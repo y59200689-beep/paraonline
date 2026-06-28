@@ -1,0 +1,112 @@
+{
+  "niacinamide": {
+    "icon": "🧬",
+    "name_fr": "Niacinamide (Vitamine B3)",
+    "name_ar": "نياسيناميد (فيتامين B3)",
+    "safety_fr": "Très Sûr (Excellent)",
+    "safety_ar": "آمن جداً (ممتاز)",
+    "desc_fr": "Actif dermatologique majeur. Régule le sébum, resserre les pores, atténue les taches pigmentaires et renforce la barrière cutanée.",
+    "desc_ar": "مكون جلدي رئيسي. ينظم إفراز الدهون، يضيق المسام، يقلل البقع الداكنة ويقوي حاجز البشرة.",
+    "benefit_fr": "Anti-inflammatoire & Anti-taches",
+    "benefit_ar": "مضاد للالتهابات ومحارب للبقع"
+  },
+  "centella asiatica": {
+    "icon": "🌿",
+    "name_fr": "Centella Asiatica (Cica)",
+    "name_ar": "سنتيلا أسياتيكا (سيكا)",
+    "safety_fr": "Très Sûr (Excellent)",
+    "safety_ar": "آمن جداً (ممتاز)",
+    "desc_fr": "Plante médicinale légendaire connue sous le nom d'herbe du tigre. Apaise intensément, répare les irritations et cicatrise la peau.",
+    "desc_ar": "نبتة طبية أسطورية تُعرف بعشبة النمر. تهدئ البشرة بشكل مكثف، تعالج التهيجات وتساعد على التئام الجلد.",
+    "benefit_fr": "Apaisement intense & Cicatrisation",
+    "benefit_ar": "تهدئة مكثفة وتسريع التئام الجلد"
+  },
+  "msm": {
+    "icon": "💎",
+    "name_fr": "MSM (Méthylsulfonylméthane)",
+    "name_ar": "أم أس أم (ميثيل سلفونيل ميثان)",
+    "safety_fr": "Sûr (Bon)",
+    "safety_ar": "آمن (جيد)",
+    "desc_fr": "Composé organique soufré qui booste la production de kératine et de collagène. Fortifie la peau, les cheveux et les ongles.",
+    "desc_ar": "مركب كبريتي عضوي يعزز إنتاج الكيراتين والكولاجين. يقوي البشرة والشعر والأظافر.",
+    "benefit_fr": "Synthèse de Collagène & Fermeté",
+    "benefit_ar": "بناء الكولاجين وزيادة المرونة"
+  },
+  "silice": {
+    "icon": "🐚",
+    "name_fr": "Silice Naturelle",
+    "name_ar": "السيليكا الطبيعية",
+    "safety_fr": "Très Sûr (Excellent)",
+    "safety_ar": "آمن جداً (ممتاز)",
+    "desc_fr": "Minéral extrait d'algues rouges. Favorise l'élasticité de la peau, renforce la structure des ongles et donne de l'épaisseur aux cheveux.",
+    "desc_ar": "معدن مستخلص من الطحالب الحمراء. يعزز مرونة الجلد، يقوي بنية الأظافر ويزيد من سمك الشعر.",
+    "benefit_fr": "Élasticité & Fortifiant Capillaire",
+    "benefit_ar": "زيادة المرونة وتقوية ألياف الشعر"
+  },
+  "retinol": {
+    "icon": "✨",
+    "name_fr": "Rétinol (Vitamine A)",
+    "name_ar": "ريتينول (فيتامين A)",
+    "safety_fr": "Actif Puissant",
+    "safety_ar": "مكون قوي",
+    "desc_fr": "L'actif anti-âge de référence. Accélère le renouvellement cellulaire, stimule le collagène et réduit visiblement les rides profondes.",
+    "desc_ar": "المكون المرجعي لمحاربة الشيخوخة. يسرع تجديد الخلايا، يحفز الكولاجين ويقلل التجاعيد العميقة بشكل ملحوظ.",
+    "benefit_fr": "Anti-rides puissant & Renouvellement",
+    "benefit_ar": "مضاد للتجاعيد وتجديد الخلايا"
+  },
+  "vitamine c": {
+    "icon": "🍋",
+    "name_fr": "Vitamine C (Acide Ascorbique)",
+    "name_ar": "فيتامين C (حمض الأسكوربيك)",
+    "safety_fr": "Très Sûr (Excellent)",
+    "safety_ar": "آمن جداً (ممتاز)",
+    "desc_fr": "Antioxydant ultra-puissant. Illumine le teint terne, neutralise les radicaux libres et stimule la synthèse de collagène.",
+    "desc_ar": "مضاد أكسدة فائق القوة. يضيء البشرة الباهتة، يعادل الجذور الحرة ويحفز إنتاج الكولاجين.",
+    "benefit_fr": "Éclat & Anti-oxydant",
+    "benefit_ar": "إشراقة فورية ومحاربة الأكسدة"
+  },
+  "acide hyaluronique": {
+    "icon": "💧",
+    "name_fr": "Acide Hyaluronique",
+    "name_ar": "حمض الهيالورونيك",
+    "safety_fr": "Très Sûr (Excellent)",
+    "safety_ar": "آمن جداً (ممتاز)",
+    "desc_fr": "Molécule éponge capable de retenir jusqu'à 1000 fois son poids en eau. Hydrate intensément, repulpe la peau et comble les ridules.",
+    "desc_ar": "جزيء إسفنجي قادر على الاحتفاظ بالماء حتى 1000 ضعف وزنه. يرطب بعمق، يملأ البشرة ويخفي الخطوط الجافة.",
+    "benefit_fr": "Hydratation extrême & Repulpant",
+    "benefit_ar": "ترطيب فائق وملء فوري للبشرة"
+  },
+  "acide tranexamique": {
+    "icon": "🧪",
+    "name_fr": "Acide Tranexamique (TXA)",
+    "name_ar": "حمض الترانيكساميك (TXA)",
+    "safety_fr": "Sûr (Excellent)",
+    "safety_ar": "آمن (ممتاز)",
+    "desc_fr": "Ingrédient révolutionnaire contre l'hyperpigmentation. Bloque le transfert de mélanine pour effacer les taches d'acné et de soleil.",
+    "desc_ar": "مكون ثوري لمحاربة التصبغات. يمنع انتقال الميلانين لمحو بقع حب الشباب والتصبغات الشمسية.",
+    "benefit_fr": "Anti-taches & Unifiant",
+    "benefit_ar": "محاربة التصبغات وتوحيد لون البشرة"
+  },
+  "squalane": {
+    "icon": "🌻",
+    "name_fr": "Squalane",
+    "name_ar": "السكوالان",
+    "safety_fr": "Très Sûr (Excellent)",
+    "safety_ar": "آمن جداً (ممتاز)",
+    "desc_fr": "Huile sèche d'origine végétale (olive). Mimétique du sébum naturel, elle adoucit la peau sans obstruer les pores (non comédogène).",
+    "desc_ar": "زيت جاف ذو أصل نباتي (من الزيتون). يحاكي الدهون الطبيعية للبشرة، ينعم الجلد دون سد المسام.",
+    "benefit_fr": "Émollient & Non comédogène",
+    "benefit_ar": "ترطيب خفيف وغير مسبب للبثور"
+  },
+  "acide salicylique": {
+    "icon": "🍃",
+    "name_fr": "Acide Salicylique (BHA)",
+    "name_ar": "حمض الساليسيليك (BHA)",
+    "safety_fr": "Très Efficace (Exfoliant)",
+    "safety_ar": "فعال جداً (مقشر)",
+    "desc_fr": "Exfoliant chimique soluble dans le gras. Pénètre profondément dans les pores pour dissoudre l'excès de sébum et éliminer les comédons.",
+    "desc_ar": "مقشر كيميائي يذوب في الدهون. يتغلغل عميقاً داخل المسام ليذيب الدهون الزائدة ويقضي على الرؤوس السوداء.",
+    "benefit_fr": "Exfoliant pores & Sébum",
+    "benefit_ar": "تقشير المسام وتخفيف الدهون"
+  }
+}

@@ -1,20 +1,34 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useCart, CartItem } from '../context/CartContext';
-import { useTranslation } from '../context/LanguageContext';
-import { PRODUCTS_DB, Product } from '../lib/data';
-import { X, ShoppingBag, Trash2, ArrowRight, ShieldCheck, Tag, Plus, Minus, Check, HelpCircle, Truck } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useCart } from '@/context/CartContext';
+import { useTranslation } from '@/context/LanguageContext';
+import { useLoyalty } from '@/context/LoyaltyContext';
+import { Product, MOROCCAN_CITIES } from '@/lib/data';
+import { useProducts } from '@/context/ProductsContext';
+import {
+  X, ShoppingBag, ArrowRight, ShieldCheck, Tag, Plus,
+  Truck, ArrowLeft, AlertTriangle, CreditCard, Sparkles, Gift
+} from 'lucide-react';
+import { getOptimizedImageUrl } from '@/lib/image-optimizer';
+import { useSettings } from '@/context/SettingsContext';
+import { useUi } from '@/context/UiContext';
+import Image from 'next/image';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
+
+// Sub-components
+import { CartItemList } from './cart/CartItemList';
+import { CartUpsells } from './cart/CartUpsells';
+import { CouponSection } from './cart/CouponSection';
+import { CheckoutForm } from './cart/CheckoutForm';
+import { CartFooter } from './cart/CartFooter';
 
 const placeholderSvg = "data:image/svg+xml;utf8," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300' width='100%' height='100%'><rect width='100%' height='100%' fill='#f1f5f9'/><path d='M150 100a40 40 0 1 0 40 40 40 40 0 0 0-40-40zm0 60a20 20 0 1 1 20-20 20 20 0 0 1-20 20z' fill='#94a3b8'/><path d='M180 180h-60a10 10 0 0 0-10 10v10h80v-10a10 10 0 0 0-10-10z' fill='#94a3b8'/><text x='150' y='230' font-family='sans-serif' font-size='12' font-weight='bold' fill='#64748b' text-anchor='middle'>Image Indisponible</text></svg>");
 
 const toTitleCase = (str: string) => {
   if (!str) return '';
-  return str
-    .toLowerCase()
-    .split(/\s+/)
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+  return str.toLowerCase().split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 };
 
 interface CartDrawerProps {
@@ -24,506 +38,613 @@ interface CartDrawerProps {
   onOpenScratchCard: () => void;
 }
 
-export const CartDrawer: React.FC<CartDrawerProps> = ({ 
-  isOpen, 
-  onClose, 
+export const CartDrawer: React.FC<CartDrawerProps> = ({
+  isOpen,
+  onClose,
   onSelectProduct,
-  onOpenScratchCard
+  onOpenScratchCard,
 }) => {
   const { t, language } = useTranslation();
+  const { products } = useProducts();
+  const { settings } = useSettings();
+  const { earnPoints, tierMultiplier, points: loyaltyPoints, tier } = useLoyalty();
   const {
-    cart,
-    addToCart,
-    removeFromCart,
-    updateQuantity,
-    subtotal,
-    total,
-    discountAmount,
-    shippingFee,
-    isFreeShipping,
-    amountNeededForFreeShipping,
-    appliedCoupon,
-    applyCouponCode,
-    removeCoupon,
-    dailyGiftName,
-    submitOrder,
-    isSubmitting
+    cart, clearCart, addToCart, removeFromCart, updateQuantity,
+    subtotal, total, discountAmount, shippingFee, isFreeShipping,
+    amountNeededForFreeShipping, appliedCoupon, applyCouponCode, removeCoupon,
+    submitOrder, isSubmitting, setShippingCity, dailyGiftName,
+    activeGiftRange, paymentMethod, setPaymentMethod,
   } = useCart();
 
+  // Look up the full product object for the active gift range
+  const activeGiftProduct = activeGiftRange
+    ? products.find(p => p.id === activeGiftRange.productId) ?? null
+    : null;
+  const { showToast } = useUi();
+
+  // ── Step & form state ────────────────────────────────────────────────────
   const [step, setStep] = useState<'cart' | 'checkout'>('cart');
+  const [checkoutSubStep, setCheckoutSubStep] = useState<'info' | 'delivery' | 'payment'>('info');
   const [couponCode, setCouponCode] = useState('');
   const [couponMessage, setCouponMessage] = useState({ text: '', isError: false });
-
-  // Checkout Form fields
-  const [formFields, setFormFields] = useState({
-    name: '',
-    phone: '',
-    address: '',
-    city: ''
-  });
+  const [formFields, setFormFields] = useState({ name: '', phone: '', address: '', city: '', note: '' });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  // Reset steps on opening/closing
+  // ── Stripe state ─────────────────────────────────────────────────────────
+  const [clientSecret, setClientSecret] = useState('');
+  const [stripeOrderId, setStripeOrderId] = useState('');
+  const [isInitializingStripe, setIsInitializingStripe] = useState(false);
+  const [stripePromise, setStripePromise] = useState<ReturnType<typeof loadStripe> | null>(null);
+
+  useEffect(() => {
+    if (settings?.paymentSettings?.stripePublishableKey) {
+      setStripePromise(loadStripe(settings.paymentSettings.stripePublishableKey));
+    }
+  }, [settings?.paymentSettings?.stripePublishableKey]);
+
+  // ── Swipe-to-dismiss gesture ─────────────────────────────────────────────
+  const touchStartX = useRef(0);
+  const touchCurrentX = useRef(0);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+
+  const isRTL = language === 'AR';
+
+  // Reset state when drawer closes
   useEffect(() => {
     if (!isOpen) {
       setStep('cart');
+      setCheckoutSubStep('info');
       setCouponMessage({ text: '', isError: false });
       setCouponCode('');
+      setSwipeOffset(0);
+      setClientSecret('');
+      setStripeOrderId('');
+      setPaymentMethod('cod');
     }
-  }, [isOpen]);
+  }, [isOpen, setPaymentMethod]);
 
-
-  const handleApplyCoupon = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!couponCode.trim()) return;
-
-    const res = applyCouponCode(couponCode);
-    setCouponMessage({
-      text: res.message,
-      isError: !res.success
-    });
-
-    if (res.success) {
-      setCouponCode('');
-    }
-  };
-
-  // Smart cross-sell checking:
-  // Oil is id 15, Foam is id 22.
+  // ── Derived cart state ───────────────────────────────────────────────────
   const hasOil = cart.some(item => item.product.id === 15);
   const hasFoam = cart.some(item => item.product.id === 22);
   const showDoubleCleanseUpsell = hasOil && !hasFoam;
 
-  // Threshold Maximizer item suggestion (under 200 DH and not currently in the cart)
-  const thresholdItems = PRODUCTS_DB.filter(
+  const thresholdItems = products.filter(
     p => p.price <= 200 && !cart.some(item => item.product.id === p.id)
-  ).slice(0, 3); // Max 3 items
+  ).slice(0, 3);
 
-  const handleCheckoutSubmit = async (e: React.FormEvent) => {
+  // ── Calculate Total Savings ───────────────────────────────────────────────
+  const getSavingsDetails = () => {
+    const couponSavings = discountAmount;
+    let shippingSavings = 0;
+    if (isFreeShipping && subtotal > 0) {
+      if (formFields.city && settings?.shippingRules) {
+        const cityRule = settings.shippingRules.find(
+          r => r.city.toLowerCase() === formFields.city.toLowerCase()
+        );
+        shippingSavings = cityRule ? cityRule.fee : (settings.shippingFee ?? 35);
+      } else {
+        shippingSavings = settings?.shippingFee ?? 35;
+      }
+    }
+    const giftSavings = activeGiftProduct ? activeGiftProduct.price : 0;
+    return couponSavings + shippingSavings + giftSavings;
+  };
+
+  const totalSavings = getSavingsDetails();
+
+  // ── Handlers ─────────────────────────────────────────────────────────────
+  const handleApplyCoupon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!couponCode.trim()) return;
+    const res = await applyCouponCode(couponCode);
+    setCouponMessage({ text: res.message, isError: !res.success });
+    if (res.success) setCouponCode('');
+  };
+
+  // ── Merged single-step handler (replaces proceedToDelivery + handleCheckoutSubmit) ──
+  const handleMergedSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormErrors({});
-
     const errors: Record<string, string> = {};
-    if (!formFields.name.trim()) errors.name = language === 'FR' ? 'Nom complet requis' : 'الاسم الكامل مطلوب';
-    if (!formFields.phone.trim() || formFields.phone.length < 8) errors.phone = language === 'FR' ? 'Téléphone WhatsApp valide requis' : 'رقم واتساب صحيح مطلوب';
-    if (!formFields.address.trim()) errors.address = language === 'FR' ? 'Adresse complète requise' : 'العنوان الكامل مطلوب';
-    if (!formFields.city) errors.city = language === 'FR' ? 'Veuillez choisir votre ville' : 'يرجى اختيار مدينتكِ';
 
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      return;
-    }
+    // Validate all fields in one pass
+    if (!formFields.name.trim())
+      errors.name = language === 'FR' ? 'Nom complet requis' : 'الاسم الكامل مطلوب';
+    if (!formFields.phone.trim() || formFields.phone.length < 8)
+      errors.phone = language === 'FR' ? 'Téléphone WhatsApp valide requis' : 'رقم واتساب صحيح مطلوب';
+    if (!formFields.city)
+      errors.city = language === 'FR' ? 'Veuillez choisir votre ville' : 'يرجى اختيار مدينتكِ';
+    if (!formFields.address.trim())
+      errors.address = language === 'FR' ? 'Adresse complète requise' : 'العنوان الكامل مطلوب';
 
-    const res = await submitOrder(formFields);
-    if (res.success) {
-      // Clear form
-      setFormFields({ name: '', phone: '', address: '', city: '' });
-      // Redirect to WhatsApp COD flow
-      window.open(res.whatsappUrl, '_blank');
-      onClose();
+    if (Object.keys(errors).length > 0) { setFormErrors(errors); return; }
+
+    // Capture abandoned cart
+    fetch('/api/admin/abandoned-carts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: formFields.name, phone: formFields.phone,
+        items: cart.map(i => ({ id: i.product.id, title: i.product.title, quantity: i.quantity, price: i.product.price })),
+        total, date: new Date().toISOString(),
+      }),
+    }).catch(err => console.error('Failed to sync abandoned cart:', err));
+
+    if (settings.paymentSettings?.onlinePaymentEnabled) {
+      setCheckoutSubStep('payment');
+    } else {
+      const orderTotal = total;
+      const res = await submitOrder(formFields);
+      if (res.success) {
+        earnPoints(Math.round(orderTotal), 'Nouvelle commande', 'طلب جديد');
+        setFormFields({ name: '', phone: '', address: '', city: '', note: '' });
+        window.open(res.whatsappUrl, '_blank');
+        onClose();
+      }
     }
   };
 
-  // Moroccan Cities dropdown selection
-  const MOROCCAN_CITIES = [
-    { value: 'Rabat', label: 'Rabat / الرباط' },
-    { value: 'Tanger', label: 'Tanger / طنجة' },
-    { value: 'Fès', label: 'Fès / فاس' },
-    { value: 'Meknès', label: 'Meknès / مكناس' },
-    { value: 'Tétouan', label: 'Tétouan / تطوان' },
-    { value: 'Salé', label: 'Salé / سلا' },
-    { value: 'Témara', label: 'Témara / تمارة' },
-    { value: 'Casablanca', label: 'Casablanca / الدار البيضاء' },
-    { value: 'Marrakech', label: 'Marrakech / مراكش' },
-    { value: 'Agadir', label: 'Agadir / أكادير' },
-    { value: 'Oujda', label: 'Oujda / وجدة' },
-    { value: 'Nador', label: 'Nador / الناظور' },
-    { value: 'Kénitra', label: 'Kénitra / القنيطرة' },
-  ];
+  // Keep these as no-ops so CheckoutForm prop types are satisfied
+  const proceedToDelivery = () => {};
+  const handleCheckoutSubmit = async (e: React.FormEvent) => { e.preventDefault(); };
 
-  const isRTL = language === 'AR';
+  const handleCmiPayment = async (orderId: string) => {
+    try {
+      const res = await fetch('/api/payment/cmi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: total, orderId, customerName: formFields.name, phone: formFields.phone }),
+      });
+      const data = await res.json();
+      if (data.success && data.apiUrl && data.params) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = data.apiUrl;
+        Object.entries(data.params).forEach(([key, val]) => {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = key;
+          input.value = String(val);
+          form.appendChild(input);
+        });
+        document.body.appendChild(form);
+        form.submit();
+      } else {
+        showToast(data.error || "Une erreur est survenue lors de l'initialisation du paiement CMI.", 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Erreur lors de la connexion à la passerelle CMI.', 'error');
+    }
+  };
+
+  const handleConfirmPayment = async () => {
+    if (paymentMethod === 'cod') {
+      const orderTotal = total;
+      const res = await submitOrder(formFields);
+      if (res.success) {
+        earnPoints(Math.round(orderTotal), 'Nouvelle commande', 'طلب جديد');
+        setFormFields({ name: '', phone: '', address: '', city: '', note: '' });
+        setCheckoutSubStep('info');
+        setStep('cart');
+        window.open(res.whatsappUrl, '_blank');
+        onClose();
+      }
+    } else if (paymentMethod === 'stripe') {
+      setIsInitializingStripe(true);
+      try {
+        const orderRes = await submitOrder(formFields);
+        if (orderRes.success && orderRes.orderId) {
+          setStripeOrderId(orderRes.orderId);
+          const res = await fetch('/api/payment/stripe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ amount: total, orderId: orderRes.orderId }),
+          });
+          const data = await res.json();
+          if (data.success && data.clientSecret) {
+            setClientSecret(data.clientSecret);
+          } else {
+            showToast("Impossible d'obtenir la clé de paiement Stripe.", 'error');
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("Une erreur est survenue lors de l'appel Stripe.", 'error');
+      } finally {
+        setIsInitializingStripe(false);
+      }
+    } else if (paymentMethod === 'cmi') {
+      const orderRes = await submitOrder(formFields);
+      if (orderRes.success && orderRes.orderId) {
+        await handleCmiPayment(orderRes.orderId);
+      }
+    }
+  };
+
+  // ── Swipe gesture ────────────────────────────────────────────────────────
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchCurrentX.current = e.touches[0].clientX;
+  };
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchCurrentX.current = e.touches[0].clientX;
+    const diff = touchCurrentX.current - touchStartX.current;
+    setSwipeOffset(isRTL ? Math.min(0, diff) : Math.max(0, diff));
+  };
+  const handleTouchEnd = () => {
+    const totalSwipe = Math.abs(touchCurrentX.current - touchStartX.current);
+    const isValidSwipe = isRTL
+      ? (touchCurrentX.current - touchStartX.current < -100)
+      : (touchCurrentX.current - touchStartX.current > 100);
+    if (isValidSwipe && totalSwipe > 100) onClose();
+    setSwipeOffset(0);
+  };
+
+  const getDrawerTransformStyle = () => {
+    if (!isOpen) return isRTL ? 'translateX(-100%)' : 'translateX(100%)';
+    return `translateX(${swipeOffset}px)`;
+  };
+
+  // ── Stripe success handler ────────────────────────────────────────────────
+  const handleStripeSuccess = () => {
+    earnPoints(Math.round(total), 'Paiement en ligne réussi', 'دفع ناجح عبر الإنترنت');
+    clearCart();
+    setShippingCity('');
+    setFormFields({ name: '', phone: '', address: '', city: '', note: '' });
+    setCheckoutSubStep('info');
+    setStep('cart');
+    setClientSecret('');
+    onClose();
+    showToast(
+      language === 'FR'
+        ? '🎉 Paiement réussi ! Votre commande a été enregistrée avec succès.'
+        : '🎉 تم الدفع بنجاح! تم تسجيل طلبك بنجاح.',
+      'success',
+    );
+  };
 
   return (
-    <div 
-      className={`fixed inset-0 bg-black/55 z-50 flex justify-end transition-all duration-300 ease-in-out ${
-        isOpen ? 'opacity-100 pointer-events-auto backdrop-blur-sm' : 'opacity-0 pointer-events-none'
+    <div
+      className={`fixed inset-0 bg-black/55 z-50 flex justify-end ${
+        isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
       }`}
+      style={{
+        transitionProperty: 'opacity, backdrop-filter',
+        transitionDuration: isOpen ? '400ms' : '300ms',
+        transitionTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)',
+        backdropFilter: isOpen ? 'blur(8px)' : 'blur(0px)',
+        WebkitBackdropFilter: isOpen ? 'blur(8px)' : 'blur(0px)',
+      }}
     >
-      
-      {/* Background click overlay */}
       <div className="absolute inset-0 bg-transparent" onClick={onClose} />
 
-      {/* Cart Drawer Panel */}
-      <div 
-        className={`relative w-full max-w-[460px] h-full bg-white border-l border-border shadow-2xl flex flex-col justify-between z-10 text-slate-800 overflow-hidden transform transition-transform duration-300 ease-in-out ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
-        style={{ direction: isRTL ? 'rtl' : 'ltr' }}
+      {/* Drawer Panel */}
+      <div
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        className="relative w-full max-w-[460px] h-full bg-[#FAF9F6] border-l border-slate-200/50 shadow-2xl flex flex-col z-10 overflow-hidden"
+        style={{
+          direction: isRTL ? 'rtl' : 'ltr',
+          transform: getDrawerTransformStyle(),
+          transition: `transform ${isOpen ? '420ms' : '320ms'} cubic-bezier(0.22, 1, 0.36, 1)`,
+          willChange: 'transform',
+        }}
       >
-        
-        {/* Header Drawer */}
-        <div className="p-5 border-b border-border-light flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ShoppingBag className="w-5 h-5 text-secondary" />
-            <h3 className="text-base font-black font-heading text-primary-dark">
-              {step === 'cart' ? t('cart_title') : (language === 'FR' ? 'Validation de commande (COD)' : 'تأكيد الطلب عند الاستلام')}
+        {/* Header */}
+        <div className="py-5 px-6 border-b border-slate-200/40 bg-white flex items-center justify-between shrink-0 sticky top-0 z-20 backdrop-blur-md bg-white/95">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-primary/5 text-primary flex items-center justify-center">
+              <ShoppingBag className="w-4.5 h-4.5" />
+            </div>
+            <h3 className="text-base font-heading font-extrabold text-primary-dark leading-none">
+              {step === 'cart' ? t('cart_title') : (language === 'FR' ? 'Validation de commande' : 'تأكيد الطلب')}
             </h3>
           </div>
-          <button 
+          <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-all"
+            aria-label={language === 'FR' ? 'Fermer' : 'إغلاق'}
+            className="w-9 h-9 rounded-full hover:bg-slate-50 flex items-center justify-center text-slate-400 hover:text-primary-dark transition-all duration-300"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4.5 h-4.5" />
           </button>
         </div>
 
-        {/* Dynamic Drawer content body (Cart view or Checkout view) */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-6 no-scrollbar">
+        {/* Scrollable Body */}
+        <div className="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-6 no-scrollbar">
           {cart.length === 0 ? (
-            <div className="text-center py-20 space-y-4">
-              <ShoppingBag className="w-16 h-16 text-slate-200 mx-auto" />
-              <h4 className="text-sm font-black text-primary-dark">{t('cart_empty')}</h4>
-              <button 
+            /* ── Empty State ─────────────────────────────────────────────── */
+            <div className="text-center py-20 flex flex-col items-center gap-4">
+              <ShoppingBag className="w-16 h-16 text-slate-200" />
+              <h4 className="text-sm font-black text-slate-700">{t('cart_empty')}</h4>
+              <button
                 onClick={onClose}
-                className="px-6 py-2.5 bg-primary hover:bg-accent text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all"
+                className="px-6 py-3.5 bg-primary-dark text-white text-xs font-black uppercase tracking-widest rounded-lg hover:bg-primary hover:-translate-y-0.5 active:scale-95 transition-all duration-300 shadow-md shadow-primary-dark/10"
               >
                 {language === 'FR' ? 'Faire mes achats' : 'مواصلة التسوق'}
               </button>
             </div>
+
           ) : step === 'cart' ? (
-            // ==========================================
-            // STEP 1: SHOPPING BASKET SUMMARY VIEW
-            // ==========================================
-            <div className="space-y-6">
-              
-              {/* 1. Free Shipping milestone Threshold tracker */}
-              <div className="bg-muted rounded-2xl p-4 border border-accent/10 space-y-2">
-                <div className="flex items-center gap-2 text-xs font-extrabold text-primary-dark">
-                  <Truck className="w-4 h-4 text-secondary" />
-                  <span>
-                    {isFreeShipping 
-                      ? t('shipping_free')
-                      : t('shipping_progress').replace('{amount}', amountNeededForFreeShipping.toString())
-                    }
-                  </span>
+            /* ── Cart Step ───────────────────────────────────────────────── */
+            <>
+              {/* 1. Cart Items */}
+              <CartItemList
+                cart={cart}
+                language={language}
+                onSelectProduct={onSelectProduct}
+                updateQuantity={updateQuantity}
+                removeFromCart={removeFromCart}
+                lowStockThreshold={settings?.lowStockThreshold ?? 5}
+                isOpen={isOpen}
+              />
+
+              {/* 1b. Active Gift Range Card */}
+              {activeGiftRange && (
+                <div 
+                  className={`relative overflow-hidden rounded-2xl border border-emerald-400/30 bg-gradient-to-br from-emerald-50 via-teal-50/60 to-white shadow-[0_4px_24px_rgba(16,185,129,0.10)] ${
+                    isOpen ? 'animate-slide-up' : 'opacity-0'
+                  }`}
+                  style={isOpen ? { animationDelay: `${cart.length * 55 + 50}ms` } : undefined}
+                >
+                  {/* Glow orb */}
+                  <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-emerald-400/20 blur-2xl pointer-events-none" />
+                  <div className="absolute -bottom-4 -left-4 w-16 h-16 rounded-full bg-teal-400/15 blur-xl pointer-events-none" />
+
+                  <div className="relative flex items-center gap-4 px-4 py-4">
+                    {/* Gift product image or icon */}
+                    <div className="relative shrink-0">
+                      <div className="w-14 h-14 rounded-xl border-2 border-emerald-400/40 bg-white shadow-md overflow-hidden flex items-center justify-center">
+                        {activeGiftProduct?.image ? (
+                          <Image
+                            src={getOptimizedImageUrl(activeGiftProduct.image) || placeholderSvg}
+                            alt={activeGiftProduct.nameFr || activeGiftProduct.title}
+                            width={56}
+                            height={56}
+                            className="object-contain p-1"
+                          />
+                        ) : (
+                          <Gift className="w-6 h-6 text-emerald-500" />
+                        )}
+                      </div>
+                      {/* Unlocked badge */}
+                      <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center shadow-md">
+                        <Sparkles className="w-2.5 h-2.5 text-white" />
+                      </div>
+                    </div>
+
+                    {/* Text content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-600">
+                          {language === 'FR' ? '🎁 Cadeau offert' : '🎁 هدية مجانية'}
+                        </span>
+                      </div>
+                      <p className="text-[12px] font-bold text-slate-800 leading-tight line-clamp-2">
+                        {activeGiftRange.productName}
+                      </p>
+                      <p className="text-[10px] text-slate-500 mt-0.5 font-medium">
+                        {language === 'FR'
+                          ? `Offert pour toute commande de ${activeGiftRange.minAmount}–${activeGiftRange.maxAmount} DH`
+                          : `مهداة لكل طلب من ${activeGiftRange.minAmount} إلى ${activeGiftRange.maxAmount} درهم`}
+                      </p>
+                    </div>
+
+                    {/* OFFERT tag */}
+                    <div className="shrink-0 flex flex-col items-end gap-1">
+                      {activeGiftProduct && (
+                        <span className="text-[9px] font-bold text-slate-400 line-through">
+                          {activeGiftProduct.price} DH
+                        </span>
+                      )}
+                      <span className="px-2.5 py-1 rounded-lg bg-emerald-500 text-white text-[9px] font-black uppercase tracking-wider shadow-sm">
+                        {language === 'FR' ? 'Offert' : 'مجانًا'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Bottom shimmer strip */}
+                  <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-emerald-400/50 to-transparent" />
                 </div>
-                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-accent transition-all duration-300"
-                    style={{ width: `${Math.min((subtotal / 600) * 100, 100)}%` }}
+              )}
+
+              <div 
+                className={`rounded-2xl border p-4 flex flex-col gap-3.5 transition-all duration-500 ${
+                  isFreeShipping 
+                    ? 'border-emerald-500/20 bg-emerald-50/30 shadow-[0_4px_16px_rgba(16,185,129,0.04)]' 
+                    : 'border-slate-200/40 bg-white shadow-[0_4px_12px_rgba(26,37,93,0.02)]'
+                } ${isOpen ? 'animate-slide-up' : 'opacity-0'}`}
+                style={isOpen ? { animationDelay: `${cart.length * 55 + 100}ms` } : undefined}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 transition-all duration-500 ${
+                    isFreeShipping 
+                      ? 'bg-emerald-500/10 border-emerald-500/10 text-emerald-600 shadow-[0_0_12px_rgba(16,185,129,0.15)]' 
+                      : 'bg-primary/5 border-primary/10 text-primary'
+                  }`}>
+                    <Truck className="w-4.5 h-4.5 animate-[pulse_3s_infinite]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className={`text-[12px] font-bold leading-tight flex items-center gap-1.5 transition-colors duration-500 ${isFreeShipping ? 'text-emerald-800' : 'text-slate-800'}`}>
+                      {isFreeShipping && <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0 animate-pulse" />}
+                      <span>
+                        {isFreeShipping
+                          ? (language === 'FR' ? 'Livraison Gratuite Débloquée !' : 'تم تفعيل التوصيل المجاني!')
+                          : (language === 'FR' 
+                              ? `Plus que ${(amountNeededForFreeShipping as number).toFixed(2)} DH pour la livraison gratuite` 
+                              : `متبقي ${(amountNeededForFreeShipping as number).toFixed(2)} درهم للاستفادة من التوصيل المجاني`)}
+                      </span>
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-medium block mt-0.5">
+                      {isFreeShipping 
+                        ? (language === 'FR' ? 'Votre commande sera livrée sans frais.' : 'سيتم توصيل طلبكِ مجاناً بالكامل.')
+                        : (language === 'FR' 
+                            ? `Seuil de livraison gratuite : ${settings?.freeShippingThreshold || 600} DH` 
+                            : `حد التوصيل المجاني: ${settings?.freeShippingThreshold || 600} درهم`)}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="relative w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                      isFreeShipping 
+                        ? 'bg-gradient-to-r from-emerald-500 to-teal-500 shadow-[0_0_12px_rgba(16,185,129,0.3)]' 
+                        : 'bg-gradient-to-r from-primary-dark to-primary shadow-[0_0_12px_rgba(37,115,163,0.2)]'
+                    }`}
+                    style={{ width: `${Math.min((subtotal / (settings?.freeShippingThreshold || 600)) * 100, 100)}%` }}
                   />
                 </div>
+
                 {!dailyGiftName && (
-                  <button 
+                  <button
                     onClick={onOpenScratchCard}
-                    className="text-[10px] font-black uppercase text-accent hover:text-accent/80 flex items-center gap-1 mt-2 animate-pulse"
+                    className="text-[11px] font-extrabold uppercase tracking-wider text-accent flex items-center gap-1.5 self-start hover:text-teal-700 transition-colors duration-200"
                   >
-                    🎁 {language === 'FR' ? 'Débloquer mon cadeau du jour gratuit !' : 'افتحي هديتكِ المجانية اليومية الآن!'}
+                    <Gift className="w-3.5 h-3.5 animate-bounce text-accent" />
+                    <span>{language === 'FR' ? 'Débloquer mon cadeau gratuit !' : 'افتحي هديتكِ المجانية اليومية!'}</span>
                   </button>
                 )}
               </div>
 
-              {/* 2. Items List */}
-              <div className="divide-y divide-solid divide-border/20">
-                {cart.map((item) => (
-                  <div key={item.product.id} className="py-4 flex gap-4 items-center">
-                    <img
-                      src={item.product.image}
-                      alt={item.product.nameFr || item.product.name || item.product.title}
-                      className="w-14 h-14 object-cover rounded-md bg-white border border-solid border-border/30 shrink-0"
-                      onError={(e) => {
-                        e.currentTarget.src = placeholderSvg;
-                      }}
-                    />
-
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <h4 
-                        onClick={() => { onSelectProduct(item.product); }}
-                        className="text-xs font-bold truncate text-primary-dark hover:text-accent cursor-pointer"
-                      >
-                        {toTitleCase(item.product.nameFr || item.product.name || item.product.title)}
-                      </h4>
-                      <span className="text-[10px] text-foreground/75 block">{item.product.vendor}</span>
-                      
-                      {/* Quantity counters */}
-                      <div className="flex items-center border border-border-light rounded-lg px-1.5 w-max bg-background h-8">
-                        <button
-                          onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                          className="p-1 text-foreground/70 hover:text-primary-dark"
-                        >
-                          <Minus className="w-3 h-3" />
-                        </button>
-                        <span className="px-2.5 text-xs font-black min-w-[20px] text-center">
-                          {item.quantity}
-                        </span>
-                        <button
-                          onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                          className="p-1 text-foreground/70 hover:text-primary-dark"
-                        >
-                          <Plus className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="text-right flex flex-col justify-between h-14 shrink-0">
-                      <span className="text-xs font-black text-primary-dark">
-                        {(item.product.price * item.quantity).toFixed(2)} DH
-                      </span>
-                      <button
-                        onClick={() => removeFromCart(item.product.id)}
-                        className="text-foreground/70 hover:text-rose-500 p-1 self-end transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+              {/* 3. Coupon */}
+              <div
+                className={isOpen ? 'animate-slide-up' : 'opacity-0'}
+                style={isOpen ? { animationDelay: `${cart.length * 55 + 150}ms` } : undefined}
+              >
+                <CouponSection
+                  language={language}
+                  couponCode={couponCode}
+                  setCouponCode={setCouponCode}
+                  couponMessage={couponMessage}
+                  appliedCoupon={appliedCoupon}
+                  onApply={handleApplyCoupon}
+                  onRemove={removeCoupon}
+                />
               </div>
 
-              {/* 3. Double Cleanse Dynamic Upsell Component */}
-              {showDoubleCleanseUpsell && (
-                <div className="bg-muted rounded-2xl p-4 border border-dashed border-accent/25 space-y-3">
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-black uppercase text-accent tracking-wider block">
-                      {t('cro_double_cleanse_title')}
-                    </span>
-                    <p className="text-[10px] leading-relaxed text-foreground/70">
-                      {t('cro_double_cleanse_desc')}
-                    </p>
-                  </div>
-                  <div className="flex gap-3 items-center bg-white p-2.5 rounded-xl border border-border">
-                    <img 
-                      src="https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=320&auto=format&fit=crop" 
-                      alt="" 
-                      className="w-10 h-10 object-cover rounded-md"
-                      onError={(e) => {
-                        e.currentTarget.src = placeholderSvg;
-                      }}
-                    />
-                    <div className="flex-grow min-w-0">
-                      <h5 className="text-[11px] font-extrabold truncate text-primary-dark">
-                        {toTitleCase(PRODUCTS_DB.find(p => p.id === 22)?.nameFr || PRODUCTS_DB.find(p => p.id === 22)?.name || "Anua Heartleaf Mousse Nettoyante Profonde des Pores 150ml")}
-                      </h5>
-                      <span className="text-[10px] text-accent font-black">179.00 DH</span>
+              {/* 4. Loyalty Points Preview */}
+              {(() => {
+                const pointsPerDh = settings?.loyaltyPointsPerDh ?? 1.0;
+                const pointsToEarn = Math.round(Math.round(subtotal * pointsPerDh) * tierMultiplier);
+                if (pointsToEarn <= 0) return null;
+                const tierColors: Record<string, string> = {
+                  Bronze:   'text-amber-700  bg-amber-50   border-amber-200/70',
+                  Silver:   'text-slate-600  bg-slate-50   border-slate-200/70',
+                  Gold:     'text-yellow-700 bg-yellow-50  border-yellow-200/70',
+                  Platinum: 'text-violet-700 bg-violet-50  border-violet-200/70',
+                };
+                const tierBadge = tierColors[tier] ?? tierColors.Bronze;
+                return (
+                  <div 
+                    className={`relative rounded-2xl border border-amber-200/50 bg-gradient-to-br from-amber-50/80 via-orange-50/40 to-white shadow-[0_4px_20px_rgba(245,158,11,0.06)] px-4 py-3.5 flex items-center gap-3.5 ${
+                      isOpen ? 'animate-slide-up' : 'opacity-0'
+                    }`}
+                    style={isOpen ? { animationDelay: `${cart.length * 55 + 200}ms` } : undefined}
+                  >
+                    {/* Ambient glow — contained, no negative positioning so no clipping */}
+                    <div className="absolute inset-0 rounded-2xl bg-amber-300/5 pointer-events-none" />
+
+                    {/* Flame icon */}
+                    <div className="shrink-0 w-9 h-9 rounded-xl bg-amber-100 border border-amber-200/60 flex items-center justify-center">
+                      <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5 text-amber-500" stroke="currentColor" strokeWidth={1.8}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
+                      </svg>
                     </div>
-                    <button
-                      onClick={() => {
-                        const partner = PRODUCTS_DB.find(p => p.id === 22);
-                        if (partner) addToCart(partner, 1);
-                      }}
-                      className="px-3 py-1.5 bg-accent hover:bg-accent/80 text-white text-[9px] font-black uppercase tracking-wider rounded-lg transition-all"
-                    >
-                      {t('cro_add_partner_btn')}
-                    </button>
-                  </div>
-                </div>
-              )}
 
-              {/* 4. Threshold Maximizer product upsells (Only if subtotal is below free shipping) */}
-              {!isFreeShipping && thresholdItems.length > 0 && (
-                <div className="space-y-3">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-foreground/70 block">
-                    🎁 {t('cro_free_shipping_unlock')}
-                  </span>
-                  <div className="grid grid-cols-3 gap-3">
-                    {thresholdItems.map((item) => (
-                      <div 
-                        key={item.id}
-                        className="bg-background border border-border-light rounded-xl p-2 flex flex-col justify-between items-center text-center text-[10px]"
-                      >
-                        <img 
-                          src={item.image} 
-                          alt="" 
-                          className="w-12 h-12 object-cover rounded-md mb-1 bg-white" 
-                          onError={(e) => {
-                            e.currentTarget.src = placeholderSvg;
-                          }}
-                        />
-                        <span className="font-extrabold truncate w-full text-slate-700">
-                          {toTitleCase(item.nameFr || item.name || item.title)}
-                        </span>
-                        <span className="text-accent font-black mb-2">{item.price} DH</span>
-                        <button
-                          onClick={() => addToCart(item, 1)}
-                          className="w-full py-1 bg-primary text-white font-black uppercase tracking-wider rounded-lg hover:bg-accent text-[9px] transition-colors"
-                        >
-                          + {language === 'FR' ? 'Ajouter' : 'إضافة'}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+                    {/* Text */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-bold text-slate-800 leading-tight">
+                        {language === 'FR'
+                          ? <>Vous allez gagner <span className="text-amber-600">+{pointsToEarn} pts</span> avec cette commande</>
+                          : <>ستكسبين <span className="text-amber-600">+{pointsToEarn} نقطة</span> من هذا الطلب</>}
+                      </p>
+                      <p className="text-[10px] text-slate-400 font-medium mt-0.5">
+                        {language === 'FR'
+                          ? `Solde actuel : ${loyaltyPoints} pts`
+                          : `رصيدك الحالي : ${loyaltyPoints} نقطة`}
+                      </p>
+                    </div>
 
-              {/* 5. Coupon Form */}
-              <form onSubmit={handleApplyCoupon} className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder={language === 'FR' ? 'Code promo...' : 'رمز القسيمة...'}
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value)}
-                  className="flex-1 px-3 py-2.5 bg-background border border-border-light rounded-xl text-xs focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/10"
+                    {/* Tier + multiplier badge */}
+                    <div className={`shrink-0 flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-xl border text-center ${tierBadge}`}>
+                      <span className="text-[9px] font-black uppercase tracking-wider">{tier}</span>
+                      {tierMultiplier > 1 && (
+                        <span className="text-[8px] font-bold opacity-70">×{tierMultiplier}</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* 5. Upsells */}
+              <div
+                className={isOpen ? 'animate-slide-up' : 'opacity-0'}
+                style={isOpen ? { animationDelay: `${cart.length * 55 + 250}ms` } : undefined}
+              >
+                <CartUpsells
+                  showDoubleCleanseUpsell={showDoubleCleanseUpsell}
+                  thresholdItems={thresholdItems}
+                  isFreeShipping={isFreeShipping}
+                  products={products}
+                  addToCart={addToCart}
                 />
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 bg-primary hover:bg-accent text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all"
-                >
-                  {language === 'FR' ? 'Appliquer' : 'تطبيق'}
-                </button>
-              </form>
-
-              {/* Applied Code indicators */}
-              {appliedCoupon && (
-                <div className="flex items-center justify-between bg-emerald-500/10 border border-solid border-emerald-500/20 text-emerald-500 px-3.5 py-2 rounded-xl text-xs">
-                  <div className="flex items-center gap-1.5 font-bold">
-                    <Tag className="w-4 h-4 shrink-0" />
-                    <span>{appliedCoupon.code} (-{appliedCoupon.discountPercent}% Off)</span>
-                  </div>
-                  <button onClick={removeCoupon} className="text-slate-400 hover:text-rose-500 font-extrabold text-xs">Retirer</button>
-                </div>
-              )}
-
-              {couponMessage.text && (
-                <span className={`text-[10px] font-bold block ${couponMessage.isError ? 'text-rose-500' : 'text-emerald-500'}`}>
-                  {couponMessage.text}
-                </span>
-              )}
-
-            </div>
+              </div>
+            </>
           ) : (
-            // ==========================================
-            // STEP 2: SECURE CASH ON DELIVERY FORM
-            // ==========================================
-            <form onSubmit={handleCheckoutSubmit} className="space-y-4 pt-2">
-              
-              <div className="space-y-1">
-                <label className="text-[10px] font-extrabold uppercase text-foreground/75 block">{t('form_name')}</label>
-                <input
-                  type="text"
-                  placeholder="Jean Dupont"
-                  value={formFields.name}
-                  onChange={(e) => setFormFields(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-3.5 py-3 bg-background border border-border-light rounded-xl text-xs focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/10"
-                />
-                {formErrors.name && <span className="text-[10px] font-bold text-rose-500 block">{formErrors.name}</span>}
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[10px] font-extrabold uppercase text-foreground/75 block">{t('form_phone')}</label>
-                <input
-                  type="tel"
-                  placeholder="0661234567"
-                  value={formFields.phone}
-                  onChange={(e) => setFormFields(prev => ({ ...prev, phone: e.target.value }))}
-                  className="w-full px-3.5 py-3 bg-background border border-border-light rounded-xl text-xs focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/10"
-                />
-                {formErrors.phone && <span className="text-[10px] font-bold text-rose-500 block">{formErrors.phone}</span>}
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[10px] font-extrabold uppercase text-foreground/75 block">{t('form_city_label')}</label>
-                <select
-                  value={formFields.city}
-                  onChange={(e) => setFormFields(prev => ({ ...prev, city: e.target.value }))}
-                  className="w-full px-3.5 py-3 bg-background border border-border-light rounded-xl text-xs focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/10"
-                >
-                  <option value="">{t('form_city')}</option>
-                  {MOROCCAN_CITIES.map(c => (
-                    <option key={c.value} value={c.value}>{c.label}</option>
-                  ))}
-                </select>
-                {formErrors.city && <span className="text-[10px] font-bold text-rose-500 block">{formErrors.city}</span>}
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[10px] font-extrabold uppercase text-foreground/75 block">{t('form_address')}</label>
-                <textarea
-                  rows={3}
-                  placeholder="Quartier Riad, Avenue Mohamed VI, Immeuble 12..."
-                  value={formFields.address}
-                  onChange={(e) => setFormFields(prev => ({ ...prev, address: e.target.value }))}
-                  className="w-full px-3.5 py-3 bg-background border border-border-light rounded-xl text-xs focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/10"
-                />
-                {formErrors.address && <span className="text-[10px] font-bold text-rose-500 block">{formErrors.address}</span>}
-              </div>
-
-              {/* Clinical Trust Badge COD */}
-              <div className="bg-emerald-500/10 border border-solid border-emerald-500/20 text-emerald-500 rounded-xl p-3.5 flex items-start gap-2.5 text-[10px] leading-normal">
-                <ShieldCheck className="w-4.5 h-4.5 shrink-0 mt-0.5" />
-                <div>
-                  <span className="font-extrabold block">{language === 'FR' ? 'Paiement à la Livraison Garanti' : 'الدفع عند الاستلام مضمون'}</span>
-                  <p className="opacity-90">
-                    {language === 'FR'
-                      ? 'Aucun paiement en ligne requis. Vous inspectez vos produits à la livraison avant de payer le livreur en espèces.'
-                      : 'لا يتطلب أي دفع مسبق عبر الإنترنت. يمكنكِ فحص المنتجات عند التسليم قبل دفع المبلغ نقداً للموزع.'
-                    }
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full py-4 bg-whatsapp hover:bg-whatsapp-hover text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
-              >
-                <span>{t('form_confirm')}</span>
-                <ArrowRight className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setStep('cart')}
-                className="w-full py-2.5 border border-border-light text-foreground/75 hover:text-primary-dark hover:bg-slate-50 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all"
-              >
-                {t('cart_back')}
-              </button>
-
-            </form>
+            <CheckoutForm
+              language={language}
+              isRTL={isRTL}
+              checkoutSubStep={checkoutSubStep}
+              setCheckoutSubStep={setCheckoutSubStep}
+              setStep={setStep}
+              formFields={formFields}
+              setFormFields={setFormFields}
+              formErrors={formErrors}
+              setShippingCity={setShippingCity}
+              isSubmitting={isSubmitting}
+              isInitializingStripe={isInitializingStripe}
+              paymentMethod={paymentMethod}
+              setPaymentMethod={setPaymentMethod}
+              clientSecret={clientSecret}
+              setClientSecret={setClientSecret}
+              stripeOrderId={stripeOrderId}
+              stripePromise={stripePromise}
+              total={total}
+              onlinePaymentEnabled={!!settings.paymentSettings?.onlinePaymentEnabled}
+              testMode={!!settings.paymentSettings?.testMode}
+              stripeEnabled={!!settings.paymentSettings?.stripeEnabled}
+              cmiEnabled={!!settings.paymentSettings?.cmiEnabled}
+              proceedToDelivery={proceedToDelivery}
+              handleCheckoutSubmit={handleMergedSubmit}
+              handleConfirmOrder={handleConfirmPayment}
+              onStripeSuccess={handleStripeSuccess}
+              t={t}
+            />
           )}
         </div>
 
-        {/* Footer Summary panel */}
+        {/* Footer */}
         {cart.length > 0 && (
-          <div className="p-5 border-t border-border-light bg-[#f8fafc] space-y-4">
-            <div className="space-y-1.5 text-xs font-bold">
-              <div className="flex justify-between text-slate-500">
-                <span>{t('cart_subtotal')}</span>
-                <span>{subtotal.toFixed(2)} DH</span>
-              </div>
-              {discountAmount > 0 && (
-                <div className="flex justify-between text-emerald-500">
-                  <span>{language === 'FR' ? 'Remise' : 'الخصم'}</span>
-                  <span>-{discountAmount.toFixed(2)} DH</span>
-                </div>
-              )}
-              {dailyGiftName && (
-                <div className="flex justify-between text-accent">
-                  <span>{language === 'FR' ? 'Cadeau Gratuit' : 'الهدية المجانية'}</span>
-                  <span className="font-black truncate max-w-[200px]">{dailyGiftName}</span>
-                </div>
-              )}
-              <div className="flex justify-between text-slate-500">
-                <span>{language === 'FR' ? 'Frais de livraison' : 'مصاريف الشحن'}</span>
-                <span>{shippingFee === 0 ? (language === 'FR' ? 'GRATUIT' : 'مجاني') : `${shippingFee.toFixed(2)} DH`}</span>
-              </div>
-              <div className="flex justify-between text-sm font-black text-primary-dark pt-2 border-t border-border-light">
-                <span>Total</span>
-                <span>{total.toFixed(2)} DH</span>
-              </div>
-            </div>
-
-            {step === 'cart' && (
-              <button
-                onClick={() => setStep('checkout')}
-                className="w-full py-3.5 bg-primary hover:bg-accent text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-1.5"
-              >
-                <span>{t('cart_checkout')}</span>
-                <ArrowRight className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
-              </button>
-            )}
-          </div>
+          <CartFooter
+            subtotal={subtotal}
+            discountAmount={discountAmount}
+            dailyGiftName={dailyGiftName}
+            shippingFee={shippingFee}
+            total={total}
+            language={language}
+            isRTL={isRTL}
+            step={step}
+            onCheckout={() => setStep('checkout')}
+            t={t}
+            showShipping={step === 'checkout' && formFields.address.trim() !== '' && formFields.city !== ''}
+            shippingCity={formFields.city}
+            totalSavings={totalSavings}
+            deliverySettings={settings?.deliverySettings}
+          />
         )}
-
       </div>
     </div>
   );

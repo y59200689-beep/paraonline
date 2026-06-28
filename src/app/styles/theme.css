@@ -1,0 +1,153 @@
+@theme {
+  --font-heading: "Playfair Display", var(--font-heading-next), serif;
+  --font-body: var(--font-body-next), sans-serif;
+
+  --color-primary: #2573a3;
+  --color-primary-dark: #1a255d;
+  --color-secondary: #ffffff;
+  --color-accent: #0d9488;
+  --color-background: #ffffff;
+  --color-foreground: #111827;
+  --color-muted: #f8ede3;
+  --color-border: #e2e8f0;
+  --color-destructive: #dc2626;
+  --color-ring: #2573a3;
+  
+  --color-gold: #B09B71;
+  --color-gold-hover: #98845E;
+
+  --color-brand-baby: #5D85F8;
+  --color-brand-organic: #3E5F26;
+  --color-brand-solaire: #5D3E84;
+
+  --color-teal-50: #f0fdfa;
+  --color-teal-100: #ccfbf1;
+  --color-teal-200: #99f6e4;
+  --color-teal-400: #2dd4bf;
+  --color-teal-500: #14b8a6;
+  --color-teal-600: #0d9488;
+  --color-teal-700: #0f766e;
+  --color-teal-800: #115e59;
+  --color-teal-900: #134e4a;
+
+  --color-emerald-50: #ecfdf5;
+  --color-emerald-100: #d1fae5;
+  --color-emerald-200: #a7f3d0;
+  --color-emerald-400: #34d399;
+  --color-emerald-500: #10b981;
+  --color-emerald-600: #059669;
+  --color-emerald-700: #047857;
+  --color-emerald-800: #065f46;
+  --color-emerald-900: #064e3b;
+
+  --color-whatsapp: #25d366;
+  --color-whatsapp-hover: #1ebd59;
+
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 5px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-3xl: 24px;
+  --radius-4xl: 32px;
+  --radius-5xl: 40px;
+
+  --color-ivory-dark: #F2EDE3;
+  --color-section-dark: #080f1e;
+  --color-glass-dark: rgba(255, 255, 255, 0.06);
+  --color-glass-dark-border: rgba(255, 255, 255, 0.09);
+  
+  --shadow-glass: 0 8px 32px 0 rgba(26, 37, 93, 0.04);
+
+  --ease-out-premium: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-premium: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-spring-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-spring-soft: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Force light color scheme regardless of OS preference */
+:root { color-scheme: light; }
+
+/* ==========================================================================
+   DESIGN SYSTEM VARIABLES & RESET
+   ========================================================================== */
+:root {
+  --color-primary: #2573a3;      /* Slate Blue */
+  --color-secondary: #ffffff;    /* White */
+  --color-primary-dark: #1a255d; /* Dark Navy */
+  --color-secondary-light: #ffffff; /* White background */
+
+  --color-bg: #ffffff;           /* Main background: Sterile White */
+  --color-text: #111827;         /* Foreground text: Black */
+  --color-text-muted: rgba(17, 24, 39, 0.7); /* Muted Black text */
+  --color-border: #e2e8f0;       /* Slate border */
+  --color-border-light: #f1f5f9; /* Lighter border */
+  
+  --color-accent: #0d9488;       /* Teal Green Accent */
+  --color-accent-bg: #f0fdfa;    /* Soft teal backdrop tint */
+  
+  --color-gold: #B09B71;         /* Sage Gold */
+  --color-gold-hover: #98845E;   /* Gold Hover */
+
+  --color-brand-baby: #5D85F8;
+  --color-brand-organic: #3E5F26;
+  --color-brand-solaire: #5D3E84;
+  
+  --color-whatsapp: #25d366;
+  --color-whatsapp-hover: #1ebd59;
+  
+  /* Liquid Glass Core Variables */
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-bg-hover: rgba(255, 255, 255, 0.95);
+  --glass-border: rgba(226, 232, 240, 0.6);
+  --glass-shadow: 0 8px 32px 0 rgba(26, 37, 93, 0.04);
+  --glass-glow: 0 0 20px rgba(37, 115, 163, 0.08);
+  --glass-glow-pink: 0 0 20px rgba(26, 37, 93, 0.08);
+  
+  --transition-smooth: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-out-premium: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-premium: cubic-bezier(0.77, 0, 0.175, 1);
+  --spring-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --spring-soft: cubic-bezier(0.16, 1, 0.3, 1);
+  
+  --shadow-premium: 0 20px 40px -15px rgba(26, 37, 93, 0.05), 0 1px 3px rgba(0, 0, 0, 0.01);
+  --shadow-drawer: -10px 0 40px rgba(0,0,0,0.12);
+  
+  /* Premium Layered Shadow Systems */
+  --shadow-sm: 0 2px 4px rgba(26, 37, 93, 0.01), 0 1px 2px rgba(26, 37, 93, 0.01);
+  --shadow-md: 0 6px 20px -2px rgba(26, 37, 93, 0.03), 0 2px 8px -1px rgba(26, 37, 93, 0.01);
+  --shadow-lg: 0 24px 48px -8px rgba(26, 37, 93, 0.05), 0 12px 24px -4px rgba(26, 37, 93, 0.02);
+  --shadow-xl: 0 35px 70px -10px rgba(26, 37, 93, 0.07), 0 15px 35px -5px rgba(26, 37, 93, 0.03);
+  
+  --header-height: 140px;
+  --theme-bg-gradient: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
+
+  /* Section rhythm tokens */
+  --section-divider: rgba(226, 232, 240, 0.4);
+  --section-dark-bg: #080f1e;
+  --section-dark-glow-teal: radial-gradient(ellipse 80% 60% at 50% 100%, rgba(37, 115, 163, 0.12) 0%, transparent 70%);
+  --section-dark-glow-indigo: radial-gradient(ellipse 60% 40% at 80% 20%, rgba(99, 102, 241, 0.07) 0%, transparent 60%);
+
+  /* Premium ambient shadows */
+  --shadow-glow-teal: 0 0 40px rgba(37, 115, 163, 0.12), 0 8px 32px rgba(37, 115, 163, 0.06);
+  --shadow-glow-gold: 0 0 40px rgba(176, 155, 113, 0.15), 0 8px 24px rgba(176, 155, 113, 0.08);
+  --shadow-glow-violet: 0 0 30px rgba(139, 92, 246, 0.12);
+
+  /* Double-bezel system */
+  --bezel-outer-bg: rgba(249, 250, 251, 0.8);
+  --bezel-outer-border: rgba(226, 232, 240, 0.7);
+  --bezel-inner-bg: #ffffff;
+  --bezel-inner-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.theme-am {
+  --theme-bg-gradient: linear-gradient(135deg, #ffffff 0%, #fffbeb 50%, #ffffff 100%);
+  --color-bg: #ffffff;
+}
+
+.theme-pm {
+  --theme-bg-gradient: linear-gradient(135deg, #ffffff 0%, #f5f3ff 50%, #ffffff 100%);
+  --color-bg: #ffffff;
+}
+

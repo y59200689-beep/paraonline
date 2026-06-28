@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { getOptimizedImageUrl } from '@/lib/image-optimizer';
+import { useUi } from '@/context/UiContext';
 
 interface FloatingBubble {
   id: number;
@@ -14,62 +16,59 @@ interface FloatingBubble {
 
 export const CartBubbleCoordinator: React.FC = () => {
   const [bubbles, setBubbles] = useState<FloatingBubble[]>([]);
+  const { flyToCartTarget, triggerCartJiggle } = useUi();
 
   useEffect(() => {
-    const handleProductAdded = (e: Event) => {
-      const customEvent = e as CustomEvent<{ image: string; clientX: number; clientY: number }>;
-      const { image, clientX, clientY } = customEvent.detail;
+    if (!flyToCartTarget) return;
 
-      // 1. Locate current active destination cart icon bounds dynamically
-      let cartElement = document.getElementById('desktop-cart-btn');
+    const { image, clientX, clientY } = flyToCartTarget;
+
+    // 1. Locate current active destination cart icon bounds dynamically
+    let cartElement = document.getElementById('desktop-cart-btn');
+    
+    // Fallback to mobile bottom navigation cart icon if desktop icon is hidden
+    if (!cartElement || cartElement.getBoundingClientRect().width === 0) {
+      cartElement = document.getElementById('mobile-cart-btn');
+    }
+
+    if (!cartElement) return;
+
+    const rect = cartElement.getBoundingClientRect();
+    const targetX = rect.left + rect.width / 2;
+    const targetY = rect.top + rect.height / 2;
+
+    // 2. Compute translation deltas from start coordinates
+    const deltaX = targetX - clientX;
+    const deltaY = targetY - clientY;
+
+    const id = Date.now() + Math.random();
+    
+    // Spawn new bubble particle (inactive initially)
+    setBubbles((prev) => [...prev, {
+      id,
+      image,
+      startX: clientX,
+      startY: clientY,
+      deltaX,
+      deltaY,
+      active: false
+    }]);
+
+    // Trigger active transition in the next frame to trigger CSS transitions
+    setTimeout(() => {
+      setBubbles((prev) =>
+        prev.map((b) => (b.id === id ? { ...b, active: true } : b))
+      );
+    }, 30);
+
+    // Remove bubble from DOM after animation completes (800ms)
+    setTimeout(() => {
+      setBubbles((prev) => prev.filter((b) => b.id !== id));
       
-      // Fallback to mobile bottom navigation cart icon if desktop icon is hidden
-      if (!cartElement || cartElement.getBoundingClientRect().width === 0) {
-        cartElement = document.getElementById('mobile-cart-btn');
-      }
-
-      if (!cartElement) return;
-
-      const rect = cartElement.getBoundingClientRect();
-      const targetX = rect.left + rect.width / 2;
-      const targetY = rect.top + rect.height / 2;
-
-      // 2. Compute translation deltas from start coordinates
-      const deltaX = targetX - clientX;
-      const deltaY = targetY - clientY;
-
-      const id = Date.now() + Math.random();
-      
-      // Spawn new bubble particle (inactive initially)
-      setBubbles((prev) => [...prev, {
-        id,
-        image,
-        startX: clientX,
-        startY: clientY,
-        deltaX,
-        deltaY,
-        active: false
-      }]);
-
-      // Trigger active transition in the next frame to trigger CSS transitions
-      setTimeout(() => {
-        setBubbles((prev) =>
-          prev.map((b) => (b.id === id ? { ...b, active: true } : b))
-        );
-      }, 30);
-
-      // Remove bubble from DOM after animation completes (800ms)
-      setTimeout(() => {
-        setBubbles((prev) => prev.filter((b) => b.id !== id));
-        
-        // Dispatch absorption jiggle bounce triggers
-        window.dispatchEvent(new Event('cart_icon_jiggle'));
-      }, 820);
-    };
-
-    window.addEventListener('product_added_to_cart', handleProductAdded);
-    return () => window.removeEventListener('product_added_to_cart', handleProductAdded);
-  }, []);
+      // Trigger absorption jiggle bounce
+      triggerCartJiggle();
+    }, 820);
+  }, [flyToCartTarget]);
 
   return (
     <div className="fixed inset-0 pointer-events-none z-[100] overflow-hidden">
@@ -95,7 +94,7 @@ export const CartBubbleCoordinator: React.FC = () => {
             }}
           >
             <img
-              src={bubble.image}
+              src={getOptimizedImageUrl(bubble.image) || undefined}
               alt=""
               className="w-full h-full object-cover rounded-full"
             />

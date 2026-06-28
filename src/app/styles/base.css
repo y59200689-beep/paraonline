@@ -1,0 +1,201 @@
+/* Custom robust utility overrides mapped to design system CSS variables */
+.bg-accent {
+  background-color: var(--color-accent) !important;
+}
+.hover\:bg-accent\/90:hover {
+  background-color: var(--color-accent) !important;
+  filter: brightness(0.9);
+}
+.hover\:bg-accent:hover {
+  background-color: var(--color-accent) !important;
+  filter: brightness(0.9);
+}
+.bg-primary {
+  background-color: var(--color-primary) !important;
+}
+.hover\:bg-primary\/95:hover {
+  background-color: var(--color-primary) !important;
+  filter: brightness(0.95);
+}
+.hover\:bg-primary:hover {
+  background-color: var(--color-primary) !important;
+  filter: brightness(0.9);
+}
+.bg-primary-dark {
+  background-color: var(--color-primary-dark) !important;
+}
+.text-accent {
+  color: var(--color-accent) !important;
+}
+.text-primary {
+  color: var(--color-primary) !important;
+}
+.text-gold {
+  color: var(--color-gold) !important;
+}
+.bg-gold {
+  background-color: var(--color-gold) !important;
+}
+.fill-gold {
+  fill: var(--color-gold) !important;
+}
+
+/* Design System Standardized Classes from MASTER.md */
+.btn-primary {
+  background-color: var(--color-primary-dark); /* Navy Base */
+  color: var(--color-secondary) !important;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-radius: 6px;
+  box-shadow: 0 4px 14px rgba(26, 37, 93, 0.15);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary); /* Slate Blue Hover */
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(26, 37, 93, 0.25);
+}
+
+.btn-primary:active {
+  transform: scale(0.97);
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: var(--color-primary-dark);
+  border: 1.5px solid var(--color-primary-dark);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-primary-dark);
+  color: var(--color-secondary);
+}
+
+.product-card-shell {
+  background-color: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  border-radius: 10px;
+  box-shadow: var(--glass-shadow);
+  transition: all 0.5s ease-[cubic-bezier(0.16, 1, 0.3, 1)];
+}
+
+.product-card-shell:hover {
+  transform: perspective(900px) rotateX(2deg) rotateY(2deg) translateY(-4px);
+  border-color: rgba(37, 115, 163, 0.3); /* Slate Blue Glow Accent */
+  box-shadow: var(--shadow-premium);
+}
+
+.btn-gradient {
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+  color: var(--color-secondary) !important;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(26, 37, 93, 0.15);
+}
+
+.btn-gradient:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 20px rgba(26, 37, 93, 0.25);
+}
+
+.btn-gradient:active {
+  transform: scale(0.97);
+}
+
+
+*, ::before, ::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--theme-bg-gradient);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+  transition: background 0.8s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.8s ease;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+ul {
+  list-style: none;
+}
+
+/* ──────────────────────────────────────────
+   PREMIUM FILM GRAIN TEXTURE OVERLAY
+   Fixed pseudo-element — zero impact on scroll
+   perf, zero layout influence, pure GPU compositing.
+   ────────────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  opacity: 0.022;
+  mix-blend-mode: multiply;
+  will-change: auto;
+}
+
+/* Custom Scrollbar — brand accent teal */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #0d9488, #0f766e);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #0f766e, #0d9488);
+}
+

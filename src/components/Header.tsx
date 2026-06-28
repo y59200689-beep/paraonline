@@ -237,10 +237,8 @@ export const Header: React.FC = () => {
 
       {/* Main sticky nav */}
       <header
-        className={`sticky top-0 z-40 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] border-b header-main-nav-container mb-0 ${
-          isScrolled
-            ? 'bg-white/95 backdrop-blur-lg border-slate-200/80 shadow-[0_1px_20px_rgba(26,37,93,0.06)] scrolled'
-            : 'bg-white/80 backdrop-blur-md border-slate-100 shadow-none'
+        className={`sticky top-0 z-40 transition-[padding] duration-300 ease-in-out border-b mb-0 bg-white/75 backdrop-blur-md border-slate-200/40 shadow-glass ${
+          isScrolled ? 'scrolled' : ''
         }`}
         style={{
           paddingTop: isScrolled ? '12px' : '18px',
@@ -248,8 +246,7 @@ export const Header: React.FC = () => {
         }}
       >
         <div
-          className="max-w-[1400px] mx-auto header-custom-padding"
-          style={{ paddingLeft: 'var(--header-px, 24px)', paddingRight: 'var(--header-px, 24px)' }}
+          className="max-w-[1400px] mx-auto px-6 md:px-[30px]"
         >
           {/* Desktop grid */}
           <div className="hidden md:grid md:grid-cols-[auto_1fr_auto] items-center gap-10">

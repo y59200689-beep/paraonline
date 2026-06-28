@@ -1,0 +1,1596 @@
+/* =============================================
+   CUSTOM UTILITY CLASSES & ANIMATIONS
+   ============================================= */
+
+/* Hide scrollbars */
+.no-scrollbar, .scrollbar-hide { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar, .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+/* Scan line animation (used in Hero & SkinDiagnostic) */
+@keyframes scan-line {
+  0%   { top: 0%; }
+  100% { top: 100%; }
+}
+.animate-scan { animation: scan-line 2s linear infinite; position: absolute; left: 0; right: 0; }
+
+/* Named keyframes used by Hero.tsx inline animation references */
+@keyframes eyebrow-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.9); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes body-fade-up {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Slide-in from bottom (FOMO toast) */
+@keyframes slide-in-up {
+  0%   { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-in { animation: slide-in-up 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+/* Fade-in (glossary tooltip) */
+@keyframes fade-in {
+  from { opacity: 0; transform: scale(0.95) translateY(-4px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.animate-fade-in { animation: fade-in 0.2s ease-out forwards; }
+
+/* Marquee scroll (announcement bar) */
+@keyframes marquee-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-33.333%); }
+}
+.animate-marquee-slow { animation: marquee-scroll 20s linear infinite; display: inline-block; }
+.animate-marquee-slow:hover { animation-play-state: paused; }
+
+/* Infinite scrolling review cards marquee */
+@keyframes marquee-reviews {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-reviews-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee-reviews 70s linear infinite;
+  transform: translate3d(0, 0, 0);
+}
+.animate-reviews-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Metallic shimmer for skeleton loaders */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.shimmer-loading-pulse {
+  background: linear-gradient(90deg, #f0f2f5 25%, #e2e6ed 50%, #f0f2f5 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Custom morphing blobs & animations for Liquid Glass aesthetic */
+@keyframes morph-blob {
+  0%, 100% { border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%; transform: translate3d(0, 0, 0) scale(1); }
+  33% { border-radius: 70% 30% 52% 48% / 60% 40% 60% 40%; transform: translate3d(30px, -40px, 0) scale(1.1); }
+  66% { border-radius: 50% 50% 30% 70% / 40% 60% 40% 60%; transform: translate3d(-30px, 20px, 0) scale(0.95); }
+}
+.animate-morph-blob {
+  animation: morph-blob 16s ease-in-out infinite alternate;
+  will-change: transform, border-radius;
+}
+
+@keyframes float-ambient {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(0, -12px, 0) rotate(2deg); }
+}
+.animate-float-ambient {
+  animation: float-ambient 8s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Fade-in for modals */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Scale-up for alert dialogs */
+@keyframes scale-up {
+  from { opacity: 0; transform: scale(0.92) translateY(6px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.animate-scale-up { animation: scale-up 0.25s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+
+/* Slide-up fade-in for card / section reveals */
+@keyframes slide-up-fade {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up { animation: slide-up-fade 0.5s cubic-bezier(0.23,1,0.32,1) both; }
+
+/* Page-entry fade — fires once on first render, covers above-the-fold */
+@keyframes page-enter {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.page-entry-animate {
+  animation: page-enter 400ms ease-out both;
+}
+
+/* Mid-range display typography for sub-section leads */
+.display-md {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+
+/* Carousel right-edge fade overlay (premium scroll affordance) */
+.carousel-scroll-fade {
+  position: relative;
+}
+.carousel-scroll-fade::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 80px;
+  background: linear-gradient(to right, transparent, #f8f9fb);
+  pointer-events: none;
+  z-index: 10;
+}
+
+
+/* Neon laser scanning line for diagnostic graphic element */
+.scanner-laser-container {
+  position: relative;
+  overflow: hidden;
+}
+.scanner-laser-container::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(to right, transparent, var(--color-primary), var(--color-primary-dark), var(--color-primary), transparent);
+  box-shadow: 0 0 14px var(--color-primary), 0 0 6px var(--color-primary-dark);
+  animation: laserScan 4.5s infinite linear;
+  pointer-events: none;
+  z-index: 20;
+}
+@keyframes laserScan {
+  0% { top: 0%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+/* ============================================================
+   PREMIUM TEXT & SECTION ANIMATION SYSTEM
+   All animations use only transform + opacity (GPU-safe).
+   No layout-triggering properties animated.
+   ============================================================ */
+
+/* ----------------------------------------------------------
+   1. BASE SCROLL REVEAL  (upgraded — bigger distance + stagger)
+   Usage: class="reveal-on-scroll" to any element.
+   JS IntersectionObserver adds .active on viewport enter.
+   ---------------------------------------------------------- */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(40px) scale(0.985);
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.reveal-on-scroll.active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.reveal-delay-1 { transition-delay: 80ms  !important; }
+.reveal-delay-2 { transition-delay: 160ms !important; }
+.reveal-delay-3 { transition-delay: 240ms !important; }
+.reveal-delay-4 { transition-delay: 320ms !important; }
+.reveal-delay-5 { transition-delay: 400ms !important; }
+.reveal-delay-6 { transition-delay: 480ms !important; }
+
+/* ----------------------------------------------------------
+   2. EYEBROW TAG REVEAL
+   Usage: class="anim-eyebrow reveal-on-scroll"
+   The small pill badge above headings fades up from below.
+   ---------------------------------------------------------- */
+.anim-eyebrow {
+  opacity: 0;
+  transform: translateY(14px) scale(0.92);
+  transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.anim-eyebrow.active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* ----------------------------------------------------------
+   3. HEADING MASK REVEAL  ("curtain wipe" from bottom)
+   Usage: wrap heading in .anim-heading-wrap,
+          heading text gets .anim-heading-text
+   Text slides up from behind a clip mask — cinematic.
+   ---------------------------------------------------------- */
+.anim-heading-wrap {
+  overflow: hidden;
+  display: block;
+}
+.anim-heading-text {
+  display: block;
+  opacity: 0;
+  transform: translateY(105%);
+  transition: transform 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity   0.85s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.anim-heading-text.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+.anim-heading-text.line-2 { transition-delay: 80ms;  }
+.anim-heading-text.line-3 { transition-delay: 160ms; }
+
+/* ----------------------------------------------------------
+   4. BODY TEXT FADE-UP  (soft, after heading lands)
+   Usage: class="anim-body reveal-on-scroll"
+   ---------------------------------------------------------- */
+.anim-body {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1) 200ms,
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) 200ms;
+}
+.anim-body.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+.anim-body.delay-300 { transition-delay: 300ms; }
+.anim-body.delay-400 { transition-delay: 400ms; }
+.anim-body.delay-500 { transition-delay: 500ms; }
+
+/* ----------------------------------------------------------
+   5. DECORATIVE LINE DRAW  (horizontal rule grows from left)
+   Usage: class="anim-line-draw reveal-on-scroll"
+   ---------------------------------------------------------- */
+.anim-line-draw {
+  display: block;
+  transform-origin: left center;
+  transform: scaleX(0);
+  opacity: 0;
+  transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.3s,
+              opacity   0.4s ease 0.3s;
+}
+.anim-line-draw.active {
+  transform: scaleX(1);
+  opacity: 1;
+}
+[dir='rtl'] .anim-line-draw { transform-origin: right center; }
+
+/* ----------------------------------------------------------
+   6. UNDERLINE GROW  (hover underline — links, nav items)
+   Usage: class="anim-underline"
+   ---------------------------------------------------------- */
+.anim-underline {
+  position: relative;
+  display: inline-block;
+}
+.anim-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 1.5px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right center;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.anim-underline:hover::after,
+.anim-underline.active::after {
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+
+/* ----------------------------------------------------------
+   7. STAGGER CHILDREN  (product grids, card rows, FAQ list)
+   Usage: class="stagger-children reveal-on-scroll" on parent
+   Each direct child entrance is auto-staggered.
+   ---------------------------------------------------------- */
+.stagger-children > * {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.stagger-children.active > *:nth-child(1)  { opacity: 1; transform: none; transition-delay: 0ms;   }
+.stagger-children.active > *:nth-child(2)  { opacity: 1; transform: none; transition-delay: 70ms;  }
+.stagger-children.active > *:nth-child(3)  { opacity: 1; transform: none; transition-delay: 140ms; }
+.stagger-children.active > *:nth-child(4)  { opacity: 1; transform: none; transition-delay: 210ms; }
+.stagger-children.active > *:nth-child(5)  { opacity: 1; transform: none; transition-delay: 280ms; }
+.stagger-children.active > *:nth-child(6)  { opacity: 1; transform: none; transition-delay: 350ms; }
+.stagger-children.active > *:nth-child(7)  { opacity: 1; transform: none; transition-delay: 420ms; }
+.stagger-children.active > *:nth-child(8)  { opacity: 1; transform: none; transition-delay: 490ms; }
+.stagger-children.active > *:nth-child(9)  { opacity: 1; transform: none; transition-delay: 560ms; }
+.stagger-children.active > *:nth-child(10) { opacity: 1; transform: none; transition-delay: 630ms; }
+.stagger-children.active > *:nth-child(11) { opacity: 1; transform: none; transition-delay: 700ms; }
+.stagger-children.active > *:nth-child(12) { opacity: 1; transform: none; transition-delay: 770ms; }
+
+/* ----------------------------------------------------------
+   8. SPLIT ENTRANCE  (2-column editorial layouts)
+   Usage: class="anim-split-left" / "anim-split-right"
+   Left slides in from left, right from right.
+   ---------------------------------------------------------- */
+.anim-split-left {
+  opacity: 0;
+  transform: translateX(-48px);
+  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.anim-split-right {
+  opacity: 0;
+  transform: translateX(48px);
+  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1) 100ms,
+              transform 0.85s cubic-bezier(0.16, 1, 0.3, 1) 100ms;
+}
+.anim-split-left.active  { opacity: 1; transform: translateX(0); }
+.anim-split-right.active { opacity: 1; transform: translateX(0); }
+
+/* ----------------------------------------------------------
+   9. COUNTER POP  (trust stats, rating numbers)
+   Usage: class="anim-counter reveal-on-scroll"
+   Number scales in with a satisfying overshoot.
+   ---------------------------------------------------------- */
+@keyframes counter-pop {
+  0%   { opacity: 0; transform: scale(0.7) translateY(12px); }
+  70%  { transform: scale(1.05) translateY(-2px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+.anim-counter {
+  opacity: 0;
+  transform: scale(0.7) translateY(12px);
+  transition: opacity 0.01s; /* placeholder — keyframe takes over */
+}
+.anim-counter.active {
+  animation: counter-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* ----------------------------------------------------------
+   10. HERO CARD STAGGER ENTRANCE  (fires on page load, no observer)
+   Usage: class="hero-card-enter hero-card-delay-{1-4}"
+   ---------------------------------------------------------- */
+@keyframes hero-card-in {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.hero-card-enter { animation: hero-card-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.hero-card-delay-1 { animation-delay: 0ms;   }
+.hero-card-delay-2 { animation-delay: 80ms;  }
+.hero-card-delay-3 { animation-delay: 160ms; }
+.hero-card-delay-4 { animation-delay: 240ms; }
+
+/* ----------------------------------------------------------
+   11. SECTION HEADER COMPOUND ENTRANCE
+   Usage: class="anim-section-header reveal-on-scroll" on header block.
+   Each child (eyebrow, h2, p, cta) staggers automatically.
+   ---------------------------------------------------------- */
+.anim-section-header > * {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1),
+              transform 0.7s cubic-bezier(0.16,1,0.3,1);
+}
+.anim-section-header > *:nth-child(1) { transition-delay: 0ms;   }
+.anim-section-header > *:nth-child(2) { transition-delay: 100ms; }
+.anim-section-header > *:nth-child(3) { transition-delay: 200ms; }
+.anim-section-header > *:nth-child(4) { transition-delay: 300ms; }
+.anim-section-header.active > * {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ----------------------------------------------------------
+   12. IMAGE REVEAL — CLIP FROM BOTTOM (cinematic)
+   Usage: class="anim-image-reveal reveal-on-scroll"
+   A clip-path wipe reveals the image from bottom to top.
+   ---------------------------------------------------------- */
+.anim-image-reveal {
+  clip-path: inset(100% 0 0 0);
+  opacity: 0;
+  transition: clip-path 1s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity   0.5s ease;
+}
+.anim-image-reveal.active {
+  clip-path: inset(0% 0 0 0);
+  opacity: 1;
+}
+
+/* ----------------------------------------------------------
+   13. BADGE PULSE  (live / verified indicators)
+   Usage: class="anim-badge-pulse" on status dots/badges.
+   Subtle perpetual scale pulse — signals "live".
+   ---------------------------------------------------------- */
+@keyframes badge-pulse-anim {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.05); }
+}
+.anim-badge-pulse {
+  animation: badge-pulse-anim 2.5s ease-in-out infinite;
+}
+
+/* ----------------------------------------------------------
+   14. CARD HOVER LIFT SYSTEM  (enhanced, physics-based)
+   Usage: class="anim-card-lift" on interactive cards.
+   ---------------------------------------------------------- */
+.anim-card-lift {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.3s ease;
+  transform: translateY(0);
+  will-change: transform;
+}
+.anim-card-lift:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 24px 48px -8px rgba(26, 37, 93, 0.10),
+              0  8px 16px -4px rgba(26, 37, 93, 0.05);
+}
+
+/* ----------------------------------------------------------
+   15. PAGE ENTRY  (above-the-fold first-load fade)
+   Apply to root <div> on mount via JS class toggle.
+   ---------------------------------------------------------- */
+@keyframes page-entry {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.page-entry-animate {
+  animation: page-entry 0.5s ease-out both;
+}
+
+/* ----------------------------------------------------------
+   16. FAQ ACCORDION — SMOOTH HEIGHT (CSS grid-row trick)
+   Usage: class="faq-body-grid" on the collapsible wrapper,
+          add class "open" when expanded.
+          Inner <div> must be a direct child.
+   No JS height measurement needed — fully declarative.
+   ---------------------------------------------------------- */
+.faq-body-grid {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.4s ease-out;
+}
+.faq-body-grid.open {
+  max-height: 500px;
+  opacity: 1;
+}
+.faq-body-grid > div {
+  overflow: hidden;
+}
+
+/* Tab sliding/fade visual transitions */
+.tab-slide-fade-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.tab-slide-fade-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+
+/* =================================================================
+   TRANSITIONS.DEV  — Universal token block (installed once)
+   All 18 transitions read from these semantic custom properties.
+   ================================================================= */
+:root {
+  /* Card resize */
+  --resize-dur: 300ms;
+  --resize-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Number pop-in */
+  --digit-dur: 500ms;
+  --digit-distance: 8px;
+  --digit-stagger: 70ms;
+  --digit-blur: 2px;
+  --digit-ease: cubic-bezier(0.34, 1.45, 0.64, 1);
+  --digit-dir-x: 0;
+  --digit-dir-y: 1;
+  /* Notification badge */
+  --badge-slide-dur: 260ms;
+  --badge-pop-dur: 500ms;
+  --badge-pop-close-dur: 180ms;
+  --badge-fade-dur: 400ms;
+  --badge-fade-close-dur: 180ms;
+  --badge-blur: 2px;
+  --badge-offset-x: -8.2px;
+  --badge-offset-y: 12.4px;
+  --badge-slide-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --badge-pop-ease: cubic-bezier(0.34, 1.36, 0.64, 1);
+  --badge-close-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  /* Text states swap */
+  --text-swap-dur: 150ms;
+  --text-swap-translate-y: 4px;
+  --text-swap-blur: 2px;
+  --text-swap-ease: ease-in-out;
+  /* Menu dropdown */
+  --dropdown-open-dur: 250ms;
+  --dropdown-close-dur: 150ms;
+  --dropdown-pre-scale: 0.97;
+  --dropdown-closing-scale: 0.99;
+  --dropdown-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Modal open / close */
+  --modal-open-dur: 280ms;
+  --modal-close-dur: 160ms;
+  --modal-scale: 0.96;
+  --modal-scale-close: 0.96;
+  --modal-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Panel reveal */
+  --panel-open-dur: 420ms;
+  --panel-close-dur: 320ms;
+  --panel-translate-y: 40px;
+  --panel-blur: 2px;
+  --panel-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Page side-by-side */
+  --page-slide-dur: 250ms;
+  --page-fade-dur: 250ms;
+  --page-slide-distance: 8px;
+  --page-blur: 3px;
+  --page-stagger: 0ms;
+  --page-exit-enabled: 1;
+  --page-slide-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --page-fade-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Icon swap */
+  --icon-swap-dur: 250ms;
+  --icon-swap-blur: 2px;
+  --icon-swap-start-scale: 0.25;
+  --icon-swap-ease: ease-in-out;
+  /* Success check */
+  --check-opacity-dur: 500ms;
+  --check-rotate-dur: 500ms;
+  --check-rotate-from: 80deg;
+  --check-bob-dur: 500ms;
+  --check-y-amount: 40px;
+  --check-blur-dur: 500ms;
+  --check-blur-from: 10px;
+  --check-path-dur: 500ms;
+  --check-path-delay: 80ms;
+  --check-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --check-ease-opacity: cubic-bezier(0.22, 1, 0.36, 1);
+  --check-ease-rotate: cubic-bezier(0.22, 1, 0.36, 1);
+  --check-ease-bob: cubic-bezier(0.34, 1.35, 0.64, 1);
+  --check-ease-path: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Avatar group hover */
+  --avatar-lift: -4px;
+  --avatar-dur: 320ms;
+  --avatar-scale: 1.05;
+  --avatar-falloff: 0.45;
+  --avatar-ease-in: cubic-bezier(0.22, 1, 0.36, 1);
+  --avatar-ease-out: cubic-bezier(0.34, 3.85, 0.64, 1);
+  /* Error state shake */
+  --shake-distance: 6px;
+  --shake-overshoot: 4px;
+  --shake-dur-a: 80ms;
+  --shake-dur-b: 60ms;
+  --shake-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --revert-hold: 3000ms;
+  --revert-dur: 280ms;
+  /* Input clear with dissolve */
+  --clear-dur: 1000ms;
+  --clear-out-dur: 400ms;
+  --clear-in-dur: 400ms;
+  --clear-out-fly: 12px;
+  --clear-in-fly: 12px;
+  --clear-out-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --clear-in-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --clear-blur: 2px;
+  --glow-delay: 50ms;
+  --glow-peak-at: 0.15;
+  --glow-opacity: 0.42;
+  --glow-spread: 1.5;
+  /* Skeleton loader and reveal */
+  --pulse-dur: 1000ms;
+  --pulse-count: 1;
+  --pulse-min: 0.5;
+  --reveal-dur: 400ms;
+  --reveal-blur: 2px;
+  --reveal-ease: ease-in-out;
+  /* Shimmer text */
+  --shimmer-dur: 2000ms;
+  --shimmer-base: #7c7c7c;
+  --shimmer-highlight: #0d0d0d;
+  --shimmer-band: 400%;
+  --shimmer-ease: linear;
+  /* Tabs sliding */
+  --tabs-dur: 250ms;
+  --tabs-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --tabs-text-muted: rgba(15, 15, 15, 0.8);
+  --tabs-text-active: #101f3d;
+  --tabs-bar-bg: #f1f1f1;
+  --tabs-pill-bg: #ffffff;
+  /* Tooltip open/close */
+  --tt-in-dur: 150ms;
+  --tt-out-dur: 50ms;
+  --tt-scale: 0.98;
+  --tt-delay: 80ms;
+  --tt-in-ease: ease-out;
+  --tt-out-ease: ease-out;
+  --tt-bg: #ffffff;
+  --tt-fg: #2f2f2f;
+  /* Texts reveal */
+  --stagger-dur: 500ms;
+  --stagger-distance: 12px;
+  --stagger-stagger: 40ms;
+  --stagger-blur: 3px;
+  --stagger-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* -----------------------------------------------------------------
+   t-modal  (06-modal.md)
+   Usage: <div class="t-modal"> add .is-open to open,
+   swap .is-open → .is-closing then setTimeout remove .is-closing.
+   ----------------------------------------------------------------- */
+.t-modal {
+  transform-origin: center;
+  transform: scale(var(--modal-scale));
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform var(--modal-open-dur) var(--modal-ease),
+    opacity   var(--modal-open-dur) var(--modal-ease);
+  will-change: transform, opacity;
+}
+.t-modal.is-open {
+  transform: scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+.t-modal.is-closing {
+  transform: scale(var(--modal-scale-close));
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform var(--modal-close-dur) var(--modal-ease),
+    opacity   var(--modal-close-dur) var(--modal-ease);
+}
+/* Backdrop for modals — fades in/out with the modal */
+.t-modal-backdrop {
+  opacity: 0;
+  transition: opacity var(--modal-open-dur) var(--modal-ease);
+}
+.t-modal-backdrop.is-open  { opacity: 1; }
+.t-modal-backdrop.is-closing {
+  opacity: 0;
+  transition: opacity var(--modal-close-dur) var(--modal-ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .t-modal,
+  .t-modal-backdrop { transition: none !important; }
+}
+
+/* -----------------------------------------------------------------
+   t-panel-slide  (07-panel-reveal.md)
+   Usage: data-open="false" / data-open="true" — pure CSS.
+   ----------------------------------------------------------------- */
+.t-panel-slide {
+  transform: translateY(var(--panel-translate-y));
+  opacity: 0;
+  filter: blur(var(--panel-blur));
+  pointer-events: none;
+  transition:
+    transform var(--panel-close-dur) var(--panel-ease),
+    opacity   var(--panel-close-dur) var(--panel-ease),
+    filter    var(--panel-close-dur) var(--panel-ease);
+  will-change: transform, opacity, filter;
+}
+.t-panel-slide[data-open="true"] {
+  transform: translateY(0);
+  opacity: 1;
+  filter: blur(0);
+  pointer-events: auto;
+  transition:
+    transform var(--panel-open-dur) var(--panel-ease),
+    opacity   var(--panel-open-dur) var(--panel-ease),
+    filter    var(--panel-open-dur) var(--panel-ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .t-panel-slide { transition: none !important; }
+}
+
+/* -----------------------------------------------------------------
+   t-dropdown  (05-menu-dropdown.md)
+   Usage: add .is-open to show; on close swap to .is-closing
+   then remove after --dropdown-close-dur.
+   ----------------------------------------------------------------- */
+.t-dropdown {
+  transform-origin: top left;
+  transform: scale(var(--dropdown-pre-scale));
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform var(--dropdown-open-dur) var(--dropdown-ease),
+    opacity   var(--dropdown-open-dur) var(--dropdown-ease);
+  will-change: transform, opacity;
+}
+.t-dropdown[data-origin="top-right"]     { transform-origin: top right; }
+.t-dropdown[data-origin="top-center"]    { transform-origin: top center; }
+.t-dropdown[data-origin="bottom-left"]   { transform-origin: bottom left; }
+.t-dropdown[data-origin="bottom-center"] { transform-origin: bottom center; }
+.t-dropdown[data-origin="bottom-right"]  { transform-origin: bottom right; }
+
+.t-dropdown.is-open {
+  transform: scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+.t-dropdown.is-closing {
+  transform: scale(var(--dropdown-closing-scale));
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform var(--dropdown-close-dur) var(--dropdown-ease),
+    opacity   var(--dropdown-close-dur) var(--dropdown-ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .t-dropdown { transition: none !important; }
+}
+
+/* -----------------------------------------------------------------
+   t-badge  (03-notification-badge.md)
+   Usage: <span class="t-badge" data-open="false">
+             <span class="t-badge-dot">1</span>
+          </span>  — toggle data-open="true"/"false".
+   ----------------------------------------------------------------- */
+@keyframes t-badge-slide-in {
+  from { transform: translate(var(--badge-offset-x), var(--badge-offset-y)); }
+  to   { transform: translate(0, 0); }
+}
+.t-badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  pointer-events: none;
+  will-change: transform;
+}
+.t-badge[data-open="true"] {
+  animation: t-badge-slide-in var(--badge-slide-dur) var(--badge-slide-ease);
+}
+.t-badge-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center;
+  transform: scale(1);
+  opacity: 1;
+  filter: blur(0);
+  transition:
+    transform var(--badge-pop-dur)  var(--badge-pop-ease),
+    opacity   var(--badge-fade-dur) var(--badge-pop-ease),
+    filter    var(--badge-pop-dur)  var(--badge-pop-ease);
+  will-change: transform, opacity, filter;
+}
+.t-badge[data-open="false"] .t-badge-dot {
+  transform: scale(0);
+  opacity: 0;
+  filter: blur(var(--badge-blur));
+  transition:
+    transform var(--badge-pop-close-dur)  var(--badge-close-ease),
+    opacity   var(--badge-fade-close-dur) var(--badge-close-ease),
+    filter    var(--badge-pop-close-dur)  var(--badge-close-ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .t-badge, .t-badge-dot { animation: none !important; transition: none !important; }
+}
+
+/* -----------------------------------------------------------------
+   t-tabs / t-tab / t-tabs-pill  (16-tabs-sliding.md)
+   JS writes pill position; CSS owns the tween.
+   ----------------------------------------------------------------- */
+.t-tabs {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 48px;
+  background: var(--tabs-bar-bg);
+}
+.t-tab {
+  position: relative;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  height: 30px;
+  padding: 4px 12px;
+  color: var(--tabs-text-muted);
+  cursor: pointer;
+  border-radius: 48px;
+  z-index: 1;
+  transition: color var(--tabs-dur) var(--tabs-ease);
+}
+.t-tab:not([aria-selected="true"]):hover,
+.t-tab[aria-selected="true"] { color: var(--tabs-text-active); }
+.t-tabs-pill {
+  position: absolute;
+  top: 3px;
+  left: 0;
+  height: 30px;
+  width: 0;
+  background: var(--tabs-pill-bg);
+  border-radius: 48px;
+  transform: translateX(0);
+  transition:
+    transform var(--tabs-dur) var(--tabs-ease),
+    width     var(--tabs-dur) var(--tabs-ease);
+  will-change: transform, width;
+  z-index: 0;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .t-tabs-pill, .t-tab { transition: none !important; }
+}
+
+/* -----------------------------------------------------------------
+   t-stagger / t-stagger-line  (18-texts-reveal.md)
+   Add .is-shown to parent to play; .is-hiding to exit.
+   ----------------------------------------------------------------- */
+.t-stagger-line {
+  display: block;
+  opacity: 0;
+  transform: translateY(var(--stagger-distance));
+  filter: blur(var(--stagger-blur));
+  transition:
+    opacity   var(--stagger-dur) var(--stagger-ease),
+    transform var(--stagger-dur) var(--stagger-ease),
+    filter    var(--stagger-dur) var(--stagger-ease);
+  will-change: transform, opacity, filter;
+}
+.t-stagger-line--2 { transition-delay: var(--stagger-stagger); }
+.t-stagger-line--3 { transition-delay: calc(var(--stagger-stagger) * 2); }
+.t-stagger-line--4 { transition-delay: calc(var(--stagger-stagger) * 3); }
+
+.t-stagger.is-shown .t-stagger-line {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+.t-stagger.is-hiding .t-stagger-line {
+  opacity: 0;
+  transform: translateY(0);
+  filter: blur(0);
+  transition:
+    opacity 200ms ease,
+    transform 0s linear,
+    filter 0s linear;
+  transition-delay: 0s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .t-stagger-line { transition: none !important; }
+}
+
+/* -----------------------------------------------------------------
+   t-success-check  (10-success-check.md)
+   Usage: <span class="t-success-check" data-state="out">…</span>
+   Set data-state="in" to trigger the appear animation.
+   ----------------------------------------------------------------- */
+.t-success-check {
+  display: inline-block;
+  transform-origin: center;
+  opacity: 0;
+  will-change: transform, opacity, filter;
+}
+.t-success-check svg { display: block; overflow: visible; }
+.t-success-check svg path {
+  stroke-dasharray: 20;
+  stroke-dashoffset: 20;
+}
+.t-success-check[data-state="in"] {
+  animation:
+    t-check-fade   var(--check-opacity-dur) var(--check-ease-opacity) forwards,
+    t-check-rotate var(--check-rotate-dur)  var(--check-ease-rotate)  forwards,
+    t-check-blur   var(--check-blur-dur)    var(--check-ease-out)     forwards,
+    t-check-bob    var(--check-bob-dur)     var(--check-ease-bob)     forwards;
+}
+.t-success-check[data-state="in"] svg path {
+  animation: t-check-draw var(--check-path-dur) var(--check-ease-path) var(--check-path-delay, 0ms) forwards;
+}
+@keyframes t-check-fade   { from { opacity: 0; } to { opacity: 1; } }
+@keyframes t-check-rotate { from { transform: rotate(var(--check-rotate-from)); } to { transform: rotate(0deg); } }
+@keyframes t-check-blur   { from { filter: blur(var(--check-blur-from)); } to { filter: blur(0); } }
+@keyframes t-check-bob    { from { translate: 0 var(--check-y-amount); } to { translate: 0 0; } }
+@keyframes t-check-draw   { to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .t-success-check { animation: none !important; opacity: 1; }
+  .t-success-check svg path { animation: none !important; stroke-dashoffset: 0 !important; }
+}
+
+/* -----------------------------------------------------------------
+   t-tooltip  (17-tooltip.md)
+   Pure CSS — no JS needed. Shown on parent:hover / :focus-within.
+   ----------------------------------------------------------------- */
+.t-tt-host { position: relative; display: inline-block; }
+.t-tt {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  translate: -50% 0;
+  white-space: nowrap;
+  background: var(--tt-bg);
+  color: var(--tt-fg);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(var(--tt-scale)) translateY(4px);
+  transition:
+    opacity   var(--tt-in-dur) var(--tt-in-ease) var(--tt-delay),
+    transform var(--tt-in-dur) var(--tt-in-ease) var(--tt-delay);
+  will-change: opacity, transform;
+  z-index: 100;
+}
+.t-tt-host:hover .t-tt,
+.t-tt-host:focus-within .t-tt {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  transition:
+    opacity   var(--tt-out-dur) var(--tt-out-ease) 0s,
+    transform var(--tt-out-dur) var(--tt-out-ease) 0s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .t-tt { transition: none !important; }
+}
+
+/* New animations and layout styles for Visual Appeal 5/5 */
+.aurora-bg {
+  background: linear-gradient(135deg, #f0fdf4 0%, #fefcf8 40%, #e0f2fe 100%);
+  background-size: 400% 400%;
+  animation: aurora-shift 18s ease infinite;
+}
+
+@keyframes aurora-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.shimmer-sweep-1,
+.shimmer-sweep-2,
+.shimmer-sweep-3 {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-sweep-1::after,
+.shimmer-sweep-2::after,
+.shimmer-sweep-3::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 10;
+  background: linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.08) 25%,
+    rgba(255, 255, 255, 0.35) 50%,
+    rgba(255, 255, 255, 0.08) 75%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+.shimmer-sweep-1::after {
+  transform: translateX(-120%) skewX(-15deg);
+  animation: shimmer-sweep-card1 3.5s infinite linear;
+}
+
+.shimmer-sweep-2::after {
+  transform: translateX(-120%) skewX(-15deg);
+  animation: shimmer-sweep-card2 3.5s infinite linear;
+}
+
+.shimmer-sweep-3::after {
+  transform: translateX(-120%) skewX(-15deg);
+  animation: shimmer-sweep-card3-4 3.5s infinite linear;
+}
+
+@keyframes shimmer-sweep-card1 {
+  0% { transform: translateX(-120%) skewX(-15deg); }
+  45% { transform: translateX(120%) skewX(-15deg); }
+  100% { transform: translateX(120%) skewX(-15deg); }
+}
+
+@keyframes shimmer-sweep-card2 {
+  0% { transform: translateX(-120%) skewX(-15deg); }
+  30% { transform: translateX(-120%) skewX(-15deg); }
+  65% { transform: translateX(120%) skewX(-15deg); }
+  100% { transform: translateX(120%) skewX(-15deg); }
+}
+
+@keyframes shimmer-sweep-card3-4 {
+  0% { transform: translateX(-120%) skewX(-15deg); }
+  50% { transform: translateX(-120%) skewX(-15deg); }
+  85% { transform: translateX(120%) skewX(-15deg); }
+  100% { transform: translateX(120%) skewX(-15deg); }
+}
+
+
+.animate-float-slow {
+  animation: float-slow 12s ease-in-out infinite;
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Glow Orbs */
+.glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 0;
+  mix-blend-mode: multiply;
+}
+
+.glow-orb-teal { background: radial-gradient(circle, #0d9488 0%, transparent 70%); }
+.glow-orb-indigo { background: radial-gradient(circle, #4f46e5 0%, transparent 70%); }
+.glow-orb-gold { background: radial-gradient(circle, #d97706 0%, transparent 70%); }
+.glow-orb-violet { background: radial-gradient(circle, #7c3aed 0%, transparent 70%); }
+.glow-orb-pink { background: radial-gradient(circle, #db2777 0%, transparent 70%); }
+.glow-orb-blue { background: radial-gradient(circle, #2563eb 0%, transparent 70%); }
+.glow-orb-emerald { background: radial-gradient(circle, #059669 0%, transparent 70%); }
+
+/* Glass Dark Card */
+.glass-card-dark {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card-dark:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
+  transform: translateY(-4px);
+}
+
+/* Pulse Ring Animation */
+.animate-pulse-ring {
+  position: relative;
+}
+.animate-pulse-ring::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border: 1px solid #10b981;
+  border-radius: inherit;
+  animation: pulse-ring 2s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+  opacity: 0;
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { opacity: 0.5; }
+  100% { transform: scale(1.08); opacity: 0; }
+}
+
+/* Watermark decoration */
+.watermark-num {
+  font-family: var(--font-playfair), serif;
+  font-size: 8rem;
+  font-weight: 900;
+  line-height: 1;
+  color: currentColor;
+  opacity: 0.03;
+  pointer-events: none;
+  user-select: none;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.group:hover .watermark-num {
+  opacity: 0.06;
+  transform: translateY(-8px);
+}
+
+/* Section rhythmic dividers */
+.section-ivory {
+  background-color: var(--color-background, #fdfbf7);
+}
+.section-white {
+  background-color: #ffffff;
+}
+.section-dark {
+  background-color: #080f1e; /* Midnight navy */
+}
+
+/* Eyebrows tags instead of side-stripe absolute ban */
+.eyebrow-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 9999px;
+  transition: all 0.3s ease;
+}
+
+.eyebrow-tag-light {
+  background-color: rgba(13, 148, 136, 0.06);
+  color: #0d9488;
+  border: 1px solid rgba(13, 148, 136, 0.12);
+}
+
+.eyebrow-tag-dark {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.eyebrow-tag-gold {
+  background-color: rgba(217, 119, 6, 0.08);
+  color: #d97706;
+  border: 1px solid rgba(217, 119, 6, 0.15);
+}
+
+/* Orbit particle decoration */
+@keyframes orbit-slow {
+  0% { transform: rotate(0deg) translateX(40px) rotate(0deg); }
+  100% { transform: rotate(360deg) translateX(40px) rotate(-360deg); }
+}
+
+@keyframes orbit-reverse {
+  0% { transform: rotate(360deg) translateX(60px) rotate(-360deg); }
+  100% { transform: rotate(0deg) translateX(60px) rotate(0deg); }
+}
+
+.orbit-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+}
+
+.orbit-particle-1 {
+  animation: orbit-slow 20s linear infinite;
+  background-color: rgba(16, 185, 129, 0.4);
+}
+
+.orbit-particle-2 {
+  animation: orbit-reverse 25s linear infinite;
+  background-color: rgba(245, 158, 11, 0.3);
+}
+
+/* Double bezel helpers */
+.bezel-outer {
+  position: relative;
+  padding: 8px;
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 4px 20px -2px rgba(148, 163, 184, 0.06);
+  border-radius: 20px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bezel-inner {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid rgba(226, 232, 240, 0.5);
+  background: #fafafa;
+}
+
+/* Toast notifications entry/exit animations */
+@keyframes toast-in-right {
+  0% {
+    transform: translateX(100%) translateY(0) scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0) translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-out-right {
+  0% {
+    transform: translateX(0) translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%) translateY(0) scale(0.95);
+    opacity: 0;
+  }
+}
+
+.animate-toast-in {
+  animation: toast-in-right 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-toast-out {
+  animation: toast-out-right 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ==========================================================================
+   CART & UTILITY INTERACTIVE ANIMATIONS (Ported from storefront.css)
+   ========================================================================== */
+@keyframes cart-jiggle {
+  0% { transform: scale(1); }
+  25% { transform: scale(1.3) rotate(-6deg); }
+  50% { transform: scale(0.9) rotate(4deg); }
+  75% { transform: scale(1.1) rotate(-2deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+
+.animate-cart-jiggle {
+  animation: cart-jiggle 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes cart-badge-bump {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
+.cart-badge-bump {
+  animation: cart-badge-bump 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  will-change: transform;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+
+.animate-ripple {
+  animation: ripple 0.6s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+/* ── Gift Range Card entrance animation ─────────────────────────────── */
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+
+/* =============================================================================
+   TRANSITIONS-DEV — Motion Token Variables
+   Source: transitions-dev/_root.css
+   Install once: every transition below reads from these semantic names.
+   ============================================================================= */
+:root {
+  /* Tabs sliding */
+  --tabs-dur: 250ms;
+  --tabs-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --tabs-text-muted: rgba(15, 15, 15, 0.8);
+  --tabs-text-active: #0f0f0f;
+  --tabs-bar-bg: #f1f1f1;
+  --tabs-pill-bg: #ffffff;
+
+  /* Success check */
+  --check-opacity-dur: 500ms;
+  --check-rotate-dur: 500ms;
+  --check-rotate-from: 80deg;
+  --check-bob-dur: 500ms;
+  --check-y-amount: 40px;
+  --check-blur-dur: 500ms;
+  --check-blur-from: 10px;
+  --check-path-dur: 500ms;
+  --check-path-delay: 80ms;
+  --check-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --check-ease-opacity: cubic-bezier(0.22, 1, 0.36, 1);
+  --check-ease-rotate: cubic-bezier(0.22, 1, 0.36, 1);
+  --check-ease-bob: cubic-bezier(0.34, 1.35, 0.64, 1);
+  --check-ease-path: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Error state shake */
+  --shake-distance: 6px;
+  --shake-overshoot: 4px;
+  --shake-dur-a: 80ms;
+  --shake-dur-b: 60ms;
+  --shake-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --revert-hold: 3000ms;
+  --revert-dur: 280ms;
+}
+
+
+/* =============================================================================
+   TRANSITION: Tabs Sliding Pill
+   Source: transitions-dev/16-tabs-sliding.md
+   Usage: wrap buttons in .t-tabs, add a <span class="t-tabs-pill">,
+          give each button class="t-tab" and aria-selected="true/false".
+          JS writes pill.style.transform + pill.style.width on click.
+   ============================================================================= */
+.t-tabs {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 48px;
+  background: var(--tabs-bar-bg);
+}
+.t-tab {
+  position: relative;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  height: 30px;
+  padding: 4px 12px;
+  color: var(--tabs-text-muted);
+  cursor: pointer;
+  border-radius: 48px;
+  z-index: 1;
+  transition: color var(--tabs-dur) var(--tabs-ease);
+}
+.t-tab:not([aria-selected="true"]):hover,
+.t-tab[aria-selected="true"] {
+  color: var(--tabs-text-active);
+}
+/* The pill: width + transform are written inline by JS so the
+   transition tweens between the previous and next measured positions. */
+.t-tabs-pill {
+  position: absolute;
+  top: 3px;
+  left: 0;
+  height: 30px;
+  width: 0;
+  background: var(--tabs-pill-bg);
+  border-radius: 48px;
+  transform: translateX(0);
+  transition:
+    transform var(--tabs-dur) var(--tabs-ease),
+    width     var(--tabs-dur) var(--tabs-ease);
+  will-change: transform, width;
+  z-index: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-tabs-pill, .t-tab { transition: none !important; }
+}
+
+
+/* =============================================================================
+   TRANSITION: Cross-Fade Tab Panel
+   Usage: wrap each panel content area in .t-panel.
+          Toggle .t-panel--active class to reveal; departing panels
+          are unmounted by React so only the entering panel animates in.
+   ============================================================================= */
+.t-panel {
+  animation: t-panel-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: opacity, transform;
+}
+
+@keyframes t-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.995);
+    filter: blur(1px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-panel { animation: none !important; }
+}
+
+
+/* =============================================================================
+   TRANSITION: Success Check
+   Source: transitions-dev/10-success-check.md
+   Usage: wrap SVG icon in <span class="t-success-check" data-state="out">.
+          JS sets data-state="in" to trigger the appear animation.
+          Reset: set "out", force reflow (void el.offsetWidth), set "in" again.
+   ============================================================================= */
+.t-success-check {
+  display: inline-block;
+  transform-origin: center;
+  opacity: 0;
+  will-change: transform, opacity, filter;
+}
+.t-success-check svg { display: block; overflow: visible; }
+.t-success-check svg path {
+  stroke-dasharray: 20;
+  stroke-dashoffset: 20;
+}
+
+.t-success-check[data-state="in"] {
+  animation:
+    t-check-fade   var(--check-opacity-dur) var(--check-ease-opacity) forwards,
+    t-check-rotate var(--check-rotate-dur)  var(--check-ease-rotate)  forwards,
+    t-check-blur   var(--check-blur-dur)    var(--check-ease-out)     forwards,
+    t-check-bob    var(--check-bob-dur)     var(--check-ease-bob)     forwards;
+}
+.t-success-check[data-state="in"] svg path {
+  animation: t-check-draw var(--check-path-dur) var(--check-ease-path) var(--check-path-delay, 0ms) forwards;
+}
+
+@keyframes t-check-fade   { from { opacity: 0; } to { opacity: 1; } }
+@keyframes t-check-rotate { from { transform: rotate(var(--check-rotate-from)); } to { transform: rotate(0deg); } }
+@keyframes t-check-blur   { from { filter: blur(var(--check-blur-from)); } to { filter: blur(0); } }
+@keyframes t-check-bob    { from { translate: 0 var(--check-y-amount); } to { translate: 0 0; } }
+@keyframes t-check-draw   { to { stroke-dashoffset: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .t-success-check { animation: none !important; opacity: 1; }
+  .t-success-check svg path { animation: none !important; stroke-dashoffset: 0 !important; }
+}
+
+
+/* =============================================================================
+   TRANSITION: Error State Shake
+   Source: transitions-dev/12-error-state-shake.md
+   Usage: wrap in .t-input-wrap, the shaking element gets .t-input,
+          error message gets .t-error-msg.
+          JS adds .is-error to both wrap + input, adds .is-shaking to input.
+          Remove .is-shaking + reflow + re-add to replay the shake.
+   ============================================================================= */
+.t-input {
+  transition: border-color 150ms ease-out;
+  will-change: transform;
+}
+.t-input.is-error {
+  transition: border-color var(--revert-dur, 280ms) ease-out;
+}
+
+.t-error-msg {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity    var(--revert-dur, 280ms) ease-out,
+    visibility 0s linear var(--revert-dur, 280ms);
+}
+.t-input-wrap.is-error .t-error-msg {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity    var(--revert-dur, 280ms) ease-out,
+    visibility 0s linear 0s;
+}
+
+.t-input.is-shaking {
+  animation: t-input-shake calc(
+      var(--shake-dur-a) * 2 + var(--shake-dur-b) * 2
+    ) linear;
+}
+@keyframes t-input-shake {
+  0%     { transform: translateX(0);                                  animation-timing-function: var(--shake-ease); }
+  28.57% { transform: translateX(var(--shake-distance));              animation-timing-function: var(--shake-ease); }
+  57.14% { transform: translateX(calc(var(--shake-distance) * -1));   animation-timing-function: var(--shake-ease); }
+  78.57% { transform: translateX(var(--shake-overshoot));             animation-timing-function: var(--shake-ease); }
+  100%   { transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-input { animation: none !important; transform: none !important; }
+}
+
+
+/* =============================================================================
+   TRANSITION: Button Active Press Feedback
+   Source: emil-design-eng skill — "Buttons must feel responsive"
+   Usage: add class="btn-press-feedback" to any pressable button.
+   ============================================================================= */
+.btn-press-feedback {
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.btn-press-feedback:active {
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-press-feedback { transition: none !important; }
+}
+
+
+/* =============================================================================
+   TRANSITION: Save Button Loading → Success Morph
+   Usage: button with class="save-btn". JS toggles data-state:
+          "idle" → "saving" → "success" → "idle"
+   ============================================================================= */
+.save-btn {
+  position: relative;
+  transition:
+    transform 160ms cubic-bezier(0.23, 1, 0.32, 1),
+    background-color 200ms ease,
+    box-shadow 200ms ease;
+}
+.save-btn:active { transform: scale(0.97); }
+
+.save-btn[data-state="saving"] {
+  pointer-events: none;
+  opacity: 0.75;
+}
+.save-btn[data-state="success"] {
+  pointer-events: none;
+}
+
+/* Spinner for the saving state */
+.save-btn__spinner {
+  display: none;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: save-btn-spin 600ms linear infinite;
+  will-change: transform;
+}
+.save-btn[data-state="saving"] .save-btn__spinner { display: block; }
+.save-btn[data-state="saving"] .save-btn__label   { display: none; }
+.save-btn[data-state="success"] .save-btn__label  { display: none; }
+
+@keyframes save-btn-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Check icon — hidden by default, shown on success */
+.save-btn__check {
+  display: none;
+}
+.save-btn[data-state="success"] .save-btn__check {
+  display: block;
+  animation: save-btn-check-pop 300ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes save-btn-check-pop {
+  from { transform: scale(0.4); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .save-btn { transition: none !important; }
+  .save-btn__spinner { animation: none !important; }
+  .save-btn__check   { animation: none !important; }
+}
+
+
+
+

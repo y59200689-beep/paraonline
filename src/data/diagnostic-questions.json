@@ -1,0 +1,108 @@
+{
+  "questions": [
+    {
+      "step": 1,
+      "field": "skinType",
+      "translationKey": "q1_text",
+      "stepLabelFr": "Étape 1 : Typologie Cutanée",
+      "stepLabelAr": "الخطوة 1: تصنيف طبيعة البشرة",
+      "options": [
+        {
+          "val": "oily",
+          "labelKey": "q1_o1",
+          "emoji": "",
+          "descFr": "Brillance, pores dilatés",
+          "descAr": "مسام واسعة، لمعان مستمر"
+        },
+        {
+          "val": "dry",
+          "labelKey": "q1_o2",
+          "emoji": "️",
+          "descFr": "Tiraillements, sécheresse",
+          "descAr": "جفاف، شد جلدي وقشور"
+        },
+        {
+          "val": "mixed",
+          "labelKey": "q1_o3",
+          "emoji": "️",
+          "descFr": "Zone T grasse, joues sèches",
+          "descAr": "منطقة T دهنية، وخدان جافان"
+        },
+        {
+          "val": "sensitive",
+          "labelKey": "q1_o4",
+          "emoji": "",
+          "descFr": "Rougeurs, inconfort",
+          "descAr": "احمرار، تهيج وحساسية"
+        }
+      ]
+    },
+    {
+      "step": 2,
+      "field": "concern",
+      "translationKey": "q2_text",
+      "stepLabelFr": "Étape 2 : Préoccupation Épidermique",
+      "stepLabelAr": "الخطوة 2: الخلل الجلدي المستهدف",
+      "options": [
+        {
+          "val": "acne",
+          "labelKey": "q2_o1",
+          "emoji": "",
+          "descFr": "Boutons, imperfections",
+          "descAr": "بثور، رؤوس سوداء وشوائب"
+        },
+        {
+          "val": "spots",
+          "labelKey": "q2_o2",
+          "emoji": "",
+          "descFr": "Hyperpigmentation, taches",
+          "descAr": "تصبغات، كلف وبقع داكنة"
+        },
+        {
+          "val": "wrinkles",
+          "labelKey": "q2_o3",
+          "emoji": "⏳",
+          "descFr": "Rides, ridules, relâchement",
+          "descAr": "تجاعيد، خطوط دقيقة وترهل"
+        },
+        {
+          "val": "dryness",
+          "labelKey": "q2_o4",
+          "emoji": "",
+          "descFr": "Déshydratation intense",
+          "descAr": "جفاف شديد، نقص رطوبة شديد"
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "field": "sunExposure",
+      "translationKey": "q3_text",
+      "stepLabelFr": "Étape 3 : Niveau d'Exposition aux UV",
+      "stepLabelAr": "الخطوة 3: التعرض للأشعة فوق البنفسجية",
+      "options": [
+        {
+          "val": "intense",
+          "labelKey": "q3_o1",
+          "emoji": "️",
+          "descFr": "Exposition quotidienne directe importante",
+          "descAr": "تعرض يومي مباشر وشديد لأشعة الشمس"
+        },
+        {
+          "val": "moderate",
+          "labelKey": "q3_o2",
+          "emoji": "",
+          "descFr": "Exposition modérée (Sorties, transports)",
+          "descAr": "تعرض معتدل (خروج مؤقت، مواصلات)"
+        },
+        {
+          "val": "low",
+          "labelKey": "q3_o3",
+          "emoji": "",
+          "descFr": "Intérieur majoritairement (Bureau, maison)",
+          "descAr": "معظم الوقت داخل البيت أو المكتب المغلق"
+        }
+      ]
+    }
+  ]
+}

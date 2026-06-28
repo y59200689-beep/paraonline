@@ -1,10 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useCart } from '../context/CartContext';
-import { useTranslation } from '../context/LanguageContext';
-import { Product, PRODUCTS_DB } from '../lib/data';
-import { X, Sparkles, Check, ChevronRight, HelpCircle, AlertCircle, ShoppingBag } from 'lucide-react';
+import { useCart } from '@/context/CartContext';
+import { useTranslation } from '@/context/LanguageContext';
+import { Product } from '@/lib/data';
+import { useProducts } from '@/context/ProductsContext';
+import { X, Check, ShoppingBag } from 'lucide-react';
+import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 
 interface RoutineBundleDrawerProps {
   isOpen: boolean;
@@ -14,6 +16,29 @@ interface RoutineBundleDrawerProps {
 export const RoutineBundleDrawer: React.FC<RoutineBundleDrawerProps> = ({ isOpen, onClose }) => {
   const { addToCart, applyDailyGift } = useCart();
   const { language } = useTranslation();
+  const { products } = useProducts();
+
+  // t-panel-slide / drawer animation states
+  const [isVisible, setIsVisible] = useState(false);
+  const [drawerState, setDrawerState] = useState<'closed' | 'opening' | 'open' | 'closing'>('closed');
+  const closeMs = 320; // Matches panel close duration
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsVisible(true);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setDrawerState('open'));
+      });
+    } else if (drawerState === 'open') {
+      setDrawerState('closing');
+      const t = setTimeout(() => {
+        setDrawerState('closed');
+        setIsVisible(false);
+      }, closeMs);
+      return () => clearTimeout(t);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const [activeStep, setActiveStep] = useState<1 | 2 | 3>(1);
   const [selectedCleanse, setSelectedCleanse] = useState<Product | null>(null);
@@ -21,9 +46,9 @@ export const RoutineBundleDrawer: React.FC<RoutineBundleDrawerProps> = ({ isOpen
   const [selectedProtect, setSelectedProtect] = useState<Product | null>(null);
 
   // Group products specifically for steps
-  const STEP_1_PRODUCTS = PRODUCTS_DB.filter(p => [15, 22].includes(p.id));
-  const STEP_2_PRODUCTS = PRODUCTS_DB.filter(p => [14, 7, 3, 8].includes(p.id));
-  const STEP_3_PRODUCTS = PRODUCTS_DB.filter(p => [13, 17, 1].includes(p.id));
+  const STEP_1_PRODUCTS = products.filter(p => [15, 22].includes(p.id));
+  const STEP_2_PRODUCTS = products.filter(p => [14, 7, 3, 8].includes(p.id));
+  const STEP_3_PRODUCTS = products.filter(p => [13, 17, 1].includes(p.id));
 
   const isRTL = language === 'AR';
 
@@ -70,26 +95,33 @@ export const RoutineBundleDrawer: React.FC<RoutineBundleDrawerProps> = ({ isOpen
     if (selectedProtect) addToCart(selectedProtect, 1, true);
 
     // Apply the Free clinical Spa Headband gift!
-    const giftName = language === 'FR' ? 'Bandeau Spa Clinique Offert 🎁' : 'رباط شعر للسبا هدية مجانية 🎁';
+    const giftName = language === 'FR' ? 'Bandeau Spa Clinique Offert' : 'رباط شعر للسبا هدية مجانية';
     applyDailyGift('ROUTINE_BUNDLE_GIFT', giftName);
 
     onClose();
   };
 
-  if (!isOpen) return null;
+  if (!isVisible) return null;
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden flex justify-end">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300"
+        className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-[300ms] ${
+          drawerState === 'open' ? 'opacity-100' : 'opacity-0'
+        }`}
         onClick={onClose}
       />
 
       {/* Drawer Body */}
       <div 
-        className="relative w-full max-w-[500px] bg-white h-full shadow-2xl flex flex-col z-10 overflow-hidden border-l border-border/20 transition-transform duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]"
-        style={{ direction: isRTL ? 'rtl' : 'ltr' }}
+        className="relative w-full max-w-[500px] bg-white h-full shadow-2xl flex flex-col z-10 overflow-hidden border-l border-border/20"
+        style={{ 
+          direction: isRTL ? 'rtl' : 'ltr',
+          transform: drawerState === 'open' ? 'translateX(0)' : (isRTL ? 'translateX(-100%)' : 'translateX(100%)'),
+          transition: `transform ${drawerState === 'open' ? '420ms' : '320ms'} cubic-bezier(0.22, 1, 0.36, 1)`,
+          willChange: 'transform'
+        }}
       >
         {/* Ambient decorative glowing spots */}
         <div className="absolute top-0 right-0 w-44 h-44 rounded-full bg-primary/8 blur-3xl pointer-events-none" />
@@ -99,10 +131,10 @@ export const RoutineBundleDrawer: React.FC<RoutineBundleDrawerProps> = ({ isOpen
         <div className="p-6 border-b border-border/30 flex items-center justify-between shrink-0 bg-white/90 backdrop-blur-md relative z-10">
           <div className="space-y-1">
             <h3 className="text-md md:text-lg font-black uppercase text-primary-dark tracking-tight flex items-center gap-1.5">
-              <span>{language === 'FR' ? 'Routine Sur-Mesure 🪄' : 'روتينكِ المخصص 🪄'}</span>
+              <span>{language === 'FR' ? 'Routine Sur-Mesure' : 'روتينكِ المخصص'}</span>
             </h3>
             <span className="text-[10px] font-bold text-foreground/50 block">
-              {language === 'FR' ? 'Un rituels en 3 étapes avec -15% et Cadeau Offert !' : 'روتين من 3 خطوات بخصم 15٪ وهدية مجانية!'}
+              {language === 'FR' ? 'Un rituels en 3 étapes avec -15% et Cadeau Offert !' : 'روتين من 3 خطوات بخصم 15% وهدية مجانية!'}
             </span>
           </div>
           <button 
@@ -125,7 +157,7 @@ export const RoutineBundleDrawer: React.FC<RoutineBundleDrawerProps> = ({ isOpen
               <button
                 key={item.step}
                 onClick={() => setActiveStep(item.step as 1 | 2 | 3)}
-                className={`px-3 py-2.5 rounded-xl border text-[10px] font-black uppercase tracking-wider transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 ${
+                className={`px-3 py-2.5 rounded-[8px] border text-[10px] font-black uppercase tracking-wider transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 ${
                   isStepActive
                     ? 'bg-primary border-primary text-white shadow-sm shadow-primary/10'
                     : item.active
@@ -149,10 +181,10 @@ export const RoutineBundleDrawer: React.FC<RoutineBundleDrawerProps> = ({ isOpen
           <div className="space-y-4">
             <span className="text-[10px] font-black uppercase tracking-widest text-accent block">
               {activeStep === 1 
-                ? (language === 'FR' ? 'Étape 1 : Choisissez un Nettoyeur 🧼' : 'الخطوة 1 : اختاري منظفاً للبشرة 🧼')
+                ? (language === 'FR' ? 'Étape 1 : Choisissez un Nettoyeur' : 'الخطوة 1 : اختاري منظفاً للبشرة')
                 : activeStep === 2
-                  ? (language === 'FR' ? 'Étape 2 : Choisissez un Sérum / Hydratant 🧪' : 'الخطوة 2 : اختاري سيروم معالج 🧪')
-                  : (language === 'FR' ? 'Étape 3 : Choisissez un Écran Solaire ☀️' : 'الخطوة 3 : اختاري واقياً شمسياً ☀️')
+                  ? (language === 'FR' ? 'Étape 2 : Choisissez un Sérum / Hydratant' : 'الخطوة 2 : اختاري سيروم معالج')
+                  : (language === 'FR' ? 'Étape 3 : Choisissez un Écran Solaire️' : 'الخطوة 3 : اختاري واقياً شمسياً️')
               }
             </span>
 
@@ -172,7 +204,7 @@ export const RoutineBundleDrawer: React.FC<RoutineBundleDrawerProps> = ({ isOpen
                   <div
                     key={product.id}
                     onClick={() => handleSelectProduct(product)}
-                    className={`p-4 border rounded-2xl flex gap-4 items-center transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] cursor-pointer hover:border-primary/40 select-none ${
+                    className={`p-4 border rounded-[10px] flex gap-4 items-center transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] cursor-pointer hover:border-primary/40 select-none ${
                       isSelected 
                         ? 'border-primary bg-primary/5 ring-1 ring-primary/20 shadow-sm'
                         : 'border-border/50 bg-white/70 hover:bg-slate-50'
@@ -180,14 +212,14 @@ export const RoutineBundleDrawer: React.FC<RoutineBundleDrawerProps> = ({ isOpen
                   >
                     {/* Thumbnail */}
                     <img
-                      src={product.image}
+                      src={getOptimizedImageUrl(product.image)}
                       alt={product.title}
-                      className="w-16 h-16 object-cover rounded-xl bg-slate-50 border border-border/30 shrink-0"
+                      className="w-16 h-16 object-cover rounded-[8px] bg-slate-50 border border-border/30 shrink-0"
                     />
 
                     {/* Meta Info */}
-                    <div className="flex-1 min-w-0">
-                      <span className="text-[9px] font-black uppercase text-accent tracking-widest block">{product.vendor}</span>
+                    <div className="flex-grow min-w-0">
+                      <span className="text-[9px] font-black uppercase text-teal-700 tracking-widest block">{product.vendor}</span>
                       <h4 className="text-xs font-black truncate text-primary-dark leading-tight mt-0.5">{product.title}</h4>
                       <p className="text-[10px] text-foreground/60 leading-normal line-clamp-2 mt-1">{product.description}</p>
                     </div>
@@ -217,18 +249,16 @@ export const RoutineBundleDrawer: React.FC<RoutineBundleDrawerProps> = ({ isOpen
         <div className="p-6 border-t border-solid border-slate-100 bg-slate-50/90 backdrop-blur-md shrink-0 space-y-4 relative z-10">
           
           {/* Unlocked accessory indicator */}
-          <div className="bg-white border border-border/30 rounded-2xl p-3 flex gap-3 items-center shadow-sm">
+          <div className="bg-white border border-border/30 rounded-[10px] p-3 flex gap-3 items-center shadow-sm">
             <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 border transition-all duration-500 ${
               isRoutineComplete
                 ? 'bg-emerald-100 border-emerald-200 text-emerald-600 animate-pulse'
                 : 'bg-slate-100 border-slate-200 text-slate-400'
-            }`}>
-              🎁
-            </div>
+            }`}> </div>
             <div className="text-[10px] leading-relaxed">
               <span className="font-extrabold uppercase tracking-wider block text-primary-dark">
                 {isRoutineComplete 
-                  ? (language === 'FR' ? 'Cadeau Débloqué ! 🎀' : 'تم فتح الهدية المجانية ! 🎀')
+                  ? (language === 'FR' ? 'Cadeau Débloqué !' : 'تم فتح الهدية المجانية !')
                   : (language === 'FR' ? 'Cadeau de Routine' : 'هدية الروتين المجانية')
                 }
               </span>
@@ -262,7 +292,7 @@ export const RoutineBundleDrawer: React.FC<RoutineBundleDrawerProps> = ({ isOpen
           <button
             onClick={handleAddRoutineToCart}
             disabled={!isRoutineComplete}
-            className={`w-full py-4 text-xs font-black uppercase tracking-widest rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-md cursor-pointer ${
+            className={`w-full py-4 text-xs font-black uppercase tracking-widest rounded-[8px] transition-all duration-300 flex items-center justify-center gap-2 shadow-md cursor-pointer ${
               isRoutineComplete
                 ? 'bg-primary hover:bg-accent text-white active:scale-[0.98]'
                 : 'bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed'

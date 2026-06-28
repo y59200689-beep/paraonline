@@ -21,11 +21,29 @@ import {
   Lock,
   ShieldCheck,
   ShieldAlert,
-  Key
+  Key,
+  ArrowRight,
+  Layout,
+  Layers,
+  Package,
+  Terminal,
+  Search,
+  Copy,
+  Check,
+  RefreshCw,
+  Plus,
+  Zap,
+  BookOpen,
+  Heart,
+  Activity,
+  Gift,
+  Eye
 } from 'lucide-react';
 import { useAdmin } from '@/context/AdminContext';
 import { useSettings, HeroCardConfig } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
+import { useAdminUI } from '@/app/admin/AdminUIContext';
+import { useProducts } from '@/context/ProductsContext';
 
 export default function SettingsTab() {
   const { settings, saveSettings } = useSettings();
@@ -52,9 +70,23 @@ export default function SettingsTab() {
     handleSaveNotificationTemplates,
   } = useAdmin();
 
-  // Local UI states
-  const [activeSettingsSubTab, setActiveSettingsSubTab] = useState<'general' | 'banners' | 'coupons' | 'shipping' | 'loyalty' | 'faq' | 'logs' | 'notifications' | 'operators' | 'payment' | 'security'>('general');
-  const [isAddingCoupon, setIsAddingCoupon] = useState(false);
+  const { products } = useProducts();
+  const {
+    activeSettingsSubTab,
+    setActiveSettingsSubTab,
+    isAddingCoupon,
+    setIsAddingCoupon
+  } = useAdminUI();
+
+  // Layout Builder State
+  const [sectionsList, setSectionsList] = useState<any[]>([]);
+  const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
+  const [isAddingSection, setIsAddingSection] = useState(false);
+  const [saveHomepageState, setSaveHomepageState] = useState<'idle'|'saving'|'success'>('idle');
+
+  // Search dropdown states (generic product picker states)
+  const [trSearch, setTrSearch] = useState("");
+  const [trOpen, setTrOpen] = useState(false);
 
   // MFA / Security states
   const [isMfaEnabled, setIsMfaEnabled] = useState(false);
@@ -78,6 +110,103 @@ export default function SettingsTab() {
   const [ownerResetPasswordVal, setOwnerResetPasswordVal] = useState('');
   const [ownerResetError, setOwnerResetError] = useState('');
   const [ownerResetSuccess, setOwnerResetSuccess] = useState('');
+
+  // Sync settings and products for homepage sections
+  useEffect(() => {
+    if (settings?.homepageSections) {
+      const hp = settings.homepageSections;
+
+      // Initialize Section Order
+      const defaultOrder = [
+        { id: 'hero-1', type: 'hero', nameFr: 'Carrousel Héro & Diaporama', visible: hp.showHero ?? true },
+        { id: 'categoryTrack-1', type: 'categoryTrack', nameFr: 'Barre de Défilement des Catégories', visible: hp.showCategoryTrack ?? true },
+        { id: 'productGrid-1', type: 'productGrid', nameFr: 'Grille Principale des Produits', visible: hp.showProductGrid ?? true },
+        { id: 'brandPartners-1', type: 'brandPartners', nameFr: 'Marques Partenaires', visible: hp.showBrandPartners ?? true },
+        { id: 'diagnosticBanner-1', type: 'diagnosticBanner', nameFr: 'Diagnostic de Peau IA', visible: hp.showDiagnosticBanner ?? true },
+        { id: 'summerSale-1', type: 'summerSale', nameFr: "Offres d'Été (Summer Sale)", visible: hp.showSummerSale ?? true, settings: { productIds: hp.summerSaleProductIds || [] } },
+        { id: 'skinConcerns-1', type: 'skinConcerns', nameFr: 'Bento de Préoccupations Cutanées', visible: hp.showSkinConcerns ?? true },
+        { id: 'flashSale-1', type: 'flashSale', nameFr: 'Bannière de Vente Flash', visible: hp.showFlashSale ?? true },
+        { id: 'horizontalPromo-1', type: 'horizontalPromo', nameFr: 'Bannière Promotionnelle Horizontale', visible: hp.showHorizontalPromo ?? true },
+        { id: 'trustBar-1', type: 'trustBar', nameFr: 'Barre de Confiance Maroc', visible: hp.showTrustBar ?? true },
+        { id: 'customerReviews-1', type: 'customerReviews', nameFr: 'Témoignages & Avis Clients', visible: hp.showCustomerReviews ?? true },
+        { id: 'triplePromo-1', type: 'triplePromo', nameFr: 'Bannières Triple Promotionnelles', visible: hp.showTriplePromo ?? true },
+        { id: 'topRated-1', type: 'topRated', nameFr: 'Produits les Mieux Notés', visible: hp.showTopRated ?? true, settings: { titleFr: hp.topRatedTitleFr, titleAr: hp.topRatedTitleAr, productIds: hp.topRatedProductIds || [] } },
+        { id: 'bestSellers-1', type: 'bestSellers', nameFr: 'Produits les Plus Vendus', visible: hp.showBestSellers ?? true, settings: { titleFr: hp.bestSellersTitleFr, titleAr: hp.bestSellersTitleAr, productIds: hp.bestSellersProductIds || [] } },
+        { id: 'weeklySales-1', type: 'weeklySales', nameFr: 'Meilleures Ventes de la Semaine', visible: hp.showWeeklySales ?? true, settings: { titleFr: hp.weeklySalesTitleFr, titleAr: hp.weeklySalesTitleAr, productIds: hp.weeklySalesProductIds || [] } },
+        { id: 'routineVisualizer-1', type: 'routineVisualizer', nameFr: 'Visualiseur de Routine de Soins', visible: hp.showRoutineVisualizer ?? true },
+        { id: 'featuredIngredient-1', type: 'featuredIngredient', nameFr: 'Ingrédient Focus de la Semaine', visible: hp.showFeaturedIngredient ?? true },
+        { id: 'ingredientDictionary-1', type: 'ingredientDictionary', nameFr: 'Dictionnaire Clinique des Ingrédients', visible: hp.showIngredientDictionary ?? true },
+        { id: 'faq-1', type: 'faq', nameFr: 'Foire Aux Questions (FAQ)', visible: hp.showFaq ?? true }
+      ];
+      setSectionsList(hp.sectionOrder && hp.sectionOrder.length > 0 ? hp.sectionOrder : defaultOrder);
+    }
+  }, [settings, products]);
+
+  // Save homepage settings
+  const handleSaveHomepageSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const findVisible = (type: string) => sectionsList.find(s => s.type === type)?.visible ?? false;
+    const findSettings = (type: string) => sectionsList.find(s => s.type === type)?.settings || {};
+
+    const topRatedSec = findSettings('topRated');
+    const bestSellersSec = findSettings('bestSellers');
+    const weeklySalesSec = findSettings('weeklySales');
+    const summerSaleSec = findSettings('summerSale');
+
+    const updated = {
+      ...settings,
+      homepageSections: {
+        showHero: findVisible('hero'),
+        showCategoryTrack: findVisible('categoryTrack'),
+        showProductGrid: findVisible('productGrid'),
+        showBrandPartners: findVisible('brandPartners'),
+        showDiagnosticBanner: findVisible('diagnosticBanner'),
+        showSummerSale: findVisible('summerSale'),
+        showSkinConcerns: findVisible('skinConcerns'),
+        showFlashSale: findVisible('flashSale'),
+        showHorizontalPromo: findVisible('horizontalPromo'),
+        showTrustBar: findVisible('trustBar'),
+        showCustomerReviews: findVisible('customerReviews'),
+        showTriplePromo: findVisible('triplePromo'),
+        showTopRated: findVisible('topRated'),
+        showBestSellers: findVisible('bestSellers'),
+        showWeeklySales: findVisible('weeklySales'),
+        showRoutineVisualizer: findVisible('routineVisualizer'),
+        showFeaturedIngredient: findVisible('featuredIngredient'),
+        showIngredientDictionary: findVisible('ingredientDictionary'),
+        showFaq: findVisible('faq'),
+
+        topRatedTitleFr: topRatedSec.titleFr || '',
+        topRatedTitleAr: topRatedSec.titleAr || '',
+        topRatedProductIds: topRatedSec.productIds || [],
+
+        bestSellersTitleFr: bestSellersSec.titleFr || '',
+        bestSellersTitleAr: bestSellersSec.titleAr || '',
+        bestSellersProductIds: bestSellersSec.productIds || [],
+
+        weeklySalesTitleFr: weeklySalesSec.titleFr || '',
+        weeklySalesTitleAr: weeklySalesSec.titleAr || '',
+        weeklySalesProductIds: weeklySalesSec.productIds || [],
+
+        summerSaleProductIds: summerSaleSec.productIds || [],
+        featuredProductIds: settings.homepageSections?.featuredProductIds || [],
+        
+        sectionOrder: sectionsList
+      }
+    };
+
+    setSaveHomepageState('saving');
+    const success = await saveSettings(updated);
+    if (success) {
+      setSaveHomepageState('success');
+      showToast("Mise en page de l'accueil sauvegardée !", 'success');
+      setTimeout(() => setSaveHomepageState('idle'), 3000);
+    } else {
+      setSaveHomepageState('idle');
+      showToast("Erreur lors de la sauvegarde.", 'error');
+    }
+  };
 
   // Fetch current user MFA state
   useEffect(() => {
@@ -393,6 +522,7 @@ export default function SettingsTab() {
       <aside className={`p-4 rounded-2xl border flex flex-col space-y-1 lg:col-span-1 ${adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/40 border-slate-900'}`}>
         {[
           { id: 'general', label: 'Paramètres Généraux', icon: Sliders },
+          { id: 'homepage', label: 'Mise en Page de l\'Accueil', icon: Layout },
           { id: 'banners', label: 'Bannières Diaporama', icon: Sliders },
           { id: 'coupons', label: 'Codes Promo', icon: Percent },
           { id: 'shipping', label: 'Expéditions / Livreurs', icon: Truck },
@@ -534,6 +664,789 @@ export default function SettingsTab() {
             </div>
           </form>
         )}
+
+        {/* C. HOMEPAGE VISUAL LAYOUT CUSTOMIZER */}
+        {activeSettingsSubTab === 'homepage' && (() => {
+          const SECTION_METADATA: Record<string, { nameFr: string; descFr: string; icon: any; color: string }> = {
+            hero: { nameFr: 'Carrousel Héro & Diaporama', descFr: 'Bannière animée rotative au sommet de la page.', icon: Layout, color: 'from-blue-500 to-indigo-500' },
+            categoryTrack: { nameFr: 'Barre de Défilement des Catégories', descFr: 'Curseur horizontal de catégories.', icon: Layers, color: 'from-purple-500 to-pink-500' },
+            productGrid: { nameFr: 'Grille Principale des Produits', descFr: 'Grille d\'affichage des produits vedettes.', icon: Package, color: 'from-amber-500 to-orange-500' },
+            brandPartners: { nameFr: 'Marques Partenaires', descFr: 'Bandeau des logos des laboratoires.', icon: Users, color: 'from-teal-500 to-emerald-500' },
+            diagnosticBanner: { nameFr: 'Diagnostic de Peau IA', descFr: 'Bannière d\'incitation au diagnostic IA.', icon: Activity, color: 'from-indigo-500 to-blue-500' },
+            summerSale: { nameFr: 'Offres d\'Été (Summer Sale)', descFr: 'Deal Box d\'été avec compte à rebours.', icon: Gift, color: 'from-orange-500 to-red-500' },
+            skinConcerns: { nameFr: 'Bento Préoccupations Cutanées', descFr: 'Sélecteur interactif de type de peau.', icon: Sliders, color: 'from-violet-500 to-purple-500' },
+            flashSale: { nameFr: 'Bannière de Vente Flash', descFr: 'Bannière promotionnelle flash animée.', icon: Zap, color: 'from-yellow-500 to-orange-500' },
+            horizontalPromo: { nameFr: 'Bannière Horizontale', descFr: 'Bannière publicitaire épurée.', icon: FileText, color: 'from-emerald-500 to-teal-500' },
+            trustBar: { nameFr: 'Barre de Confiance Maroc', descFr: 'Indicateurs de réassurance client.', icon: Truck, color: 'from-cyan-500 to-blue-500' },
+            customerReviews: { nameFr: 'Témoignages & Avis Clients', descFr: 'Carrousel des avis et témoignages.', icon: Star, color: 'from-amber-400 to-yellow-500' },
+            triplePromo: { nameFr: 'Bannières Triple Promotionnelles', descFr: 'Grille de 3 bannières de saison.', icon: Layers, color: 'from-pink-500 to-rose-500' },
+            topRated: { nameFr: 'Produits les Mieux Notés', descFr: 'Mise en page asymétrique des produits favoris.', icon: Star, color: 'from-emerald-500 to-teal-500' },
+            bestSellers: { nameFr: 'Produits les Plus Vendus', descFr: 'Grille des produits les plus vendus.', icon: Sliders, color: 'from-indigo-500 to-purple-500' },
+            weeklySales: { nameFr: 'Meilleures Ventes de la Semaine', descFr: 'Sélection de produits hebdomadaires.', icon: Sliders, color: 'from-pink-500 to-purple-500' },
+            routineVisualizer: { nameFr: 'Visualiseur de Routine de Soins', descFr: 'Parcours interactif de soins matin/soir.', icon: Activity, color: 'from-teal-500 to-cyan-500' },
+            featuredIngredient: { nameFr: 'Ingrédient Focus de la Semaine', descFr: 'Section focus sur un ingrédient.', icon: Star, color: 'from-purple-500 to-indigo-500' },
+            ingredientDictionary: { nameFr: 'Dictionnaire des Ingrédients', descFr: 'Encyclopédie clinique des ingrédients.', icon: BookOpen, color: 'from-blue-500 to-teal-500' },
+            faq: { nameFr: 'Foire Aux Questions (FAQ)', descFr: 'FAQ et centre d\'aide interactif.', icon: HelpCircle, color: 'from-emerald-500 to-blue-500' },
+            customHtml: { nameFr: 'Code HTML Personnalisé', descFr: 'Bloc de code HTML ou scripts embeds libre.', icon: Terminal, color: 'from-slate-700 to-slate-900' },
+            richText: { nameFr: 'Texte Enrichi & CTA', descFr: 'Bannière de texte avec titre, description et bouton.', icon: FileText, color: 'from-rose-500 to-amber-500' }
+          };
+
+          return (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              {/* Left Column: Sections Tree */}
+              <div className="lg:col-span-5 space-y-6">
+                <div className={`border rounded-3xl p-6 transition-all duration-200 space-y-4 ${
+                  adminTheme === 'light'
+                    ? 'bg-white border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.03)]'
+                    : 'bg-slate-900/30 border-slate-900 shadow-xl'
+                }`}>
+                  <div className="flex items-center justify-between border-b pb-4 border-slate-100/55 dark:border-slate-800/40">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500">
+                        <Layers className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <h3 className={`text-sm font-extrabold uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-300'}`}>
+                          Arborescence de la Page
+                        </h3>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          Triez et gérez l&apos;affichage de vos sections
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2.5 max-h-[600px] overflow-y-auto pr-1">
+                    {sectionsList.map((sec, idx) => {
+                      const meta = SECTION_METADATA[sec.type] || { nameFr: sec.nameFr, descFr: '', icon: Layout, color: 'from-slate-500 to-slate-600' };
+                      const IconComp = meta.icon;
+                      const isEditing = editingSectionId === sec.id;
+
+                      return (
+                        <div
+                          key={sec.id}
+                          className={`flex items-center justify-between p-3 rounded-2xl border transition-all duration-200 ${
+                            isEditing
+                              ? adminTheme === 'light'
+                                ? 'border-indigo-400 bg-indigo-50/50 shadow-md'
+                                : 'border-indigo-700 bg-indigo-950/20 shadow-md'
+                              : sec.visible
+                                ? adminTheme === 'light'
+                                  ? 'bg-white border-slate-100 shadow-sm hover:shadow-md'
+                                  : 'bg-slate-900/40 border-slate-800 hover:border-slate-700'
+                                : adminTheme === 'light'
+                                  ? 'bg-slate-50 border-slate-100 opacity-60'
+                                  : 'bg-slate-950/30 border-slate-900 opacity-50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                            {/* Reorder arrows */}
+                            <div className="flex flex-col items-center shrink-0">
+                              <button
+                                type="button"
+                                disabled={idx === 0}
+                                onClick={() => {
+                                  const newList = [...sectionsList];
+                                  const temp = newList[idx];
+                                  newList[idx] = newList[idx - 1];
+                                  newList[idx - 1] = temp;
+                                  setSectionsList(newList);
+                                }}
+                                className="p-0.5 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 disabled:opacity-20 transition"
+                              >
+                                <ChevronUp className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                disabled={idx === sectionsList.length - 1}
+                                onClick={() => {
+                                  const newList = [...sectionsList];
+                                  const temp = newList[idx];
+                                  newList[idx] = newList[idx + 1];
+                                  newList[idx + 1] = temp;
+                                  setSectionsList(newList);
+                                }}
+                                className="p-0.5 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 disabled:opacity-20 transition"
+                              >
+                                <ChevronDown className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+
+                            {/* Section Icon */}
+                            <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${meta.color} p-2 text-white shadow-sm shrink-0 flex items-center justify-center`}>
+                              <IconComp className="w-4 h-4" />
+                            </div>
+
+                            {/* Name */}
+                            <div className="min-w-0 flex-1">
+                              <p className={`text-xs font-bold truncate ${
+                                adminTheme === 'light' ? 'text-slate-800' : 'text-slate-200'
+                              }`}>
+                                {sec.settings?.titleFr || meta.nameFr}
+                              </p>
+                              <p className="text-[9px] text-slate-400 font-mono mt-0.5 lowercase">
+                                {sec.type}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Quick Actions */}
+                          <div className="flex items-center gap-1 shrink-0 ml-2">
+                            {/* Toggle visibility */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newList = sectionsList.map(s => s.id === sec.id ? { ...s, visible: !s.visible } : s);
+                                setSectionsList(newList);
+                              }}
+                              className={`p-1.5 rounded-lg border transition-all duration-150 ${
+                                sec.visible
+                                  ? adminTheme === 'light'
+                                    ? 'text-emerald-500 bg-emerald-50 border-emerald-100 hover:bg-emerald-100'
+                                    : 'text-emerald-400 bg-emerald-900/10 border-emerald-900/30'
+                                  : adminTheme === 'light'
+                                    ? 'text-slate-400 bg-slate-50 border-slate-200 hover:bg-slate-100'
+                                    : 'text-slate-500 bg-slate-955 border-slate-800 hover:bg-slate-800'
+                              }`}
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
+
+                            {/* Select for edit */}
+                            <button
+                              type="button"
+                              onClick={() => setEditingSectionId(sec.id)}
+                              className={`p-1.5 rounded-lg border transition-all duration-150 ${
+                                isEditing
+                                  ? adminTheme === 'light'
+                                    ? 'text-indigo-500 bg-indigo-50 border-indigo-100'
+                                    : 'text-indigo-400 bg-indigo-900/10 border-indigo-900/30'
+                                  : adminTheme === 'light'
+                                    ? 'text-slate-400 bg-slate-50 border-slate-200 hover:bg-slate-100'
+                                    : 'text-slate-500 bg-slate-955 border-slate-800 hover:bg-slate-800'
+                              }`}
+                            >
+                              <Sliders className="w-3.5 h-3.5" />
+                            </button>
+
+                            {/* Delete button */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newList = sectionsList.filter(s => s.id !== sec.id);
+                                setSectionsList(newList);
+                                if (editingSectionId === sec.id) setEditingSectionId(null);
+                                showToast("Section supprimée.", 'info');
+                              }}
+                              className={`p-1.5 rounded-lg border transition-all duration-150 ${
+                                adminTheme === 'light'
+                                  ? 'text-red-500 bg-red-50 border-red-100 hover:bg-red-100'
+                                  : 'text-red-400 bg-red-950/20 border-red-900/30 hover:bg-red-955/40'
+                              }`}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Add Section dropdown */}
+                  <div className="pt-2 relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingSection(!isAddingSection)}
+                      className={`w-full flex items-center justify-center gap-1.5 py-3 rounded-2xl border-2 border-dashed transition-all duration-200 text-xs font-bold ${
+                        adminTheme === 'light'
+                          ? 'border-slate-200 text-slate-400 hover:border-indigo-400 hover:text-indigo-650 hover:bg-indigo-50/5'
+                          : 'border-slate-800 text-slate-550 hover:border-indigo-700 hover:text-indigo-404 hover:bg-indigo-950/10'
+                      }`}
+                    >
+                      <Plus className="w-4 h-4" />
+                      Ajouter une section
+                    </button>
+
+                    {isAddingSection && (
+                      <div className={`absolute left-0 right-0 bottom-full mb-2.5 z-40 max-h-72 overflow-y-auto rounded-2xl border shadow-2xl p-2 space-y-1 ${
+                        adminTheme === 'light' ? 'bg-white border-slate-100' : 'bg-slate-900 border-slate-800'
+                      }`}>
+                        <div className="text-[9px] font-black uppercase text-slate-455 px-3 py-1.5 border-b border-slate-100/50 dark:border-slate-800/40">
+                          Sélectionnez la section à créer
+                        </div>
+                        {Object.entries(SECTION_METADATA).map(([type, meta]) => (
+                          <button
+                            type="button"
+                            key={`add-type-${type}`}
+                            onClick={() => {
+                              const newId = `${type}-${Date.now()}`;
+                              const newSection = {
+                                id: newId,
+                                type,
+                                nameFr: meta.nameFr,
+                                visible: true,
+                                settings: type === 'topRated' || type === 'bestSellers' || type === 'weeklySales' || type === 'summerSale'
+                                  ? { titleFr: meta.nameFr, titleAr: '', productIds: [] }
+                                  : type === 'richText'
+                                    ? { titleFr: 'Titre de la section', titleAr: '', descFr: 'Ajoutez une description ici...', descAr: '', ctaTextFr: 'En savoir plus', ctaLink: '#', bgColor: '#f9fafb', textColor: '#111827' }
+                                    : type === 'customHtml'
+                                      ? { html: '<!-- Insérez votre code HTML ou scripts embeds ici -->' }
+                                      : {}
+                              };
+                              setSectionsList([...sectionsList, newSection]);
+                              setEditingSectionId(newId);
+                              setIsAddingSection(false);
+                              showToast(`Section "${meta.nameFr}" ajoutée !`, 'success');
+                            }}
+                            className={`w-full flex items-center gap-2.5 px-2.5 py-2 text-left rounded-xl transition text-xs ${
+                              adminTheme === 'light' ? 'hover:bg-slate-50 text-slate-700' : 'hover:bg-slate-800/60 text-slate-300'
+                            }`}
+                          >
+                            <div className={`w-6 h-6 rounded-lg bg-gradient-to-br ${meta.color} p-1.5 text-white flex items-center justify-center shrink-0`}>
+                              <meta.icon className="w-3.5 h-3.5" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-bold truncate">{meta.nameFr}</div>
+                              <div className="text-[9px] text-slate-400 truncate max-w-[200px]">{meta.descFr}</div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Save modifications */}
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={handleSaveHomepageSettings}
+                    disabled={saveHomepageState === 'saving'}
+                    className="w-full py-3.5 bg-gradient-to-r from-indigo-500 to-indigo-650 text-white font-bold text-xs uppercase tracking-wider rounded-2xl hover:from-indigo-600 hover:to-indigo-750 hover:shadow-lg hover:shadow-indigo-500/20 transition-all duration-200 shadow-md cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    {saveHomepageState === 'saving' ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        Sauvegarde...
+                      </>
+                    ) : saveHomepageState === 'success' ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        Modifications Enregistrées !
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-4 h-4" />
+                        Enregistrer la mise en page
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Right Column: Contextual Section Settings */}
+              <div className="lg:col-span-7">
+                {editingSectionId === null ? (
+                  <div className={`border rounded-3xl p-16 text-center flex flex-col items-center justify-center space-y-4 ${
+                    adminTheme === 'light'
+                      ? 'bg-white border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.03)]'
+                      : 'bg-slate-900/30 border-slate-900 shadow-xl'
+                  }`}>
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner ${
+                      adminTheme === 'light' ? 'bg-indigo-50 text-indigo-500' : 'bg-indigo-950/20 text-indigo-400'
+                    }`}>
+                      <Layout className="w-7 h-7" />
+                    </div>
+                    <div>
+                      <h3 className={`text-sm font-bold ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-202'}`}>
+                        Aucune section sélectionnée
+                      </h3>
+                      <p className="text-xs text-slate-505 max-w-xs mt-1 leading-relaxed">
+                        Sélectionnez une section dans l&apos;arborescence de gauche à l&apos;aide du bouton <Sliders className="inline w-3 h-3 mx-0.5 text-slate-400" /> pour commencer à l&apos;éditer.
+                      </p>
+                    </div>
+                  </div>
+                ) : (() => {
+                  const activeSectionIndex = sectionsList.findIndex(s => s.id === editingSectionId);
+                  if (activeSectionIndex === -1) {
+                    setEditingSectionId(null);
+                    return null;
+                  }
+                  const activeSection = sectionsList[activeSectionIndex];
+                  const meta = SECTION_METADATA[activeSection.type] || { nameFr: activeSection.nameFr, descFr: '', icon: Layout, color: 'from-slate-500 to-slate-600' };
+
+                  const updateActiveSectionSettings = (newSettings: any) => {
+                    const newList = [...sectionsList];
+                    newList[activeSectionIndex] = {
+                      ...newList[activeSectionIndex],
+                      settings: {
+                        ...newList[activeSectionIndex].settings,
+                        ...newSettings
+                      }
+                    };
+                    setSectionsList(newList);
+                  };
+
+                  const activeProductIds = activeSection.settings?.productIds || [];
+
+                  return (
+                    <div className={`border rounded-3xl p-6 transition-all duration-200 space-y-6 ${
+                      adminTheme === 'light'
+                        ? 'bg-white border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.03)]'
+                        : 'bg-slate-900/30 border-slate-900 shadow-xl'
+                    }`}>
+                      {/* Section Info Header */}
+                      <div className={`flex items-center justify-between border-b pb-4 ${
+                        adminTheme === 'light' ? 'border-slate-100' : 'border-slate-850'
+                      }`}>
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${meta.color} p-2 text-white flex items-center justify-center shrink-0`}>
+                            <meta.icon className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <h3 className={`text-sm font-extrabold truncate ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-202'}`}>
+                              Édition: {activeSection.settings?.titleFr || meta.nameFr}
+                            </h3>
+                            <p className="text-[10px] text-slate-400 mt-0.5">
+                              ID: <span className="font-mono">{activeSection.id}</span> · Type: <span className="font-mono">{activeSection.type}</span>
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setEditingSectionId(null)}
+                          className="p-1 rounded-lg hover:bg-slate-150 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600"
+                        >
+                          <X className="w-4.5 h-4.5" />
+                        </button>
+                      </div>
+
+                      {/* Fields */}
+                      <div className="space-y-5">
+                        {/* Custom HTML editor */}
+                        {activeSection.type === 'customHtml' && (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                                Code HTML / JavaScript / Embed
+                              </label>
+                              <span className="text-[9px] font-bold px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-500 font-mono">HTML</span>
+                            </div>
+                            <textarea
+                              rows={15}
+                              value={activeSection.settings?.html || ''}
+                              onChange={(e) => updateActiveSectionSettings({ html: e.target.value })}
+                              className="w-full text-[11px] font-mono transition outline-none rounded-xl p-3 border bg-slate-950 border-slate-900 text-emerald-400 shadow-inner"
+                              placeholder="<div>\n  <p>Votre bloc de code HTML...</p>\n</div>"
+                            />
+                            <p className="text-[9.5px] text-slate-400 leading-relaxed italic">
+                              * Vous pouvez injecter des iframes Google Maps, des embeds de réseaux sociaux, des lecteurs vidéo tiers ou du code CSS/JS personnalisé.
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Rich Text editor */}
+                        {activeSection.type === 'richText' && (
+                          <div className="space-y-4">
+                            {/* Titles */}
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Titre (FR)</label>
+                                <input
+                                  type="text"
+                                  value={activeSection.settings?.titleFr || ''}
+                                  onChange={(e) => updateActiveSectionSettings({ titleFr: e.target.value })}
+                                  className={`w-full text-xs transition outline-none rounded-xl px-3 py-2 border ${
+                                    adminTheme === 'light' ? 'bg-slate-55 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-900 text-slate-202'
+                                  }`}
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Titre (AR)</label>
+                                <input
+                                  type="text"
+                                  value={activeSection.settings?.titleAr || ''}
+                                  onChange={(e) => updateActiveSectionSettings({ titleAr: e.target.value })}
+                                  className={`w-full text-xs transition outline-none rounded-xl px-3 py-2 border text-right ${
+                                    adminTheme === 'light' ? 'bg-slate-55 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-900 text-slate-202'
+                                  }`}
+                                  dir="rtl"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Descriptions */}
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Description (FR)</label>
+                                <textarea
+                                  rows={4}
+                                  value={activeSection.settings?.descFr || ''}
+                                  onChange={(e) => updateActiveSectionSettings({ descFr: e.target.value })}
+                                  className={`w-full text-xs transition outline-none rounded-xl px-3 py-2 border ${
+                                    adminTheme === 'light' ? 'bg-slate-55 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-900 text-slate-202'
+                                  }`}
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Description (AR)</label>
+                                <textarea
+                                  rows={4}
+                                  value={activeSection.settings?.descAr || ''}
+                                  onChange={(e) => updateActiveSectionSettings({ descAr: e.target.value })}
+                                  className={`w-full text-xs transition outline-none rounded-xl px-3 py-2 border text-right ${
+                                    adminTheme === 'light' ? 'bg-slate-55 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-900 text-slate-202'
+                                  }`}
+                                  dir="rtl"
+                                />
+                              </div>
+                            </div>
+
+                            {/* CTA block */}
+                            <div className="grid grid-cols-3 gap-3">
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-505">Texte du Bouton (FR)</label>
+                                <input
+                                  type="text"
+                                  value={activeSection.settings?.ctaTextFr || ''}
+                                  onChange={(e) => updateActiveSectionSettings({ ctaTextFr: e.target.value })}
+                                  className={`w-full text-xs transition outline-none rounded-xl px-3 py-2 border ${
+                                    adminTheme === 'light' ? 'bg-slate-55 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-900 text-slate-202'
+                                  }`}
+                                  placeholder="Découvrir"
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-505">Texte du Bouton (AR)</label>
+                                <input
+                                  type="text"
+                                  value={activeSection.settings?.ctaTextAr || ''}
+                                  onChange={(e) => updateActiveSectionSettings({ ctaTextAr: e.target.value })}
+                                  className={`w-full text-xs transition outline-none rounded-xl px-3 py-2 border text-right ${
+                                    adminTheme === 'light' ? 'bg-slate-55 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-900 text-slate-202'
+                                  }`}
+                                  placeholder="تسوقي الآن"
+                                  dir="rtl"
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Lien de redirection</label>
+                                <input
+                                  type="text"
+                                  value={activeSection.settings?.ctaLink || ''}
+                                  onChange={(e) => updateActiveSectionSettings({ ctaLink: e.target.value })}
+                                  className={`w-full text-xs transition outline-none rounded-xl px-3 py-2 border ${
+                                    adminTheme === 'light' ? 'bg-slate-55 border-slate-200 text-slate-850' : 'bg-slate-950 border-slate-900 text-slate-202'
+                                  }`}
+                                  placeholder="/products or link"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Styles */}
+                            <div className="grid grid-cols-2 gap-4 pt-1">
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Arrière-plan</label>
+                                <div className="flex gap-2 items-center">
+                                  <input
+                                    type="color"
+                                    value={activeSection.settings?.bgColor || '#f9fafb'}
+                                    onChange={(e) => updateActiveSectionSettings({ bgColor: e.target.value })}
+                                    className="w-8 h-8 rounded-lg cursor-pointer border border-slate-200 dark:border-slate-800 p-0 shrink-0"
+                                  />
+                                  <input
+                                    type="text"
+                                    value={activeSection.settings?.bgColor || '#f9fafb'}
+                                    onChange={(e) => updateActiveSectionSettings({ bgColor: e.target.value })}
+                                    className={`flex-1 text-xs font-mono px-3 py-1.5 rounded-xl border ${
+                                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-805' : 'bg-slate-955 border-slate-900 text-slate-202'
+                                    }`}
+                                  />
+                                </div>
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Couleur du texte</label>
+                                <div className="flex gap-2 items-center">
+                                  <input
+                                    type="color"
+                                    value={activeSection.settings?.textColor || '#111827'}
+                                    onChange={(e) => updateActiveSectionSettings({ textColor: e.target.value })}
+                                    className="w-8 h-8 rounded-lg cursor-pointer border border-slate-200 dark:border-slate-800 p-0 shrink-0"
+                                  />
+                                  <input
+                                    type="text"
+                                    value={activeSection.settings?.textColor || '#111827'}
+                                    onChange={(e) => updateActiveSectionSettings({ textColor: e.target.value })}
+                                    className={`flex-1 text-xs font-mono px-3 py-1.5 rounded-xl border ${
+                                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-805' : 'bg-slate-955 border-slate-900 text-slate-202'
+                                    }`}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Product list editor (topRated, bestSellers, weeklySales, summerSale) */}
+                        {(activeSection.type === 'topRated' || activeSection.type === 'bestSellers' || activeSection.type === 'weeklySales' || activeSection.type === 'summerSale') && (
+                          <div className="space-y-4">
+                            {/* Titles (If not SummerSale which doesn't display heading) */}
+                            {activeSection.type !== 'summerSale' && (
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Titre de section (FR)</label>
+                                  <input
+                                    type="text"
+                                    value={activeSection.settings?.titleFr || ''}
+                                    onChange={(e) => updateActiveSectionSettings({ titleFr: e.target.value })}
+                                    className={`w-full text-xs transition outline-none rounded-xl px-3 py-2 border ${
+                                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-955 border-slate-900 text-slate-202'
+                                    }`}
+                                  />
+                                </div>
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Titre de section (AR)</label>
+                                  <input
+                                    type="text"
+                                    value={activeSection.settings?.titleAr || ''}
+                                    onChange={(e) => updateActiveSectionSettings({ titleAr: e.target.value })}
+                                    className={`w-full text-xs transition outline-none rounded-xl px-3 py-2 border text-right ${
+                                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-955 border-slate-900 text-slate-202'
+                                    }`}
+                                    dir="rtl"
+                                  />
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Section Selected Products List */}
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between mb-1">
+                                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Produits Liés</label>
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                  activeProductIds.length === 0
+                                    ? 'bg-amber-100 text-amber-700'
+                                    : adminTheme === 'light' ? 'bg-slate-100 text-slate-500' : 'bg-slate-800 text-slate-400'
+                                }`}>
+                                  {activeProductIds.length} sélectionnés
+                                </span>
+                              </div>
+
+                              {activeProductIds.length === 0 && (
+                                <div className={`py-8 rounded-2xl border-2 border-dashed text-center ${
+                                  adminTheme === 'light' ? 'border-slate-200' : 'border-slate-800'
+                                }`}>
+                                  <Package className="w-7 h-7 mx-auto mb-2 text-slate-300 opacity-70" />
+                                  <p className="text-xs font-semibold text-slate-400">Aucun produit configuré</p>
+                                  <p className="text-[10px] text-slate-400 mt-0.5 opacity-75">
+                                    Les produits les mieux notés/vendus s&apos;afficheront automatiquement
+                                  </p>
+                                </div>
+                              )}
+
+                              <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                                {activeProductIds.map((id: number, pIdx: number) => {
+                                  const prod = products.find(p => p.id === id);
+                                  if (!prod) return null;
+                                  return (
+                                    <div
+                                      key={`sec-p-item-${id}-${pIdx}`}
+                                      className={`flex items-center justify-between p-2 rounded-xl border transition ${
+                                        adminTheme === 'light'
+                                          ? 'bg-white border-slate-100 hover:border-slate-250 shadow-sm'
+                                          : 'bg-slate-900/60 border-slate-850 hover:border-slate-750'
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                        {/* Sort arrows */}
+                                        <div className="flex flex-col items-center shrink-0">
+                                          <button
+                                            type="button"
+                                            disabled={pIdx === 0}
+                                            onClick={() => {
+                                              const newIds = [...activeProductIds];
+                                              const temp = newIds[pIdx];
+                                              newIds[pIdx] = newIds[pIdx - 1];
+                                              newIds[pIdx - 1] = temp;
+                                              updateActiveSectionSettings({ productIds: newIds });
+                                            }}
+                                            className="p-0.5 text-slate-400 hover:text-slate-650 disabled:opacity-20"
+                                          >
+                                            <ChevronUp className="w-3.5 h-3.5" />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            disabled={pIdx === activeProductIds.length - 1}
+                                            onClick={() => {
+                                              const newIds = [...activeProductIds];
+                                              const temp = newIds[pIdx];
+                                              newIds[pIdx] = newIds[pIdx + 1];
+                                              newIds[pIdx + 1] = temp;
+                                              updateActiveSectionSettings({ productIds: newIds });
+                                            }}
+                                            className="p-0.5 text-slate-400 hover:text-slate-650 disabled:opacity-20"
+                                          >
+                                            <ChevronDown className="w-3.5 h-3.5" />
+                                          </button>
+                                        </div>
+
+                                        <div className="w-9 h-9 rounded-lg overflow-hidden shrink-0 bg-slate-100 ring-1 ring-black/5">
+                                          {prod.image && <img src={prod.image} alt="" className="w-full h-full object-cover" />}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                          <p className={`text-xs font-bold truncate ${adminTheme === 'light' ? 'text-slate-850' : 'text-slate-200'}`}>
+                                            {prod.nameFr || prod.title}
+                                          </p>
+                                          <p className="text-[9.5px] text-slate-400 mt-0.5">
+                                            {prod.price} DH · Stock: {prod.stock ?? 0}
+                                          </p>
+                                        </div>
+                                      </div>
+
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const newIds = activeProductIds.filter((pId: number) => pId !== id);
+                                          updateActiveSectionSettings({ productIds: newIds });
+                                        }}
+                                        className={`p-1.5 rounded-lg border transition ${
+                                          adminTheme === 'light'
+                                            ? 'text-red-500 bg-red-50 border-red-100 hover:bg-red-100'
+                                            : 'text-red-400 bg-red-950/20 border-red-900/30 hover:bg-red-955/40'
+                                        }`}
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+
+                              {/* Dropdown product search selector */}
+                              <div className="relative pt-1.5">
+                                {!trOpen ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => setTrOpen(true)}
+                                    className={`w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-dashed text-xs font-bold ${
+                                      adminTheme === 'light'
+                                        ? 'border-slate-200 text-slate-400 hover:text-slate-600 hover:border-slate-350 bg-slate-50/50'
+                                        : 'border-slate-805 text-slate-550 hover:text-slate-400 hover:border-slate-700 bg-slate-950/20'
+                                    }`}
+                                  >
+                                    <Plus className="w-3.5 h-3.5" />
+                                    Associer un produit à la section
+                                  </button>
+                                ) : (
+                                  <div className={`rounded-xl border shadow-xl overflow-hidden ${
+                                    adminTheme === 'light' ? 'bg-white border-slate-100' : 'bg-slate-900 border-slate-800'
+                                  }`}>
+                                    <div className={`flex items-center gap-2 px-3 py-2 border-b ${
+                                      adminTheme === 'light' ? 'border-slate-100 bg-slate-50/50' : 'border-slate-850 bg-slate-950/30'
+                                    }`}>
+                                      <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                      <input
+                                        type="text"
+                                        autoFocus
+                                        value={trSearch}
+                                        onChange={(e) => setTrSearch(e.target.value)}
+                                        placeholder="Rechercher par nom..."
+                                        className={`flex-1 bg-transparent outline-none text-xs font-semibold ${
+                                          adminTheme === 'light' ? 'text-slate-850 placeholder-slate-400' : 'text-slate-200 placeholder-slate-550'
+                                        }`}
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => { setTrOpen(false); setTrSearch(''); }}
+                                        className="text-slate-400 hover:text-slate-650"
+                                      >
+                                        <X className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                    <div className="max-h-48 overflow-y-auto">
+                                      {products
+                                        .filter(p => {
+                                          const name = (p.nameFr || p.title || '').toLowerCase();
+                                          const q = trSearch.toLowerCase();
+                                          return !activeProductIds.includes(p.id) && (!q || name.includes(q));
+                                        })
+                                        .slice(0, 10)
+                                        .map(p => (
+                                          <button
+                                            type="button"
+                                            key={`add-p-opt-${p.id}`}
+                                            onClick={() => {
+                                              updateActiveSectionSettings({ productIds: [...activeProductIds, p.id] });
+                                              setTrOpen(false);
+                                              setTrSearch('');
+                                            }}
+                                            className={`w-full flex items-center gap-3 px-3 py-2 text-left border-b last:border-0 text-xs transition ${
+                                              adminTheme === 'light'
+                                                ? 'border-slate-50 hover:bg-slate-50 text-slate-700'
+                                                : 'border-slate-850/50 hover:bg-slate-800/65 text-slate-300'
+                                            }`}
+                                          >
+                                            <div className="w-8 h-8 rounded overflow-hidden bg-slate-100 shrink-0">
+                                              {p.image && <img src={p.image} alt="" className="w-full h-full object-cover" />}
+                                            </div>
+                                            <span className="flex-1 truncate font-medium">{p.nameFr || p.title}</span>
+                                            <span className="text-[10px] font-bold text-slate-455 shrink-0">{p.price} DH</span>
+                                          </button>
+                                        ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Standard section global warning */}
+                        {activeSection.type !== 'customHtml' && activeSection.type !== 'richText' && activeSection.type !== 'topRated' && activeSection.type !== 'bestSellers' && activeSection.type !== 'weeklySales' && activeSection.type !== 'summerSale' && (
+                          <div className="space-y-4 py-8 text-center">
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto ${
+                              adminTheme === 'light' ? 'bg-slate-50 text-slate-400' : 'bg-slate-850 text-slate-550'
+                            }`}>
+                              <Sliders className="w-5 h-5" />
+                            </div>
+                            <div className="space-y-1">
+                              <p className={`text-xs font-bold ${adminTheme === 'light' ? 'text-slate-750' : 'text-slate-200'}`}>
+                                Paramètres Globaux
+                              </p>
+                              <p className="text-[10.5px] text-slate-500 max-w-[280px] mx-auto leading-relaxed">
+                                Les données et le contenu de cette section proviennent d&apos;autres onglets (bannières, FAQ, programme fidélité, etc.).
+                              </p>
+                            </div>
+                            {activeSection.type === 'hero' && (
+                              <button
+                                type="button"
+                                onClick={() => setActiveSettingsSubTab('banners')}
+                                className="mt-2.5 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10.5px] font-black bg-indigo-50 hover:bg-indigo-100 text-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400 transition"
+                              >
+                                Éditer les Bannières Hero
+                                <ArrowRight className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                            {activeSection.type === 'faq' && (
+                              <button
+                                type="button"
+                                onClick={() => setActiveSettingsSubTab('faq')}
+                                className="mt-2.5 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10.5px] font-black bg-indigo-50 hover:bg-indigo-100 text-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400 transition"
+                              >
+                                Éditer les Questions FAQ
+                                <ArrowRight className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* B. HERO DIAPORAMA SLIDESHOW MANAGER */}
         {activeSettingsSubTab === 'banners' && (

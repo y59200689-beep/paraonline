@@ -52,7 +52,7 @@ export const Magnetic: React.FC<MagneticProps> = ({
   };
 
   // Clone child element and inject tracking style properties
-  const child = React.Children.only(children) as React.ReactElement<any>;
+  const child = React.Children.only(children) as React.ReactElement<{ className?: string; style?: React.CSSProperties }>;
   const combinedClassName = `${child.props.className || ''} transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]`;
 
 

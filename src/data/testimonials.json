@@ -1,0 +1,44 @@
+[
+  {
+    "rating": 5,
+    "text_fr": "La protection solaire dermo-active a parfaitement régulé ma barrière cutanée. Aucun résidu blanc ni effet comédogène, avec un fini très hydratant. Expédition prioritaire le jour même à Tanger. Je recommande la rigueur clinique de cette officine.",
+    "text_ar": "واقي الشمس الطبي المنشط للبشرة حافظ تماماً على حاجزي الجلدي. لا يترك أي بقايا بيضاء أو آثار دهنية، مع ترطيب فائق. شحن ذو أولوية في نفس اليوم إلى طنجة. أوصي بشدة بالدقة الصيدلانية لمجموعتكم.",
+    "author": "Dr. Salma K.",
+    "city": "Tanger"
+  },
+  {
+    "rating": 5,
+    "text_fr": "L'intégration du sérum concentré dans mon protocole de soin a transformé l'élasticité de mon épiderme en 14 jours. Le service d'accompagnement officinal sur WhatsApp est extrêmement rigoureux et la logistique sur Rabat est irréprochable.",
+    "text_ar": "دمج السيروم المركز في بروتوكول العناية الخاص بي حسّن مرونة بشرتي في غضون 14 يوماً. خدمة المتابعة الصيدلانية عبر واتساب دقيقة للغاية والتوصيل إلى الرباط سريع ومجاني.",
+    "author": "Yassine M.",
+    "city": "Rabat"
+  },
+  {
+    "rating": 5,
+    "text_fr": "Je prescris mes soins et solaires K-Beauty exclusifs sur cette plateforme. Les formules sont 100% authentiques avec une traçabilité totale des laboratoires d'origine. Les tarifs sont parfaitement ajustés à la qualité clinique.",
+    "text_ar": "أقتني علاجاتي وواقيات الشمس الكورية الحصرية من هذه المنصة. المستحضرات أصلية 100% مع إمكانية التتبع الكامل للمختبرات المصنعة. الأسعار عادلة ومتناسبة مع الجودة العيادية العالية.",
+    "author": "Meryem T.",
+    "city": "Meknès"
+  },
+  {
+    "rating": 5,
+    "text_fr": "Mon protocole de double nettoyage a unifié mon teint en moins de 10 jours. Le conditionnement thermique des flacons est parfait et l'authenticité des ingrédients actifs est garantie dès l'ouverture du colis.",
+    "text_ar": "بروتوكول التنظيف المزدوج الموصى به وحّد لون بشرتي في أقل من 10 أيام. التعبئة والحفظ الحراري للعبوات ممتاز، وفعالية المكونات النشطة مضمونة تماماً منذ فتح الطرد.",
+    "author": "Nadia R.",
+    "city": "Marrakech"
+  },
+  {
+    "rating": 5,
+    "text_fr": "Certaines références de pointe sont introuvables au Maroc, mais l'officine me les a livrées en moins de 3 heures à Fès. La qualité du service client et la rigueur scientifique de l'équipe d'accompagnement sont exceptionnelles.",
+    "text_ar": "بعض المستحضرات الجلدية النادرة يصعب العثور عليها بالمغرب، لكن الصيدلية قامت بتسليمها لي في أقل من 3 ساعات بفاس. جودة خدمة العملاء والدقة العلمية لفريق الاستشارة استثنائية.",
+    "author": "Fatima Z.",
+    "city": "Fès"
+  },
+  {
+    "rating": 5,
+    "text_fr": "Le suivi personnalisé et le renouvellement régulier de mes soins se font en toute sérénité. Les dermo-cosmétiques de pointe comme Bioderma et Embryolisse sont toujours disponibles et la livraison à Casablanca est rapide.",
+    "text_ar": "المتابعة المخصصة وتجديد علاجاتي الدورية يتمان بكل سلاسة. مستحضرات الجلدية المتطورة متوفرة دائماً والتوصيل إلى الدار البيضاء مثالي وآمن.",
+    "author": "Khadija A.",
+    "city": "Casablanca"
+  }
+]

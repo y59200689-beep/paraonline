@@ -1,11 +1,18 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Product } from '../lib/data';
-import { useCart } from '../context/CartContext';
-import { useTranslation } from '../context/LanguageContext';
-import { Star, ShoppingBag, Eye, Heart, Sparkles } from 'lucide-react';
-import { useAmPm } from '../context/AmPmContext';
+import { Product } from '@/lib/data';
+import { useCart } from '@/context/CartContext';
+import { useTranslation } from '@/context/LanguageContext';
+import { useCurrency } from '@/context/CurrencyContext';
+import { Star, ShoppingCart, Eye, Heart, Sparkles, Scale, Coins } from 'lucide-react';
+import { getOptimizedImageUrl } from '@/lib/image-optimizer';
+import { useAmPm } from '@/context/AmPmContext';
+import { useCompare } from '@/context/CompareContext';
+import { useWishlist } from '@/context/WishlistContext';
+import { useSettings } from '@/context/SettingsContext';
+import { useUi } from '@/context/UiContext';
+import Image from 'next/image';
 
 interface ProductCardProps {
   product: Product;
@@ -14,6 +21,8 @@ interface ProductCardProps {
   style?: React.CSSProperties;
   customBadge?: string;
   imageOverlay?: React.ReactNode;
+  showMatchScore?: boolean;
+  searchQuery?: string;
 }
 
 const placeholderSvg = "data:image/svg+xml;utf8," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300' width='100%' height='100%'><rect width='100%' height='100%' fill='#f1f5f9'/><path d='M150 100a40 40 0 1 0 40 40 40 40 0 0 0-40-40zm0 60a20 20 0 1 1 20-20 20 20 0 0 1-20 20z' fill='#94a3b8'/><path d='M180 180h-60a10 10 0 0 0-10 10v10h80v-10a10 10 0 0 0-10-10z' fill='#94a3b8'/><text x='150' y='230' font-family='sans-serif' font-size='12' font-weight='bold' fill='#64748b' text-anchor='middle'>Image Indisponible</text></svg>");
@@ -27,50 +36,117 @@ const toTitleCase = (str: string) => {
     .join(' ');
 };
 
+const renderHighlightedTitle = (title: string, query?: string) => {
+  if (!query || !query.trim()) return title;
+  const escapedQuery = query.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+  const parts = title.split(new RegExp(`(${escapedQuery})`, 'gi'));
+  return (
+    <>
+      {parts.map((part, i) => 
+        part.toLowerCase() === query.toLowerCase() 
+          ? <span key={i} className="bg-teal-500/15 text-teal-800 dark:text-teal-300 font-extrabold rounded px-0.5">{part}</span>
+          : part
+      )}
+    </>
+  );
+};
+
 export const ProductCard: React.FC<ProductCardProps> = ({ 
   product, 
   onOpenQuickView,
   className,
   style,
   customBadge,
-  imageOverlay
+  imageOverlay,
+  showMatchScore = false,
+  searchQuery
 }) => {
   const { addToCart } = useCart();
   const { language } = useTranslation();
+  const { convertPrice } = useCurrency();
+  const { settings } = useSettings();
+  const lowStockThreshold = settings.lowStockThreshold || 5;
+  const { toggleCompare, isInCompare } = useCompare();
+  const isCompared = isInCompare(product.id);
+  const { toggleWishlist, isInWishlist } = useWishlist();
+  const isFavorite = isInWishlist(product.id);
+  const { amPmState } = useAmPm();
+  const { diagnostic, triggerFlyToCart, setSelectedProduct } = useUi();
 
-  const cardRef = useRef<HTMLDivElement>(null);
-  const glareRef = useRef<HTMLDivElement>(null);
+  const [imgError, setImgError] = useState(false);
+  const [altImgError, setAltImgError] = useState(false);
+
   const [isAdding, setIsAdding] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
-
-  // persistent diagnostic match score state
-  const [diagnostic, setDiagnostic] = useState<{ skinType: string; concern: string; sunExposure: string } | null>(null);
+  const [ripples, setRipples] = useState<{ id: number; x: number; y: number; size: number }[]>([]);
 
   useEffect(() => {
-    const loadDiagnostic = () => {
-      try {
-        const stored = localStorage.getItem('skin_diagnostic_results');
-        if (stored) {
-          setDiagnostic(JSON.parse(stored));
-        } else {
-          setDiagnostic(null);
+    if (ripples.length > 0) {
+      const timer = setTimeout(() => {
+        setRipples(prev => prev.slice(1));
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [ripples]);
+
+  const handleRippleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const button = e.currentTarget;
+    const rect = button.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const size = Math.max(rect.width, rect.height) * 2;
+    setRipples(prev => [...prev, { id: Date.now() + Math.random(), x: x - size / 2, y: y - size / 2, size }]);
+  };
+
+  const [isVisible, setIsVisible] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    if (!('IntersectionObserver' in window)) {
+      setIsVisible(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
         }
-      } catch (e) {
-        console.error('LocalStorage blocked/unavailable:', e);
-      }
-    };
+      },
+      { rootMargin: '200px' }
+    );
 
-    loadDiagnostic();
-
-    // Listen to custom diagnostic events
-    window.addEventListener('skin_diagnostic_completed', loadDiagnostic);
-    window.addEventListener('skin_diagnostic_reset', loadDiagnostic);
+    const el = cardRef.current;
+    if (el) {
+      observer.observe(el);
+    }
 
     return () => {
-      window.removeEventListener('skin_diagnostic_completed', loadDiagnostic);
-      window.removeEventListener('skin_diagnostic_reset', loadDiagnostic);
+      observer.disconnect();
     };
   }, []);
+
+  if (!isVisible) {
+    return (
+      <div
+        ref={cardRef}
+        className={`group relative bg-white border border-slate-100 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.015)] transition-all duration-300 flex flex-col h-full ${className || ''}`}
+        style={{ ...style, minHeight: '380px' }}
+      >
+        <div className="relative w-[calc(100%-24px)] aspect-square m-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden shrink-0 animate-pulse" />
+        <div className="px-4 pb-4 pt-1 flex flex-col flex-grow space-y-3">
+          <div className="h-3 bg-slate-50/60 rounded w-1/3 animate-pulse" />
+          <div className="h-5 bg-slate-50/60 rounded w-3/4 animate-pulse" />
+          <div className="h-4 bg-slate-50/60 rounded w-1/2 animate-pulse" />
+          <div className="mt-auto pt-2.5">
+            <div className="h-[40px] bg-slate-50/60 rounded-lg w-full animate-pulse" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const getMatchScore = () => {
     if (!diagnostic) return null;
@@ -155,26 +231,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const matchReason = getMatchReason();
   const isRTL = language === 'AR';
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const card = cardRef.current;
-    if (!card) return;
-    const { left, top, width, height } = card.getBoundingClientRect();
-    const x = e.clientX - left;
-    const y = e.clientY - top;
-    const angleX = -(y - height / 2) / 20;
-    const angleY = (x - width / 2) / 20;
-    card.style.transform = `perspective(900px) rotateX(${angleX}deg) rotateY(${angleY}deg) scale(1.015)`;
-    if (glareRef.current) {
-      glareRef.current.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(255,255,255,0.15) 0%, transparent 70%)`;
-      glareRef.current.style.opacity = '1';
-    }
-  };
-
-  const handleMouseLeave = () => {
-    if (cardRef.current) cardRef.current.style.transform = 'perspective(900px) rotateX(0deg) rotateY(0deg) scale(1)';
-    if (glareRef.current) glareRef.current.style.opacity = '0';
-  };
-
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsAdding(true);
@@ -182,27 +238,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     const clientX = e.clientX || window.innerWidth / 2;
     const clientY = e.clientY || window.innerHeight / 2;
 
-    window.dispatchEvent(
-      new CustomEvent('product_added_to_cart', {
-        detail: {
-          image: product.image,
-          clientX,
-          clientY
-        }
-      })
-    );
+    triggerFlyToCart(product.image, clientX, clientY);
 
     addToCart(product, 1);
     setTimeout(() => setIsAdding(false), 900);
   };
 
-
   const discount = product.comparePrice && product.price && product.comparePrice > product.price
     ? Math.round((1 - product.price / product.comparePrice) * 100)
     : null;
 
-  // Dynamic Premium Tag extraction
-  const vendorLower = product.vendor.toLowerCase();
+  const vendorLower = (product.vendor || '').toLowerCase();
   const isKBeauty = ['anua', 'beauty of joseon', 'skin1004', 'hada labo tokyo'].includes(vendorLower);
   const isBestSeller = product.rating >= 4.8;
   const isSolaire = product.tags.includes('solaire') || product.nameFr?.toLowerCase().includes('solaire') || product.name?.toLowerCase().includes('sun');
@@ -212,226 +258,261 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     : isBestSeller 
       ? (language === 'FR' ? 'Best-Seller' : 'الأكثر مبيعاً')
       : isSolaire
-        ? (language === 'FR' ? 'Solaire' : 'واقي شمس')
+        ? (language === 'FR' ? 'Solaire' : 'واqui شمس')
         : (language === 'FR' ? 'Nouveau' : 'جديد');
 
   const isUrgent = discount && discount >= 20;
-
-  // AM/PM Daytime/Nighttime Routine properties
-  const { amPmState } = useAmPm();
   const isAMState = amPmState === 'am';
 
   const isDayProduct = isSolaire || product.tags.includes('jour') || product.nameFr?.toLowerCase().includes('jour') || product.nameFr?.toLowerCase().includes('bright') || product.nameFr?.toLowerCase().includes('vitamine c') || product.id === 3 || product.id === 7 || product.id === 14 || product.id === 17 || product.id === 13 || product.id === 1;
   const isNightProduct = product.tags.includes('nuit') || product.nameFr?.toLowerCase().includes('nuit') || product.nameFr?.toLowerCase().includes('night') || product.id === 8 || product.id === 5 || product.id === 22 || product.id === 15 || product.id === 16 || product.id === 6;
 
-  const routineLabelFr = isDayProduct && isNightProduct ? 'Jour & Nuit' : isDayProduct ? 'Soin de Jour ☀️' : 'Soin de Nuit 🌙';
-  const routineLabelAr = isDayProduct && isNightProduct ? 'نهاراً وليلاً' : isDayProduct ? 'عناية نهارية ☀️' : 'عناية ليلية 🌙';
+  const routineLabelFr = isDayProduct && isNightProduct ? 'Jour & Nuit' : isDayProduct ? 'Soin de Jour' : 'Soin de Nuit';
+  const routineLabelAr = isDayProduct && isNightProduct ? 'نهاراً وليلاً' : isDayProduct ? 'عناية نهارية' : 'عناية ليلية';
 
   const isMatchingTime = (isAMState && isDayProduct) || (!isAMState && isNightProduct);
+
+  const getKeyIngredients = () => {
+    if (!product.ingredients) return [];
+    const actives = [
+      'niacinamide', 'centella asiatica', 'retinol', 'vitamine c', 'acide hyaluronique', 
+      'acide tranexamique', 'squalane', 'acide salicylique', 'zinc', 'panthenol', 'collagène', 
+      'l-lysine', 'ceramides', 'l-proline', 'hyaluronic acid', 'squalene', 'aminexil'
+    ];
+    const found: string[] = [];
+    const ingredientsLower = product.ingredients.toLowerCase();
+    
+    actives.forEach(act => {
+      if (ingredientsLower.includes(act)) {
+        if (act === 'acide hyaluronique' || act === 'hyaluronic acid') found.push('Acide Hyaluronique');
+        else if (act === 'vitamine c') found.push('Vitamine C');
+        else if (act === 'centella asiatica') found.push('Centella');
+        else if (act === 'acide tranexamique') found.push('TXA');
+        else if (act === 'acide salicylique') found.push('BHA');
+        else found.push(act.charAt(0).toUpperCase() + act.slice(1));
+      }
+    });
+    
+    return found.slice(0, 2);
+  };
+  const keyIngredients = getKeyIngredients();
+
+  const getCategoryLabel = () => {
+    const cat = product.category.toLowerCase();
+    if (cat === 'visage') return language === 'FR' ? 'Soin Visage' : 'العناية بالوجه';
+    if (cat === 'solaire') return language === 'FR' ? 'Soin Solaire' : 'واقيات الشمس';
+    if (cat === 'cheveux') return language === 'FR' ? 'Soin Capillaire' : 'العناية بالشعر';
+    if (cat === 'corps') return language === 'FR' ? 'Soin du Corps' : 'العناية بالجسم';
+    if (cat === 'kbeauty') return 'K-Beauty';
+    return product.vendor;
+  };
+
+  const categoryLabel = getCategoryLabel();
+
+  const cleanTitle = (title: string) => {
+    let clean = title;
+    const vendorPrefixes = [
+      "Hada Labo Tokyo", "Hada Labo", "La Roche-Posay", "La Roche Posay",
+      "Vichy", "CeraVe", "Eucerin", "Bioderma", "SVR", "Cetaphil",
+      "Avène", "Mixa Bébé", "Mixa", "L'Oréal Paris", "L'Oréal", "L&apos;Oréal",
+      "Garnier", "Erborian", "Kérastase", "Dercos Technique", "Dercos",
+      "Maybelline", "Beauty of Joseon", "Anua", "Skin1004", "Foreo",
+      "BeautyBlender", "Solgar", "Embryolisse", "Nivea Sun", "Nivea"
+    ];
+    for (const vendor of vendorPrefixes) {
+      const regex = new RegExp(`^${vendor}\\s+[-–—]?\\s*`, 'i');
+      clean = clean.replace(regex, '');
+    }
+    return clean;
+  };
 
   return (
     <div
       ref={cardRef}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      className={`group relative bg-white border rounded-2xl overflow-hidden transition-all duration-500 hover:-translate-y-1.5 flex flex-col cursor-default bg-clip-padding ${
-        isMatchingTime
-          ? isAMState
-            ? 'border-amber-200/50 shadow-[0_4px_20px_rgba(245,158,11,0.04)] hover:shadow-[0_20px_40px_rgba(245,158,11,0.08)]'
-            : 'border-indigo-200/50 shadow-[0_4px_20px_rgba(99,102,241,0.04)] hover:shadow-[0_20px_40px_rgba(99,102,241,0.08)]'
-          : 'border-slate-100 hover:shadow-[0_20px_40px_rgba(131,24,67,0.03)]'
-      } hover:border-accent/20 ${className || ''}`}
-      style={{ transformStyle: 'preserve-3d', ...style }}
+      className={`group relative bg-white border border-slate-100 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.015)] hover:shadow-[0_12px_30px_rgba(13,148,136,0.06)] hover:border-teal-500/20 hover:-translate-y-1.5 transition-all duration-300 flex flex-col h-full cursor-default ${className || ''}`}
+      style={{ ...style }}
     >
-      {/* Glare effect */}
-      <div ref={glareRef} className="absolute inset-0 pointer-events-none z-10 opacity-0 transition-opacity duration-300" />
-
-      {/* Floating Inset Image Container */}
-      <div className="relative aspect-square m-3 rounded-xl overflow-hidden bg-slate-50 shrink-0">
-        {discount && (
-          <span
-            className="absolute top-0 left-0 bg-primary text-white text-[10px] font-black rounded-br-xl z-30 uppercase tracking-widest shadow-sm inline-flex items-center justify-center px-3.5 py-1.5"
-          >
+      <a
+        href={`/products/${product.id}`}
+        className="bezel-outer !p-2 bg-[#f8fafc]/90 border border-slate-100/60 block m-3 w-[calc(100%-24px)] aspect-square relative shrink-0 overflow-hidden cursor-pointer rounded-2xl group/img"
+      >
+        
+        {product.stock !== undefined && product.stock <= 0 ? (
+          <span className="absolute top-2.5 left-2.5 bg-rose-600 text-white text-[9px] font-black rounded-[4px] z-30 uppercase tracking-widest shadow-sm px-2 py-1 select-none">
+            {language === 'FR' ? 'Hors Stock' : 'غير متوفر'}
+          </span>
+        ) : product.stock !== undefined && product.stock > 0 && product.stock <= lowStockThreshold ? (
+          <span className="absolute top-2.5 left-2.5 bg-amber-500 text-white text-[9px] font-black rounded-[4px] z-30 uppercase tracking-widest shadow-sm px-2 py-1 select-none animate-pulse">
+            {language === 'FR' ? `Seulement ${product.stock} restants !` : `متبقي ${product.stock} فقط !`}
+          </span>
+        ) : discount ? (
+          <span className="absolute top-2.5 left-2.5 bg-primary text-white text-[10px] font-black rounded-[4px] z-30 uppercase tracking-widest shadow-sm px-2 py-1 select-none">
             -{discount}%
           </span>
-        )}
+        ) : null}
 
-        {/* Interactive floating heart wishlist button */}
         <button
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
-            setIsFavorite(!isFavorite);
+            toggleWishlist(product);
           }}
-          className={`absolute top-3 right-3 z-30 w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-md transition-all duration-300 active:scale-90 cursor-pointer shadow-sm ${
-            isFavorite
-              ? 'bg-white text-[#F43F5E] hover:bg-[#FFF1F2]'
-              : 'bg-white/95 text-slate-500 hover:text-slate-800 hover:bg-white'
+          className={`absolute top-2.5 right-2.5 z-30 w-8 h-8 rounded-full flex items-center justify-center bg-white border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.05)] transition-all duration-200 ease-out active:scale-90 cursor-pointer ${
+            isFavorite ? 'text-[#F43F5E] border-rose-100' : 'text-slate-400 hover:text-slate-600'
           }`}
           title={language === 'FR' ? 'Ajouter aux favoris' : 'إضافة للمفضلة'}
+          aria-label={language === 'FR' ? 'Ajouter aux favoris' : 'إضافة للمفضلة'}
         >
           <Heart className={`w-3.5 h-3.5 transition-transform duration-300 ${isFavorite ? 'fill-[#F43F5E] scale-110 text-[#F43F5E]' : ''}`} />
         </button>
 
-        <div className="absolute inset-0 w-full h-full z-0">
-          {/* Main Image */}
-          <img
-            src={product.image}
+        {/* Inner bezel wrapper around images */}
+        <div className="bezel-inner absolute inset-2 bg-white rounded-xl border border-slate-100 flex items-center justify-center overflow-hidden z-0 transition-transform duration-500 ease-out group-hover/img:scale-[1.02]">
+          <Image
+            src={imgError ? placeholderSvg : getOptimizedImageUrl(product.image)}
             alt={product.nameFr || product.name || product.title}
-            className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-in-out ${
-              product.images && product.images.length > 1 ? 'group-hover:opacity-0' : 'group-hover:scale-105'
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className={`object-cover filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.03)] transition-all duration-700 ease-in-out ${
+              product.images && product.images.length > 1 ? 'group-hover:opacity-0' : ''
             }`}
-            onError={(e) => {
-              e.currentTarget.src = placeholderSvg;
-            }}
-            loading="lazy"
+            onError={() => setImgError(true)}
           />
-          {/* Secondary Image (Hover Swap) */}
           {product.images && product.images.length > 1 && (
-            <img
-              src={product.images[1]}
+            <Image
+              src={altImgError ? placeholderSvg : getOptimizedImageUrl(product.images[1])}
               alt={`${product.nameFr || product.name || product.title} Alternate`}
-              className="absolute inset-0 w-full h-full object-cover transition-all duration-700 cubic-bezier(0.23, 1, 0.32, 1) opacity-0 group-hover:opacity-100 scale-105 group-hover:scale-100"
-              onError={(e) => {
-                e.currentTarget.src = placeholderSvg;
-              }}
-              loading="lazy"
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="object-cover filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.03)] transition-all duration-700 ease-out opacity-0 group-hover:opacity-100"
+              onError={() => setAltImgError(true)}
             />
           )}
         </div>
-        {/* Hover Quick View action overlay */}
-        <div className="absolute inset-0 bg-[#0F172A]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 flex items-center justify-center">
-          <button
-            onClick={() => onOpenQuickView?.(product)}
-            className="px-4 py-2 bg-white hover:bg-primary hover:text-white text-[#1E293B] rounded-lg shadow-md transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] translate-y-3 group-hover:translate-y-0 active:scale-95 cursor-pointer flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider"
-            title="Aperçu rapide"
-          >
-            <Eye className="w-3.5 h-3.5" />
-            <span>{language === 'FR' ? 'Aperçu' : 'عرض'}</span>
-          </button>
-        </div>
 
-        {/* Custom Image Overlay */}
-        {imageOverlay}
-      </div>
-
-      {/* Spacious Card Body */}
-      <div className="pt-2 flex flex-col flex-grow px-5 pb-5">
-        {/* Brand & Star Rating Row */}
-        <div className="flex items-center justify-between gap-2 mb-2 mt-2">
-          <span className="text-[9px] font-extrabold text-accent uppercase tracking-widest">{product.vendor}</span>
-          <div
-            className="flex items-center gap-0.5 bg-amber-50 rounded-lg text-amber-700 font-extrabold text-[9px] px-2.5 py-0.5"
-          >
-            <Star className="w-2.5 h-2.5 fill-amber-500 stroke-none" />
-            <span>{product.rating}</span>
-            <span
-              className="text-amber-800/60 font-normal ml-1"
+        <div className="absolute inset-0 bg-black/6 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 flex items-center justify-center">
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (onOpenQuickView) {
+                  onOpenQuickView(product);
+                } else {
+                  setSelectedProduct(product);
+                }
+              }}
+              className="px-4 py-2 bg-slate-900/90 backdrop-blur-sm hover:bg-primary hover:scale-105 text-white rounded-lg shadow-md transition-all duration-300 cursor-pointer flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.1em] select-none"
             >
-              ({product.reviews})
-            </span>
+              <Eye className="w-3.5 h-3.5 text-white" />
+              <span className="text-white">{language === 'FR' ? 'Aperçu' : 'عرض'}</span>
+            </button>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleCompare(product);
+              }}
+              className="px-4 py-2 bg-slate-900/90 backdrop-blur-sm hover:bg-slate-800 text-white rounded-lg shadow-md transition-all duration-300 cursor-pointer flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.1em] select-none"
+            >
+              <Scale className={`w-3.5 h-3.5 ${isCompared ? 'text-amber-500' : 'text-white'}`} />
+              <span className="text-white">{language === 'FR' ? 'Comparer' : 'مقارنة'}</span>
+            </button>
           </div>
         </div>
 
-        {/* Clean, Refined Product Title */}
-        <h3
-          onClick={() => onOpenQuickView?.(product)}
-          className="text-[13px] font-bold text-[#1E293B] hover:text-primary cursor-pointer line-clamp-2 leading-snug transition-colors duration-300 min-h-[38px] mb-2"
-        >
-          {toTitleCase(product.nameFr || product.name || product.title)}
-        </h3>
+        {imageOverlay}
+      </a>
 
-        {/* Dynamic Highlight Benefit Tag & Stock Row */}
-        <div className="flex items-center justify-between mt-1 mb-3.5 select-none relative">
-          {/* Benefit Badge or AI Match Score */}
-          {matchScore ? (
-            <div className="relative group/tooltip">
-              <span className="px-2.5 py-1 text-[9px] font-black uppercase tracking-wider rounded-md bg-emerald-50/80 text-emerald-700 shadow-[0_0_10px_rgba(16,185,129,0.05)] flex items-center gap-1.5 cursor-help">
-                <span className="relative flex h-1.5 w-1.5 shrink-0">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                </span>
-                <span>🧬 {matchScore}% Match</span>
-              </span>
-              
-              {/* Luxury Clinical Micro-Tooltip */}
-              <div 
-                className="absolute bottom-full mb-2 left-0 w-[240px] bg-[#0b0f19]/95 backdrop-blur-md text-white text-[10px] p-2.5 rounded-xl shadow-xl opacity-0 scale-95 group-hover/tooltip:opacity-100 group-hover/tooltip:scale-100 transition-all duration-300 pointer-events-none z-50 origin-bottom-left leading-relaxed border border-slate-800"
-                style={{ direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}
-              >
-                <div className="font-extrabold text-[8px] uppercase tracking-wider text-emerald-400 mb-1 flex items-center gap-1">
-                  <Sparkles className="w-2.5 h-2.5 fill-emerald-400 stroke-none" />
-                  <span>{language === 'FR' ? 'Analyse Clinique IA' : 'تحليل المختبر الذكي'}</span>
-                </div>
-                <div className="font-medium text-slate-300">{matchReason}</div>
-                {/* Arrow */}
-                <div className="absolute top-full left-4 -translate-y-[1px] w-2 h-2 bg-[#0b0f19] border-r border-b border-slate-800 rotate-45" />
-              </div>
-            </div>
-          ) : (
-            <span className={`px-2.5 py-1 text-[9px] font-black uppercase tracking-wider rounded-md transition-all duration-300 ${
-              isMatchingTime
-                ? isAMState
-                  ? 'bg-amber-50 text-amber-700 shadow-sm'
-                  : 'bg-indigo-50 text-indigo-700 shadow-sm'
-                : customBadge
-                  ? 'bg-[#FDF2F8] text-[#DB2777]'
-                  : highlightTag === 'K-Beauty' || highlightTag === 'جمال كوري'
-                    ? 'bg-sky-50/80 text-sky-700'
-                    : highlightTag === 'Best-Seller' || highlightTag === 'الأكثر مبيعاً'
-                      ? 'bg-amber-50/80 text-amber-700'
-                      : highlightTag === 'Solaire' || highlightTag === 'واقي شمس'
-                        ? 'bg-rose-50/80 text-rose-700'
-                        : 'bg-emerald-50/80 text-emerald-700'
-            }`}>
-              {customBadge || (isMatchingTime ? (language === 'FR' ? routineLabelFr : routineLabelAr) : highlightTag)}
+      <div className="px-4 pb-4 pt-1 flex flex-col flex-grow">
+        
+        <div className="flex items-center justify-between mb-1 select-none">
+          <span className="text-[10px] font-bold text-slate-400/80 uppercase tracking-wider block text-left">
+            {categoryLabel}
+          </span>
+          {showMatchScore && diagnostic && matchScore && (
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-teal-50 dark:bg-teal-950/30 text-teal-700 dark:text-teal-400 text-[9px] font-black uppercase tracking-wider border border-teal-100/50 dark:border-teal-900/30">
+              <Sparkles className="w-2.5 h-2.5 fill-current text-teal-500 dark:text-teal-400" />
+              {matchScore}% Match
             </span>
           )}
+        </div>
 
-          {/* Premium Urgency/Stock status indicator */}
-          <div className="flex items-center text-[10px] font-bold">
-            {isUrgent ? (
-              <span className="text-[#DC2626] flex items-center gap-1.5">
-                <span className="relative flex h-1.5 w-1.5 shrink-0">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#DC2626] opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#DC2626]"></span>
-                </span>
-                <span>{language === 'FR' ? 'Dernières pièces' : 'القطع الأخيرة'}</span>
-              </span>
-            ) : (
-              <span className="text-[#059669] flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#059669] shrink-0" />
-                <span>{language === 'FR' ? 'En stock' : 'متوفر'}</span>
-              </span>
-            )}
+        <h3 className="text-[13.5px] font-bold text-slate-800 hover:text-primary line-clamp-2 leading-snug transition-colors duration-300 min-h-[38px] text-left mb-2.5">
+          <a href={`/products/${product.id}`} className="cursor-pointer block">
+            {renderHighlightedTitle(toTitleCase(cleanTitle(product.nameFr || product.name || product.title)), searchQuery)}
+          </a>
+        </h3>
+
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-[15px] font-black text-primary tracking-tight whitespace-nowrap">
+            {convertPrice(product.price)}
+          </span>
+          {discount && (
+            <span className="text-[11px] text-slate-400 line-through font-semibold whitespace-nowrap">
+              {convertPrice(product.comparePrice)}
+            </span>
+          )}
+        </div>
+
+        {product.stock !== undefined && product.stock > 0 && product.stock <= lowStockThreshold && (
+          <div className="flex items-center gap-1.5 mb-2.5 select-none justify-start">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+            </span>
+            <span className="text-[10px] font-extrabold text-amber-600 animate-pulse">
+              {language === 'FR' ? `Stock limité : plus que ${product.stock} dispo` : `كمية محدودة: متبقي ${product.stock} فقط`}
+            </span>
+          </div>
+        )}
+
+        <div className="flex items-center gap-1.5 mt-1 mb-2.5 select-none justify-start">
+          <Coins className="w-3.5 h-3.5 text-accent" />
+          <span className="text-[9.5px] font-extrabold text-accent">
+            {language === 'FR' ? `+${Math.round(product.price)} Points Beauté` : `+${Math.round(product.price)} نقطة جمال`}
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between border-t border-slate-50 pt-2.5 mt-auto select-none">
+          <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star 
+                  key={star} 
+                  className={`w-3.5 h-3.5 fill-current ${
+                    star <= Math.round(product.rating) 
+                      ? 'text-gold fill-gold'
+                      : 'text-slate-200 fill-slate-200'
+                  } stroke-none`} 
+                />
+              ))}
+            </div>
+            <span className="text-[10.5px] font-bold text-slate-400 mt-0.5">
+              ({product.rating.toFixed(1)})
+            </span>
           </div>
         </div>
 
-        {/* Price & Full-width elegant Button */}
-        <div className="mt-auto border-t border-slate-100 flex flex-col gap-3 pt-3">
-          <div className="flex items-baseline gap-1.5 px-0.5">
-            <span className="text-[16px] font-black text-primary-dark tracking-tight">
-              {product.price.toFixed(2)} <span className="text-[10px] font-extrabold uppercase">DH</span>
-            </span>
-            {discount && (
-              <span className="text-[11px] text-[#94A3B8] line-through font-semibold">
-                {product.comparePrice.toFixed(2)} DH
-              </span>
-            )}
-          </div>
+        <button
+          onClick={handleAdd}
+          disabled={isAdding || (product.stock !== undefined && product.stock <= 0)}
+          className={`mt-3.5 w-full font-bold text-[11px] sm:text-[11px] lg:text-[12px] uppercase tracking-wide h-[40px] rounded-lg flex items-center justify-center gap-1.5 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 cursor-pointer px-2 ${
+            product.stock !== undefined && product.stock <= 0
+              ? 'bg-slate-700 text-slate-300 cursor-not-allowed opacity-70'
+              : 'btn-gradient'
+          }`}
+        >
+          <ShoppingCart className={`w-3.5 h-3.5 shrink-0 ${isAdding ? 'animate-bounce' : ''}`} style={{ color: '#ffffff', stroke: '#ffffff' }} />
+          <span className="whitespace-nowrap" style={{ color: '#ffffff', fontWeight: 800, letterSpacing: '0.02em' }}>
+            {product.stock !== undefined && product.stock <= 0
+              ? (language === 'FR' ? 'Rupture de Stock' : 'غير متوفر')
+              : isAdding
+              ? (language === 'FR' ? 'Ajouté !' : 'تم !')
+              : (language === 'FR' ? 'Ajouter au panier' : 'أضف إلى السلة')}
+          </span>
+        </button>
 
-          <button
-            onClick={handleAdd}
-            disabled={isAdding}
-            className="w-full flex items-center justify-center gap-2 py-3 bg-primary-dark hover:bg-primary text-white text-[11px] font-black uppercase tracking-wider rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary-dark/15 active:scale-[0.97] disabled:opacity-80 cursor-pointer mt-1"
-          >
-            <ShoppingBag className={`w-3.5 h-3.5 ${isAdding ? 'animate-bounce' : ''}`} style={{ color: '#ffffff' }} />
-            <span style={{ color: '#ffffff', fontWeight: 900 }}>
-              {isAdding
-                ? (language === 'FR' ? 'Ajouté !' : 'تم !')
-                : (language === 'FR' ? 'Ajouter au panier' : 'أضف إلى السلة')}
-            </span>
-          </button>
-        </div>
       </div>
     </div>
   );

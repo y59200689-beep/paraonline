@@ -1,0 +1,26 @@
+[
+  {
+    "question_fr": "Quelles sont vos zones de couverture pour l'expédition ?",
+    "question_ar": "ما هي مناطق التغطية الخاصة بالشحن الصيدلاني ؟",
+    "answer_fr": "Nous assurons la livraison de vos soins dermatologiques sur l'ensemble du territoire marocain. Pour les villes de Tanger, Tétouan, Rabat, Salé, Témara, Fès, Meknès et Ifrane, les commandes validées avant 12h00 sont livrées le jour même. Les frais de livraison prioritaire sont intégralement pris en charge par notre officine.",
+    "answer_ar": "نحن نضمن توصيل مستحضرات العناية الجلدية إلى جميع أنحاء المملكة المغربية. بالنسبة لمدن طنجة، تطوان، الرباط، سلا، تمارة، فاس، مكناس، وإفران، فإن الطلبيات المؤكدة قبل الساعة 12:00 زوالاً يتم تسليمها في نفس اليوم. تكاليف الشحن ذو الأولوية مغطاة بالكامل من قبل صيدليتنا."
+  },
+  {
+    "question_fr": "Proposez-vous un service de retrait en officine physique (Click & Collect) ?",
+    "question_ar": "هل تتوفر خدمة الاستلام المباشر من مقر الصيدلية (Click & Collect) ؟",
+    "answer_fr": "Actuellement, nous ne proposons pas de retrait sur place. Afin de garantir les protocoles d'hygiène et de conservation des formules, nous opérons exclusivement via un réseau logistique stérile et sécurisé directement livré à votre adresse (professionnelle ou personnelle).",
+    "answer_ar": "في الوقت الحالي، لا تتوفر خدمة الاستلام الذاتي من المقر. لضمان بروتوكولات النظافة وحفظ المستحضرات الكيميائية، نقوم بالتوصيل الحصري عبر شبكة لوجستية معقمة وآمنة مباشرة إلى عنوانكم المختار."
+  },
+  {
+    "question_fr": "Quelle est la politique de retour des produits ?",
+    "question_ar": "ما هي سياسة إرجاع واستبدال المنتجات ؟",
+    "answer_fr": "Pour des raisons de sécurité sanitaire et de traçabilité dermo-cosmétique, seuls les produits non ouverts, scellés dans leur emballage d'origine et intacts peuvent faire l'objet d'un retour. Vous disposez d'un délai légal de 7 jours calendaires à compter de la réception de votre colis pour initier une demande de retour auprès de notre service client.",
+    "answer_ar": "لدواعي السلامة الصحية وضمان تتبع المستحضرات الطبية، نقبل فقط إرجاع المنتجات غير المفتوحة، والمحفوظة في غلافها الأصلي المغلق دون أي تلف. لديكم مهلة 7 أيام تقويمية من تاريخ استلام الطرد لتقديم طلب الإرجاع إلى خدمة العملاء لدينا."
+  },
+  {
+    "question_fr": "Quels sont les modes de règlement sécurisés acceptés ?",
+    "question_ar": "ما هي وسائل الدفع الآمنة المعتمدة ؟",
+    "answer_fr": "Nous acceptons les règlements par carte bancaire marocaine et internationale (transaction cryptée sécurisée via le guichet du CMI) ainsi que les paiements en espèces lors de la remise en main propre de vos colis (Paiement à la Livraison / Cash on Delivery) après vérification de votre commande.",
+    "answer_ar": "نقبل السداد بواسطة البطاقات البنكية الوطنية والدولية (معاملات مشفرة بالكامل وآمنة عبر بوابة CMI)، بالإضافة إلى الدفع نقداً عند تسلّم طردكم ومعاينته شخصياً (الدفع عند الاستلام)."
+  }
+]

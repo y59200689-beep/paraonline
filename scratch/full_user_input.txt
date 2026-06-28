@@ -1,0 +1,971 @@
+<USER_REQUEST>
+/*
+ * Plugin Name: WooCommerce Atlascom Sync (Fixed for Firewall Friendly Fire)
+ * Description: Uses Local WSDL to prevent DoS blocking.
+ * Version: 1.1.4 (Fix null round() crash - move totalTtc fallback after loop)
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
+// FIX #1: Remove global ini_set() calls from the top level.
+// These were firing on EVERY page load, including customer-facing pages.
+// socket timeout and script timeout are now set only inside the specific
+// functions that make SOAP calls, with appropriate values per operation.
+
+// Load User Pharmacy Logic if available
+if ( file_exists( __DIR__ . '/wc-atlascom-user-pharmacy.php' ) ) {
+    include_once __DIR__ . '/wc-atlascom-user-pharmacy.php';
+}
+
+// -------------------------------------------------------------------------
+// 1. Logger Class
+// -------------------------------------------------------------------------
+
+if ( ! class_exists( 'WC_Atlascom_Logger' ) ) {
+    class WC_Atlascom_Logger {
+
+        private static $logger;
+        private static $context = array( 'source' => 'wc-atlascom-sync' );
+
+        public static function log( $message, $level = 'info', $custom_context = null ) {
+            if ( ! function_exists( 'wc_get_logger' ) ) {
+                return;
+            }
+            if ( null === self::$logger ) {
+                self::$logger = wc_get_logger();
+            }
+            $context = $custom_context ? array( 'source' => $custom_context ) : self::$context;
+            $message = is_array( $message ) || is_object( $message ) ? print_r( $message, true ) : $message;
+            switch ( $level ) {
+                case 'error':   self::$logger->error( $message, $context );   break;
+                case 'warning': self::$logger->warning( $message, $context );  break;
+                case 'debug':   self::$logger->debug( $message, $context );    break;
+                default:        self::$logger->info( $message, $context );     break;
+            }
+        }
+
+        public static function error( $message, $context = null )   { self::log( $message, 'error', $context ); }
+        public static function warning( $message, $context = null ) { self::log( $message, 'warning', $context ); }
+        public static function info( $message, $context = null )    { self::log( $message, 'info', $context ); }
+        public static function debug( $message, $context = null )   { self::log( $message, 'debug', $context ); }
+    }
+}
+
+// -------------------------------------------------------------------------
+// 2. Settings Class
+// -------------------------------------------------------------------------
+
+if ( ! class_exists( 'WC_Atlascom_Settings_Loader' ) ) {
+    class WC_Atlascom_Settings_Loader {
+
+        public static function init() {
+            add_filter( 'woocommerce_settings_tabs_array', array( __CLASS__, 'add_settings_tab' ), 50 );
+            add_action( 'woocommerce_settings_tabs_atlascom_sync', array( __CLASS__, 'settings_tab' ) );
+            add_action( 'woocommerce_update_options_atlascom_sync', array( __CLASS__, 'update_settings' ) );
+        }
+
+        public static function add_settings_tab( $settings_tabs ) {
+            $settings_tabs['atlascom_sync'] = __( 'Atlascom Sync', 'wc-atlascom-sync' );
+            return $settings_tabs;
+        }
+
+        public static function settings_tab() {
+            woocommerce_admin_fields( self::get_settings() );
+        }
+
+        public static function update_settings() {
+            woocommerce_update_options( self::get_settings() );
+
+            if ( get_option( 'wc_atlascom_test_connection' ) === 'yes' ) {
+                self::run_connection_test();
+                update_option( 'wc_atlascom_test_connection', 'no' );
+            }
+            if ( get_option( 'wc_atlascom_test_count' ) === 'yes' ) {
+                self::run_count_test();
+                update_option( 'wc_atlascom_test_count', 'no' );
+            }
+            if ( get_option( 'wc_atlascom_test_order_sync' ) === 'yes' ) {
+                self::run_order_sync_test();
+                update_option( 'wc_atlascom_test_order_sync', 'no' );
+            }
+        }
+
+        private static function run_count_test() {
+            $api   = new WC_Atlascom_API();
+            $count = $api->test_get_count();
+            if ( $count !== false ) {
+                WC_Admin_Settings::add_message( sprintf( __( 'Atlascom getCountArticle SUCCESS! Total articles: %s', 'wc-atlascom-sync' ), $count ) );
+            } else {
+                WC_Admin_Settings::add_error( __( 'Atlascom getCountArticle FAILED. Check logs for details.', 'wc-atlascom-sync' ) );
+            }
+        }
+
+        private static function run_order_sync_test() {
+            $api    = new WC_Atlascom_API();
+            $result = $api->test_order_sync();
+            if ( $result ) {
+                WC_Admin_Settings::add_message( __( 'Order sync test completed! Check WooCommerce > Status > Logs for detailed results.', 'wc-atlascom-sync' ) );
+            } else {
+                WC_Admin_Settings::add_error( __( 'Order sync test failed. Check logs for details.', 'wc-atlascom-sync' ) );
+            }
+        }
+
+        private static function run_connection_test() {
+            $wsdl_url = get_option( 'wc_atlascom_wsdl_url' );
+
+            if ( empty( $wsdl_url ) ) {
+                WC_Admin_Settings::add_error( __( 'Atlascom Test: WSDL URL is missing.', 'wc-atlascom-sync' ) );
+                return;
+            }
+
+            $local_wsdl_path = WP_CONTENT_DIR . '/plugins/softlite-io-integration/atlascom.wsdl';
+            $use_local       = file_exists( $local_wsdl_path );
+            $wsdl_target     = $use_local ? $local_wsdl_path : $wsdl_url;
+
+            try {
+                // FIX #2: Use a realistic socket timeout (30s) for the connection test.
+                // 5 seconds is too aggressive for a cold SOAP handshake over the internet.
+                $opts = array(
+                    'location'           => $wsdl_url,
+                    'soap_version'       => SOAP_1_1,
+                    'exceptions'         => true,
+                    'trace'              => 1,
+                    'cache_wsdl'         => WSDL_CACHE_DISK,
+                    'connection_timeout' => 30,
+                    'keep_alive'         => false,
+                    'stream_context'     => stream_context_create( array(
+                        'http' => array(
+                            'timeout' => 30, // FIX: This is what actually controls __doRequest() timeout
+                        ),
+                        'ssl' => array(
+                            'verify_peer'       => false,
+                            'verify_peer_name'  => false,
+                            'allow_self_signed' => true,
+                        ),
+                    ) ),
+                );
+
+                $client = new SoapClient( $wsdl_target, $opts );
+                $msg    = $use_local
+                    ? 'Connection Successful using LOCAL WSDL file!'
+                    : 'Connection Successful using REMOTE URL (Warning: Remote fetch is risky).';
+                WC_Admin_Settings::add_message( __( 'Atlascom Test: ' . $msg, 'wc-atlascom-sync' ) );
+
+            } catch ( SoapFault $e ) {
+                $error_msg = $e->getMessage();
+                WC_Admin_Settings::add_error( __( 'Atlascom Test Failed: ', 'wc-atlascom-sync' ) . $error_msg );
+                if ( stripos( $error_msg, 'Connection timed out' ) !== false ) {
+                    WC_Admin_Settings::add_error( __( 'Hint: The server is not reachable. Check Firewall or Port Forwarding.', 'wc-atlascom-sync' ) );
+                } elseif ( stripos( $error_msg, 'Not Found' ) !== false ) {
+                    WC_Admin_Settings::add_error( __( 'Hint: The server was reached but the URL path is wrong (404). Check the Service Name.', 'wc-atlascom-sync' ) );
+                }
+            } catch ( Exception $e ) {
+                WC_Admin_Settings::add_error( __( 'Atlascom Test Error: ', 'wc-atlascom-sync' ) . $e->getMessage() );
+            }
+        }
+
+        public static function get_settings() {
+            $settings = array(
+                array(
+                    'title' => __( 'Atlascom Connection Settings', 'wc-atlascom-sync' ),
+                    'type'  => 'title',
+                    'desc'  => __( 'Configure the connection to the Atlascom SOAP API.', 'wc-atlascom-sync' ),
+                    'id'    => 'wc_atlascom_connection_settings',
+                ),
+                array(
+                    'title'    => __( 'WSDL URL', 'wc-atlascom-sync' ),
+                    'desc'     => __( 'e.g., https://paraoficinal.ruijieddnsa.com/WebServiceAtlasCom/atlascomservice.asmx?wsdl', 'wc-atlascom-sync' ),
+                    'id'       => 'wc_atlascom_wsdl_url',
+                    'type'     => 'text',
+                    'default'  => 'https://paraoficinal.ruijieddnsa.com/WebServiceAtlasCom/atlascomservice.asmx?wsdl',
+                    'desc_tip' => true,
+                ),
+                array(
+                    'title'   => __( 'SOAP Timeout (seconds)', 'wc-atlascom-sync' ),
+                    'desc'    => __( 'How long to wait for Atlascom to respond. Default: 30. Increase to 60 if you experience timeouts on slow connections.', 'wc-atlascom-sync' ),
+                    'id'      => 'wc_atlascom_soap_timeout',
+                    'type'    => 'number',
+                    'default' => '30',
+                    'custom_attributes' => array( 'min' => '10', 'max' => '120' ),
+                ),
+                array(
+                    'title'    => __( 'Code Employe', 'wc-atlascom-sync' ),
+                    'desc'     => __( 'Required for authentication (generateTOKEN) and Order sync.', 'wc-atlascom-sync' ),
+                    'id'       => 'wc_atlascom_code_employe',
+                    'type'     => 'text',
+                    'default'  => '',
+                ),
+                array(
+                    'title'   => __( 'Password (Optional)', 'wc-atlascom-sync' ),
+                    'desc'    => __( 'Enter if required for generateTOKEN.', 'wc-atlascom-sync' ),
+                    'id'      => 'wc_atlascom_password',
+                    'type'    => 'password',
+                    'default' => '',
+                ),
+                array(
+                    'title'   => __( 'Code Agence (Optional)', 'wc-atlascom-sync' ),
+                    'desc'    => __( 'Leave empty if not required by your Atlascom setup.', 'wc-atlascom-sync' ),
+                    'id'      => 'wc_atlascom_code_agence',
+                    'type'    => 'text',
+                    'default' => '',
+                ),
+                array(
+                    'title'   => __( 'Code Commerciale', 'wc-atlascom-sync' ),
+                    'desc'    => __( 'Commercial code for orders (e.g., 000051). Can be overridden per user via user meta "atlascom_commercial_code".', 'wc-atlascom-sync' ),
+                    'id'      => 'wc_atlascom_code_commerciale',
+                    'type'    => 'text',
+                    'default' => '000051',
+                ),
+                array(
+                    'title'   => __( 'Send Code Commerciale as Integer', 'wc-atlascom-sync' ),
+                    'desc'    => __( 'If checked, sends codeCommerciale as integer (51) instead of string (000051). Try this if orders are still not being created.', 'wc-atlascom-sync' ),
+                    'id'      => 'wc_atlascom_commerciale_as_int',
+                    'type'    => 'checkbox',
+                    'default' => 'no',
+                ),
+                array(
+                    'title'   => __( 'Enable Simulation Mode (Dry Run)', 'wc-atlascom-sync' ),
+                    'desc'    => __( 'Check this if you do not have credentials yet. It simulates API calls and logs the data for verification.', 'wc-atlascom-sync' ),
+                    'id'      => 'wc_atlascom_simulation_mode',
+                    'type'    => 'checkbox',
+                    'default' => 'no',
+                ),
+                array(
+                    'title'   => __( 'Test Connection on Save', 'wc-atlascom-sync' ),
+                    'desc'    => __( 'Check this and save to test the SOAP connection immediately.', 'wc-atlascom-sync' ),
+                    'id'      => 'wc_atlascom_test_connection',
+                    'type'    => 'checkbox',
+                    'default' => 'no',
+                ),
+                array(
+                    'title'   => __( 'Test getCountArticle on Save', 'wc-atlascom-sync' ),
+                    'desc'    => __( 'Check this and save to call getCountArticle() - tests if API returns article count.', 'wc-atlascom-sync' ),
+                    'id'      => 'wc_atlascom_test_count',
+                    'type'    => 'checkbox',
+                    'default' => 'no',
+                ),
+                array(
+                    'title'   => __( 'Test Order Sync (setListeCommandes)', 'wc-atlascom-sync' ),
+                    'desc'    => __( 'Check this and save to test sending a sample order to Atlascom. Check logs for results.', 'wc-atlascom-sync' ),
+                    'id'      => 'wc_atlascom_test_order_sync',
+                    'type'    => 'checkbox',
+                    'default' => 'no',
+                ),
+                array( 'type' => 'sectionend', 'id' => 'wc_atlascom_connection_settings' ),
+                array(
+                    'title' => __( 'Stock & Price Synchronization (getListeArticles)', 'wc-atlascom-sync' ),
+                    'type'  => 'title',
+                    'id'    => 'wc_atlascom_stock_settings',
+                ),
+                array(
+                    'title'   => __( 'Enable Stock Sync', 'wc-atlascom-sync' ),
+                    'id'      => 'wc_atlascom_enable_stock_sync',
+                    'type'    => 'checkbox',
+                    'default' => 'no',
+                ),
+                array(
+                    'title'             => __( 'Number of Partitions', 'wc-atlascom-sync' ),
+                    'desc'              => __( 'Split the request into N parts. Start with 1. Increase to 10-20 if you experience timeouts with large datasets.', 'wc-atlascom-sync' ),
+                    'id'                => 'wc_atlascom_nbr_partition',
+                    'type'              => 'number',
+                    'default'           => '1',
+                    'custom_attributes' => array( 'min' => '1' ),
+                ),
+                array(
+                    'title'   => __( 'Sync Frequency', 'wc-atlascom-sync' ),
+                    'desc'    => __( 'How often to check for updates (Stock & Price).', 'wc-atlascom-sync' ),
+                    'id'      => 'wc_atlascom_sync_interval',
+                    'type'    => 'select',
+                    'options' => array(
+                        'daily'       => __( 'Daily', 'wc-atlascom-sync' ),
+                        'hourly'      => __( 'Hourly', 'wc-atlascom-sync' ),
+                        'thirty_min'  => __( 'Every 30 Minutes', 'wc-atlascom-sync' ),
+                        'fifteen_min' => __( 'Every 15 Minutes (Recommended)', 'wc-atlascom-sync' ),
+                        'five_min'    => __( 'Every 5 Minutes (High Load)', 'wc-atlascom-sync' ),
+                    ),
+                    'default' => 'daily',
+                ),
+                array( 'type' => 'sectionend', 'id' => 'wc_atlascom_stock_settings' ),
+                array(
+                    'title' => __( 'Order Synchronization (setListeCommandes)', 'wc-atlascom-sync' ),
+                    'type'  => 'title',
+                    'id'    => 'wc_atlascom_order_settings',
+                ),
+                array(
+                    'title'   => __( 'Enable Order Sync', 'wc-atlascom-sync' ),
+                    'id'      => 'wc_atlascom_enable_order_sync',
+                    'type'    => 'checkbox',
+                    'default' => 'no',
+                ),
+                array(
+                    'title'   => __( 'Trigger Status', 'wc-atlascom-sync' ),
+                    'desc'    => __( 'Send order when it reaches this status.', 'wc-atlascom-sync' ),
+                    'id'      => 'wc_atlascom_order_status',
+                    'type'    => 'select',
+                    'options' => wc_get_order_statuses(),
+                    'default' => 'wc-processing',
+                ),
+                array( 'type' => 'sectionend', 'id' => 'wc_atlascom_order_settings' ),
+            );
+            return apply_filters( 'wc_atlascom_settings', $settings );
+        }
+    }
+}
+
+// -------------------------------------------------------------------------
+// 3. API Class
+// -------------------------------------------------------------------------
+
+if ( ! class_exists( 'WC_Atlascom_API' ) ) {
+    class WC_Atlascom_API {
+
+        private $wsdl_url;
+        private $client;
+        private $code_employe;
+        private $password;
+        private $code_agence;
+        private $simulation_mode;
+        private $token;
+
+        // FIX #3: Read timeout from settings (default 30s) instead of hardcoding 5s.
+        // 5 seconds is far too low — a cold SOAP connection over the internet easily
+        // takes 5-15 seconds just for the TCP handshake + WSDL parse + auth round-trip.
+        private $soap_timeout;
+
+        public function __construct() {
+            $this->wsdl_url        = get_option( 'wc_atlascom_wsdl_url' );
+            $this->code_employe    = get_option( 'wc_atlascom_code_employe' );
+            $this->password        = get_option( 'wc_atlascom_password' );
+            $this->code_agence     = get_option( 'wc_atlascom_code_agence' );
+            $this->simulation_mode = get_option( 'wc_atlascom_simulation_mode' ) === 'yes';
+            $this->soap_timeout    = (int) get_option( 'wc_atlascom_soap_timeout', 30 );
+
+            if ( $this->soap_timeout < 10 ) {
+                $this->soap_timeout = 30; // Safety floor
+            }
+        }
+
+        public function get_code_agence() {
+            return $this->code_agence;
+        }
+
+        /**
+         * Build the SOAP stream context with correct timeouts.
+         *
+         * KEY FIX: PHP's SoapClient has TWO separate timeout mechanisms:
+         *   1. `connection_timeout` option  → controls the TCP connect() phase only.
+         *   2. The `http` stream context `timeout` → controls the __doRequest() data transfer.
+         *
+         * The original code only set connection_timeout => 5, which meant the TCP
+         * handshake was limited to 5 seconds but once connected the data transfer
+         * used the PHP default_socket_timeout (which was also set to 5 globally).
+         * Any slow response from Atlascom triggered the "connect() failed: Connection
+         * timed out" error on line 849 (__doRequest).
+         *
+         * The fix: set the stream_context http.timeout to our configurable value,
+         * which governs the full __doRequest() lifecycle.
+         */
+        private function build_stream_context() {
+            return stream_context_create( array(
+                'http' => array(
+                    'timeout' => $this->soap_timeout, // governs __doRequest()
+                ),
+                'ssl' => array(
+                    'verify_peer'       => false,
+                    'verify_peer_name'  => false,
+                    'allow_self_signed' => true,
+                ),
+            ) );
+        }
+
+        private function connect() {
+            if ( $this->simulation_mode ) {
+                WC_Atlascom_Logger::info( 'SIMULATION MODE: Skipping SOAP connection.' );
+                return true;
+            }
+
+            if ( ! $this->wsdl_url ) {
+                WC_Atlascom_Logger::error( 'WSDL URL is missing.' );
+                return false;
+            }
+
+            $local_wsdl_path = WP_CONTENT_DIR . '/plugins/softlite-io-integration/atlascom.wsdl';
+            if ( file_exists( $local_wsdl_path ) ) {
+                $wsdl_target = $local_wsdl_path;
+                WC_Atlascom_Logger::debug( 'Using LOCAL WSDL file: ' . $local_wsdl_path );
+            } else {
+                $wsdl_target = $this->wsdl_url;
+                WC_Atlascom_Logger::warning( 'Local WSDL not found. Falling back to remote URL: ' . $this->wsdl_url );
+            }
+
+            // FIX #4: Set script timeout generously for the connection phase.
+            // This is a background/cron context; 120s is safe.
+            set_time_limit( 120 );
+
+            try {
+                $opts = array(
+                    'location'           => $this->wsdl_url,
+                    'soap_version'       => SOAP_1_1,
+                    'exceptions'         => true,
+                    'trace'              => 1,
+                    'cache_wsdl'         => WSDL_CACHE_DISK,
+                    'connection_timeout' => $this->soap_timeout,
+                    'keep_alive'         => false,
+                    'stream_context'     => $this->build_stream_context(),
+                );
+
+                $this->client = @new SoapClient( $wsdl_target, $opts );
+
+                if ( ! $this->authenticate() ) {
+                    return false;
+                }
+
+                return true;
+
+            } catch ( SoapFault $e ) {
+                WC_Atlascom_Logger::error( 'SOAP Connection Error: ' . $e->getMessage() );
+                // FIX #5: Do NOT re-throw here. The original code threw after catching,
+                // which bypassed the graceful false-return and crashed the snippet.
+                // Callers already check for false and handle it correctly.
+                return false;
+            }
+        }
+
+        private function authenticate() {
+            if ( $this->token ) return true;
+
+            try {
+                $params = array(
+                    'utilisateur' => $this->code_employe,
+                    'motDePasse'  => $this->password,
+                );
+                WC_Atlascom_Logger::info( 'Attempting to generate TOKEN...' );
+                $response = @$this->client->generateTOKEN( $params );
+
+                $token = null;
+                if ( isset( $response->generateTOKENResult ) ) {
+                    $token = $response->generateTOKENResult;
+                } elseif ( is_string( $response ) ) {
+                    $token = $response;
+                }
+
+                if ( $token ) {
+                    $this->token = $token;
+                    WC_Atlascom_Logger::info( 'Token generated successfully.' );
+                    return true;
+                }
+
+                WC_Atlascom_Logger::error( 'Failed to generate Token. Response: ' . print_r( $response, true ) );
+                return false;
+
+            } catch ( SoapFault $e ) {
+                WC_Atlascom_Logger::error( 'Error generating Token (SoapFault): ' . $e->getMessage() );
+                return false;
+            } catch ( Exception $e ) {
+                WC_Atlascom_Logger::error( 'Error generating Token (Exception): ' . $e->getMessage() );
+                return false;
+            }
+        }
+
+        public function test_get_count() {
+            if ( ! $this->client && ! $this->connect() ) {
+                return false;
+            }
+            try {
+                WC_Atlascom_Logger::info( 'Testing API with getCountArticle()...' );
+                $response = @$this->client->getCountArticle();
+                $count    = null;
+                if ( isset( $response->getCountArticleResult ) ) {
+                    $count = $response->getCountArticleResult;
+                } elseif ( is_numeric( $response ) ) {
+                    $count = $response;
+                }
+                WC_Atlascom_Logger::info( 'getCountArticle returned: ' . print_r( $response, true ) );
+                return $count;
+            } catch ( SoapFault $e ) {
+                WC_Atlascom_Logger::error( 'getCountArticle failed (SoapFault): ' . $e->getMessage() );
+                return false;
+            } catch ( Exception $e ) {
+                WC_Atlascom_Logger::error( 'getCountArticle failed (Exception): ' . $e->getMessage() );
+                return false;
+            }
+        }
+
+        public function fetch_products( $partition = 1, $nbr_partition = 1 ) {
+            if ( ! $this->client && ! $this->connect() ) {
+                return false;
+            }
+
+            $code_agence   = ! empty( $this->code_agence ) ? $this->code_agence : $this->code_employe;
+            $last_sync_date = get_option( 'wc_atlascom_last_sync_date', '' );
+
+            if ( $last_sync_date ) {
+                if ( preg_match( '/^\d{4}-\d{2}-\d{2}/', $last_sync_date ) ) {
+                    $last_sync = substr( $last_sync_date, 0, 10 );
+                } else {
+                    $date_parts = explode( ' ', $last_sync_date );
+                    $parts      = explode( '/', $date_parts[0] );
+                    $last_sync  = count( $parts ) === 3 ? $parts[2] . '-' . $parts[1] . '-' . $parts[0] : '2024-01-01';
+                }
+            } else {
+                $last_sync = '2024-01-01';
+            }
+
+            $params = array(
+                'PDateSynch'     => $last_sync,
+                'codeAgence'     => $code_agence,
+                'nbrPartition'   => $nbr_partition,
+                'partition'      => $partition,
+                'ImageOrArticle' => '1',
+                'token'          => $this->token,
+            );
+
+            WC_Atlascom_Logger::info( "Calling getListeArticles (Partition $partition of $nbr_partition) with params: " . print_r( $params, true ) );
+
+            if ( $this->simulation_mode ) {
+                WC_Atlascom_Logger::info( 'SIMULATION MODE: Returning mock product data.' );
+                $mock         = new stdClass();
+                $mock->getListeArticlesResult = new stdClass();
+                $a1 = new stdClass(); $a1->codeArticle = 'SKU_TEST_1'; $a1->qteStock = 100; $a1->prix = 150.00;
+                $a2 = new stdClass(); $a2->codeArticle = 'SKU_TEST_2'; $a2->qteStock = 5;   $a2->prix = 25.50;
+                $mock->getListeArticlesResult->Article = array( $a1, $a2 );
+                return $mock;
+            }
+
+            try {
+                $result = @$this->client->getListeArticles( $params );
+                return $result;
+            } catch ( SoapFault $e ) {
+                $msg = $e->getMessage();
+                // Token expired mid-sync — re-authenticate once and retry
+                if ( stripos( $msg, 'Token' ) !== false || stripos( $msg, 'incorrect' ) !== false ) {
+                    WC_Atlascom_Logger::warning( 'Token expired during getListeArticles. Re-authenticating...' );
+                    $this->token = null;
+                    if ( $this->authenticate() ) {
+                        $params['token'] = $this->token;
+                        try {
+                            return @$this->client->getListeArticles( $params );
+                        } catch ( SoapFault $e2 ) {
+                            WC_Atlascom_Logger::error( 'getListeArticles failed after re-auth: ' . $e2->getMessage() );
+                            return false;
+                        }
+                    }
+                }
+                WC_Atlascom_Logger::error( 'Error fetching products (SoapFault): ' . $msg );
+                return false;
+            } catch ( Exception $e ) {
+                WC_Atlascom_Logger::error( 'Error fetching products (Exception): ' . $e->getMessage() );
+                return false;
+            }
+        }
+
+        public function test_order_sync() {
+            if ( ! $this->client && ! $this->connect() ) {
+                WC_Atlascom_Logger::error( 'Cannot test order sync: API connection failed.' );
+                return false;
+            }
+
+            WC_Atlascom_Logger::info( '=== TESTING ORDER SYNC (setListeCommandes) ===' );
+
+            $test_order_id = 99999;
+            $test_date     = date( 'Y-m-d\TH:i:s' );
+            $test_date_c   = date( 'd/m/Y' );
+            $test_sync_code = date( 'Ymd\THis' );
+
+            $test_header = array(
+                'Livreur'         => '',
+                'Annule'          => false,
+                'Livre'           => false,
+                'Partiel'         => false,
+                'codeCommande'    => $test_order_id,
+                'codeTiers'       => 'CLIENT_WEB',
+                'codeClient'      => 'CLIENT_WEB',
+                'dateC'           => $test_date_c,
+                'date'            => $test_date,
+                'codeModeP'       => '',
+                'dateEchu'        => '',
+                'totalHt'         => 100.00,
+                'totalTtc'        => 120.00,
+                'totalTva'        => 20.00,
+                'observation'     => 'Test order from WooCommerce',
+                'remarqueDev'     => '',
+                'codedeSynchcronisation' => $test_sync_code,
+                'remise'          => 0.0,
+                'mtremise'        => 0.0,
+                'codeCommerciale' => 0,
+            );
+
+            $test_line = array(
+                'Tva'            => 20.00,
+                'PlafondRM'      => 0.0,
+                'QteLivre'       => 0.0,
+                'codeLCommande'  => 1,
+                'codeArticle'    => 'TEST_SKU_001',
+                'qte'            => 1.0,
+                'prixU'          => 100.00,
+                'prixTTTC'       => 120.00,
+                'codeCommande'   => $test_order_id,
+                'nbrPiece'       => 0.0,
+                'qteCar'         => 0.0,
+                'codedeSynchcronisation' => $test_sync_code,
+                'puttc'          => 120.00,
+                'ptttc'          => 120.00,
+                'ptht'           => 100.00,
+                'puht'           => 100.00,
+                'remise'         => 0.0,
+                'qteGratuit'     => 0.0,
+                'codeTva'        => 0,
+                'ordre'          => 1,
+                'codeUnite'      => 0,
+                'libelle'        => 'Test Product',
+                'TypePrix'       => '',
+                'typeLigne'      => '',
+                'codesup'        => '',
+                'qteG'           => 0.0,
+            );
+
+            try {
+                $response = $this->send_orders( array( $test_header ), array( $test_line ) );
+                if ( is_wp_error( $response ) ) {
+                    WC_Atlascom_Logger::error( 'ORDER SYNC TEST FAILED: ' . $response->get_error_message() );
+                    return false;
+                }
+                WC_Atlascom_Logger::info( 'ORDER SYNC TEST SUCCESS! Response: ' . print_r( $response, true ) );
+                return true;
+            } catch ( Exception $e ) {
+                WC_Atlascom_Logger::error( 'ORDER SYNC TEST EXCEPTION: ' . $e->getMessage() );
+                return false;
+            }
+        }
+
+        public function extract_soap_value( $value ) {
+            if ( $value instanceof SoapVar ) {
+                if ( isset( $value->enc_value ) ) return $value->enc_value;
+                $vars = get_object_vars( $value );
+                if ( ! empty( $vars ) ) return reset( $vars );
+                $s = serialize( $value );
+                if ( preg_match( '/s:\d+:"([^"]+)"/', $s, $m ) ) return $m[1];
+                return '[SoapVar]';
+            }
+            return $value;
+        }
+
+        public function prepare_for_logging( $data ) {
+            if ( is_array( $data ) ) {
+                $result = array();
+                foreach ( $data as $key => $value ) {
+                    $result[ $key ] = is_array( $value ) ? $this->prepare_for_logging( $value ) : $this->extract_soap_value( $value );
+                }
+                return $result;
+            }
+            return $this->extract_soap_value( $data );
+        }
+
+        private function ensure_soap_types( $data ) {
+            if ( is_array( $data ) ) {
+                $result = array();
+                foreach ( $data as $key => $value ) {
+                    if ( is_array( $value ) ) {
+                        $result[ $key ] = $this->ensure_soap_types( $value );
+                    } elseif ( $key === 'codeCommerciale' && is_string( $value ) && ! empty( $value ) ) {
+                        $send_as_int = get_option( 'wc_atlascom_commerciale_as_int', 'no' ) === 'yes';
+                        $result[ $key ] = $send_as_int ? (int) $value : new SoapVar( $value, XSD_STRING );
+                    } else {
+                        $result[ $key ] = $value;
+                    }
+                }
+                return $result;
+            }
+            return $data;
+        }
+
+        public function send_orders( $liste_commandes, $liste_lignes, $override_code_agence = null ) {
+            if ( ! $this->client && ! $this->connect() ) {
+                return new WP_Error( 'atlascom_connect_failed', 'SOAP connection failed.' );
+            }
+
+            $code_agence      = ! empty( $override_code_agence ) ? $override_code_agence : ( ! empty( $this->code_agence ) ? $this->code_agence : '' );
+            $liste_commandes  = $this->ensure_soap_types( $liste_commandes );
+            $liste_lignes     = $this->ensure_soap_types( $liste_lignes );
+
+            $params = array(
+                'codeEmploye'         => (string) $this->code_employe,
+                'codeAgence'          => (string) $code_agence,
+                'listeCommandes'      => $liste_commandes,
+                'listeLigneCommandes' => $liste_lignes,
+                'token'               => (string) $this->token,
+                'codeLangue'          => 'FR',
+            );
+
+            WC_Atlascom_Logger::info( sprintf(
+                'Calling setListeCommandes (codeEmploye=%s, codeAgence=%s, commandes=%d, lignes=%d)',
+                (string) $this->code_employe,
+                (string) $code_agence,
+                is_array( $liste_commandes ) ? count( $liste_commandes ) : 0,
+                is_array( $liste_lignes ) ? count( $liste_lignes ) : 0
+            ) );
+
+            if ( $this->simulation_mode ) {
+                WC_Atlascom_Logger::info( 'SIMULATION MODE: Order sync simulated successfully.' );
+                return true;
+            }
+
+            try {
+                $response = @$this->client->setListeCommandes( $params );
+
+                $soap_request  = '';
+                $soap_response = '';
+                $soap_headers  = '';
+
+                if ( $this->client ) {
+                    try { $soap_request  = $this->sanitize_soap_payload_for_log( (string) $this->client->__getLastRequest() );  WC_Atlascom_Logger::info( 'SOAP Request XML: ' . $soap_request ); } catch ( Exception $ex ) {}
+                    try { $soap_response = $this->sanitize_soap_payload_for_log( (string) $this->client->__getLastResponse() ); WC_Atlascom_Logger::info( 'SOAP Response XML: ' . $soap_response ); } catch ( Exception $ex ) {}
+                    try { $soap_headers  = $this->sanitize_soap_payload_for_log( (string) $this->client->__getLastResponseHeaders() ); WC_Atlascom_Logger::info( 'SOAP Response Headers: ' . $soap_headers ); } catch ( Exception $ex ) {}
+                }
+
+                WC_Atlascom_Logger::info( 'setListeCommandes response: ' . print_r( $response, true ) );
+
+                $result = null;
+                if ( isset( $response->setListeCommandesResult ) ) {
+                    $result = $response->setListeCommandesResult;
+                } elseif ( is_string( $response ) ) {
+                    $result = $response;
+                } elseif ( is_object( $response ) ) {
+                    $props  = get_object_vars( $response );
+                    if ( ! empty( $props ) ) $result = reset( $props );
+                }
+
+                if ( empty( $result ) || trim( (string) $result ) === '' ) {
+                    WC_Atlascom_Logger::warning( 'setListeCommandes returned empty result.' );
+                    $this->log_empty_response_diagnostic( $liste_commandes, $liste_lignes );
+                    return new WP_Error(
+                        'atlascom_empty_response',
+                        'Atlascom returned empty response. Check logs for diagnostic details.',
+                        array(
+                            'response'             => $response,
+                            'soap_request'         => $soap_request,
+                            'soap_response'        => $soap_response,
+                            'soap_response_headers'=> $soap_headers,
+                        )
+                    );
+                }
+
+                return $response;
+
+            } catch ( SoapFault $e ) {
+                $last_request  = '';
+                $last_response = '';
+                $last_headers  = '';
+
+                if ( $this->client ) {
+                    try { $last_request  = $this->sanitize_soap_payload_for_log( (string) $this->client->__getLastRequest() );  WC_Atlascom_Logger::error( 'SOAP Request XML (fault): ' . $last_request ); } catch ( Exception $ex ) {}
+                    try { $last_response = $this->sanitize_soap_payload_for_log( (string) $this->client->__getLastResponse() ); WC_Atlascom_Logger::error( 'SOAP Response XML (fault): ' . $last_response ); } catch ( Exception $ex ) {}
+                    try { $last_headers  = $this->sanitize_soap_payload_for_log( (string) $this->client->__getLastResponseHeaders() ); } catch ( Exception $ex ) {}
+                }
+
+                WC_Atlascom_Logger::error( 'SoapFault - Code: ' . ( isset( $e->faultcode ) ? $e->faultcode : 'N/A' ) . ', String: ' . ( isset( $e->faultstring ) ? $e->faultstring : 'N/A' ) );
+
+                return new WP_Error(
+                    'atlascom_order_send_failed',
+                    (string) $e->getMessage(),
+                    array(
+                        'faultcode'    => isset( $e->faultcode ) ? (string) $e->faultcode : '',
+                        'faultstring'  => isset( $e->faultstring ) ? (string) $e->faultstring : '',
+                        'last_request' => $last_request,
+                        'last_response'=> $last_response,
+                        'last_headers' => $last_headers,
+                    )
+                );
+
+            } catch ( Exception $e ) {
+                WC_Atlascom_Logger::error( 'Order send failed (Exception): ' . $e->getMessage() );
+                return new WP_Error( 'atlascom_order_send_exception', (string) $e->getMessage() );
+            }
+        }
+
+        private function log_empty_response_diagnostic( $liste_commandes, $liste_lignes ) {
+            $article_codes = array();
+            if ( is_array( $liste_lignes ) ) {
+                foreach ( $liste_lignes as $line ) {
+                    if ( ! empty( $line['codeArticle'] ) ) $article_codes[] = $line['codeArticle'];
+                }
+            }
+            $client_code = ( is_array( $liste_commandes ) && isset( $liste_commandes[0]['codeClient'] ) ) ? $liste_commandes[0]['codeClient'] : '';
+            $commercial  = ( is_array( $liste_commandes ) && isset( $liste_commandes[0]['codeCommerciale'] ) ) ? $this->extract_soap_value( $liste_commandes[0]['codeCommerciale'] ) : 'N/A';
+
+            WC_Atlascom_Logger::warning( '━━━ Empty Response Diagnostic ━━━' );
+            WC_Atlascom_Logger::warning( 'Client Code: ' . $client_code );
+            WC_Atlascom_Logger::warning( 'Commercial Code: ' . $commercial );
+            WC_Atlascom_Logger::warning( 'Article Codes: ' . implode( ', ', array_unique( $article_codes ) ) );
+            WC_Atlascom_Logger::warning( 'CHECKLIST: 1) Client code exists & active  2) Commercial code has order permission  3) Article codes exist in Atlascom  4) No credit/minimum-order blocks.' );
+        }
+
+        private function sanitize_soap_payload_for_log( $payload ) {
+            if ( ! is_string( $payload ) || $payload === '' ) return '';
+            $payload = preg_replace( '/<(?:[a-zA-Z0-9_\-]+:)?token>.*?<\/(?:[a-zA-Z0-9_\-]+:)?token>/si', '<token>***</token>', $payload );
+            $payload = preg_replace( '/<(?:[a-zA-Z0-9_\-]+:)?motDePasse>.*?<\/(?:[a-zA-Z0-9_\-]+:)?motDePasse>/si', '<motDePasse>***</motDePasse>', $payload );
+            if ( strlen( $payload ) > 8000 ) $payload = substr( $payload, 0, 8000 ) . '...';
+            return $payload;
+        }
+    }
+}
+
+// -------------------------------------------------------------------------
+// 4. Sync Logic Class
+// -------------------------------------------------------------------------
+
+if ( ! class_exists( 'WC_Atlascom_Sync_Logic' ) ) {
+    class WC_Atlascom_Sync_Logic {
+
+        private $api;
+
+        public function __construct() {
+            $this->api = new WC_Atlascom_API();
+
+            // Stock sync (background cron)
+            add_action( 'wc_atlascom_daily_stock_sync', array( $this, 'run_stock_sync' ) );
+
+            // ---------------------------------------------------------------
+            // ORDER SYNC HOOKS — three separate entry points cover all cases:
+            //
+            // CASE 1 — Status transition on an existing order (e.g. on-hold → pending-payment).
+            //   woocommerce_order_status_{status} fires reliably here.
+            //   Items are already saved, so async AS scheduling is safe.
+            //
+            // CASE 2 — Frontend checkout (classic or block).
+            //   woocommerce_checkout_order_processed / woocommerce_store_api_checkout_order_processed
+            //   fire AFTER items are saved. We run sync directly (synchronous).
+            //
+            // CASE 3 — Admin dashboard order creation/edit (THE ROOT CAUSE of this bug).
+            //   None of the above hooks fire in this path.
+            //   woocommerce_process_shop_order_meta fires in WC_Meta_Box_Order_Data::save()
+            //   AFTER all items, meta, and status are committed to the DB.
+            //   woocommerce_after_order_object_save covers HPOS (High-Performance Order Storage).
+            //   Both run sync directly.
+            // ---------------------------------------------------------------
+
+            $trigger_status = get_option( 'wc_atlascom_order_status', 'wc-processing' );
+            $status_hook    = preg_replace( '/^wc-/', '', $trigger_status );
+
+            // Case 1: status transition on existing order
+            add_action( 'woocommerce_order_status_' . $status_hook, array( $this, 'schedule_order_sync' ), 10, 1 );
+
+            // Case 2: frontend checkout (classic + block)
+            add_action( 'woocommerce_checkout_order_processed',           array( $this, 'check_and_sync_new_order' ), 10, 1 );
+            add_action( 'woocommerce_store_api_checkout_order_processed', array( $this, 'check_and_sync_new_order' ), 10, 1 );
+
+            // Case 3: admin dashboard order create/save (traditional post meta storage)
+            add_action( 'woocommerce_process_shop_order_meta', array( $this, 'check_and_sync_new_order' ), 20, 1 );
+
+            // Case 3 (HPOS): admin dashboard order create/save (high-performance order storage)
+            add_action( 'woocommerce_after_order_object_save', array( $this, 'check_and_sync_after_hpos_save' ), 20, 1 );
+
+            // Order action (manual retry from order screen)
+            add_action( 'woocommerce_order_actions',                          array( $this, 'add_order_action' ) );
+            add_action( 'woocommerce_order_action_wc_atlascom_retry_sync',    array( $this, 'process_manual_sync' ) );
+
+            // Background event handler (Action Scheduler)
+            add_action( 'wc_atlascom_sync_order_event', array( $this, 'run_order_sync' ), 10, 1 );
+
+            // Cron schedules & schedule management
+            add_filter( 'cron_schedules', array( $this, 'add_cron_intervals' ) );
+            add_action( 'admin_init',                      array( $this, 'check_cron_schedule' ) );
+            add_action( 'wc_atlascom_retry_failed_orders', array( $this, 'retry_failed_orders' ) );
+            add_action( 'wc_atlascom_sync_new_order',      array( $this, 'sync_scheduled_new_order' ) );
+
+            // FIX #7: Only schedule the retry cron when order sync is actually enabled.
+            // Previously it fired regardless, hammering a dead server every 15 minutes.
+            if ( get_option( 'wc_atlascom_enable_order_sync' ) === 'yes' ) {
+                if ( ! wp_next_scheduled( 'wc_atlascom_retry_failed_orders' ) ) {
+                    wp_schedule_event( time(), 'every_15_mins', 'wc_atlascom_retry_failed_orders' );
+                }
+            }
+
+            // UI
+            add_filter( 'manage_edit-shop_order_columns',       array( $this, 'add_sync_column' ) );
+            add_action( 'manage_shop_order_posts_custom_column', array( $this, 'render_sync_column' ), 10, 2 );
+            add_action( 'add_meta_boxes',                        array( $this, 'add_sync_meta_box' ) );
+        }
+
+        /**
+         * FIX #6 (continued): Schedule async sync via Action Scheduler instead of
+         * running synchronously. If AS is unavailable, fall back to a 5-second
+         * delayed wp_schedule_single_event so it still runs in a separate request.
+         */
+        public function schedule_order_sync( $order_id ) {
+            if ( get_option( 'wc_atlascom_enable_order_sync' ) !== 'yes' ) return;
+
+            // Skip if already synced
+            if ( get_post_meta( $order_id, '_atlascom_synced', true ) ) return;
+
+            if ( function_exists( 'as_enqueue_async_action' ) ) {
+                as_enqueue_async_action( 'wc_atlascom_sync_order_event', array( $order_id ), 'atlascom-sync' );
+                WC_Atlascom_Logger::info( "Order #$order_id queued for background sync via Action Scheduler." );
+            } else {
+                // Fallback: 5-second delayed cron (separate HTTP request, non-blocking)
+                wp_schedule_single_event( time() + 5, 'wc_atlascom_sync_order_event', array( $order_id ) );
+                WC_Atlascom_Logger::info( "Order #$order_id queued for background sync via WP Cron." );
+            }
+        }
+
+        public function add_sync_column( $columns ) {
+            $columns['atlascom_sync'] = __( 'Atlascom Sync', 'wc-atlascom-sync' );
+            return $columns;
+        }
+
+        public function render_sync_column( $column, $post_id ) {
+            if ( 'atlascom_sync' !== $column ) return;
+            $is_synced = get_post_meta( $post_id, '_atlascom_synced', true );
+            if ( $is_synced ) {
+                $date = get_post_meta( $post_id, '_atlascom_sync_date', true );
+                echo '<span style="color:#46b450;font-weight:bold;">✅ Synced</span>';
+                if ( $date ) echo '<br><small style="color:#777;">' . esc_html( $date ) . '</small>';
+            } else {
+                echo '<span style="color:#a00;">❌ Not Synced</span>';
+            }
+        }
+
+        public function add_sync_meta_box() {
+            add_meta_box( 'wc_atlascom_sync_status', __( 'Atlascom Sync Details', 'wc-atlascom-sync' ), array( $this, 'render_sync_meta_box' ), 'shop_order', 'side', 'default' );
+        }
+
+        public function render_sync_meta_box( $post ) {
+            $is_synced = get_post_meta( $post->ID, '_atlascom_synced', true );
+            $sync_date = get_post_meta( $post->ID, '_atlascom_sync_date', true );
+            $response  = get_post_meta( $post->ID, '_atlascom_response', true );
+
+            $wsdl_url = get_option( 'wc_atlascom_wsdl_url' );
+            $host     = 'Unknown';
+            if ( ! empty( $wsdl_url ) ) {
+                $parsed = parse_url( $wsdl_url );
+                $host   = isset( $parsed['host'] ) ? $parsed['host'] : $wsdl_url;
+            }
+
+            $pharmacy_code = get_post_meta( $post->ID, '_atlascom_pharmacy_code', true );
+            if ( ! $pharmacy_code ) {
+                $order = wc_get_order( $post->ID );
+                if ( $order ) {
+                    $user_id = $order->get_user_id();
+                    if ( $user_id ) $pharmacy_code = get_user_meta( $user_id, 'pharmacy_code', true );
+                }
+            }
+
+            echo '<div class="wc-atlascom-sync-status">';
+            if ( $is_synced ) {
+                echo '<p style="color:#46b450;font-weight:bold;font-size:1.1em;margin-bottom:5px;">✅ Synced Successfully</p>';
+                echo '<p class="description"><strong>Synced on:</strong> ' . esc_html( $sync_date ) . '</p>';
+                echo '<p class="description"><strong>Destination Host:</strong> ' . esc_html( $host ) . '</p>';
+                if ( $pharmacy_code ) echo '<p class="description"><strong>Target Pharmacy Code:</strong> ' . esc_html( $pharmacy_code ) . '</p>';
+
+                $remote_id = '';
+                if ( preg_match( '/setListeCommandesResult.*?=>\s*(\d+)/', $response, $m ) ) {
+                    $remote_id = $m[1];
+                } elseif ( preg_match( '/Result.*?(\d+)/', $response, $m ) ) {
+                    $remote_id = $m[1];
+                }
+                if ( $remote_id ) echo '<p style="background:#e7f5ea;padding:8px;border-radius:4px;border:1px solid #c3e6cb;"><strong>Remote Order ID:</strong> <span style="font
+<truncated 30193 bytes>
+
+NOTE: The output was truncated because it was too long. Use a more targeted query or a smaller range to get the information you need.
