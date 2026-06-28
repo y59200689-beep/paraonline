@@ -36,7 +36,8 @@ export default async function ProductsPage() {
       .from('products')
       .select('*')
       .eq('status', 'live')
-      .order('id', { ascending: true });
+      .order('id', { ascending: true })
+      .limit(500);
     
     if (!error && data) {
       products = data.map(rowToProduct);
