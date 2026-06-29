@@ -366,14 +366,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <Heart className={`w-3.5 h-3.5 transition-transform duration-300 ${isFavorite ? 'fill-[#F43F5E] scale-110 text-[#F43F5E]' : ''}`} />
         </button>
 
-        {/* Inner bezel wrapper around images */}
         <div className="bezel-inner absolute inset-2 bg-white rounded-xl border border-slate-100 flex items-center justify-center overflow-hidden z-0 transition-transform duration-500 ease-out group-hover/img:scale-[1.02]">
           <Image
             src={imgError ? placeholderSvg : getOptimizedImageUrl(product.image)}
             alt={product.nameFr || product.name || product.title}
-            fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className={`object-cover filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.03)] transition-all duration-700 ease-in-out ${
+            width={300}
+            height={300}
+            className={`w-full h-full object-cover filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.03)] transition-all duration-700 ease-in-out ${
               product.images && product.images.length > 1 ? 'group-hover:opacity-0' : ''
             }`}
             onError={() => setImgError(true)}
@@ -382,9 +381,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <Image
               src={altImgError ? placeholderSvg : getOptimizedImageUrl(product.images[1])}
               alt={`${product.nameFr || product.name || product.title} Alternate`}
-              fill
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              className="object-cover filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.03)] transition-all duration-700 ease-out opacity-0 group-hover:opacity-100"
+              width={300}
+              height={300}
+              className="w-full h-full object-cover filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.03)] transition-all duration-700 ease-out opacity-0 group-hover:opacity-100"
               onError={() => setAltImgError(true)}
             />
           )}
