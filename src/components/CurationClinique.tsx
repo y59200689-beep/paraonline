@@ -217,7 +217,7 @@ function ProductCardMini({ product, concern, index }: {
       {/* Info */}
       <div className="flex flex-col gap-2 p-4 flex-1">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 truncate">
-          {product.brand || 'Para Officinal'}
+          {product.vendor || 'Para Officinal'}
         </p>
         <Link href={`/products/${product.slug}`}>
           <h3 className="text-sm font-semibold text-slate-800 line-clamp-2 leading-snug hover:text-slate-600 transition-colors">
