@@ -1187,8 +1187,8 @@ export default function SettingsTab() {
                           </div>
                         )}
 
-                        {/* Product list editor (topRated, bestSellers, weeklySales, summerSale) */}
-                        {(activeSection.type === 'topRated' || activeSection.type === 'bestSellers' || activeSection.type === 'weeklySales' || activeSection.type === 'summerSale') && (
+                        {/* Product list editor (topRated, bestSellers, weeklySales, summerSale, productGrid) */}
+                        {(activeSection.type === 'topRated' || activeSection.type === 'bestSellers' || activeSection.type === 'weeklySales' || activeSection.type === 'summerSale' || activeSection.type === 'productGrid') && (
                           <div className="space-y-4">
                             {/* Titles (If not SummerSale which doesn't display heading) */}
                             {activeSection.type !== 'summerSale' && (

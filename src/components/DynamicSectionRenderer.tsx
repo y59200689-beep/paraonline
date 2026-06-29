@@ -78,6 +78,7 @@ export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps
                   activeCategory={activeCategory}
                   onSelectCategory={setActiveCategory}
                   onOpenQuickView={(p) => setSelectedProduct(p)}
+                  pinnedProductIds={section.settings?.productIds || []}
                 />
               </main>
             );

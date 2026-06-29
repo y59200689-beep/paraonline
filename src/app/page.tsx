@@ -72,7 +72,7 @@ export default async function Home() {
   const defaultSections: HomepageSectionItem[] = [
     { id: 'hero-1', type: 'hero', nameFr: 'Carrousel Héro & Diaporama', visible: hp.showHero ?? true },
     { id: 'categoryTrack-1', type: 'categoryTrack', nameFr: 'Barre de Défilement des Catégories', visible: hp.showCategoryTrack ?? true },
-    { id: 'productGrid-1', type: 'productGrid', nameFr: 'Grille Principale des Produits', visible: hp.showProductGrid ?? true },
+    { id: 'productGrid-1', type: 'productGrid', nameFr: 'Grille Principale des Produits', visible: hp.showProductGrid ?? true, settings: { productIds: hp.featuredProductIds || [] } },
     { id: 'brandPartners-1', type: 'brandPartners', nameFr: 'Marques Partenaires', visible: hp.showBrandPartners ?? true },
     { id: 'diagnosticBanner-1', type: 'diagnosticBanner', nameFr: 'Diagnostic de Peau IA', visible: hp.showDiagnosticBanner ?? true },
     { id: 'summerSale-1', type: 'summerSale', nameFr: "Offres d'Été (Summer Sale)", visible: hp.showSummerSale ?? true },

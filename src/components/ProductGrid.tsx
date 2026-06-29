@@ -68,9 +68,10 @@ interface ProductGridProps {
   activeCategory: string;
   onSelectCategory: (category: string) => void;
   onOpenQuickView: (product: Product) => void;
+  pinnedProductIds?: number[];
 }
 
-export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, onSelectCategory, onOpenQuickView }) => {
+export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, onSelectCategory, onOpenQuickView, pinnedProductIds = [] }) => {
   const { language } = useTranslation();
   const { amPmState } = useAmPm();
   const { 
@@ -96,6 +97,23 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, onSele
 
     const fetchProducts = async () => {
       try {
+        let list: Product[] = [];
+        let pinnedList: Product[] = [];
+        const isDefaultFilter = activeCategory === 'all' && activeConcern === 'all' && activeIngredient === 'all';
+
+        // If on page 1 and there are pinned products, fetch them first
+        if (page === 1 && isDefaultFilter && pinnedProductIds.length > 0) {
+          try {
+            const pinnedRes = await fetch(`/api/products?ids=${pinnedProductIds.join(',')}`);
+            const pinnedData = await pinnedRes.json();
+            if (pinnedData.success && pinnedData.products) {
+              pinnedList = pinnedData.products;
+            }
+          } catch (e) {
+            console.error("Failed to fetch pinned products:", e);
+          }
+        }
+
         const queryParams = new URLSearchParams({
           page: page.toString(),
           limit: '15',
@@ -104,12 +122,20 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, onSele
           ingredient: activeIngredient,
         });
 
-
         const res = await fetch(`/api/products?${queryParams.toString()}`);
         const data = await res.json();
         
         if (active && data.success) {
-          const list = [...(data.products || [])];
+          const fetchedList = [...(data.products || [])];
+          
+          // Merge pinned products at the start of page 1, avoiding duplicates
+          if (page === 1 && pinnedList.length > 0) {
+            const pinnedIds = new Set(pinnedList.map(p => p.id));
+            const filteredFetched = fetchedList.filter(p => !pinnedIds.has(p.id));
+            list = [...pinnedList, ...filteredFetched].slice(0, 15);
+          } else {
+            list = fetchedList;
+          }
           
           // Re-order result so products matching the selected routine context appear first!
           const isAM = amPmState === 'am';
@@ -142,7 +168,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, onSele
     return () => {
       active = false;
     };
-  }, [activeCategory, amPmState, activeConcern, activeIngredient, page]);
+  }, [activeCategory, amPmState, activeConcern, activeIngredient, page, pinnedProductIds]);
 
   return (
     <div
