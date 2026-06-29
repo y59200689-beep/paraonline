@@ -519,7 +519,7 @@ export default function SettingsTab() {
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 animate-slide-up">
       
       {/* Settings Sidebar submenus */}
-      <aside className={`p-4 rounded-2xl border flex flex-col space-y-1 lg:col-span-1 ${adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/40 border-slate-900'}`}>
+      <aside className={`p-3 lg:p-4 rounded-2xl border flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible gap-2 lg:space-y-1 lg:gap-0 lg:col-span-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/40 border-slate-900'}`}>
         {[
           { id: 'general', label: 'Paramètres Généraux', icon: Sliders },
           { id: 'homepage', label: 'Mise en Page de l\'Accueil', icon: Layout },
@@ -545,7 +545,7 @@ export default function SettingsTab() {
                 setSelectedBannerIndex(null);
                 setIsAddingFaq(false);
               }}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold tracking-wide border transition-all duration-200 text-left ${
+              className={`shrink-0 w-auto lg:w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold tracking-wide border transition-all duration-200 text-left ${
                 isSubActive
                   ? (adminTheme === 'light'
                       ? 'bg-emerald-50 text-emerald-700 border-emerald-200/40 shadow-sm'
