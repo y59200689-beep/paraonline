@@ -516,10 +516,10 @@ export default function SettingsTab() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 animate-slide-up">
+    <div className="flex flex-col gap-6 animate-slide-up">
       
-      {/* Settings Sidebar submenus */}
-      <aside className={`p-3 lg:p-4 rounded-2xl border flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible gap-2 lg:space-y-1 lg:gap-0 lg:col-span-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/40 border-slate-900'}`}>
+      {/* Settings submenus (Horizontal Tab Bar) */}
+      <nav className={`p-2 rounded-2xl border flex flex-row overflow-x-auto gap-2 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/40 border-slate-900'}`}>
         {[
           { id: 'general', label: 'Paramètres Généraux', icon: Sliders },
           { id: 'homepage', label: 'Mise en Page de l\'Accueil', icon: Layout },
@@ -545,7 +545,7 @@ export default function SettingsTab() {
                 setSelectedBannerIndex(null);
                 setIsAddingFaq(false);
               }}
-              className={`shrink-0 w-auto lg:w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold tracking-wide border transition-all duration-200 text-left ${
+              className={`shrink-0 flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-semibold tracking-wide border transition-all duration-200 ${
                 isSubActive
                   ? (adminTheme === 'light'
                       ? 'bg-emerald-50 text-emerald-700 border-emerald-200/40 shadow-sm'
@@ -560,10 +560,10 @@ export default function SettingsTab() {
             </button>
           );
         })}
-      </aside>
+      </nav>
 
       {/* Sub-tab main workspace */}
-      <div className="lg:col-span-3">
+      <div className="w-full">
         {currentUser?.role !== 'owner' && (
           <div className="bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs px-4 py-3 rounded-2xl mb-4 font-semibold flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -1401,42 +1401,367 @@ export default function SettingsTab() {
                           </div>
                         )}
 
-                        {/* Standard section global warning */}
-                        {activeSection.type !== 'customHtml' && activeSection.type !== 'richText' && activeSection.type !== 'topRated' && activeSection.type !== 'bestSellers' && activeSection.type !== 'weeklySales' && activeSection.type !== 'summerSale' && (
+                        {/* Standard section global warning / Specialized editors */}
+                        {activeSection.type === 'hero' && (
+                          <div className="space-y-6">
+                            <div className={`border-b pb-3 ${adminTheme === 'light' ? 'border-slate-100' : 'border-slate-800'}`}>
+                              <h4 className={`text-xs font-black uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-700' : 'text-slate-355'}`}>
+                                Diapositives du Carrousel Héro
+                              </h4>
+                              <p className="text-[10px] text-slate-505 mt-1">
+                                Sélectionnez une diapositive ci-dessous pour la modifier.
+                              </p>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              {settings.banners?.map((banner, index) => (
+                                <div 
+                                  key={index}
+                                  onClick={() => handleOpenBannerEdit(index)}
+                                  className={`relative h-28 rounded-2xl overflow-hidden group cursor-pointer transition-all duration-300 flex flex-col justify-end p-3 border ${
+                                    selectedBannerIndex === index
+                                      ? 'border-indigo-500 ring-2 ring-indigo-500/20'
+                                      : adminTheme === 'light'
+                                        ? 'border-slate-200 bg-white hover:border-indigo-500/50 hover:shadow-sm'
+                                        : 'border-slate-805 bg-slate-950 hover:border-indigo-500/50'
+                                  }`}
+                                >
+                                  <div 
+                                    className="absolute inset-0 bg-cover bg-center transition-transform duration-[1000ms] group-hover:scale-105"
+                                    style={{ backgroundImage: `url(${banner.bgImage})` }}
+                                  />
+                                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/45 to-transparent" />
+                                  
+                                  <div className="relative z-10 space-y-0.5 keep-light">
+                                    <span className="text-[7.5px] font-bold text-emerald-400 uppercase tracking-widest block bg-emerald-950/60 border border-emerald-900/50 rounded px-1.5 py-0.5 w-fit">
+                                      Diapositive #{index + 1} • {banner.tagFr}
+                                    </span>
+                                    <h4 className="font-extrabold text-[11px] text-slate-100 truncate">{banner.titleFr}</h4>
+                                    <span className="text-[8.5px] text-slate-400 font-mono block truncate">Lien: {banner.linkType} &rarr; {banner.linkValue || 'Aucun'}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+
+                            {selectedBannerIndex !== null && (
+                              <div className={`border rounded-2xl p-4 mt-2 space-y-4 ${
+                                adminTheme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-950 border-slate-900'
+                              }`}>
+                                <div className="flex justify-between items-center border-b pb-2 border-slate-200/50 dark:border-slate-800/40">
+                                  <h4 className="text-xs font-black uppercase text-indigo-500">
+                                    Modifier la Diapositive #{selectedBannerIndex + 1}
+                                  </h4>
+                                  <button type="button" onClick={() => setSelectedBannerIndex(null)} className="text-slate-400 hover:text-slate-200">
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  <div className="space-y-1">
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase">Tag (FR)</label>
+                                    <input
+                                      type="text"
+                                      value={bannerForm.tagFr || ''}
+                                      onChange={(e) => setBannerForm({ ...bannerForm, tagFr: e.target.value })}
+                                      className={`w-full text-xs rounded-xl px-2.5 py-1.5 border ${adminTheme === 'light' ? 'bg-white text-slate-800 border-slate-200' : 'bg-slate-900 text-slate-200 border-slate-800'}`}
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase">Tag (AR)</label>
+                                    <input
+                                      type="text"
+                                      value={bannerForm.tagAr || ''}
+                                      onChange={(e) => setBannerForm({ ...bannerForm, tagAr: e.target.value })}
+                                      className={`w-full text-xs rounded-xl px-2.5 py-1.5 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800 border-slate-200' : 'bg-slate-900 text-slate-200 border-slate-800'}`}
+                                      dir="rtl"
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase">Titre (FR)</label>
+                                    <input
+                                      type="text"
+                                      value={bannerForm.titleFr || ''}
+                                      onChange={(e) => setBannerForm({ ...bannerForm, titleFr: e.target.value })}
+                                      className={`w-full text-xs rounded-xl px-2.5 py-1.5 border ${adminTheme === 'light' ? 'bg-white text-slate-800 border-slate-200' : 'bg-slate-900 text-slate-200 border-slate-800'}`}
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase">Titre (AR)</label>
+                                    <input
+                                      type="text"
+                                      value={bannerForm.titleAr || ''}
+                                      onChange={(e) => setBannerForm({ ...bannerForm, titleAr: e.target.value })}
+                                      className={`w-full text-xs rounded-xl px-2.5 py-1.5 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800 border-slate-200' : 'bg-slate-900 text-slate-200 border-slate-800'}`}
+                                      dir="rtl"
+                                    />
+                                  </div>
+                                  <div className="space-y-1 sm:col-span-2">
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase">Image de fond (URL)</label>
+                                    <div className="flex gap-2">
+                                      <input
+                                        type="text"
+                                        value={bannerForm.bgImage || ''}
+                                        onChange={(e) => setBannerForm({ ...bannerForm, bgImage: e.target.value })}
+                                        className={`flex-1 text-xs rounded-xl px-2.5 py-1.5 border ${adminTheme === 'light' ? 'bg-white text-slate-850 border-slate-200' : 'bg-slate-900 text-slate-200 border-slate-800'}`}
+                                      />
+                                      <label className="px-3 py-1.5 bg-slate-950 dark:bg-white text-white dark:text-slate-950 hover:bg-slate-900 dark:hover:bg-slate-50 font-bold text-[10px] rounded-xl cursor-pointer flex items-center justify-center border border-transparent">
+                                        Importer
+                                        <input
+                                          type="file"
+                                          accept="image/*"
+                                          onChange={(e) => handleImageUpload(e, 'banner')}
+                                          className="hidden"
+                                        />
+                                      </label>
+                                    </div>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase">Type de redirection</label>
+                                    <select
+                                      value={bannerForm.linkType || 'diagnostic'}
+                                      onChange={(e) => setBannerForm({ ...bannerForm, linkType: e.target.value as any })}
+                                      className={`w-full text-xs rounded-xl px-2.5 py-1.5 border ${adminTheme === 'light' ? 'bg-white text-slate-800 border-slate-200' : 'bg-slate-900 text-slate-200 border-slate-800'}`}
+                                    >
+                                      <option value="diagnostic">Diagnostic IA</option>
+                                      <option value="category">Catégorie</option>
+                                      <option value="product">Produit unique</option>
+                                    </select>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase">Valeur de redirection</label>
+                                    <input
+                                      type="text"
+                                      placeholder="Nom catégorie ou ID produit"
+                                      value={bannerForm.linkValue || ''}
+                                      onChange={(e) => setBannerForm({ ...bannerForm, linkValue: e.target.value })}
+                                      className={`w-full text-xs rounded-xl px-2.5 py-1.5 border ${adminTheme === 'light' ? 'bg-white text-slate-800 border-slate-200' : 'bg-slate-900 text-slate-200 border-slate-800'}`}
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="flex justify-end gap-2 pt-2 border-t border-slate-200/50 dark:border-slate-800/40">
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedBannerIndex(null)}
+                                    className="px-3.5 py-2 border rounded-xl text-[10px] uppercase font-bold text-slate-455 hover:bg-slate-100 dark:hover:bg-slate-900/40"
+                                  >
+                                    Annuler
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={onSaveBannerSubmit}
+                                    className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl text-[10px] uppercase font-black"
+                                  >
+                                    Enregistrer la Diapo
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {activeSection.type === 'faq' && (
+                          <div className="space-y-4">
+                            <div className={`border-b pb-3 flex justify-between items-center ${adminTheme === 'light' ? 'border-slate-100' : 'border-slate-800'}`}>
+                              <div>
+                                <h4 className={`text-xs font-black uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-700' : 'text-slate-355'}`}>
+                                  Questions de la FAQ d&apos;Accueil
+                                </h4>
+                                <p className="text-[10px] text-slate-505 mt-0.5">
+                                  Gérez les questions et réponses affichées sur la page d&apos;accueil.
+                                </p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setIsAddingFaq(!isAddingFaq)}
+                                className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-[10px] uppercase tracking-wider rounded-xl transition cursor-pointer"
+                              >
+                                {isAddingFaq ? 'Annuler' : 'Ajouter'}
+                              </button>
+                            </div>
+
+                            {/* Add FAQ Form inline */}
+                            {isAddingFaq && (
+                              <form onSubmit={onAddFaqSubmit} className={`border rounded-2xl p-4 space-y-4 ${
+                                adminTheme === 'light' ? 'bg-slate-50/50 border-slate-200' : 'bg-slate-950 border-slate-900 font-sans'
+                              }`}>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  <div className="space-y-1">
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase">Question (FR)</label>
+                                    <input
+                                      type="text"
+                                      value={faqForm.q_fr}
+                                      onChange={(e) => setFaqForm({ ...faqForm, q_fr: e.target.value })}
+                                      className={`w-full text-xs rounded-xl px-2.5 py-1.5 border ${adminTheme === 'light' ? 'bg-white text-slate-800 border-slate-200' : 'bg-slate-900 text-slate-200 border-slate-800'}`}
+                                      required
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase">Question (AR)</label>
+                                    <input
+                                      type="text"
+                                      value={faqForm.q_ar}
+                                      onChange={(e) => setFaqForm({ ...faqForm, q_ar: e.target.value })}
+                                      className={`w-full text-xs rounded-xl px-2.5 py-1.5 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800 border-slate-200' : 'bg-slate-900 text-slate-200 border-slate-800'}`}
+                                      dir="rtl"
+                                      required
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase">Réponse (FR)</label>
+                                    <textarea
+                                      value={faqForm.a_fr}
+                                      onChange={(e) => setFaqForm({ ...faqForm, a_fr: e.target.value })}
+                                      className={`w-full text-xs rounded-xl px-2.5 py-1.5 border ${adminTheme === 'light' ? 'bg-white text-slate-800 border-slate-200' : 'bg-slate-900 text-slate-200 border-slate-800'}`}
+                                      rows={2}
+                                      required
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase">Réponse (AR)</label>
+                                    <textarea
+                                      value={faqForm.a_ar}
+                                      onChange={(e) => setFaqForm({ ...faqForm, a_ar: e.target.value })}
+                                      className={`w-full text-xs rounded-xl px-2.5 py-1.5 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800 border-slate-200' : 'bg-slate-900 text-slate-200 border-slate-800'}`}
+                                      rows={2}
+                                      dir="rtl"
+                                      required
+                                    />
+                                  </div>
+                                </div>
+                                <div className="flex justify-end gap-2 pt-2 border-t border-slate-200/50 dark:border-slate-800/40">
+                                  <button
+                                    type="submit"
+                                    className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl text-[10px] uppercase font-black"
+                                  >
+                                    Ajouter la Question
+                                  </button>
+                                </div>
+                              </form>
+                            )}
+
+                            {/* List FAQ items */}
+                            <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
+                              {(settings.faq || []).map((faqItem, index) => (
+                                <div 
+                                  key={index}
+                                  className={`p-3 rounded-xl border flex justify-between items-start gap-4 transition hover:shadow-sm ${
+                                    adminTheme === 'light' ? 'bg-white border-slate-150' : 'bg-slate-900/60 border-slate-850'
+                                  }`}
+                                >
+                                  <div className="flex-1 min-w-0 text-xs space-y-1">
+                                    <div className="border-b border-slate-100 dark:border-slate-850 pb-1.5 mb-1.5 flex justify-between text-[9px] font-bold text-slate-400">
+                                      <span>FRANÇAIS</span>
+                                      <span className="text-right" dir="rtl">العربية</span>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                      <div className="space-y-0.5">
+                                        <strong className="block font-extrabold text-slate-700 dark:text-slate-300">{faqItem.q_fr}</strong>
+                                        <p className="text-[11px] text-slate-505 font-medium leading-relaxed">{faqItem.a_fr}</p>
+                                      </div>
+                                      <div className="space-y-0.5 text-right" dir="rtl">
+                                        <strong className="block font-extrabold text-slate-700 dark:text-slate-300">{faqItem.q_ar}</strong>
+                                        <p className="text-[11px] text-slate-550 font-medium leading-relaxed">{faqItem.a_ar}</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => onDeleteFaqClick(index)}
+                                    className="p-1 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 shrink-0"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {activeSection.type === 'diagnosticBanner' && (
+                          <div className="space-y-4">
+                            <div className={`border-b pb-3 ${adminTheme === 'light' ? 'border-slate-100' : 'border-slate-800'}`}>
+                              <h4 className={`text-xs font-black uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-700' : 'text-slate-355'}`}>
+                                Diagnostic Intelligent IA
+                              </h4>
+                              <p className="text-[10px] text-slate-505 mt-0.5">
+                                Configurez les récompenses du quiz de diagnostic intelligent de la peau.
+                              </p>
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-xs font-bold text-slate-650 dark:text-slate-400 block">
+                                Pourcentage de réduction de récompense (%)
+                              </label>
+                              <div className="flex items-center gap-3">
+                                <input
+                                  type="number"
+                                  value={settings.quizDiscountPercent || 15}
+                                  onChange={async (e) => {
+                                    const val = Number(e.target.value);
+                                    await saveSettings({ ...settings, quizDiscountPercent: val });
+                                  }}
+                                  className={`w-28 text-xs font-bold rounded-xl px-3 py-2 border ${adminTheme === 'light' ? 'bg-white text-slate-805 border-slate-200' : 'bg-slate-900 text-slate-202 border-slate-800'}`}
+                                />
+                                <span className="text-[11px] font-semibold text-slate-450">
+                                  offert aux clients après la finalisation du diagnostic cutané.
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {activeSection.type === 'trustBar' && (
+                          <div className="space-y-4">
+                            <div className={`border-b pb-3 ${adminTheme === 'light' ? 'border-slate-100' : 'border-slate-800'}`}>
+                              <h4 className={`text-xs font-black uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-700' : 'text-slate-355'}`}>
+                                Barre de Confiance Maroc
+                              </h4>
+                              <p className="text-[10px] text-slate-505 mt-0.5">
+                                Ajustez le numéro WhatsApp de contact pour la barre de réassurance d&apos;accueil.
+                              </p>
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-xs font-bold text-slate-600 dark:text-slate-400 block">
+                                Numéro WhatsApp d&apos;assistance (format international sans + ou 00)
+                              </label>
+                              <input
+                                type="text"
+                                value={settings.storeWhatsApp || ''}
+                                onChange={async (e) => {
+                                  await saveSettings({ ...settings, storeWhatsApp: e.target.value });
+                                }}
+                                className={`w-full text-xs font-bold rounded-xl px-3 py-2 border ${adminTheme === 'light' ? 'bg-white text-slate-850 border-slate-200' : 'bg-slate-900 text-slate-202 border-slate-800'}`}
+                                placeholder="Ex: 212660808080"
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Fallback for other standard sections */}
+                        {activeSection.type !== 'customHtml' && 
+                         activeSection.type !== 'richText' && 
+                         activeSection.type !== 'topRated' && 
+                         activeSection.type !== 'bestSellers' && 
+                         activeSection.type !== 'weeklySales' && 
+                         activeSection.type !== 'summerSale' && 
+                         activeSection.type !== 'hero' && 
+                         activeSection.type !== 'faq' && 
+                         activeSection.type !== 'diagnosticBanner' && 
+                         activeSection.type !== 'trustBar' && (
                           <div className="space-y-4 py-8 text-center">
                             <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto ${
                               adminTheme === 'light' ? 'bg-slate-50 text-slate-400' : 'bg-slate-850 text-slate-550'
                             }`}>
-                              <Sliders className="w-5 h-5" />
+                              <meta.icon className="w-5 h-5 animate-pulse" />
                             </div>
                             <div className="space-y-1">
                               <p className={`text-xs font-bold ${adminTheme === 'light' ? 'text-slate-750' : 'text-slate-200'}`}>
-                                Paramètres Globaux
+                                {meta.nameFr}
                               </p>
                               <p className="text-[10.5px] text-slate-500 max-w-[280px] mx-auto leading-relaxed">
-                                Les données et le contenu de cette section proviennent d&apos;autres onglets (bannières, FAQ, programme fidélité, etc.).
+                                {meta.descFr || "Cette section s'affiche automatiquement en fonction des données globales de la boutique."}
                               </p>
                             </div>
-                            {activeSection.type === 'hero' && (
-                              <button
-                                type="button"
-                                onClick={() => setActiveSettingsSubTab('banners')}
-                                className="mt-2.5 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10.5px] font-black bg-indigo-50 hover:bg-indigo-100 text-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400 transition"
-                              >
-                                Éditer les Bannières Hero
-                                <ArrowRight className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                            {activeSection.type === 'faq' && (
-                              <button
-                                type="button"
-                                onClick={() => setActiveSettingsSubTab('faq')}
-                                className="mt-2.5 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10.5px] font-black bg-indigo-50 hover:bg-indigo-100 text-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400 transition"
-                              >
-                                Éditer les Questions FAQ
-                                <ArrowRight className="w-3.5 h-3.5" />
-                              </button>
-                            )}
                           </div>
                         )}
                       </div>
