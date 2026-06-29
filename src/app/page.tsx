@@ -1,6 +1,8 @@
 import React from 'react';
 import type { Metadata } from 'next';
 
+export const dynamic = 'force-dynamic';
+
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://paraofficinal.ma';
 
 export const metadata: Metadata = {

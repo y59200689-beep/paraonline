@@ -127,19 +127,9 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, onSele
         
         if (active && data.success) {
           const fetchedList = [...(data.products || [])];
-          
-          // Merge pinned products at the start of page 1, avoiding duplicates
-          if (page === 1 && pinnedList.length > 0) {
-            const pinnedIds = new Set(pinnedList.map(p => p.id));
-            const filteredFetched = fetchedList.filter(p => !pinnedIds.has(p.id));
-            list = [...pinnedList, ...filteredFetched].slice(0, 15);
-          } else {
-            list = fetchedList;
-          }
-          
-          // Re-order result so products matching the selected routine context appear first!
+          // Re-order general catalog products so matching routine context appears first
           const isAM = amPmState === 'am';
-          list.sort((a, b) => {
+          fetchedList.sort((a, b) => {
             const isDayA = a.tags.includes('solaire') || a.tags.includes('jour') || a.nameFr?.toLowerCase().includes('solaire') || a.nameFr?.toLowerCase().includes('vitamine c') || a.id === 3 || a.id === 7 || a.id === 14 || a.id === 17 || a.id === 13 || a.id === 1;
             const isNightA = a.tags.includes('nuit') || a.nameFr?.toLowerCase().includes('nuit') || a.nameFr?.toLowerCase().includes('night') || a.id === 8 || a.id === 5 || a.id === 22 || a.id === 15 || a.id === 16 || a.id === 6;
 
@@ -153,6 +143,19 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, onSele
             if (!matchA && matchB) return 1;
             return 0;
           });
+
+          // Merge pinned products at the start of page 1, avoiding duplicates
+          if (page === 1 && pinnedList.length > 0) {
+            // Sort pinnedList to match the exact order of pinnedProductIds in the admin
+            const pinnedOrderMap = new Map(pinnedProductIds.map((id, index) => [id, index]));
+            pinnedList.sort((a, b) => (pinnedOrderMap.get(a.id) ?? 999) - (pinnedOrderMap.get(b.id) ?? 999));
+
+            const pinnedIds = new Set(pinnedList.map(p => p.id));
+            const filteredFetched = fetchedList.filter(p => !pinnedIds.has(p.id));
+            list = [...pinnedList, ...filteredFetched].slice(0, 15);
+          } else {
+            list = fetchedList;
+          }
 
           setFilteredProducts(list);
           setTotalPages(data.pagination?.totalPages || 1);
