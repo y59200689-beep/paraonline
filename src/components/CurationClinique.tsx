@@ -163,8 +163,8 @@ function ProductCardMini({ product, concern, index }: {
   const [hovered, setHovered] = useState(false);
   const [mounted, setMounted] = useState(false);
   const price = product.price ?? 0;
-  const originalPrice = product.originalPrice ?? 0;
-  const discountPct = originalPrice > price ? Math.round((1 - price / originalPrice) * 100) : null;
+  const comparePrice = product.comparePrice ?? 0;
+  const discountPct = comparePrice > price ? Math.round((1 - price / comparePrice) * 100) : null;
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), index * 60);
@@ -227,8 +227,8 @@ function ProductCardMini({ product, concern, index }: {
         <div className="mt-auto pt-2 flex items-center justify-between gap-2">
           <div className="flex flex-col">
             <span className="text-base font-bold text-slate-900">{price.toFixed(2)} Dhs</span>
-            {originalPrice > price && (
-              <span className="text-xs text-slate-400 line-through">{originalPrice.toFixed(2)} Dhs</span>
+            {comparePrice > price && (
+              <span className="text-xs text-slate-400 line-through">{comparePrice.toFixed(2)} Dhs</span>
             )}
           </div>
           <button
