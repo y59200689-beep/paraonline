@@ -1737,6 +1737,571 @@ export default function SettingsTab() {
                           </div>
                         )}
 
+                        {/* Brand Partners list editor */}
+                        {activeSection.type === 'brandPartners' && (
+                          <div className="space-y-4">
+                            <div className="flex justify-between items-center border-b pb-2">
+                              <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                                Gestion des Marques Partenaires
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const currentBrands = activeSection.settings?.brands || [
+                                    { name: 'La Roche-Posay', domain: 'laroche-posay.com' },
+                                    { name: 'Vichy', domain: 'vichyusa.com' },
+                                    { name: 'CeraVe', domain: 'cerave.com' },
+                                    { name: 'Eucerin', domain: 'eucerin.com' },
+                                    { name: 'Bioderma', domain: 'bioderma.com' },
+                                    { name: 'SVR', domain: 'labo-svr.com' },
+                                    { name: 'Cetaphil', domain: 'cetaphil.com' },
+                                    { name: 'Avène', domain: 'aveneusa.com' },
+                                    { name: 'Mixa', domain: 'mixa.fr' },
+                                    { name: "L'Oréal Paris", domain: 'loreal-paris.com' },
+                                    { name: 'Garnier', domain: 'garnier.com' },
+                                    { name: 'Erborian', domain: 'erborian.com' },
+                                    { name: 'Kérastase', domain: 'kerastase.com' },
+                                    { name: 'Dercos Technique', domain: 'dercos.com' }
+                                  ];
+                                  updateActiveSectionSettings({
+                                    brands: [...currentBrands, { name: 'Nouvelle Marque', domain: 'example.com' }]
+                                  });
+                                }}
+                                className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[10px] uppercase tracking-wider rounded-lg transition"
+                              >
+                                Ajouter
+                              </button>
+                            </div>
+
+                            <div className="space-y-3 max-h-96 overflow-y-auto pr-1 font-sans">
+                              {(activeSection.settings?.brands || [
+                                { name: 'La Roche-Posay', domain: 'laroche-posay.com' },
+                                { name: 'Vichy', domain: 'vichyusa.com' },
+                                { name: 'CeraVe', domain: 'cerave.com' },
+                                { name: 'Eucerin', domain: 'eucerin.com' },
+                                { name: 'Bioderma', domain: 'bioderma.com' },
+                                { name: 'SVR', domain: 'labo-svr.com' },
+                                { name: 'Cetaphil', domain: 'cetaphil.com' },
+                                { name: 'Avène', domain: 'aveneusa.com' },
+                                { name: 'Mixa', domain: 'mixa.fr' },
+                                { name: "L'Oréal Paris", domain: 'loreal-paris.com' },
+                                { name: 'Garnier', domain: 'garnier.com' },
+                                { name: 'Erborian', domain: 'erborian.com' },
+                                { name: 'Kérastase', domain: 'kerastase.com' },
+                                { name: 'Dercos Technique', domain: 'dercos.com' }
+                              ]).map((brand: any, index: number) => (
+                                <div 
+                                  key={index}
+                                  className={`p-3 rounded-xl border space-y-2 ${
+                                    adminTheme === 'light' ? 'bg-slate-50 border-slate-150' : 'bg-slate-900/60 border-slate-850'
+                                  }`}
+                                >
+                                  <div className="flex gap-2">
+                                    <div className="w-10 h-10 rounded bg-white flex items-center justify-center border p-1 shrink-0">
+                                      <img
+                                        src={brand.logoUrl || `https://logos.hunter.io/${brand.domain}`}
+                                        alt=""
+                                        className="max-h-full max-w-full object-contain"
+                                        onError={(e) => {
+                                          (e.target as HTMLElement).style.display = 'none';
+                                        }}
+                                      />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2 flex-1">
+                                      <input
+                                        type="text"
+                                        value={brand.name}
+                                        placeholder="Nom"
+                                        onChange={(e) => {
+                                          const newBrands = [...(activeSection.settings?.brands || [])];
+                                          if (newBrands.length === 0) {
+                                            newBrands.push({ name: 'La Roche-Posay', domain: 'laroche-posay.com' });
+                                          }
+                                          newBrands[index] = { ...brand, name: e.target.value };
+                                          updateActiveSectionSettings({ brands: newBrands });
+                                        }}
+                                        className={`text-xs px-2 py-1 rounded-lg border ${
+                                          adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-200 border-slate-800'
+                                        }`}
+                                      />
+                                      <input
+                                        type="text"
+                                        value={brand.domain}
+                                        placeholder="Domaine"
+                                        onChange={(e) => {
+                                          const newBrands = [...(activeSection.settings?.brands || [])];
+                                          newBrands[index] = { ...brand, domain: e.target.value };
+                                          updateActiveSectionSettings({ brands: newBrands });
+                                        }}
+                                        className={`text-xs px-2 py-1 rounded-lg border ${
+                                          adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-200 border-slate-800'
+                                        }`}
+                                      />
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const defaultBrands = [
+                                          { name: 'La Roche-Posay', domain: 'laroche-posay.com' },
+                                          { name: 'Vichy', domain: 'vichyusa.com' },
+                                          { name: 'CeraVe', domain: 'cerave.com' },
+                                          { name: 'Eucerin', domain: 'eucerin.com' },
+                                          { name: 'Bioderma', domain: 'bioderma.com' },
+                                          { name: 'SVR', domain: 'labo-svr.com' },
+                                          { name: 'Cetaphil', domain: 'cetaphil.com' },
+                                          { name: 'Avène', domain: 'aveneusa.com' },
+                                          { name: 'Mixa', domain: 'mixa.fr' },
+                                          { name: "L'Oréal Paris", domain: 'loreal-paris.com' },
+                                          { name: 'Garnier', domain: 'garnier.com' },
+                                          { name: 'Erborian', domain: 'erborian.com' },
+                                          { name: 'Kérastase', domain: 'kerastase.com' },
+                                          { name: 'Dercos Technique', domain: 'dercos.com' }
+                                        ];
+                                        const current = activeSection.settings?.brands || defaultBrands;
+                                        const newBrands = current.filter((_: any, i: number) => i !== index);
+                                        updateActiveSectionSettings({ brands: newBrands });
+                                      }}
+                                      className="p-1.5 text-rose-500 hover:bg-rose-50 rounded shrink-0 self-center"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-[8px] font-bold text-slate-400 uppercase">Ou URL personnalisée du logo</label>
+                                    <input
+                                      type="text"
+                                      value={brand.logoUrl || ''}
+                                      placeholder="Ex: /images/brands/brand.png (Optionnel)"
+                                      onChange={(e) => {
+                                        const newBrands = [...(activeSection.settings?.brands || [])];
+                                        newBrands[index] = { ...brand, logoUrl: e.target.value };
+                                        updateActiveSectionSettings({ brands: newBrands });
+                                      }}
+                                      className={`w-full text-[10px] px-2 py-1 rounded-lg border ${
+                                        adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-200 border-slate-800'
+                                      }`}
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Horizontal Promo Editor */}
+                        {activeSection.type === 'horizontalPromo' && (
+                          <div className="space-y-4">
+                            <div className="border-b pb-2">
+                              <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                                Édition de la Bannière Horizontale
+                              </label>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-3 font-sans">
+                              <div className="space-y-1">
+                                <label className="text-[9px] font-bold text-slate-400 uppercase">Titre (FR)</label>
+                                <input
+                                  type="text"
+                                  value={activeSection.settings?.titleFr || ''}
+                                  placeholder="En magasin ou en ligne..."
+                                  onChange={(e) => updateActiveSectionSettings({ titleFr: e.target.value })}
+                                  className={`w-full text-xs rounded-xl px-2.5 py-1.5 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-900 text-slate-202 border-slate-800'}`}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[9px] font-bold text-slate-400 uppercase">Titre (AR)</label>
+                                <input
+                                  type="text"
+                                  value={activeSection.settings?.titleAr || ''}
+                                  placeholder="في المتجر أو عبر الإنترنت..."
+                                  onChange={(e) => updateActiveSectionSettings({ titleAr: e.target.value })}
+                                  className={`w-full text-xs rounded-xl px-2.5 py-1.5 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-900 text-slate-202 border-slate-800'}`}
+                                  dir="rtl"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[9px] font-bold text-slate-400 uppercase">Description (FR)</label>
+                                <input
+                                  type="text"
+                                  value={activeSection.settings?.descFr || ''}
+                                  placeholder="La seule parapharmacie qui..."
+                                  onChange={(e) => updateActiveSectionSettings({ descFr: e.target.value })}
+                                  className={`w-full text-xs rounded-xl px-2.5 py-1.5 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-900 text-slate-202 border-slate-800'}`}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[9px] font-bold text-slate-400 uppercase">Description (AR)</label>
+                                <input
+                                  type="text"
+                                  value={activeSection.settings?.descAr || ''}
+                                  placeholder="الصيدلية الوحيدة التي تجعل..."
+                                  onChange={(e) => updateActiveSectionSettings({ descAr: e.target.value })}
+                                  className={`w-full text-xs rounded-xl px-2.5 py-1.5 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-900 text-slate-202 border-slate-800'}`}
+                                  dir="rtl"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[9px] font-bold text-slate-400 uppercase">Pourcentage de réduction (%)</label>
+                                <input
+                                  type="number"
+                                  value={activeSection.settings?.discountPercent !== undefined ? activeSection.settings.discountPercent : 50}
+                                  onChange={(e) => updateActiveSectionSettings({ discountPercent: Number(e.target.value) })}
+                                  className={`w-full text-xs rounded-xl px-2.5 py-1.5 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-900 text-slate-202 border-slate-800'}`}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[9px] font-bold text-slate-400 uppercase">Image de fond (URL)</label>
+                                <input
+                                  type="text"
+                                  value={activeSection.settings?.bgImage || ''}
+                                  placeholder="Ex: /images/promo/horizontal_promo.png"
+                                  onChange={(e) => updateActiveSectionSettings({ bgImage: e.target.value })}
+                                  className={`w-full text-xs rounded-xl px-2.5 py-1.5 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-900 text-slate-202 border-slate-800'}`}
+                                />
+                              </div>
+                              <div className="space-y-1 sm:col-span-2">
+                                <label className="text-[9px] font-bold text-slate-400 uppercase">Image du produit superposée (URL)</label>
+                                <input
+                                  type="text"
+                                  value={activeSection.settings?.overlayImage || ''}
+                                  placeholder="Ex: /images/categories/bebe.png"
+                                  onChange={(e) => updateActiveSectionSettings({ overlayImage: e.target.value })}
+                                  className={`w-full text-xs rounded-xl px-2.5 py-1.5 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-900 text-slate-202 border-slate-800'}`}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Flash Sale Editor */}
+                        {activeSection.type === 'flashSale' && (
+                          <div className="space-y-4 font-sans">
+                            <div className="border-b pb-2">
+                              <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                                Édition de la Vente Flash
+                              </label>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1">
+                                <label className="text-[9px] font-bold text-slate-400 uppercase">Titre personnalisé (FR)</label>
+                                <input
+                                  type="text"
+                                  value={activeSection.settings?.titleFr || ''}
+                                  placeholder="Optionnel (généré automatiquement)"
+                                  onChange={(e) => updateActiveSectionSettings({ titleFr: e.target.value })}
+                                  className={`w-full text-xs rounded-xl px-2.5 py-1.5 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-900 text-slate-202 border-slate-800'}`}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[9px] font-bold text-slate-400 uppercase">Titre personnalisé (AR)</label>
+                                <input
+                                  type="text"
+                                  value={activeSection.settings?.titleAr || ''}
+                                  placeholder="Optionnel"
+                                  onChange={(e) => updateActiveSectionSettings({ titleAr: e.target.value })}
+                                  className={`w-full text-xs rounded-xl px-2.5 py-1.5 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-900 text-slate-202 border-slate-800'}`}
+                                  dir="rtl"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[9px] font-bold text-slate-400 uppercase">Description (FR)</label>
+                                <textarea
+                                  value={activeSection.settings?.descFr || ''}
+                                  placeholder="Optionnel"
+                                  onChange={(e) => updateActiveSectionSettings({ descFr: e.target.value })}
+                                  className={`w-full text-xs rounded-xl px-2.5 py-1.5 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-900 text-slate-202 border-slate-800'}`}
+                                  rows={2}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[9px] font-bold text-slate-400 uppercase">Description (AR)</label>
+                                <textarea
+                                  value={activeSection.settings?.descAr || ''}
+                                  placeholder="Optionnel"
+                                  onChange={(e) => updateActiveSectionSettings({ descAr: e.target.value })}
+                                  className={`w-full text-xs rounded-xl px-2.5 py-1.5 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-900 text-slate-202 border-slate-800'}`}
+                                  dir="rtl"
+                                  rows={2}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[9px] font-bold text-slate-400 uppercase">Pourcentage de réduction (%)</label>
+                                <input
+                                  type="number"
+                                  value={activeSection.settings?.discountPercent !== undefined ? activeSection.settings.discountPercent : 30}
+                                  onChange={(e) => updateActiveSectionSettings({ discountPercent: Number(e.target.value) })}
+                                  className={`w-full text-xs rounded-xl px-2.5 py-1.5 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-900 text-slate-202 border-slate-800'}`}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[9px] font-bold text-slate-400 uppercase">Image publicitaire (URL)</label>
+                                <input
+                                  type="text"
+                                  value={activeSection.settings?.bgImage || ''}
+                                  placeholder="Optionnel (photo produit par défaut)"
+                                  onChange={(e) => updateActiveSectionSettings({ bgImage: e.target.value })}
+                                  className={`w-full text-xs rounded-xl px-2.5 py-1.5 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-900 text-slate-202 border-slate-800'}`}
+                                />
+                              </div>
+                            </div>
+
+                            {/* Link product selection */}
+                            <div className="space-y-2 pt-2 border-t border-slate-200/50 dark:border-slate-800/40">
+                              <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 block">Produit lié à la vente flash</label>
+                              {activeSection.settings?.productIds?.[0] ? (() => {
+                                const prod = products.find(p => p.id === activeSection.settings.productIds[0]);
+                                if (!prod) return null;
+                                return (
+                                  <div className={`flex items-center justify-between p-2 rounded-xl border ${
+                                    adminTheme === 'light' ? 'bg-white border-slate-150' : 'bg-slate-900/60 border-slate-850'
+                                  }`}>
+                                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                      <div className="w-9 h-9 rounded-lg overflow-hidden bg-slate-100 shrink-0">
+                                        <img src={prod.image} alt="" className="w-full h-full object-cover" />
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <p className="text-xs font-bold truncate">{prod.nameFr || prod.title}</p>
+                                        <p className="text-[9.5px] text-slate-400">{prod.price} DH</p>
+                                      </div>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => updateActiveSectionSettings({ productIds: [] })}
+                                      className="p-1.5 text-rose-500 hover:bg-rose-50 rounded"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                );
+                              })() : (
+                                <div className="relative">
+                                  {!trOpen ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => setTrOpen(true)}
+                                      className={`w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-dashed text-xs font-bold ${
+                                        adminTheme === 'light' ? 'border-slate-200 text-slate-400 bg-slate-50/50' : 'border-slate-805 text-slate-550'
+                                      }`}
+                                    >
+                                      <Plus className="w-3.5 h-3.5" />
+                                      Associer le produit flash
+                                    </button>
+                                  ) : (
+                                    <div className={`rounded-xl border shadow-xl overflow-hidden ${
+                                      adminTheme === 'light' ? 'bg-white border-slate-100' : 'bg-slate-900 border-slate-800 font-sans'
+                                    }`}>
+                                      <div className="flex items-center gap-2 px-3 py-2 border-b">
+                                        <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                        <input
+                                          type="text"
+                                          autoFocus
+                                          value={trSearch}
+                                          onChange={(e) => setTrSearch(e.target.value)}
+                                          placeholder="Rechercher par nom..."
+                                          className="flex-1 bg-transparent outline-none text-xs"
+                                        />
+                                        <button type="button" onClick={() => { setTrOpen(false); setTrSearch(''); }}>
+                                          <X className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
+                                      <div className="max-h-40 overflow-y-auto">
+                                        {products
+                                          .filter(p => !trSearch || (p.nameFr || p.title || '').toLowerCase().includes(trSearch.toLowerCase()))
+                                          .slice(0, 8)
+                                          .map(p => (
+                                            <button
+                                              type="button"
+                                              key={p.id}
+                                              onClick={() => {
+                                                updateActiveSectionSettings({ productIds: [p.id] });
+                                                setTrOpen(false);
+                                                setTrSearch('');
+                                              }}
+                                              className="w-full flex items-center gap-3 px-3 py-2 text-left border-b last:border-0 text-xs hover:bg-slate-50 dark:hover:bg-slate-800"
+                                            >
+                                              <span className="flex-1 truncate">{p.nameFr || p.title}</span>
+                                            </button>
+                                          ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Triple Promo Cards Editor */}
+                        {activeSection.type === 'triplePromo' && (
+                          <div className="space-y-6 font-sans">
+                            <div className="border-b pb-2">
+                              <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                                Bannières Triple Promotionnelles
+                              </label>
+                            </div>
+
+                            {(() => {
+                              const cards = activeSection.settings?.promoCards || [
+                                {
+                                  tagFr: "Sans Parfum",
+                                  tagAr: "خالٍ من العطور",
+                                  titleFr: "Soin Bébé\nMustela Doux",
+                                  titleAr: "عناية الطفل\nمستحضرات لطيفة",
+                                  price: "99 MAD",
+                                  bgImage: "/images/promo/card_baby.png",
+                                  overlayImage: "/images/categories/bebe.png",
+                                  category: "bebe"
+                                },
+                                {
+                                  tagFr: "Protection Max",
+                                  tagAr: "حماية قصوى",
+                                  titleFr: "Packs Solaires\nAnthelios Pack",
+                                  titleAr: "واقيات الشمس\nحماية متكاملة",
+                                  price: "159 MAD",
+                                  bgImage: "/images/promo/card_sun.png",
+                                  overlayImage: "/images/categories/solaire.png",
+                                  category: "solaire"
+                                },
+                                {
+                                  tagFr: "Protocole Nuit",
+                                  tagAr: "بروتوكول الليل",
+                                  titleFr: "Anti-Âge\nRétinol",
+                                  titleAr: "مكافحة الشيخوخة\nبروتوكول ريتينول",
+                                  price: "199 MAD",
+                                  bgImage: "/images/promo/card_antiage.png",
+                                  overlayImage: "/images/categories/solaire.png",
+                                  category: "visage"
+                                }
+                              ];
+
+                              return (
+                                <div className="space-y-4">
+                                  {cards.slice(0, 3).map((card: any, index: number) => (
+                                    <div 
+                                      key={index}
+                                      className={`p-4 rounded-2xl border space-y-3 ${
+                                        adminTheme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-900/60 border-slate-850'
+                                      }`}
+                                    >
+                                      <h5 className="text-xs font-black uppercase text-indigo-500">Carte Promotionnelle #{index + 1}</h5>
+                                      
+                                      <div className="grid grid-cols-2 gap-3">
+                                        <div className="space-y-1">
+                                          <label className="text-[9px] font-bold text-slate-400 uppercase">Tag (FR)</label>
+                                          <input
+                                            type="text"
+                                            value={card.tagFr}
+                                            onChange={(e) => {
+                                              const newCards = [...cards];
+                                              newCards[index] = { ...card, tagFr: e.target.value };
+                                              updateActiveSectionSettings({ promoCards: newCards });
+                                            }}
+                                            className={`w-full text-xs rounded-xl px-2 py-1 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-202 border-slate-800'}`}
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <label className="text-[9px] font-bold text-slate-400 uppercase">Tag (AR)</label>
+                                          <input
+                                            type="text"
+                                            value={card.tagAr}
+                                            onChange={(e) => {
+                                              const newCards = [...cards];
+                                              newCards[index] = { ...card, tagAr: e.target.value };
+                                              updateActiveSectionSettings({ promoCards: newCards });
+                                            }}
+                                            className={`w-full text-xs rounded-xl px-2 py-1 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-955 text-slate-202 border-slate-800'}`}
+                                            dir="rtl"
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <label className="text-[9px] font-bold text-slate-400 uppercase">Titre/Contenu (FR)</label>
+                                          <textarea
+                                            value={card.titleFr}
+                                            onChange={(e) => {
+                                              const newCards = [...cards];
+                                              newCards[index] = { ...card, titleFr: e.target.value };
+                                              updateActiveSectionSettings({ promoCards: newCards });
+                                            }}
+                                            className={`w-full text-xs rounded-xl px-2 py-1 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-202 border-slate-800'}`}
+                                            rows={2}
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <label className="text-[9px] font-bold text-slate-400 uppercase">Titre/Contenu (AR)</label>
+                                          <textarea
+                                            value={card.titleAr}
+                                            onChange={(e) => {
+                                              const newCards = [...cards];
+                                              newCards[index] = { ...card, titleAr: e.target.value };
+                                              updateActiveSectionSettings({ promoCards: newCards });
+                                            }}
+                                            className={`w-full text-xs rounded-xl px-2 py-1 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-955 text-slate-202 border-slate-800'}`}
+                                            rows={2}
+                                            dir="rtl"
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <label className="text-[9px] font-bold text-slate-400 uppercase">Prix affiché</label>
+                                          <input
+                                            type="text"
+                                            value={card.price}
+                                            onChange={(e) => {
+                                              const newCards = [...cards];
+                                              newCards[index] = { ...card, price: e.target.value };
+                                              updateActiveSectionSettings({ promoCards: newCards });
+                                            }}
+                                            className={`w-full text-xs rounded-xl px-2 py-1 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-202 border-slate-800'}`}
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <label className="text-[9px] font-bold text-slate-400 uppercase">Catégorie Cible</label>
+                                          <input
+                                            type="text"
+                                            value={card.category}
+                                            onChange={(e) => {
+                                              const newCards = [...cards];
+                                              newCards[index] = { ...card, category: e.target.value };
+                                              updateActiveSectionSettings({ promoCards: newCards });
+                                            }}
+                                            className={`w-full text-xs rounded-xl px-2 py-1 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-202 border-slate-800'}`}
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <label className="text-[9px] font-bold text-slate-400 uppercase">Image de Fond (URL)</label>
+                                          <input
+                                            type="text"
+                                            value={card.bgImage}
+                                            onChange={(e) => {
+                                              const newCards = [...cards];
+                                              newCards[index] = { ...card, bgImage: e.target.value };
+                                              updateActiveSectionSettings({ promoCards: newCards });
+                                            }}
+                                            className={`w-full text-xs rounded-xl px-2 py-1 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-202 border-slate-800'}`}
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <label className="text-[9px] font-bold text-slate-400 uppercase">Image Superposée (URL)</label>
+                                          <input
+                                            type="text"
+                                            value={card.overlayImage}
+                                            onChange={(e) => {
+                                              const newCards = [...cards];
+                                              newCards[index] = { ...card, overlayImage: e.target.value };
+                                              updateActiveSectionSettings({ promoCards: newCards });
+                                            }}
+                                            className={`w-full text-xs rounded-xl px-2 py-1 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-202 border-slate-800'}`}
+                                          />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        )}
+
                         {/* Fallback for other standard sections */}
                         {activeSection.type !== 'customHtml' && 
                          activeSection.type !== 'richText' && 
@@ -1747,7 +2312,11 @@ export default function SettingsTab() {
                          activeSection.type !== 'hero' && 
                          activeSection.type !== 'faq' && 
                          activeSection.type !== 'diagnosticBanner' && 
-                         activeSection.type !== 'trustBar' && (
+                         activeSection.type !== 'trustBar' && 
+                         activeSection.type !== 'brandPartners' && 
+                         activeSection.type !== 'horizontalPromo' && 
+                         activeSection.type !== 'flashSale' && 
+                         activeSection.type !== 'triplePromo' && (
                           <div className="space-y-4 py-8 text-center">
                             <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto ${
                               adminTheme === 'light' ? 'bg-slate-50 text-slate-400' : 'bg-slate-850 text-slate-550'

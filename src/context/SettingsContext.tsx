@@ -166,6 +166,20 @@ export interface HomepageSectionItem {
     textColor?: string;
     html?: string;
     productIds?: number[];
+    brands?: { name: string; domain: string; logoUrl?: string }[];
+    discountPercent?: number;
+    bgImage?: string;
+    overlayImage?: string;
+    promoCards?: {
+      tagFr: string;
+      tagAr: string;
+      titleFr: string;
+      titleAr: string;
+      price: string;
+      bgImage: string;
+      overlayImage: string;
+      category: string;
+    }[];
   };
 }
 

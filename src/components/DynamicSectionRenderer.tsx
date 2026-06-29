@@ -84,7 +84,7 @@ export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps
             );
 
           case 'brandPartners':
-            return <BrandPartners key={section.id} />;
+            return <BrandPartners key={section.id} brands={section.settings?.brands} />;
 
           case 'diagnosticBanner':
             return <DiagnosticBanner key={section.id} />;
@@ -96,10 +96,21 @@ export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps
             return <SkinConcernsSelector key={section.id} />;
 
           case 'flashSale':
-            return <FlashSaleBanner key={section.id} />;
+            return (
+              <FlashSaleBanner 
+                key={section.id} 
+                titleFr={section.settings?.titleFr}
+                titleAr={section.settings?.titleAr}
+                descFr={section.settings?.descFr}
+                descAr={section.settings?.descAr}
+                productId={section.settings?.productIds?.[0]}
+                discountPercent={section.settings?.discountPercent}
+                bgImage={section.settings?.bgImage}
+              />
+            );
 
           case 'horizontalPromo':
-            return <HorizontalPromoBanner key={section.id} />;
+            return <HorizontalPromoBanner key={section.id} settings={section.settings} />;
 
           case 'trustBar':
             return <MoroccoTrustBar key={section.id} />;
@@ -108,7 +119,7 @@ export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps
             return <CustomerReviews key={section.id} />;
 
           case 'triplePromo':
-            return <TriplePromoBanners key={section.id} />;
+            return <TriplePromoBanners key={section.id} cards={section.settings?.promoCards} />;
 
           case 'topRated':
             return <TopRatedAsymmetricGrid key={section.id} />;

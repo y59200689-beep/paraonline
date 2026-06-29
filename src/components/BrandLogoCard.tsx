@@ -6,6 +6,7 @@ interface BrandLogoCardProps {
   brand: {
     name: string;
     domain: string;
+    logoUrl?: string;
   };
 }
 
@@ -23,7 +24,7 @@ export const BrandLogoCard: React.FC<BrandLogoCardProps> = ({ brand }) => {
           </span>
         ) : (
           <img
-            src={`https://logos.hunter.io/${brand.domain}`}
+            src={brand.logoUrl || `https://logos.hunter.io/${brand.domain}`}
             alt={brand.name}
             className="h-8 max-w-[120px] object-contain filter grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300"
             loading="lazy"

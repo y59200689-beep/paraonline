@@ -1,7 +1,35 @@
 import React from 'react';
 import { BrandLogoCard } from './BrandLogoCard';
+import { useSettings } from '@/context/SettingsContext';
 
-export const BrandPartners: React.FC = () => {
+interface BrandPartnersProps {
+  brands?: { name: string; domain: string; logoUrl?: string }[];
+}
+
+export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands }) => {
+  const { settings } = useSettings();
+  
+  // Resolve brands from settings database or fallback to defaults
+  const activeSection = settings.homepageSections?.sectionOrder?.find(s => s.type === 'brandPartners');
+  const brandsList = activeSection?.settings?.brands && activeSection.settings.brands.length > 0
+    ? activeSection.settings.brands
+    : [
+        { name: 'La Roche-Posay', domain: 'laroche-posay.com' },
+        { name: 'Vichy', domain: 'vichyusa.com' },
+        { name: 'CeraVe', domain: 'cerave.com' },
+        { name: 'Eucerin', domain: 'eucerin.com' },
+        { name: 'Bioderma', domain: 'bioderma.com' },
+        { name: 'SVR', domain: 'labo-svr.com' },
+        { name: 'Cetaphil', domain: 'cetaphil.com' },
+        { name: 'Avène', domain: 'aveneusa.com' },
+        { name: 'Mixa', domain: 'mixa.fr' },
+        { name: "L'Oréal Paris", domain: 'loreal-paris.com' },
+        { name: 'Garnier', domain: 'garnier.com' },
+        { name: 'Erborian', domain: 'erborian.com' },
+        { name: 'Kérastase', domain: 'kerastase.com' },
+        { name: 'Dercos Technique', domain: 'dercos.com' }
+      ];
+
   return (
     <section 
       className="aurora-bg border-b border-slate-200/40 relative overflow-hidden py-14 md:py-20 reveal-on-scroll"
@@ -29,22 +57,7 @@ export const BrandPartners: React.FC = () => {
 
           {/* Brands 2-Row Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4 md:gap-5">
-            {[
-              { name: 'La Roche-Posay', domain: 'laroche-posay.com' },
-              { name: 'Vichy', domain: 'vichyusa.com' },
-              { name: 'CeraVe', domain: 'cerave.com' },
-              { name: 'Eucerin', domain: 'eucerin.com' },
-              { name: 'Bioderma', domain: 'bioderma.com' },
-              { name: 'SVR', domain: 'labo-svr.com' },
-              { name: 'Cetaphil', domain: 'cetaphil.com' },
-              { name: 'Avène', domain: 'aveneusa.com' },
-              { name: 'Mixa', domain: 'mixa.fr' },
-              { name: "L'Oréal Paris", domain: 'loreal-paris.com' },
-              { name: 'Garnier', domain: 'garnier.com' },
-              { name: 'Erborian', domain: 'erborian.com' },
-              { name: 'Kérastase', domain: 'kerastase.com' },
-              { name: 'Dercos Technique', domain: 'dercos.com' }
-            ].map((brand, i) => (
+            {brandsList.map((brand, i) => (
               <BrandLogoCard brand={brand} key={i} />
             ))}
           </div>
