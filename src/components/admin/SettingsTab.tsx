@@ -70,7 +70,25 @@ export default function SettingsTab() {
     handleSaveNotificationTemplates,
   } = useAdmin();
 
-  const { products } = useProducts();
+  const { products: publicProducts } = useProducts();
+  const [adminProducts, setAdminProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchAdminProducts = async () => {
+      try {
+        const res = await fetch('/api/admin/products?limit=5000');
+        const data = await res.json();
+        if (data.success && Array.isArray(data.products)) {
+          setAdminProducts(data.products);
+        }
+      } catch (e) {
+        console.error("Failed to load admin products:", e);
+      }
+    };
+    fetchAdminProducts();
+  }, []);
+
+  const products = adminProducts.length > 0 ? adminProducts : publicProducts;
   const {
     activeSettingsSubTab,
     setActiveSettingsSubTab,
@@ -153,6 +171,7 @@ export default function SettingsTab() {
     const bestSellersSec = findSettings('bestSellers');
     const weeklySalesSec = findSettings('weeklySales');
     const summerSaleSec = findSettings('summerSale');
+    const productGridSec = findSettings('productGrid');
 
     const updated = {
       ...settings,
@@ -190,7 +209,7 @@ export default function SettingsTab() {
         weeklySalesProductIds: weeklySalesSec.productIds || [],
 
         summerSaleProductIds: summerSaleSec.productIds || [],
-        featuredProductIds: settings.homepageSections?.featuredProductIds || [],
+        featuredProductIds: productGridSec.productIds || [],
         
         sectionOrder: sectionsList
       }
