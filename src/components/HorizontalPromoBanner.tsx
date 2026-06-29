@@ -37,6 +37,7 @@ export const HorizontalPromoBanner: React.FC<HorizontalPromoBannerProps> = ({ se
               src={bgImage}
               alt=""
               aria-hidden
+              loading="lazy"
               className="w-full h-full object-cover object-left group-hover:scale-[1.02] transition-transform duration-700 ease-out"
             />
             {/* Subtle overlay to keep text contrast */}

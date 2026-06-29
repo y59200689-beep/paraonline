@@ -313,6 +313,7 @@ export const IngredientDictionary: React.FC = () => {
                                 src={product.image}
                                 alt={product.title}
                                 className="object-cover"
+                                loading="lazy"
                                 style={{ width: '46px', height: '46px' }}
                               />
                             </div>
