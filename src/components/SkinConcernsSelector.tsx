@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useUi } from '@/context/UiContext';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import { useTranslation } from '@/context/LanguageContext';
+import { useSettings } from '@/context/SettingsContext';
 
 export const SkinConcernsSelector: React.FC = () => {
   const { 
@@ -14,53 +15,59 @@ export const SkinConcernsSelector: React.FC = () => {
     setActiveIngredient 
   } = useUi();
   const { language } = useTranslation();
+  const { settings } = useSettings();
 
-  const CONCERNS = [
-    {
-      key: 'acne',
-      titleFr: 'Acné & Imperfections',
-      titleAr: 'حب الشباب والشوائب',
-      subtitleFr: 'Centella Asiatica, BHA',
-      subtitleAr: 'سنتيلا أسياتيكا، BHA',
-      image: '/images/concern_acne.png',
-      gridClass: 'md:col-span-2',
-      bgGradient: 'from-emerald-500/10 to-teal-500/10 dark:from-emerald-950/20 dark:to-teal-950/20',
-      activeBorder: 'border-emerald-500'
-    },
-    {
-      key: 'spots',
-      titleFr: 'Éclat & Anti-taches',
-      titleAr: 'نضارة البشرة والبقع',
-      subtitleFr: 'Vitamine C, Niacinamide',
-      subtitleAr: 'فيتامين سي، نياسيناميد',
-      image: '/images/concern_spots.png',
-      gridClass: 'md:col-span-1',
-      bgGradient: 'from-amber-500/10 to-orange-500/10 dark:from-amber-950/20 dark:to-orange-950/20',
-      activeBorder: 'border-amber-500'
-    },
-    {
-      key: 'wrinkles',
-      titleFr: 'Anti-âge & Fermeté',
-      titleAr: 'مكافحة الشيخوخة وشد البشرة',
-      subtitleFr: 'Rétinol, Peptides',
-      subtitleAr: 'ريتينول، ببتيدات',
-      image: '/images/concern_wrinkles.png',
-      gridClass: 'md:col-span-1',
-      bgGradient: 'from-rose-500/10 to-pink-500/10 dark:from-rose-950/20 dark:to-pink-950/20',
-      activeBorder: 'border-rose-500'
-    },
-    {
-      key: 'dryness',
-      titleFr: 'Hydratation & Barrière',
-      titleAr: 'ترطيب وحماية حاجز البشرة',
-      subtitleFr: 'Acide Hyaluronique, Céramides',
-      subtitleAr: 'حمض الهيالورونيك، سيراميد',
-      image: '/images/concern_dryness.png',
-      gridClass: 'md:col-span-2',
-      bgGradient: 'from-blue-500/10 to-sky-500/10 dark:from-blue-950/20 dark:to-sky-950/20',
-      activeBorder: 'border-blue-500'
-    }
-  ];
+  const activeSection = settings.homepageSections?.sectionOrder?.find(s => s.type === 'skinConcerns');
+  const concernsList = activeSection?.settings?.concerns && activeSection.settings.concerns.length > 0
+    ? activeSection.settings.concerns
+    : [
+        {
+          key: 'acne',
+          titleFr: 'Acné & Imperfections',
+          titleAr: 'حب الشباب والشوائب',
+          subtitleFr: 'Centella Asiatica, BHA',
+          subtitleAr: 'سنتيلا أسياتيكا، BHA',
+          image: '/images/concern_acne.png'
+        },
+        {
+          key: 'spots',
+          titleFr: 'Éclat & Anti-taches',
+          titleAr: 'نضارة البشرة والبقع',
+          subtitleFr: 'Vitamine C, Niacinamide',
+          subtitleAr: 'فيتامين سي، نياسيناميد',
+          image: '/images/concern_spots.png'
+        },
+        {
+          key: 'wrinkles',
+          titleFr: 'Anti-âge & Fermeté',
+          titleAr: 'مكافحة الشيخوخة وشد البشرة',
+          subtitleFr: 'Rétinol, Peptides',
+          subtitleAr: 'ريتينول، ببتيدات',
+          image: '/images/concern_wrinkles.png'
+        },
+        {
+          key: 'dryness',
+          titleFr: 'Hydratation & Barrière',
+          titleAr: 'ترطيب وحماية حاجز البشرة',
+          subtitleFr: 'Acide Hyaluronique, Céramides',
+          subtitleAr: 'حمض الهيالورونيك، سيراميد',
+          image: '/images/concern_dryness.png'
+        }
+      ];
+
+  const getLayoutDetails = (index: number) => {
+    const gridClasses = ['md:col-span-2', 'md:col-span-1', 'md:col-span-1', 'md:col-span-2'];
+    const bgGradients = [
+      'from-emerald-500/10 to-teal-500/10 dark:from-emerald-950/20 dark:to-teal-950/20',
+      'from-amber-500/10 to-orange-500/10 dark:from-amber-950/20 dark:to-orange-950/20',
+      'from-rose-500/10 to-pink-500/10 dark:from-rose-950/20 dark:to-pink-950/20',
+      'from-blue-500/10 to-sky-500/10 dark:from-blue-950/20 dark:to-sky-950/20'
+    ];
+    return {
+      gridClass: gridClasses[index % 4],
+      bgGradient: bgGradients[index % 4]
+    };
+  };
 
   const handleSelectConcern = (concernKey: string) => {
     setActiveConcern(concernKey);
@@ -104,13 +111,14 @@ export const SkinConcernsSelector: React.FC = () => {
 
         {/* Bento Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-          {CONCERNS.map((c) => {
+          {concernsList.map((c, index) => {
             const isSelected = activeConcern === c.key;
+            const { gridClass } = getLayoutDetails(index);
             return (
               <div
                 key={c.key}
                 onClick={() => handleSelectConcern(c.key)}
-                className={`group cursor-pointer rounded-[24px] overflow-hidden border p-1.5 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1 hover:shadow-xl active:scale-[0.98] ${c.gridClass} ${
+                className={`group cursor-pointer rounded-[24px] overflow-hidden border p-1.5 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1 hover:shadow-xl active:scale-[0.98] ${gridClass} ${
                   isSelected 
                     ? `border-indigo-500 shadow-md` 
                     : 'border-slate-200/50 dark:border-white/5 hover:border-slate-350 dark:hover:border-white/10'

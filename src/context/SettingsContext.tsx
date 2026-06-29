@@ -180,6 +180,25 @@ export interface HomepageSectionItem {
       overlayImage: string;
       category: string;
     }[];
+    concerns?: {
+      key: string;
+      titleFr: string;
+      titleAr: string;
+      subtitleFr: string;
+      subtitleAr: string;
+      image: string;
+    }[];
+    reviews?: {
+      author: string;
+      authorAr?: string;
+      role?: string;
+      roleAr?: string;
+      rating: number;
+      textFr: string;
+      textAr: string;
+      date?: string;
+      avatar?: string;
+    }[];
   };
 }
 

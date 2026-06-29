@@ -2301,6 +2301,302 @@ export default function SettingsTab() {
                             })()}
                           </div>
                         )}
+                        {/* Skin Concerns Bento Editor */}
+                        {activeSection.type === 'skinConcerns' && (
+                          <div className="space-y-6 font-sans">
+                            <div className="border-b pb-2">
+                              <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                                Bento des Préoccupations Cutanées
+                              </label>
+                            </div>
+
+                            {(() => {
+                              const concerns = activeSection.settings?.concerns || [
+                                {
+                                  key: 'acne',
+                                  titleFr: 'Acné & Imperfections',
+                                  titleAr: 'حب الشباب والشوائب',
+                                  subtitleFr: 'Centella Asiatica, BHA',
+                                  subtitleAr: 'سنتيلا أسياتيكا، BHA',
+                                  image: '/images/concern_acne.png'
+                                },
+                                {
+                                  key: 'spots',
+                                  titleFr: 'Éclat & Anti-taches',
+                                  titleAr: 'نضارة البشرة والبقع',
+                                  subtitleFr: 'Vitamine C, Niacinamide',
+                                  subtitleAr: 'فيتامين سي، نياسيناميد',
+                                  image: '/images/concern_spots.png'
+                                },
+                                {
+                                  key: 'wrinkles',
+                                  titleFr: 'Anti-âge & Fermeté',
+                                  titleAr: 'مكافحة الشيخوخة وشد البشرة',
+                                  subtitleFr: 'Rétinol, Peptides',
+                                  subtitleAr: 'ريتينول، ببتيدات',
+                                  image: '/images/concern_wrinkles.png'
+                                },
+                                {
+                                  key: 'dryness',
+                                  titleFr: 'Hydratation & Barrière',
+                                  titleAr: 'ترطيب وحماية حاجز البشرة',
+                                  subtitleFr: 'Acide Hyaluronique, Céramides',
+                                  subtitleAr: 'حمض الهيالورونيك، سيراميد',
+                                  image: '/images/concern_dryness.png'
+                                }
+                              ];
+
+                              return (
+                                <div className="space-y-4">
+                                  {concerns.slice(0, 4).map((c: any, index: number) => (
+                                    <div 
+                                      key={index}
+                                      className={`p-4 rounded-2xl border space-y-3 ${
+                                        adminTheme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-900/60 border-slate-850'
+                                      }`}
+                                    >
+                                      <h5 className="text-xs font-black uppercase text-teal-650">Carte Préoccupation #{index + 1} ({c.key})</h5>
+                                      
+                                      <div className="grid grid-cols-2 gap-3">
+                                        <div className="space-y-1">
+                                          <label className="text-[9px] font-bold text-slate-400 uppercase">Titre (FR)</label>
+                                          <input
+                                            type="text"
+                                            value={c.titleFr}
+                                            onChange={(e) => {
+                                              const newConcerns = [...concerns];
+                                              newConcerns[index] = { ...c, titleFr: e.target.value };
+                                              updateActiveSectionSettings({ concerns: newConcerns });
+                                            }}
+                                            className={`w-full text-xs rounded-xl px-2 py-1 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-202 border-slate-800'}`}
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <label className="text-[9px] font-bold text-slate-400 uppercase">Titre (AR)</label>
+                                          <input
+                                            type="text"
+                                            value={c.titleAr}
+                                            onChange={(e) => {
+                                              const newConcerns = [...concerns];
+                                              newConcerns[index] = { ...c, titleAr: e.target.value };
+                                              updateActiveSectionSettings({ concerns: newConcerns });
+                                            }}
+                                            className={`w-full text-xs rounded-xl px-2 py-1 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-955 text-slate-202 border-slate-800'}`}
+                                            dir="rtl"
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <label className="text-[9px] font-bold text-slate-400 uppercase">Ingrédients clés (FR)</label>
+                                          <input
+                                            type="text"
+                                            value={c.subtitleFr}
+                                            onChange={(e) => {
+                                              const newConcerns = [...concerns];
+                                              newConcerns[index] = { ...c, subtitleFr: e.target.value };
+                                              updateActiveSectionSettings({ concerns: newConcerns });
+                                            }}
+                                            className={`w-full text-xs rounded-xl px-2 py-1 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-202 border-slate-800'}`}
+                                          />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <label className="text-[9px] font-bold text-slate-400 uppercase">Ingrédients clés (AR)</label>
+                                          <input
+                                            type="text"
+                                            value={c.subtitleAr}
+                                            onChange={(e) => {
+                                              const newConcerns = [...concerns];
+                                              newConcerns[index] = { ...c, subtitleAr: e.target.value };
+                                              updateActiveSectionSettings({ concerns: newConcerns });
+                                            }}
+                                            className={`w-full text-xs rounded-xl px-2 py-1 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-955 text-slate-202 border-slate-800'}`}
+                                            dir="rtl"
+                                          />
+                                        </div>
+                                        <div className="space-y-1 col-span-2">
+                                          <label className="text-[9px] font-bold text-slate-400 uppercase">Image de Fond (URL)</label>
+                                          <input
+                                            type="text"
+                                            value={c.image}
+                                            onChange={(e) => {
+                                              const newConcerns = [...concerns];
+                                              newConcerns[index] = { ...c, image: e.target.value };
+                                              updateActiveSectionSettings({ concerns: newConcerns });
+                                            }}
+                                            className={`w-full text-xs rounded-xl px-2 py-1 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-202 border-slate-800'}`}
+                                          />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        )}
+
+                        {/* Customer Reviews Editor */}
+                        {activeSection.type === 'customerReviews' && (
+                          <div className="space-y-4 font-sans">
+                            <div className="flex justify-between items-center border-b pb-2">
+                              <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                                Gestion des Avis Clients & Témoignages
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const currentReviews = activeSection.settings?.reviews || [];
+                                  updateActiveSectionSettings({
+                                    reviews: [
+                                      ...currentReviews,
+                                      {
+                                        author: 'Nouvel Auteur',
+                                        authorAr: 'اسم جديد',
+                                        role: 'Casablanca',
+                                        roleAr: 'الدار البيضاء',
+                                        rating: 5,
+                                        textFr: 'Excellent service client.',
+                                        textAr: 'خدمة ممتازة.'
+                                      }
+                                    ]
+                                  });
+                                }}
+                                className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[10px] uppercase tracking-wider rounded-lg transition"
+                              >
+                                Ajouter un Avis
+                              </button>
+                            </div>
+
+                            <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1">
+                              {(activeSection.settings?.reviews && activeSection.settings.reviews.length > 0) ? (
+                                activeSection.settings.reviews.map((rev: any, index: number) => (
+                                  <div 
+                                    key={index}
+                                    className={`p-4 rounded-2xl border space-y-3 ${
+                                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-900/60 border-slate-850'
+                                    }`}
+                                  >
+                                    <div className="flex justify-between items-center">
+                                      <h5 className="text-[10px] font-black uppercase text-indigo-500">Avis #{index + 1}</h5>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const newReviews = activeSection.settings.reviews.filter((_: any, i: number) => i !== index);
+                                          updateActiveSectionSettings({ reviews: newReviews });
+                                        }}
+                                        className="p-1.5 text-rose-500 hover:bg-rose-50 rounded"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-3">
+                                      <div className="space-y-1">
+                                        <label className="text-[9px] font-bold text-slate-400 uppercase">Auteur (FR)</label>
+                                        <input
+                                          type="text"
+                                          value={rev.author}
+                                          onChange={(e) => {
+                                            const newReviews = [...activeSection.settings.reviews];
+                                            newReviews[index] = { ...rev, author: e.target.value };
+                                            updateActiveSectionSettings({ reviews: newReviews });
+                                          }}
+                                          className={`w-full text-xs rounded-xl px-2 py-1 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-202 border-slate-800'}`}
+                                        />
+                                      </div>
+                                      <div className="space-y-1">
+                                        <label className="text-[9px] font-bold text-slate-400 uppercase">Auteur (AR)</label>
+                                        <input
+                                          type="text"
+                                          value={rev.authorAr || ''}
+                                          onChange={(e) => {
+                                            const newReviews = [...activeSection.settings.reviews];
+                                            newReviews[index] = { ...rev, authorAr: e.target.value };
+                                            updateActiveSectionSettings({ reviews: newReviews });
+                                          }}
+                                          className={`w-full text-xs rounded-xl px-2 py-1 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-955 text-slate-202 border-slate-800'}`}
+                                          dir="rtl"
+                                        />
+                                      </div>
+                                      <div className="space-y-1">
+                                        <label className="text-[9px] font-bold text-slate-400 uppercase">Ville/Rôle (FR)</label>
+                                        <input
+                                          type="text"
+                                          value={rev.role || ''}
+                                          onChange={(e) => {
+                                            const newReviews = [...activeSection.settings.reviews];
+                                            newReviews[index] = { ...rev, role: e.target.value };
+                                            updateActiveSectionSettings({ reviews: newReviews });
+                                          }}
+                                          className={`w-full text-xs rounded-xl px-2 py-1 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-202 border-slate-800'}`}
+                                        />
+                                      </div>
+                                      <div className="space-y-1">
+                                        <label className="text-[9px] font-bold text-slate-400 uppercase">Ville/Rôle (AR)</label>
+                                        <input
+                                          type="text"
+                                          value={rev.roleAr || ''}
+                                          onChange={(e) => {
+                                            const newReviews = [...activeSection.settings.reviews];
+                                            newReviews[index] = { ...rev, roleAr: e.target.value };
+                                            updateActiveSectionSettings({ reviews: newReviews });
+                                          }}
+                                          className={`w-full text-xs rounded-xl px-2 py-1 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-955 text-slate-202 border-slate-800'}`}
+                                          dir="rtl"
+                                        />
+                                      </div>
+                                      <div className="space-y-1 col-span-2">
+                                        <label className="text-[9px] font-bold text-slate-400 uppercase">Étoiles (1 à 5)</label>
+                                        <input
+                                          type="number"
+                                          min={1}
+                                          max={5}
+                                          value={rev.rating}
+                                          onChange={(e) => {
+                                            const newReviews = [...activeSection.settings.reviews];
+                                            newReviews[index] = { ...rev, rating: Number(e.target.value) };
+                                            updateActiveSectionSettings({ reviews: newReviews });
+                                          }}
+                                          className={`w-full text-xs rounded-xl px-2 py-1 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-202 border-slate-800'}`}
+                                        />
+                                      </div>
+                                      <div className="space-y-1 col-span-2">
+                                        <label className="text-[9px] font-bold text-slate-400 uppercase">Commentaire (FR)</label>
+                                        <textarea
+                                          value={rev.textFr}
+                                          onChange={(e) => {
+                                            const newReviews = [...activeSection.settings.reviews];
+                                            newReviews[index] = { ...rev, textFr: e.target.value };
+                                            updateActiveSectionSettings({ reviews: newReviews });
+                                          }}
+                                          className={`w-full text-xs rounded-xl px-2 py-1 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-202 border-slate-800'}`}
+                                          rows={2}
+                                        />
+                                      </div>
+                                      <div className="space-y-1 col-span-2">
+                                        <label className="text-[9px] font-bold text-slate-400 uppercase">Commentaire (AR)</label>
+                                        <textarea
+                                          value={rev.textAr || ''}
+                                          onChange={(e) => {
+                                            const newReviews = [...activeSection.settings.reviews];
+                                            newReviews[index] = { ...rev, textAr: e.target.value };
+                                            updateActiveSectionSettings({ reviews: newReviews });
+                                          }}
+                                          className={`w-full text-xs rounded-xl px-2 py-1 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-955 text-slate-202 border-slate-800'}`}
+                                          dir="rtl"
+                                          rows={2}
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))
+                              ) : (
+                                <div className="text-center py-6 text-slate-400 text-xs">
+                                  Aucun avis personnalisé. Le site utilise la liste des avis par défaut. Cliquez sur &ldquo;Ajouter un Avis&rdquo; pour commencer à personnaliser.
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
 
                         {/* Fallback for other standard sections */}
                         {activeSection.type !== 'customHtml' && 
@@ -2316,10 +2612,12 @@ export default function SettingsTab() {
                          activeSection.type !== 'brandPartners' && 
                          activeSection.type !== 'horizontalPromo' && 
                          activeSection.type !== 'flashSale' && 
-                         activeSection.type !== 'triplePromo' && (
+                         activeSection.type !== 'triplePromo' && 
+                         activeSection.type !== 'skinConcerns' && 
+                         activeSection.type !== 'customerReviews' && (
                           <div className="space-y-4 py-8 text-center">
                             <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto ${
-                              adminTheme === 'light' ? 'bg-slate-50 text-slate-400' : 'bg-slate-850 text-slate-550'
+                              adminTheme === 'light' ? 'bg-slate-50 text-slate-450' : 'bg-slate-850 text-slate-550'
                             }`}>
                               <meta.icon className="w-5 h-5 animate-pulse" />
                             </div>
