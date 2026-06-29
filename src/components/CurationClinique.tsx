@@ -136,13 +136,13 @@ function ConcernTab({ concern, isActive, onClick }: {
       onClick={onClick}
       className={`
         relative flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full border text-sm font-medium
-        transition-all duration-250 cursor-pointer
+        transition-all duration-200 cursor-pointer
         ${isActive
-          ? `${concern.accentColor} ${concern.accentText} ${concern.accentBorder} shadow-sm scale-[1.02]`
-          : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700'
+          ? `${concern.accentColor} ${concern.accentText} ${concern.accentBorder} shadow-sm`
+          : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700 hover:bg-slate-50/50'
         }
       `}
-      style={isActive ? { boxShadow: `0 0 0 1.5px ${concern.accentDot}30` } : undefined}
+      style={isActive ? { boxShadow: `0 0 0 2px ${concern.accentDot}20` } : undefined}
     >
       <span className="flex items-center gap-1.5">
         <span style={{ color: isActive ? concern.accentDot : undefined }}>{concern.icon}</span>
@@ -318,9 +318,9 @@ export const CurationClinique: React.FC = () => {
         </div>
 
         {/* Concern Tabs */}
-        <div ref={tabsRef} className="relative mb-8">
+        <div ref={tabsRef} className="relative mb-6">
           <div
-            className="flex items-center gap-2.5 overflow-x-auto pb-2 snap-x snap-mandatory"
+            className="flex items-center gap-2.5 overflow-x-auto py-3 snap-x snap-mandatory"
             style={{ scrollbarWidth: 'none' }}
           >
             {CONCERNS.map(c => (
@@ -333,7 +333,7 @@ export const CurationClinique: React.FC = () => {
               </div>
             ))}
           </div>
-          <div className="pointer-events-none absolute right-0 top-0 bottom-2 w-12 bg-gradient-to-l from-white to-transparent md:hidden" />
+          <div className="pointer-events-none absolute right-0 top-0 bottom-3 w-12 bg-gradient-to-l from-white to-transparent md:hidden" />
         </div>
 
         {/* Active Concern Banner */}
