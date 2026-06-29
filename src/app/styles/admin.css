@@ -272,7 +272,7 @@
 
 /* Scoped layout styles */
 .settings-tab-view {
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif !important;
 }
 
 /* Premium Settings Card with Double-Bezel Design */
@@ -404,7 +404,7 @@
 .settings-tab-view input[name="yalidineApiKey"],
 .settings-tab-view input[name="stripePublicKey"],
 .settings-tab-view input[name="stripeSecretKey"] {
-  font-family: 'Fira Code', 'Courier New', Courier, monospace !important;
+  font-family: var(--font-geist-mono), 'Courier New', Courier, monospace !important;
   letter-spacing: 0.05em !important;
 }
 

@@ -907,7 +907,7 @@ export default function CustomerDashboard() {
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4 text-left" style={{ textAlign: isRTL ? 'right' : 'left' }}>
                       <div className="space-y-0.5">
                         <span className="text-[9px] font-black text-slate-400 block tracking-wider uppercase">{language === 'FR' ? 'NUMÉRO DE COMMANDE' : 'رقم الطلب'}</span>
-                        <span className="text-sm font-serif font-black tracking-wider text-primary">{order.order_id}</span>
+                        <span className="text-sm font-heading font-black tracking-wider text-primary">{order.order_id}</span>
                       </div>
 
                       {/* Status Badge */}

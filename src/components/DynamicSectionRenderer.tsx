@@ -24,6 +24,7 @@ import { RoutineVisualizer } from '@/components/RoutineVisualizer';
 import { IngredientDictionary } from '@/components/IngredientDictionary';
 import { InteractiveFaqWrapper } from '@/components/InteractiveFaqWrapper';
 import { FeaturedIngredientSection } from '@/components/FeaturedIngredientSection';
+import { CurationClinique } from '@/components/CurationClinique';
 import { HomepageSectionItem } from '@/context/SettingsContext';
 
 interface DynamicSectionRendererProps {
@@ -140,6 +141,9 @@ export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps
 
           case 'ingredientDictionary':
             return <IngredientDictionary key={section.id} />;
+
+          case 'curationClinique':
+            return <CurationClinique key={section.id} />;
 
           case 'faq':
             return <InteractiveFaqWrapper key={section.id} />;

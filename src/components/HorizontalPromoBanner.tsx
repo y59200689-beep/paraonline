@@ -1,7 +1,27 @@
 import React from 'react';
 import Image from 'next/image';
 
-export const HorizontalPromoBanner: React.FC = () => {
+interface HorizontalPromoBannerProps {
+  settings?: {
+    titleFr?: string;
+    titleAr?: string;
+    descFr?: string;
+    descAr?: string;
+    discountPercent?: number;
+    bgImage?: string;
+    overlayImage?: string;
+  };
+}
+
+export const HorizontalPromoBanner: React.FC<HorizontalPromoBannerProps> = ({ settings }) => {
+  const titleFr = settings?.titleFr || "En magasin ou en ligne, votre santé & sécurité est notre priorité";
+  const titleAr = settings?.titleAr || "في المتجر أو عبر الإنترنت، صحتك وسلامتك هي أولويتنا";
+  const descFr = settings?.descFr || "La seule parapharmacie qui simplifie votre quotidien beauté au Maroc";
+  const descAr = settings?.descAr || "الصيدلية الوحيدة التي تجعل حياتك أسهل وأجمل في المغرب";
+  const discountPercent = settings?.discountPercent !== undefined ? settings.discountPercent : 50;
+  const bgImage = settings?.bgImage || "/images/promo/horizontal_promo.png";
+  const overlayImage = settings?.overlayImage || "/images/categories/bebe.png";
+
   return (
     <section className="bg-[#FAFAFA] border-b border-slate-200/40 relative overflow-hidden py-4 reveal-on-scroll">
       <div className="max-w-[1400px] mx-auto px-6 sm:px-10 md:px-12 lg:px-16 xl:px-20 relative z-10">
@@ -14,7 +34,7 @@ export const HorizontalPromoBanner: React.FC = () => {
           {/* Generated premium background */}
           <div className="absolute inset-0 rounded-[16px] overflow-hidden pointer-events-none">
             <img
-              src="/images/promo/horizontal_promo.png"
+              src={bgImage}
               alt=""
               aria-hidden
               className="w-full h-full object-cover object-left group-hover:scale-[1.02] transition-transform duration-700 ease-out"
@@ -26,12 +46,12 @@ export const HorizontalPromoBanner: React.FC = () => {
           {/* LEFT: Text block */}
           <div className="relative z-10 flex flex-col justify-center pl-6 md:pl-8 pr-4 py-3 flex-1 min-w-0 text-left">
             <h3 className="text-[13px] md:text-[15px] font-black text-[#2D1B5E] leading-snug tracking-tight">
-              <span className="hidden rtl:inline">في المتجر أو عبر الإنترنت، صحتك وسلامتك هي أولويتنا</span>
-              <span className="inline rtl:hidden">En magasin ou en ligne, votre santé & sécurité est notre priorité</span>
+              <span className="hidden rtl:inline">{titleAr}</span>
+              <span className="inline rtl:hidden">{titleFr}</span>
             </h3>
             <p className="text-[10px] text-[#5B4690]/75 mt-0.5 font-semibold leading-snug">
-              <span className="hidden rtl:inline">الصيدلية الوحيدة التي تجعل حياتك أسهل وأجمل في المغرب</span>
-              <span className="inline rtl:hidden">La seule parapharmacie qui simplifie votre quotidien beauté au Maroc</span>
+              <span className="hidden rtl:inline">{descAr}</span>
+              <span className="inline rtl:hidden">{descFr}</span>
             </p>
           </div>
 
@@ -41,7 +61,7 @@ export const HorizontalPromoBanner: React.FC = () => {
               className="font-black leading-none tracking-tighter text-[#A085C8]/40"
               style={{ fontSize: 'clamp(56px, 8vw, 88px)' }}
             >
-              %<span>50</span>
+              %<span>{discountPercent}</span>
             </span>
           </div>
 
@@ -51,7 +71,7 @@ export const HorizontalPromoBanner: React.FC = () => {
             style={{ width: '100px', height: '120px', marginBottom: '-0px', alignSelf: 'flex-end' }}
           >
             <Image
-              src="/images/categories/bebe.png"
+              src={overlayImage}
               alt="Promotion produit"
               fill
               sizes="100px"

@@ -969,7 +969,7 @@ export default function RestockForecastingTab() {
             </div>
 
             {/* Document sheet A4 */}
-            <div className="bg-white text-slate-950 p-12 md:p-16 rounded-[4px] shadow-2xl border border-slate-250 min-h-[297mm] flex flex-col justify-between print:shadow-none print:border-none print:p-0 print:m-0 font-serif leading-relaxed text-[13px]">
+            <div className="bg-white text-slate-950 p-12 md:p-16 rounded-[4px] shadow-2xl border border-slate-250 min-h-[297mm] flex flex-col justify-between print:shadow-none print:border-none print:p-0 print:m-0 font-body leading-relaxed text-[13px]">
               <div>
                 {/* 1. Header Grid */}
                 <div className="flex justify-between items-start border-b-2 border-slate-900 pb-8">

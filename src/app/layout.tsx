@@ -1,21 +1,19 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Inter } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeScript } from "../components/ThemeScript";
 import { AppProviders } from "../context/AppProviders";
 import { AiAssistant } from "../components/AiAssistant";
 import { CodeSnippetInjector } from "../components/CodeSnippetInjector";
 
-const playfairDisplay = Playfair_Display({
-  variable: "--font-heading-next",
+const geistSans = Geist({
+  variable: "--font-geist-sans",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
 });
 
-const inter = Inter({
-  variable: "--font-body-next",
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
 });
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://paraofficinal.ma';
@@ -81,7 +79,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" dir="ltr" className={`${playfairDisplay.variable} ${inter.variable}`} suppressHydrationWarning>
+    <html lang="fr" dir="ltr" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <head />
       <body className="antialiased selection:bg-primary/30 selection:text-primary-dark" suppressHydrationWarning>
         <ThemeScript />

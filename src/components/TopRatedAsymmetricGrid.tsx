@@ -105,7 +105,7 @@ export const TopRatedAsymmetricGrid: React.FC = () => {
             <span className="text-[11px] font-black uppercase tracking-widest text-slate-500">
               {language === 'AR' ? 'منتجات' : 'PRODUITS'}
             </span>
-            <span className="text-[22px] font-serif font-black text-white leading-none">
+            <span className="text-[22px] font-heading font-black text-white leading-none">
               {topRatedProducts.length}
             </span>
           </div>

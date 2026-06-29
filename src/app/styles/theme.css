@@ -1,6 +1,7 @@
 @theme {
-  --font-heading: "Playfair Display", var(--font-heading-next), serif;
-  --font-body: var(--font-body-next), sans-serif;
+  --font-heading: var(--font-geist-sans), sans-serif;
+  --font-body: var(--font-geist-sans), sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
 
   --color-primary: #2573a3;
   --color-primary-dark: #1a255d;

@@ -91,11 +91,14 @@ function renderHtmlResponse(success: boolean, titleFr: string, titleAr: string, 
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>${success ? 'Confirmation' : 'Erreur'}</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..900&family=Geist+Mono:wght@300..800&display=swap" rel="stylesheet">
         <style>
           body {
             background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
             color: #0f172a;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: 'Geist', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -149,7 +152,7 @@ function renderHtmlResponse(success: boolean, titleFr: string, titleAr: string, 
           }
           .rtl {
             direction: rtl;
-            font-family: system-ui, -apple-system, sans-serif;
+            font-family: 'Geist', system-ui, -apple-system, sans-serif;
           }
         </style>
       </head>

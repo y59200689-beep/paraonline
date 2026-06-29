@@ -5,13 +5,33 @@ import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
 import { useTranslation } from '@/context/LanguageContext';
 import { useCurrency } from '@/context/CurrencyContext';
-import { PRODUCTS_DB } from '@/lib/data';
+import { useProducts } from '@/context/ProductsContext';
 import { Zap, ShoppingBag, Star, Clock } from 'lucide-react';
+import { Product } from '@/lib/data';
 
-export const FlashSaleBanner: React.FC = () => {
+interface FlashSaleBannerProps {
+  titleFr?: string;
+  titleAr?: string;
+  descFr?: string;
+  descAr?: string;
+  productId?: number;
+  discountPercent?: number;
+  bgImage?: string;
+}
+
+export const FlashSaleBanner: React.FC<FlashSaleBannerProps> = ({
+  titleFr: propTitleFr,
+  titleAr: propTitleAr,
+  descFr: propDescFr,
+  descAr: propDescAr,
+  productId,
+  discountPercent,
+  bgImage
+}) => {
   const { addToCart, setIsCartOpen } = useCart();
   const { language } = useTranslation();
   const { convertPrice } = useCurrency();
+  const { products } = useProducts();
   const [isAdding, setIsAdding] = useState(false);
 
   // Time remaining countdown target: end of current day
@@ -46,28 +66,43 @@ export const FlashSaleBanner: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Find product ID 17: Skin1004 Madagascar Centella Hyalu-Cica Water-Fit Sun Serum
-  const originalProduct = PRODUCTS_DB.find((p) => p.id === 17);
+  // Find product
+  const finalProductId = productId || 17;
+  const originalProduct = products.find((p) => p.id === finalProductId);
+  const finalDiscountPercent = discountPercent !== undefined ? discountPercent : 30;
 
   const handleAddToCart = () => {
     if (!originalProduct) return;
     setIsAdding(true);
     
-    // Create discounted product (-30% discount on 209 DH normal price = 146 DH)
+    // Create discounted product
+    const discount = finalDiscountPercent / 100;
+    const finalPrice = Math.round(originalProduct.price * (1 - discount));
     const flashProduct = {
       ...originalProduct,
-      price: 146,
-      comparePrice: 209
+      price: finalPrice,
+      comparePrice: originalProduct.price
     };
 
     setTimeout(() => {
-      addToCart(flashProduct, 1, false);
+      addToCart(flashProduct as Product, 1, false);
       setIsAdding(false);
       setIsCartOpen(true);
     }, 450);
   };
 
   if (!originalProduct) return null;
+
+  // Calculate final discounted price
+  const discount = finalDiscountPercent / 100;
+  const finalPrice = Math.round(originalProduct.price * (1 - discount));
+
+  // Determine fallback texts based on the selected product
+  const titleFr = propTitleFr || `Le Best-Seller ${originalProduct.nameFr || originalProduct.title} à -${finalDiscountPercent}% Vente Flash`;
+  const titleAr = propTitleAr || `${originalProduct.name || originalProduct.title} خصم -${finalDiscountPercent}% فلاش`;
+  const descFr = propDescFr || originalProduct.description || "Profitez de la protection organique culte avec sa formule gel-eau ultra-légère à prix exclusif. Aujourd'hui seulement.";
+  const descAr = propDescAr || "احصل على هذا المنتج الأكثر مبيعاً بتركيبته المتميزة بسعر حصري اليوم فقط.";
+  const finalBgImage = bgImage || "/images/promo/flash_sale_banner.png";
 
   const TimeBlock = ({ value, label }: { value: number; label: string }) => {
     const formatted = value.toString().padStart(2, '0');
@@ -106,16 +141,9 @@ export const FlashSaleBanner: React.FC = () => {
 
               {/* Title & Description */}
               <div className="space-y-3">
-                <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
-                  {language === 'AR' ? (
-                    <>
-                      سيروم الحماية الأكثر <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">طلبًا -30%</span>
-                    </>
-                  ) : (
-                    <>
-                      Le Best-Seller Solaire à <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">-30% Flash</span>
-                    </>
-                  )}
+                <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white leading-tight">
+                  <span className="hidden rtl:inline">{titleAr}</span>
+                  <span className="inline rtl:hidden">{titleFr}</span>
                 </h2>
                 
                 {/* Stars Rating */}
@@ -129,10 +157,8 @@ export const FlashSaleBanner: React.FC = () => {
                 </div>
 
                 <p className="text-sm text-slate-400 leading-relaxed font-medium max-w-[45ch]">
-                  {language === 'AR' 
-                    ? 'احصل على واقي الشمس العضوي الأكثر مبيعًا Skin1004 Madagascar Centella بتركيبته المائية الخفيفة بسعر حصري اليوم فقط.'
-                    : 'Profitez de la protection organique culte Skin1004 Madagascar Centella avec sa formule gel-eau ultra-légère à prix exclusif. Aujourd’hui seulement.'
-                  }
+                  <span className="hidden rtl:inline">{descAr}</span>
+                  <span className="inline rtl:hidden">{descFr}</span>
                 </p>
               </div>
 
@@ -142,10 +168,10 @@ export const FlashSaleBanner: React.FC = () => {
                   {language === 'AR' ? 'سعر خاص لفترة محدودة' : 'PRIX FLASH DE LA JOURNÉE'}
                 </span>
                 <div className="flex items-baseline gap-3">
-                  <span className="text-3xl font-black text-white">{convertPrice(146)}</span>
-                  <span className="text-sm text-slate-500 line-through">{convertPrice(209)}</span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-450 border border-emerald-500/20">
-                    {language === 'AR' ? 'وفر 30%' : 'Économisez 30%'}
+                  <span className="text-3xl font-black text-white">{convertPrice(finalPrice)}</span>
+                  <span className="text-sm text-slate-500 line-through">{convertPrice(originalProduct.price)}</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-455 border border-emerald-500/20">
+                    {language === 'AR' ? `وفر ${finalDiscountPercent}%` : `Économisez ${finalDiscountPercent}%`}
                   </span>
                 </div>
               </div>
@@ -169,7 +195,7 @@ export const FlashSaleBanner: React.FC = () => {
               <button
                 onClick={handleAddToCart}
                 disabled={isAdding}
-                className="group relative inline-flex items-center gap-4 pl-6 pr-2 py-2 rounded-full bg-emerald-450 hover:bg-emerald-400 text-slate-950 hover:text-slate-950 shadow-lg shadow-emerald-500/10 hover:shadow-emerald-400/25 active:scale-[0.98] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer border-0 outline-none w-full md:w-auto justify-between"
+                className="group relative inline-flex items-center gap-4 pl-6 pr-2 py-2 rounded-full bg-emerald-450 hover:bg-emerald-400 text-slate-950 hover:text-slate-950 shadow-lg shadow-emerald-500/10 hover:shadow-emerald-400/25 active:scale-[0.98] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer w-full md:w-auto justify-between border-0 outline-none"
               >
                 <span className="text-xs font-black uppercase tracking-wider">
                   {isAdding 
@@ -188,8 +214,8 @@ export const FlashSaleBanner: React.FC = () => {
             <div className="relative w-full aspect-[4/3] rounded-[24px] overflow-hidden border border-slate-900 shadow-xl group">
               <div className="absolute inset-0 bg-slate-950">
                 <Image
-                  src="/images/promo/flash_sale_banner.png"
-                  alt="Skin1004 Madagascar Centella Water-Fit Sun Serum Flash Sale"
+                  src={finalBgImage}
+                  alt={titleFr}
                   fill
                   sizes="(max-w-768px) 100vw, 50vw"
                   className="object-cover object-right transition-transform duration-1000 group-hover:scale-105"
@@ -207,7 +233,7 @@ export const FlashSaleBanner: React.FC = () => {
                     FLASH
                   </span>
                   <span className="text-xl font-extrabold text-white leading-none mt-0.5">
-                    -30%
+                    -{finalDiscountPercent}%
                   </span>
                 </div>
               </div>

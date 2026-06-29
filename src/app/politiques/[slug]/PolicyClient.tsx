@@ -372,7 +372,7 @@ export const PolicyClient: React.FC<PolicyClientProps> = ({ slug }) => {
 
                       {/* Watermark Section Number */}
                       <div 
-                        className="absolute bottom-2 watermark-num font-serif text-slate-200 select-none pointer-events-none text-7xl sm:text-8xl font-black"
+                        className="absolute bottom-2 watermark-num font-heading text-slate-200 select-none pointer-events-none text-7xl sm:text-8xl font-black"
                         style={{
                           left: isRTL ? '1.5rem' : 'auto',
                           right: isRTL ? 'auto' : '1.5rem'

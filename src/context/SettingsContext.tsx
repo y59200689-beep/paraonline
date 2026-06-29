@@ -285,9 +285,9 @@ export const DEFAULT_SETTINGS: Settings = {
       { id: 'diagnosticBanner-1', type: 'diagnosticBanner', nameFr: 'Diagnostic de Peau IA', visible: false },
       { id: 'summerSale-1', type: 'summerSale', nameFr: "Offres d'Été (Summer Sale)", visible: true },
       { id: 'skinConcerns-1', type: 'skinConcerns', nameFr: 'Bento de Préoccupations Cutanées', visible: true },
+      { id: 'curationClinique-1', type: 'curationClinique', nameFr: 'Curation Clinique par Préoccupation', visible: true },
       { id: 'flashSale-1', type: 'flashSale', nameFr: 'Bannière de Vente Flash', visible: true },
       { id: 'horizontalPromo-1', type: 'horizontalPromo', nameFr: 'Bannière Promotionnelle Horizontale', visible: true },
-      { id: 'trustBar-1', type: 'trustBar', nameFr: 'Barre de Confiance Maroc', visible: true },
       { id: 'customerReviews-1', type: 'customerReviews', nameFr: 'Témoignages & Avis Clients', visible: true },
       { id: 'triplePromo-1', type: 'triplePromo', nameFr: 'Bannières Triple Promotionnelles', visible: true },
       { id: 'topRated-1', type: 'topRated', nameFr: 'Produits les Mieux Notés', visible: true },
@@ -295,7 +295,8 @@ export const DEFAULT_SETTINGS: Settings = {
       { id: 'routineVisualizer-1', type: 'routineVisualizer', nameFr: 'Visualiseur de Routine de Soins', visible: true },
       { id: 'featuredIngredient-1', type: 'featuredIngredient', nameFr: 'Ingrédient Focus de la Semaine', visible: true },
       { id: 'ingredientDictionary-1', type: 'ingredientDictionary', nameFr: 'Dictionnaire Clinique des Ingrédients', visible: true },
-      { id: 'faq-1', type: 'faq', nameFr: 'Foire Aux Questions (FAQ)', visible: true }
+      { id: 'faq-1', type: 'faq', nameFr: 'Foire Aux Questions (FAQ)', visible: true },
+      { id: 'trustBar-1', type: 'trustBar', nameFr: 'Barre de Confiance Maroc', visible: true }
     ]
   },
   storeName: "Para Officinal S.A",
