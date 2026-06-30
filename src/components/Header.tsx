@@ -198,6 +198,8 @@ export const Header: React.FC = () => {
     const rect = e.currentTarget.getBoundingClientRect();
     triggerFlyToCart(product.image, rect.left + rect.width / 2, rect.top + rect.height / 2);
     addToCart(product, 1);
+    setSearchQuery('');
+    setShowSearch(false);
   };
 
   // Shared search props used by both desktop and mobile search
