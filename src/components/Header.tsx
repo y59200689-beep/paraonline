@@ -83,7 +83,8 @@ export const Header: React.FC = () => {
   const { selectedCurrency, setSelectedCurrency, currentCurrency, convertPrice, isLoading: ratesLoading } = useCurrency();
 
   // ── Refs ───────────────────────────────────────────────────────────────────
-  const searchRef = useRef<HTMLDivElement>(null);
+  const desktopSearchRef = useRef<HTMLDivElement>(null);
+  const mobileSearchRef = useRef<HTMLDivElement>(null);
   const categoryRef = useRef<HTMLDivElement>(null);
   const currencyRef = useRef<HTMLDivElement>(null);
   const langRef = useRef<HTMLDivElement>(null);
@@ -167,7 +168,9 @@ export const Header: React.FC = () => {
   // Click-outside handler
   useEffect(() => {
     const handle = (e: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) setShowSearch(false);
+      const clickedOutsideDesktop = !desktopSearchRef.current || !desktopSearchRef.current.contains(e.target as Node);
+      const clickedOutsideMobile = !mobileSearchRef.current || !mobileSearchRef.current.contains(e.target as Node);
+      if (clickedOutsideDesktop && clickedOutsideMobile) setShowSearch(false);
       if (categoryRef.current && !categoryRef.current.contains(e.target as Node)) setShowCategoryDropdown(false);
       if (currencyRef.current && !currencyRef.current.contains(e.target as Node)) closeCurrency();
       if (langRef.current && !langRef.current.contains(e.target as Node)) closeLang();
@@ -280,7 +283,7 @@ export const Header: React.FC = () => {
 
             {/* Search pill */}
             <SearchPill
-              searchRef={searchRef}
+              searchRef={desktopSearchRef}
               categoryRef={categoryRef}
               selectedCategoryId={selectedCategoryId}
               setSelectedCategoryId={setSelectedCategoryId}
@@ -315,7 +318,7 @@ export const Header: React.FC = () => {
           <MobileHeader
             cartCount={cartCount}
             isBumping={isBumping}
-            searchRef={searchRef}
+            searchRef={mobileSearchRef}
             onCartOpen={() => setIsCartOpen(true)}
             onToggleLanguage={toggleLanguage}
             t={t}
