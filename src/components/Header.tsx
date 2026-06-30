@@ -14,6 +14,7 @@ import { BeautyWalletDrawer } from './BeautyWalletDrawer';
 import { useUi } from '@/context/UiContext';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 // Sub-components
 import { AnnouncementBar } from './Header/AnnouncementBar';
@@ -29,6 +30,7 @@ const LANGUAGES = [
 ];
 
 export const Header: React.FC = () => {
+  const router = useRouter();
   const { t, language, toggleLanguage } = useTranslation();
   const { compareProducts, setIsOpenModal } = useCompare();
   const { cart, addToCart, subtotal, setIsCartOpen } = useCart();
@@ -177,9 +179,9 @@ export const Header: React.FC = () => {
 
   // ── Handlers ───────────────────────────────────────────────────────────────
   const handleSuggestionClick = (product: Product) => {
-    setSelectedProduct(product);
     setSearchQuery('');
     setShowSearch(false);
+    router.push(`/products/${product.id}`);
   };
 
   const handleIngredientClick = (key: string) => {
