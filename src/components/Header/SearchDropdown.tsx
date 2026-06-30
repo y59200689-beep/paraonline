@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Search, ShoppingBag, Sparkles, X } from 'lucide-react';
+import { Search, ShoppingBag, X } from 'lucide-react';
 import Image from 'next/image';
 import { Product, INGREDIENTS_GLOSSARY } from '@/lib/data';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
@@ -44,51 +44,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
       {!searchQuery.trim() ? (
         /* Trending & AI shortcuts + All available products */
         <div className="flex flex-col">
-          <div className="p-4 space-y-4 border-b border-slate-100">
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400 block mb-2 px-0.5 text-left">
-                {language === 'FR' ? 'RECHERCHES POPULAIRES' : 'الأكثر بحثاً'}
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { fr: 'Garnier UV', query: 'Garnier' },
-                  { fr: 'Rétinol', query: 'retinol' },
-                  { fr: 'Anua', query: 'Anua' },
-                  { fr: 'Solaire', query: 'solaire' },
-                ].map((term) => (
-                  <button
-                    key={term.query}
-                    onClick={() => onSetSearchQuery(term.query)}
-                    className="px-3.5 py-1.5 bg-slate-50 border border-slate-100/60 hover:bg-primary/5 hover:border-primary/20 text-slate-500 hover:text-primary text-[11px] font-medium rounded-lg transition-all duration-200 cursor-pointer"
-                  >
-                    {term.fr}
-                  </button>
-                ))}
-              </div>
-            </div>
 
-            <div
-              onClick={onOpenDiagnostic}
-              className="p-4 bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/10 rounded-xl cursor-pointer hover:border-primary/20 hover:from-primary/8 hover:to-accent/8 transition-all duration-300 group text-left flex items-center justify-between gap-4"
-            >
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-primary fill-primary/15 animate-pulse group-hover:scale-110 transition-transform duration-300" />
-                  <span className="text-[11px] font-black text-primary-dark uppercase tracking-wider">
-                    {language === 'FR' ? 'Diagnostic Clinique IA' : 'فحص البشرة بالذكاء الاصطناعي'}
-                  </span>
-                </div>
-                <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
-                  {language === 'FR'
-                    ? 'Analysez votre type de peau et obtenez votre pack à -15%'
-                    : 'حللي نوع بشرتكِ واحصلي على خصم 15% على روتينكِ'}
-                </p>
-              </div>
-              <span className="px-3.5 py-1.5 bg-white border border-primary/25 text-primary text-[9px] font-black tracking-widest uppercase rounded-lg shadow-sm transition-all duration-300 group-hover:bg-primary group-hover:text-white shrink-0">
-                {language === 'FR' ? 'Lancer' : 'ابدأ'}
-              </span>
-            </div>
-          </div>
 
           {searchResults.length > 0 && (
             <div className="max-h-[320px] overflow-y-auto pr-0.5">
