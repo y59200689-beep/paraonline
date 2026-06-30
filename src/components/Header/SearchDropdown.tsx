@@ -126,42 +126,6 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
       ) : (
         /* Search Results */
         <div>
-          {matchedIngredients.length > 0 && (
-            <div className="border-b border-slate-100 p-3 bg-slate-50/50">
-              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-2 px-1 text-left">
-                {language === 'FR' ? 'ACTIFS DERMATOLOGIQUES' : 'مكونات علاجية نشطة'}
-              </span>
-              <div className="flex flex-col gap-1.5">
-                {matchedIngredients.map(key => {
-                  const ing = INGREDIENTS_GLOSSARY[key];
-                  return (
-                    <div
-                      key={key}
-                      onClick={() => onIngredientClick(key)}
-                      className="flex items-center justify-between p-2 rounded-xl border border-border/30 hover:border-primary/20 bg-white hover:bg-primary/5 cursor-pointer transition-all duration-200"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <span className="text-base w-7 h-7 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0">
-                          {ing.icon}
-                        </span>
-                        <div className={`min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
-                          <span className="text-xs font-extrabold text-primary-dark block leading-none">
-                            {language === 'FR' ? ing.name_fr : ing.name_ar}
-                          </span>
-                          <span className="text-[9px] text-foreground/60 block mt-0.5 capitalize truncate">
-                            {language === 'FR' ? ing.benefit_fr : ing.benefit_ar}
-                          </span>
-                        </div>
-                      </div>
-                      <span className="text-[9px] font-extrabold text-accent shrink-0 border border-accent/20 px-2 py-0.5 rounded-md hover:bg-accent hover:text-white transition-colors">
-                        {language === 'FR' ? 'Encyclopédie' : 'القاموس'}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
 
           {searchResults.length > 0 ? (
             <div className="max-h-[320px] overflow-y-auto pr-0.5">
@@ -195,11 +159,9 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
               </ul>
             </div>
           ) : (
-            matchedIngredients.length === 0 && (
-              <div className="p-6 text-center text-slate-400 text-xs">
-                {language === 'FR' ? 'Aucun résultat trouvé' : 'لم يتم العثور على نتائج'}
-              </div>
-            )
+            <div className="p-6 text-center text-slate-400 text-xs">
+              {language === 'FR' ? 'Aucun résultat trouvé' : 'لم يتم العثور على نتائج'}
+            </div>
           )}
         </div>
       )}
