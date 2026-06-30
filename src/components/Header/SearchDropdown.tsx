@@ -66,14 +66,14 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                       <span className="text-xs font-bold text-primary-dark truncate block mt-0.5">{product.title}</span>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-[10px] font-black text-accent">{convertPrice(product.price)}</span>
-                        {product.stock <= 0 && (
+                        {(product.stock ?? 0) <= 0 && (
                           <span className="text-[8px] font-black text-red-500 bg-red-50 px-1.5 py-0.5 rounded uppercase tracking-wider">
                             {language === 'FR' ? 'Rupture' : 'نفد'}
                           </span>
                         )}
                       </div>
                     </div>
-                    {product.stock > 0 ? (
+                    {(product.stock ?? 0) > 0 ? (
                       <button
                         onClick={(e) => onQuickAdd(e, product)}
                         className="w-8 h-8 rounded-full bg-primary/10 hover:bg-primary text-primary hover:text-white flex items-center justify-center transition-all duration-300 shrink-0 border border-primary/10"
@@ -119,14 +119,14 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                       <span className="text-xs font-bold text-primary-dark truncate block mt-0.5">{product.title}</span>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-[10px] font-black text-accent">{convertPrice(product.price)}</span>
-                        {product.stock <= 0 && (
+                        {(product.stock ?? 0) <= 0 && (
                           <span className="text-[8px] font-black text-red-500 bg-red-50 px-1.5 py-0.5 rounded uppercase tracking-wider">
                             {language === 'FR' ? 'Rupture' : 'نفد'}
                           </span>
                         )}
                       </div>
                     </div>
-                    {product.stock > 0 ? (
+                    {(product.stock ?? 0) > 0 ? (
                       <button
                         onClick={(e) => onQuickAdd(e, product)}
                         className="w-8 h-8 rounded-full bg-primary/10 hover:bg-primary text-primary hover:text-white flex items-center justify-center transition-all duration-300 shrink-0 border border-primary/10"
