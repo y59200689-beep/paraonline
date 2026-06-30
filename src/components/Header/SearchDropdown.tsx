@@ -64,15 +64,31 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                     <div className={`flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
                       <span className="text-[8px] font-extrabold uppercase text-[#846f48] block leading-none">{product.vendor}</span>
                       <span className="text-xs font-bold text-primary-dark truncate block mt-0.5">{product.title}</span>
-                      <span className="text-[10px] font-black text-accent block mt-0.5">{convertPrice(product.price)}</span>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[10px] font-black text-accent">{convertPrice(product.price)}</span>
+                        {product.stock <= 0 && (
+                          <span className="text-[8px] font-black text-red-500 bg-red-50 px-1.5 py-0.5 rounded uppercase tracking-wider">
+                            {language === 'FR' ? 'Rupture' : 'نفد'}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <button
-                      onClick={(e) => onQuickAdd(e, product)}
-                      className="w-8 h-8 rounded-full bg-primary/10 hover:bg-primary text-primary hover:text-white flex items-center justify-center transition-all duration-300 shrink-0 border border-primary/10"
-                      title="Ajouter au Panier"
-                    >
-                      <ShoppingBag className="w-3.5 h-3.5" />
-                    </button>
+                    {product.stock > 0 ? (
+                      <button
+                        onClick={(e) => onQuickAdd(e, product)}
+                        className="w-8 h-8 rounded-full bg-primary/10 hover:bg-primary text-primary hover:text-white flex items-center justify-center transition-all duration-300 shrink-0 border border-primary/10"
+                        title="Ajouter au Panier"
+                      >
+                        <ShoppingBag className="w-3.5 h-3.5" />
+                      </button>
+                    ) : (
+                      <div 
+                        className="w-8 h-8 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center shrink-0 border border-slate-100 cursor-not-allowed" 
+                        title={language === 'FR' ? 'Rupture de Stock' : 'نفدت الكمية'}
+                      >
+                        <X className="w-3 h-3" />
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -86,7 +102,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
           {searchResults.length > 0 ? (
             <div className="max-h-[320px] overflow-y-auto pr-0.5">
               <div className={`px-4 py-2 border-b border-slate-100 text-[9px] font-black uppercase tracking-wider text-slate-400 ${isRTL ? 'text-right' : 'text-left'}`}>
-                {language === 'FR' ? '️ PRODUITS EN STOCK' : '️ En Stock'}
+                {language === 'FR' ? '️ PRODUITS DISPONIBLES' : '️ المنتجات المتاحة'}
               </div>
               <ul>
                 {searchResults.map(product => (
@@ -101,15 +117,31 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                     <div className={`flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
                       <span className="text-[8px] font-extrabold uppercase text-[#846f48] block leading-none">{product.vendor}</span>
                       <span className="text-xs font-bold text-primary-dark truncate block mt-0.5">{product.title}</span>
-                      <span className="text-[10px] font-black text-accent block mt-0.5">{convertPrice(product.price)}</span>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[10px] font-black text-accent">{convertPrice(product.price)}</span>
+                        {product.stock <= 0 && (
+                          <span className="text-[8px] font-black text-red-500 bg-red-50 px-1.5 py-0.5 rounded uppercase tracking-wider">
+                            {language === 'FR' ? 'Rupture' : 'نفد'}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <button
-                      onClick={(e) => onQuickAdd(e, product)}
-                      className="w-8 h-8 rounded-full bg-primary/10 hover:bg-primary text-primary hover:text-white flex items-center justify-center transition-all duration-300 shrink-0 border border-primary/10"
-                      title="Ajouter au Panier"
-                    >
-                      <ShoppingBag className="w-3.5 h-3.5" />
-                    </button>
+                    {product.stock > 0 ? (
+                      <button
+                        onClick={(e) => onQuickAdd(e, product)}
+                        className="w-8 h-8 rounded-full bg-primary/10 hover:bg-primary text-primary hover:text-white flex items-center justify-center transition-all duration-300 shrink-0 border border-primary/10"
+                        title="Ajouter au Panier"
+                      >
+                        <ShoppingBag className="w-3.5 h-3.5" />
+                      </button>
+                    ) : (
+                      <div 
+                        className="w-8 h-8 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center shrink-0 border border-slate-100 cursor-not-allowed" 
+                        title={language === 'FR' ? 'Rupture de Stock' : 'نفدت الكمية'}
+                      >
+                        <X className="w-3 h-3" />
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
