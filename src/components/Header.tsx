@@ -123,7 +123,7 @@ export const Header: React.FC = () => {
       let active = true;
       const timer = setTimeout(async () => {
         try {
-          const params = new URLSearchParams({ search: '', limit: '24', category: 'all' });
+          const params = new URLSearchParams({ search: '', limit: '24', category: selectedCategoryId });
           const res = await fetch(`/api/products?${params}`);
           const data = await res.json();
           if (active && data.success) setSearchResults(data.products || []);
@@ -150,7 +150,7 @@ export const Header: React.FC = () => {
     let active = true;
     const timer = setTimeout(async () => {
       try {
-        const params = new URLSearchParams({ search: searchQuery, limit: '24', category: 'all' });
+        const params = new URLSearchParams({ search: searchQuery, limit: '24', category: selectedCategoryId });
         const res = await fetch(`/api/products?${params}`);
         const data = await res.json();
         if (active && data.success) setSearchResults(data.products || []);
@@ -160,7 +160,7 @@ export const Header: React.FC = () => {
     }, 250);
 
     return () => { active = false; clearTimeout(timer); };
-  }, [searchQuery]);
+  }, [searchQuery, selectedCategoryId]);
 
   // Click-outside handler
   useEffect(() => {
