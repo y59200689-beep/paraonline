@@ -54,7 +54,7 @@ export const Header: React.FC = () => {
   const [matchedIngredients, setMatchedIngredients] = useState<string[]>([]);
   const [showSearch, setShowSearch] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [selectedCategoryId, setSelectedCategoryId] = useState('bebe');
+  const [selectedCategoryId, setSelectedCategoryId] = useState('all');
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [hoveredCategoryId, setHoveredCategoryId] = useState<string | null>(null);
   const [isJiggling, setIsJiggling] = useState(false);
@@ -119,9 +119,19 @@ export const Header: React.FC = () => {
   // Debounced search
   useEffect(() => {
     if (!searchQuery.trim()) {
-      setSearchResults([]);
       setMatchedIngredients([]);
-      return;
+      let active = true;
+      const timer = setTimeout(async () => {
+        try {
+          const params = new URLSearchParams({ search: '', limit: '24', category: 'all' });
+          const res = await fetch(`/api/products?${params}`);
+          const data = await res.json();
+          if (active && data.success) setSearchResults(data.products || []);
+        } catch (err) {
+          console.error('Default products fetch failed:', err);
+        }
+      }, 50);
+      return () => { active = false; clearTimeout(timer); };
     }
     const q = searchQuery.toLowerCase();
 
@@ -140,7 +150,7 @@ export const Header: React.FC = () => {
     let active = true;
     const timer = setTimeout(async () => {
       try {
-        const params = new URLSearchParams({ search: searchQuery, limit: '6', category: selectedCategoryId });
+        const params = new URLSearchParams({ search: searchQuery, limit: '24', category: 'all' });
         const res = await fetch(`/api/products?${params}`);
         const data = await res.json();
         if (active && data.success) setSearchResults(data.products || []);
@@ -150,7 +160,7 @@ export const Header: React.FC = () => {
     }, 250);
 
     return () => { active = false; clearTimeout(timer); };
-  }, [searchQuery, selectedCategoryId]);
+  }, [searchQuery]);
 
   // Click-outside handler
   useEffect(() => {

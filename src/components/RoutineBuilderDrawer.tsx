@@ -386,7 +386,7 @@ export const RoutineBuilderDrawer: React.FC<RoutineBuilderDrawerProps> = ({ isOp
                       <img
                         src={getOptimizedImageUrl(product.image)}
                         alt={product.title}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover scale-[1.04]"
                       />
                     ) : (
                       <span className="text-slate-300 text-2xl select-none">✦</span>

@@ -140,13 +140,13 @@ export const BestSellersDualGrid: React.FC = () => {
                     </button>
 
                     {/* Left image container */}
-                    <div className="w-[80px] h-[80px] rounded-[14px] bg-[#F8FAF8] border border-slate-100 flex items-center justify-center shrink-0 overflow-hidden relative self-center">
+                    <div className="w-[80px] h-[80px] rounded-[14px] bg-[#F8FAF8] flex items-center justify-center shrink-0 overflow-hidden relative self-center">
                       <Image 
                         src={getOptimizedImageUrl(product.image)} 
                         alt={titleStr} 
                         fill
                         sizes="80px"
-                        className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                        className="object-cover scale-[1.04] transition-transform duration-500 ease-out group-hover:scale-[1.09]"
                       />
                     </div>
 
@@ -248,13 +248,13 @@ export const BestSellersDualGrid: React.FC = () => {
                     </button>
 
                     {/* Left image container */}
-                    <div className="w-[80px] h-[80px] rounded-[14px] bg-[#F8FAF8] border border-slate-100 flex items-center justify-center shrink-0 overflow-hidden relative self-center">
+                    <div className="w-[80px] h-[80px] rounded-[14px] bg-[#F8FAF8] flex items-center justify-center shrink-0 overflow-hidden relative self-center">
                       <Image 
                         src={getOptimizedImageUrl(product.image)} 
                         alt={titleStr} 
                         fill
                         sizes="80px"
-                        className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                        className="object-cover scale-[1.04] transition-transform duration-500 ease-out group-hover:scale-[1.09]"
                       />
                     </div>
 

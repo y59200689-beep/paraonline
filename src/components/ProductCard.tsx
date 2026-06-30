@@ -366,13 +366,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <Heart className={`w-3.5 h-3.5 transition-transform duration-300 ${isFavorite ? 'fill-[#F43F5E] scale-110 text-[#F43F5E]' : ''}`} />
         </button>
 
-        <div className="bezel-inner absolute inset-2 bg-white rounded-xl border border-slate-100 flex items-center justify-center overflow-hidden z-0 transition-transform duration-500 ease-out group-hover/img:scale-[1.02]">
+        <div className="bezel-inner absolute inset-2 bg-white rounded-xl border-0 flex items-center justify-center overflow-hidden z-0 transition-transform duration-500 ease-out group-hover/img:scale-[1.02]">
           <Image
             src={imgError ? placeholderSvg : getOptimizedImageUrl(product.image)}
             alt={product.nameFr || product.name || product.title}
             width={300}
             height={300}
-            className={`w-full h-full object-cover filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.03)] transition-all duration-700 ease-in-out ${
+            className={`w-full h-full object-cover scale-[1.04] filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.03)] transition-all duration-700 ease-in-out ${
               product.images && product.images.length > 1 ? 'group-hover:opacity-0' : ''
             }`}
             onError={() => setImgError(true)}
@@ -383,7 +383,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               alt={`${product.nameFr || product.name || product.title} Alternate`}
               width={300}
               height={300}
-              className="w-full h-full object-cover filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.03)] transition-all duration-700 ease-out opacity-0 group-hover:opacity-100"
+              className="w-full h-full object-cover scale-[1.04] filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.03)] transition-all duration-700 ease-out opacity-0 group-hover:opacity-100"
               onError={() => setAltImgError(true)}
             />
           )}
