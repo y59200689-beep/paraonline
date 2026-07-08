@@ -5,6 +5,7 @@ import { ThemeScript } from "../components/ThemeScript";
 import { AppProviders } from "../context/AppProviders";
 import { AiAssistant } from "../components/AiAssistant";
 import { CodeSnippetInjector } from "../components/CodeSnippetInjector";
+import { triggerLazyCron } from "@/lib/lazy-cron";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -78,6 +79,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  triggerLazyCron();
   return (
     <html lang="fr" dir="ltr" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <head />
