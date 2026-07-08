@@ -15,23 +15,22 @@ export const BrandLogoCard: React.FC<BrandLogoCardProps> = ({ brand }) => {
 
   return (
     <div
-      className="bezel-outer !p-1.5 bg-slate-50/80 border border-slate-100/80 rounded-2xl hover:scale-[1.03] hover:shadow-[0_12px_28px_-6px_rgba(13,148,136,0.15),_0_0_20px_rgba(13,148,136,0.05)] hover:border-accent/40 transition-all duration-300 cursor-pointer group"
+      style={{ backgroundColor: '#ffffff' }}
+      className="relative flex items-center justify-center border border-slate-200 rounded-2xl h-[64px] sm:h-[72px] transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_12px_28px_-6px_rgba(13,148,136,0.15),_0_0_20px_rgba(13,148,136,0.05)] hover:border-accent/40 cursor-pointer group overflow-hidden w-full"
     >
-      <div className="bezel-inner flex items-center justify-center bg-white rounded-[12px] py-4 px-5 h-[64px] sm:h-[72px] transition-colors duration-300 w-full">
-        {imgError ? (
-          <span className="text-[10px] sm:text-xs font-black tracking-widest text-slate-400 group-hover:text-primary uppercase transition-colors duration-300">
-            {brand.name}
-          </span>
-        ) : (
-          <img
-            src={brand.logoUrl || `https://logos.hunter.io/${brand.domain}`}
-            alt={brand.name}
-            className="h-8 max-w-[120px] object-contain filter grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300"
-            loading="lazy"
-            onError={() => setImgError(true)}
-          />
-        )}
-      </div>
+      {imgError ? (
+        <span className="text-[10px] sm:text-xs font-black tracking-widest text-slate-400 group-hover:text-primary uppercase transition-colors duration-300 px-4 text-center">
+          {brand.name}
+        </span>
+      ) : (
+        <img
+          src={brand.logoUrl || `https://logos.hunter.io/${brand.domain}`}
+          alt={brand.name}
+          className="w-full h-full object-contain filter grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300 p-2"
+          loading="lazy"
+          onError={() => setImgError(true)}
+        />
+      )}
     </div>
   );
 };

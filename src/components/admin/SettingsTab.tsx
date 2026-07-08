@@ -323,7 +323,10 @@ export default function SettingsTab() {
   }, [settings]);
 
   // Image upload handler
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: 'banner') => {
+  const handleImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    target: 'banner' | ((url: string) => void)
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -340,6 +343,8 @@ export default function SettingsTab() {
       if (data.success) {
         if (target === 'banner') {
           setBannerForm(prev => ({ ...prev, bgImage: data.url }));
+        } else if (typeof target === 'function') {
+          target(data.url);
         }
         showToast('Image téléversée avec succès !', 'success');
       } else {
@@ -1758,203 +1763,215 @@ export default function SettingsTab() {
                         )}
 
                         {/* Brand Partners list editor */}
-                        {activeSection.type === 'brandPartners' && (
-                          <div className="space-y-4">
-                            <div className="flex justify-between items-center border-b pb-2">
-                              <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                                Gestion des Marques Partenaires
-                              </label>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const currentBrands = activeSection.settings?.brands || [
-                                    { name: 'La Roche-Posay', domain: 'laroche-posay.com' },
-                                    { name: 'Vichy', domain: 'vichyusa.com' },
-                                    { name: 'CeraVe', domain: 'cerave.com' },
-                                    { name: 'Eucerin', domain: 'eucerin.com' },
-                                    { name: 'Bioderma', domain: 'bioderma.com' },
-                                    { name: 'SVR', domain: 'labo-svr.com' },
-                                    { name: 'Cetaphil', domain: 'cetaphil.com' },
-                                    { name: 'Avène', domain: 'aveneusa.com' },
-                                    { name: 'Mixa', domain: 'mixa.fr' },
-                                    { name: "L'Oréal Paris", domain: 'loreal-paris.com' },
-                                    { name: 'Garnier', domain: 'garnier.com' },
-                                    { name: 'Erborian', domain: 'erborian.com' },
-                                    { name: 'Kérastase', domain: 'kerastase.com' },
-                                    { name: 'Dercos Technique', domain: 'dercos.com' }
-                                  ];
-                                  updateActiveSectionSettings({
-                                    brands: [...currentBrands, { name: 'Nouvelle Marque', domain: 'example.com' }]
-                                  });
-                                }}
-                                className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[10px] uppercase tracking-wider rounded-lg transition"
-                              >
-                                Ajouter
-                              </button>
-                            </div>
+                        {activeSection.type === 'brandPartners' && (() => {
+                          const defaultBrands = [
+                            { name: 'La Roche-Posay', domain: 'laroche-posay.com' },
+                            { name: 'Vichy', domain: 'vichyusa.com' },
+                            { name: 'CeraVe', domain: 'cerave.com' },
+                            { name: 'Eucerin', domain: 'eucerin.com' },
+                            { name: 'Bioderma', domain: 'bioderma.com' },
+                            { name: 'SVR', domain: 'labo-svr.com' },
+                            { name: 'Cetaphil', domain: 'cetaphil.com' },
+                            { name: 'Avène', domain: 'aveneusa.com' },
+                            { name: 'Mixa', domain: 'mixa.fr' },
+                            { name: "L'Oréal Paris", domain: 'loreal-paris.com' },
+                            { name: 'Garnier', domain: 'garnier.com' },
+                            { name: 'Erborian', domain: 'erborian.com' },
+                            { name: 'Kérastase', domain: 'kerastase.com' },
+                            { name: 'Dercos Technique', domain: 'dercos.com' }
+                          ];
+                          const currentBrands = activeSection.settings?.brands || defaultBrands;
 
-                            <div className="space-y-3 max-h-96 overflow-y-auto pr-1 font-sans">
-                              {(activeSection.settings?.brands || [
-                                { name: 'La Roche-Posay', domain: 'laroche-posay.com' },
-                                { name: 'Vichy', domain: 'vichyusa.com' },
-                                { name: 'CeraVe', domain: 'cerave.com' },
-                                { name: 'Eucerin', domain: 'eucerin.com' },
-                                { name: 'Bioderma', domain: 'bioderma.com' },
-                                { name: 'SVR', domain: 'labo-svr.com' },
-                                { name: 'Cetaphil', domain: 'cetaphil.com' },
-                                { name: 'Avène', domain: 'aveneusa.com' },
-                                { name: 'Mixa', domain: 'mixa.fr' },
-                                { name: "L'Oréal Paris", domain: 'loreal-paris.com' },
-                                { name: 'Garnier', domain: 'garnier.com' },
-                                { name: 'Erborian', domain: 'erborian.com' },
-                                { name: 'Kérastase', domain: 'kerastase.com' },
-                                { name: 'Dercos Technique', domain: 'dercos.com' }
-                              ]).map((brand: any, index: number) => (
-                                <div 
-                                  key={index}
-                                  className={`p-3 rounded-xl border space-y-2 ${
-                                    adminTheme === 'light' ? 'bg-slate-50 border-slate-150' : 'bg-slate-900/60 border-slate-850'
-                                  }`}
+                          return (
+                            <div className="space-y-4">
+                              <div className="flex justify-between items-center border-b pb-2">
+                                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                                  Gestion des Marques Partenaires
+                                </label>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    updateActiveSectionSettings({
+                                      brands: [...currentBrands, { name: 'Nouvelle Marque', domain: 'example.com' }]
+                                    });
+                                  }}
+                                  className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[10px] uppercase tracking-wider rounded-lg transition"
                                 >
-                                  <div className="flex gap-2">
-                                    <div className="w-10 h-10 rounded bg-white flex items-center justify-center border p-1 shrink-0">
-                                      <img
-                                        src={brand.logoUrl || `https://logos.hunter.io/${brand.domain}`}
-                                        alt=""
-                                        className="max-h-full max-w-full object-contain"
-                                        onError={(e) => {
-                                          (e.target as HTMLElement).style.display = 'none';
-                                        }}
-                                      />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-2 flex-1">
-                                      <input
-                                        type="text"
-                                        value={brand.name}
-                                        placeholder="Nom"
-                                        onChange={(e) => {
-                                          const newBrands = [...(activeSection.settings?.brands || [])];
-                                          if (newBrands.length === 0) {
-                                            newBrands.push({ name: 'La Roche-Posay', domain: 'laroche-posay.com' });
-                                          }
-                                          newBrands[index] = { ...brand, name: e.target.value };
+                                  Ajouter
+                                </button>
+                              </div>
+
+                              <div className="space-y-3 max-h-96 overflow-y-auto pr-1 font-sans">
+                                {currentBrands.map((brand: any, index: number) => (
+                                  <div 
+                                    key={index}
+                                    className={`p-3 rounded-xl border space-y-2 ${
+                                      adminTheme === 'light' ? 'bg-slate-50 border-slate-150' : 'bg-slate-900/60 border-slate-850'
+                                    }`}
+                                  >
+                                    <div className="flex gap-2">
+                                      <div className="w-10 h-10 rounded bg-white flex items-center justify-center border p-1 shrink-0">
+                                        <img
+                                          src={brand.logoUrl || `https://logos.hunter.io/${brand.domain}`}
+                                          alt=""
+                                          className="max-h-full max-w-full object-contain"
+                                          onError={(e) => {
+                                            (e.target as HTMLElement).style.display = 'none';
+                                          }}
+                                        />
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-2 flex-1">
+                                        <input
+                                          type="text"
+                                          value={brand.name}
+                                          placeholder="Nom"
+                                          onChange={(e) => {
+                                            const newBrands = [...currentBrands];
+                                            newBrands[index] = { ...brand, name: e.target.value };
+                                            updateActiveSectionSettings({ brands: newBrands });
+                                          }}
+                                          className={`text-xs px-2 py-1 rounded-lg border ${
+                                            adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-200 border-slate-800'
+                                          }`}
+                                        />
+                                        <input
+                                          type="text"
+                                          value={brand.domain}
+                                          placeholder="Domaine"
+                                          onChange={(e) => {
+                                            const newBrands = [...currentBrands];
+                                            newBrands[index] = { ...brand, domain: e.target.value };
+                                            updateActiveSectionSettings({ brands: newBrands });
+                                          }}
+                                          className={`text-xs px-2 py-1 rounded-lg border ${
+                                            adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-200 border-slate-800'
+                                          }`}
+                                        />
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const newBrands = currentBrands.filter((_: any, i: number) => i !== index);
                                           updateActiveSectionSettings({ brands: newBrands });
                                         }}
-                                        className={`text-xs px-2 py-1 rounded-lg border ${
-                                          adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-200 border-slate-800'
-                                        }`}
-                                      />
-                                      <input
-                                        type="text"
-                                        value={brand.domain}
-                                        placeholder="Domaine"
-                                        onChange={(e) => {
-                                          const newBrands = [...(activeSection.settings?.brands || [])];
-                                          newBrands[index] = { ...brand, domain: e.target.value };
-                                          updateActiveSectionSettings({ brands: newBrands });
-                                        }}
-                                        className={`text-xs px-2 py-1 rounded-lg border ${
-                                          adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-200 border-slate-800'
-                                        }`}
-                                      />
-                                    </div>
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        const defaultBrands = [
-                                          { name: 'La Roche-Posay', domain: 'laroche-posay.com' },
-                                          { name: 'Vichy', domain: 'vichyusa.com' },
-                                          { name: 'CeraVe', domain: 'cerave.com' },
-                                          { name: 'Eucerin', domain: 'eucerin.com' },
-                                          { name: 'Bioderma', domain: 'bioderma.com' },
-                                          { name: 'SVR', domain: 'labo-svr.com' },
-                                          { name: 'Cetaphil', domain: 'cetaphil.com' },
-                                          { name: 'Avène', domain: 'aveneusa.com' },
-                                          { name: 'Mixa', domain: 'mixa.fr' },
-                                          { name: "L'Oréal Paris", domain: 'loreal-paris.com' },
-                                          { name: 'Garnier', domain: 'garnier.com' },
-                                          { name: 'Erborian', domain: 'erborian.com' },
-                                          { name: 'Kérastase', domain: 'kerastase.com' },
-                                          { name: 'Dercos Technique', domain: 'dercos.com' }
-                                        ];
-                                        const current = activeSection.settings?.brands || defaultBrands;
-                                        const newBrands = current.filter((_: any, i: number) => i !== index);
-                                        updateActiveSectionSettings({ brands: newBrands });
-                                      }}
-                                      className="p-1.5 text-rose-500 hover:bg-rose-50 rounded shrink-0 self-center"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
-                                  </div>
-                                  <div className="space-y-1">
-                                    <label className="text-[8px] font-bold text-slate-400 uppercase">Ou URL personnalisée du logo</label>
-                                    <input
-                                      type="text"
-                                      value={brand.logoUrl || ''}
-                                      placeholder="Ex: /images/brands/brand.png (Optionnel)"
-                                      onChange={(e) => {
-                                        const newBrands = [...(activeSection.settings?.brands || [])];
-                                        newBrands[index] = { ...brand, logoUrl: e.target.value };
-                                        updateActiveSectionSettings({ brands: newBrands });
-                                      }}
-                                      className={`w-full text-[10px] px-2 py-1 rounded-lg border ${
-                                        adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-200 border-slate-800'
-                                      }`}
-                                    />
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-2 pt-1.5 border-t border-dashed border-slate-200/50 dark:border-slate-850">
-                                    <div className="space-y-1">
-                                      <label className="text-[8px] font-bold text-slate-400 uppercase">Associer une catégorie</label>
-                                      <select
-                                        value={brand.categoryTag || ''}
-                                        onChange={(e) => {
-                                          const newBrands = [...(activeSection.settings?.brands || [])];
-                                          newBrands[index] = { ...brand, categoryTag: e.target.value };
-                                          updateActiveSectionSettings({ brands: newBrands });
-                                        }}
-                                        className={`w-full text-[10px] px-2 py-1 rounded-lg border ${
-                                          adminTheme === 'light' ? 'bg-white text-slate-800 border-slate-200' : 'bg-slate-950 text-slate-202 border-slate-800'
-                                        }`}
+                                        className="p-1.5 text-rose-500 hover:bg-rose-50 rounded shrink-0 self-center"
                                       >
-                                        <option value="">Aucune</option>
-                                        <option value="visage">Visage</option>
-                                        <option value="cheveux">Cheveux</option>
-                                        <option value="solaire">Solaire</option>
-                                        <option value="corps">Corps</option>
-                                        <option value="kbeauty">K-Beauty</option>
-                                        <option value="offers">Offres</option>
-                                        <option value="appareils">Appareils</option>
-                                        <option value="accessoires">Accessoires</option>
-                                        <option value="complements">Compléments</option>
-                                        <option value="maquillage">Maquillage</option>
-                                        <option value="sport">Sport</option>
-                                        <option value="masques">Masques</option>
-                                        <option value="homme">Homme</option>
-                                        <option value="bebe">Bébé</option>
-                                      </select>
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
                                     </div>
                                     <div className="space-y-1">
-                                      <label className="text-[8px] font-bold text-slate-400 uppercase">URL Image Catégorie</label>
-                                      <input
-                                        type="text"
-                                        value={brand.categoryImage || ''}
-                                        placeholder="Ex: /images/categories/visage.png"
-                                        onChange={(e) => {
-                                          const newBrands = [...(activeSection.settings?.brands || [])];
-                                          newBrands[index] = { ...brand, categoryImage: e.target.value };
-                                          updateActiveSectionSettings({ brands: newBrands });
-                                        }}
-                                        className={`w-full text-[10px] px-2 py-1 rounded-lg border ${
-                                          adminTheme === 'light' ? 'bg-white text-slate-800 border-slate-200' : 'bg-slate-950 text-slate-202 border-slate-800'
-                                        }`}
-                                      />
+                                      <label className="text-[8px] font-bold text-slate-400 uppercase">Ou URL personnalisée du logo</label>
+                                      <div className="flex gap-2">
+                                        <input
+                                          type="text"
+                                          value={brand.logoUrl || ''}
+                                          placeholder="Ex: /images/brands/brand.png (Optionnel)"
+                                          onChange={(e) => {
+                                            const newBrands = [...currentBrands];
+                                            newBrands[index] = { ...brand, logoUrl: e.target.value };
+                                            updateActiveSectionSettings({ brands: newBrands });
+                                          }}
+                                          className={`flex-1 text-[10px] px-2 py-1 rounded-lg border ${
+                                            adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-202 border-slate-800'
+                                          }`}
+                                        />
+                                        <label className={`px-2.5 py-1 font-bold rounded-lg text-[9px] uppercase cursor-pointer flex items-center gap-1 border shrink-0 transition-all ${
+                                          adminTheme === 'light'
+                                            ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-sm'
+                                            : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300'
+                                        }`}>
+                                          <Upload className="w-3 h-3 text-slate-500" />
+                                          {isUploading ? '...' : 'Importer'}
+                                          <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) => {
+                                              handleImageUpload(e, (url) => {
+                                                const newBrands = [...currentBrands];
+                                                newBrands[index] = { ...brand, logoUrl: url };
+                                                updateActiveSectionSettings({ brands: newBrands });
+                                              });
+                                            }}
+                                            className="hidden"
+                                          />
+                                        </label>
+                                      </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2 pt-1.5 border-t border-dashed border-slate-200/50 dark:border-slate-850">
+                                      <div className="space-y-1">
+                                        <label className="text-[8px] font-bold text-slate-400 uppercase">Associer une catégorie</label>
+                                        <select
+                                          value={brand.categoryTag || ''}
+                                          onChange={(e) => {
+                                            const newBrands = [...currentBrands];
+                                            newBrands[index] = { ...brand, categoryTag: e.target.value };
+                                            updateActiveSectionSettings({ brands: newBrands });
+                                          }}
+                                          className={`w-full text-[10px] px-2 py-1 rounded-lg border ${
+                                            adminTheme === 'light' ? 'bg-white text-slate-800 border-slate-200' : 'bg-slate-950 text-slate-202 border-slate-800'
+                                          }`}
+                                        >
+                                          <option value="">Aucune</option>
+                                          <option value="visage">Visage</option>
+                                          <option value="cheveux">Cheveux</option>
+                                          <option value="solaire">Solaire</option>
+                                          <option value="corps">Corps</option>
+                                          <option value="kbeauty">K-Beauty</option>
+                                          <option value="offers">Offres</option>
+                                          <option value="appareils">Appareils</option>
+                                          <option value="accessoires">Accessoires</option>
+                                          <option value="complements">Compléments</option>
+                                          <option value="maquillage">Maquillage</option>
+                                          <option value="sport">Sport</option>
+                                          <option value="masques">Masques</option>
+                                          <option value="homme">Homme</option>
+                                          <option value="bebe">Bébé</option>
+                                        </select>
+                                      </div>
+                                      <div className="space-y-1">
+                                        <label className="text-[8px] font-bold text-slate-400 uppercase">URL Image Catégorie</label>
+                                        <div className="flex gap-1.5">
+                                          <input
+                                            type="text"
+                                            value={brand.categoryImage || ''}
+                                            placeholder="Ex: /images/categories/visage.png"
+                                            onChange={(e) => {
+                                              const newBrands = [...currentBrands];
+                                              newBrands[index] = { ...brand, categoryImage: e.target.value };
+                                              updateActiveSectionSettings({ brands: newBrands });
+                                            }}
+                                            className={`flex-1 text-[10px] px-2 py-1 rounded-lg border ${
+                                              adminTheme === 'light' ? 'bg-white text-slate-800 border-slate-200' : 'bg-slate-950 text-slate-202 border-slate-800'
+                                            }`}
+                                          />
+                                          <label className={`px-2 py-1 font-bold rounded-lg text-[9px] uppercase cursor-pointer flex items-center gap-1 border shrink-0 transition-all ${
+                                            adminTheme === 'light'
+                                              ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-sm'
+                                              : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300'
+                                          }`}>
+                                            <Upload className="w-3 h-3 text-slate-500" />
+                                            <input
+                                              type="file"
+                                              accept="image/*"
+                                              onChange={(e) => {
+                                                handleImageUpload(e, (url) => {
+                                                  const newBrands = [...currentBrands];
+                                                  newBrands[index] = { ...brand, categoryImage: url };
+                                                  updateActiveSectionSettings({ brands: newBrands });
+                                                });
+                                              }}
+                                              className="hidden"
+                                            />
+                                          </label>
+                                        </div>
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                              ))}
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          );
+                        })()}
 
                         {/* Horizontal Promo Editor */}
                         {activeSection.type === 'horizontalPromo' && (

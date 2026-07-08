@@ -279,6 +279,94 @@ if (isPlaceholder) {
   } else if (!loaded && globalForMock.mockDb) {
     saveToDisk();
   }
+
+  // Force update brand partners settings inside the running Next.js instance
+  if (globalForMock.mockDb && globalForMock.mockDb.settings) {
+    for (const setting of globalForMock.mockDb.settings) {
+      if (setting.id === 1 && setting.value && setting.value.homepageSections && setting.value.homepageSections.sectionOrder) {
+        let dbUpdated = false;
+        for (const section of setting.value.homepageSections.sectionOrder) {
+          if (section.id === 'brandPartners-1') {
+            section.settings = section.settings || {};
+            // Force reset/update the brands with local logos
+            section.settings.brands = [
+              {
+                name: 'La Roche Posay',
+                domain: 'laroche-posay.com',
+                logoUrl: '/images/brands/laroche.png',
+                categoryTag: 'solaire',
+                categoryImage: '/images/categories/solaire-custom.png'
+              },
+              {
+                name: 'Vichy',
+                domain: 'vichyusa.com',
+                logoUrl: '/images/brands/vichy.png'
+              },
+              {
+                name: 'Cerave',
+                domain: 'cerave.com',
+                logoUrl: '/images/brands/cerave.svg',
+                categoryTag: 'visage'
+              },
+              {
+                name: 'Eucerin',
+                domain: 'eucerin.com'
+              },
+              {
+                name: 'Bioderma',
+                domain: 'bioderma.com'
+              },
+              {
+                name: 'SVR',
+                domain: 'labo-svr.com'
+              },
+              {
+                name: 'Cetaphil',
+                domain: 'cetaphil.com'
+              },
+              {
+                name: 'Avène',
+                domain: 'aveneusa.com'
+              },
+              {
+                name: 'Mixa',
+                domain: 'mixa.fr'
+              },
+              {
+                name: "L'Oréal Paris",
+                domain: 'loreal-paris.com'
+              },
+              {
+                name: 'Garnier',
+                domain: 'garnier.com'
+              },
+              {
+                name: 'Erborian',
+                domain: 'erborian.com'
+              },
+              {
+                name: 'Kérastase',
+                domain: 'kerastase.com'
+              },
+              {
+                name: 'Dercos Technique',
+                domain: 'dercos.com'
+              },
+              {
+                name: 'Nouvelle Marque',
+                domain: 'example.com'
+              }
+            ];
+            dbUpdated = true;
+            break;
+          }
+        }
+        if (dbUpdated) {
+          saveToDisk();
+        }
+      }
+    }
+  }
 }
 
 class MockSupabaseQueryBuilder {
@@ -490,6 +578,89 @@ class MockSupabaseQueryBuilder {
   }
 
   private execute() {
+    if (this.table === 'settings' && globalForMock.mockDb && globalForMock.mockDb.settings) {
+      for (const setting of globalForMock.mockDb.settings) {
+        if (setting.id === 1 && setting.value && setting.value.homepageSections && setting.value.homepageSections.sectionOrder) {
+          for (const section of setting.value.homepageSections.sectionOrder) {
+            if (section.id === 'brandPartners-1') {
+              section.settings = section.settings || {};
+              const currentBrands = section.settings.brands || [];
+              if (currentBrands.length < 10) {
+                section.settings.brands = [
+                  {
+                    name: 'La Roche Posay',
+                    domain: 'laroche-posay.com',
+                    logoUrl: '/images/brands/laroche.png',
+                    categoryTag: 'solaire',
+                    categoryImage: '/images/categories/solaire-custom.png'
+                  },
+                  {
+                    name: 'Vichy',
+                    domain: 'vichyusa.com',
+                    logoUrl: '/images/brands/vichy.png'
+                  },
+                  {
+                    name: 'Cerave',
+                    domain: 'cerave.com',
+                    logoUrl: '/images/brands/cerave.svg',
+                    categoryTag: 'visage'
+                  },
+                  {
+                    name: 'Eucerin',
+                    domain: 'eucerin.com'
+                  },
+                  {
+                    name: 'Bioderma',
+                    domain: 'bioderma.com'
+                  },
+                  {
+                    name: 'SVR',
+                    domain: 'labo-svr.com'
+                  },
+                  {
+                    name: 'Cetaphil',
+                    domain: 'cetaphil.com'
+                  },
+                  {
+                    name: 'Avène',
+                    domain: 'aveneusa.com'
+                  },
+                  {
+                    name: 'Mixa',
+                    domain: 'mixa.fr'
+                  },
+                  {
+                    name: "L'Oréal Paris",
+                    domain: 'loreal-paris.com'
+                  },
+                  {
+                    name: 'Garnier',
+                    domain: 'garnier.com'
+                  },
+                  {
+                    name: 'Erborian',
+                    domain: 'erborian.com'
+                  },
+                  {
+                    name: 'Kérastase',
+                    domain: 'kerastase.com'
+                  },
+                  {
+                    name: 'Dercos Technique',
+                    domain: 'dercos.com'
+                  },
+                  {
+                    name: 'Nouvelle Marque',
+                    domain: 'example.com'
+                  }
+                ];
+              }
+            }
+          }
+        }
+      }
+    }
+
     let list = globalForMock.mockDb[this.table as keyof typeof globalForMock.mockDb] || [];
 
     if (this.actionType === 'delete') {
@@ -583,6 +754,34 @@ const mockSupabaseClient = {
       return { data: null, error: null };
     }
     return { data: null, error: { message: `Function ${fn} not mocked` } };
+  },
+  storage: {
+    from: (bucket: string) => ({
+      upload: async (filename: string, buffer: Buffer, options?: any) => {
+        if (typeof window === 'undefined') {
+          try {
+            const fs = require('fs');
+            const path = require('path');
+            const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+            if (!fs.existsSync(uploadDir)) {
+              fs.mkdirSync(uploadDir, { recursive: true });
+            }
+            fs.writeFileSync(path.join(uploadDir, filename), buffer);
+            return { data: { path: filename }, error: null };
+          } catch (err: any) {
+            return { data: null, error: err };
+          }
+        }
+        return { data: null, error: new Error('Upload only supported on server side') };
+      },
+      getPublicUrl: (filename: string) => {
+        return {
+          data: {
+            publicUrl: `/uploads/${filename}`
+          }
+        };
+      }
+    })
   }
 } as any;
 
