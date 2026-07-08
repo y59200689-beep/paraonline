@@ -1902,6 +1902,54 @@ export default function SettingsTab() {
                                       }`}
                                     />
                                   </div>
+                                  <div className="grid grid-cols-2 gap-2 pt-1.5 border-t border-dashed border-slate-200/50 dark:border-slate-850">
+                                    <div className="space-y-1">
+                                      <label className="text-[8px] font-bold text-slate-400 uppercase">Associer une catégorie</label>
+                                      <select
+                                        value={brand.categoryTag || ''}
+                                        onChange={(e) => {
+                                          const newBrands = [...(activeSection.settings?.brands || [])];
+                                          newBrands[index] = { ...brand, categoryTag: e.target.value };
+                                          updateActiveSectionSettings({ brands: newBrands });
+                                        }}
+                                        className={`w-full text-[10px] px-2 py-1 rounded-lg border ${
+                                          adminTheme === 'light' ? 'bg-white text-slate-800 border-slate-200' : 'bg-slate-950 text-slate-202 border-slate-800'
+                                        }`}
+                                      >
+                                        <option value="">Aucune</option>
+                                        <option value="visage">Visage</option>
+                                        <option value="cheveux">Cheveux</option>
+                                        <option value="solaire">Solaire</option>
+                                        <option value="corps">Corps</option>
+                                        <option value="kbeauty">K-Beauty</option>
+                                        <option value="offers">Offres</option>
+                                        <option value="appareils">Appareils</option>
+                                        <option value="accessoires">Accessoires</option>
+                                        <option value="complements">Compléments</option>
+                                        <option value="maquillage">Maquillage</option>
+                                        <option value="sport">Sport</option>
+                                        <option value="masques">Masques</option>
+                                        <option value="homme">Homme</option>
+                                        <option value="bebe">Bébé</option>
+                                      </select>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="text-[8px] font-bold text-slate-400 uppercase">URL Image Catégorie</label>
+                                      <input
+                                        type="text"
+                                        value={brand.categoryImage || ''}
+                                        placeholder="Ex: /images/categories/visage.png"
+                                        onChange={(e) => {
+                                          const newBrands = [...(activeSection.settings?.brands || [])];
+                                          newBrands[index] = { ...brand, categoryImage: e.target.value };
+                                          updateActiveSectionSettings({ brands: newBrands });
+                                        }}
+                                        className={`w-full text-[10px] px-2 py-1 rounded-lg border ${
+                                          adminTheme === 'light' ? 'bg-white text-slate-800 border-slate-200' : 'bg-slate-950 text-slate-202 border-slate-800'
+                                        }`}
+                                      />
+                                    </div>
+                                  </div>
                                 </div>
                               ))}
                             </div>

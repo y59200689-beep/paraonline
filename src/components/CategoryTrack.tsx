@@ -5,6 +5,7 @@ import { useTranslation } from '@/context/LanguageContext';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
+import { useSettings } from '@/context/SettingsContext';
 
 export interface CategoryItem {
   id: string;
@@ -24,6 +25,21 @@ interface CategoryTrackProps {
 
 export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, onSelectCategory }) => {
   const { t, language } = useTranslation();
+  const { settings } = useSettings();
+
+  const brandPartnersSection = settings.homepageSections?.sectionOrder?.find(
+    (s) => s.type === 'brandPartners'
+  );
+  const customCategoryImages = brandPartnersSection?.settings?.brands?.reduce(
+    (acc: Record<string, string>, b: any) => {
+      if (b.categoryTag && b.categoryImage) {
+        acc[b.categoryTag] = b.categoryImage;
+      }
+      return acc;
+    },
+    {}
+  ) || {};
+
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const [showLeftFade, setShowLeftFade] = React.useState(false);
   const [showRightFade, setShowRightFade] = React.useState(true);
@@ -172,7 +188,7 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
                      <div className="relative w-full h-[60px] sm:h-[68px] md:h-[72px] lg:h-[74px] flex items-center justify-center overflow-hidden select-none mt-1">
                        <div className="relative w-[54px] h-[54px] sm:w-[62px] sm:h-[62px] md:w-[68px] md:h-[68px] lg:w-[70px] lg:h-[70px] pointer-events-none select-none group-hover:scale-105 transition-transform duration-500 ease-out">
                          <Image 
-                           src={`/images/categories/${cat.tag}.png`}
+                           src={customCategoryImages[cat.tag] || `/images/categories/${cat.tag}.png`}
                            alt={t(cat.translationKey)}
                            fill
                            sizes="(max-width: 640px) 54px, (max-width: 768px) 62px, 70px"
