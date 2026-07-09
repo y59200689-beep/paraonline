@@ -1453,17 +1453,30 @@ export default function SettingsTab() {
                                 <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                                   Image de Gauche (Cicaplast)
                                 </label>
-                                <input
-                                  type="text"
-                                  placeholder="/images/cicaplast_bundle_nobg.png"
-                                  value={activeSection.settings?.leftImage || ''}
-                                  onChange={(e) => updateActiveSectionSettings({ 
-                                    leftImage: e.target.value 
-                                  })}
-                                  className={`w-full text-xs transition outline-none rounded-xl px-3 py-2 border ${
-                                    adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-955 border-slate-900 text-slate-202'
-                                  }`}
-                                />
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    placeholder="/images/cicaplast_bundle_nobg.png"
+                                    value={activeSection.settings?.leftImage || ''}
+                                    onChange={(e) => updateActiveSectionSettings({ 
+                                      leftImage: e.target.value 
+                                    })}
+                                    className={`flex-1 text-xs transition outline-none rounded-xl px-3 py-2 border ${
+                                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-955 border-slate-900 text-slate-202'
+                                    }`}
+                                  />
+                                  <label className="px-3 py-2 bg-slate-950 dark:bg-white text-white dark:text-slate-950 hover:bg-slate-900 dark:hover:bg-slate-50 font-bold text-[10px] uppercase tracking-wider rounded-xl cursor-pointer flex items-center justify-center border border-transparent transition-colors">
+                                    Importer
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      onChange={(e) => handleImageUpload(e, (url) => {
+                                        updateActiveSectionSettings({ leftImage: url });
+                                      })}
+                                      className="hidden"
+                                    />
+                                  </label>
+                                </div>
                                 <p className="text-[9px] text-slate-400 font-medium leading-relaxed">
                                   Recommandé : image verticale ou carrée de 480x640px minimum. Elle sera recadrée en object-cover pour couvrir 100% de la carte.
                                 </p>
@@ -1474,17 +1487,30 @@ export default function SettingsTab() {
                                 <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                                   Image de Droite (Vichy)
                                 </label>
-                                <input
-                                  type="text"
-                                  placeholder="/images/vichy_sunscreen_bundle_nobg.png"
-                                  value={activeSection.settings?.rightImage || ''}
-                                  onChange={(e) => updateActiveSectionSettings({ 
-                                    rightImage: e.target.value 
-                                  })}
-                                  className={`w-full text-xs transition outline-none rounded-xl px-3 py-2 border ${
-                                    adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-955 border-slate-900 text-slate-202'
-                                  }`}
-                                />
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    placeholder="/images/vichy_sunscreen_bundle_nobg.png"
+                                    value={activeSection.settings?.rightImage || ''}
+                                    onChange={(e) => updateActiveSectionSettings({ 
+                                      rightImage: e.target.value 
+                                    })}
+                                    className={`flex-1 text-xs transition outline-none rounded-xl px-3 py-2 border ${
+                                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-955 border-slate-900 text-slate-202'
+                                    }`}
+                                  />
+                                  <label className="px-3 py-2 bg-slate-950 dark:bg-white text-white dark:text-slate-950 hover:bg-slate-900 dark:hover:bg-slate-50 font-bold text-[10px] uppercase tracking-wider rounded-xl cursor-pointer flex items-center justify-center border border-transparent transition-colors">
+                                    Importer
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      onChange={(e) => handleImageUpload(e, (url) => {
+                                        updateActiveSectionSettings({ rightImage: url });
+                                      })}
+                                      className="hidden"
+                                    />
+                                  </label>
+                                </div>
                                 <p className="text-[9px] text-slate-400 font-medium leading-relaxed">
                                   Recommandé : image verticale ou carrée de 480x640px minimum. Elle sera recadrée en object-cover pour couvrir 100% de la carte.
                                 </p>
