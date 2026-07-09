@@ -170,6 +170,8 @@ export interface HomepageSectionItem {
     discountPercent?: number;
     bgImage?: string;
     overlayImage?: string;
+    leftImage?: string;
+    rightImage?: string;
     promoCards?: {
       tagFr: string;
       tagAr: string;
@@ -236,6 +238,8 @@ export interface HomepageSectionConfig {
   weeklySalesProductIds?: number[];
 
   summerSaleProductIds?: number[];
+  summerSaleLeftImage?: string;
+  summerSaleRightImage?: string;
 
   /** IDs of products to pin in the Produits Vedettes grid (first 15 slots on page 1) */
   featuredProductIds?: number[];
@@ -276,6 +280,8 @@ export const DEFAULT_SETTINGS: Settings = {
     weeklySalesTitleAr: "أفضل المنتجات مبيعاً",
     weeklySalesProductIds: [],
     summerSaleProductIds: [],
+    summerSaleLeftImage: "/images/cicaplast_bundle_nobg.png",
+    summerSaleRightImage: "/images/vichy_sunscreen_bundle_nobg.png",
     featuredProductIds: [],
     sectionOrder: [
       { id: 'hero-1', type: 'hero', nameFr: 'Carrousel Héro & Diaporama', visible: true },

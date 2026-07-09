@@ -58,7 +58,7 @@ export const TriplePromoBanners: React.FC<TriplePromoBannersProps> = ({ cards })
       titleAr: "مكافحة الشيخوخة\nبروتوكول ريتينول",
       price: "199 MAD",
       bgImage: "/images/promo/card_antiage.png",
-      overlayImage: "/images/categories/solaire.png",
+      overlayImage: "/images/categories/retinol-custom.png",
       category: "visage"
     }
   ];

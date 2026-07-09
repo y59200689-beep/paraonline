@@ -17,6 +17,12 @@ export const SummerSalePromo: React.FC = () => {
   const hp = settings?.homepageSections;
   const showSummerSale = hp?.showSummerSale ?? true;
 
+  const summerSaleSection = hp?.sectionOrder?.find(
+    (s: any) => s.type === 'summerSale'
+  );
+  const leftImage = summerSaleSection?.settings?.leftImage || hp?.summerSaleLeftImage || "/images/cicaplast_bundle_nobg.png";
+  const rightImage = summerSaleSection?.settings?.rightImage || hp?.summerSaleRightImage || "/images/vichy_sunscreen_bundle_nobg.png";
+
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 20, seconds: 0 });
   const { setSelectedProduct } = useUi();
 
@@ -157,19 +163,17 @@ export const SummerSalePromo: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6 relative z-10">
             
             {/* Left Card: Cicaplast Duo Pack Image (25% on desktop) */}
-            <div className="lg:col-span-3 bg-white rounded-[24px] p-6 flex flex-col items-center justify-center relative overflow-hidden group min-h-[320px] shadow-[0_8px_30px_rgba(0,0,0,0.015)] border border-slate-100/50">
-              <div className="absolute inset-0 bg-gradient-to-br from-slate-50/50 to-transparent pointer-events-none" />
-              <div className="relative w-full aspect-square max-w-[240px] flex items-center justify-center transform group-hover:scale-105 transition-transform duration-500 ease-out">
-                <Image 
-                  src="/images/cicaplast_bundle_nobg.webp" 
-                  alt="Cicaplast Duo Pack" 
-                  fill
-                  sizes="240px"
-                  preload={true}
-                  loading="eager"
-                  className="object-contain filter drop-shadow-[0_15px_30px_rgba(0,0,0,0.06)]"
-                />
-              </div>
+            <div className="lg:col-span-3 bg-white rounded-[24px] relative overflow-hidden group min-h-[320px] shadow-[0_8px_30px_rgba(0,0,0,0.015)] border border-slate-100/50">
+              <Image 
+                src={leftImage} 
+                alt="Cicaplast Duo Pack" 
+                fill
+                sizes="(max-width: 1024px) 100vw, 25vw"
+                preload={true}
+                loading="eager"
+                className="object-cover w-full h-full group-hover:scale-[1.03] transition-transform duration-500 ease-out"
+              />
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-50/20 to-transparent pointer-events-none" />
             </div>
 
             {/* Center Card: Countdown & Offer Details (50% on desktop to prevent clipping!) */}
@@ -256,19 +260,17 @@ export const SummerSalePromo: React.FC = () => {
             </div>
 
             {/* Right Card: Vichy Sunscreen Bundle Pack Image (25% on desktop) */}
-            <div className="lg:col-span-3 bg-white rounded-[24px] p-6 flex flex-col items-center justify-center relative overflow-hidden group min-h-[320px] shadow-[0_8px_30px_rgba(0,0,0,0.015)] border border-slate-100/50">
-              <div className="absolute inset-0 bg-gradient-to-bl from-slate-50/50 to-transparent pointer-events-none" />
-              <div className="relative w-full aspect-square max-w-[240px] flex items-center justify-center transform group-hover:scale-105 transition-transform duration-500 ease-out">
-                <Image 
-                  src="/images/vichy_sunscreen_bundle_nobg.webp" 
-                  alt="Vichy Sunscreen Pack" 
-                  fill
-                  sizes="240px"
-                  preload={true}
-                  loading="eager"
-                  className="object-contain filter drop-shadow-[0_15px_30px_rgba(0,0,0,0.06)]"
-                />
-              </div>
+            <div className="lg:col-span-3 bg-white rounded-[24px] relative overflow-hidden group min-h-[320px] shadow-[0_8px_30px_rgba(0,0,0,0.015)] border border-slate-100/50">
+              <Image 
+                src={rightImage} 
+                alt="Vichy Sunscreen Pack" 
+                fill
+                sizes="(max-width: 1024px) 100vw, 25vw"
+                preload={true}
+                loading="eager"
+                className="object-cover w-full h-full group-hover:scale-[1.03] transition-transform duration-500 ease-out"
+              />
+              <div className="absolute inset-0 bg-gradient-to-bl from-slate-50/20 to-transparent pointer-events-none" />
             </div>
 
           </div>

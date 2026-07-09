@@ -288,77 +288,86 @@ if (isPlaceholder) {
         for (const section of setting.value.homepageSections.sectionOrder) {
           if (section.id === 'brandPartners-1') {
             section.settings = section.settings || {};
-            // Force reset/update the brands with local logos
-            section.settings.brands = [
-              {
-                name: 'La Roche Posay',
-                domain: 'laroche-posay.com',
-                logoUrl: '/images/brands/laroche.png',
-                categoryTag: 'solaire',
-                categoryImage: '/images/categories/solaire-custom.png'
-              },
-              {
-                name: 'Vichy',
-                domain: 'vichyusa.com',
-                logoUrl: '/images/brands/vichy.png'
-              },
-              {
-                name: 'Cerave',
-                domain: 'cerave.com',
-                logoUrl: '/images/brands/cerave.svg',
-                categoryTag: 'visage'
-              },
-              {
-                name: 'Eucerin',
-                domain: 'eucerin.com'
-              },
-              {
-                name: 'Bioderma',
-                domain: 'bioderma.com'
-              },
-              {
-                name: 'SVR',
-                domain: 'labo-svr.com'
-              },
-              {
-                name: 'Cetaphil',
-                domain: 'cetaphil.com'
-              },
-              {
-                name: 'Avène',
-                domain: 'aveneusa.com'
-              },
-              {
-                name: 'Mixa',
-                domain: 'mixa.fr'
-              },
-              {
-                name: "L'Oréal Paris",
-                domain: 'loreal-paris.com'
-              },
-              {
-                name: 'Garnier',
-                domain: 'garnier.com'
-              },
-              {
-                name: 'Erborian',
-                domain: 'erborian.com'
-              },
-              {
-                name: 'Kérastase',
-                domain: 'kerastase.com'
-              },
-              {
-                name: 'Dercos Technique',
-                domain: 'dercos.com'
-              },
-              {
-                name: 'Nouvelle Marque',
-                domain: 'example.com'
-              }
-            ];
-            dbUpdated = true;
-            break;
+            if (!section.settings.brands || section.settings.brands.length === 0) {
+              // Force reset/update the brands with local logos
+              section.settings.brands = [
+                {
+                  name: 'La Roche Posay',
+                  domain: 'laroche-posay.com',
+                  logoUrl: '/images/brands/laroche.png',
+                  categoryTag: 'solaire',
+                  categoryImage: '/images/categories/solaire-custom.png'
+                },
+                {
+                  name: 'Vichy',
+                  domain: 'vichyusa.com',
+                  logoUrl: '/images/brands/vichy.png'
+                },
+                {
+                  name: 'Cerave',
+                  domain: 'cerave.com',
+                  logoUrl: '/images/brands/cerave.svg',
+                  categoryTag: 'visage'
+                },
+                {
+                  name: 'Eucerin',
+                  domain: 'eucerin.com'
+                },
+                {
+                  name: 'Bioderma',
+                  domain: 'bioderma.com'
+                },
+                {
+                  name: 'SVR',
+                  domain: 'labo-svr.com'
+                },
+                {
+                  name: 'Cetaphil',
+                  domain: 'cetaphil.com'
+                },
+                {
+                  name: 'Avène',
+                  domain: 'aveneusa.com'
+                },
+                {
+                  name: 'Mixa',
+                  domain: 'mixa.fr'
+                },
+                {
+                  name: "L'Oréal Paris",
+                  domain: 'loreal-paris.com'
+                },
+                {
+                  name: 'Garnier',
+                  domain: 'garnier.com'
+                },
+                {
+                  name: 'Erborian',
+                  domain: 'erborian.com'
+                },
+                {
+                  name: 'Kérastase',
+                  domain: 'kerastase.com'
+                },
+                {
+                  name: 'Dercos Technique',
+                  domain: 'dercos.com'
+                },
+                {
+                  name: 'Nouvelle Marque',
+                  domain: 'example.com'
+                }
+              ];
+              dbUpdated = true;
+            }
+          }
+          if (section.type === 'summerSale') {
+            section.settings = section.settings || {};
+            if (!section.settings.leftImage || !section.settings.rightImage) {
+              section.settings.leftImage = section.settings.leftImage || "/images/cicaplast_bundle_nobg.png";
+              section.settings.rightImage = section.settings.rightImage || "/images/vichy_sunscreen_bundle_nobg.png";
+              dbUpdated = true;
+            }
           }
         }
         if (dbUpdated) {

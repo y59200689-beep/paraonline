@@ -141,7 +141,17 @@ export default function SettingsTab() {
         { id: 'productGrid-1', type: 'productGrid', nameFr: 'Grille Principale des Produits', visible: hp.showProductGrid ?? true },
         { id: 'brandPartners-1', type: 'brandPartners', nameFr: 'Marques Partenaires', visible: hp.showBrandPartners ?? true },
         { id: 'diagnosticBanner-1', type: 'diagnosticBanner', nameFr: 'Diagnostic de Peau IA', visible: hp.showDiagnosticBanner ?? false },
-        { id: 'summerSale-1', type: 'summerSale', nameFr: "Offres d'Été (Summer Sale)", visible: hp.showSummerSale ?? true, settings: { productIds: hp.summerSaleProductIds || [] } },
+        { 
+          id: 'summerSale-1', 
+          type: 'summerSale', 
+          nameFr: "Offres d'Été (Summer Sale)", 
+          visible: hp.showSummerSale ?? true, 
+          settings: { 
+            productIds: hp.summerSaleProductIds || [],
+            leftImage: hp.summerSaleLeftImage || "/images/cicaplast_bundle_nobg.png",
+            rightImage: hp.summerSaleRightImage || "/images/vichy_sunscreen_bundle_nobg.png"
+          } 
+        },
         { id: 'skinConcerns-1', type: 'skinConcerns', nameFr: 'Bento de Préoccupations Cutanées', visible: hp.showSkinConcerns ?? true },
         { id: 'curationClinique-1', type: 'curationClinique', nameFr: 'Curation Clinique par Préoccupation', visible: true },
         { id: 'flashSale-1', type: 'flashSale', nameFr: 'Bannière de Vente Flash', visible: hp.showFlashSale ?? true },
@@ -210,6 +220,8 @@ export default function SettingsTab() {
         weeklySalesProductIds: weeklySalesSec.productIds || [],
 
         summerSaleProductIds: summerSaleSec.productIds || [],
+        summerSaleLeftImage: summerSaleSec.leftImage || "/images/cicaplast_bundle_nobg.png",
+        summerSaleRightImage: summerSaleSec.rightImage || "/images/vichy_sunscreen_bundle_nobg.png",
         featuredProductIds: productGridSec.productIds || [],
         
         sectionOrder: sectionsList
@@ -1426,6 +1438,61 @@ export default function SettingsTab() {
                           </div>
                         )}
 
+                        {activeSection.type === 'summerSale' && (
+                          <div className={`mt-6 pt-6 border-t ${adminTheme === 'light' ? 'border-slate-100' : 'border-slate-800'} space-y-4`}>
+                            <h4 className={`text-xs font-black uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
+                              Personnalisation Visuelle d'Été (Summer Sale)
+                            </h4>
+                            <p className="text-[10px] text-slate-400">
+                              Configurez les visuels d'accompagnement de la Summer Sale. Ces images s'afficheront sur 100% de la largeur/hauteur de leur carte respective.
+                            </p>
+                            
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              {/* Left Card Image Input */}
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                                  Image de Gauche (Cicaplast)
+                                </label>
+                                <input
+                                  type="text"
+                                  placeholder="/images/cicaplast_bundle_nobg.png"
+                                  value={activeSection.settings?.leftImage || ''}
+                                  onChange={(e) => updateActiveSectionSettings({ 
+                                    leftImage: e.target.value 
+                                  })}
+                                  className={`w-full text-xs transition outline-none rounded-xl px-3 py-2 border ${
+                                    adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-955 border-slate-900 text-slate-202'
+                                  }`}
+                                />
+                                <p className="text-[9px] text-slate-400 font-medium leading-relaxed">
+                                  Recommandé : image verticale ou carrée de 480x640px minimum. Elle sera recadrée en object-cover pour couvrir 100% de la carte.
+                                </p>
+                              </div>
+
+                              {/* Right Card Image Input */}
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                                  Image de Droite (Vichy)
+                                </label>
+                                <input
+                                  type="text"
+                                  placeholder="/images/vichy_sunscreen_bundle_nobg.png"
+                                  value={activeSection.settings?.rightImage || ''}
+                                  onChange={(e) => updateActiveSectionSettings({ 
+                                    rightImage: e.target.value 
+                                  })}
+                                  className={`w-full text-xs transition outline-none rounded-xl px-3 py-2 border ${
+                                    adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-955 border-slate-900 text-slate-202'
+                                  }`}
+                                />
+                                <p className="text-[9px] text-slate-400 font-medium leading-relaxed">
+                                  Recommandé : image verticale ou carrée de 480x640px minimum. Elle sera recadrée en object-cover pour couvrir 100% de la carte.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
                         {/* Standard section global warning / Specialized editors */}
                         {activeSection.type === 'hero' && (
                           <div className="space-y-6">
@@ -2255,7 +2322,7 @@ export default function SettingsTab() {
                                   titleAr: "مكافحة الشيخوخة\nبروتوكول ريتينول",
                                   price: "199 MAD",
                                   bgImage: "/images/promo/card_antiage.png",
-                                  overlayImage: "/images/categories/solaire.png",
+                                  overlayImage: "/images/categories/retinol-custom.png",
                                   category: "visage"
                                 }
                               ];
