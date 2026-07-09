@@ -20,7 +20,7 @@ export const HorizontalPromoBanner: React.FC<HorizontalPromoBannerProps> = ({ se
   const descAr = settings?.descAr || "الصيدلية الوحيدة التي تجعل حياتك أسهل وأجمل في المغرب";
   const discountPercent = settings?.discountPercent !== undefined ? settings.discountPercent : 50;
   const bgImage = settings?.bgImage || "/images/promo/horizontal_promo.png";
-  const overlayImage = settings?.overlayImage || "/images/categories/bebe.png";
+  const overlayImage = settings?.overlayImage || "/images/promo/horizontal_promo_product.png";
 
   const isDefaultBg = bgImage === "/images/promo/horizontal_promo.png";
 
@@ -93,8 +93,8 @@ export const HorizontalPromoBanner: React.FC<HorizontalPromoBannerProps> = ({ se
                 alt="Promotion produit"
                 fill
                 sizes="(max-width: 640px) 90px, (max-width: 768px) 110px, 130px"
-                className="object-contain"
-                style={{ objectPosition: 'bottom' }}
+                className="object-contain mix-blend-screen"
+                style={{ objectPosition: 'bottom', mixBlendMode: 'screen' }}
               />
             </div>
           </div>
