@@ -1453,6 +1453,22 @@ export default function SettingsTab() {
                                 <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                                   Image de Gauche (Cicaplast)
                                 </label>
+                                {activeSection.settings?.leftImage && (
+                                  <div className="relative w-full h-36 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 mb-2 flex items-center justify-center p-2">
+                                    <img 
+                                      src={activeSection.settings.leftImage} 
+                                      alt="Aperçu Gauche" 
+                                      className="max-w-full max-h-full object-contain rounded"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => updateActiveSectionSettings({ leftImage: '' })}
+                                      className="absolute top-2 right-2 px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors text-[9px] uppercase font-bold tracking-wider shadow"
+                                    >
+                                      Supprimer
+                                    </button>
+                                  </div>
+                                )}
                                 <div className="flex gap-2">
                                   <input
                                     type="text"
@@ -1487,6 +1503,22 @@ export default function SettingsTab() {
                                 <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                                   Image de Droite (Vichy)
                                 </label>
+                                {activeSection.settings?.rightImage && (
+                                  <div className="relative w-full h-36 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 mb-2 flex items-center justify-center p-2">
+                                    <img 
+                                      src={activeSection.settings.rightImage} 
+                                      alt="Aperçu Droite" 
+                                      className="max-w-full max-h-full object-contain rounded"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => updateActiveSectionSettings({ rightImage: '' })}
+                                      className="absolute top-2 right-2 px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors text-[9px] uppercase font-bold tracking-wider shadow"
+                                    >
+                                      Supprimer
+                                    </button>
+                                  </div>
+                                )}
                                 <div className="flex gap-2">
                                   <input
                                     type="text"
