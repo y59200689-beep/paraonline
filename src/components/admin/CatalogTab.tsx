@@ -2346,7 +2346,7 @@ export default function CatalogTab({
                               </button>
                               <span className="text-slate-300 dark:text-slate-800">|</span>
                               <a 
-                                href={`/product/${product.id}`}
+                                href={`/products/${product.id}`}
                                 target="_blank"
                                 rel="noreferrer"
                                 onClick={(e) => e.stopPropagation()}
