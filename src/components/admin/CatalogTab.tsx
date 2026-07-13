@@ -106,7 +106,7 @@ function SearchableDropdown({
 
       {isOpen && (
         <div className={`absolute left-0 right-0 mt-1 z-50 rounded-xl border p-1.5 shadow-lg space-y-1.5 animate-in fade-in-30 slide-in-from-top-1 duration-150 ${
-          adminTheme === 'light' ? 'bg-white border-slate-200/80' : 'bg-slate-950 border-slate-850'
+          adminTheme === 'light' ? 'bg-white border-slate-200/80' : 'bg-slate-950 border-slate-800'
         }`}>
           <div className="relative">
             <Search className="w-3 h-3 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
@@ -118,7 +118,7 @@ function SearchableDropdown({
               className={`w-full text-[10px] rounded-lg pl-7 pr-2 py-1 outline-none border transition ${
                 adminTheme === 'light'
                   ? 'bg-slate-50 border-slate-200 text-slate-800 focus:bg-white focus:shadow-sm'
-                  : 'bg-slate-900 border-slate-800 text-slate-100 focus:bg-slate-850'
+                  : 'bg-slate-900 border-slate-800 text-slate-100 focus:bg-slate-800'
               }`}
               autoFocus
             />
@@ -232,7 +232,7 @@ export default function CatalogTab({
   useEffect(() => {
     const idx = STATUS_TABS.indexOf(filterStatus);
     if (idx !== -1) moveStatusPill(idx, true);
-  }, [filterStatus, moveStatusPill]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filterStatus, moveStatusPill, products]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Sliding pill refs — View mode bar ──────────────────────────────────────
   const viewPillRef  = useRef<HTMLSpanElement>(null);
@@ -304,6 +304,7 @@ export default function CatalogTab({
 
   // New/Edit product modal/drawer state
   const [isNewProductModalOpen, setIsNewProductModalOpen] = useState(false);
+  const [modalTab, setModalTab] = useState<'general' | 'pricing' | 'variants' | 'seo'>('general');
   const [productForm, setProductForm] = useState<Partial<Product>>({
     title: '', vendor: '', price: 0, comparePrice: 0, category: 'visage', tags: [], stock: 100, description: '', ingredients: '', usage: '', image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop', sku: '', buyingCost: 0, status: 'live'
   });
@@ -512,6 +513,8 @@ export default function CatalogTab({
     let noDesc = 0;
     let onSale = 0;
     let positiveStock = 0;
+    let positiveStockNoVendor = 0;
+    let positiveStockNoDesc = 0;
 
     products.forEach((p: any) => {
       if (!p.image || p.image === '' || p.image === '/placeholder.png') {
@@ -540,6 +543,13 @@ export default function CatalogTab({
       }
       if (p.stock !== undefined && p.stock !== null && p.stock > 0) {
         positiveStock++;
+        const hasNoVendor = !p.vendor || p.vendor.trim() === '' || p.vendor === '-';
+        if (hasNoVendor) {
+          positiveStockNoVendor++;
+        }
+        if (!p.description || p.description.trim() === '') {
+          positiveStockNoDesc++;
+        }
       }
     });
 
@@ -552,7 +562,9 @@ export default function CatalogTab({
       lowMargin,
       noDesc,
       onSale,
-      positiveStock
+      positiveStock,
+      positiveStockNoVendor,
+      positiveStockNoDesc
     };
   }, [products, deadProductIds, lowStockThreshold]);
 
@@ -1339,7 +1351,7 @@ export default function CatalogTab({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/80">
           {/* Search bar */}
           <div className="relative flex-1 w-full">
-            <Search className="w-4 h-4 text-slate-450 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Rechercher un produit..."
@@ -1438,7 +1450,7 @@ export default function CatalogTab({
                 className={`relative z-10 px-3 py-1.5 rounded-lg transition-colors duration-200 flex items-center gap-1.5 text-xs font-semibold cursor-pointer ${
                   filterStatus === 'draft'
                     ? (adminTheme === 'light' ? 'text-slate-900 font-bold' : 'text-slate-100 font-bold')
-                    : (adminTheme === 'light' ? 'text-slate-500 hover:text-slate-850' : 'text-slate-400 hover:text-slate-200')
+                    : (adminTheme === 'light' ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-slate-200')
                 }`}
               >
                 <span>Brouillons</span>
@@ -1567,6 +1579,9 @@ export default function CatalogTab({
                   {filterSpecial === 'all' && 'Filtres Spéciaux'}
                   {filterSpecial === 'no_image' && 'Sans image'}
                   {filterSpecial === 'negative_stock' && 'Stock négatif'}
+                  {filterSpecial === 'positive_stock' && 'Stock positif (> 0)'}
+                  {filterSpecial === 'positive_stock_no_vendor' && 'Stock positif sans marque'}
+                  {filterSpecial === 'positive_stock_no_desc' && 'Stock positif sans description'}
                   {filterSpecial === 'dead_products' && 'Produits morts (30j)'}
                   {filterSpecial === 'low_margin' && 'Marge faible/nég.'}
                   {filterSpecial === 'no_desc' && 'Sans description'}
@@ -1582,7 +1597,7 @@ export default function CatalogTab({
 
               {isSpecialOpen && (
                 <div className={`absolute left-0 mt-1 z-50 w-72 rounded-xl border p-2 shadow-lg space-y-1 animate-in fade-in-30 slide-in-from-top-1 duration-150 ${
-                  adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.08)]' : 'bg-slate-950 border-slate-850'
+                  adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.08)]' : 'bg-slate-950 border-slate-800'
                 }`}>
                   <div className="flex items-center justify-between px-2 py-1 border-b border-slate-100 dark:border-slate-800/60 pb-1.5 mb-1 select-none">
                     <span className={`text-[10px] font-bold uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>
@@ -1594,7 +1609,7 @@ export default function CatalogTab({
                         onClick={() => {
                           handleFilterSpecialToggle('all');
                         }}
-                        className="text-[9px] font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-450 dark:hover:text-emerald-450 cursor-pointer transition"
+                        className="text-[9px] font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-400 cursor-pointer transition"
                       >
                         Réinitialiser
                       </button>
@@ -1611,7 +1626,7 @@ export default function CatalogTab({
                       className={`w-full text-left text-xs px-2.5 py-1.5 rounded-lg transition-colors flex items-center justify-between cursor-pointer ${
                         filterSpecial === 'all'
                           ? (adminTheme === 'light' ? 'bg-slate-100 text-slate-900 font-bold' : 'bg-slate-800 text-slate-100 font-bold')
-                          : (adminTheme === 'light' ? 'hover:bg-slate-50 text-slate-650 hover:text-slate-900' : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200')
+                          : (adminTheme === 'light' ? 'hover:bg-slate-50 text-slate-600 hover:text-slate-900' : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200')
                       }`}
                     >
                       <div className="flex items-center gap-2">
@@ -1633,7 +1648,7 @@ export default function CatalogTab({
                       className={`w-full text-left text-xs px-2.5 py-1.5 rounded-lg transition-colors flex items-center justify-between cursor-pointer ${
                         filterSpecial.split(',').includes('no_image')
                           ? (adminTheme === 'light' ? 'bg-slate-100 text-slate-900 font-bold' : 'bg-slate-800 text-slate-100 font-bold')
-                          : (adminTheme === 'light' ? 'hover:bg-slate-50 text-slate-650 hover:text-slate-900' : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200')
+                          : (adminTheme === 'light' ? 'hover:bg-slate-50 text-slate-600 hover:text-slate-900' : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200')
                       }`}
                     >
                       <div className="flex items-center gap-2">
@@ -1655,7 +1670,7 @@ export default function CatalogTab({
                       className={`w-full text-left text-xs px-2.5 py-1.5 rounded-lg transition-colors flex items-center justify-between cursor-pointer ${
                         filterSpecial.split(',').includes('positive_stock')
                           ? (adminTheme === 'light' ? 'bg-slate-100 text-slate-900 font-bold' : 'bg-slate-800 text-slate-100 font-bold')
-                          : (adminTheme === 'light' ? 'hover:bg-slate-50 text-slate-650 hover:text-slate-900' : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200')
+                          : (adminTheme === 'light' ? 'hover:bg-slate-50 text-slate-600 hover:text-slate-900' : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200')
                       }`}
                     >
                       <div className="flex items-center gap-2">
@@ -1668,6 +1683,28 @@ export default function CatalogTab({
                       </div>
                     </button>
 
+                    {/* Option: Stock positif sans marque */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleFilterSpecialToggle('positive_stock_no_vendor');
+                      }}
+                      className={`w-full text-left text-xs px-2.5 py-1.5 rounded-lg transition-colors flex items-center justify-between cursor-pointer ${
+                        filterSpecial.split(',').includes('positive_stock_no_vendor')
+                          ? (adminTheme === 'light' ? 'bg-slate-100 text-slate-900 font-bold' : 'bg-slate-800 text-slate-100 font-bold')
+                          : (adminTheme === 'light' ? 'hover:bg-slate-50 text-slate-600 hover:text-slate-900' : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200')
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="w-3.5 h-3.5 opacity-70 text-teal-500" />
+                        <span>Stock positif sans marque</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono opacity-60 font-medium">{specialFilterCounts.positiveStockNoVendor}</span>
+                        {filterSpecial.split(',').includes('positive_stock_no_vendor') && <Check className="w-3 h-3 text-emerald-500" />}
+                      </div>
+                    </button>
+
                     {/* Option: Stock négatif */}
                     <button
                       type="button"
@@ -1677,7 +1714,7 @@ export default function CatalogTab({
                       className={`w-full text-left text-xs px-2.5 py-1.5 rounded-lg transition-colors flex items-center justify-between cursor-pointer ${
                         filterSpecial.split(',').includes('negative_stock')
                           ? (adminTheme === 'light' ? 'bg-slate-100 text-slate-900 font-bold' : 'bg-slate-800 text-slate-100 font-bold')
-                          : (adminTheme === 'light' ? 'hover:bg-slate-50 text-slate-650 hover:text-slate-900' : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200')
+                          : (adminTheme === 'light' ? 'hover:bg-slate-50 text-slate-600 hover:text-slate-900' : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200')
                       }`}
                     >
                       <div className="flex items-center gap-2">
@@ -1699,7 +1736,7 @@ export default function CatalogTab({
                       className={`w-full text-left text-xs px-2.5 py-1.5 rounded-lg transition-colors flex items-center justify-between cursor-pointer ${
                         filterSpecial.split(',').includes('dead_products')
                           ? (adminTheme === 'light' ? 'bg-slate-100 text-slate-900 font-bold' : 'bg-slate-800 text-slate-100 font-bold')
-                          : (adminTheme === 'light' ? 'hover:bg-slate-50 text-slate-650 hover:text-slate-900' : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200')
+                          : (adminTheme === 'light' ? 'hover:bg-slate-50 text-slate-600 hover:text-slate-900' : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200')
                       }`}
                     >
                       <div className="flex items-center gap-2">
@@ -1721,7 +1758,7 @@ export default function CatalogTab({
                       className={`w-full text-left text-xs px-2.5 py-1.5 rounded-lg transition-colors flex items-center justify-between cursor-pointer ${
                         filterSpecial.split(',').includes('out_of_stock')
                           ? (adminTheme === 'light' ? 'bg-slate-100 text-slate-900 font-bold' : 'bg-slate-800 text-slate-100 font-bold')
-                          : (adminTheme === 'light' ? 'hover:bg-slate-50 text-slate-650 hover:text-slate-900' : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200')
+                          : (adminTheme === 'light' ? 'hover:bg-slate-50 text-slate-600 hover:text-slate-900' : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200')
                       }`}
                     >
                       <div className="flex items-center gap-2">
@@ -1743,7 +1780,7 @@ export default function CatalogTab({
                       className={`w-full text-left text-xs px-2.5 py-1.5 rounded-lg transition-colors flex items-center justify-between cursor-pointer ${
                         filterSpecial.split(',').includes('low_stock')
                           ? (adminTheme === 'light' ? 'bg-slate-100 text-slate-900 font-bold' : 'bg-slate-800 text-slate-100 font-bold')
-                          : (adminTheme === 'light' ? 'hover:bg-slate-50 text-slate-650 hover:text-slate-900' : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200')
+                          : (adminTheme === 'light' ? 'hover:bg-slate-50 text-slate-600 hover:text-slate-900' : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200')
                       }`}
                     >
                       <div className="flex items-center gap-2">
@@ -1765,7 +1802,7 @@ export default function CatalogTab({
                       className={`w-full text-left text-xs px-2.5 py-1.5 rounded-lg transition-colors flex items-center justify-between cursor-pointer ${
                         filterSpecial.split(',').includes('low_margin')
                           ? (adminTheme === 'light' ? 'bg-slate-100 text-slate-900 font-bold' : 'bg-slate-800 text-slate-100 font-bold')
-                          : (adminTheme === 'light' ? 'hover:bg-slate-50 text-slate-650 hover:text-slate-900' : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200')
+                          : (adminTheme === 'light' ? 'hover:bg-slate-50 text-slate-600 hover:text-slate-900' : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200')
                       }`}
                     >
                       <div className="flex items-center gap-2">
@@ -1787,7 +1824,7 @@ export default function CatalogTab({
                       className={`w-full text-left text-xs px-2.5 py-1.5 rounded-lg transition-colors flex items-center justify-between cursor-pointer ${
                         filterSpecial.split(',').includes('no_desc')
                           ? (adminTheme === 'light' ? 'bg-slate-100 text-slate-900 font-bold' : 'bg-slate-800 text-slate-100 font-bold')
-                          : (adminTheme === 'light' ? 'hover:bg-slate-50 text-slate-650 hover:text-slate-900' : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200')
+                          : (adminTheme === 'light' ? 'hover:bg-slate-50 text-slate-600 hover:text-slate-900' : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200')
                       }`}
                     >
                       <div className="flex items-center gap-2">
@@ -1800,6 +1837,28 @@ export default function CatalogTab({
                       </div>
                     </button>
 
+                    {/* Option: Stock positif sans description */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleFilterSpecialToggle('positive_stock_no_desc');
+                      }}
+                      className={`w-full text-left text-xs px-2.5 py-1.5 rounded-lg transition-colors flex items-center justify-between cursor-pointer ${
+                        filterSpecial.split(',').includes('positive_stock_no_desc')
+                          ? (adminTheme === 'light' ? 'bg-slate-100 text-slate-900 font-bold' : 'bg-slate-800 text-slate-100 font-bold')
+                          : (adminTheme === 'light' ? 'hover:bg-slate-50 text-slate-600 hover:text-slate-900' : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200')
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <FileText className="w-3.5 h-3.5 opacity-70 text-amber-500" />
+                        <span>Stock + sans description</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono opacity-60 font-medium">{specialFilterCounts.positiveStockNoDesc}</span>
+                        {filterSpecial.split(',').includes('positive_stock_no_desc') && <Check className="w-3 h-3 text-emerald-500" />}
+                      </div>
+                    </button>
+
                     {/* Option: En promotion */}
                     <button
                       type="button"
@@ -1809,7 +1868,7 @@ export default function CatalogTab({
                       className={`w-full text-left text-xs px-2.5 py-1.5 rounded-lg transition-colors flex items-center justify-between cursor-pointer ${
                         filterSpecial.split(',').includes('on_sale')
                           ? (adminTheme === 'light' ? 'bg-slate-100 text-slate-900 font-bold' : 'bg-slate-800 text-slate-100 font-bold')
-                          : (adminTheme === 'light' ? 'hover:bg-slate-50 text-slate-650 hover:text-slate-900' : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200')
+                          : (adminTheme === 'light' ? 'hover:bg-slate-50 text-slate-600 hover:text-slate-900' : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200')
                       }`}
                     >
                       <div className="flex items-center gap-2">
@@ -1823,7 +1882,7 @@ export default function CatalogTab({
                     </button>
                   </div>
 
-                  <div className="border-t border-slate-100 dark:border-slate-855 pt-1.5 mt-1.5 select-none">
+                  <div className="border-t border-slate-100 dark:border-slate-800 pt-1.5 mt-1.5 select-none">
                     {/* Action: Lot rapide (Bulk Edit Mode) */}
                     <button
                       type="button"
@@ -1833,7 +1892,7 @@ export default function CatalogTab({
                       }}
                       className={`w-full text-left text-xs px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-2 font-bold cursor-pointer ${
                         isCatalogBulkMode
-                          ? (adminTheme === 'light' ? 'bg-amber-100 text-amber-850' : 'bg-amber-500/20 text-amber-400')
+                          ? (adminTheme === 'light' ? 'bg-amber-100 text-amber-800' : 'bg-amber-500/20 text-amber-400')
                           : (adminTheme === 'light' ? 'hover:bg-slate-50 text-slate-700 hover:text-slate-900' : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200')
                       }`}
                     >
@@ -1849,60 +1908,7 @@ export default function CatalogTab({
           {/* Right Side: Action Buttons */}
           <div className="flex flex-wrap items-center gap-2 shrink-0">
             {/* Bulk Actions when items are selected */}
-            {selectedProductIds.size > 0 && !isCatalogBulkMode && (
-              <div className={`flex items-center gap-2 p-1 h-9 rounded-xl border transition-all duration-200 ${
-                adminTheme === 'light' 
-                  ? 'bg-emerald-500/5 border-emerald-500/20 shadow-sm' 
-                  : 'bg-emerald-500/5 border-emerald-500/15'
-              }`}>
-                <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 px-1 whitespace-nowrap">
-                  <CheckSquare className="w-3.5 h-3.5 text-emerald-500" />
-                  {selectedProductIds.size} sélect.
-                </span>
-                
-                <select
-                  value={bulkAction}
-                  onChange={(e) => setBulkAction(e.target.value)}
-                  className={`text-[10px] h-7 outline-none rounded-lg px-2 border cursor-pointer font-bold uppercase tracking-wider transition-colors duration-150 ${
-                    adminTheme === 'light'
-                      ? 'bg-white border-slate-200 text-slate-700 hover:border-slate-300 focus:border-emerald-500/50'
-                      : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-750 focus:border-emerald-500/50'
-                  }`}
-                >
-                  <option value="">Actions groupées</option>
-                  <option value="categorize">Catégorie</option>
-                  <option value="publish">Publier (Live)</option>
-                  <option value="draft">Mettre en brouillon</option>
-                  <option value="delete">Supprimer</option>
-                </select>
-
-                {bulkAction === 'categorize' && (
-                  <select
-                    value={bulkCategory}
-                    onChange={(e) => setBulkCategory(e.target.value)}
-                    className={`text-[10px] h-7 outline-none rounded-lg px-2 border cursor-pointer font-bold uppercase tracking-wider transition-colors duration-150 ${
-                      adminTheme === 'light'
-                        ? 'bg-white border-slate-200 text-slate-750 hover:border-slate-300'
-                        : 'bg-slate-900 border-slate-800 text-slate-350 hover:text-slate-750'
-                    }`}
-                  >
-                    <option value="">Choisir...</option>
-                    {uniqueCategories.map(cat => (
-                      <option key={cat} value={cat}>{cat.toUpperCase()}</option>
-                    ))}
-                  </select>
-                )}
-
-                <button
-                  type="button"
-                  onClick={handleApplyBulkAction}
-                  disabled={!bulkAction}
-                  className="px-3 h-7 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-450 hover:to-teal-450 text-white font-black text-[9px] uppercase tracking-wider rounded-lg transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  Appliquer
-                </button>
-              </div>
-            )}
+            {/* Bulk Actions replaced by floating bar */}
 
             {/* Importer */}
             <button
@@ -1924,11 +1930,11 @@ export default function CatalogTab({
               onClick={handleExportCatalogToCsv}
               className={`px-3 h-9 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition cursor-pointer ${
                 adminTheme === 'light'
-                  ? 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-sky-50/50 hover:border-sky-200 hover:text-sky-750 shadow-sm font-medium'
+                  ? 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-sky-50/50 hover:border-sky-200 hover:text-sky-700 shadow-sm font-medium'
                   : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700 hover:bg-slate-800/50'
               }`}
             >
-              <Download className="w-3.5 h-3.5 text-sky-550" />
+              <Download className="w-3.5 h-3.5 text-sky-500" />
               <span>Exporter</span>
             </button>
 
@@ -1951,7 +1957,7 @@ export default function CatalogTab({
             <button
               type="button"
               onClick={() => setIsNewProductModalOpen(true)}
-              className="px-4 h-9 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/10 hover:shadow-emerald-600/20 hover:from-emerald-550 hover:to-teal-550 transition-all duration-200 cursor-pointer flex items-center gap-1.5"
+              className="px-4 h-9 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/10 hover:shadow-emerald-600/20 hover:from-emerald-500 hover:to-teal-500 transition-all duration-200 cursor-pointer flex items-center gap-1.5"
             >
               <Plus className="w-3.5 h-3.5 text-white" />
               <span>Produit</span>
@@ -2096,7 +2102,7 @@ export default function CatalogTab({
             {isLocalLoading && (
               <div className="absolute inset-0 bg-slate-950/5 dark:bg-slate-950/20 backdrop-blur-[0.5px] flex items-center justify-center z-30 transition-all duration-300">
                 <div className={`p-4 rounded-2xl border flex items-center gap-3 shadow-lg select-none ${
-                  adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-700' : 'bg-slate-950 border-slate-850 text-slate-200'
+                  adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-700' : 'bg-slate-950 border-slate-800 text-slate-200'
                 }`}>
                   <Loader2 className="w-4 h-4 text-emerald-500 animate-spin" />
                   <span className="text-xs font-semibold">Chargement des produits...</span>
@@ -2116,7 +2122,7 @@ export default function CatalogTab({
                     <tr className={`text-[10px] uppercase tracking-wider font-extrabold border-b transition-colors ${
                       adminTheme === 'light' 
                         ? 'bg-slate-50/50 text-slate-600 border-slate-200/80' 
-                        : 'bg-slate-950/40 text-slate-400 border-slate-855'
+                        : 'bg-slate-950/40 text-slate-400 border-slate-800'
                     }`}>
                       {/* Checkbox Header */}
                       <th className="p-3 w-10 text-center select-none">
@@ -2215,7 +2221,7 @@ export default function CatalogTab({
                       </th>
                   </tr>
                 </thead>
-                <tbody className={`divide-y ${adminTheme === 'light' ? 'divide-slate-100' : 'divide-slate-850'}`}>
+                <tbody className={`divide-y ${adminTheme === 'light' ? 'divide-slate-100' : 'divide-slate-800'}`}>
                   {paginatedProducts.map(product => {
                     const stock = product.stock !== undefined ? product.stock : 100;
                     
@@ -2276,7 +2282,7 @@ export default function CatalogTab({
                             
                             {/* WooCommerce style Hover Actions */}
                             <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-[10px] text-slate-400 mt-1.5 flex items-center gap-1.5 font-medium select-none">
-                              <span className="text-slate-450 dark:text-slate-500">ID: {product.id}</span>
+                              <span className="text-slate-400 dark:text-slate-500">ID: {product.id}</span>
                               <span className="text-slate-300 dark:text-slate-800">|</span>
                               <button 
                                 type="button"
@@ -2381,7 +2387,7 @@ export default function CatalogTab({
                         </td>
 
                         {/* SKU */}
-                        <td className="p-3 font-mono text-[11px] text-slate-650 dark:text-slate-400 whitespace-nowrap">
+                        <td className="p-3 font-mono text-[11px] text-slate-600 dark:text-slate-400 whitespace-nowrap">
                           {product.sku || '-'}
                         </td>
 
@@ -2431,8 +2437,33 @@ export default function CatalogTab({
                   })}
                   {paginatedProducts.length === 0 && (
                     <tr>
-                      <td colSpan={10} className="p-8 text-center text-slate-500 italic">
-                        Aucun produit ne correspond à votre recherche ou filtre.
+                      <td colSpan={10} className="p-12">
+                        <div className={`rich-empty-state max-w-md mx-auto ${
+                          adminTheme === 'light' ? 'rich-empty-state-light' : 'rich-empty-state-dark'
+                        }`}>
+                          <div className={`rich-empty-state-icon ${
+                            adminTheme === 'light' ? 'bg-slate-100 text-slate-400' : 'bg-slate-900 text-slate-500'
+                          }`}>
+                            <Search className="w-5 h-5" />
+                          </div>
+                          <h4 className="text-xs uppercase font-black tracking-wider mb-1">Aucun produit trouvé</h4>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed mb-4">
+                            Aucun produit ne correspond à vos filtres de recherche ou de catégorie actuels.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setProductSearchQuery('');
+                              setFilterCategory('all');
+                              setFilterVendor('all');
+                              setFilterStatus('all');
+                              setCatalogStockFilter(false);
+                            }}
+                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[9px] uppercase tracking-wider rounded-lg transition active:scale-95 border-0 outline-none cursor-pointer"
+                          >
+                            Réinitialiser les filtres
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   )}
@@ -2493,7 +2524,7 @@ export default function CatalogTab({
                       </div>
 
                       <div className="text-right">
-                        <span className="text-[9px] text-slate-550 uppercase font-semibold block">Stock</span>
+                        <span className="text-[9px] text-slate-500 uppercase font-semibold block">Stock</span>
                         <span className={`font-mono text-xs font-bold flex items-center gap-1 ${
                             stock <= lowStockThreshold
                               ? (adminTheme === 'light' ? 'text-rose-600 font-black' : 'text-rose-400 font-black')
@@ -2505,13 +2536,13 @@ export default function CatalogTab({
                       </div>
                     </div>
 
-                    <div className={`pt-2 border-t flex gap-2 justify-end ${adminTheme === 'light' ? 'border-slate-105' : 'border-slate-950'}`}>
+                    <div className={`pt-2 border-t flex gap-2 justify-end ${adminTheme === 'light' ? 'border-slate-100' : 'border-slate-950'}`}>
                       <button
                         onClick={() => {
                           setProductForm(product);
                           setIsNewProductModalOpen(true);
                         }}
-                        className={`p-2 border rounded-lg transition cursor-pointer ${adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-555 hover:text-slate-800 hover:border-slate-300 hover:bg-slate-100' : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'}`}
+                        className={`p-2 border rounded-lg transition cursor-pointer ${adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-500 hover:text-slate-800 hover:border-slate-300 hover:bg-slate-100' : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'}`}
                         title="Modifier"
                       >
                         <Edit3 className="w-3.5 h-3.5" />
@@ -2549,7 +2580,7 @@ export default function CatalogTab({
                   setCurrentPage(1);
                 }}
                 className={`px-2 py-1 rounded-lg border outline-none text-xs cursor-pointer font-medium ${
-                  adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-700' : 'bg-slate-900 border-slate-800 text-slate-305'
+                  adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-700' : 'bg-slate-900 border-slate-800 text-slate-300'
                 }`}
               >
                 {[10, 20, 50, 100].map(val => (
@@ -2564,7 +2595,7 @@ export default function CatalogTab({
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
                 className={`px-2.5 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition ${
-                  adminTheme === 'light' ? 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700' : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-355'
+                  adminTheme === 'light' ? 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700' : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300'
                 }`}
               >
                 Précédent
@@ -2575,7 +2606,7 @@ export default function CatalogTab({
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
                 className={`px-2.5 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition ${
-                  adminTheme === 'light' ? 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700' : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-355'
+                  adminTheme === 'light' ? 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700' : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300'
                 }`}
               >
                 Suivant
@@ -2592,6 +2623,7 @@ export default function CatalogTab({
           className="fixed inset-0 bg-slate-950/60 backdrop-blur-md flex justify-end z-45 select-none animate-in fade-in duration-200"
           onClick={() => {
             setIsNewProductModalOpen(false);
+            setModalTab('general');
             setProductForm({
               title: '', vendor: '', price: 0, comparePrice: 0, category: 'visage', tags: [], stock: 100, description: '', ingredients: '', usage: '', image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop', sku: '', buyingCost: 0, status: 'live'
             });
@@ -2620,6 +2652,7 @@ export default function CatalogTab({
                 type="button" 
                 onClick={() => {
                   setIsNewProductModalOpen(false);
+                  setModalTab('general');
                   setProductForm({
                     title: '', vendor: '', price: 0, comparePrice: 0, category: 'visage', tags: [], stock: 100, description: '', ingredients: '', usage: '', image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop', sku: '', buyingCost: 0, status: 'live'
                   });
@@ -2632,261 +2665,274 @@ export default function CatalogTab({
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-5">
+            {/* Modal Tabs Switching Bar */}
+            <div className={`flex border-b px-6 flex-shrink-0 select-none ${
+              adminTheme === 'light' ? 'border-slate-100 bg-slate-50/40' : 'border-slate-800 bg-slate-900/10'
+            }`}>
+              {(['general', 'pricing', 'variants', 'seo'] as const).map((tab) => {
+                const label =
+                  tab === 'general' ? 'Général' :
+                  tab === 'pricing' ? 'Tarifs & Stock' :
+                  tab === 'variants' ? 'Variantes' : 'Référencement (SEO)';
+                const active = modalTab === tab;
+                return (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setModalTab(tab)}
+                    className={`px-4 py-3 text-[10px] font-black uppercase tracking-wider transition-all border-b-2 cursor-pointer outline-none bg-transparent ${
+                      active
+                        ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                        : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6">
               <div className="space-y-4 text-xs">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className={`text-[9px] font-bold uppercase tracking-wider ${
-                    adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                  }`}>Titre Français</label>
-                  <input 
-                    type="text" 
-                    value={productForm.nameFr || productForm.title} 
-                    onChange={(e) => setProductForm({...productForm, title: e.target.value, nameFr: e.target.value})} 
-                    className={`w-full border rounded-xl px-3 py-2 transition outline-none ${
-                      adminTheme === 'light'
-                        ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
-                        : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
-                    }`} 
-                    required 
-                  />
-                </div>
+                {modalTab === 'general' && (
+                  <div className="space-y-4 animate-in fade-in duration-200">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className={`text-[9px] font-bold uppercase tracking-wider ${
+                          adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
+                        }`}>Titre Français</label>
+                        <input 
+                          type="text" 
+                          value={productForm.nameFr || productForm.title} 
+                          onChange={(e) => setProductForm({...productForm, title: e.target.value, nameFr: e.target.value})} 
+                          className={`w-full border rounded-xl px-3 py-2 transition outline-none ${
+                            adminTheme === 'light'
+                              ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
+                              : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
+                          }`} 
+                          required 
+                        />
+                      </div>
 
-                <div className="space-y-1">
-                  <label className={`text-[9px] font-bold uppercase tracking-wider ${
-                    adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                  }`}>Marque / Fournisseur</label>
-                  <input 
-                    type="text" 
-                    value={productForm.vendor} 
-                    onChange={(e) => setProductForm({...productForm, vendor: e.target.value})} 
-                    className={`w-full border rounded-xl px-3 py-2 transition outline-none ${
-                      adminTheme === 'light'
-                        ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
-                        : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
-                    }`} 
-                    required 
-                  />
-                </div>
+                      <div className="space-y-1">
+                        <label className={`text-[9px] font-bold uppercase tracking-wider ${
+                          adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
+                        }`}>Marque / Fournisseur</label>
+                        <input 
+                          type="text" 
+                          value={productForm.vendor} 
+                          onChange={(e) => setProductForm({...productForm, vendor: e.target.value})} 
+                          className={`w-full border rounded-xl px-3 py-2 transition outline-none ${
+                            adminTheme === 'light'
+                              ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
+                              : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
+                          }`} 
+                          required 
+                        />
+                      </div>
 
-                <div className="space-y-1">
-                  <label className={`text-[9px] font-bold uppercase tracking-wider ${
-                    adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                  }`}>Catégorie</label>
-                  <select 
-                    value={productForm.category} 
-                    onChange={(e) => setProductForm({...productForm, category: e.target.value})}
-                    className={`w-full border rounded-xl px-3 py-2 transition outline-none cursor-pointer ${
-                      adminTheme === 'light'
-                        ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
-                        : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
-                    }`}
-                  >
-                    {['visage', 'kbeauty', 'garnier', 'hadalabo', 'offers'].map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                </div>
+                      <div className="space-y-1">
+                        <label className={`text-[9px] font-bold uppercase tracking-wider ${
+                          adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
+                        }`}>Catégorie</label>
+                        <select 
+                          value={productForm.category} 
+                          onChange={(e) => setProductForm({...productForm, category: e.target.value})}
+                          className={`w-full border rounded-xl px-3 py-2 transition outline-none cursor-pointer ${
+                            adminTheme === 'light'
+                              ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
+                              : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
+                          }`}
+                        >
+                          {['visage', 'kbeauty', 'garnier', 'hadalabo', 'offers'].map(cat => (
+                            <option key={cat} value={cat}>{cat}</option>
+                          ))}
+                        </select>
+                      </div>
 
-                <div className="space-y-1">
-                  <label className={`text-[9px] font-bold uppercase tracking-wider ${
-                    adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                  }`}>Statut du Produit</label>
-                  <select 
-                    value={productForm.status || 'live'} 
-                    onChange={(e) => setProductForm({...productForm, status: e.target.value as any})}
-                    className={`w-full border rounded-xl px-3 py-2 transition outline-none cursor-pointer ${
-                      adminTheme === 'light'
-                        ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
-                        : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
-                    }`}
-                  >
-                    <option value="live">Publié (Live)</option>
-                    <option value="draft">Brouillon (Draft)</option>
-                  </select>
-                </div>
+                      <div className="space-y-1">
+                        <label className={`text-[9px] font-bold uppercase tracking-wider ${
+                          adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
+                        }`}>Statut du Produit</label>
+                        <select 
+                          value={productForm.status || 'live'} 
+                          onChange={(e) => setProductForm({...productForm, status: e.target.value as any})}
+                          className={`w-full border rounded-xl px-3 py-2 transition outline-none cursor-pointer ${
+                            adminTheme === 'light'
+                              ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
+                              : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
+                          }`}
+                        >
+                          <option value="live">Publié (Live)</option>
+                          <option value="draft">Brouillon (Draft)</option>
+                        </select>
+                      </div>
+                    </div>
 
-                <div className="space-y-1">
-                  <label className={`text-[9px] font-bold uppercase tracking-wider ${
-                    adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                  }`}>Quantité en Stock</label>
-                  <input 
-                    type="number" 
-                    value={productForm.stock !== undefined ? productForm.stock : 100} 
-                    onChange={(e) => setProductForm({...productForm, stock: Number(e.target.value)})} 
-                    className={`w-full border rounded-xl px-3 py-2 text-right font-mono transition outline-none ${
-                      adminTheme === 'light'
-                        ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
-                        : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
-                    }`} 
-                    required 
-                  />
-                </div>
+                    <div className="space-y-1.5">
+                      <label className={`text-[9px] font-bold uppercase tracking-wider block ${
+                        adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
+                      }`}>Image du produit URL</label>
+                      <div className="flex gap-4 items-center">
+                        <input 
+                          type="text" 
+                          value={productForm.image} 
+                          onChange={(e) => setProductForm({...productForm, image: e.target.value})} 
+                          className={`flex-1 font-mono border rounded-xl px-3 py-2 transition outline-none ${
+                            adminTheme === 'light'
+                              ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
+                              : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
+                          }`} 
+                          required 
+                        />
+                        <label 
+                          htmlFor="product-file-input"
+                          className={`px-3 py-2 border font-bold rounded-xl text-xs uppercase cursor-pointer flex items-center gap-1 transition-all ${
+                            adminTheme === 'light'
+                              ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-sm'
+                              : 'bg-slate-950 hover:bg-slate-800 border-slate-800 text-slate-300'
+                          }`}
+                        >
+                          <Upload className="w-4.5 h-4.5" />
+                          {isUploading ? 'Upload...' : 'File'}
+                        </label>
+                        <input 
+                          id="product-file-input"
+                          type="file" 
+                          accept="image/*" 
+                          onChange={handleImageUpload} 
+                          className="hidden" 
+                        />
+                      </div>
+                    </div>
 
-                <div className="space-y-1">
-                  <label className={`text-[9px] font-bold uppercase tracking-wider ${
-                    adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                  }`}>Prix Public (DH)</label>
-                  <input 
-                    type="number" 
-                    value={productForm.price || ''} 
-                    onChange={(e) => setProductForm({...productForm, price: Number(e.target.value)})} 
-                    className={`w-full border rounded-xl px-3 py-2 text-right font-mono transition outline-none ${
-                      adminTheme === 'light'
-                        ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
-                        : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
-                    }`} 
-                    required 
-                  />
-                </div>
+                    <div className="space-y-1.5">
+                      <label className={`text-[9px] font-bold uppercase tracking-wider ${
+                        adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
+                      }`}>Tags (Séparés par virgules)</label>
+                      <input 
+                        type="text" 
+                        value={Array.isArray(productForm.tags) ? productForm.tags.join(', ') : ''} 
+                        onChange={(e) => setProductForm({...productForm, tags: e.target.value.split(',').map(t => t.trim())})} 
+                        placeholder="visage, hydratant, solaire" 
+                        className={`w-full border rounded-xl px-3 py-2 transition outline-none ${
+                          adminTheme === 'light'
+                            ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
+                            : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
+                        }`} 
+                      />
+                    </div>
 
-                <div className="space-y-1">
-                  <label className={`text-[9px] font-bold uppercase tracking-wider ${
-                    adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                  }`}>Prix Comparatif (DH)</label>
-                  <input 
-                    type="number" 
-                    value={productForm.comparePrice || ''} 
-                    onChange={(e) => setProductForm({...productForm, comparePrice: Number(e.target.value)})} 
-                    className={`w-full border rounded-xl px-3 py-2 text-right font-mono transition outline-none ${
-                      adminTheme === 'light'
-                        ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
-                        : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
-                    }`} 
-                  />
-                </div>
+                    <div className="space-y-1.5">
+                      <label className={`text-[9px] font-bold uppercase tracking-wider ${
+                        adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
+                      }`}>Description Produit</label>
+                      <textarea 
+                        value={productForm.description} 
+                        onChange={(e) => setProductForm({...productForm, description: e.target.value})} 
+                        className={`w-full border rounded-xl p-3 transition outline-none ${
+                          adminTheme === 'light'
+                            ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
+                            : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
+                        }`} 
+                        rows={4} 
+                      />
+                    </div>
+                  </div>
+                )}
 
-                <div className="space-y-1">
-                  <label className={`text-[9px] font-bold uppercase tracking-wider ${
-                    adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                  }`}>Code SKU</label>
-                  <input 
-                    type="text" 
-                    value={productForm.sku || ''} 
-                    onChange={(e) => setProductForm({...productForm, sku: e.target.value})} 
-                    className={`w-full border rounded-xl px-3 py-2 transition outline-none ${
-                      adminTheme === 'light'
-                        ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
-                        : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
-                    }`} 
-                    placeholder="e.g. SKU-BRAND-001"
-                  />
-                </div>
+                {modalTab === 'pricing' && (
+                  <div className="space-y-4 animate-in fade-in duration-200">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className={`text-[9px] font-bold uppercase tracking-wider ${
+                          adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
+                        }`}>Prix Public (DH)</label>
+                        <input 
+                          type="number" 
+                          value={productForm.price || ''} 
+                          onChange={(e) => setProductForm({...productForm, price: Number(e.target.value)})} 
+                          className={`w-full border rounded-xl px-3 py-2 text-right font-mono transition outline-none ${
+                            adminTheme === 'light'
+                              ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
+                              : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
+                          }`} 
+                          required 
+                        />
+                      </div>
 
-                <div className="space-y-1">
-                  <label className={`text-[9px] font-bold uppercase tracking-wider ${
-                    adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                  }`}>Coût d&apos;achat (DH)</label>
-                  <input 
-                    type="number" 
-                    value={productForm.buyingCost || ''} 
-                    onChange={(e) => setProductForm({...productForm, buyingCost: Number(e.target.value)})} 
-                    className={`w-full border rounded-xl px-3 py-2 text-right font-mono transition outline-none ${
-                      adminTheme === 'light'
-                        ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
-                        : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
-                    }`} 
-                    placeholder="0"
-                  />
-                </div>
-              </div>
+                      <div className="space-y-1">
+                        <label className={`text-[9px] font-bold uppercase tracking-wider ${
+                          adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
+                        }`}>Prix Comparatif (DH)</label>
+                        <input 
+                          type="number" 
+                          value={productForm.comparePrice || ''} 
+                          onChange={(e) => setProductForm({...productForm, comparePrice: Number(e.target.value)})} 
+                          className={`w-full border rounded-xl px-3 py-2 text-right font-mono transition outline-none ${
+                            adminTheme === 'light'
+                              ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
+                              : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
+                          }`} 
+                        />
+                      </div>
 
-              <div className="space-y-1.5">
-                <label className={`text-[9px] font-bold uppercase tracking-wider block ${
-                  adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                }`}>Image du produit URL</label>
-                <div className="flex gap-4 items-center">
-                  <input 
-                    type="text" 
-                    value={productForm.image} 
-                    onChange={(e) => setProductForm({...productForm, image: e.target.value})} 
-                    className={`flex-1 font-mono border rounded-xl px-3 py-2 transition outline-none ${
-                      adminTheme === 'light'
-                        ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
-                        : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
-                    }`} 
-                    required 
-                  />
-                  <label 
-                    htmlFor="product-file-input"
-                    className={`px-3 py-2 border font-bold rounded-xl text-xs uppercase cursor-pointer flex items-center gap-1 transition-all ${
-                      adminTheme === 'light'
-                        ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-sm'
-                        : 'bg-slate-950 hover:bg-slate-800 border-slate-800 text-slate-300'
-                    }`}
-                  >
-                    <Upload className="w-4.5 h-4.5" />
-                    {isUploading ? 'Upload...' : 'File'}
-                  </label>
-                  <input 
-                    id="product-file-input"
-                    type="file" 
-                    accept="image/*" 
-                    onChange={handleImageUpload} 
-                    className="hidden" 
-                  />
-                </div>
-              </div>
+                      <div className="space-y-1">
+                        <label className={`text-[9px] font-bold uppercase tracking-wider ${
+                          adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
+                        }`}>Quantité en Stock</label>
+                        <input 
+                          type="number" 
+                          value={productForm.stock !== undefined ? productForm.stock : 100} 
+                          onChange={(e) => setProductForm({...productForm, stock: Number(e.target.value)})} 
+                          className={`w-full border rounded-xl px-3 py-2 text-right font-mono transition outline-none ${
+                            adminTheme === 'light'
+                              ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
+                              : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
+                          }`} 
+                          required 
+                        />
+                      </div>
 
-              <div className="space-y-1.5">
-                <label className={`text-[9px] font-bold uppercase tracking-wider ${
-                  adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                }`}>Tags (Séparés par virgules)</label>
-                <input 
-                  type="text" 
-                  value={Array.isArray(productForm.tags) ? productForm.tags.join(', ') : ''} 
-                  onChange={(e) => setProductForm({...productForm, tags: e.target.value.split(',').map(t => t.trim())})} 
-                  placeholder="visage, hydratant, solaire" 
-                  className={`w-full border rounded-xl px-3 py-2 transition outline-none ${
-                    adminTheme === 'light'
-                      ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
-                      : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
-                  }`} 
-                />
-              </div>
+                      <div className="space-y-1">
+                        <label className={`text-[9px] font-bold uppercase tracking-wider ${
+                          adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
+                        }`}>Code SKU</label>
+                        <input 
+                          type="text" 
+                          value={productForm.sku || ''} 
+                          onChange={(e) => setProductForm({...productForm, sku: e.target.value})} 
+                          className={`w-full border rounded-xl px-3 py-2 transition outline-none ${
+                            adminTheme === 'light'
+                              ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
+                              : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
+                          }`} 
+                          placeholder="e.g. SKU-BRAND-001"
+                        />
+                      </div>
 
-              <div className="space-y-1.5">
-                <label className={`text-[9px] font-bold uppercase tracking-wider ${
-                  adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                }`}>Description Produit</label>
-                <textarea 
-                  value={productForm.description} 
-                  onChange={(e) => setProductForm({...productForm, description: e.target.value})} 
-                  className={`w-full border rounded-xl p-3 transition outline-none ${
-                    adminTheme === 'light'
-                      ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
-                      : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
-                  }`} 
-                  rows={2} 
-                />
-              </div>
+                      <div className="space-y-1">
+                        <label className={`text-[9px] font-bold uppercase tracking-wider ${
+                          adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
+                        }`}>Coût d&apos;achat (DH)</label>
+                        <input 
+                          type="number" 
+                          value={productForm.buyingCost || ''} 
+                          onChange={(e) => setProductForm({...productForm, buyingCost: Number(e.target.value)})} 
+                          className={`w-full border rounded-xl px-3 py-2 text-right font-mono transition outline-none ${
+                            adminTheme === 'light'
+                              ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
+                              : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
+                          }`} 
+                          placeholder="0"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-              {/* Collapsible Variants & Options Manager */}
-              <div className={`space-y-2 border-t pt-3 ${
-                adminTheme === 'light' ? 'border-slate-100' : 'border-slate-800'
-              }`}>
-                <button
-                  type="button"
-                  onClick={() => setIsVariantsExpanded(!isVariantsExpanded)}
-                  className={`flex items-center justify-between w-full py-1.5 px-3 border rounded-xl text-[10px] font-bold uppercase tracking-wider transition cursor-pointer ${
-                    adminTheme === 'light'
-                      ? 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200 shadow-sm'
-                      : 'bg-slate-950 hover:bg-slate-900/80 border-slate-800 text-slate-300'
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5">
-                    <Layers className="w-3.5 h-3.5 text-emerald-400" />
-                    Variantes et Options (Tailles / Sizing / Stock)
-                  </span>
-                  <span className="text-slate-500 font-mono text-[9px]">
-                    {isVariantsExpanded ? 'Masquer [-]' : 'Afficher [+]'}
-                  </span>
-                </button>
-
-                {isVariantsExpanded && (
-                  <div className={`space-y-4 p-4 rounded-2xl border animate-in fade-in-30 slide-in-from-top-1 duration-150 ${
-                    adminTheme === 'light' ? 'bg-slate-50/50 border-slate-200' : 'bg-slate-950/40 border-slate-800'
-                  }`}>
+                {modalTab === 'variants' && (
+                  <div className="space-y-4 animate-in fade-in duration-200">
                     <div className="flex justify-between items-center">
                       <p className="text-[10px] text-slate-500">Configurez des variations pour ce produit avec des prix et stocks distincts.</p>
                       <button
@@ -2903,7 +2949,7 @@ export default function CatalogTab({
                             stock: sumStock
                           });
                         }}
-                        className="px-2 py-1 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded-lg text-[9px] font-bold uppercase transition cursor-pointer"
+                        className="px-2 py-1 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded-lg text-[9px] font-bold uppercase transition cursor-pointer border-0 outline-none"
                       >
                         + Ajouter Variante
                       </button>
@@ -2912,7 +2958,7 @@ export default function CatalogTab({
                     {productForm.variants && productForm.variants.length > 0 ? (
                       <div className="space-y-3">
                         {productForm.variants.map((v, idx) => (
-                          <div key={v.id} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end border-b border-slate-800 pb-3 md:pb-1.5 last:border-b-0 last:pb-0">
+                          <div key={v.id} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end border-b border-slate-100 dark:border-slate-800 pb-3 md:pb-1.5 last:border-b-0 last:pb-0">
                             <div className="md:col-span-4 space-y-1">
                               <label className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Option (Ex: 30ml, 50ml)</label>
                               <input
@@ -2946,7 +2992,7 @@ export default function CatalogTab({
                                   adminTheme === 'light'
                                     ? 'bg-white border-slate-200 text-slate-800 focus:border-accent/50'
                                     : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
-                                }`}
+                                  }`}
                                 required
                               />
                             </div>
@@ -2995,7 +3041,7 @@ export default function CatalogTab({
                                   const sumStock = updated.reduce((sum, item) => sum + item.stock, 0);
                                   setProductForm({ ...productForm, stock: sumStock, variants: updated.length > 0 ? updated : undefined });
                                 }}
-                                className="px-2.5 py-1.5 bg-rose-500/10 text-rose-400 hover:bg-rose-500/25 border border-rose-500/15 rounded-lg text-[9px] uppercase font-bold transition-all w-full md:w-auto cursor-pointer"
+                                className="px-2.5 py-1.5 bg-rose-500/10 text-rose-400 hover:bg-rose-500/25 border border-rose-500/15 rounded-lg text-[9px] uppercase font-bold transition-all w-full md:w-auto cursor-pointer outline-none"
                               >
                                 Supprimer
                               </button>
@@ -3004,48 +3050,21 @@ export default function CatalogTab({
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-4 text-[10px] text-slate-500">
-                        Aucune variante active. Le produit utilise le prix et le stock globaux saisis ci-dessus.
+                      <div className="text-center py-8 text-[10px] text-slate-500">
+                        Aucune variante active. Le produit utilise le prix et le stock globaux saisis dans l&apos;onglet Tarifs.
                       </div>
                     )}
                   </div>
                 )}
-              </div>
 
-              {/* Collapsible SEO & Meta Manager */}
-              <div className={`space-y-2 border-t pt-3 ${
-                adminTheme === 'light' ? 'border-slate-100' : 'border-slate-800'
-              }`}>
-                <button
-                  type="button"
-                  onClick={() => setIsSeoExpanded(!isSeoExpanded)}
-                  className={`flex items-center justify-between w-full py-1.5 px-3 border rounded-xl text-[10px] font-bold uppercase tracking-wider transition cursor-pointer ${
-                    adminTheme === 'light'
-                      ? 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200 shadow-sm'
-                      : 'bg-slate-950 hover:bg-slate-900/80 border-slate-800 text-slate-300'
-                  }`}
-                >
-                  <span className="flex items-center gap-1.5">
-                    <Globe className="w-3.5 h-3.5 text-emerald-400" />
-                    Référencement (SEO) & Méta-données
-                  </span>
-                  <span className="text-slate-500 font-mono text-[9px]">
-                    {isSeoExpanded ? 'Masquer [-]' : 'Afficher [+]'}
-                  </span>
-                </button>
-                
-                {isSeoExpanded && (
-                  <div className={`space-y-3 p-3 rounded-2xl border animate-in fade-in-30 slide-in-from-top-1 duration-150 ${
-                    adminTheme === 'light' ? 'bg-slate-50/50 border-slate-200' : 'bg-slate-950/40 border-slate-800'
-                  }`}>
+                {modalTab === 'seo' && (
+                  <div className="space-y-4 animate-in fade-in duration-200">
                     <div className="space-y-1">
                       <div className="flex justify-between items-center">
                         <label className={`text-[9px] font-bold uppercase tracking-wider ${
                           adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
                         }`}>Slug URL personnalisé</label>
-                        <span className={`text-[9px] font-mono ${
-                          adminTheme === 'light' ? 'text-slate-500' : 'text-slate-500'
-                        }`}>para-officinal.ma/produit/<b className="text-emerald-400">{productForm.slug || 'url-slug'}</b></span>
+                        <span className="text-[9px] font-mono text-slate-500">para-officinal.ma/produit/<b className="text-emerald-500 dark:text-emerald-400">{productForm.slug || 'url-slug'}</b></span>
                       </div>
                       <input
                         type="text"
@@ -3105,7 +3124,7 @@ export default function CatalogTab({
                             ? 'bg-white border-slate-200 text-slate-800 focus:border-accent/50'
                             : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
                         }`}
-                        rows={2}
+                        rows={3}
                       />
                     </div>
 
@@ -3113,7 +3132,7 @@ export default function CatalogTab({
                     <div className="space-y-1.5">
                       <label className={`text-[9px] font-bold uppercase tracking-wider block ${
                         adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                      }`}>Aperçu du résultat Google (SERP)</label>
+                      }`}>Aperçu Google (SERP)</label>
                       <div className={`p-3 rounded-xl border font-sans select-text ${
                         adminTheme === 'light'
                           ? 'bg-white border-slate-200 text-slate-900 shadow-[0_1px_2px_rgba(0,0,0,0.02)]'
@@ -3126,11 +3145,11 @@ export default function CatalogTab({
                           <span>›</span>
                           <span className="text-slate-500 font-mono text-[9px]">{productForm.slug || 'slug-produit'}</span>
                         </div>
-                        <h4 className="text-[14px] text-[#1a0dab] hover:underline leading-tight font-medium truncate font-sans">
+                        <h4 className="text-[13px] text-[#1a0dab] hover:underline leading-tight font-medium truncate font-sans">
                           {productForm.metaTitle || productForm.title || 'Méta-Titre du Produit'}
                         </h4>
-                        <p className="text-[11px] text-[#4d5156] leading-relaxed mt-0.5 font-light font-sans break-words">
-                          {productForm.metaDescription || productForm.description || 'Veuillez saisir une méta-description pour avoir un aperçu réaliste de la façon dont ce produit apparaîtra dans les moteurs de recherche Google.'}
+                        <p className="text-[10px] text-[#4d5156] leading-relaxed mt-0.5 font-light font-sans break-words">
+                          {productForm.metaDescription || productForm.description || 'Veuillez saisir une méta-description.'}
                         </p>
                       </div>
                     </div>
@@ -3138,7 +3157,6 @@ export default function CatalogTab({
                 )}
               </div>
             </div>
-          </div>
 
           <div className={`p-6 border-t flex justify-end gap-3 text-xs flex-shrink-0 ${
             adminTheme === 'light'
@@ -3149,6 +3167,7 @@ export default function CatalogTab({
               type="button" 
               onClick={() => {
                 setIsNewProductModalOpen(false);
+                setModalTab('general');
                 setProductForm({
                   title: '', vendor: '', price: 0, comparePrice: 0, category: 'visage', tags: [], stock: 100, description: '', ingredients: '', usage: '', image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop', sku: '', buyingCost: 0, status: 'live'
                 });
@@ -3156,7 +3175,7 @@ export default function CatalogTab({
               className={`px-5 py-2.5 border font-bold rounded-xl text-xs uppercase tracking-wider transition-all duration-150 cursor-pointer ${
                 adminTheme === 'light'
                   ? 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-sm'
-                  : 'bg-slate-900 hover:bg-slate-800 border-slate-700 text-slate-350 hover:text-slate-200'
+                  : 'bg-slate-900 hover:bg-slate-800 border-slate-700 text-slate-300 hover:text-slate-200'
               }`}
             >
               Annuler
@@ -3164,17 +3183,17 @@ export default function CatalogTab({
             <button 
               type="submit" 
               disabled={isSavingProduct}
-              className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold uppercase tracking-wider rounded-xl hover:from-emerald-450 hover:to-teal-450 shadow-md shadow-emerald-500/10 hover:shadow-lg hover:shadow-emerald-500/20 transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 shadow-md shadow-emerald-500/10 hover:shadow-lg hover:shadow-emerald-500/20 transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSavingProduct ? 'Sauvegarde...' : (productForm.id ? 'Sauvegarder' : 'Créer le Produit')}
             </button>
           </div>
         </form>
       </div>
-    )}
+      )}
 
-    {/* -------------------- MODAL: CSV / EXCEL WIZARD IMPORTER -------------------- */}
-    {isImportModalOpen && (
+      {/* -------------------- MODAL: CSV / EXCEL WIZARD IMPORTER -------------------- */}
+      {isImportModalOpen && (
       <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-md flex items-center justify-center z-45 animate-in fade-in duration-200 select-none">
         <div className={`w-full max-w-3xl rounded-3xl border shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-250 ${
           adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-800' : 'bg-slate-900 border-slate-800 text-slate-200'
@@ -3768,7 +3787,7 @@ export default function CatalogTab({
           </div>
         </div>
       </div>
-    )}
+      )}
 
       {/* Unified Custom Confirmation Modal */}
       {confirmDialog && (
@@ -3782,7 +3801,7 @@ export default function CatalogTab({
           />
           <div className={`relative w-full max-w-sm rounded-2xl border p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150 ${
             adminTheme === 'light' 
-              ? 'bg-white border-slate-205 text-slate-800' 
+              ? 'bg-white border-slate-200 text-slate-800' 
               : 'bg-slate-900 border-slate-800 text-slate-100'
           }`}>
             <div className="flex items-start gap-3">
@@ -3823,10 +3842,10 @@ export default function CatalogTab({
                 }}
                 className={`px-4 py-2 text-white font-black rounded-xl shadow-md cursor-pointer transition-all duration-200 ${
                   confirmDialog.confirmStyle === 'danger'
-                    ? 'bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-450 hover:to-red-500 shadow-rose-500/10'
+                    ? 'bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500 shadow-rose-500/10'
                     : confirmDialog.confirmStyle === 'warning'
-                      ? 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-450 hover:to-orange-500 shadow-amber-500/10'
-                      : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-450 hover:to-teal-500 shadow-emerald-500/10'
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 shadow-amber-500/10'
+                      : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 shadow-emerald-500/10'
                 }`}
               >
                 {confirmDialog.confirmText}
@@ -3835,6 +3854,70 @@ export default function CatalogTab({
           </div>
         </div>
       )}
-  </div>
-);
+
+      {/* FLOATING GLASSMORPHIC BULK ACTIONS BAR */}
+      <div className={`floating-bulk-bar ${selectedProductIds.size > 0 && !isCatalogBulkMode ? 'active' : ''} ${
+        adminTheme === 'light' ? 'floating-bulk-bar-light' : 'floating-bulk-bar-dark'
+      }`}>
+        <span className="flex items-center gap-1.5 text-xs font-black text-emerald-600 dark:text-emerald-400">
+          <CheckSquare className="w-4 h-4 text-emerald-500" />
+          {selectedProductIds.size} produits sélectionnés
+        </span>
+        
+        <div className="w-px h-6 bg-slate-200 dark:bg-slate-800" />
+        
+        <select
+          value={bulkAction}
+          onChange={(e) => setBulkAction(e.target.value)}
+          className={`text-xs h-9 outline-none rounded-xl px-3 border cursor-pointer font-bold uppercase tracking-wider transition-colors duration-150 ${
+            adminTheme === 'light'
+              ? 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+              : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
+          }`}
+        >
+          <option value="">Actions groupées</option>
+          <option value="categorize">Changer de Catégorie</option>
+          <option value="publish">Publier (Live)</option>
+          <option value="draft">Mettre en brouillon</option>
+          <option value="delete">Supprimer définitivement</option>
+        </select>
+
+        {bulkAction === 'categorize' && (
+          <select
+            value={bulkCategory}
+            onChange={(e) => setBulkCategory(e.target.value)}
+            className={`text-xs h-9 outline-none rounded-xl px-3 border cursor-pointer font-semibold transition-colors duration-150 ${
+              adminTheme === 'light'
+                ? 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
+            }`}
+          >
+            <option value="">Choisir...</option>
+            {uniqueCategories.map(cat => (
+              <option key={cat} value={cat}>{cat.toUpperCase()}</option>
+            ))}
+          </select>
+        )}
+
+        <button
+          onClick={handleApplyBulkAction}
+          disabled={!bulkAction}
+          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition active:scale-95 cursor-pointer border-0 outline-none"
+        >
+          Appliquer
+        </button>
+
+        <button
+          onClick={() => {
+            setSelectedProductIds(new Set());
+            setBulkAction('');
+          }}
+          className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition p-1 cursor-pointer border-0 bg-transparent outline-none"
+          title="Annuler la sélection"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
 }

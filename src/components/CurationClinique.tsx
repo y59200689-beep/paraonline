@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Product } from '@/lib/data';
 import { useTranslation } from '@/context/LanguageContext';
-import { ShoppingCart, ArrowRight, Sparkles, Zap, Droplets, Star, Shield, FlaskConical } from 'lucide-react';
+import { ShoppingCart, ArrowRight, Sparkles, Zap, Droplets, Star, Shield, FlaskConical, HelpCircle } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import { useSettings } from '@/context/SettingsContext';
 
 // ─── Concern Definitions ─────────────────────────────────────────────────────
 
@@ -119,6 +120,11 @@ function matchesConcern(product: Product, concern: Concern): boolean {
   const ingredients = (product.ingredients || '').toLowerCase();
   const tags = (product.tags || []).join(' ').toLowerCase();
   const all = `${text} ${tags}`;
+  
+  // Explicit ID check
+  const productIds = (concern as any).productIds || [];
+  if (productIds.includes(product.id)) return true;
+
   const kwMatch = concern.keywords.some(kw => all.includes(kw));
   const ingMatch = concern.ingredientKeywords.some(kw => ingredients.includes(kw) || all.includes(kw));
   return kwMatch || ingMatch;
@@ -266,14 +272,59 @@ function SkeletonCard() {
 export const CurationClinique: React.FC = () => {
   const { language } = useTranslation();
   const isRTL = language === 'AR';
+  const { settings } = useSettings();
+  const customConcerns = settings.customConcerns || [];
 
-  const [activeConcernKey, setActiveConcernKey] = useState<string>(CONCERNS[0].key);
+  const iconMap: Record<string, React.ReactNode> = {
+    acne: <Zap size={16} strokeWidth={1.8} />,
+    spots: <Sparkles size={16} strokeWidth={1.8} />,
+    wrinkles: <Star size={16} strokeWidth={1.8} />,
+    antiage: <Star size={16} strokeWidth={1.8} />,
+    dryness: <Droplets size={16} strokeWidth={1.8} />,
+    hydration: <Droplets size={16} strokeWidth={1.8} />,
+    redness: <Shield size={16} strokeWidth={1.8} />,
+    soothing: <Shield size={16} strokeWidth={1.8} />,
+    suncare: <FlaskConical size={16} strokeWidth={1.8} />,
+    solaire: <FlaskConical size={16} strokeWidth={1.8} />,
+  };
+
+  const getIcon = (key: string) => iconMap[key] || iconMap[key.replace(/[^a-z]/g, '')] || <HelpCircle size={16} strokeWidth={1.8} />;
+
+  const dynamicConcerns = useMemo(() => {
+    if (customConcerns.length > 0) {
+      return customConcerns.map((c: any) => ({
+        key: c.id,
+        icon: getIcon(c.id),
+        labelFr: c.labelFr,
+        labelAr: c.labelAr,
+        taglineFr: c.taglineFr || '',
+        taglineAr: c.taglineAr || '',
+        accentColor: c.accentColor || 'bg-slate-50',
+        accentText: c.accentText || 'text-slate-700',
+        accentBorder: c.accentBorder || 'border-slate-200',
+        accentDot: c.accentDot || '#cbd5e1',
+        keywords: c.keywords || [],
+        ingredientKeywords: c.ingredientKeywords || [],
+        productIds: c.productIds || []
+      }));
+    }
+    return CONCERNS;
+  }, [customConcerns]);
+
+  const [activeConcernKey, setActiveConcernKey] = useState<string>(dynamicConcerns[0].key);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [gridVisible, setGridVisible] = useState(true);
   const tabsRef = useRef<HTMLDivElement>(null);
 
-  const activeConcern = CONCERNS.find(c => c.key === activeConcernKey) ?? CONCERNS[0];
+  // Sync activeConcernKey once concerns load
+  useEffect(() => {
+    if (dynamicConcerns.length > 0 && !dynamicConcerns.some((c: any) => c.key === activeConcernKey)) {
+      setActiveConcernKey(dynamicConcerns[0].key);
+    }
+  }, [dynamicConcerns]);
+
+  const activeConcern = dynamicConcerns.find((c: any) => c.key === activeConcernKey) ?? dynamicConcerns[0];
 
   useEffect(() => {
     fetch('/api/products?limit=500&page=1')
@@ -291,7 +342,7 @@ export const CurationClinique: React.FC = () => {
 
   return (
     <section className="w-full py-16 md:py-24 bg-white border-b border-slate-100">
-      <div className="max-w-[1400px] mx-auto px-4 md:px-8">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8">
 
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">
@@ -323,7 +374,7 @@ export const CurationClinique: React.FC = () => {
             className="flex items-center gap-2.5 overflow-x-auto py-3 snap-x snap-mandatory"
             style={{ scrollbarWidth: 'none' }}
           >
-            {CONCERNS.map(c => (
+            {dynamicConcerns.map((c: any) => (
               <div key={c.key} className="snap-start flex-shrink-0">
                 <ConcernTab
                   concern={c}

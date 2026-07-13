@@ -19,6 +19,7 @@ import dynamic from 'next/dynamic';
 // Component Imports
 import { Header } from './Header';
 import { CartBubbleCoordinator } from './CartBubbleCoordinator';
+import { OrderSuccessModal } from './OrderSuccessModal';
 
 const CartDrawer = dynamic(() => import('./CartDrawer').then(m => m.CartDrawer), { ssr: false });
 const WishlistDrawer = dynamic(() => import('./WishlistDrawer').then(m => m.WishlistDrawer), { ssr: false });
@@ -220,6 +221,9 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children }) => {
       dir={isRTL ? 'rtl' : 'ltr'}
       style={{ direction: isRTL ? 'rtl' : 'ltr' }}
     >
+      {/* Editorial Noise Overlay */}
+      <div className="editorial-noise" />
+
       {/* Header */}
       <Header />
 
@@ -448,6 +452,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children }) => {
 
       <CompareModal />
       <CartBubbleCoordinator />
+      <OrderSuccessModal />
 
       {/* FOMO Toast */}
       {showToast && (

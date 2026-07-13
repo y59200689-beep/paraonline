@@ -109,7 +109,7 @@ export const FlashSaleBanner: React.FC<FlashSaleBannerProps> = ({
     return (
       <div className="flex flex-col items-center">
         <div className="bg-slate-900/90 border border-slate-800 rounded-xl px-3.5 py-2.5 min-w-[64px] md:min-w-[72px] shadow-lg flex items-center justify-center">
-          <span className="font-mono text-xl md:text-3xl font-black text-emerald-450 tracking-tight tabular-nums">
+          <span className="font-mono text-xl md:text-3xl font-black text-emerald-400 tracking-tight tabular-nums">
             {formatted}
           </span>
         </div>
@@ -125,7 +125,7 @@ export const FlashSaleBanner: React.FC<FlashSaleBannerProps> = ({
       {/* Background Subtle Mesh Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/5 dark:bg-emerald-500/10 blur-[130px] rounded-full pointer-events-none" />
 
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8">
         {/* Double-Bezel Outer Shell (Contrast Dark Mode) */}
         <div className="p-2 md:p-3 rounded-[32px] bg-slate-950/95 border border-slate-900 shadow-2xl relative overflow-hidden">
           {/* Inner Content Core */}
@@ -170,7 +170,7 @@ export const FlashSaleBanner: React.FC<FlashSaleBannerProps> = ({
                 <div className="flex items-baseline gap-3">
                   <span className="text-3xl font-black text-white">{convertPrice(finalPrice)}</span>
                   <span className="text-sm text-slate-500 line-through">{convertPrice(originalProduct.price)}</span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-455 border border-emerald-500/20">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                     {language === 'AR' ? `وفر ${finalDiscountPercent}%` : `Économisez ${finalDiscountPercent}%`}
                   </span>
                 </div>
@@ -179,7 +179,7 @@ export const FlashSaleBanner: React.FC<FlashSaleBannerProps> = ({
               {/* Countdown Timer Board */}
               <div className="space-y-2.5 w-full">
                 <div className="flex items-center gap-1.5 text-xs text-slate-400 font-bold uppercase tracking-wider">
-                  <Clock className="w-3.5 h-3.5 text-emerald-450" />
+                  <Clock className="w-3.5 h-3.5 text-emerald-400" />
                   <span>{language === 'AR' ? 'ينتهي العرض خلال' : 'L’offre se termine dans'}</span>
                 </div>
                 <div className="flex items-center gap-2 md:gap-3">
@@ -195,7 +195,7 @@ export const FlashSaleBanner: React.FC<FlashSaleBannerProps> = ({
               <button
                 onClick={handleAddToCart}
                 disabled={isAdding}
-                className="group relative inline-flex items-center gap-4 pl-6 pr-2 py-2 rounded-full bg-emerald-450 hover:bg-emerald-400 text-slate-950 hover:text-slate-950 shadow-lg shadow-emerald-500/10 hover:shadow-emerald-400/25 active:scale-[0.98] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer w-full md:w-auto justify-between border-0 outline-none"
+                className="group relative inline-flex items-center gap-4 pl-6 pr-2 py-2 rounded-full bg-emerald-400 hover:bg-emerald-400 text-slate-950 hover:text-slate-950 shadow-lg shadow-emerald-500/10 hover:shadow-emerald-400/25 active:scale-[0.98] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer w-full md:w-auto justify-between border-0 outline-none"
               >
                 <span className="text-xs font-black uppercase tracking-wider">
                   {isAdding 

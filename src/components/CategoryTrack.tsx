@@ -111,7 +111,7 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
     <div className="w-full bg-[#FAFAFA] border-b border-slate-200/40 pt-6 pb-2 md:pt-8 md:pb-3 overflow-hidden">
       
       {/* Centered title & track container */}
-      <div className="max-w-[1400px] mx-auto px-5 sm:px-7 md:px-10 lg:px-12 relative w-full">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 relative w-full">
         {/* Header section aligns exactly with rest of page sections */}
         <div 
           className="mb-4 flex justify-between items-end select-none font-sans"
@@ -188,7 +188,7 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
                      <div className="relative w-full h-[60px] sm:h-[68px] md:h-[72px] lg:h-[74px] flex items-center justify-center overflow-hidden select-none mt-1">
                        <div className="relative w-[54px] h-[54px] sm:w-[62px] sm:h-[62px] md:w-[68px] md:h-[68px] lg:w-[70px] lg:h-[70px] pointer-events-none select-none group-hover:scale-105 transition-transform duration-500 ease-out">
                          <Image 
-                           src={customCategoryImages[cat.tag] || `/images/categories/${cat.tag}.png`}
+                           src={getOptimizedImageUrl(customCategoryImages[cat.tag] || `/images/categories/${cat.tag}.png`) || ''}
                            alt={t(cat.translationKey)}
                            fill
                            sizes="(max-width: 640px) 54px, (max-width: 768px) 62px, 70px"

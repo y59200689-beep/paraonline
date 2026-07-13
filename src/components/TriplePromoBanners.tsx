@@ -37,8 +37,8 @@ export const TriplePromoBanners: React.FC<TriplePromoBannersProps> = ({ cards })
       titleFr: "Soin Bébé\nMustela Doux",
       titleAr: "عناية الطفل\nمستحضرات لطيفة",
       price: "99 MAD",
-      bgImage: "/images/promo/card_baby.png",
-      overlayImage: "/images/categories/bebe.png",
+      bgImage: "/images/promo/card_baby_clean.png",
+      overlayImage: "/images/categories/bebe_transparent_v3.png",
       category: "bebe"
     },
     {
@@ -47,8 +47,8 @@ export const TriplePromoBanners: React.FC<TriplePromoBannersProps> = ({ cards })
       titleFr: "Packs Solaires\nAnthelios Pack",
       titleAr: "واقيات الشمس\nحماية متكاملة",
       price: "159 MAD",
-      bgImage: "/images/promo/card_sun.png",
-      overlayImage: "/images/categories/solaire.png",
+      bgImage: "/images/promo/card_sun_clean.png",
+      overlayImage: "/images/categories/solaire_transparent_v3.png",
       category: "solaire"
     },
     {
@@ -57,8 +57,8 @@ export const TriplePromoBanners: React.FC<TriplePromoBannersProps> = ({ cards })
       titleFr: "Anti-Âge\nRétinol",
       titleAr: "مكافحة الشيخوخة\nبروتوكول ريتينول",
       price: "199 MAD",
-      bgImage: "/images/promo/card_antiage.png",
-      overlayImage: "/images/categories/retinol-custom.png",
+      bgImage: "/images/promo/card_antiage_clean.png",
+      overlayImage: "/images/categories/retinol_transparent_v3.png",
       category: "visage"
     }
   ];
@@ -67,7 +67,7 @@ export const TriplePromoBanners: React.FC<TriplePromoBannersProps> = ({ cards })
 
   return (
     <section className="py-10 bg-[#FAFAFA] border-b border-slate-200/40 relative overflow-hidden reveal-on-scroll">
-      <div className="max-w-[1400px] mx-auto px-6 sm:px-10 md:px-12 lg:px-16 xl:px-20 relative z-10">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
           {list.slice(0, 3).map((card, idx) => (
             <div 

@@ -60,7 +60,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const activeGiftProduct = activeGiftRange
     ? products.find(p => p.id === activeGiftRange.productId) ?? null
     : null;
-  const { showToast } = useUi();
+  const { 
+    showToast,
+    setSuccessModalOpen,
+    setSuccessOrderId,
+    setSuccessWhatsappUrl
+  } = useUi();
 
   // ── Step & form state ────────────────────────────────────────────────────
   const [step, setStep] = useState<'cart' | 'checkout'>('cart');
@@ -178,7 +183,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       if (res.success) {
         earnPoints(Math.round(orderTotal), 'Nouvelle commande', 'طلب جديد');
         setFormFields({ name: '', phone: '', address: '', city: '', note: '' });
-        window.open(res.whatsappUrl, '_blank');
+        setSuccessOrderId(res.orderId ?? '');
+        setSuccessWhatsappUrl(res.whatsappUrl ?? '');
+        setSuccessModalOpen(true);
+        clearCart();
         onClose();
       }
     }
@@ -227,7 +235,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         setFormFields({ name: '', phone: '', address: '', city: '', note: '' });
         setCheckoutSubStep('info');
         setStep('cart');
-        window.open(res.whatsappUrl, '_blank');
+        setSuccessOrderId(res.orderId ?? '');
+        setSuccessWhatsappUrl(res.whatsappUrl ?? '');
+        setSuccessModalOpen(true);
+        clearCart();
         onClose();
       }
     } else if (paymentMethod === 'stripe') {

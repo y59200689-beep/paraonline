@@ -86,7 +86,7 @@ export const IngredientDictionary: React.FC = () => {
       <div className="absolute top-[5%] left-[3%] w-[500px] h-[500px] rounded-full bg-primary/4 blur-3xl pointer-events-none opacity-50" />
       <div className="absolute bottom-[5%] right-[3%] w-[500px] h-[500px] rounded-full bg-[#EC4899]/3 blur-3xl pointer-events-none opacity-50" />
 
-      <div className="max-w-7xl mx-auto relative z-10 px-6 sm:px-10 md:px-16 lg:px-20 xl:px-24">
+      <div className="max-w-[1400px] mx-auto relative z-10 px-4 sm:px-6 md:px-8">
 
         {/* ── Section Header ── */}
         <div className="flex flex-col items-center text-center mb-14 gap-4">

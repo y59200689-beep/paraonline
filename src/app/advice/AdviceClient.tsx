@@ -75,7 +75,7 @@ export default function AdviceClient({ initialArticles }: AdviceClientProps) {
                 className={`px-5 py-2.5 rounded-full text-xs font-bold transition duration-300 cursor-pointer active:scale-95 border ${
                   isActive 
                     ? 'bg-primary border-primary text-white shadow-md' 
-                    : 'bg-white/70 border-slate-200/80 text-slate-500 hover:text-slate-850 hover:bg-white'
+                    : 'bg-white/70 border-slate-200/80 text-slate-500 hover:text-slate-800 hover:bg-white'
                 }`}
               >
                 {isRTL ? cat.labelAr : cat.labelFr}

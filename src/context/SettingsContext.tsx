@@ -147,6 +147,21 @@ export interface Settings {
   diagnosticRules?: DiagnosticRule[];
   deliverySettings?: DeliverySettings;
   homepageSections?: HomepageSectionConfig;
+  customCategories?: { id: string; labelFr: string; labelAr: string }[];
+  customConcerns?: {
+    id: string;
+    labelFr: string;
+    labelAr: string;
+    taglineFr: string;
+    taglineAr: string;
+    keywords: string[];
+    ingredientKeywords: string[];
+    accentColor?: string;
+    accentText?: string;
+    accentBorder?: string;
+    accentDot?: string;
+    productIds?: number[];
+  }[];
 }
 
 export interface HomepageSectionItem {
@@ -245,6 +260,21 @@ export interface HomepageSectionConfig {
   featuredProductIds?: number[];
   
   sectionOrder?: HomepageSectionItem[];
+  customCategories?: { id: string; labelFr: string; labelAr: string }[];
+  customConcerns?: {
+    id: string;
+    labelFr: string;
+    labelAr: string;
+    taglineFr: string;
+    taglineAr: string;
+    keywords: string[];
+    ingredientKeywords: string[];
+    accentColor?: string;
+    accentText?: string;
+    accentBorder?: string;
+    accentDot?: string;
+    productIds?: number[];
+  }[];
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -469,7 +499,100 @@ export const DEFAULT_SETTINGS: Settings = {
     defaultDaysMin: 1,
     defaultDaysMax: 2,
     cityRules: []
-  }
+  },
+  customCategories: [
+    { id: 'visage', labelFr: 'Visage & Peau', labelAr: 'الوجه والبشرة' },
+    { id: 'solaire', labelFr: 'Protection Solaire', labelAr: 'واقيات الشمس' },
+    { id: 'cheveux', labelFr: 'Soin Capillaire', labelAr: 'العناية بالشعر' },
+    { id: 'kbeauty', labelFr: 'K-Beauty Coréenne', labelAr: 'الجمال الكوري' },
+    { id: 'offers', labelFr: 'Offres & Coffrets', labelAr: 'العروض والمجموعات' }
+  ],
+  customConcerns: [
+    {
+      id: 'acne',
+      labelFr: 'Acné & Imperfections',
+      labelAr: 'حب الشباب والشوائب',
+      taglineFr: 'BHA · Centella · Niacinamide',
+      taglineAr: 'BHA · سنتيلا · نياسيناميد',
+      accentColor: 'bg-emerald-50',
+      accentText: 'text-emerald-700',
+      accentBorder: 'border-emerald-200',
+      accentDot: '#059669',
+      keywords: ['acné', 'acne', 'imperfection', 'bouton', 'sebum', 'pore', 'purifi', 'comedone', 'blackhead', 'point noir', 'séb'],
+      ingredientKeywords: ['salicylic', 'benzoyl', 'sulfur', 'centella', 'niacinamide'],
+      productIds: [3, 22, 15, 16, 17]
+    },
+    {
+      id: 'spots',
+      labelFr: 'Éclat & Anti-taches',
+      labelAr: 'نضارة البشرة والبقع',
+      taglineFr: 'Vitamine C · Tranexamique · Kojic',
+      taglineAr: 'فيتامين C · ترانيكساميك · كوجيك',
+      accentColor: 'bg-amber-50',
+      accentText: 'text-amber-700',
+      accentBorder: 'border-amber-200',
+      accentDot: '#d97706',
+      keywords: ['tache', 'éclat', 'luminos', 'bright', 'pigment', 'mélasma', 'anti-taches', 'teint', 'terne', 'unifi'],
+      ingredientKeywords: ['tranexamic', 'ascorbic', 'ascorbyl', 'kojic', 'arbutin', 'vitamin c', 'vitamine c'],
+      productIds: [3, 14]
+    },
+    {
+      id: 'wrinkles',
+      labelFr: 'Anti-âge & Fermeté',
+      labelAr: 'مكافحة الشيخوخة',
+      taglineFr: 'Rétinol · Peptides · Collagène',
+      taglineAr: 'ريتينول · ببتيدات · كولاجين',
+      accentColor: 'bg-rose-50',
+      accentText: 'text-rose-700',
+      accentBorder: 'border-rose-200',
+      accentDot: '#e11d48',
+      keywords: ['anti-ride', 'anti ride', 'ride', 'fermeté', 'ferme', 'lift', 'âge', 'vieill', 'collagène', 'elastin', 'jeunesse', 'contour', 'anti-aging'],
+      ingredientKeywords: ['retinol', 'retinal', 'peptide', 'collagen', 'bakuchiol', 'adenosine', 'coenzyme'],
+      productIds: [8, 5, 6]
+    },
+    {
+      id: 'dryness',
+      labelFr: 'Hydratation & Barrière',
+      labelAr: 'ترطيب وحماية البشرة',
+      taglineFr: 'Acide Hyaluronique · Céramides',
+      taglineAr: 'حمض الهيالورونيك · سيراميد',
+      accentColor: 'bg-sky-50',
+      accentText: 'text-sky-700',
+      accentBorder: 'border-sky-200',
+      accentDot: '#0284c7',
+      keywords: ['hydrat', 'hydra', 'barrière', 'séch', 'déshydrat', 'moisture', 'sérum', 'crème', 'nourris', 'douceur'],
+      ingredientKeywords: ['hyaluronic', 'hyaluronate', 'ceramide', 'squalane', 'glycerin', 'panthenol'],
+      productIds: [5, 6, 7, 17]
+    },
+    {
+      id: 'redness',
+      labelFr: 'Apaisant & Sensible',
+      labelAr: 'مهدئ للبشرة الحساسة',
+      taglineFr: 'Centella · Madécassoside · Aloe',
+      taglineAr: 'سنتيلا · مديكاسوسيد · ألوفيرا',
+      accentColor: 'bg-teal-50',
+      accentText: 'text-teal-700',
+      accentBorder: 'border-teal-200',
+      accentDot: '#0d9488',
+      keywords: ['apais', 'sensible', 'rougeur', 'calme', 'sooth', 'réactif', 'toleriane', 'cica', 'cicatri'],
+      ingredientKeywords: ['centella', 'madecassoside', 'aloe', 'chamomile', 'allantoin', 'bisabolol'],
+      productIds: [17, 16, 15]
+    },
+    {
+      id: 'suncare',
+      labelFr: 'Solaire & Protection',
+      labelAr: 'واقي الشمس والحماية',
+      taglineFr: 'SPF 30 · SPF 50 · SPF 50+',
+      taglineAr: 'SPF 30 · SPF 50 · SPF 50+',
+      accentColor: 'bg-orange-50',
+      accentText: 'text-orange-700',
+      accentBorder: 'border-orange-200',
+      accentDot: '#ea580c',
+      keywords: ['solaire', 'spf', 'uva', 'uvb', 'écran', 'sun', 'protection', 'solar', 'bronz'],
+      ingredientKeywords: ['zinc oxide', 'titanium dioxide', 'avobenzone', 'octocrylene', 'tinosorb'],
+      productIds: [10, 11]
+    }
+  ]
 };
 
 interface SettingsContextProps {

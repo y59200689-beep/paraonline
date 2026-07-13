@@ -503,13 +503,13 @@ export default function RestockForecastingTab() {
       <div className={`border rounded-[24px] overflow-hidden ${
         adminTheme === 'light' 
           ? 'bg-white border-slate-200/80 shadow-sm' 
-          : 'bg-slate-950 border-slate-850'
+          : 'bg-slate-950 border-slate-800'
       }`}>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className={`border-b text-[10px] font-bold uppercase tracking-wider ${
-                adminTheme === 'light' ? 'bg-slate-50/50 border-slate-200 text-slate-500' : 'bg-slate-900/20 border-slate-850 text-slate-400'
+                adminTheme === 'light' ? 'bg-slate-50/50 border-slate-200 text-slate-500' : 'bg-slate-900/20 border-slate-800 text-slate-400'
               }`}>
                 <th className="px-5 py-4 w-12 text-center">
                   {selectedVendor !== 'all' && (
@@ -518,7 +518,7 @@ export default function RestockForecastingTab() {
                       disabled={isReadOnly}
                       onChange={(e) => handleSelectAll(e.target.checked)}
                       checked={filteredProducts.length > 0 && filteredProducts.every(p => selectedProducts[p.id])}
-                      className="rounded border-slate-350 dark:border-slate-800 text-emerald-500 focus:ring-emerald-500 w-3.5 h-3.5 cursor-pointer disabled:opacity-50"
+                      className="rounded border-slate-300 dark:border-slate-800 text-emerald-500 focus:ring-emerald-500 w-3.5 h-3.5 cursor-pointer disabled:opacity-50"
                     />
                   )}
                 </th>
@@ -531,7 +531,7 @@ export default function RestockForecastingTab() {
                 <th className="px-5 py-4 text-center">Suggestion (Cible: {targetCoverage}j)</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200/50 dark:divide-slate-850/80">
+            <tbody className="divide-y divide-slate-200/50 dark:divide-slate-800/80">
               {filteredProducts.length > 0 ? (
                 filteredProducts.map((product) => {
                   const isChecked = !!selectedProducts[product.id];
@@ -551,7 +551,7 @@ export default function RestockForecastingTab() {
                           disabled={isCheckboxDisabled}
                           checked={isChecked}
                           onChange={(e) => handleSelectProduct(product.id, e.target.checked)}
-                          className="rounded border-slate-350 dark:border-slate-800 text-emerald-500 focus:ring-emerald-500 w-3.5 h-3.5 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
+                          className="rounded border-slate-300 dark:border-slate-800 text-emerald-500 focus:ring-emerald-500 w-3.5 h-3.5 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
                           title={selectedVendor === 'all' ? "Filtrez par fournisseur spécifique d'abord" : ""}
                         />
                       </td>
@@ -693,7 +693,7 @@ export default function RestockForecastingTab() {
                   <FileText className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className={`font-black text-base tracking-tight ${adminTheme === 'light' ? 'text-slate-850' : 'text-slate-100'}`}>
+                  <h3 className={`font-black text-base tracking-tight ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-100'}`}>
                     Créateur de Bon de Commande (Purchase Order)
                   </h3>
                   <p className={`text-xs font-light ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
@@ -809,7 +809,7 @@ export default function RestockForecastingTab() {
                                 }));
                               }}
                               className={`w-20 text-center font-mono text-xs h-8 rounded-lg border outline-none focus:ring-1 focus:ring-emerald-500 ${
-                                adminTheme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-950 border-slate-850'
+                                adminTheme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-950 border-slate-800'
                               }`}
                             />
                           </td>
@@ -827,7 +827,7 @@ export default function RestockForecastingTab() {
                                 }));
                               }}
                               className={`w-24 text-center font-mono text-xs h-8 rounded-lg border outline-none focus:ring-1 focus:ring-emerald-500 ${
-                                adminTheme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-950 border-slate-850'
+                                adminTheme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-950 border-slate-800'
                               }`}
                             />
                           </td>
@@ -954,7 +954,7 @@ export default function RestockForecastingTab() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setIsPreviewOpen(false)}
-                  className="px-3.5 h-9 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-400 transition"
+                  className="px-3.5 h-9 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 transition"
                 >
                   Fermer
                 </button>
@@ -969,7 +969,7 @@ export default function RestockForecastingTab() {
             </div>
 
             {/* Document sheet A4 */}
-            <div className="bg-white text-slate-950 p-12 md:p-16 rounded-[4px] shadow-2xl border border-slate-250 min-h-[297mm] flex flex-col justify-between print:shadow-none print:border-none print:p-0 print:m-0 font-body leading-relaxed text-[13px]">
+            <div className="bg-white text-slate-950 p-12 md:p-16 rounded-[4px] shadow-2xl border border-slate-200 min-h-[297mm] flex flex-col justify-between print:shadow-none print:border-none print:p-0 print:m-0 font-body leading-relaxed text-[13px]">
               <div>
                 {/* 1. Header Grid */}
                 <div className="flex justify-between items-start border-b-2 border-slate-900 pb-8">
@@ -1054,7 +1054,7 @@ export default function RestockForecastingTab() {
 
               {/* 4. Footer Calculations / Signatures */}
               <div className="font-sans">
-                <div className="flex justify-between items-start gap-8 border-t border-slate-250 pt-8">
+                <div className="flex justify-between items-start gap-8 border-t border-slate-200 pt-8">
                   {/* Notes / Special Instructions */}
                   <div className="flex-1 max-w-md text-xs text-slate-500 space-y-2 leading-relaxed">
                     <p className="font-bold text-slate-700 uppercase text-[9px] tracking-wider">Instructions Spéciales:</p>

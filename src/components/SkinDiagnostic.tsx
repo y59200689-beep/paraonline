@@ -201,9 +201,16 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
 
     setMatchedRule(bestRule);
 
+    const customConcerns = settings.customConcerns || [];
+    const targetConcern = customConcerns.find((c: any) => c.id === concern);
+
+    const targetProductIds = targetConcern?.productIds;
+
     let recs: Product[] = [];
     if (bestRule && bestRule.productIds && bestRule.productIds.length > 0) {
       recs = products.filter(p => bestRule.productIds.includes(p.id));
+    } else if (targetProductIds && targetProductIds.length > 0) {
+      recs = products.filter(p => targetProductIds.includes(p.id));
     } else {
       // Find custom matches based on key concern
       if (concern === 'acne') {
@@ -413,7 +420,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
               <span className="text-[11.5px] font-black uppercase tracking-[0.2em] text-primary-dark dark:text-emerald-400 block leading-none">
                 Dermo-IA Diagnostic
               </span>
-              <span className="text-[8.5px] text-slate-500 dark:text-slate-450 font-extrabold tracking-wider uppercase block leading-none">
+              <span className="text-[8.5px] text-slate-500 dark:text-slate-400 font-extrabold tracking-wider uppercase block leading-none">
                 Clinical Skin Profiling
               </span>
             </div>
@@ -501,10 +508,10 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                 ].map((item, idx) => (
                   <div 
                     key={idx} 
-                    className="flex-1 flex flex-col items-center gap-3 bg-white/40 dark:bg-stone-800/20 rounded-2xl border border-stone-250/20 dark:border-stone-800 hover:border-primary/25 hover:bg-white/60 dark:hover:bg-stone-800/30 transition-all duration-500 shadow-sm text-center group hover:-translate-y-0.5 p-4"
+                    className="flex-1 flex flex-col items-center gap-3 bg-white/40 dark:bg-stone-800/20 rounded-2xl border border-stone-200/20 dark:border-stone-800 hover:border-primary/25 hover:bg-white/60 dark:hover:bg-stone-800/30 transition-all duration-500 shadow-sm text-center group hover:-translate-y-0.5 p-4"
                   >
                     <div 
-                      className="w-8 h-8 rounded-full bg-stone-105/50 text-primary-dark dark:text-emerald-400 flex items-center justify-center font-black text-xs shrink-0 border border-stone-200/40 dark:border-stone-850 shadow-sm transition-transform duration-300 group-hover:scale-105"
+                      className="w-8 h-8 rounded-full bg-stone-100/50 text-primary-dark dark:text-emerald-400 flex items-center justify-center font-black text-xs shrink-0 border border-stone-200/40 dark:border-stone-800 shadow-sm transition-transform duration-300 group-hover:scale-105"
                     >
                       {item.num}
                     </div>
@@ -568,7 +575,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                           style={{ textAlign: isRTL ? 'right' : 'left' }}
                         >
                           <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 transition-transform ${
-                            isSelected ? 'bg-primary/10 text-primary scale-105' : 'bg-stone-100 dark:bg-stone-850 text-stone-500 dark:text-stone-400'
+                            isSelected ? 'bg-primary/10 text-primary scale-105' : 'bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400'
                           }`}>
                             {opt.emoji}
                           </div>

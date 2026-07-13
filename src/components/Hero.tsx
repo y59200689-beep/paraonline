@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useTranslation } from '@/context/LanguageContext';
 import { useSettings } from '@/context/SettingsContext';
 import { Sparkles, Shield, Activity, ArrowRight, ArrowLeft } from 'lucide-react';
+import { gsap } from 'gsap';
 
 interface HeroProps {
   onOpenDiagnostic: () => void;
@@ -16,6 +17,47 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
   const { settings } = useSettings();
   const isRTL = language === 'AR';
   const [isHovered, setIsHovered] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || !containerRef.current) return;
+
+    // Reset before animating
+    gsap.set(containerRef.current.querySelectorAll('.hero-card-gsap'), { clearProps: 'all' });
+    gsap.set(containerRef.current.querySelectorAll('.hero-word-char'), { clearProps: 'all' });
+
+    // Animate cards
+    gsap.fromTo(
+      containerRef.current.querySelectorAll('.hero-card-gsap'),
+      { opacity: 0, y: 30 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        stagger: 0.1,
+        ease: 'power3.out',
+      }
+    );
+
+    // Animate heading words
+    gsap.fromTo(
+      containerRef.current.querySelectorAll('.hero-word-char'),
+      { opacity: 0, y: '100%' },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        stagger: 0.05,
+        ease: 'power4.out',
+        delay: 0.3,
+      }
+    );
+  }, [mounted, language]);
 
   const getBannerAction = (banner: any) => {
     if (banner.linkType === 'diagnostic') return onOpenDiagnostic;
@@ -71,9 +113,12 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
     },
   };
 
+  const titleText = isRTL ? CARDS.card1.title_ar : CARDS.card1.title_fr;
+  const titleWords = titleText.split(' ');
+
   return (
-    <section className="hero-section w-full bg-background !pt-3 !pb-6 md:!pt-4 md:!pb-8">
-      <div className="max-w-[1400px] mx-auto px-6">
+    <section ref={containerRef} className="hero-section w-full bg-background !pt-3 !pb-6 md:!pt-4 md:!pb-8">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8">
         
         {/* Editorial Responsive Layout */}
         <div 
@@ -84,16 +129,17 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
           {/* Card 1: Left Main Banner (Spans 2 columns, full height) */}
           <div 
             onClick={CARDS.card1.action}
-            className="hero-card-enter hero-card-delay-1 md:col-span-2 lg:col-span-2 relative group overflow-hidden rounded-3xl ring-1 ring-black/6 bg-white shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 cursor-pointer h-[280px] md:h-[480px] lg:h-[520px] shimmer-sweep-1"
+            className="hero-card-gsap md:col-span-2 lg:col-span-2 relative group overflow-hidden rounded-3xl ring-1 ring-black/6 bg-white shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 cursor-pointer h-[280px] md:h-[480px] lg:h-[520px] shimmer-sweep-1 card-press-feedback"
+            style={{ opacity: mounted ? 0 : 1 }}
           >
-            {/* Background image parallax — 3s ease-out-quart for visible breath */}
+            {/* Background image parallax — 2s ease-out-premium for visible breath */}
             <Image
               src={CARDS.card1.bgImage}
               alt=""
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 50vw"
               priority
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-[3000ms] ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-[1.04]"
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2000ms] ease-[var(--ease-out-premium)] group-hover:scale-[1.06]"
             />
             {/* Soft Ambient Radial/Linear Overlay */}
             <div className="absolute inset-0 bg-gradient-to-r from-primary-dark/85 via-primary-dark/45 to-transparent" style={{ direction: 'ltr' }} />
@@ -126,10 +172,15 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
                 {/* Heading — curtain mask wipe */}
                 <span className="anim-heading-wrap">
                   <h1
-                    className="anim-heading-text active text-xl md:text-4xl font-black font-heading leading-tight tracking-tight text-white"
-                    style={{ transitionDelay: '0.4s' }}
+                    className="active text-xl md:text-4xl font-black font-heading leading-tight tracking-tight text-white flex flex-wrap gap-x-2"
                   >
-                    {isRTL ? CARDS.card1.title_ar : CARDS.card1.title_fr}
+                    {titleWords.map((word, idx) => (
+                      <span key={idx} className="inline-block overflow-hidden h-fit">
+                        <span className="hero-word-char inline-block translate-y-full opacity-0">
+                          {word}
+                        </span>
+                      </span>
+                    ))}
                   </h1>
                 </span>
 
@@ -150,10 +201,10 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
                     }}
                     onMouseEnter={() => setIsHovered(true)}
                     onMouseLeave={() => setIsHovered(false)}
-                    className="group/btn inline-flex items-center gap-3 pl-5 pr-2 py-2 text-xs font-black uppercase tracking-wider rounded-full transition-all duration-300 shadow-md cursor-pointer active:scale-95 border-0 outline-none hover:shadow-lg hover:-translate-y-0.5"
+                    className="group/btn inline-flex items-center gap-3 pl-5 pr-2 py-2 text-xs font-black uppercase tracking-wider rounded-full shadow-md cursor-pointer border-0 outline-none hover:shadow-lg hover:-translate-y-0.5 btn-press-feedback"
                     style={{
                       backgroundColor: isHovered ? 'var(--color-gold-hover)' : 'var(--color-accent)',
-                      transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+                      transition: 'background-color 0.3s var(--ease-out-premium)'
                     }}
                   >
                     <span style={{ color: '#ffffff', fontWeight: 900 }}>{isRTL ? CARDS.card1.cta_ar : CARDS.card1.cta_fr}</span>
@@ -174,7 +225,8 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
           {/* Card 2: Desktop Middle Tall Banner */}
           <div 
             onClick={CARDS.card2.action}
-            className="hidden md:block hero-card-enter hero-card-delay-2 lg:col-span-1 relative group overflow-hidden rounded-2xl ring-1 ring-black/6 bg-white shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 cursor-pointer h-[380px] md:h-[480px] lg:h-[520px] shimmer-sweep-2"
+            className="hidden md:block hero-card-gsap lg:col-span-1 relative group overflow-hidden rounded-2xl ring-1 ring-black/6 bg-white shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 cursor-pointer h-[380px] md:h-[480px] lg:h-[520px] shimmer-sweep-2 card-press-feedback"
+            style={{ opacity: mounted ? 0 : 1 }}
           >
             {/* Background image */}
             <Image
@@ -182,7 +234,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
               alt=""
               fill
               sizes="(max-width: 768px) 0vw, (max-width: 1024px) 25vw, 25vw"
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-[3000ms] ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-[1.04]"
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2000ms] ease-[var(--ease-out-premium)] group-hover:scale-[1.06]"
             />
             {/* Standard bottom visual gradient fade */}
             <div className="absolute inset-0 bg-gradient-to-t from-primary-dark/85 via-primary-dark/35 to-transparent" />
@@ -226,7 +278,8 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
             {/* Card 3: Top Half Card */}
             <div 
               onClick={CARDS.card3.action}
-              className="hero-card-enter hero-card-delay-3 relative group overflow-hidden rounded-2xl ring-1 ring-black/6 bg-white shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 cursor-pointer h-[178px] md:h-[228px] lg:h-[248px] shimmer-sweep-3"
+              className="hero-card-gsap relative group overflow-hidden rounded-2xl ring-1 ring-black/6 bg-white shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 cursor-pointer h-[178px] md:h-[228px] lg:h-[248px] shimmer-sweep-3 card-press-feedback"
+              style={{ opacity: mounted ? 0 : 1 }}
             >
               {/* Background image */}
               <Image
@@ -234,7 +287,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
                 alt=""
                 fill
                 sizes="(max-width: 768px) 0vw, (max-width: 1024px) 25vw, 25vw"
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-[3000ms] ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-[1.04]"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2000ms] ease-[var(--ease-out-premium)] group-hover:scale-[1.06]"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-primary-dark/85 via-primary-dark/35 to-transparent" />
 
@@ -270,7 +323,8 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
             {/* Card 4: Bottom Half Card */}
             <div 
               onClick={CARDS.card4.action}
-              className="hero-card-enter hero-card-delay-4 relative group overflow-hidden rounded-2xl ring-1 ring-black/6 bg-white shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 cursor-pointer h-[178px] md:h-[228px] lg:h-[248px] shimmer-sweep-3"
+              className="hero-card-gsap relative group overflow-hidden rounded-2xl ring-1 ring-black/6 bg-white shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 cursor-pointer h-[178px] md:h-[228px] lg:h-[248px] shimmer-sweep-3 card-press-feedback"
+              style={{ opacity: mounted ? 0 : 1 }}
             >
               {/* Background image */}
               <Image
@@ -278,7 +332,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
                 alt=""
                 fill
                 sizes="(max-width: 768px) 0vw, (max-width: 1024px) 25vw, 25vw"
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-[3000ms] ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-[1.04]"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2000ms] ease-[var(--ease-out-premium)] group-hover:scale-[1.06]"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-primary-dark/85 via-primary-dark/35 to-transparent" />
 
@@ -325,14 +379,15 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
             {/* Mobile Card 2 */}
             <div 
               onClick={CARDS.card2.action}
-              className="hero-card-enter hero-card-delay-2 w-[60vw] shrink-0 snap-start snap-always relative group overflow-hidden rounded-2xl border border-slate-200/50 bg-white h-[160px] cursor-pointer shimmer-sweep-2"
+              className="hero-card-gsap w-[60vw] shrink-0 snap-start snap-always relative group overflow-hidden rounded-2xl border border-slate-200/50 bg-white h-[160px] cursor-pointer shimmer-sweep-2 card-press-feedback"
+              style={{ opacity: mounted ? 0 : 1 }}
             >
               <Image
                 src={CARDS.card2.bgImage}
                 alt=""
                 fill
                 sizes="60vw"
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-[3000ms] ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-[1.04]"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2000ms] ease-[var(--ease-out-premium)] group-hover:scale-[1.06]"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-primary-dark/90 via-primary-dark/45 to-transparent" />
               <div className="absolute inset-0 p-4 flex flex-col justify-end text-white">
@@ -354,14 +409,15 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
             {/* Mobile Card 3 */}
             <div 
               onClick={CARDS.card3.action}
-              className="hero-card-enter hero-card-delay-3 w-[60vw] shrink-0 snap-start snap-always relative group overflow-hidden rounded-2xl border border-slate-200/50 bg-white h-[160px] cursor-pointer shimmer-sweep-3"
+              className="hero-card-gsap w-[60vw] shrink-0 snap-start snap-always relative group overflow-hidden rounded-2xl border border-slate-200/50 bg-white h-[160px] cursor-pointer shimmer-sweep-3 card-press-feedback"
+              style={{ opacity: mounted ? 0 : 1 }}
             >
               <Image
                 src={CARDS.card3.bgImage}
                 alt=""
                 fill
                 sizes="60vw"
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-[3000ms] ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-[1.04]"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2000ms] ease-[var(--ease-out-premium)] group-hover:scale-[1.06]"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-primary-dark/90 via-primary-dark/45 to-transparent" />
               <div className="absolute inset-0 p-4 flex flex-col justify-end text-white">
@@ -383,14 +439,15 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
             {/* Mobile Card 4 */}
             <div 
               onClick={CARDS.card4.action}
-              className="hero-card-enter hero-card-delay-4 w-[60vw] shrink-0 snap-start snap-always relative group overflow-hidden rounded-2xl border border-slate-200/50 bg-white h-[160px] cursor-pointer shimmer-sweep-3"
+              className="hero-card-gsap w-[60vw] shrink-0 snap-start snap-always relative group overflow-hidden rounded-2xl border border-slate-200/50 bg-white h-[160px] cursor-pointer shimmer-sweep-3 card-press-feedback"
+              style={{ opacity: mounted ? 0 : 1 }}
             >
               <Image
                 src={CARDS.card4.bgImage}
                 alt=""
                 fill
                 sizes="60vw"
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-[3000ms] ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-[1.04]"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2000ms] ease-[var(--ease-out-premium)] group-hover:scale-[1.06]"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-primary-dark/90 via-primary-dark/45 to-transparent" />
               <div className="absolute inset-0 p-4 flex flex-col justify-end text-white">

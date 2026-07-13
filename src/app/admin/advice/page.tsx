@@ -82,7 +82,7 @@ function MarkdownEditor({ value, onChange, disabled, placeholder, lang, adminThe
     html = html.replace(/```([a-zA-Z0-9]*)\n([\s\S]*?)```/g, '<pre class="bg-slate-950 text-slate-200 p-3.5 rounded-xl font-mono text-[10px] overflow-auto my-3 border border-slate-800"><code>$2</code></pre>');
     html = html.replace(/`([^`]+)`/g, '<code class="bg-slate-100 dark:bg-slate-900 px-1.5 py-0.5 rounded font-mono text-[10px] border dark:border-slate-800 text-rose-500 font-bold">$1</code>');
     html = html.replace(/^# (.*?)$/gm, '<h1 class="text-lg font-black mt-4 mb-2">$1</h1>');
-    html = html.replace(/^## (.*?)$/gm, '<h2 class="text-md font-extrabold mt-4 mb-2 border-b pb-1 dark:border-slate-850">$1</h2>');
+    html = html.replace(/^## (.*?)$/gm, '<h2 class="text-md font-extrabold mt-4 mb-2 border-b pb-1 dark:border-slate-800">$1</h2>');
     html = html.replace(/^### (.*?)$/gm, '<h3 class="text-sm font-extrabold mt-3 mb-1.5">$1</h3>');
     html = html.replace(/^\- (.*?)$/gm, '<li class="ml-4 list-disc">$1</li>');
     html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
@@ -115,7 +115,7 @@ function MarkdownEditor({ value, onChange, disabled, placeholder, lang, adminThe
       light ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/20 border-slate-800/80'
     }`}>
       <div className={`flex flex-wrap justify-between items-center px-4 py-2 border-b gap-2 ${
-        light ? 'bg-slate-50 border-slate-200/60' : 'bg-slate-950/40 border-slate-850'
+        light ? 'bg-slate-50 border-slate-200/60' : 'bg-slate-950/40 border-slate-800'
       }`}>
         <div className={`flex items-center gap-1.5 transition-opacity ${activeTab === 'preview' ? 'opacity-30 pointer-events-none' : ''}`}>
           <button
@@ -123,7 +123,7 @@ function MarkdownEditor({ value, onChange, disabled, placeholder, lang, adminThe
             onClick={() => insertMarkdown('bold', 'texte gras')}
             title="Gras"
             disabled={disabled}
-            className={`p-1.5 rounded hover:bg-slate-550/10 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition cursor-pointer`}
+            className={`p-1.5 rounded hover:bg-slate-500/10 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition cursor-pointer`}
           >
             <Bold className="w-3.5 h-3.5" />
           </button>
@@ -132,7 +132,7 @@ function MarkdownEditor({ value, onChange, disabled, placeholder, lang, adminThe
             onClick={() => insertMarkdown('italic', 'texte italique')}
             title="Italique"
             disabled={disabled}
-            className={`p-1.5 rounded hover:bg-slate-550/10 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition cursor-pointer`}
+            className={`p-1.5 rounded hover:bg-slate-500/10 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition cursor-pointer`}
           >
             <Italic className="w-3.5 h-3.5" />
           </button>
@@ -141,7 +141,7 @@ function MarkdownEditor({ value, onChange, disabled, placeholder, lang, adminThe
             onClick={() => insertMarkdown('heading', 'Titre')}
             title="Titre H3"
             disabled={disabled}
-            className={`p-1.5 rounded hover:bg-slate-550/10 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition cursor-pointer`}
+            className={`p-1.5 rounded hover:bg-slate-500/10 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition cursor-pointer`}
           >
             <Heading className="w-3.5 h-3.5" />
           </button>
@@ -150,7 +150,7 @@ function MarkdownEditor({ value, onChange, disabled, placeholder, lang, adminThe
             onClick={() => insertMarkdown('list', 'élément')}
             title="Liste à puces"
             disabled={disabled}
-            className={`p-1.5 rounded hover:bg-slate-550/10 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition cursor-pointer`}
+            className={`p-1.5 rounded hover:bg-slate-500/10 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition cursor-pointer`}
           >
             <List className="w-3.5 h-3.5" />
           </button>
@@ -159,7 +159,7 @@ function MarkdownEditor({ value, onChange, disabled, placeholder, lang, adminThe
             onClick={() => insertMarkdown('link', 'texte du lien')}
             title="Lien"
             disabled={disabled}
-            className={`p-1.5 rounded hover:bg-slate-550/10 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition cursor-pointer`}
+            className={`p-1.5 rounded hover:bg-slate-500/10 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition cursor-pointer`}
           >
             <LinkIcon className="w-3.5 h-3.5" />
           </button>
@@ -168,7 +168,7 @@ function MarkdownEditor({ value, onChange, disabled, placeholder, lang, adminThe
             onClick={() => insertMarkdown('code', '// code ici')}
             title="Code block"
             disabled={disabled}
-            className={`p-1.5 rounded hover:bg-slate-550/10 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition cursor-pointer`}
+            className={`p-1.5 rounded hover:bg-slate-500/10 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition cursor-pointer`}
           >
             <Code className="w-3.5 h-3.5" />
           </button>
@@ -642,7 +642,7 @@ export default function AdminAdvicePage() {
                     value={formCategory}
                     disabled={!isOwner}
                     onChange={(e) => setFormCategory(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-850 text-slate-700 dark:text-slate-200 rounded-xl outline-none focus:border-emerald-500/60 transition cursor-pointer"
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-200 rounded-xl outline-none focus:border-emerald-500/60 transition cursor-pointer"
                   >
                     <option value="skincare">Soin de peau (Skincare)</option>
                     <option value="kbeauty">K-Beauty Coréen</option>
@@ -659,7 +659,7 @@ export default function AdminAdvicePage() {
                     value={formReadTime}
                     disabled={!isOwner}
                     onChange={(e) => setFormReadTime(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-850 text-slate-700 dark:text-slate-200 rounded-xl outline-none focus:border-emerald-500/60 transition"
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-200 rounded-xl outline-none focus:border-emerald-500/60 transition"
                     required
                   />
                 </div>
@@ -671,7 +671,7 @@ export default function AdminAdvicePage() {
                     value={formStatus}
                     disabled={!isOwner}
                     onChange={(e) => setFormStatus(e.target.value as any)}
-                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-850 text-slate-700 dark:text-slate-200 rounded-xl outline-none focus:border-emerald-500/60 transition cursor-pointer"
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-200 rounded-xl outline-none focus:border-emerald-500/60 transition cursor-pointer"
                   >
                     <option value="draft">Brouillon (Non visible)</option>
                     <option value="published">Publié (En Ligne)</option>
@@ -689,7 +689,7 @@ export default function AdminAdvicePage() {
                     value={formSlug}
                     disabled={!isOwner}
                     onChange={(e) => setFormSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '-'))}
-                    className="w-full px-3.5 py-2.5 font-mono text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-850 text-slate-700 dark:text-slate-200 rounded-xl outline-none focus:border-emerald-500/60 transition"
+                    className="w-full px-3.5 py-2.5 font-mono text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-200 rounded-xl outline-none focus:border-emerald-500/60 transition"
                     placeholder="ex: ma-routine-skincare-kbeauty"
                     required
                   />
@@ -703,7 +703,7 @@ export default function AdminAdvicePage() {
                     value={formImage}
                     disabled={!isOwner}
                     onChange={(e) => setFormImage(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-850 text-slate-700 dark:text-slate-200 rounded-xl outline-none focus:border-emerald-500/60 transition"
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-200 rounded-xl outline-none focus:border-emerald-500/60 transition"
                     placeholder="https://images.unsplash.com/..."
                     required
                   />
@@ -742,7 +742,7 @@ export default function AdminAdvicePage() {
                         value={formTitleFr}
                         disabled={!isOwner}
                         onChange={(e) => handleTitleFrChange(e.target.value)}
-                        className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-850 text-slate-700 dark:text-slate-200 rounded-xl outline-none focus:border-emerald-500/60 transition"
+                        className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-200 rounded-xl outline-none focus:border-emerald-500/60 transition"
                         placeholder="Rédiger le titre français..."
                         required
                       />
@@ -754,7 +754,7 @@ export default function AdminAdvicePage() {
                         value={formSummaryFr}
                         disabled={!isOwner}
                         onChange={(e) => setFormSummaryFr(e.target.value)}
-                        className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-850 text-slate-700 dark:text-slate-200 rounded-xl outline-none focus:border-emerald-500/60 transition resize-none"
+                        className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-200 rounded-xl outline-none focus:border-emerald-500/60 transition resize-none"
                         placeholder="Court résumé de présentation de l'article pour le feed..."
                         required
                       />
@@ -783,7 +783,7 @@ export default function AdminAdvicePage() {
                         value={formTitleAr}
                         disabled={!isOwner}
                         onChange={(e) => setFormTitleAr(e.target.value)}
-                        className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-850 text-slate-700 dark:text-slate-200 rounded-xl outline-none focus:border-emerald-500/60 transition"
+                        className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-200 rounded-xl outline-none focus:border-emerald-500/60 transition"
                         placeholder="اكتب العنوان باللغة العربية..."
                         required
                       />
@@ -795,7 +795,7 @@ export default function AdminAdvicePage() {
                         value={formSummaryAr}
                         disabled={!isOwner}
                         onChange={(e) => setFormSummaryAr(e.target.value)}
-                        className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-850 text-slate-700 dark:text-slate-200 rounded-xl outline-none focus:border-emerald-500/60 transition resize-none"
+                        className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-200 rounded-xl outline-none focus:border-emerald-500/60 transition resize-none"
                         placeholder="ملخص المقال للعرض في صفحة المقالات..."
                         required
                       />
@@ -820,7 +820,7 @@ export default function AdminAdvicePage() {
                 <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                   Associer des Produits Recommandés ({formRecommendedProducts.length} sélectionnés)
                 </label>
-                <div className="p-4 border border-slate-200/60 dark:border-slate-850 rounded-2xl max-h-48 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50/50 dark:bg-slate-950/20">
+                <div className="p-4 border border-slate-200/60 dark:border-slate-800 rounded-2xl max-h-48 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50/50 dark:bg-slate-950/20">
                   {products.map(p => {
                     const isChecked = formRecommendedProducts.includes(p.id);
                     return (

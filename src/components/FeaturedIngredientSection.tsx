@@ -48,7 +48,7 @@ export const FeaturedIngredientSection: React.FC = () => {
       {/* Background soft green radial glow */}
       <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-emerald-500/5 dark:bg-emerald-500/10 blur-[130px] rounded-full pointer-events-none" />
 
-      <div className="max-w-6xl mx-auto px-6 relative z-10">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 relative z-10">
         
         {/* Section Header */}
         <div className="text-left mb-10 md:mb-14 space-y-2">
@@ -113,19 +113,19 @@ export const FeaturedIngredientSection: React.FC = () => {
                   <div className="space-y-2">
                     <div className="flex items-start gap-2.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-                      <span className="text-xs text-slate-650 dark:text-slate-350 font-medium">
+                      <span className="text-xs text-slate-600 dark:text-slate-300 font-medium">
                         {language === 'AR' ? 'تهدئة فورية للاحمرار والتهيجات' : 'Calme instantanément les inflammations et rougeurs.'}
                       </span>
                     </div>
                     <div className="flex items-start gap-2.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-                      <span className="text-xs text-slate-650 dark:text-slate-350 font-medium">
+                      <span className="text-xs text-slate-600 dark:text-slate-300 font-medium">
                         {language === 'AR' ? 'تحفيز بناء الكولاجين وتجديد الخلايا' : 'Stimule la synthèse de collagène endogène.'}
                       </span>
                     </div>
                     <div className="flex items-start gap-2.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-                      <span className="text-xs text-slate-650 dark:text-slate-350 font-medium">
+                      <span className="text-xs text-slate-600 dark:text-slate-300 font-medium">
                         {language === 'AR' ? 'تقوية وإصلاح حاجز البشرة التالف' : 'Restaure et renforce la barrière cutanée altérée.'}
                       </span>
                     </div>
@@ -171,13 +171,13 @@ export const FeaturedIngredientSection: React.FC = () => {
               <div className="flex gap-2">
                 <button
                   onClick={() => scroll('left')}
-                  className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-650 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-900 active:scale-95 transition-all cursor-pointer outline-none"
+                  className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 active:scale-95 transition-all cursor-pointer outline-none"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => scroll('right')}
-                  className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-650 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-900 active:scale-95 transition-all cursor-pointer outline-none"
+                  className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 active:scale-95 transition-all cursor-pointer outline-none"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
@@ -244,7 +244,7 @@ export const FeaturedIngredientSection: React.FC = () => {
                           {convertPrice(product.price)}
                         </span>
                         {product.comparePrice > product.price && (
-                          <span className="text-[9px] text-slate-450 line-through">
+                          <span className="text-[9px] text-slate-400 line-through">
                             {convertPrice(product.comparePrice)}
                           </span>
                         )}

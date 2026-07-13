@@ -20,13 +20,13 @@ export const HorizontalPromoBanner: React.FC<HorizontalPromoBannerProps> = ({ se
   const descAr = settings?.descAr || "الصيدلية الوحيدة التي تجعل حياتك أسهل وأجمل في المغرب";
   const discountPercent = settings?.discountPercent !== undefined ? settings.discountPercent : 50;
   const bgImage = settings?.bgImage || "/images/promo/horizontal_promo.png";
-  const overlayImage = settings?.overlayImage || "/images/promo/horizontal_promo_product.png";
+  const overlayImage = settings?.overlayImage || "/images/promo/horizontal_promo_product_transparent.png";
 
   const isDefaultBg = bgImage === "/images/promo/horizontal_promo.png";
 
   return (
     <section className="bg-[#FAFAFA] border-b border-slate-200/40 relative py-8 sm:py-10 md:py-12 overflow-visible reveal-on-scroll">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-8 md:px-12 lg:px-16 xl:px-20 relative overflow-visible">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 relative overflow-visible">
         
         {/* Banner container with overflow-visible to let product float above the top boundary */}
         <div className="relative rounded-[20px] flex flex-row items-center justify-between border border-emerald-500/10 shadow-xl shadow-slate-900/5 overflow-visible h-28 sm:h-32 group bg-slate-950">
@@ -93,8 +93,8 @@ export const HorizontalPromoBanner: React.FC<HorizontalPromoBannerProps> = ({ se
                 alt="Promotion produit"
                 fill
                 sizes="(max-width: 640px) 90px, (max-width: 768px) 110px, 130px"
-                className="object-contain mix-blend-screen"
-                style={{ objectPosition: 'bottom', mixBlendMode: 'screen' }}
+                className="object-contain"
+                style={{ objectPosition: 'bottom' }}
               />
             </div>
           </div>

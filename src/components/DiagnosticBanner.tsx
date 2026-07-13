@@ -13,7 +13,7 @@ export const DiagnosticBanner: React.FC = () => {
       {/* Background Subtle Mesh Gradient */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-500/5 dark:bg-indigo-500/10 blur-[120px] rounded-full pointer-events-none" />
 
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8">
         {/* Double-Bezel Outer Shell */}
         <div className="p-2 md:p-3 rounded-[32px] bg-slate-200/40 dark:bg-white/5 border border-slate-200/50 dark:border-white/10 shadow-sm">
           {/* Inner Content Core */}
@@ -22,7 +22,7 @@ export const DiagnosticBanner: React.FC = () => {
             {/* Left Column: Copywriting & Action */}
             <div className="space-y-6 md:pr-4 flex flex-col justify-center items-start text-left">
               {/* Eyebrow Tag */}
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.2em] bg-indigo-500/10 dark:bg-indigo-400/10 text-indigo-650 dark:text-indigo-400 border border-indigo-500/15">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.2em] bg-indigo-500/10 dark:bg-indigo-400/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/15">
                 <Sparkles className="w-3 h-3" /> Diagnostic Intelligent
               </span>
 
@@ -32,14 +32,14 @@ export const DiagnosticBanner: React.FC = () => {
               </h2>
 
               {/* Paragraph */}
-              <p className="text-sm md:text-base text-slate-500 dark:text-slate-450 leading-relaxed font-medium">
+              <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
                 Découvrez votre routine K-Beauty sur-mesure en 2 minutes grâce à notre Diagnostic de Peau IA de grade clinique.
               </p>
 
               {/* Premium Nested CTA Button with Button-in-Button architecture */}
               <button
                 onClick={() => setDiagnosticOpen(true)}
-                className="group relative inline-flex items-center gap-4 pl-6 pr-2 py-2 rounded-full bg-slate-950 dark:bg-white text-white dark:text-slate-950 hover:bg-indigo-650 dark:hover:bg-indigo-500 hover:text-white dark:hover:text-white shadow-lg shadow-slate-950/10 hover:shadow-indigo-500/25 active:scale-[0.98] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer border-0 outline-none"
+                className="group relative inline-flex items-center gap-4 pl-6 pr-2 py-2 rounded-full bg-slate-950 dark:bg-white text-white dark:text-slate-950 hover:bg-indigo-600 dark:hover:bg-indigo-500 hover:text-white dark:hover:text-white shadow-lg shadow-slate-950/10 hover:shadow-indigo-500/25 active:scale-[0.98] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer border-0 outline-none"
               >
                 <span className="text-xs font-black uppercase tracking-wider">
                   Démarrer le diagnostic

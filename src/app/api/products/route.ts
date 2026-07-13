@@ -2,23 +2,38 @@ import { NextResponse } from 'next/server';
 import { Product } from '@/lib/data';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 
-function matchesConcern(product: Product, concern: string) {
+function matchesConcern(product: Product, concernId: string, customConcerns: any[] = []) {
   const text = `${product.title} ${product.nameFr || ''} ${product.description || ''} ${(product.tags || []).join(' ')}`.toLowerCase();
   const ingredients = (product.ingredients || '').toLowerCase();
   
-  if (concern === 'acne') {
+  // Find concern config in dynamic list
+  const concern = customConcerns.find((c: any) => c.id === concernId);
+  if (concern) {
+    const keywords = concern.keywords || [];
+    const ingredientKeywords = concern.ingredientKeywords || [];
+    const productIds = concern.productIds || [];
+    
+    if (productIds.includes(product.id)) return true;
+    
+    const kwMatch = keywords.some((kw: string) => text.includes(kw.toLowerCase()));
+    const ingMatch = ingredientKeywords.some((kw: string) => ingredients.includes(kw.toLowerCase()) || text.includes(kw.toLowerCase()));
+    return kwMatch || ingMatch;
+  }
+
+  // Fallbacks for hardcoded defaults
+  if (concernId === 'acne') {
     return text.includes('acné') || text.includes('imperfection') || text.includes('bouton') || ingredients.includes('salicylic acid') || product.id === 3 || product.id === 22 || product.id === 15 || product.id === 16 || product.id === 17;
   }
-  if (concern === 'spots') {
+  if (concernId === 'spots') {
     return text.includes('tache') || text.includes('éclat') || text.includes('bright') || text.includes('pigment') || ingredients.includes('tranexamic') || ingredients.includes('ascorbic') || product.id === 3 || product.id === 14;
   }
-  if (concern === 'dryness') {
+  if (concernId === 'dryness') {
     return text.includes('déshydrat') || text.includes('sec') || text.includes('hydrat') || ingredients.includes('hyaluronic') || product.id === 5 || product.id === 6 || product.id === 7 || product.id === 17;
   }
-  if (concern === 'wrinkles') {
+  if (concernId === 'wrinkles') {
     return text.includes('ridule') || text.includes('âge') || text.includes('anti-aging') || text.includes('vieill') || ingredients.includes('retinol') || product.id === 8 || product.id === 5 || product.id === 6;
   }
-  if (concern === 'redness') {
+  if (concernId === 'redness') {
     return text.includes('rougeur') || text.includes('apais') || text.includes('sensible') || text.includes('sooth') || ingredients.includes('centella') || ingredients.includes('heartleaf') || product.id === 17 || product.id === 16 || product.id === 15;
   }
   return true;
@@ -61,6 +76,7 @@ export async function GET(request: Request) {
   const limit = Math.max(1, parseInt(searchParams.get('limit') || '15'));
   const category = searchParams.get('category') || 'all';
   const search = searchParams.get('search') || '';
+  const vendor = searchParams.get('vendor') || '';
   const concern = searchParams.get('concern') || 'all';
   const ingredient = searchParams.get('ingredient') || 'all';
   const idStr = searchParams.get('id') || '';
@@ -177,6 +193,16 @@ export async function GET(request: Request) {
       query = query.or(`title.ilike.%${search}%,name.ilike.%${search}%,name_fr.ilike.%${search}%,vendor.ilike.%${search}%`);
     }
 
+    // Vendor filter for brand pages — case-insensitive prefix match
+    // Also strips hyphens so "La Roche-Posay" matches "LA ROCHE POSAY"
+    if (vendor) {
+      // Use the first 'word group' to maximize match coverage
+      // e.g. "La Roche-Posay" → filter by "la roche%" 
+      const normalizedVendor = vendor.replace(/-/g, ' ').trim();
+      const firstChunk = normalizedVendor.split(' ').slice(0, 2).join(' ');
+      query = query.filter('vendor', 'ilike', `${firstChunk}%`);
+    }
+
     const from = (page - 1) * limit;
     const to = from + limit - 1;
     query = query.range(from, to).order('id', { ascending: true });
@@ -210,10 +236,25 @@ export async function GET(request: Request) {
       status: item.status || 'live'
     }));
 
+    // Fetch custom concerns from settings
+    let customConcerns: any[] = [];
+    try {
+      const { data: settingsData } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('id', 1)
+        .single();
+      if (settingsData && settingsData.value) {
+        customConcerns = settingsData.value.customConcerns || [];
+      }
+    } catch (e) {
+      console.error("Failed to load settings in products API route:", e);
+    }
+
     let total = count || products.length;
 
     if (concern !== 'all') {
-      products = products.filter(p => matchesConcern(p, concern));
+      products = products.filter(p => matchesConcern(p, concern, customConcerns));
       total = products.length;
     }
     if (ingredient !== 'all') {

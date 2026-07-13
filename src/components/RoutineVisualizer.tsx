@@ -23,13 +23,329 @@ interface Step {
   icon: React.ReactNode;
 }
 
+interface MoleculeDetails {
+  categoryFr: string;
+  categoryAr: string;
+  targetFr: string;
+  targetAr: string;
+  descFr: string;
+  descAr: string;
+  concentration: string;
+}
+
+const MOLECULE_DATABASE: Record<string, MoleculeDetails> = {
+  // Step 1: Nettoyer
+  "Acide Salicylique": {
+    categoryFr: "BHA (Beta-Hydroxy Acid)",
+    categoryAr: "حمض بيتا هيدروكسي",
+    targetFr: "Pores & Glandes Sébacées",
+    targetAr: "المسام والغدد الدهنية",
+    descFr: "Exfoliant lipophile qui pénètre à l'intérieur des pores pour dissoudre le sébum et prévenir l'acné.",
+    descAr: "مقشر يذوب في الدهون يتغلغل داخل المسام لإذابة الدهون ومنع ظهور حب الشباب.",
+    concentration: "0.5% - 2.0%"
+  },
+  "حمض الساليسيليك": {
+    categoryFr: "BHA (Beta-Hydroxy Acid)",
+    categoryAr: "حمض بيتا هيدروكسي",
+    targetFr: "Pores & Glandes Sébacées",
+    targetAr: "المسام والغدد الدهنية",
+    descFr: "Exfoliant lipophile qui pénètre à l'intérieur des pores pour dissoudre le sébum et prévenir l'acné.",
+    descAr: "مقشر يذوب في الدهون يتغلغل داخل المسام لإذابة الدهون ومنع ظهور حب الشباب.",
+    concentration: "0.5% - 2.0%"
+  },
+  "Centella Asiatica": {
+    categoryFr: "Phyto-Actif Apaisant",
+    categoryAr: "مستخلص نباتي مهدئ",
+    targetFr: "Barrière Cutanée & Rougeurs",
+    targetAr: "حاجز الجلد والاحمرار",
+    descFr: "Plante médicinale asiatique riche en madécassoside, accélérant la cicatrisation et calmant l'inflammation.",
+    descAr: "نبات طبي آسيوي غني بالمديكاسوسيد، يسرع التئام البشرة ويهدئ الالتهاب.",
+    concentration: "10% - 95%"
+  },
+  "سنتيلا أسياتيكا": {
+    categoryFr: "Phyto-Actif Apaisant",
+    categoryAr: "مستخلص نباتي مهدئ",
+    targetFr: "Barrière Cutanée & Rougeurs",
+    targetAr: "حاجز الجلد والاحمرار",
+    descFr: "Plante médicinale asiatique riche en madécassoside, accélérant la cicatrisation et calmant l'inflammation.",
+    descAr: "نبات طبي آسيوي غني بالمديكاسوسيد، يسرع التئام البشرة ويهدئ الالتهاب.",
+    concentration: "10% - 95%"
+  },
+  "Glycerin": {
+    categoryFr: "Humectant Naturel",
+    categoryAr: "مرطب طبيعي",
+    targetFr: "Couche Cornée (Hydratation)",
+    targetAr: "الطبقة القرنية (الترطيب)",
+    descFr: "Molécule hygroscopique qui attire et retient l'eau dans l'épiderme pour maintenir l'élasticité.",
+    descAr: "جزيء جاذب للرطوبة يسحب الماء ويحتفظ به داخل البشرة للحفاظ على مرونتها.",
+    concentration: "2.0% - 15%"
+  },
+  "الجلسرين": {
+    categoryFr: "Humectant Naturel",
+    categoryAr: "مرطب طبيعي",
+    targetFr: "Couche Cornée (Hydratation)",
+    targetAr: "الطبقة القرنية (الترطيب)",
+    descFr: "Molécule hygroscopique qui attire et retient l'eau dans l'épiderme pour maintenir l'élasticité.",
+    descAr: "جزيء جاذب للرطوبة يسحب الماء ويحتفظ به داخل البشرة للحفاظ على مرونتها.",
+    concentration: "2.0% - 15%"
+  },
+  
+  // Step 2: Préparer
+  "Panthenol (B5)": {
+    categoryFr: "Provitamine Cicatrisante",
+    categoryAr: "بروفيتامين مهدئ",
+    targetFr: "Barrière Lipidique",
+    targetAr: "حاجز الدهون الطبيعي",
+    descFr: "Se transforme en acide pantothénique pour stimuler la régénération cellulaire et réduire la perte d'eau.",
+    descAr: "يتحول إلى حمض البانتوثنيك لتحفيز تجديد الخلايا وتقليل فقدان رطوبة البشرة.",
+    concentration: "1.0% - 5.0%"
+  },
+  "بانثينول (B5)": {
+    categoryFr: "Provitamine Cicatrisante",
+    categoryAr: "بروفيتامين مهدئ",
+    targetFr: "Barrière Lipidique",
+    targetAr: "حاجز الدهون الطبيعي",
+    descFr: "Se transforme en acide pantothénique pour stimuler la régénération cellulaire et réduire la perte d'eau.",
+    descAr: "يتحول إلى حمض البانتوثنيك لتحفيز تجديد الخلايا وتقليل فقدان رطوبة البشرة.",
+    concentration: "1.0% - 5.0%"
+  },
+  "Eau Thermale": {
+    categoryFr: "Solution Minérale",
+    categoryAr: "محلول معدني طبيعي",
+    targetFr: "Épiderme Sensible",
+    targetAr: "البشرة الحساسة",
+    descFr: "Riche en oligo-éléments (sélénium, silice) pour apaiser instantanément les irritations cutanées.",
+    descAr: "غنية بالعناصر النادرة (السيلينيوم والسيليكا) لتهدئة تهيج الجلد فوراً.",
+    concentration: "Purifiée 100%"
+  },
+  "مياه حرارية": {
+    categoryFr: "Solution Minérale",
+    categoryAr: "محلول معدني طبيعي",
+    targetFr: "Épiderme Sensible",
+    targetAr: "البشرة الحساسة",
+    descFr: "Riche en oligo-éléments (sélénium, silice) pour apaiser instantanément les irritations cutanées.",
+    descAr: "غنية بالعناصر النادرة (السيلينيوم والسيليكا) لتهدئة تهيج الجلد فوراً.",
+    concentration: "Purifiée 100%"
+  },
+  "Acide Hyaluronique": {
+    categoryFr: "Polysaccharide Humectant",
+    categoryAr: "مرطب عميق",
+    targetFr: "Matrice Extra-Cellulaire",
+    targetAr: "المصفوفة خارج الخلية",
+    descFr: "Capacité de retenir jusqu'à 1000 fois son poids en eau, repulpant visiblement les ridules.",
+    descAr: "له القدرة على الاحتفاظ بالماء بوزن يعادل 1000 ضعف وزنه، مما يملأ الخطوط الدقيقة.",
+    concentration: "0.1% - 2.0%"
+  },
+  "حمض الهيالورونيك": {
+    categoryFr: "Polysaccharide Humectant",
+    categoryAr: "مرطب عميق",
+    targetFr: "Matrice Extra-Cellulaire",
+    targetAr: "المصفوفة خارج الخلية",
+    descFr: "Capacité de retenir jusqu'à 1000 fois son poids en eau, repulpant visiblement les ridules.",
+    descAr: "له القدرة على الاحتفاظ بالماء بوزن يعادل 1000 ضعف وزنه، مما يملأ الخطوط الدقيقة.",
+    concentration: "0.1% - 2.0%"
+  },
+
+  // Step 3: Traiter
+  "Retinol": {
+    categoryFr: "Rétinoïde (Vitamine A)",
+    categoryAr: "ريتينويد (فيتامين أ)",
+    targetFr: "Renouvellement Cellulaire",
+    targetAr: "تجديد خلايا البشرة",
+    descFr: "Accélère la desquamation, stimule le collagène et estompe rides et cicatrices d'acné.",
+    descAr: "يسرع تقشير الخلايا القديمة، يحفز إنتاج الكولاجين ويخفف التجاعيد وآثار الحبوب.",
+    concentration: "0.1% - 1.0%"
+  },
+  "ريتينول": {
+    categoryFr: "Rétinoïde (Vitamine A)",
+    categoryAr: "ريتينويد (فيتامين أ)",
+    targetFr: "Renouvellement Cellulaire",
+    targetAr: "تجديد خلايا البشرة",
+    descFr: "Accélère la desquamation, stimule le collagène et estompe rides et cicatrices d'acné.",
+    descAr: "يسرع تقشير الخلايا القديمة، يحفز إنتاج الكولاجين ويخفف التجاعيد وآثار الحبوب.",
+    concentration: "0.1% - 1.0%"
+  },
+  "Vitamine C": {
+    categoryFr: "Antioxydant Majeur",
+    categoryAr: "مضاد أكسدة قوي",
+    targetFr: "Mélanocytes (Éclat)",
+    targetAr: "الخلايا الصبغية (النضارة)",
+    descFr: "Inhibe la production de mélanine pour réduire les taches et neutralise les radicaux libres induits par les UV.",
+    descAr: "يثبط إنتاج الميلانين لتقليل البقع الداكنة ويحيد الجذور الحرة الناتجة عن الشمس.",
+    concentration: "5.0% - 20.0%"
+  },
+  "فيتامين C": {
+    categoryFr: "Antioxydant Majeur",
+    categoryAr: "مضاد أكسدة قوي",
+    targetFr: "Mélanocytes (Éclat)",
+    targetAr: "الخلايا الصبغية (النضارة)",
+    descFr: "Inhibe la production de mélanine pour réduire les taches et neutralise les radicaux libres induits par les UV.",
+    descAr: "يثبط إنتاج الميلانين لتقليل البقع الداكنة ويحيد الجذور الحرة الناتجة عن الشمس.",
+    concentration: "5.0% - 20.0%"
+  },
+  "Acide Tranexamique": {
+    categoryFr: "Inhibiteur de Pigmentation",
+    categoryAr: "مضاد للتصبغات",
+    targetFr: "Voies Inflammatoires",
+    targetAr: "الالتهابات والتصبغات",
+    descFr: "Bloque l'interaction entre les kératinocytes et les mélanocytes pour traiter le mélasma et les taches tenaces.",
+    descAr: "يمنع التفاعل بين خلايا الجلد السطحية والصبغية لعلاج الكلف والبقع المستعصية.",
+    concentration: "2.0% - 5.0%"
+  },
+  "حمض الترانيكساميك": {
+    categoryFr: "Inhibiteur de Pigmentation",
+    categoryAr: "مضاد للتصبغات",
+    targetFr: "Voies Inflammatoires",
+    targetAr: "الالتهابات والتصبغات",
+    descFr: "Bloque l'interaction entre les kératinocytes et les mélanocytes pour traiter le mélasma et les taches tenaces.",
+    descAr: "يمنع التفاعل بين خلايا الجلد السطحية والصبغية لعلاج الكلف والبقع المستعصية.",
+    concentration: "2.0% - 5.0%"
+  },
+  "Niacinamide": {
+    categoryFr: "Vitamine B3",
+    categoryAr: "فيتامين ب3",
+    targetFr: "Barrière & Teint",
+    targetAr: "حاجز البشرة ولونها",
+    descFr: "Régule le sébum, resserre les pores, renforce les céramides et estompe les taches d'hyperpigmentation.",
+    descAr: "ينظم إفراز الدهون، يضيق المسام، يعزز السيراميد الطبيعي ويوحد لون البشرة.",
+    concentration: "2.0% - 10.0%"
+  },
+  "نياسيناميد": {
+    categoryFr: "Vitamine B3",
+    categoryAr: "فيتامين ب3",
+    targetFr: "Barrière & Teint",
+    targetAr: "حاجز البشرة ولونها",
+    descFr: "Régule le sébum, resserre les pores, renforce les céramides et estompe les taches d'hyperpigmentation.",
+    descAr: "ينظم إفراز الدهون، يضيق المسام، يعزز السيراميد الطبيعي ويوحد لون البشرة.",
+    concentration: "2.0% - 10.0%"
+  },
+
+  // Step 4: Hydrater
+  "Ceramides": {
+    categoryFr: "Lipides Intercellulaires",
+    categoryAr: "دهون حاجز البشرة",
+    targetFr: "Ciment Intercellulaire",
+    targetAr: "الروابط بين الخلايا",
+    descFr: "Restaure la cohésion cellulaire pour empêcher l'évaporation de l'eau et bloquer les allergènes extérieurs.",
+    descAr: "يعيد تماسك خلايا البشرة لمنع تبخر الرطوبة وحمايتها من العوامل الخارجية الضارة.",
+    concentration: "1.0% - 3.0%"
+  },
+  "سيراميد": {
+    categoryFr: "Lipides Intercellulaires",
+    categoryAr: "دهون حاجز البشرة",
+    targetFr: "Ciment Intercellulaire",
+    targetAr: "الروابط بين الخلايا",
+    descFr: "Restaure la cohésion cellulaire pour empêcher l'évaporation de l'eau et bloquer les allergènes extérieurs.",
+    descAr: "يعيد تماسك خلايا البشرة لمنع تبخر الرطوبة وحمايتها من العوامل الخارجية الضارة.",
+    concentration: "1.0% - 3.0%"
+  },
+  "Squalane": {
+    categoryFr: "Émollient Protecteur",
+    categoryAr: "مرطب ومنعم للبشرة",
+    targetFr: "Film Hydrolipidique",
+    targetAr: "الغشاء المائي الدهني",
+    descFr: "Mimétique du sébum humain stable, adoucit la peau sans sensation grasse ni comédogénicité.",
+    descAr: "يحاكي دهون البشرة الطبيعية، ينعم البشرة بفعالية دون سد المسام أو ترك ملمس دهني.",
+    concentration: "2.0% - 100%"
+  },
+  "سيروم السكوالين": {
+    categoryFr: "Émollient Protecteur",
+    categoryAr: "مرطب ومنعم للبشرة",
+    targetFr: "Film Hydrolipidique",
+    targetAr: "الغشاء المائي الدهني",
+    descFr: "Mimétique du sébum humain stable, adoucit la peau sans sensation grasse ni comédogénicité.",
+    descAr: "يحاكي دهون البشرة الطبيعية، ينعم البشرة بفعالية دون سد المسام أو ترك ملمس دهني.",
+    concentration: "2.0% - 100%"
+  },
+  "Peptides": {
+    categoryFr: "Chaînes d'Acides Aminés",
+    categoryAr: "سلاسل أحماض أمينية",
+    targetFr: "Fibroblastes (Collagène)",
+    targetAr: "خلايا إنتاج الكولاجين",
+    descFr: "Messagers cellulaires qui signalent à la peau de produire du nouveau collagène et de l'élastine.",
+    descAr: "مرسلات خلوية تعطي إشارات للبشرة لإنتاج كولاجين وإيلاستين جديدين لزيادة مرونتها.",
+    concentration: "1.0% - 5.0%"
+  },
+  "ببتيدات": {
+    categoryFr: "Chaînes d'Acides Aminés",
+    categoryAr: "سلاسل أحماض أمينية",
+    targetFr: "Fibroblastes (Collagène)",
+    targetAr: "خلايا إنتاج الكولاجين",
+    descFr: "Messagers cellulaires qui signalent à la peau de produire du nouveau collagène et de l'élastine.",
+    descAr: "مرسلات خلوية تعطي إشارات للبشرة لإنتاج كولاجين وإيلاستين جديدين لزيادة مرونتها.",
+    concentration: "1.0% - 5.0%"
+  },
+
+  // Step 5: Protéger
+  "Filtres UV Organiques": {
+    categoryFr: "Filtres Chimiques",
+    categoryAr: "فلاتر واقية كيميائية",
+    targetFr: "Couches Épidermiques",
+    targetAr: "طبقات الجلد الخارجية",
+    descFr: "Absorbent les rayons UV et les convertissent en chaleur inoffensive pour prévenir les brûlures et taches.",
+    descAr: "تمتص الأشعة فوق البنفسجية وتحولها إلى حرارة غير ضارة لمنع الحروق والتصبغات.",
+    concentration: "Homologuée (Spf 50+)"
+  },
+  "فلاتر عضوية": {
+    categoryFr: "Filtres Chimiques",
+    categoryAr: "فلاتر واقية كيميائية",
+    targetFr: "Couches Épidermiques",
+    targetAr: "طبقات الجلد الخارجية",
+    descFr: "Absorbent les rayons UV et les convertissent en chaleur inoffensive pour prévenir les brûlures et taches.",
+    descAr: "تمتص الأشعة فوق البنفسجية وتحولها إلى حرارة غير ضارة لمنع الحروق والتصبغات.",
+    concentration: "Homologuée (Spf 50+)"
+  },
+  "Filtres Minéraux": {
+    categoryFr: "Filtres Physiques",
+    categoryAr: "فلاتر واقية فيزيائية",
+    targetFr: "Surface Cutanée (Écran)",
+    targetAr: "سطح البشرة (حاجز واقي)",
+    descFr: "Oxyde de Zinc et Dioxyde de Titane qui réfléchissent les UV comme un miroir, idéal pour peaux sensibles.",
+    descAr: "أكسيد الزنك وثاني أكسيد التيتانيوم اللذان يعكسان الأشعة كمرآة، مثالي للبشرة الحساسة.",
+    concentration: "5.0% - 25.0%"
+  },
+  "فلاتر معدنية": {
+    categoryFr: "Filtres Physiques",
+    categoryAr: "فلاتر واقية فيزيائية",
+    targetFr: "Surface Cutanée (Écran)",
+    targetAr: "سطح البشرة (حاجز واقي)",
+    descFr: "Oxyde de Zinc et Dioxyde de Titane qui réfléchissent les UV comme un miroir, idéal pour peaux sensibles.",
+    descAr: "أكسيد الزنك وثاني أكسيد التيتانيوم اللذان يعكسان الأشعة كمرآة، مثالي للبشرة الحساسة.",
+    concentration: "5.0% - 25.0%"
+  },
+  "Antioxydants": {
+    categoryFr: "Bouclier Moléculaire",
+    categoryAr: "درع جزيئي واقي",
+    targetFr: "Intracellulaire (Stress Ox)",
+    targetAr: "داخل الخلايا (الإجهاد)",
+    descFr: "Neutralisent les radicaux libres générés par la pollution, l'ozone et la lumière bleue du soleil.",
+    descAr: "تحيد الجذور الحرة الناتجة عن التلوث، الأوزون، والضوء الأزرق المنبعث من الشمس.",
+    concentration: "0.5% - 2.0%"
+  },
+  "مضادات الأكسدة": {
+    categoryFr: "Bouclier Moléculaire",
+    categoryAr: "درع جزيئي واقي",
+    targetFr: "Intracellulaire (Stress Ox)",
+    targetAr: "داخل الخلايا (الإجهاد)",
+    descFr: "Neutralisent les radicaux libres générés par la pollution, l'ozone et la lumière bleue du soleil.",
+    descAr: "تحيد الجذور الحرة الناتجة عن التلوث، الأوزون، والضوء الأزرق المنبعث من الشمس.",
+    concentration: "0.5% - 2.0%"
+  }
+};
+
 export function RoutineVisualizer() {
   const { language } = useTranslation();
   const [activeStep, setActiveStep] = useState<number>(0);
   const [sectionVisible, setSectionVisible] = useState(false);
+  const [selectedMolecule, setSelectedMolecule] = useState<string | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
 
   const isRTL = language === 'AR';
+
+  // Reset selected molecule on activeStep change
+  useEffect(() => {
+    setSelectedMolecule(null);
+  }, [activeStep]);
 
   // Trigger scroll reveal when the section enters the viewport
   useEffect(() => {
@@ -175,7 +491,7 @@ export function RoutineVisualizer() {
       <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-primary/5 to-transparent blur-3xl pointer-events-none opacity-60" />
       <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-[#EC4899]/5 to-transparent blur-3xl pointer-events-none opacity-60" />
 
-      <div className="max-w-[1400px] mx-auto px-6 sm:px-10 md:px-12 lg:px-16 xl:px-20 relative z-10">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 relative z-10">
         <div className="w-full bg-white rounded-[32px] border border-slate-100/80 shadow-[0_16px_40px_rgba(0,0,0,0.015)] p-6 sm:p-8 md:p-10 overflow-hidden">
       
       {/* ========================== HEADER ========================== */}
@@ -206,7 +522,7 @@ export function RoutineVisualizer() {
         
         {/* Connection Line (Progressive fill desktop only) */}
         <div 
-          className="absolute top-[38px] h-[2px] bg-gradient-to-r from-primary to-accent transition-all duration-700 ease-out -z-0 hidden md:block"
+          className="absolute top-[38px] h-[2px] bg-gradient-to-r from-primary to-accent transition-all duration-700 ease-[var(--ease-in-out-premium)] -z-0 hidden md:block"
           style={{ 
             width: `${(activeStep / (steps.length - 1)) * 88}%`,
             right: isRTL ? '6%' : 'auto',
@@ -328,7 +644,10 @@ export function RoutineVisualizer() {
         </div>
 
         {/* Right Side: Scientific Context & Active Ingredients */}
-        <div className="w-full lg:w-[380px] bg-[#fdfcf9] border border-[#eedfd2]/50 rounded-[20px] p-6 flex flex-col justify-between gap-6 text-left shrink-0 shadow-sm relative overflow-hidden">
+        <div 
+          onMouseLeave={() => setSelectedMolecule(null)}
+          className="w-full lg:w-[380px] bg-[#fdfcf9] border border-[#eedfd2]/50 rounded-[20px] p-6 flex flex-col justify-between gap-6 text-left shrink-0 shadow-sm relative overflow-hidden"
+        >
           {/* Subtle design gradient accent */}
           <div className="absolute -right-6 -bottom-6 w-32 h-32 rounded-full bg-[#eedfd2]/15 blur-xl pointer-events-none" />
           
@@ -350,16 +669,57 @@ export function RoutineVisualizer() {
               {isRTL ? 'الجزيئات النشطة الموصى بها' : 'Molécules actives'}
             </span>
             <div className="flex flex-wrap gap-1.5">
-              {(isRTL ? currentStepData.activesAr : currentStepData.activesFr).map((active, idx) => (
-                <span 
-                  key={idx} 
-                  className="px-2.5 py-1 bg-white border border-[#eedfd2]/50 text-[#b5905b] text-[10px] font-extrabold rounded-lg shadow-sm hover:border-[#b5905b]/40 transition-colors"
-                >
-                  {active}
-                </span>
-              ))}
+              {(isRTL ? currentStepData.activesAr : currentStepData.activesFr).map((active, idx) => {
+                const isSelected = selectedMolecule === active;
+                return (
+                  <button 
+                    key={idx}
+                    onClick={() => setSelectedMolecule(isSelected ? null : active)}
+                    onMouseEnter={() => setSelectedMolecule(active)}
+                    className={`px-2.5 py-1 text-[10px] font-extrabold rounded-lg shadow-sm transition-all duration-200 cursor-pointer border ${
+                      isSelected 
+                        ? 'bg-[#b5905b] text-white border-[#b5905b]' 
+                        : 'bg-white border-[#eedfd2]/50 text-[#b5905b] hover:border-[#b5905b]/45 hover:bg-[#b5905b]/5'
+                    }`}
+                  >
+                    {active}
+                  </button>
+                );
+              })}
             </div>
           </div>
+
+          {/* Molecule Detail Popover Box */}
+          {selectedMolecule && MOLECULE_DATABASE[selectedMolecule] && (() => {
+            const details = MOLECULE_DATABASE[selectedMolecule];
+            return (
+              <div className="relative z-10 p-3.5 bg-white border border-[#b5905b]/30 rounded-xl shadow-sm text-left animate-fade-in text-[11px] space-y-2 mt-2">
+                {/* Header Row */}
+                <div className="flex justify-between items-start gap-2 border-b border-stone-100 pb-1.5">
+                  <div>
+                    <span className="text-[9.5px] font-black uppercase text-[#b5905b] block">
+                      {isRTL ? details.categoryAr : details.categoryFr}
+                    </span>
+                    <h5 className="font-black text-slate-800 leading-tight">
+                      {selectedMolecule}
+                    </h5>
+                  </div>
+                  <span className="px-1.5 py-0.5 rounded bg-[#b5905b]/10 text-[#b5905b] text-[8.5px] font-black uppercase whitespace-nowrap">
+                    {details.concentration}
+                  </span>
+                </div>
+                {/* Body Content */}
+                <p className="text-stone-600 font-semibold leading-relaxed">
+                  {isRTL ? details.descAr : details.descFr}
+                </p>
+                {/* Cellular Target */}
+                <div className="flex items-center gap-1.5 pt-1 text-[9px] font-bold text-slate-400">
+                  <span className="uppercase tracking-widest">{isRTL ? 'الهدف الخلوي:' : 'Cible:'}</span>
+                  <span className="text-[#b5905b]">{isRTL ? details.targetAr : details.targetFr}</span>
+                </div>
+              </div>
+            );
+          })()}
           
           {/* Routine schedule clock badge */}
           <div className="flex items-center justify-between border-t border-[#eedfd2]/30 pt-4 relative z-10">

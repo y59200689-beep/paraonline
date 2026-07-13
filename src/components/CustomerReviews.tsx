@@ -57,7 +57,7 @@ export const CustomerReviews: React.FC = () => {
       {/* Background radial glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] rounded-full bg-accent/5 blur-3xl pointer-events-none" />
 
-      <div className="max-w-[1400px] mx-auto px-6 sm:px-10 md:px-12 lg:px-16 xl:px-20 relative z-10 font-sans">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 relative z-10 font-sans">
 
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">

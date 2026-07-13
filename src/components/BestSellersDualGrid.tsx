@@ -88,7 +88,7 @@ export const BestSellersDualGrid: React.FC = () => {
 
   return (
     <section className="py-10 bg-[#FAFAFA] border-b border-slate-200/40 relative overflow-hidden reveal-on-scroll">
-      <div className="max-w-[1400px] mx-auto px-6 sm:px-10 md:px-12 lg:px-16 xl:px-20 relative z-10">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 relative z-10">
         <div className={`grid grid-cols-1 ${
           showBestSellers && bestSellingProducts.length > 0 && showWeeklySales && topSellingProducts.length > 0
             ? 'lg:grid-cols-2 gap-8 lg:gap-12' 

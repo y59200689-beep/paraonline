@@ -329,7 +329,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   return (
     <div
       ref={cardRef}
-      className={`group relative bg-white border border-slate-100 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.015)] hover:shadow-[0_12px_30px_rgba(13,148,136,0.06)] hover:border-teal-500/20 hover:-translate-y-1.5 transition-all duration-300 flex flex-col h-full cursor-default ${className || ''}`}
+      className={`group relative bg-white border border-slate-100 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.015)] hover:shadow-[0_12px_30px_rgba(13,148,136,0.06)] hover:border-teal-500/20 hover:-translate-y-1.5 transition-all duration-300 flex flex-col h-full cursor-default card-press-feedback ${className || ''}`}
       style={{ ...style }}
     >
       <a
@@ -373,7 +373,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             width={300}
             height={300}
             className={`w-full h-full object-cover scale-[1.04] filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.03)] transition-all duration-700 ease-in-out ${
-              product.images && product.images.length > 1 ? 'group-hover:opacity-0' : ''
+              product.images && product.images.length > 1 ? 'group-hover:opacity-0 group-hover:blur-[1.5px]' : ''
             }`}
             onError={() => setImgError(true)}
           />
@@ -383,7 +383,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               alt={`${product.nameFr || product.name || product.title} Alternate`}
               width={300}
               height={300}
-              className="w-full h-full object-cover scale-[1.04] filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.03)] transition-all duration-700 ease-out opacity-0 group-hover:opacity-100"
+              className="w-full h-full object-cover scale-[1.04] filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.03)] transition-all duration-700 ease-out opacity-0 group-hover:opacity-100 blur-[1.5px] group-hover:blur-0"
               onError={() => setAltImgError(true)}
             />
           )}
@@ -496,7 +496,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <button
           onClick={handleAdd}
           disabled={isAdding || (product.stock !== undefined && product.stock <= 0)}
-          className={`mt-3.5 w-full font-bold text-[11px] sm:text-[11px] lg:text-[12px] uppercase tracking-wide h-[40px] rounded-lg flex items-center justify-center gap-1.5 transition-all duration-300 active:scale-[0.98] disabled:opacity-70 cursor-pointer px-2 ${
+          className={`mt-3.5 w-full font-bold text-[11px] sm:text-[11px] lg:text-[12px] uppercase tracking-wide h-[40px] rounded-lg flex items-center justify-center gap-1.5 transition-all duration-300 disabled:opacity-70 cursor-pointer px-2 btn-press-feedback ${
             product.stock !== undefined && product.stock <= 0
               ? 'bg-slate-700 text-slate-300 cursor-not-allowed opacity-70'
               : 'btn-gradient'

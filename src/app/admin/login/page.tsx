@@ -282,7 +282,7 @@ function AdminLoginFormInner() {
                 <button
                   type="button"
                   onClick={() => submitLogin('', '')}
-                  className="w-full text-center text-[10px] text-slate-650 hover:text-slate-400 transition underline cursor-pointer"
+                  className="w-full text-center text-[10px] text-slate-600 hover:text-slate-400 transition underline cursor-pointer"
                 >
                   Retourner à la connexion
                 </button>
@@ -339,7 +339,7 @@ function AdminLoginFormInner() {
                     setIsUsingRecoveryCode(!isUsingRecoveryCode);
                     setMfaCodeInput('');
                   }}
-                  className="w-full text-center text-xs text-emerald-400 hover:text-emerald-350 transition duration-200 ease-out-premium underline cursor-pointer"
+                  className="w-full text-center text-xs text-emerald-400 hover:text-emerald-300 transition duration-200 ease-out-premium underline cursor-pointer"
                 >
                   {isUsingRecoveryCode ? "Utiliser un code d'authentification standard" : "Utiliser un code de secours"}
                 </button>
@@ -351,7 +351,7 @@ function AdminLoginFormInner() {
                     setIsUsingRecoveryCode(false);
                     submitLogin('', '');
                   }}
-                  className="w-full text-center text-[10px] text-slate-550 hover:text-slate-400 transition duration-200 ease-out-premium underline cursor-pointer"
+                  className="w-full text-center text-[10px] text-slate-500 hover:text-slate-400 transition duration-200 ease-out-premium underline cursor-pointer"
                 >
                   Retourner à la page de connexion
                 </button>

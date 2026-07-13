@@ -237,7 +237,7 @@ export default function AdminBrandingPage() {
               className={`px-3 py-2 border rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition ${
                 isLight 
                   ? 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-600' 
-                  : 'bg-slate-900 hover:bg-slate-850 border-slate-800 text-slate-300'
+                  : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300'
               }`}
             >
               <RotateCcw className="w-3.5 h-3.5" /> Réinitialiser
@@ -261,7 +261,7 @@ export default function AdminBrandingPage() {
           <div className={`p-5 rounded-3xl border transition-all ${
             isLight ? 'bg-white border-slate-100 shadow-sm' : 'bg-slate-900/40 border-slate-800/80 shadow-md'
           }`}>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-450 dark:text-slate-400 mb-4 flex items-center gap-1.5">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 mb-4 flex items-center gap-1.5">
               <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" /> Palettes de Design Prédéfinies
             </h3>
             <div className="space-y-2.5">
@@ -274,19 +274,19 @@ export default function AdminBrandingPage() {
                     className={`w-full p-3 border rounded-2xl flex items-center justify-between text-left transition cursor-pointer ${
                       isActive
                         ? (isLight ? 'border-emerald-500 bg-emerald-50/20' : 'border-emerald-500 bg-emerald-950/10')
-                        : (isLight ? 'border-slate-100 hover:bg-slate-50' : 'border-slate-850 hover:bg-slate-900/30')
+                        : (isLight ? 'border-slate-100 hover:bg-slate-50' : 'border-slate-800 hover:bg-slate-900/30')
                     }`}
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-bold">{preset.name}</span>
                         {isActive && (
-                          <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-450 text-[9px] font-bold flex items-center gap-0.5">
+                          <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[9px] font-bold flex items-center gap-0.5">
                             <Check className="w-2.5 h-2.5" /> Actif
                           </span>
                         )}
                       </div>
-                      <p className={`text-[10px] font-light ${isLight ? 'text-slate-450' : 'text-slate-550'}`}>
+                      <p className={`text-[10px] font-light ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
                         {preset.description}
                       </p>
                     </div>
@@ -311,7 +311,7 @@ export default function AdminBrandingPage() {
           <div className={`p-5 rounded-3xl border transition-all ${
             isLight ? 'bg-white border-slate-100 shadow-sm' : 'bg-slate-900/40 border-slate-800/80 shadow-md'
           }`}>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-450 dark:text-slate-400 mb-5">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 mb-5">
               Configuration Avancée des Couleurs
             </h3>
 
@@ -332,7 +332,7 @@ export default function AdminBrandingPage() {
                     />
                     <div className="flex-1 min-w-0">
                       <span className="block text-[11px] font-bold">Primaire (Marque)</span>
-                      <span className="text-[10px] text-slate-450 font-mono select-all uppercase">{colors.primary}</span>
+                      <span className="text-[10px] text-slate-400 font-mono select-all uppercase">{colors.primary}</span>
                     </div>
                   </div>
 
@@ -346,7 +346,7 @@ export default function AdminBrandingPage() {
                     />
                     <div className="flex-1 min-w-0">
                       <span className="block text-[11px] font-bold">Contrastes & Titres</span>
-                      <span className="text-[10px] text-slate-450 font-mono select-all uppercase">{colors.primaryDark}</span>
+                      <span className="text-[10px] text-slate-400 font-mono select-all uppercase">{colors.primaryDark}</span>
                     </div>
                   </div>
                 </div>
@@ -368,7 +368,7 @@ export default function AdminBrandingPage() {
                     />
                     <div className="flex-1 min-w-0">
                       <span className="block text-[11px] font-bold">Fond de Page</span>
-                      <span className="text-[10px] text-slate-450 font-mono select-all uppercase">{colors.bg}</span>
+                      <span className="text-[10px] text-slate-400 font-mono select-all uppercase">{colors.bg}</span>
                     </div>
                   </div>
 
@@ -382,7 +382,7 @@ export default function AdminBrandingPage() {
                     />
                     <div className="flex-1 min-w-0">
                       <span className="block text-[11px] font-bold">Texte de Base</span>
-                      <span className="text-[10px] text-slate-450 font-mono select-all uppercase">{colors.text}</span>
+                      <span className="text-[10px] text-slate-400 font-mono select-all uppercase">{colors.text}</span>
                     </div>
                   </div>
 
@@ -396,7 +396,7 @@ export default function AdminBrandingPage() {
                     />
                     <div className="flex-1 min-w-0">
                       <span className="block text-[11px] font-bold">Bordures & Séparateurs</span>
-                      <span className="text-[10px] text-slate-450 font-mono select-all uppercase">{colors.border}</span>
+                      <span className="text-[10px] text-slate-400 font-mono select-all uppercase">{colors.border}</span>
                     </div>
                   </div>
 
@@ -410,7 +410,7 @@ export default function AdminBrandingPage() {
                     />
                     <div className="flex-1 min-w-0">
                       <span className="block text-[11px] font-bold">Texte Secondaire</span>
-                      <span className="text-[10px] text-slate-450 font-mono select-all uppercase">{colors.textMuted}</span>
+                      <span className="text-[10px] text-slate-400 font-mono select-all uppercase">{colors.textMuted}</span>
                     </div>
                   </div>
                 </div>
@@ -432,7 +432,7 @@ export default function AdminBrandingPage() {
                     />
                     <div className="flex-1 min-w-0">
                       <span className="block text-[11px] font-bold">Accent (Statut & Badges)</span>
-                      <span className="text-[10px] text-slate-450 font-mono select-all uppercase">{colors.accent}</span>
+                      <span className="text-[10px] text-slate-400 font-mono select-all uppercase">{colors.accent}</span>
                     </div>
                   </div>
 
@@ -446,7 +446,7 @@ export default function AdminBrandingPage() {
                     />
                     <div className="flex-1 min-w-0">
                       <span className="block text-[11px] font-bold">Fond d&apos;Accent Soft</span>
-                      <span className="text-[10px] text-slate-450 font-mono select-all uppercase">{colors.accentBg}</span>
+                      <span className="text-[10px] text-slate-400 font-mono select-all uppercase">{colors.accentBg}</span>
                     </div>
                   </div>
 
@@ -460,7 +460,7 @@ export default function AdminBrandingPage() {
                     />
                     <div className="flex-1 min-w-0">
                       <span className="block text-[11px] font-bold">Boutons Quiz & Étoiles</span>
-                      <span className="text-[10px] text-slate-450 font-mono select-all uppercase">{colors.gold}</span>
+                      <span className="text-[10px] text-slate-400 font-mono select-all uppercase">{colors.gold}</span>
                     </div>
                   </div>
 
@@ -474,7 +474,7 @@ export default function AdminBrandingPage() {
                     />
                     <div className="flex-1 min-w-0">
                       <span className="block text-[11px] font-bold">Bouton WhatsApp</span>
-                      <span className="text-[10px] text-slate-450 font-mono select-all uppercase">{colors.whatsapp}</span>
+                      <span className="text-[10px] text-slate-400 font-mono select-all uppercase">{colors.whatsapp}</span>
                     </div>
                   </div>
                 </div>
@@ -489,7 +489,7 @@ export default function AdminBrandingPage() {
             <div className={`p-5 rounded-3xl border transition-all ${
               isLight ? 'bg-white border-slate-100 shadow-sm' : 'bg-slate-900/40 border-slate-800/80 shadow-md'
             }`}>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-450 dark:text-slate-400 mb-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 mb-4">
                 Aperçu de la Boutique en Temps Réel
               </h3>
 
@@ -679,7 +679,7 @@ export default function AdminBrandingPage() {
             
             {/* Context/Status Info Card */}
             <div className={`p-4 rounded-3xl border text-[11px] font-light leading-relaxed transition-all ${
-              isLight ? 'bg-slate-50/50 border-slate-200 text-slate-500' : 'bg-slate-900/20 border-slate-850/60 text-slate-400'
+              isLight ? 'bg-slate-50/50 border-slate-200 text-slate-500' : 'bg-slate-900/20 border-slate-800/60 text-slate-400'
             }`}>
               💡 **Astuce pro** : Cette prévisualisation utilise exactement le moteur CSS de votre site public. Les boutons, en-têtes et textes affichés ci-contre reflètent directement les couleurs que vous choisissez en temps réel.
             </div>

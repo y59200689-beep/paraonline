@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 
 export interface AdminUIContextProps {
@@ -17,8 +17,8 @@ export interface AdminUIContextProps {
   // Sub-tabs syncing
   ordersSubTab: 'list' | 'abandoned' | 'shipping' | 'reconciliation';
   setOrdersSubTab: React.Dispatch<React.SetStateAction<'list' | 'abandoned' | 'shipping' | 'reconciliation'>>;
-  crmSubTab: 'clients' | 'diagnostics' | 'leads' | 'rules' | 'rfm' | 'reminders';
-  setCrmSubTab: React.Dispatch<React.SetStateAction<'clients' | 'diagnostics' | 'leads' | 'rules' | 'rfm' | 'reminders'>>;
+  crmSubTab: 'clients' | 'diagnostics' | 'leads' | 'rules' | 'rfm' | 'reminders' | 'automations';
+  setCrmSubTab: React.Dispatch<React.SetStateAction<'clients' | 'diagnostics' | 'leads' | 'rules' | 'rfm' | 'reminders' | 'automations'>>;
   loyaltySubTab: 'members' | 'product_points' | 'bulk_points' | 'logs';
   setLoyaltySubTab: React.Dispatch<React.SetStateAction<'members' | 'product_points' | 'bulk_points' | 'logs'>>;
   activeSettingsSubTab: 'general' | 'banners' | 'coupons' | 'shipping' | 'loyalty' | 'faq' | 'logs' | 'notifications' | 'operators' | 'payment' | 'security' | 'gifts' | 'delivery' | 'homepage';
@@ -71,13 +71,13 @@ export const AdminUIProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setActiveTabState(getTabFromPathname(pathname));
   }, [pathname]);
 
-  const setActiveTab = (tab: 'dashboard' | 'analytics' | 'orders' | 'catalog' | 'crm' | 'reviews' | 'settings' | 'loyalty' | 'branding' | 'advice' | 'snippets' | 'cron' | 'audit-logs' | 'coupons') => {
+  const setActiveTab = useCallback((tab: 'dashboard' | 'analytics' | 'orders' | 'catalog' | 'crm' | 'reviews' | 'settings' | 'loyalty' | 'branding' | 'advice' | 'snippets' | 'cron' | 'audit-logs' | 'coupons') => {
     if (tab === 'dashboard') {
       router.push('/admin');
     } else {
       router.push(`/admin/${tab}`);
     }
-  };
+  }, [router]);
 
   // Other states
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -85,7 +85,7 @@ export const AdminUIProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const [ordersSubTab, setOrdersSubTab] = useState<'list' | 'abandoned' | 'shipping' | 'reconciliation'>('list');
-  const [crmSubTab, setCrmSubTab] = useState<'clients' | 'diagnostics' | 'leads' | 'rules' | 'rfm' | 'reminders'>('clients');
+  const [crmSubTab, setCrmSubTab] = useState<'clients' | 'diagnostics' | 'leads' | 'rules' | 'rfm' | 'reminders' | 'automations'>('clients');
   const [loyaltySubTab, setLoyaltySubTab] = useState<'members' | 'product_points' | 'bulk_points' | 'logs'>('members');
   const [activeSettingsSubTab, setActiveSettingsSubTab] = useState<any>('general');
 
@@ -169,49 +169,70 @@ export const AdminUIProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [analyticsChartHoverIdx, setAnalyticsChartHoverIdx] = useState<number | null>(null);
   const [catalogStockFilter, setCatalogStockFilter] = useState(false);
 
+  const contextValue = useMemo(() => ({
+    activeTab,
+    setActiveTab,
+    sidebarCollapsed,
+    setSidebarCollapsed,
+    isMobileDrawerOpen,
+    setIsMobileDrawerOpen,
+    isSearchOpen,
+    setIsSearchOpen,
+    ordersSubTab,
+    setOrdersSubTab,
+    crmSubTab,
+    setCrmSubTab,
+    loyaltySubTab,
+    setLoyaltySubTab,
+    activeSettingsSubTab,
+    setActiveSettingsSubTab,
+    isAddingCoupon,
+    setIsAddingCoupon,
+    isNewProductModalOpen,
+    setIsNewProductModalOpen,
+    selectedOrder,
+    setSelectedOrder,
+    productForm,
+    setProductForm,
+    analyticsRange,
+    setAnalyticsRange,
+    customDateFrom,
+    setCustomDateFrom,
+    customDateTo,
+    setCustomDateTo,
+    analyticsSortCol,
+    setAnalyticsSortCol,
+    analyticsSortDir,
+    setAnalyticsSortDir,
+    analyticsChartHoverIdx,
+    setAnalyticsChartHoverIdx,
+    catalogStockFilter,
+    setCatalogStockFilter,
+  }), [
+    activeTab,
+    setActiveTab,
+    sidebarCollapsed,
+    isMobileDrawerOpen,
+    isSearchOpen,
+    ordersSubTab,
+    crmSubTab,
+    loyaltySubTab,
+    activeSettingsSubTab,
+    isAddingCoupon,
+    isNewProductModalOpen,
+    selectedOrder,
+    productForm,
+    analyticsRange,
+    customDateFrom,
+    customDateTo,
+    analyticsSortCol,
+    analyticsSortDir,
+    analyticsChartHoverIdx,
+    catalogStockFilter,
+  ]);
+
   return (
-    <AdminUIContext.Provider
-      value={{
-        activeTab,
-        setActiveTab,
-        sidebarCollapsed,
-        setSidebarCollapsed,
-        isMobileDrawerOpen,
-        setIsMobileDrawerOpen,
-        isSearchOpen,
-        setIsSearchOpen,
-        ordersSubTab,
-        setOrdersSubTab,
-        crmSubTab,
-        setCrmSubTab,
-        loyaltySubTab,
-        setLoyaltySubTab,
-        activeSettingsSubTab,
-        setActiveSettingsSubTab,
-        isAddingCoupon,
-        setIsAddingCoupon,
-        isNewProductModalOpen,
-        setIsNewProductModalOpen,
-        selectedOrder,
-        setSelectedOrder,
-        productForm,
-        setProductForm,
-        analyticsRange,
-        setAnalyticsRange,
-        customDateFrom,
-        setCustomDateFrom,
-        customDateTo,
-        setCustomDateTo,
-        analyticsSortCol,
-        setAnalyticsSortCol,
-        analyticsSortDir,
-        setAnalyticsSortDir,
-        analyticsChartHoverIdx,
-        setAnalyticsChartHoverIdx,
-        catalogStockFilter,
-        setCatalogStockFilter,
-      }}
-    >
+    <AdminUIContext.Provider value={contextValue}>
       {children}
     </AdminUIContext.Provider>
   );

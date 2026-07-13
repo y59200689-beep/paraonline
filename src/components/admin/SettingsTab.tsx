@@ -843,7 +843,7 @@ export default function SettingsTab() {
                                     : 'text-emerald-400 bg-emerald-900/10 border-emerald-900/30'
                                   : adminTheme === 'light'
                                     ? 'text-slate-400 bg-slate-50 border-slate-200 hover:bg-slate-100'
-                                    : 'text-slate-500 bg-slate-955 border-slate-800 hover:bg-slate-800'
+                                    : 'text-slate-500 bg-slate-950 border-slate-800 hover:bg-slate-800'
                               }`}
                             >
                               <Eye className="w-3.5 h-3.5" />
@@ -860,7 +860,7 @@ export default function SettingsTab() {
                                     : 'text-indigo-400 bg-indigo-900/10 border-indigo-900/30'
                                   : adminTheme === 'light'
                                     ? 'text-slate-400 bg-slate-50 border-slate-200 hover:bg-slate-100'
-                                    : 'text-slate-500 bg-slate-955 border-slate-800 hover:bg-slate-800'
+                                    : 'text-slate-500 bg-slate-950 border-slate-800 hover:bg-slate-800'
                               }`}
                             >
                               <Sliders className="w-3.5 h-3.5" />
@@ -878,7 +878,7 @@ export default function SettingsTab() {
                               className={`p-1.5 rounded-lg border transition-all duration-150 ${
                                 adminTheme === 'light'
                                   ? 'text-red-500 bg-red-50 border-red-100 hover:bg-red-100'
-                                  : 'text-red-400 bg-red-950/20 border-red-900/30 hover:bg-red-955/40'
+                                  : 'text-red-400 bg-red-950/20 border-red-900/30 hover:bg-red-950/40'
                               }`}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -896,8 +896,8 @@ export default function SettingsTab() {
                       onClick={() => setIsAddingSection(!isAddingSection)}
                       className={`w-full flex items-center justify-center gap-1.5 py-3 rounded-2xl border-2 border-dashed transition-all duration-200 text-xs font-bold ${
                         adminTheme === 'light'
-                          ? 'border-slate-200 text-slate-400 hover:border-indigo-400 hover:text-indigo-650 hover:bg-indigo-50/5'
-                          : 'border-slate-800 text-slate-550 hover:border-indigo-700 hover:text-indigo-404 hover:bg-indigo-950/10'
+                          ? 'border-slate-200 text-slate-400 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/5'
+                          : 'border-slate-800 text-slate-500 hover:border-indigo-700 hover:text-indigo-404 hover:bg-indigo-950/10'
                       }`}
                     >
                       <Plus className="w-4 h-4" />
@@ -908,7 +908,7 @@ export default function SettingsTab() {
                       <div className={`absolute left-0 right-0 bottom-full mb-2.5 z-40 max-h-72 overflow-y-auto rounded-2xl border shadow-2xl p-2 space-y-1 ${
                         adminTheme === 'light' ? 'bg-white border-slate-100' : 'bg-slate-900 border-slate-800'
                       }`}>
-                        <div className="text-[9px] font-black uppercase text-slate-455 px-3 py-1.5 border-b border-slate-100/50 dark:border-slate-800/40">
+                        <div className="text-[9px] font-black uppercase text-slate-400 px-3 py-1.5 border-b border-slate-100/50 dark:border-slate-800/40">
                           Sélectionnez la section à créer
                         </div>
                         {Object.entries(SECTION_METADATA).map(([type, meta]) => (
@@ -959,7 +959,7 @@ export default function SettingsTab() {
                     type="button"
                     onClick={handleSaveHomepageSettings}
                     disabled={saveHomepageState === 'saving'}
-                    className="w-full py-3.5 bg-gradient-to-r from-indigo-500 to-indigo-650 text-white font-bold text-xs uppercase tracking-wider rounded-2xl hover:from-indigo-600 hover:to-indigo-750 hover:shadow-lg hover:shadow-indigo-500/20 transition-all duration-200 shadow-md cursor-pointer flex items-center justify-center gap-2"
+                    className="w-full py-3.5 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white font-bold text-xs uppercase tracking-wider rounded-2xl hover:from-indigo-600 hover:to-indigo-700 hover:shadow-lg hover:shadow-indigo-500/20 transition-all duration-200 shadow-md cursor-pointer flex items-center justify-center gap-2"
                   >
                     {saveHomepageState === 'saving' ? (
                       <>
@@ -998,7 +998,7 @@ export default function SettingsTab() {
                       <h3 className={`text-sm font-bold ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-202'}`}>
                         Aucune section sélectionnée
                       </h3>
-                      <p className="text-xs text-slate-505 max-w-xs mt-1 leading-relaxed">
+                      <p className="text-xs text-slate-500 max-w-xs mt-1 leading-relaxed">
                         Sélectionnez une section dans l&apos;arborescence de gauche à l&apos;aide du bouton <Sliders className="inline w-3 h-3 mx-0.5 text-slate-400" /> pour commencer à l&apos;éditer.
                       </p>
                     </div>
@@ -1034,7 +1034,7 @@ export default function SettingsTab() {
                     }`}>
                       {/* Section Info Header */}
                       <div className={`flex items-center justify-between border-b pb-4 ${
-                        adminTheme === 'light' ? 'border-slate-100' : 'border-slate-850'
+                        adminTheme === 'light' ? 'border-slate-100' : 'border-slate-800'
                       }`}>
                         <div className="flex items-center gap-3">
                           <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${meta.color} p-2 text-white flex items-center justify-center shrink-0`}>
@@ -1052,7 +1052,7 @@ export default function SettingsTab() {
                         <button
                           type="button"
                           onClick={() => setEditingSectionId(null)}
-                          className="p-1 rounded-lg hover:bg-slate-150 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600"
+                          className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600"
                         >
                           <X className="w-4.5 h-4.5" />
                         </button>
@@ -1094,7 +1094,7 @@ export default function SettingsTab() {
                                   value={activeSection.settings?.titleFr || ''}
                                   onChange={(e) => updateActiveSectionSettings({ titleFr: e.target.value })}
                                   className={`w-full text-xs transition outline-none rounded-xl px-3 py-2 border ${
-                                    adminTheme === 'light' ? 'bg-slate-55 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-900 text-slate-202'
+                                    adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-900 text-slate-202'
                                   }`}
                                 />
                               </div>
@@ -1105,7 +1105,7 @@ export default function SettingsTab() {
                                   value={activeSection.settings?.titleAr || ''}
                                   onChange={(e) => updateActiveSectionSettings({ titleAr: e.target.value })}
                                   className={`w-full text-xs transition outline-none rounded-xl px-3 py-2 border text-right ${
-                                    adminTheme === 'light' ? 'bg-slate-55 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-900 text-slate-202'
+                                    adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-900 text-slate-202'
                                   }`}
                                   dir="rtl"
                                 />
@@ -1121,7 +1121,7 @@ export default function SettingsTab() {
                                   value={activeSection.settings?.descFr || ''}
                                   onChange={(e) => updateActiveSectionSettings({ descFr: e.target.value })}
                                   className={`w-full text-xs transition outline-none rounded-xl px-3 py-2 border ${
-                                    adminTheme === 'light' ? 'bg-slate-55 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-900 text-slate-202'
+                                    adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-900 text-slate-202'
                                   }`}
                                 />
                               </div>
@@ -1132,7 +1132,7 @@ export default function SettingsTab() {
                                   value={activeSection.settings?.descAr || ''}
                                   onChange={(e) => updateActiveSectionSettings({ descAr: e.target.value })}
                                   className={`w-full text-xs transition outline-none rounded-xl px-3 py-2 border text-right ${
-                                    adminTheme === 'light' ? 'bg-slate-55 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-900 text-slate-202'
+                                    adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-900 text-slate-202'
                                   }`}
                                   dir="rtl"
                                 />
@@ -1142,25 +1142,25 @@ export default function SettingsTab() {
                             {/* CTA block */}
                             <div className="grid grid-cols-3 gap-3">
                               <div className="space-y-1.5">
-                                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-505">Texte du Bouton (FR)</label>
+                                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Texte du Bouton (FR)</label>
                                 <input
                                   type="text"
                                   value={activeSection.settings?.ctaTextFr || ''}
                                   onChange={(e) => updateActiveSectionSettings({ ctaTextFr: e.target.value })}
                                   className={`w-full text-xs transition outline-none rounded-xl px-3 py-2 border ${
-                                    adminTheme === 'light' ? 'bg-slate-55 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-900 text-slate-202'
+                                    adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-900 text-slate-202'
                                   }`}
                                   placeholder="Découvrir"
                                 />
                               </div>
                               <div className="space-y-1.5">
-                                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-505">Texte du Bouton (AR)</label>
+                                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Texte du Bouton (AR)</label>
                                 <input
                                   type="text"
                                   value={activeSection.settings?.ctaTextAr || ''}
                                   onChange={(e) => updateActiveSectionSettings({ ctaTextAr: e.target.value })}
                                   className={`w-full text-xs transition outline-none rounded-xl px-3 py-2 border text-right ${
-                                    adminTheme === 'light' ? 'bg-slate-55 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-900 text-slate-202'
+                                    adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-900 text-slate-202'
                                   }`}
                                   placeholder="تسوقي الآن"
                                   dir="rtl"
@@ -1173,7 +1173,7 @@ export default function SettingsTab() {
                                   value={activeSection.settings?.ctaLink || ''}
                                   onChange={(e) => updateActiveSectionSettings({ ctaLink: e.target.value })}
                                   className={`w-full text-xs transition outline-none rounded-xl px-3 py-2 border ${
-                                    adminTheme === 'light' ? 'bg-slate-55 border-slate-200 text-slate-850' : 'bg-slate-950 border-slate-900 text-slate-202'
+                                    adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-900 text-slate-202'
                                   }`}
                                   placeholder="/products or link"
                                 />
@@ -1196,7 +1196,7 @@ export default function SettingsTab() {
                                     value={activeSection.settings?.bgColor || '#f9fafb'}
                                     onChange={(e) => updateActiveSectionSettings({ bgColor: e.target.value })}
                                     className={`flex-1 text-xs font-mono px-3 py-1.5 rounded-xl border ${
-                                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-805' : 'bg-slate-955 border-slate-900 text-slate-202'
+                                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-900 text-slate-202'
                                     }`}
                                   />
                                 </div>
@@ -1215,7 +1215,7 @@ export default function SettingsTab() {
                                     value={activeSection.settings?.textColor || '#111827'}
                                     onChange={(e) => updateActiveSectionSettings({ textColor: e.target.value })}
                                     className={`flex-1 text-xs font-mono px-3 py-1.5 rounded-xl border ${
-                                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-805' : 'bg-slate-955 border-slate-900 text-slate-202'
+                                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-900 text-slate-202'
                                     }`}
                                   />
                                 </div>
@@ -1237,7 +1237,7 @@ export default function SettingsTab() {
                                     value={activeSection.settings?.titleFr || ''}
                                     onChange={(e) => updateActiveSectionSettings({ titleFr: e.target.value })}
                                     className={`w-full text-xs transition outline-none rounded-xl px-3 py-2 border ${
-                                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-955 border-slate-900 text-slate-202'
+                                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-900 text-slate-202'
                                     }`}
                                   />
                                 </div>
@@ -1248,7 +1248,7 @@ export default function SettingsTab() {
                                     value={activeSection.settings?.titleAr || ''}
                                     onChange={(e) => updateActiveSectionSettings({ titleAr: e.target.value })}
                                     className={`w-full text-xs transition outline-none rounded-xl px-3 py-2 border text-right ${
-                                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-955 border-slate-900 text-slate-202'
+                                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-900 text-slate-202'
                                     }`}
                                     dir="rtl"
                                   />
@@ -1290,8 +1290,8 @@ export default function SettingsTab() {
                                       key={`sec-p-item-${id}-${pIdx}`}
                                       className={`flex items-center justify-between p-2 rounded-xl border transition ${
                                         adminTheme === 'light'
-                                          ? 'bg-white border-slate-100 hover:border-slate-250 shadow-sm'
-                                          : 'bg-slate-900/60 border-slate-850 hover:border-slate-750'
+                                          ? 'bg-white border-slate-100 hover:border-slate-200 shadow-sm'
+                                          : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
                                       }`}
                                     >
                                       <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -1307,7 +1307,7 @@ export default function SettingsTab() {
                                               newIds[pIdx - 1] = temp;
                                               updateActiveSectionSettings({ productIds: newIds });
                                             }}
-                                            className="p-0.5 text-slate-400 hover:text-slate-650 disabled:opacity-20"
+                                            className="p-0.5 text-slate-400 hover:text-slate-600 disabled:opacity-20"
                                           >
                                             <ChevronUp className="w-3.5 h-3.5" />
                                           </button>
@@ -1321,7 +1321,7 @@ export default function SettingsTab() {
                                               newIds[pIdx + 1] = temp;
                                               updateActiveSectionSettings({ productIds: newIds });
                                             }}
-                                            className="p-0.5 text-slate-400 hover:text-slate-650 disabled:opacity-20"
+                                            className="p-0.5 text-slate-400 hover:text-slate-600 disabled:opacity-20"
                                           >
                                             <ChevronDown className="w-3.5 h-3.5" />
                                           </button>
@@ -1331,7 +1331,7 @@ export default function SettingsTab() {
                                           {prod.image && <img src={prod.image} alt="" className="w-full h-full object-cover" />}
                                         </div>
                                         <div className="min-w-0 flex-1">
-                                          <p className={`text-xs font-bold truncate ${adminTheme === 'light' ? 'text-slate-850' : 'text-slate-200'}`}>
+                                          <p className={`text-xs font-bold truncate ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-200'}`}>
                                             {prod.nameFr || prod.title}
                                           </p>
                                           <p className="text-[9.5px] text-slate-400 mt-0.5">
@@ -1349,7 +1349,7 @@ export default function SettingsTab() {
                                         className={`p-1.5 rounded-lg border transition ${
                                           adminTheme === 'light'
                                             ? 'text-red-500 bg-red-50 border-red-100 hover:bg-red-100'
-                                            : 'text-red-400 bg-red-950/20 border-red-900/30 hover:bg-red-955/40'
+                                            : 'text-red-400 bg-red-950/20 border-red-900/30 hover:bg-red-950/40'
                                         }`}
                                       >
                                         <Trash2 className="w-3.5 h-3.5" />
@@ -1367,8 +1367,8 @@ export default function SettingsTab() {
                                     onClick={() => setTrOpen(true)}
                                     className={`w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-dashed text-xs font-bold ${
                                       adminTheme === 'light'
-                                        ? 'border-slate-200 text-slate-400 hover:text-slate-600 hover:border-slate-350 bg-slate-50/50'
-                                        : 'border-slate-805 text-slate-550 hover:text-slate-400 hover:border-slate-700 bg-slate-950/20'
+                                        ? 'border-slate-200 text-slate-400 hover:text-slate-600 hover:border-slate-300 bg-slate-50/50'
+                                        : 'border-slate-800 text-slate-500 hover:text-slate-400 hover:border-slate-700 bg-slate-950/20'
                                     }`}
                                   >
                                     <Plus className="w-3.5 h-3.5" />
@@ -1379,7 +1379,7 @@ export default function SettingsTab() {
                                     adminTheme === 'light' ? 'bg-white border-slate-100' : 'bg-slate-900 border-slate-800'
                                   }`}>
                                     <div className={`flex items-center gap-2 px-3 py-2 border-b ${
-                                      adminTheme === 'light' ? 'border-slate-100 bg-slate-50/50' : 'border-slate-850 bg-slate-950/30'
+                                      adminTheme === 'light' ? 'border-slate-100 bg-slate-50/50' : 'border-slate-800 bg-slate-950/30'
                                     }`}>
                                       <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                                       <input
@@ -1389,13 +1389,13 @@ export default function SettingsTab() {
                                         onChange={(e) => setTrSearch(e.target.value)}
                                         placeholder="Rechercher par nom..."
                                         className={`flex-1 bg-transparent outline-none text-xs font-semibold ${
-                                          adminTheme === 'light' ? 'text-slate-850 placeholder-slate-400' : 'text-slate-200 placeholder-slate-550'
+                                          adminTheme === 'light' ? 'text-slate-800 placeholder-slate-400' : 'text-slate-200 placeholder-slate-500'
                                         }`}
                                       />
                                       <button
                                         type="button"
                                         onClick={() => { setTrOpen(false); setTrSearch(''); }}
-                                        className="text-slate-400 hover:text-slate-650"
+                                        className="text-slate-400 hover:text-slate-600"
                                       >
                                         <X className="w-3.5 h-3.5" />
                                       </button>
@@ -1420,14 +1420,14 @@ export default function SettingsTab() {
                                             className={`w-full flex items-center gap-3 px-3 py-2 text-left border-b last:border-0 text-xs transition ${
                                               adminTheme === 'light'
                                                 ? 'border-slate-50 hover:bg-slate-50 text-slate-700'
-                                                : 'border-slate-850/50 hover:bg-slate-800/65 text-slate-300'
+                                                : 'border-slate-800/50 hover:bg-slate-800/65 text-slate-300'
                                             }`}
                                           >
                                             <div className="w-8 h-8 rounded overflow-hidden bg-slate-100 shrink-0">
                                               {p.image && <img src={p.image} alt="" className="w-full h-full object-cover" />}
                                             </div>
                                             <span className="flex-1 truncate font-medium">{p.nameFr || p.title}</span>
-                                            <span className="text-[10px] font-bold text-slate-455 shrink-0">{p.price} DH</span>
+                                            <span className="text-[10px] font-bold text-slate-400 shrink-0">{p.price} DH</span>
                                           </button>
                                         ))}
                                     </div>
@@ -1484,7 +1484,7 @@ export default function SettingsTab() {
                                       leftImage: e.target.value 
                                     })}
                                     className={`flex-1 text-xs transition outline-none rounded-xl px-3 py-2 border ${
-                                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-955 border-slate-900 text-slate-202'
+                                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-900 text-slate-202'
                                     }`}
                                   />
                                   <label className="px-3 py-2 bg-slate-950 dark:bg-white text-white dark:text-slate-950 hover:bg-slate-900 dark:hover:bg-slate-50 font-bold text-[10px] uppercase tracking-wider rounded-xl cursor-pointer flex items-center justify-center border border-transparent transition-colors">
@@ -1540,7 +1540,7 @@ export default function SettingsTab() {
                                       rightImage: e.target.value 
                                     })}
                                     className={`flex-1 text-xs transition outline-none rounded-xl px-3 py-2 border ${
-                                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-955 border-slate-900 text-slate-202'
+                                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-900 text-slate-202'
                                     }`}
                                   />
                                   <label className="px-3 py-2 bg-slate-950 dark:bg-white text-white dark:text-slate-950 hover:bg-slate-900 dark:hover:bg-slate-50 font-bold text-[10px] uppercase tracking-wider rounded-xl cursor-pointer flex items-center justify-center border border-transparent transition-colors">
@@ -1567,10 +1567,10 @@ export default function SettingsTab() {
                         {activeSection.type === 'hero' && (
                           <div className="space-y-6">
                             <div className={`border-b pb-3 ${adminTheme === 'light' ? 'border-slate-100' : 'border-slate-800'}`}>
-                              <h4 className={`text-xs font-black uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-700' : 'text-slate-355'}`}>
+                              <h4 className={`text-xs font-black uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
                                 Diapositives du Carrousel Héro
                               </h4>
-                              <p className="text-[10px] text-slate-505 mt-1">
+                              <p className="text-[10px] text-slate-500 mt-1">
                                 Sélectionnez une diapositive ci-dessous pour la modifier.
                               </p>
                             </div>
@@ -1585,7 +1585,7 @@ export default function SettingsTab() {
                                       ? 'border-indigo-500 ring-2 ring-indigo-500/20'
                                       : adminTheme === 'light'
                                         ? 'border-slate-200 bg-white hover:border-indigo-500/50 hover:shadow-sm'
-                                        : 'border-slate-805 bg-slate-950 hover:border-indigo-500/50'
+                                        : 'border-slate-800 bg-slate-950 hover:border-indigo-500/50'
                                   }`}
                                 >
                                   <div 
@@ -1664,7 +1664,7 @@ export default function SettingsTab() {
                                         type="text"
                                         value={bannerForm.bgImage || ''}
                                         onChange={(e) => setBannerForm({ ...bannerForm, bgImage: e.target.value })}
-                                        className={`flex-1 text-xs rounded-xl px-2.5 py-1.5 border ${adminTheme === 'light' ? 'bg-white text-slate-850 border-slate-200' : 'bg-slate-900 text-slate-200 border-slate-800'}`}
+                                        className={`flex-1 text-xs rounded-xl px-2.5 py-1.5 border ${adminTheme === 'light' ? 'bg-white text-slate-800 border-slate-200' : 'bg-slate-900 text-slate-200 border-slate-800'}`}
                                       />
                                       <label className="px-3 py-1.5 bg-slate-950 dark:bg-white text-white dark:text-slate-950 hover:bg-slate-900 dark:hover:bg-slate-50 font-bold text-[10px] rounded-xl cursor-pointer flex items-center justify-center border border-transparent">
                                         Importer
@@ -1705,7 +1705,7 @@ export default function SettingsTab() {
                                   <button
                                     type="button"
                                     onClick={() => setSelectedBannerIndex(null)}
-                                    className="px-3.5 py-2 border rounded-xl text-[10px] uppercase font-bold text-slate-455 hover:bg-slate-100 dark:hover:bg-slate-900/40"
+                                    className="px-3.5 py-2 border rounded-xl text-[10px] uppercase font-bold text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900/40"
                                   >
                                     Annuler
                                   </button>
@@ -1726,10 +1726,10 @@ export default function SettingsTab() {
                           <div className="space-y-4">
                             <div className={`border-b pb-3 flex justify-between items-center ${adminTheme === 'light' ? 'border-slate-100' : 'border-slate-800'}`}>
                               <div>
-                                <h4 className={`text-xs font-black uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-700' : 'text-slate-355'}`}>
+                                <h4 className={`text-xs font-black uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
                                   Questions de la FAQ d&apos;Accueil
                                 </h4>
-                                <p className="text-[10px] text-slate-505 mt-0.5">
+                                <p className="text-[10px] text-slate-500 mt-0.5">
                                   Gérez les questions et réponses affichées sur la page d&apos;accueil.
                                 </p>
                               </div>
@@ -1808,22 +1808,22 @@ export default function SettingsTab() {
                                 <div 
                                   key={index}
                                   className={`p-3 rounded-xl border flex justify-between items-start gap-4 transition hover:shadow-sm ${
-                                    adminTheme === 'light' ? 'bg-white border-slate-150' : 'bg-slate-900/60 border-slate-850'
+                                    adminTheme === 'light' ? 'bg-white border-slate-100' : 'bg-slate-900/60 border-slate-800'
                                   }`}
                                 >
                                   <div className="flex-1 min-w-0 text-xs space-y-1">
-                                    <div className="border-b border-slate-100 dark:border-slate-850 pb-1.5 mb-1.5 flex justify-between text-[9px] font-bold text-slate-400">
+                                    <div className="border-b border-slate-100 dark:border-slate-800 pb-1.5 mb-1.5 flex justify-between text-[9px] font-bold text-slate-400">
                                       <span>FRANÇAIS</span>
                                       <span className="text-right" dir="rtl">العربية</span>
                                     </div>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                       <div className="space-y-0.5">
                                         <strong className="block font-extrabold text-slate-700 dark:text-slate-300">{faqItem.q_fr}</strong>
-                                        <p className="text-[11px] text-slate-505 font-medium leading-relaxed">{faqItem.a_fr}</p>
+                                        <p className="text-[11px] text-slate-500 font-medium leading-relaxed">{faqItem.a_fr}</p>
                                       </div>
                                       <div className="space-y-0.5 text-right" dir="rtl">
                                         <strong className="block font-extrabold text-slate-700 dark:text-slate-300">{faqItem.q_ar}</strong>
-                                        <p className="text-[11px] text-slate-550 font-medium leading-relaxed">{faqItem.a_ar}</p>
+                                        <p className="text-[11px] text-slate-500 font-medium leading-relaxed">{faqItem.a_ar}</p>
                                       </div>
                                     </div>
                                   </div>
@@ -1843,15 +1843,15 @@ export default function SettingsTab() {
                         {activeSection.type === 'diagnosticBanner' && (
                           <div className="space-y-4">
                             <div className={`border-b pb-3 ${adminTheme === 'light' ? 'border-slate-100' : 'border-slate-800'}`}>
-                              <h4 className={`text-xs font-black uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-700' : 'text-slate-355'}`}>
+                              <h4 className={`text-xs font-black uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
                                 Diagnostic Intelligent IA
                               </h4>
-                              <p className="text-[10px] text-slate-505 mt-0.5">
+                              <p className="text-[10px] text-slate-500 mt-0.5">
                                 Configurez les récompenses du quiz de diagnostic intelligent de la peau.
                               </p>
                             </div>
                             <div className="space-y-2">
-                              <label className="text-xs font-bold text-slate-650 dark:text-slate-400 block">
+                              <label className="text-xs font-bold text-slate-600 dark:text-slate-400 block">
                                 Pourcentage de réduction de récompense (%)
                               </label>
                               <div className="flex items-center gap-3">
@@ -1862,9 +1862,9 @@ export default function SettingsTab() {
                                     const val = Number(e.target.value);
                                     await saveSettings({ ...settings, quizDiscountPercent: val });
                                   }}
-                                  className={`w-28 text-xs font-bold rounded-xl px-3 py-2 border ${adminTheme === 'light' ? 'bg-white text-slate-805 border-slate-200' : 'bg-slate-900 text-slate-202 border-slate-800'}`}
+                                  className={`w-28 text-xs font-bold rounded-xl px-3 py-2 border ${adminTheme === 'light' ? 'bg-white text-slate-800 border-slate-200' : 'bg-slate-900 text-slate-202 border-slate-800'}`}
                                 />
-                                <span className="text-[11px] font-semibold text-slate-450">
+                                <span className="text-[11px] font-semibold text-slate-400">
                                   offert aux clients après la finalisation du diagnostic cutané.
                                 </span>
                               </div>
@@ -1875,10 +1875,10 @@ export default function SettingsTab() {
                         {activeSection.type === 'trustBar' && (
                           <div className="space-y-4">
                             <div className={`border-b pb-3 ${adminTheme === 'light' ? 'border-slate-100' : 'border-slate-800'}`}>
-                              <h4 className={`text-xs font-black uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-700' : 'text-slate-355'}`}>
+                              <h4 className={`text-xs font-black uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
                                 Barre de Confiance Maroc
                               </h4>
-                              <p className="text-[10px] text-slate-505 mt-0.5">
+                              <p className="text-[10px] text-slate-500 mt-0.5">
                                 Ajustez le numéro WhatsApp de contact pour la barre de réassurance d&apos;accueil.
                               </p>
                             </div>
@@ -1892,7 +1892,7 @@ export default function SettingsTab() {
                                 onChange={async (e) => {
                                   await saveSettings({ ...settings, storeWhatsApp: e.target.value });
                                 }}
-                                className={`w-full text-xs font-bold rounded-xl px-3 py-2 border ${adminTheme === 'light' ? 'bg-white text-slate-850 border-slate-200' : 'bg-slate-900 text-slate-202 border-slate-800'}`}
+                                className={`w-full text-xs font-bold rounded-xl px-3 py-2 border ${adminTheme === 'light' ? 'bg-white text-slate-800 border-slate-200' : 'bg-slate-900 text-slate-202 border-slate-800'}`}
                                 placeholder="Ex: 212660808080"
                               />
                             </div>
@@ -1943,7 +1943,7 @@ export default function SettingsTab() {
                                   <div 
                                     key={index}
                                     className={`p-3 rounded-xl border space-y-2 ${
-                                      adminTheme === 'light' ? 'bg-slate-50 border-slate-150' : 'bg-slate-900/60 border-slate-850'
+                                      adminTheme === 'light' ? 'bg-slate-50 border-slate-100' : 'bg-slate-900/60 border-slate-800'
                                     }`}
                                   >
                                     <div className="flex gap-2">
@@ -2034,7 +2034,7 @@ export default function SettingsTab() {
                                         </label>
                                       </div>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-2 pt-1.5 border-t border-dashed border-slate-200/50 dark:border-slate-850">
+                                    <div className="grid grid-cols-2 gap-2 pt-1.5 border-t border-dashed border-slate-200/50 dark:border-slate-800">
                                       <div className="space-y-1">
                                         <label className="text-[8px] font-bold text-slate-400 uppercase">Associer une catégorie</label>
                                         <select
@@ -2276,7 +2276,7 @@ export default function SettingsTab() {
                                 if (!prod) return null;
                                 return (
                                   <div className={`flex items-center justify-between p-2 rounded-xl border ${
-                                    adminTheme === 'light' ? 'bg-white border-slate-150' : 'bg-slate-900/60 border-slate-850'
+                                    adminTheme === 'light' ? 'bg-white border-slate-100' : 'bg-slate-900/60 border-slate-800'
                                   }`}>
                                     <div className="flex items-center gap-2.5 min-w-0 flex-1">
                                       <div className="w-9 h-9 rounded-lg overflow-hidden bg-slate-100 shrink-0">
@@ -2303,7 +2303,7 @@ export default function SettingsTab() {
                                       type="button"
                                       onClick={() => setTrOpen(true)}
                                       className={`w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-dashed text-xs font-bold ${
-                                        adminTheme === 'light' ? 'border-slate-200 text-slate-400 bg-slate-50/50' : 'border-slate-805 text-slate-550'
+                                        adminTheme === 'light' ? 'border-slate-200 text-slate-400 bg-slate-50/50' : 'border-slate-800 text-slate-500'
                                       }`}
                                     >
                                       <Plus className="w-3.5 h-3.5" />
@@ -2403,7 +2403,7 @@ export default function SettingsTab() {
                                     <div 
                                       key={index}
                                       className={`p-4 rounded-2xl border space-y-3 ${
-                                        adminTheme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-900/60 border-slate-850'
+                                        adminTheme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-900/60 border-slate-800'
                                       }`}
                                     >
                                       <h5 className="text-xs font-black uppercase text-indigo-500">Carte Promotionnelle #{index + 1}</h5>
@@ -2432,7 +2432,7 @@ export default function SettingsTab() {
                                               newCards[index] = { ...card, tagAr: e.target.value };
                                               updateActiveSectionSettings({ promoCards: newCards });
                                             }}
-                                            className={`w-full text-xs rounded-xl px-2 py-1 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-955 text-slate-202 border-slate-800'}`}
+                                            className={`w-full text-xs rounded-xl px-2 py-1 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-202 border-slate-800'}`}
                                             dir="rtl"
                                           />
                                         </div>
@@ -2458,7 +2458,7 @@ export default function SettingsTab() {
                                               newCards[index] = { ...card, titleAr: e.target.value };
                                               updateActiveSectionSettings({ promoCards: newCards });
                                             }}
-                                            className={`w-full text-xs rounded-xl px-2 py-1 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-955 text-slate-202 border-slate-800'}`}
+                                            className={`w-full text-xs rounded-xl px-2 py-1 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-202 border-slate-800'}`}
                                             rows={2}
                                             dir="rtl"
                                           />
@@ -2491,29 +2491,73 @@ export default function SettingsTab() {
                                         </div>
                                         <div className="space-y-1">
                                           <label className="text-[9px] font-bold text-slate-400 uppercase">Image de Fond (URL)</label>
-                                          <input
-                                            type="text"
-                                            value={card.bgImage}
-                                            onChange={(e) => {
-                                              const newCards = [...cards];
-                                              newCards[index] = { ...card, bgImage: e.target.value };
-                                              updateActiveSectionSettings({ promoCards: newCards });
-                                            }}
-                                            className={`w-full text-xs rounded-xl px-2 py-1 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-202 border-slate-800'}`}
-                                          />
+                                          <div className="flex gap-2">
+                                            <input
+                                              type="text"
+                                              value={card.bgImage}
+                                              onChange={(e) => {
+                                                const newCards = [...cards];
+                                                newCards[index] = { ...card, bgImage: e.target.value };
+                                                updateActiveSectionSettings({ promoCards: newCards });
+                                              }}
+                                              className={`w-full text-xs rounded-xl px-2 py-1 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-202 border-slate-800'}`}
+                                            />
+                                            <label className={`px-2.5 py-1 font-bold rounded-lg text-[9px] uppercase cursor-pointer flex items-center gap-1 border shrink-0 transition-all ${
+                                              adminTheme === 'light'
+                                                ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-sm'
+                                                : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300'
+                                            }`}>
+                                              <Upload className="w-3 h-3 text-slate-500" />
+                                              {isUploading ? '...' : 'Importer'}
+                                              <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={(e) => {
+                                                  handleImageUpload(e, (url) => {
+                                                    const newCards = [...cards];
+                                                    newCards[index] = { ...card, bgImage: url };
+                                                    updateActiveSectionSettings({ promoCards: newCards });
+                                                  });
+                                                }}
+                                                className="hidden"
+                                              />
+                                            </label>
+                                          </div>
                                         </div>
                                         <div className="space-y-1">
                                           <label className="text-[9px] font-bold text-slate-400 uppercase">Image Superposée (URL)</label>
-                                          <input
-                                            type="text"
-                                            value={card.overlayImage}
-                                            onChange={(e) => {
-                                              const newCards = [...cards];
-                                              newCards[index] = { ...card, overlayImage: e.target.value };
-                                              updateActiveSectionSettings({ promoCards: newCards });
-                                            }}
-                                            className={`w-full text-xs rounded-xl px-2 py-1 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-202 border-slate-800'}`}
-                                          />
+                                          <div className="flex gap-2">
+                                            <input
+                                              type="text"
+                                              value={card.overlayImage}
+                                              onChange={(e) => {
+                                                const newCards = [...cards];
+                                                newCards[index] = { ...card, overlayImage: e.target.value };
+                                                updateActiveSectionSettings({ promoCards: newCards });
+                                              }}
+                                              className={`w-full text-xs rounded-xl px-2 py-1 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-202 border-slate-800'}`}
+                                            />
+                                            <label className={`px-2.5 py-1 font-bold rounded-lg text-[9px] uppercase cursor-pointer flex items-center gap-1 border shrink-0 transition-all ${
+                                              adminTheme === 'light'
+                                                ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-sm'
+                                                : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300'
+                                            }`}>
+                                              <Upload className="w-3 h-3 text-slate-500" />
+                                              {isUploading ? '...' : 'Importer'}
+                                              <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={(e) => {
+                                                  handleImageUpload(e, (url) => {
+                                                    const newCards = [...cards];
+                                                    newCards[index] = { ...card, overlayImage: url };
+                                                    updateActiveSectionSettings({ promoCards: newCards });
+                                                  });
+                                                }}
+                                                className="hidden"
+                                              />
+                                            </label>
+                                          </div>
                                         </div>
                                       </div>
                                     </div>
@@ -2574,10 +2618,10 @@ export default function SettingsTab() {
                                     <div 
                                       key={index}
                                       className={`p-4 rounded-2xl border space-y-3 ${
-                                        adminTheme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-900/60 border-slate-850'
+                                        adminTheme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-900/60 border-slate-800'
                                       }`}
                                     >
-                                      <h5 className="text-xs font-black uppercase text-teal-650">Carte Préoccupation #{index + 1} ({c.key})</h5>
+                                      <h5 className="text-xs font-black uppercase text-teal-600">Carte Préoccupation #{index + 1} ({c.key})</h5>
                                       
                                       <div className="grid grid-cols-2 gap-3">
                                         <div className="space-y-1">
@@ -2603,7 +2647,7 @@ export default function SettingsTab() {
                                               newConcerns[index] = { ...c, titleAr: e.target.value };
                                               updateActiveSectionSettings({ concerns: newConcerns });
                                             }}
-                                            className={`w-full text-xs rounded-xl px-2 py-1 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-955 text-slate-202 border-slate-800'}`}
+                                            className={`w-full text-xs rounded-xl px-2 py-1 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-202 border-slate-800'}`}
                                             dir="rtl"
                                           />
                                         </div>
@@ -2630,7 +2674,7 @@ export default function SettingsTab() {
                                               newConcerns[index] = { ...c, subtitleAr: e.target.value };
                                               updateActiveSectionSettings({ concerns: newConcerns });
                                             }}
-                                            className={`w-full text-xs rounded-xl px-2 py-1 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-955 text-slate-202 border-slate-800'}`}
+                                            className={`w-full text-xs rounded-xl px-2 py-1 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-202 border-slate-800'}`}
                                             dir="rtl"
                                           />
                                         </div>
@@ -2694,7 +2738,7 @@ export default function SettingsTab() {
                                   <div 
                                     key={index}
                                     className={`p-4 rounded-2xl border space-y-3 ${
-                                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-900/60 border-slate-850'
+                                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-900/60 border-slate-800'
                                     }`}
                                   >
                                     <div className="flex justify-between items-center">
@@ -2735,7 +2779,7 @@ export default function SettingsTab() {
                                             newReviews[index] = { ...rev, authorAr: e.target.value };
                                             updateActiveSectionSettings({ reviews: newReviews });
                                           }}
-                                          className={`w-full text-xs rounded-xl px-2 py-1 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-955 text-slate-202 border-slate-800'}`}
+                                          className={`w-full text-xs rounded-xl px-2 py-1 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-202 border-slate-800'}`}
                                           dir="rtl"
                                         />
                                       </div>
@@ -2762,7 +2806,7 @@ export default function SettingsTab() {
                                             newReviews[index] = { ...rev, roleAr: e.target.value };
                                             updateActiveSectionSettings({ reviews: newReviews });
                                           }}
-                                          className={`w-full text-xs rounded-xl px-2 py-1 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-955 text-slate-202 border-slate-800'}`}
+                                          className={`w-full text-xs rounded-xl px-2 py-1 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-202 border-slate-800'}`}
                                           dir="rtl"
                                         />
                                       </div>
@@ -2803,7 +2847,7 @@ export default function SettingsTab() {
                                             newReviews[index] = { ...rev, textAr: e.target.value };
                                             updateActiveSectionSettings({ reviews: newReviews });
                                           }}
-                                          className={`w-full text-xs rounded-xl px-2 py-1 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-955 text-slate-202 border-slate-800'}`}
+                                          className={`w-full text-xs rounded-xl px-2 py-1 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-202 border-slate-800'}`}
                                           dir="rtl"
                                           rows={2}
                                         />
@@ -2839,12 +2883,12 @@ export default function SettingsTab() {
                          activeSection.type !== 'customerReviews' && (
                           <div className="space-y-4 py-8 text-center">
                             <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto ${
-                              adminTheme === 'light' ? 'bg-slate-50 text-slate-450' : 'bg-slate-850 text-slate-550'
+                              adminTheme === 'light' ? 'bg-slate-50 text-slate-400' : 'bg-slate-800 text-slate-500'
                             }`}>
                               <meta.icon className="w-5 h-5 animate-pulse" />
                             </div>
                             <div className="space-y-1">
-                              <p className={`text-xs font-bold ${adminTheme === 'light' ? 'text-slate-750' : 'text-slate-200'}`}>
+                              <p className={`text-xs font-bold ${adminTheme === 'light' ? 'text-slate-700' : 'text-slate-200'}`}>
                                 {meta.nameFr}
                               </p>
                               <p className="text-[10.5px] text-slate-500 max-w-[280px] mx-auto leading-relaxed">

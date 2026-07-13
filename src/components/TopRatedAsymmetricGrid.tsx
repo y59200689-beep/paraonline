@@ -72,7 +72,7 @@ export const TopRatedAsymmetricGrid: React.FC = () => {
 
   return (
     <section className="py-10 bg-[#FAFAFA] border-b border-slate-200/40 relative overflow-hidden reveal-on-scroll">
-      <div className="max-w-[1400px] mx-auto px-6 sm:px-10 md:px-12 lg:px-16 xl:px-20 relative z-10">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 relative z-10">
 
         {/* Section Dark Title Card Banner — slim compact design matching reference */}
         <div className="relative rounded-[20px] bg-[#111827] overflow-hidden flex flex-row items-center justify-between px-6 md:px-8 border border-slate-800 shadow-lg mb-7 group" style={{ height: '72px' }}>

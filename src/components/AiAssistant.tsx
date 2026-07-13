@@ -527,7 +527,7 @@ export const AiAssistant: React.FC = () => {
                                   <button
                                     type="button"
                                     onClick={() => handleUpdateQty(item.productId, -1)}
-                                    className="w-4 h-4 rounded bg-slate-200 hover:bg-slate-350 flex items-center justify-center font-bold border-0 outline-none text-[10px] cursor-pointer"
+                                    className="w-4 h-4 rounded bg-slate-200 hover:bg-slate-300 flex items-center justify-center font-bold border-0 outline-none text-[10px] cursor-pointer"
                                   >
                                     -
                                   </button>
@@ -535,7 +535,7 @@ export const AiAssistant: React.FC = () => {
                                   <button
                                     type="button"
                                     onClick={() => handleUpdateQty(item.productId, 1)}
-                                    className="w-4 h-4 rounded bg-slate-200 hover:bg-slate-355 flex items-center justify-center font-bold border-0 outline-none text-[10px] cursor-pointer"
+                                    className="w-4 h-4 rounded bg-slate-200 hover:bg-slate-300 flex items-center justify-center font-bold border-0 outline-none text-[10px] cursor-pointer"
                                   >
                                     +
                                   </button>

@@ -37,6 +37,13 @@ interface UiContextProps {
   selectedProduct: Product | null;
   setSelectedProduct: (product: Product | null) => void;
 
+  isSuccessModalOpen: boolean;
+  setSuccessModalOpen: (open: boolean) => void;
+  successOrderId: string;
+  setSuccessOrderId: (id: string) => void;
+  successWhatsappUrl: string;
+  setSuccessWhatsappUrl: (url: string) => void;
+
   // Search & Glossary
   activeGlossaryKey: string;
   setActiveGlossaryKey: (key: string) => void;
@@ -77,6 +84,9 @@ export const UiProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   const [isScratchCardOpen, setScratchCardOpen] = useState(false);
   const [isRoutineBuilderOpen, setRoutineBuilderOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isSuccessModalOpen, setSuccessModalOpen] = useState(false);
+  const [successOrderId, setSuccessOrderId] = useState('');
+  const [successWhatsappUrl, setSuccessWhatsappUrl] = useState('');
   const [activeGlossaryKey, setActiveGlossaryKey] = useState('niacinamide');
   const [activeCategory, setActiveCategory] = useState('all');
   const [activeConcern, setActiveConcern] = useState('all');
@@ -194,6 +204,12 @@ export const UiProvider: React.FC<{ children: React.ReactNode }> = ({ children }
         setRoutineBuilderOpen,
         selectedProduct,
         setSelectedProduct,
+        isSuccessModalOpen,
+        setSuccessModalOpen,
+        successOrderId,
+        setSuccessOrderId,
+        successWhatsappUrl,
+        setSuccessWhatsappUrl,
         activeGlossaryKey,
         setActiveGlossaryKey,
         activeCategory,

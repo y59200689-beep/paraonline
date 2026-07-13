@@ -184,7 +184,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, onSele
       {/* Delicate background ambient halos */}
       <div className="absolute top-1/4 -left-64 w-[500px] h-[300px] rounded-full bg-accent/8 blur-3xl pointer-events-none animate-morph-blob" />
       <div className="absolute bottom-1/4 -right-64 w-[450px] h-[250px] rounded-full bg-primary/5 blur-3xl pointer-events-none animate-morph-blob" style={{ animationDelay: '-4s' }} />
-      <div className="max-w-7xl mx-auto px-6 sm:px-10 md:px-16 lg:px-20 xl:px-24">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8">
 
         {/* Section header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 border-b border-slate-100 pb-5 gap-6 select-none font-sans">

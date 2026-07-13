@@ -27,6 +27,8 @@ export async function GET() {
       dailyGiftName: settings.dailyGiftName,
       giftRanges: settings.giftRanges || [],
       categories: settings.categories,
+      customCategories: settings.customCategories || [],
+      customConcerns: settings.customConcerns || [],
       banners: settings.banners,
       coupons: settings.coupons,
       faq: settings.faq,

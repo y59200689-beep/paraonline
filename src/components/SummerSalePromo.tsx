@@ -147,7 +147,7 @@ export const SummerSalePromo: React.FC = () => {
           filter: 'saturate(1.4)',
         }}
       />
-      <div className="max-w-[1400px] mx-auto px-6 sm:px-10 md:px-12 lg:px-16 xl:px-20 relative z-10">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 relative z-10">
         
         {/* Blue Frame Container */}
         <div className="bg-primary-dark rounded-[32px] p-6 md:p-8 shadow-[0_20px_50px_rgba(26,37,93,0.15)] border border-primary/30 relative overflow-hidden">

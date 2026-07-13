@@ -153,37 +153,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         <div className={`pt-4 border-t space-y-2 ${adminTheme === 'light' ? 'border-slate-100' : 'border-slate-900/80'}`}>
-          {!sidebarCollapsed && (
-            <div className={`p-2.5 rounded-xl flex items-center gap-2.5 transition border ${
-              adminTheme === 'light' ? 'bg-slate-50/50 border-slate-200 text-slate-700' : 'bg-slate-900/40 border-slate-800/60 text-slate-300'
-            }`}>
-              <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center text-[10px] font-extrabold text-emerald-600 shrink-0">
-                {currentUser?.name ? currentUser.name.slice(0, 2).toUpperCase() : 'AD'}
-              </div>
-              <div className="min-w-0 flex-1">
-                <span className="block text-[11px] font-bold truncate leading-tight">
-                  {currentUser?.name || 'Administrateur'}
-                </span>
-                <span className="flex items-center gap-1 text-[9px] text-slate-400 font-medium mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 animate-pulse" />
-                  {currentUser?.role === 'owner' ? 'Propriétaire' : currentUser?.role === 'logistician' ? 'Logisticien' : currentUser?.role === 'support' ? 'Support' : 'Admin'}
-                </span>
-              </div>
-            </div>
-          )}
-          <button
-            onClick={handleLogout}
-            title={sidebarCollapsed ? 'Se Déconnecter' : undefined}
-            className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-2.5'} px-3 py-2 text-xs font-semibold rounded-xl border border-transparent transition duration-200 cursor-pointer ${
-              adminTheme === 'light'
-                ? 'text-rose-600 hover:text-rose-700 hover:bg-rose-50 hover:border-rose-100/50'
-                : 'text-rose-400 hover:text-rose-300 hover:bg-rose-950/20 hover:border-rose-950/40'
-            }`}
-          >
-            <LogOut className="w-4 h-4" />
-            {!sidebarCollapsed && <span>Se Déconnecter</span>}
-          </button>
-          
           <button
             onClick={() => setSidebarCollapsed(c => !c)}
             className={`hidden md:flex w-full items-center justify-center px-3 py-2 text-[10px] font-semibold rounded-xl border border-transparent transition duration-205 gap-1 cursor-pointer ${

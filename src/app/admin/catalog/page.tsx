@@ -4,11 +4,13 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useAdminUI } from '../AdminUIContext';
 import { useAdmin } from '@/context/AdminContext';
 import CatalogTab from '@/components/admin/CatalogTab';
+import CategoriesTab from '@/components/admin/CategoriesTab';
 import RestockForecastingTab from '@/components/admin/RestockForecastingTab';
-import { List, TrendingUp } from 'lucide-react';
+import { List, TrendingUp, FolderTree } from 'lucide-react';
 
 const CATALOG_TABS = [
   { id: 'products', label: 'Liste des Produits',       icon: List },
+  { id: 'categories', label: 'Catégories & Préoccupations', icon: FolderTree },
   { id: 'restock',  label: 'Prévisions & Ravitaillement', icon: TrendingUp },
 ] as const;
 
@@ -128,6 +130,8 @@ export default function AdminCatalogPage() {
             catalogStockFilter={catalogStockFilter}
             setCatalogStockFilter={setCatalogStockFilter}
           />
+        ) : activeSubTab === 'categories' ? (
+          <CategoriesTab />
         ) : (
           <RestockForecastingTab />
         )}

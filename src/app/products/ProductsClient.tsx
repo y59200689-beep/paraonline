@@ -44,23 +44,38 @@ const CATEGORIES = [
   { id: 'offers', labelFR: 'Offres & Coffrets', labelAR: 'العروض والمجموعات' }
 ];
 
-const matchesConcern = (product: Product, concern: string) => {
+const matchesConcern = (product: Product, concernId: string, customConcerns: any[] = []) => {
   const text = `${product.title} ${product.nameFr || ''} ${product.description} ${product.tags.join(' ')}`.toLowerCase();
   const ingredients = product.ingredients.toLowerCase();
   
-  if (concern === 'acne') {
+  // Find concern config in dynamic list
+  const concern = customConcerns.find(c => c.id === concernId);
+  if (concern) {
+    const keywords = concern.keywords || [];
+    const ingredientKeywords = concern.ingredientKeywords || [];
+    const productIds = concern.productIds || [];
+    
+    if (productIds.includes(product.id)) return true;
+    
+    const kwMatch = keywords.some((kw: string) => text.includes(kw.toLowerCase()));
+    const ingMatch = ingredientKeywords.some((kw: string) => ingredients.includes(kw.toLowerCase()) || text.includes(kw.toLowerCase()));
+    return kwMatch || ingMatch;
+  }
+
+  // fallbacks
+  if (concernId === 'acne') {
     return text.includes('acné') || text.includes('imperfection') || text.includes('bouton') || ingredients.includes('salicylic acid') || product.id === 3 || product.id === 22 || product.id === 15 || product.id === 16 || product.id === 17;
   }
-  if (concern === 'spots') {
+  if (concernId === 'spots') {
     return text.includes('tache') || text.includes('éclat') || text.includes('bright') || text.includes('pigment') || ingredients.includes('tranexamic') || ingredients.includes('ascorbic') || product.id === 3 || product.id === 14;
   }
-  if (concern === 'dryness') {
+  if (concernId === 'dryness') {
     return text.includes('déshydrat') || text.includes('sec') || text.includes('hydrat') || ingredients.includes('hyaluronic') || product.id === 5 || product.id === 6 || product.id === 7 || product.id === 17;
   }
-  if (concern === 'wrinkles') {
+  if (concernId === 'wrinkles') {
     return text.includes('ridule') || text.includes('âge') || text.includes('anti-aging') || text.includes('vieill') || ingredients.includes('retinol') || product.id === 8 || product.id === 5 || product.id === 6;
   }
-  if (concern === 'redness') {
+  if (concernId === 'redness') {
     return text.includes('rougeur') || text.includes('apais') || text.includes('sensible') || text.includes('sooth') || ingredients.includes('centella') || ingredients.includes('heartleaf') || product.id === 17 || product.id === 16 || product.id === 15;
   }
   return true;
@@ -119,6 +134,27 @@ const getProductMatchScore = (product: Product, diagnostic: any) => {
 export default function ProductsClient({ initialProducts }: { initialProducts: Product[] }) {
   const { language } = useTranslation();
   const { diagnostic } = useUi();
+  const { settings } = useSettings();
+
+  const customCategories = settings.customCategories || [];
+  const customConcerns = settings.customConcerns || [];
+
+  const CATEGORIES_LIST = useMemo(() => {
+    if (customCategories.length > 0) {
+      return [
+        { id: 'all', labelFR: 'Toutes catégories', labelAR: 'جميع الفئات' },
+        ...customCategories.map((c: any) => ({ id: c.id, labelFR: c.labelFr, labelAR: c.labelAr }))
+      ];
+    }
+    return CATEGORIES;
+  }, [customCategories]);
+
+  const CONCERNS_LIST = useMemo(() => {
+    if (customConcerns.length > 0) {
+      return customConcerns.map((c: any) => ({ id: c.id, labelFR: c.labelFr, labelAR: c.labelAr }));
+    }
+    return CONCERNS;
+  }, [customConcerns]);
 
   // Filters State
   const [searchQuery, setSearchQuery] = useState('');
@@ -136,7 +172,7 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
   // Dynamic counts for filters
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    CATEGORIES.forEach(cat => {
+    CATEGORIES_LIST.forEach(cat => {
       if (cat.id === 'all') {
         counts[cat.id] = products.length;
       } else {
@@ -144,15 +180,15 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
       }
     });
     return counts;
-  }, [products]);
+  }, [products, CATEGORIES_LIST]);
 
   const concernCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    CONCERNS.forEach(c => {
-      counts[c.id] = products.filter(p => matchesConcern(p, c.id)).length;
+    CONCERNS_LIST.forEach((c: any) => {
+      counts[c.id] = products.filter(p => matchesConcern(p, c.id, customConcerns)).length;
     });
     return counts;
-  }, [products]);
+  }, [products, CONCERNS_LIST, customConcerns]);
 
   const brandCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -236,7 +272,7 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
     // Concerns filter
     if (selectedConcerns.length > 0) {
       result = result.filter(p => 
-        selectedConcerns.every(concernId => matchesConcern(p, concernId))
+        selectedConcerns.every(concernId => matchesConcern(p, concernId, customConcerns))
       );
     }
 
@@ -406,7 +442,7 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
                 {language === 'FR' ? 'Catégories' : 'الفئات'}
               </span>
               <div className="flex flex-col gap-1.5 mt-2">
-                {CATEGORIES.map(cat => (
+                {CATEGORIES_LIST.map(cat => (
                   <button
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}
@@ -432,7 +468,7 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
                 {language === 'FR' ? 'Préoccupations de Peau' : 'مشاكل البشرة'}
               </span>
               <div className="space-y-2 mt-2">
-                {CONCERNS.map(c => {
+                {CONCERNS_LIST.map((c: any) => {
                   const isChecked = selectedConcerns.includes(c.id);
                   return (
                     <label 
@@ -529,8 +565,8 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
                     </h4>
                     <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                       {language === 'FR' 
-                        ? `Votre profil : Peau ${diagnostic.skinType === 'oily' ? 'Grasse' : diagnostic.skinType === 'dry' ? 'Sèche' : diagnostic.skinType === 'sensitive' ? 'Sensible' : 'Mixte'} • Cible : ${CONCERNS.find(c => c.id === diagnostic.concern)?.labelFR || diagnostic.concern}`
-                        : `بشرتكِ: ${diagnostic.skinType === 'oily' ? 'دهنية' : diagnostic.skinType === 'dry' ? 'جافة' : diagnostic.skinType === 'sensitive' ? 'حساسة' : 'مختلطة'} • الهدف: ${CONCERNS.find(c => c.id === diagnostic.concern)?.labelAR || diagnostic.concern}`}
+                        ? `Votre profil : Peau ${diagnostic.skinType === 'oily' ? 'Grasse' : diagnostic.skinType === 'dry' ? 'Sèche' : diagnostic.skinType === 'sensitive' ? 'Sensible' : 'Mixte'} • Cible : ${CONCERNS_LIST.find((c: any) => c.id === diagnostic.concern)?.labelFR || diagnostic.concern}`
+                        : `بشرتكِ: ${diagnostic.skinType === 'oily' ? 'دهنية' : diagnostic.skinType === 'dry' ? 'جافة' : diagnostic.skinType === 'sensitive' ? 'حساسة' : 'مختلطة'} • الهدف: ${CONCERNS_LIST.find((c: any) => c.id === diagnostic.concern)?.labelAR || diagnostic.concern}`}
                     </p>
                   </div>
                 </div>
@@ -665,7 +701,7 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
 
                 {selectedCategory !== 'all' && (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-50 border border-slate-100 rounded-lg text-xs font-bold text-slate-600">
-                    {CATEGORIES.find(c => c.id === selectedCategory)?.labelFR}
+                    {CATEGORIES_LIST.find((c: any) => c.id === selectedCategory)?.labelFR}
                     <X className="w-3.5 h-3.5 text-slate-400 hover:text-slate-600 cursor-pointer" onClick={() => setSelectedCategory('all')} />
                   </span>
                 )}
@@ -679,7 +715,7 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
 
                 {selectedConcerns.map(concernId => (
                   <span key={concernId} className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-50 border border-slate-100 rounded-lg text-xs font-bold text-slate-600">
-                    {CONCERNS.find(c => c.id === concernId)?.labelFR}
+                    {CONCERNS_LIST.find((c: any) => c.id === concernId)?.labelFR}
                     <X className="w-3.5 h-3.5 text-slate-400 hover:text-slate-600 cursor-pointer" onClick={() => handleConcernToggle(concernId)} />
                   </span>
                 ))}
@@ -801,7 +837,7 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
                   {language === 'FR' ? 'Catégories' : 'الفئات'}
                 </label>
                 <div className="flex flex-wrap gap-1.5">
-                  {CATEGORIES.map(cat => (
+                  {CATEGORIES_LIST.map(cat => (
                     <button
                       key={cat.id}
                       onClick={() => setSelectedCategory(cat.id)}
@@ -823,7 +859,7 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
                   {language === 'FR' ? 'Préoccupations' : 'مشاكل البشرة'}
                 </label>
                 <div className="space-y-2">
-                  {CONCERNS.map(c => {
+                  {CONCERNS_LIST.map((c: any) => {
                     const isChecked = selectedConcerns.includes(c.id);
                     return (
                       <label 

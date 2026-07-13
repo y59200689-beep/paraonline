@@ -38,7 +38,12 @@ function CheckoutPageContent() {
   const { t, language } = useTranslation();
   const { settings } = useSettings();
   const { earnPoints } = useLoyalty();
-  const { showToast } = useUi();
+  const { 
+    showToast,
+    setSuccessModalOpen,
+    setSuccessOrderId,
+    setSuccessWhatsappUrl
+  } = useUi();
   const { convertPrice, currentCurrency } = useCurrency();
   const {
     cart, clearCart, removeFromCart, updateQuantity,
@@ -121,8 +126,9 @@ function CheckoutPageContent() {
         earnPoints(Math.round(orderTotal), 'Nouvelle commande', 'طلب جديد');
         setFormFields({ name: '', phone: '', address: '', city: '', note: '' });
         setCheckoutSubStep('info');
-        window.open(res.whatsappUrl, '_blank');
-        router.push(`/checkout/success?orderId=${res.orderId}`);
+        setSuccessOrderId(res.orderId ?? '');
+        setSuccessWhatsappUrl(res.whatsappUrl ?? '');
+        setSuccessModalOpen(true);
         clearCart();
       }
     }
@@ -166,8 +172,9 @@ function CheckoutPageContent() {
         earnPoints(Math.round(orderTotal), 'Nouvelle commande', 'طلب جديد');
         setFormFields({ name: '', phone: '', address: '', city: '', note: '' });
         setCheckoutSubStep('info');
-        window.open(res.whatsappUrl, '_blank');
-        router.push(`/checkout/success?orderId=${res.orderId}`);
+        setSuccessOrderId(res.orderId ?? '');
+        setSuccessWhatsappUrl(res.whatsappUrl ?? '');
+        setSuccessModalOpen(true);
         clearCart();
       }
     } else if (paymentMethod === 'stripe') {

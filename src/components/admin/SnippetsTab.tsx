@@ -514,7 +514,7 @@ export default function SnippetsTab() {
       {deletingId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
           <div className={`w-full max-w-sm rounded-[24px] border p-6 shadow-2xl animate-in scale-in duration-200 ${
-            adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-850' : 'bg-slate-950 border-slate-800 text-slate-200'
+            adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-800 text-slate-200'
           }`}>
             <div className="flex items-center gap-3 text-rose-500 mb-3">
               <AlertCircle className="w-6 h-6" />

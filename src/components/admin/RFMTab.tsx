@@ -97,7 +97,7 @@ export default function RFMTab() {
     attention: {
       label: 'Besoin d\'attention',
       desc: 'Dernière commande il y a 2-3 mois. Nécessite un rappel rapide.',
-      badgeColor: 'bg-amber-500/10 text-amber-600 dark:text-amber-450 border-amber-500/20',
+      badgeColor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
       color: 'text-amber-500 border-amber-500/20 bg-amber-500/5',
       accentColor: 'bg-amber-500',
       descriptionAr: 'عملاء متوسطي النشاط بحاجة لتنبيه ترويجي'
@@ -105,7 +105,7 @@ export default function RFMTab() {
     risque: {
       label: 'À Risque',
       desc: 'Anciens clients réguliers sans achat récent. Perte imminente.',
-      badgeColor: 'bg-rose-500/10 text-rose-600 dark:text-rose-450 border-rose-500/20',
+      badgeColor: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
       color: 'text-rose-500 border-rose-500/20 bg-rose-500/5',
       accentColor: 'bg-rose-500',
       descriptionAr: 'عملاء أوفياء سابقاً لم يشتروا منذ مدة طويلة'
@@ -114,7 +114,7 @@ export default function RFMTab() {
       label: 'Perdus / Endormis',
       desc: 'Achat unique lointain. Réactivation difficile et coûteuse.',
       badgeColor: 'bg-slate-500/15 text-slate-600 dark:text-slate-400 border-slate-500/20',
-      color: 'text-slate-550 dark:text-slate-400 border-slate-500/20 bg-slate-500/5',
+      color: 'text-slate-500 dark:text-slate-400 border-slate-500/20 bg-slate-500/5',
       accentColor: 'bg-slate-500',
       descriptionAr: 'عملاء غير نشطين منذ فترات طويلة جداً'
     }
@@ -355,7 +355,7 @@ export default function RFMTab() {
 
           <div className="text-right">
             <span className={`inline-flex items-center gap-1.5 px-3 py-1 border rounded-full text-[10px] font-mono font-semibold ${
-              adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-600 shadow-sm' : 'bg-slate-950 border-slate-850 text-slate-400'
+              adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-600 shadow-sm' : 'bg-slate-950 border-slate-800 text-slate-400'
             }`}>
               <Sparkles className="w-3 h-3 text-amber-500 animate-pulse" /> BASE ANALYSÉE : {rfmCustomersList.length} CLIENTS
             </span>
@@ -417,7 +417,7 @@ export default function RFMTab() {
 
             <div className="space-y-1.5 flex-1 min-w-0">
               <span className={`text-[10px] font-bold uppercase tracking-wider block ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-200'}`}>Fidélité Active</span>
-              <p className={`text-[9.5px] leading-relaxed font-light ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-450'}`}>
+              <p className={`text-[9.5px] leading-relaxed font-light ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
                 Visualisation concentrique des trois segments clés de croissance de la boutique.
               </p>
             </div>
@@ -538,7 +538,7 @@ export default function RFMTab() {
             disabled={filteredCustomers.length === 0}
             className={`h-9 px-3.5 text-xs font-bold rounded-xl flex items-center justify-center gap-2 cursor-pointer transition duration-200 active:scale-[0.98] border ${
               filteredCustomers.length > 0
-                ? (adminTheme === 'light' ? 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700 shadow-sm' : 'bg-slate-900 border-slate-800 hover:bg-slate-850 text-slate-200')
+                ? (adminTheme === 'light' ? 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700 shadow-sm' : 'bg-slate-900 border-slate-800 hover:bg-slate-800 text-slate-200')
                 : 'bg-slate-100 border-slate-200/50 text-slate-400 dark:bg-slate-950 dark:border-slate-900 dark:text-slate-700 cursor-not-allowed'
             }`}
           >
@@ -552,7 +552,7 @@ export default function RFMTab() {
             className={`h-9 px-4 text-xs font-bold rounded-xl flex items-center justify-center gap-2 cursor-pointer transition duration-200 active:scale-[0.98] ${
               filteredCustomers.length > 0 && !isReadOnly
                 ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/20'
-                : 'bg-slate-200 text-slate-400 border border-slate-300/20 dark:bg-slate-900 dark:border-slate-850 dark:text-slate-600 cursor-not-allowed'
+                : 'bg-slate-200 text-slate-400 border border-slate-300/20 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-600 cursor-not-allowed'
             }`}
           >
             <MessageSquare className="w-3.5 h-3.5" />
@@ -565,13 +565,13 @@ export default function RFMTab() {
       <div className={`border rounded-[24px] overflow-hidden ${
         adminTheme === 'light' 
           ? 'bg-white border-slate-200/80 shadow-sm' 
-          : 'bg-slate-950 border-slate-850'
+          : 'bg-slate-950 border-slate-800'
       }`}>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className={`border-b text-[10px] font-bold uppercase tracking-wider ${
-                adminTheme === 'light' ? 'bg-slate-50/50 border-slate-200 text-slate-500' : 'bg-slate-900/20 border-slate-850 text-slate-400'
+                adminTheme === 'light' ? 'bg-slate-50/50 border-slate-200 text-slate-500' : 'bg-slate-900/20 border-slate-800 text-slate-400'
               }`}>
                 <th className="px-5 py-4">Client</th>
                 <th className="px-3 py-4">Téléphone</th>
@@ -582,7 +582,7 @@ export default function RFMTab() {
                 <th className="px-5 py-4 text-center">Segment RFM</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200/50 dark:divide-slate-850/80">
+            <tbody className="divide-y divide-slate-200/50 dark:divide-slate-800/80">
               {filteredCustomers.length > 0 ? (
                 filteredCustomers.map((customer, idx) => (
                   <tr 
@@ -650,14 +650,14 @@ export default function RFMTab() {
           }`}>
             {/* Modal Header */}
             <div className={`p-6 border-b flex justify-between items-center ${
-              adminTheme === 'light' ? 'bg-slate-55 border-slate-200' : 'bg-slate-950/60 border-slate-800'
+              adminTheme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-950/60 border-slate-800'
             }`}>
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-emerald-500/10 text-emerald-500 rounded-xl">
                   <Send className="w-5 h-5 animate-pulse" />
                 </div>
                 <div>
-                  <h3 className={`font-black text-base tracking-tight ${adminTheme === 'light' ? 'text-slate-850' : 'text-slate-100'}`}>
+                  <h3 className={`font-black text-base tracking-tight ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-100'}`}>
                     Simulateur de Campagne WhatsApp RFM
                   </h3>
                   <p className={`text-xs font-light ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
@@ -674,7 +674,7 @@ export default function RFMTab() {
                 }}
                 disabled={isSimulating}
                 className={`p-1.5 rounded-lg border transition ${
-                  adminTheme === 'light' ? 'hover:bg-slate-250 border-slate-200 text-slate-500' : 'hover:bg-slate-800 border-slate-800 text-slate-400'
+                  adminTheme === 'light' ? 'hover:bg-slate-200 border-slate-200 text-slate-500' : 'hover:bg-slate-800 border-slate-800 text-slate-400'
                 }`}
               >
                 <X className="w-4 h-4" />
@@ -701,7 +701,7 @@ export default function RFMTab() {
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Message de Diffusion</label>
-                  <span className="text-[9px] text-slate-505 font-medium">Balises : <code className="font-mono bg-slate-100 dark:bg-slate-950 px-1 py-0.5 rounded text-emerald-500">{`{NAME}`}</code>, <code className="font-mono bg-slate-100 dark:bg-slate-950 px-1 py-0.5 rounded text-emerald-500">{`{POINTS}`}</code></span>
+                  <span className="text-[9px] text-slate-500 font-medium">Balises : <code className="font-mono bg-slate-100 dark:bg-slate-950 px-1 py-0.5 rounded text-emerald-500">{`{NAME}`}</code>, <code className="font-mono bg-slate-100 dark:bg-slate-950 px-1 py-0.5 rounded text-emerald-500">{`{POINTS}`}</code></span>
                 </div>
                 
                 <textarea
@@ -724,7 +724,7 @@ export default function RFMTab() {
                   </div>
                   
                   {/* Progress bar */}
-                  <div className="h-2 rounded-full overflow-hidden bg-slate-150 dark:bg-slate-950 border border-slate-200/10">
+                  <div className="h-2 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-950 border border-slate-200/10">
                     <div 
                       style={{ width: `${simulationProgress}%` }}
                       className="bg-emerald-500 h-full transition-all duration-150"
@@ -763,7 +763,7 @@ export default function RFMTab() {
                 disabled={isSimulating}
                 className={`px-4 h-10 text-xs font-bold rounded-xl border transition ${
                   adminTheme === 'light'
-                    ? 'hover:bg-slate-100 border-slate-200 text-slate-650'
+                    ? 'hover:bg-slate-100 border-slate-200 text-slate-600'
                     : 'hover:bg-slate-800 border-slate-800 text-slate-300'
                 }`}
               >
@@ -786,7 +786,7 @@ export default function RFMTab() {
                   </>
                 ) : simulationComplete ? (
                   <>
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-350" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" />
                     Complété !
                   </>
                 ) : (

@@ -267,7 +267,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                   analyticsRange === range
                     ? (adminTheme === 'light'
                         ? 'bg-white text-slate-800 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08)] font-black'
-                        : 'bg-slate-850 text-emerald-400 shadow-sm border border-slate-750 font-black')
+                        : 'bg-slate-800 text-emerald-400 shadow-sm border border-slate-700 font-black')
                     : (adminTheme === 'light'
                         ? 'text-slate-500 hover:text-slate-800 hover:bg-white/40 bg-transparent'
                         : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30 bg-transparent')
@@ -280,7 +280,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
           
           {analyticsRange === 'custom' && (
             <div className={`flex flex-wrap items-center gap-3 rounded-2xl px-4 py-2 border transition-all duration-200 ${
-              adminTheme === 'light' ? 'bg-slate-55 border-slate-200/60 shadow-sm' : 'bg-slate-950 border-slate-900'
+              adminTheme === 'light' ? 'bg-slate-50 border-slate-200/60 shadow-sm' : 'bg-slate-950 border-slate-900'
             }`}>
               <div className="flex items-center gap-2">
                 <label className="text-[9px] font-bold uppercase tracking-wider text-slate-500 shrink-0">Du</label>
@@ -386,7 +386,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center gap-3">
                 <div className={`p-2 rounded-xl border ${
-                  adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-650' : 'bg-slate-900 border-slate-800 text-slate-400'
+                  adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-slate-900 border-slate-800 text-slate-400'
                 }`}>
                   <BarChart2 className="w-4 h-4" strokeWidth={1.5} />
                 </div>
@@ -396,7 +396,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                 </div>
               </div>
               <span className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold border ${
-                adminTheme === 'light' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-emerald-950/30 border-emerald-900/40 text-emerald-450'
+                adminTheme === 'light' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-emerald-950/30 border-emerald-900/40 text-emerald-400'
               }`}>{dashboardStats.totalSales.toFixed(0)} DH total</span>
             </div>
 
@@ -511,7 +511,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
           }`}>
             <div className="flex items-center gap-3 mb-6">
               <div className={`p-2 rounded-xl border ${
-                adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-655 text-slate-650' : 'bg-slate-900 border-slate-800 text-slate-400'
+                adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-slate-900 border-slate-800 text-slate-400'
               }`}>
                 <ClipboardList className="w-4 h-4" strokeWidth={1.5} />
               </div>
@@ -533,12 +533,12 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                   Cancelled: { bg: 'bg-rose-500/10 border-rose-500/20', text: 'text-rose-500', progress: 'bg-rose-500' } 
                 };
                 const labelMap: Record<string, string> = { Pending: 'En attente', Confirmed: 'Confirmées', Shipped: 'Expédiées', Delivered: 'Livrées', Cancelled: 'Annulées' };
-                const c = colors[status] || { bg: 'bg-slate-500/10 border-slate-500/20', text: 'text-slate-505', progress: 'bg-slate-500' };
+                const c = colors[status] || { bg: 'bg-slate-500/10 border-slate-500/20', text: 'text-slate-500', progress: 'bg-slate-500' };
                 
                 return (
                   <div key={status} className="space-y-1.5">
                     <div className="flex justify-between items-center text-[10.5px]">
-                      <span className={`font-semibold ${adminTheme === 'light' ? 'text-slate-655 font-medium' : 'text-slate-400'}`}>{labelMap[status] || status}</span>
+                      <span className={`font-semibold ${adminTheme === 'light' ? 'text-slate-600 font-medium' : 'text-slate-400'}`}>{labelMap[status] || status}</span>
                       <div className="flex items-center gap-2">
                         <span className={`font-mono text-[9px] px-1.5 py-0.2 rounded border ${c.bg} ${c.text} font-bold`}>{pct}%</span>
                         <span className="font-bold font-mono opacity-80">{count as number}</span>
@@ -567,12 +567,12 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
               <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-3">
                   <div className={`p-2 rounded-xl border ${
-                    adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-655 text-slate-650' : 'bg-slate-900 border-slate-800 text-slate-400'
+                    adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-slate-900 border-slate-800 text-slate-400'
                   }`}>
                     <TrendingUp className="w-4 h-4" strokeWidth={1.5} />
                   </div>
                   <div>
-                    <span className={`text-[9px] font-black tracking-[0.2em] uppercase block leading-none ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-505 text-slate-500'}`}>Audits</span>
+                    <span className={`text-[9px] font-black tracking-[0.2em] uppercase block leading-none ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>Audits</span>
                     <h3 className="text-sm font-bold leading-none mt-1.5">Journal d&apos;activité</h3>
                   </div>
                 </div>
@@ -628,7 +628,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                             </span>
                             <span className="text-slate-500 font-mono shrink-0">{new Date(log.date).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
                           </div>
-                          <p className={`text-[10.5px] leading-relaxed font-semibold ${adminTheme === 'light' ? 'text-slate-650' : 'text-slate-350'}`}>{log.details}</p>
+                          <p className={`text-[10.5px] leading-relaxed font-semibold ${adminTheme === 'light' ? 'text-slate-600' : 'text-slate-300'}`}>{log.details}</p>
                         </div>
                       );
                     })}
@@ -643,7 +643,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
         {/* Bento Cell 3: Top Produits (Ventes) */}
         <div className={`p-1 rounded-[36px] lg:col-span-2 xl:col-span-2 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-2xl ${
           adminTheme === 'light'
-            ? 'bg-slate-200/50 border border-slate-200/60 shadow-[0_4px_12px_-2px_rgba(15,30,54,0.02)] hover:border-slate-305'
+            ? 'bg-slate-200/50 border border-slate-200/60 shadow-[0_4px_12px_-2px_rgba(15,30,54,0.02)] hover:border-slate-300'
             : 'bg-white/5 border border-white/10 hover:border-white/15'
         }`}>
           <div className={`rounded-[calc(36px-4px)] p-6 h-full flex flex-col justify-between ${
@@ -652,7 +652,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
             <div>
               <div className="flex items-center gap-3 mb-6">
                 <div className={`p-2 rounded-xl border ${
-                  adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-650' : 'bg-slate-900 border-slate-800 text-slate-400'
+                  adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-slate-900 border-slate-800 text-slate-400'
                 }`}>
                   <ShoppingBag className="w-4 h-4" strokeWidth={1.5} />
                 </div>
@@ -686,7 +686,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                       const pct = ((data.qty / maxQty) * 100).toFixed(0);
                       const rankGradients = [
                         'from-amber-400 to-yellow-500 text-white shadow-md shadow-amber-500/10',
-                        'from-slate-300 to-slate-450 text-white shadow-md shadow-slate-455/10',
+                        'from-slate-300 to-slate-400 text-white shadow-md shadow-slate-400/10',
                         'from-amber-600 to-amber-700 text-white shadow-md shadow-amber-700/10',
                       ];
                       
@@ -733,7 +733,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                           </div>
 
                           {/* Quantity */}
-                          <div className={`w-16 shrink-0 hidden sm:flex items-center justify-center font-mono text-xs font-black ${adminTheme === 'light' ? 'text-slate-600' : 'text-slate-350'}`}>
+                          <div className={`w-16 shrink-0 hidden sm:flex items-center justify-center font-mono text-xs font-black ${adminTheme === 'light' ? 'text-slate-600' : 'text-slate-300'}`}>
                             {data.qty}
                           </div>
 
@@ -769,7 +769,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
               <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-3">
                   <div className={`p-2 rounded-xl border ${
-                    adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-650' : 'bg-slate-900 border-slate-800 text-slate-400'
+                    adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-slate-900 border-slate-800 text-slate-400'
                   }`}>
                     <ClipboardList className="w-4 h-4" strokeWidth={1.5} />
                   </div>
@@ -780,10 +780,10 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                 </div>
                 <div className="flex gap-2 text-[9px] font-mono font-bold">
                   <span className={`px-2 py-0.5 rounded-full border ${
-                    adminTheme === 'light' ? 'bg-rose-50 border-rose-100 text-rose-700' : 'bg-rose-950/30 border-rose-900/40 text-rose-455 text-rose-400'
+                    adminTheme === 'light' ? 'bg-rose-50 border-rose-100 text-rose-700' : 'bg-rose-950/30 border-rose-900/40 text-rose-400'
                   }`}>{cartRecoveryStats.total} abandons</span>
                   <span className={`px-2 py-0.5 rounded-full border ${
-                    adminTheme === 'light' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-emerald-950/30 border-emerald-900/40 text-emerald-455 text-emerald-400'
+                    adminTheme === 'light' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-emerald-950/30 border-emerald-900/40 text-emerald-400'
                   }`}>{cartRecoveryStats.rate}% récup.</span>
                 </div>
               </div>
@@ -794,7 +794,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                   { 
                     label: 'Non contactés', 
                     value: cartRecoveryStats.total - cartRecoveryStats.contacted - cartRecoveryStats.recovered, 
-                    color: adminTheme === 'light' ? 'text-slate-705 text-slate-700' : 'text-slate-350',
+                    color: adminTheme === 'light' ? 'text-slate-700' : 'text-slate-300',
                     border: adminTheme === 'light' ? 'border-slate-200/80 shadow-[0_2px_4px_rgba(0,0,0,0.01)]' : 'border-slate-900',
                     bg: adminTheme === 'light' ? 'bg-slate-50/60' : 'bg-slate-950/40'
                   },
@@ -802,15 +802,15 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                     label: 'Contactés', 
                     value: cartRecoveryStats.contacted, 
                     color: adminTheme === 'light' ? 'text-amber-707 text-amber-700' : 'text-amber-400',
-                    border: adminTheme === 'light' ? 'border-amber-200/50 shadow-[0_2px_4px_rgba(0,0,0,0.01)]' : 'border-amber-955/20 border-amber-950/20',
-                    bg: adminTheme === 'light' ? 'bg-amber-50/25' : 'bg-amber-955/10 bg-amber-950/10'
+                    border: adminTheme === 'light' ? 'border-amber-200/50 shadow-[0_2px_4px_rgba(0,0,0,0.01)]' : 'border-amber-950/20 border-amber-950/20',
+                    bg: adminTheme === 'light' ? 'bg-amber-50/25' : 'bg-amber-950/10 bg-amber-950/10'
                   },
                   { 
                     label: 'Récupérés', 
                     value: cartRecoveryStats.recovered, 
                     color: adminTheme === 'light' ? 'text-emerald-707 text-emerald-700' : 'text-emerald-400',
-                    border: adminTheme === 'light' ? 'border-emerald-200/50 shadow-[0_2px_4px_rgba(0,0,0,0.01)]' : 'border-emerald-955/20 border-emerald-950/20',
-                    bg: adminTheme === 'light' ? 'bg-emerald-50/25' : 'bg-emerald-955/10 bg-emerald-950/10'
+                    border: adminTheme === 'light' ? 'border-emerald-200/50 shadow-[0_2px_4px_rgba(0,0,0,0.01)]' : 'border-emerald-950/20 border-emerald-950/20',
+                    bg: adminTheme === 'light' ? 'bg-emerald-50/25' : 'bg-emerald-950/10 bg-emerald-950/10'
                   }
                 ].map((s, i) => (
                   <div key={i} className={`rounded-[20px] py-2 px-1 border transition-all hover:scale-[1.02] ${s.bg} ${s.border}`}>
@@ -831,7 +831,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                   
                   const statusBadgeStyle = {
                     not_contacted: adminTheme === 'light' 
-                      ? 'bg-slate-100 border-slate-205 text-slate-600' 
+                      ? 'bg-slate-100 border-slate-200 text-slate-600' 
                       : 'bg-slate-900/50 border-slate-900 text-slate-400',
                     contacted: adminTheme === 'light' 
                       ? 'bg-amber-50 border-amber-100 text-amber-700' 
@@ -843,8 +843,8 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
                   const dotColor = {
                     not_contacted: 'bg-slate-400',
-                    contacted: 'bg-amber-505 bg-amber-500',
-                    recovered: 'bg-emerald-505 bg-emerald-500'
+                    contacted: 'bg-amber-500',
+                    recovered: 'bg-emerald-500'
                   }[status];
 
                    const buyerInitials = (cart.name || 'A').split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase();
@@ -862,26 +862,26 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                       onClick={() => setSelectedAbandonedCart(cart)}
                       className={`p-3.5 rounded-2xl text-xs flex justify-between items-start gap-3 border cursor-pointer transition-all duration-200 ${
                         adminTheme === 'light'
-                          ? 'bg-slate-50/40 border-slate-200/50 hover:bg-slate-50 hover:border-slate-350 hover:shadow-md hover:scale-[1.01]'
+                          ? 'bg-slate-50/40 border-slate-200/50 hover:bg-slate-50 hover:border-slate-300 hover:shadow-md hover:scale-[1.01]'
                           : 'bg-slate-950 border-slate-900 hover:border-slate-800 hover:bg-slate-900/20 hover:scale-[1.01]'
                       }`}
                     >
                       <div className="min-w-0 flex-1 space-y-2 animate-fade-in flex items-start gap-2.5">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5 ${
-                          adminTheme === 'light' ? 'bg-slate-100 text-slate-700 border border-slate-200/40' : 'bg-slate-900 text-slate-350 border border-slate-800/60'
+                          adminTheme === 'light' ? 'bg-slate-100 text-slate-700 border border-slate-200/40' : 'bg-slate-900 text-slate-300 border border-slate-800/60'
                         }`}>
                           {buyerInitials}
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-col gap-0.5">
                             <div className="flex gap-1.5 items-center flex-wrap">
-                              <span className={`font-bold text-[11px] ${adminTheme === 'light' ? 'text-slate-850' : 'text-slate-200'}`}>{cart.name || 'Anonyme'}</span>
+                              <span className={`font-bold text-[11px] ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-200'}`}>{cart.name || 'Anonyme'}</span>
                               <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider border ${statusBadgeStyle}`}>
                                 <span className={`w-1.5 h-1.5 rounded-full ${dotColor} ${status === 'contacted' ? 'animate-pulse' : ''}`} />
                                 {statusLabels[status]}
                               </span>
                             </div>
-                            <span className="text-[9.5px] text-slate-550 text-slate-500 font-semibold select-none leading-none">
+                            <span className="text-[9.5px] text-slate-500 font-semibold select-none leading-none">
                               Compte : <span className={cart.clientProfileName ? 'text-indigo-500 font-bold' : 'text-rose-500 italic font-bold'}>{cart.clientProfileName || 'unavailable'}</span>
                             </span>
                             {cart.date && (
@@ -905,8 +905,8 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                                   key={iIdx} 
                                   className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9px] font-bold border ${
                                     adminTheme === 'light' 
-                                      ? 'bg-slate-100/70 border-slate-250/50 text-slate-700' 
-                                      : 'bg-slate-900 border-slate-850 text-slate-350'
+                                      ? 'bg-slate-100/70 border-slate-200/50 text-slate-700' 
+                                      : 'bg-slate-900 border-slate-800 text-slate-300'
                                   }`}
                                 >
                                   <span className="text-emerald-500 font-extrabold">{qty}x</span>
@@ -918,7 +918,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                             {cart.items && cart.items.length > 3 && (
                               <span className={`inline-flex items-center px-1.5 py-0.5 rounded-lg text-[9px] font-black border uppercase tracking-wider ${
                                 adminTheme === 'light'
-                                  ? 'bg-indigo-50 border-indigo-150 text-indigo-600'
+                                  ? 'bg-indigo-50 border-indigo-100 text-indigo-600'
                                   : 'bg-indigo-950/20 border-indigo-900/30 text-indigo-400'
                               }`}>
                                 +{cart.items.length - 3} de plus
@@ -929,7 +929,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                       </div>
                       
                       <div className="shrink-0 flex flex-col items-end gap-2" onClick={(e) => e.stopPropagation()}>
-                        <span className={`font-black text-[11.5px] font-mono leading-none ${adminTheme === 'light' ? 'text-slate-850' : 'text-slate-100'}`}>{cart.total} DH</span>
+                        <span className={`font-black text-[11.5px] font-mono leading-none ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-100'}`}>{cart.total} DH</span>
                         <div className="flex gap-1.5">
                           <a
                             href={buildCartRecoveryLink(cart)}
@@ -938,7 +938,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                             onClick={() => handleUpdateCartRecovery(cart.phone, 'contacted')}
                             className={`inline-flex items-center gap-1 px-2.5 py-1 text-[9px] font-black uppercase rounded-lg border transition-all duration-200 hover:scale-[1.04] active:scale-[0.96] ${
                               adminTheme === 'light'
-                                ? 'text-emerald-700 bg-emerald-50 border-emerald-250 hover:bg-emerald-500 hover:text-white hover:border-emerald-500'
+                                ? 'text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-500 hover:text-white hover:border-emerald-500'
                                 : 'text-emerald-400 bg-emerald-950/30 border-emerald-900/40 hover:bg-emerald-500 hover:text-slate-950 hover:border-emerald-500'
                             }`}
                           >
@@ -949,8 +949,8 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                               onClick={() => handleUpdateCartRecovery(cart.phone, 'recovered')}
                               className={`inline-flex items-center gap-1 px-2.5 py-1 text-[9px] font-black uppercase rounded-lg border transition-all duration-200 cursor-pointer hover:scale-[1.04] active:scale-[0.96] ${
                                 adminTheme === 'light'
-                                  ? 'text-slate-700 bg-slate-100 border-slate-250 hover:bg-emerald-500 hover:text-white hover:border-emerald-500'
-                                  : 'text-slate-400 bg-slate-900 border-slate-850 hover:bg-emerald-500 hover:text-slate-950 hover:border-emerald-500'
+                                  ? 'text-slate-700 bg-slate-100 border-slate-200 hover:bg-emerald-500 hover:text-white hover:border-emerald-500'
+                                  : 'text-slate-400 bg-slate-900 border-slate-800 hover:bg-emerald-500 hover:text-slate-950 hover:border-emerald-500'
                               }`}
                             >
                               <Check className="w-3 h-3" /> OK

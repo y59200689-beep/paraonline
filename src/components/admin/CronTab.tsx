@@ -438,7 +438,7 @@ export default function CronTab() {
                             title="Lancer l'exécution maintenant"
                             className={`p-1.5 rounded-lg border transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
                               adminTheme === 'light'
-                                ? 'bg-emerald-50 hover:bg-emerald-100 border-emerald-250 text-emerald-700'
+                                ? 'bg-emerald-50 hover:bg-emerald-100 border-emerald-200 text-emerald-700'
                                 : 'bg-emerald-950/20 border-emerald-950/50 text-emerald-400 hover:bg-emerald-950/40'
                             }`}
                           >
@@ -522,7 +522,7 @@ export default function CronTab() {
 
               {/* Monospace Code Editor styled Logs Block */}
               <div className="space-y-1.5">
-                <span className="text-[10px] font-bold text-slate-450 uppercase tracking-widest block">Console Output</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Console Output</span>
                 <pre className={`p-4 rounded-xl font-mono text-[11px] leading-relaxed max-h-80 overflow-y-auto whitespace-pre-wrap select-text border ${
                   adminTheme === 'light'
                     ? 'bg-slate-950 text-slate-100 border-slate-900'
@@ -549,7 +549,7 @@ export default function CronTab() {
       {deletingId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
           <div className={`w-full max-w-sm rounded-[24px] border p-6 shadow-2xl animate-in scale-in duration-200 ${
-            adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-850' : 'bg-slate-950 border-slate-800 text-slate-200'
+            adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-800 text-slate-200'
           }`}>
             <div className="flex items-center gap-3 text-rose-500 mb-3">
               <AlertCircle className="w-6 h-6" />
@@ -700,7 +700,7 @@ export default function CronTab() {
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
                       Script Node / JS (Server-side)
                     </label>
-                    <span className="text-[10px] text-slate-550 font-medium flex items-center gap-1">
+                    <span className="text-[10px] text-slate-500 font-medium flex items-center gap-1">
                       <Code className="w-3.5 h-3.5 text-emerald-500" />
                       Utilise l&apos;environnement async JS, avec logs capturés
                     </span>
@@ -715,7 +715,7 @@ export default function CronTab() {
                     className={`w-full font-mono text-[11px] leading-relaxed p-4 border rounded-xl outline-none focus:border-emerald-500/50 resize-y whitespace-pre tab-size-2 ${
                       adminTheme === 'light' 
                         ? 'bg-slate-950 text-slate-100 focus:bg-black selection:bg-emerald-500/30' 
-                        : 'bg-slate-950 text-slate-205 focus:bg-black selection:bg-emerald-500/30'
+                        : 'bg-slate-950 text-slate-200 focus:bg-black selection:bg-emerald-500/30'
                     }`}
                     style={{ tabSize: 2 }}
                   />

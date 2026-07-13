@@ -113,6 +113,7 @@ export default function OrdersTab() {
   const [shippingCourierFilter, setShippingCourierFilter] = useState('ALL');
   const [shippingStatusFilter, setShippingStatusFilter] = useState('ALL');
   const [reconciledOrders, setReconciledOrders] = useState<Record<string, boolean>>({});
+  const [selectedReconRow, setSelectedReconRow] = useState<any | null>(null);
 
   // Shipping integration panel state
   const [isShippingPanelOpen, setIsShippingPanelOpen] = useState(false);
@@ -1026,7 +1027,7 @@ export default function OrdersTab() {
                           <div className="flex flex-col gap-1">
                             <span>{order.order_id}</span>
                             {order.notes?.includes('Ai Chat') && (
-                              <span className="inline-flex px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-indigo-500/10 text-indigo-450 border border-indigo-500/20 max-w-fit select-none">
+                              <span className="inline-flex px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 max-w-fit select-none">
                                 Ai Chat
                               </span>
                             )}
@@ -1078,19 +1079,29 @@ export default function OrdersTab() {
                   })}
                   {filteredOrders.length === 0 && (
                     <tr>
-                      <td colSpan={9}>
-                        <div className="flex flex-col items-center justify-center py-20 gap-3 max-w-[280px] mx-auto text-center">
-                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                            adminTheme === 'light' ? 'bg-slate-100 text-slate-400' : 'bg-slate-900/60 text-slate-500'
+                      <td colSpan={9} className="p-12">
+                        <div className={`rich-empty-state max-w-md mx-auto ${
+                          adminTheme === 'light' ? 'rich-empty-state-light' : 'rich-empty-state-dark'
+                        }`}>
+                          <div className={`rich-empty-state-icon ${
+                            adminTheme === 'light' ? 'bg-slate-100 text-slate-400' : 'bg-slate-900 text-slate-500'
                           }`}>
-                            <ShoppingBag className="w-6 h-6" />
+                            <ShoppingBag className="w-5 h-5" />
                           </div>
-                          <h4 className="text-sm font-bold">
-                            Aucune commande trouvée
-                          </h4>
-                          <p className="text-xs text-slate-500 leading-relaxed">
+                          <h4 className="text-xs uppercase font-black tracking-wider mb-1">Aucune commande trouvée</h4>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed mb-4">
                             Ajustez vos filtres de recherche ou attendez les commandes de vos clients pour commencer à les traiter.
                           </p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setOrderSearchQuery('');
+                              setOrderStatusFilter('ALL');
+                            }}
+                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[9px] uppercase tracking-wider rounded-lg transition active:scale-95 border-0 outline-none cursor-pointer"
+                          >
+                            Réinitialiser les filtres
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -1542,7 +1553,7 @@ export default function OrdersTab() {
                   setReconciliationNotes({});
                 }}
                 className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1 cursor-pointer transition border ${
-                  adminTheme === 'light' ? 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700' : 'bg-slate-950 border-slate-850 hover:bg-slate-905 text-slate-300'
+                  adminTheme === 'light' ? 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700' : 'bg-slate-950 border-slate-800 hover:bg-slate-900 text-slate-300'
                 }`}
               >
                 Réinitialiser
@@ -1568,11 +1579,11 @@ export default function OrdersTab() {
               className={`p-12 border-2 border-dashed rounded-3xl text-center flex flex-col items-center justify-center gap-4 transition-all duration-300 ${
                 isDragOver 
                   ? 'border-emerald-500 bg-emerald-500/5' 
-                  : (adminTheme === 'light' ? 'border-slate-200 hover:border-slate-350 bg-white' : 'border-slate-800 hover:border-slate-750 bg-slate-900/10')
+                  : (adminTheme === 'light' ? 'border-slate-200 hover:border-slate-300 bg-white' : 'border-slate-800 hover:border-slate-700 bg-slate-900/10')
               }`}
             >
               <div className={`p-4 rounded-full border transition ${
-                adminTheme === 'light' ? 'bg-slate-50 text-slate-400 border-slate-200' : 'bg-slate-950 border-slate-850 text-slate-500'
+                adminTheme === 'light' ? 'bg-slate-50 text-slate-400 border-slate-200' : 'bg-slate-950 border-slate-800 text-slate-500'
               }`}>
                 <FileText className="w-8 h-8" />
               </div>
@@ -1676,7 +1687,7 @@ export default function OrdersTab() {
                       className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider transition ${
                         reconciliationFilter === t.id
                           ? (adminTheme === 'light' ? 'bg-slate-900 text-white' : 'bg-emerald-600 text-white')
-                          : (adminTheme === 'light' ? 'text-slate-500 hover:text-slate-800 hover:bg-slate-100' : 'text-slate-400 hover:text-slate-250 hover:bg-slate-800')
+                          : (adminTheme === 'light' ? 'text-slate-500 hover:text-slate-800 hover:bg-slate-100' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800')
                       }`}
                     >
                       {t.label} ({t.count})
@@ -1698,7 +1709,7 @@ export default function OrdersTab() {
                     <button
                       onClick={handleExportDiscrepancies}
                       className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer border ${
-                        adminTheme === 'light' ? 'bg-white border-slate-250 hover:bg-slate-50 text-slate-700 shadow-sm' : 'bg-slate-950 border-slate-850 hover:bg-slate-900 text-slate-300'
+                        adminTheme === 'light' ? 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700 shadow-sm' : 'bg-slate-950 border-slate-800 hover:bg-slate-900 text-slate-300'
                       }`}
                     >
                       <FileText className="w-3.5 h-3.5" /> Exporter les Écarts
@@ -1750,7 +1761,7 @@ export default function OrdersTab() {
                           
                           if (isReconciled) {
                             statusBadge = (
-                              <span className="inline-flex px-2.5 py-0.5 rounded-full text-[9px] uppercase font-black border tracking-wider bg-slate-50 border-slate-200 text-slate-450">
+                              <span className="inline-flex px-2.5 py-0.5 rounded-full text-[9px] uppercase font-black border tracking-wider bg-slate-50 border-slate-200 text-slate-400">
                                 Réconcilié
                               </span>
                             );
@@ -1762,7 +1773,7 @@ export default function OrdersTab() {
                             );
                           } else if (row.matchType === 'AMOUNT_MISMATCH') {
                             statusBadge = (
-                              <span className="inline-flex px-2.5 py-0.5 rounded-full text-[9px] uppercase font-black border tracking-wider bg-amber-50 border-amber-250 text-amber-805">
+                              <span className="inline-flex px-2.5 py-0.5 rounded-full text-[9px] uppercase font-black border tracking-wider bg-amber-50 border-amber-200 text-amber-800">
                                 Écart Montant
                               </span>
                             );
@@ -1775,9 +1786,21 @@ export default function OrdersTab() {
                           }
 
                           return (
-                            <tr key={row.id} className={`transition-colors ${
-                              adminTheme === 'light' ? 'hover:bg-slate-50/50' : 'hover:bg-slate-900/10'
-                            }`}>
+                            <tr
+                               key={row.id}
+                               onClick={() => {
+                                 if (row.matchType !== 'PERFECT' && row.matchType !== 'ALREADY_RECONCILED') {
+                                   setSelectedReconRow(row);
+                                 }
+                               }}
+                               className={`transition-colors ${
+                                 adminTheme === 'light' ? 'hover:bg-slate-50/50' : 'hover:bg-slate-900/10'
+                               } ${
+                                 row.matchType !== 'PERFECT' && row.matchType !== 'ALREADY_RECONCILED'
+                                   ? 'cursor-pointer'
+                                   : ''
+                               }`}
+                            >
                               <td className="p-4 font-mono font-extrabold">
                                 {o ? (
                                   <span className="cursor-pointer hover:underline text-emerald-600" onClick={() => setSelectedOrder(o)}>
@@ -1787,7 +1810,7 @@ export default function OrdersTab() {
                                   <span className="text-slate-400">{row.fileOrderId || '—'}</span>
                                 )}
                                 {o && (
-                                  <span className={`text-[10px] block ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-550'}`}>
+                                  <span className={`text-[10px] block ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-500'}`}>
                                     {o.customer_name}
                                   </span>
                                 )}
@@ -1853,7 +1876,7 @@ export default function OrdersTab() {
                                     </div>
                                   )}
                                   {isReconciled && (
-                                    <span className="text-[10.5px] text-slate-405 font-bold flex items-center gap-1 justify-end">
+                                    <span className="text-[10.5px] text-slate-400 font-bold flex items-center gap-1 justify-end">
                                       <CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> Fait
                                     </span>
                                   )}
@@ -1868,6 +1891,110 @@ export default function OrdersTab() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* SPLIT-SCREEN RECONCILIATION COMPARISON DRAWER */}
+      {selectedReconRow && (
+        <div
+          className="fixed inset-0 z-50 flex justify-end"
+          onClick={() => setSelectedReconRow(null)}
+        >
+          <div
+            className={`w-full max-w-2xl h-full shadow-2xl border-l flex flex-col animate-in slide-in-from-right duration-300 ${
+              adminTheme === 'light' ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className={`flex items-center justify-between p-5 border-b flex-shrink-0 ${
+              adminTheme === 'light' ? 'border-slate-100' : 'border-slate-800'
+            }`}>
+              <div>
+                <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                  selectedReconRow.matchType === 'AMOUNT_MISMATCH'
+                    ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                    : 'bg-purple-50 text-purple-700 border border-purple-200'
+                }`}>
+                  {selectedReconRow.matchType === 'AMOUNT_MISMATCH' ? 'Écart de Montant' : 'Écart de Statut'}
+                </span>
+                <h3 className={`text-sm font-black mt-1.5 ${
+                  adminTheme === 'light' ? 'text-slate-800' : 'text-slate-100'
+                }`}>Analyse de l&apos;Écart — {selectedReconRow.id}</h3>
+              </div>
+              <button
+                onClick={() => setSelectedReconRow(null)}
+                className={`cursor-pointer transition ${
+                  adminTheme === 'light' ? 'text-slate-400 hover:text-slate-600' : 'text-slate-500 hover:text-slate-200'
+                }`}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Split comparison body */}
+            <div className="flex-1 overflow-y-auto p-5 grid grid-cols-2 gap-4">
+              {/* CSV Side */}
+              <div className={`rounded-2xl border p-4 space-y-3 ${
+                adminTheme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-950 border-slate-800'
+              }`}>
+                <h4 className="text-[9px] font-black uppercase tracking-wider text-slate-400 mb-3">Fichier Livreur (CSV)</h4>
+                {[
+                  ['ID', selectedReconRow.id],
+                  ['Montant COD', `${selectedReconRow.codAmount ?? '-'} DH`],
+                  ['Statut', selectedReconRow.status],
+                  ['Livreur', selectedReconRow.courier],
+                  ['Tracking', selectedReconRow.trackingNumber || '-'],
+                ].map(([label, value]) => (
+                  <div key={label} className={`flex justify-between items-center py-1.5 border-b last:border-0 ${
+                    adminTheme === 'light' ? 'border-slate-200' : 'border-slate-800'
+                  }`}>
+                    <span className="text-[10px] font-semibold text-slate-400">{label}</span>
+                    <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 text-right max-w-[140px] truncate">{value}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* DB Order Side */}
+              <div className={`rounded-2xl border p-4 space-y-3 ${
+                adminTheme === 'light' ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-700'
+              }`}>
+                <h4 className="text-[9px] font-black uppercase tracking-wider text-slate-400 mb-3">Base de Données (Commande)</h4>
+                {selectedReconRow.matchedOrder ? [
+                  ['ID', selectedReconRow.matchedOrder.order_id],
+                  ['Montant COD', `${selectedReconRow.matchedOrder.cod_amount ?? '-'} DH`],
+                  ['Statut', selectedReconRow.matchedOrder.status],
+                  ['Client', selectedReconRow.matchedOrder.customer_name],
+                  ['Téléphone', selectedReconRow.matchedOrder.phone_number],
+                ].map(([label, value]) => {
+                  const isMismatch =
+                    (label === 'Montant COD' && selectedReconRow.matchType === 'AMOUNT_MISMATCH') ||
+                    (label === 'Statut' && selectedReconRow.matchType === 'STATUS_MISMATCH');
+                  return (
+                    <div key={label} className={`flex justify-between items-center py-1.5 border-b last:border-0 ${
+                      adminTheme === 'light' ? 'border-slate-100' : 'border-slate-800'
+                    }`}>
+                      <span className="text-[10px] font-semibold text-slate-400">{label}</span>
+                      <span className={`text-[11px] font-bold text-right max-w-[140px] truncate ${
+                        isMismatch ? 'text-amber-600 dark:text-amber-400' : 'text-slate-700 dark:text-slate-200'
+                      }`}>{value}</span>
+                    </div>
+                  );
+                }) : (
+                  <p className="text-[11px] text-rose-500 font-bold text-center py-6">Aucune commande correspondante trouvée dans la base de données.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Footer message */}
+            {selectedReconRow.discrepancyMessage && (
+              <div className={`p-4 border-t text-xs font-semibold ${
+                adminTheme === 'light' ? 'bg-amber-50 border-amber-100 text-amber-800' : 'bg-amber-950/20 border-amber-900/30 text-amber-400'
+              }`}>
+                ⚠️ {selectedReconRow.discrepancyMessage}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -1894,7 +2021,7 @@ export default function OrdersTab() {
             {/* Visual Shipping Timeline */}
             <div className="bg-slate-950 p-4 rounded-2xl border border-slate-900 space-y-4 w-full">
               <div className="flex justify-between items-center border-b border-slate-900/60 pb-2">
-                <h4 className="text-[10px] font-bold text-slate-405 uppercase tracking-widest flex items-center gap-1.5">
+                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
                   <Truck className="w-3.5 h-3.5 text-emerald-400" />
                   Timeline d&apos;Expédition & Suivi COD
                 </h4>
@@ -1950,7 +2077,7 @@ export default function OrdersTab() {
                       const isDone = step.done;
                       const isActive = step.active;
                       
-                      let circleColor = 'border-slate-800 bg-slate-950 text-slate-650';
+                      let circleColor = 'border-slate-800 bg-slate-950 text-slate-600';
                       if (isDone) {
                         if (step.isRed) {
                           circleColor = 'border-rose-500 bg-rose-950 text-rose-400 ring-4 ring-rose-500/10';

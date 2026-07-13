@@ -235,7 +235,7 @@ export default function AuditLogsTab() {
             title="Rafraîchir les logs"
             className={`p-2 border rounded-xl transition duration-200 flex items-center justify-center cursor-pointer ${
               adminTheme === 'light' 
-                ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-850 hover:bg-slate-50' 
+                ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50' 
                 : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -266,7 +266,7 @@ export default function AuditLogsTab() {
           {/* Keyword Search */}
           <div className="space-y-1.5 md:col-span-2">
             <label className="text-[9px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-              <Search className="w-3 h-3 text-slate-550" /> Recherche Libre
+              <Search className="w-3 h-3 text-slate-500" /> Recherche Libre
             </label>
             <input
               type="text"
@@ -284,14 +284,14 @@ export default function AuditLogsTab() {
           {/* Action Filter */}
           <div className="space-y-1.5">
             <label className="text-[9px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-              <Activity className="w-3 h-3 text-slate-550" /> Type d&apos;Action
+              <Activity className="w-3 h-3 text-slate-500" /> Type d&apos;Action
             </label>
             <select
               value={selectedAction}
               onChange={(e) => setSelectedAction(e.target.value)}
               className={`w-full text-xs rounded-xl px-3 py-2 border outline-none cursor-pointer transition ${
                 adminTheme === 'light' 
-                  ? 'bg-slate-50 border-slate-200 text-slate-850' 
+                  ? 'bg-slate-50 border-slate-200 text-slate-800' 
                   : 'bg-slate-950 border-slate-900 text-slate-200'
               }`}
             >
@@ -305,15 +305,15 @@ export default function AuditLogsTab() {
           {/* Administrator Filter */}
           <div className="space-y-1.5">
             <label className="text-[9px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-              <Users className="w-3 h-3 text-slate-550" /> Opérateur Staff
+              <Users className="w-3 h-3 text-slate-500" /> Opérateur Staff
             </label>
             <select
               value={selectedOperator}
               onChange={(e) => setSelectedOperator(e.target.value)}
               className={`w-full text-xs rounded-xl px-3 py-2 border outline-none cursor-pointer transition ${
                 adminTheme === 'light' 
-                  ? 'bg-slate-50 border-slate-200 text-slate-855' 
-                  : 'bg-slate-955 border-slate-900 text-slate-200'
+                  ? 'bg-slate-50 border-slate-200 text-slate-800' 
+                  : 'bg-slate-950 border-slate-900 text-slate-200'
               }`}
             >
               <option value="all">Tous les opérateurs ({operatorsList.length})</option>
@@ -326,7 +326,7 @@ export default function AuditLogsTab() {
           {/* Date Picker Start */}
           <div className="space-y-1.5">
             <label className="text-[9px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-              <Calendar className="w-3 h-3 text-slate-550" /> Date du
+              <Calendar className="w-3 h-3 text-slate-500" /> Date du
             </label>
             <input
               type="date"
@@ -345,7 +345,7 @@ export default function AuditLogsTab() {
           {/* Date Picker End */}
           <div className="space-y-1.5">
             <label className="text-[9px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-              <Calendar className="w-3 h-3 text-slate-550" /> Au (Date fin)
+              <Calendar className="w-3 h-3 text-slate-500" /> Au (Date fin)
             </label>
             <input
               type="date"
@@ -482,7 +482,7 @@ export default function AuditLogsTab() {
 
                     {/* Log Details content preview */}
                     <td className="py-3.5 px-5 font-medium max-w-md truncate">
-                      <span className={adminTheme === 'light' ? 'text-slate-700' : 'text-slate-350'}>
+                      <span className={adminTheme === 'light' ? 'text-slate-700' : 'text-slate-300'}>
                         {log.details}
                       </span>
                     </td>
@@ -542,7 +542,7 @@ export default function AuditLogsTab() {
                       </div>
                       
                       <p className={`leading-relaxed text-xs font-semibold ${
-                        adminTheme === 'light' ? 'text-slate-700' : 'text-slate-350'
+                        adminTheme === 'light' ? 'text-slate-700' : 'text-slate-300'
                       }`}>
                         {log.details}
                       </p>
@@ -553,7 +553,7 @@ export default function AuditLogsTab() {
                       className={`p-1 border rounded-lg transition text-[10px] font-bold uppercase tracking-wider shrink-0 cursor-pointer ${
                         adminTheme === 'light'
                           ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-800'
-                          : 'bg-slate-900 border-slate-800 text-slate-450 hover:text-slate-200'
+                          : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
                       }`}
                     >
                       Inspecter
@@ -569,7 +569,7 @@ export default function AuditLogsTab() {
         <div className={`px-5 py-4 border-t flex flex-col sm:flex-row justify-between items-center gap-3 ${
           adminTheme === 'light' ? 'bg-slate-50/50 border-slate-200' : 'bg-slate-900/40 border-slate-900'
         }`}>
-          <span className="text-[11px] font-medium text-slate-450">
+          <span className="text-[11px] font-medium text-slate-400">
             Affichage de <strong>{Math.min(filteredLogs.length, (currentPage - 1) * itemsPerPage + 1)}</strong> à <strong>{Math.min(filteredLogs.length, currentPage * itemsPerPage)}</strong> sur <strong>{filteredLogs.length}</strong> logs filtrés
           </span>
 
@@ -580,7 +580,7 @@ export default function AuditLogsTab() {
               className={`p-1.5 rounded-lg border transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
                 adminTheme === 'light'
                   ? 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                  : 'bg-slate-900 border-slate-800 text-slate-450 hover:bg-slate-800'
+                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800'
               }`}
             >
               <ChevronLeft className="w-4 h-4" />
@@ -596,7 +596,7 @@ export default function AuditLogsTab() {
               className={`p-1.5 rounded-lg border transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
                 adminTheme === 'light'
                   ? 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                  : 'bg-slate-900 border-slate-800 text-slate-450 hover:bg-slate-800'
+                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800'
               }`}
             >
               <ChevronRight className="w-4 h-4" />
@@ -633,7 +633,7 @@ export default function AuditLogsTab() {
                 <button
                   onClick={() => setSelectedLog(null)}
                   className={`p-1.5 rounded-full border transition cursor-pointer ${
-                    adminTheme === 'light' ? 'hover:bg-slate-50 border-slate-200 text-slate-450' : 'hover:bg-slate-900 border-slate-800 text-slate-505'
+                    adminTheme === 'light' ? 'hover:bg-slate-50 border-slate-200 text-slate-400' : 'hover:bg-slate-900 border-slate-800 text-slate-500'
                   }`}
                 >
                   <X className="w-4 h-4" />
@@ -644,11 +644,11 @@ export default function AuditLogsTab() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <span className="text-[9px] text-slate-450 font-bold uppercase tracking-wider block">ID Log</span>
+                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">ID Log</span>
                     <code className="text-xs font-mono font-extrabold">{selectedLog.id}</code>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-[9px] text-slate-450 font-bold uppercase tracking-wider block">Type d&apos;Action</span>
+                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Type d&apos;Action</span>
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase border tracking-wider ${
                       getLogBadgeStyles(selectedLog.action)
                     }`}>
@@ -656,7 +656,7 @@ export default function AuditLogsTab() {
                     </span>
                   </div>
                   <div className="space-y-1 col-span-2">
-                    <span className="text-[9px] text-slate-450 font-bold uppercase tracking-wider block font-sans">Date et Heure de l&apos;événement</span>
+                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block font-sans">Date et Heure de l&apos;événement</span>
                     <span className="text-xs font-mono font-extrabold flex items-center gap-1.5">
                       <Clock className="w-3.5 h-3.5 text-slate-500" />
                       {new Date(selectedLog.date).toLocaleString('fr-FR', {
@@ -674,7 +674,7 @@ export default function AuditLogsTab() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <span className="text-[9px] text-slate-450 font-bold uppercase tracking-wider block">Détails de l&apos;activité</span>
+                  <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Détails de l&apos;activité</span>
                   <div className={`p-4 rounded-xl font-mono text-[11px] leading-relaxed whitespace-pre-wrap select-text border font-bold ${
                     adminTheme === 'light'
                       ? 'bg-slate-950 text-slate-100 border-slate-900'

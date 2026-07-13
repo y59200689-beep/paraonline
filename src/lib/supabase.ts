@@ -25,6 +25,8 @@ const globalForMock = globalThis as unknown as {
     customer_profiles: any[];
     advice_articles: any[];
     code_snippets: any[];
+    marketing_flows: any[];
+    marketing_flow_runs: any[];
   }
 };
 
@@ -229,15 +231,25 @@ if (isPlaceholder) {
       loyalty_overrides: [],
       customer_profiles: [],
       advice_articles: getInitialAdviceArticles(),
-      code_snippets: getInitialCodeSnippets()
+      code_snippets: getInitialCodeSnippets(),
+      marketing_flows: [],
+      marketing_flow_runs: []
     };
     saveToDisk();
   } else if (loaded && globalForMock.mockDb) {
     let mutated = false;
     if (globalForMock.mockDb.products) {
       globalForMock.mockDb.products = globalForMock.mockDb.products.map((p: any) => {
+        let singleMutated = false;
         if (!p.status) {
           p.status = 'live';
+          singleMutated = true;
+        }
+        if (p.vendor && p.vendor.toUpperCase().includes('ATLASCOM')) {
+          p.vendor = '';
+          singleMutated = true;
+        }
+        if (singleMutated) {
           mutated = true;
         }
         return p;
@@ -249,6 +261,14 @@ if (isPlaceholder) {
     }
     if (!globalForMock.mockDb.code_snippets) {
       globalForMock.mockDb.code_snippets = getInitialCodeSnippets();
+      mutated = true;
+    }
+    if (!globalForMock.mockDb.marketing_flows) {
+      globalForMock.mockDb.marketing_flows = [];
+      mutated = true;
+    }
+    if (!globalForMock.mockDb.marketing_flow_runs) {
+      globalForMock.mockDb.marketing_flow_runs = [];
       mutated = true;
     } else {
       // Migrate existing mock snippets to include new fields if missing
@@ -446,6 +466,29 @@ class MockSupabaseQueryBuilder {
       const ids = value.replace(/[()]/g, '').split(',').map((x: string) => x.trim());
       this.filters.push((item) => !ids.includes(String(item[column])));
     } else if (operator === 'eq') {
+      this.filters.push((item) => item[column] !== value);
+    }
+    return this;
+  }
+
+  filter(column: string, operator: string, value: any) {
+    if (operator === 'ilike') {
+      // value format: "prefix%" or "%contains%" or "%suffix"
+      const pattern = String(value).toLowerCase();
+      const isPrefix = pattern.endsWith('%') && !pattern.startsWith('%');
+      const isSuffix = pattern.startsWith('%') && !pattern.endsWith('%');
+      const isContains = pattern.startsWith('%') && pattern.endsWith('%');
+      const cleanPattern = pattern.replace(/%/g, '');
+      this.filters.push((item) => {
+        const fieldVal = String(item[column] || '').toLowerCase();
+        if (isContains) return fieldVal.includes(cleanPattern);
+        if (isPrefix) return fieldVal.startsWith(cleanPattern);
+        if (isSuffix) return fieldVal.endsWith(cleanPattern);
+        return fieldVal === cleanPattern;
+      });
+    } else if (operator === 'eq') {
+      this.eq(column, value);
+    } else if (operator === 'neq') {
       this.filters.push((item) => item[column] !== value);
     }
     return this;

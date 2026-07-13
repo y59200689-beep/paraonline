@@ -82,7 +82,7 @@ export const InteractiveFaq: React.FC = () => {
       {/* Active tab radial glow */}
       <div className={`absolute top-[20%] right-[15%] w-[480px] h-[480px] rounded-full blur-3xl pointer-events-none transition-all duration-700 ${GLOW_COLORS[activeTab]}`} />
 
-      <div className="max-w-[1400px] mx-auto px-6 sm:px-10 md:px-12 lg:px-16 xl:px-20 relative z-10">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 relative z-10">
 
         {/* Section Header */}
         <div className="flex flex-col items-center text-center mb-16 gap-4">

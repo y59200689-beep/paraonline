@@ -66,6 +66,12 @@ export async function GET(request: Request) {
       if (specialFilters.includes('positive_stock')) {
         query = query.gt('stock', 0);
       }
+      if (specialFilters.includes('positive_stock_no_vendor')) {
+        query = query.gt('stock', 0).or('vendor.eq.,vendor.eq.-,vendor.is.null');
+      }
+      if (specialFilters.includes('positive_stock_no_desc')) {
+        query = query.gt('stock', 0).or('description.eq.,description.is.null');
+      }
       if (specialFilters.includes('low_stock')) {
         query = query.lte('stock', lowStockThreshold);
       }

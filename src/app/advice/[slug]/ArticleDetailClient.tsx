@@ -53,7 +53,7 @@ export default function ArticleDetailClient({ article, initialRecommendedProduct
       // Unordered Lists
       if (cleanLine.startsWith('* ') || cleanLine.startsWith('- ')) {
         return (
-          <li key={idx} className={`text-slate-650 dark:text-slate-355 list-disc text-sm sm:text-base leading-relaxed py-1 ${isRTL ? 'mr-6 ml-0' : 'ml-6 mr-0'}`}>
+          <li key={idx} className={`text-slate-600 dark:text-slate-300 list-disc text-sm sm:text-base leading-relaxed py-1 ${isRTL ? 'mr-6 ml-0' : 'ml-6 mr-0'}`}>
             {parseBold(cleanLine.slice(2))}
           </li>
         );
@@ -63,7 +63,7 @@ export default function ArticleDetailClient({ article, initialRecommendedProduct
       const numMatch = cleanLine.match(/^(\d+)\.\s(.*)/);
       if (numMatch) {
         return (
-          <li key={idx} className={`text-slate-650 dark:text-slate-355 list-decimal text-sm sm:text-base leading-relaxed py-1 ${isRTL ? 'mr-6 ml-0' : 'ml-6 mr-0'}`}>
+          <li key={idx} className={`text-slate-600 dark:text-slate-300 list-decimal text-sm sm:text-base leading-relaxed py-1 ${isRTL ? 'mr-6 ml-0' : 'ml-6 mr-0'}`}>
             {parseBold(numMatch[2])}
           </li>
         );
@@ -72,7 +72,7 @@ export default function ArticleDetailClient({ article, initialRecommendedProduct
       // Blockquotes
       if (cleanLine.startsWith('> ')) {
         return (
-          <blockquote key={idx} className={`border-primary pl-4 py-2.5 italic text-slate-505 my-5 text-sm sm:text-base bg-slate-50/50 dark:bg-slate-900/40 rounded-r-lg ${isRTL ? 'border-r-4 border-l-0 pr-4 pl-0' : 'border-l-4'}`}>
+          <blockquote key={idx} className={`border-primary pl-4 py-2.5 italic text-slate-500 my-5 text-sm sm:text-base bg-slate-50/50 dark:bg-slate-900/40 rounded-r-lg ${isRTL ? 'border-r-4 border-l-0 pr-4 pl-0' : 'border-l-4'}`}>
             {parseBold(cleanLine.slice(2))}
           </blockquote>
         );
@@ -80,7 +80,7 @@ export default function ArticleDetailClient({ article, initialRecommendedProduct
 
       // Normal paragraph
       return (
-        <p key={idx} className="text-slate-650 dark:text-slate-355 text-sm sm:text-base leading-relaxed mb-4">
+        <p key={idx} className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed mb-4">
           {parseBold(line)}
         </p>
       );
@@ -170,7 +170,7 @@ export default function ArticleDetailClient({ article, initialRecommendedProduct
             </span>
 
             <span className="inline-flex items-center gap-1.5 text-xs text-slate-400 font-semibold">
-              <Calendar className="w-3.5 h-3.5 text-slate-350" />
+              <Calendar className="w-3.5 h-3.5 text-slate-300" />
               <span>{dateFormatted}</span>
             </span>
           </div>
@@ -188,7 +188,7 @@ export default function ArticleDetailClient({ article, initialRecommendedProduct
         </header>
 
         {/* Cover image banner */}
-        <div className="relative aspect-[16/8] rounded-[32px] overflow-hidden bg-slate-105 border border-slate-200/50 mb-12 shadow-sm">
+        <div className="relative aspect-[16/8] rounded-[32px] overflow-hidden bg-slate-100 border border-slate-200/50 mb-12 shadow-sm">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img 
             src={article.image} 
