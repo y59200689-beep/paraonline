@@ -113,6 +113,16 @@ export interface AdminContextProps {
   handleBulkUpdateReviewStatus: (status: string, selectedIds: string[]) => Promise<void>;
   handleReplyReview: (reviewId: string, text: string) => Promise<boolean>;
   handleDeleteReview: (id: string) => Promise<void>;
+  handleUpdateReview: (
+    id: string,
+    updates: {
+      author?: string;
+      comment?: string;
+      rating?: number;
+      status?: string;
+      reply?: string;
+    }
+  ) => Promise<boolean>;
 
   // FAQ Handlers
   handleAddFaq: (faqForm: { q_fr: string; a_fr: string; q_ar: string; a_ar: string }) => Promise<boolean>;
@@ -278,6 +288,7 @@ export const useAdmin = (): AdminContextProps => {
     handleBulkUpdateReviewStatus: reviews.handleBulkUpdateReviewStatus,
     handleReplyReview: reviews.handleReplyReview,
     handleDeleteReview: reviews.handleDeleteReview,
+    handleUpdateReview: reviews.handleUpdateReview,
 
     // Loyalty Actions
     handleAdjustPoints: loyalty.handleAdjustPoints,

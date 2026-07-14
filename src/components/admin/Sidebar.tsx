@@ -91,65 +91,115 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           </div>
 
-          <nav className="space-y-1">
+          <nav className="space-y-0.5">
+            {/* ── Group helper ── */}
             {[
-              { id: 'dashboard', label: 'Tableau de bord', icon: LayoutDashboard, count: orders.filter(o => o.status.toLowerCase() === 'pending').length > 0 ? orders.filter(o => o.status.toLowerCase() === 'pending').length : undefined, countColor: 'bg-rose-500' },
-              { id: 'analytics', label: 'Analytiques', icon: BarChart2 },
-              { id: 'orders', label: 'Commandes', icon: ShoppingBag, count: orders.filter(o => o.status.toLowerCase() === 'pending').length },
-              { id: 'catalog', label: 'Catalogue Produits', icon: Table },
-              { id: 'crm', label: 'Clients & CRM', icon: Users },
-              { id: 'loyalty', label: 'Fidélité & Points', icon: Award },
-              { id: 'reviews', label: 'Avis Clients', icon: Star, count: reviews.filter(r => r.status === 'pending').length },
-              { id: 'advice', label: 'Espace Conseils', icon: BookOpen },
-              { id: 'branding', label: 'Personnalisation', icon: Palette },
-              { id: 'snippets', label: 'Snippets de Code', icon: Code },
-              { id: 'cron', label: 'Tâches Planifiées', icon: Clock },
-              { id: 'coupons', label: 'Promotions', icon: Ticket },
-              ...(currentUser?.role === 'owner' ? [{ id: 'audit-logs', label: "Journaux d'Audit", icon: Shield }] : []),
-              { id: 'settings', label: 'Paramètres', icon: Sliders }
-            ].map(item => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              const badgeColor = (item as any).countColor || 'bg-emerald-500';
-              return (
-                <Link
-                  key={item.id}
-                  href={item.id === 'dashboard' ? '/admin' : `/admin/${item.id}`}
-                  prefetch={true}
-                  title={sidebarCollapsed ? item.label : undefined}
-                  onClick={() => {
-                    setIsMobileDrawerOpen(false);
-                  }}
-                  className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-between'} px-3 py-2.5 rounded-xl text-[13px] font-semibold tracking-normal border transition-all duration-205 ease-out-premium hover:translate-x-1 active:scale-[0.97] relative cursor-pointer ${
-                    isActive
-                      ? (adminTheme === 'light'
-                          ? `admin-nav-active-light text-emerald-700 font-extrabold ${!sidebarCollapsed ? 'border-l-2 border-l-emerald-600 border-y-transparent border-r-transparent pl-[9px]' : ''}`
-                          : `admin-nav-active-dark text-emerald-400 font-extrabold ${!sidebarCollapsed ? 'border-l-2 border-l-emerald-400 border-y-transparent border-r-transparent pl-[9px]' : ''}`)
-                      : (adminTheme === 'light'
-                          ? 'text-slate-500 border-transparent hover:text-slate-800 hover:bg-slate-100/70'
-                          : 'text-slate-500 border-transparent hover:text-slate-200 hover:bg-white/5')
-                  }`}
-                >
-                  <div className={`flex items-center ${sidebarCollapsed ? '' : 'gap-2.5'}`}>
-                    <Icon className={`w-4 h-4 shrink-0 transition ${
-                      isActive
-                        ? (adminTheme === 'light' ? 'text-emerald-600' : 'text-emerald-400')
-                        : (adminTheme === 'light' ? 'text-slate-500' : 'text-slate-400')
-                    }`} />
-                    {!sidebarCollapsed && <span>{item.label}</span>}
-                  </div>
-                  {!sidebarCollapsed && item.count !== undefined && item.count > 0 && (
-                    <span className={`${badgeColor} text-white font-extrabold text-[10px] px-1.5 py-0.5 rounded-full min-w-4 text-center`}>
-                      {item.count}
-                    </span>
-                  )}
-                  {sidebarCollapsed && item.count !== undefined && item.count > 0 && (
-                    <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-rose-500" />
-                  )}
-                </Link>
-              );
-            })}
+              {
+                groupLabel: 'Opérations',
+                items: [
+                  { id: 'dashboard', label: 'Tableau de bord', icon: LayoutDashboard, count: orders.filter(o => o.status.toLowerCase() === 'pending').length > 0 ? orders.filter(o => o.status.toLowerCase() === 'pending').length : undefined, countColor: 'bg-rose-500' },
+                  { id: 'analytics', label: 'Analytiques', icon: BarChart2 },
+                  { id: 'orders', label: 'Commandes', icon: ShoppingBag, count: orders.filter(o => o.status.toLowerCase() === 'pending').length },
+                  { id: 'catalog', label: 'Catalogue', icon: Table },
+                ],
+              },
+              {
+                groupLabel: 'Clients',
+                items: [
+                  { id: 'crm', label: 'CRM & Clients', icon: Users },
+                  { id: 'loyalty', label: 'Fidélité', icon: Award },
+                  { id: 'reviews', label: 'Avis Clients', icon: Star, count: reviews.filter(r => r.status === 'pending').length },
+                ],
+              },
+              {
+                groupLabel: 'Boutique',
+                items: [
+                  { id: 'advice', label: 'Espace Conseils', icon: BookOpen },
+                  { id: 'branding', label: 'Personnalisation', icon: Palette },
+                  { id: 'snippets', label: 'Snippets Code', icon: Code },
+                  { id: 'cron', label: 'Tâches Planifiées', icon: Clock },
+                  { id: 'coupons', label: 'Promotions', icon: Ticket },
+                  ...(currentUser?.role === 'owner' ? [{ id: 'audit-logs', label: "Journaux d'Audit", icon: Shield }] : []),
+                  { id: 'settings', label: 'Paramètres', icon: Sliders },
+                ],
+              },
+            ].map((group, gIdx) => (
+              <div key={group.groupLabel} className={gIdx > 0 ? 'pt-3 mt-1' : ''}>
+                {/* Group separator + label */}
+                {gIdx > 0 && (
+                  <hr
+                    className="mb-2.5 mx-1"
+                    style={{
+                      border: 'none',
+                      borderTop: `1px solid var(--admin-border)`,
+                    }}
+                  />
+                )}
+                {!sidebarCollapsed && (
+                  <span
+                    className="block px-3 mb-1"
+                    style={{
+                      fontSize: 'var(--admin-text-2xs)',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.14em',
+                      color: 'var(--admin-text-faint)',
+                    }}
+                  >
+                    {group.groupLabel}
+                  </span>
+                )}
+
+                {/* Nav items */}
+                <div className="space-y-0.5">
+                  {group.items.map(item => {
+                    const Icon = item.icon;
+                    const isActive = activeTab === item.id;
+                    const badgeColor = (item as any).countColor || 'bg-emerald-500';
+                    return (
+                      <Link
+                        key={item.id}
+                        href={item.id === 'dashboard' ? '/admin' : `/admin/${item.id}`}
+                        prefetch={true}
+                        title={sidebarCollapsed ? item.label : undefined}
+                        onClick={() => {
+                          setIsMobileDrawerOpen(false);
+                        }}
+                        className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-between'} px-3 py-2.5 rounded-xl border transition-all ease-out-premium hover:translate-x-0.5 active:scale-[0.97] relative cursor-pointer ${
+                          isActive
+                            ? (adminTheme === 'light'
+                                ? `admin-nav-active-light text-emerald-700 font-bold ${!sidebarCollapsed ? 'border-l-2 border-l-emerald-500 border-y-transparent border-r-transparent pl-[11px]' : ''}`
+                                : `admin-nav-active-dark text-emerald-400 font-bold ${!sidebarCollapsed ? 'border-l-2 border-l-emerald-400 border-y-transparent border-r-transparent pl-[11px]' : ''}`)
+                            : (adminTheme === 'light'
+                                ? 'border-transparent hover:bg-slate-100/80 text-slate-500 hover:text-slate-800'
+                                : 'border-transparent hover:bg-white/[0.04] text-slate-500 hover:text-slate-200')
+                        }`}
+                        style={{ fontSize: 'var(--admin-text-xs)', fontWeight: isActive ? 700 : 500 }}
+                      >
+                        <div className={`flex items-center ${sidebarCollapsed ? '' : 'gap-2.5'}`}>
+                          <Icon className={`w-4 h-4 shrink-0 transition ${
+                            isActive
+                              ? (adminTheme === 'light' ? 'text-emerald-600' : 'text-emerald-400')
+                              : (adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500')
+                          }`} />
+                          {!sidebarCollapsed && <span>{item.label}</span>}
+                        </div>
+                        {!sidebarCollapsed && item.count !== undefined && item.count > 0 && (
+                          <span className={`${badgeColor} text-white font-bold px-1.5 py-0.5 rounded-full min-w-4 text-center`} style={{ fontSize: 'var(--admin-text-2xs)' }}>
+                            {item.count}
+                          </span>
+                        )}
+                        {sidebarCollapsed && item.count !== undefined && item.count > 0 && (
+                          <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-rose-500" />
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
+
         </div>
 
         <div className={`pt-4 border-t space-y-2 ${adminTheme === 'light' ? 'border-slate-100' : 'border-slate-900/80'}`}>

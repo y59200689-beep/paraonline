@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useAdmin } from '@/context/AdminContext';
 import { Product } from '@/lib/data';
+import { StatusBadge, EmptyState } from '@/components/admin/ui';
 
 interface RestockProduct extends Omit<Product, 'status'> {
   totalSold: number;
@@ -319,11 +320,7 @@ export default function RestockForecastingTab() {
               <select
                 value={salesWindow}
                 onChange={(e) => setSalesWindow(Number(e.target.value) as any)}
-                className={`text-[11px] h-9 rounded-xl px-3 border outline-none font-medium cursor-pointer transition ${
-                  adminTheme === 'light'
-                    ? 'bg-slate-100 border-slate-200 text-slate-700 focus:bg-white focus:ring-1 focus:ring-emerald-500'
-                    : 'bg-slate-950 border-slate-800 text-slate-200 focus:bg-slate-900 focus:ring-1 focus:ring-emerald-500'
-                }`}
+                className="admin-input h-9"
               >
                 <option value={7}>7 Derniers Jours</option>
                 <option value={14}>14 Derniers Jours</option>
@@ -339,11 +336,7 @@ export default function RestockForecastingTab() {
               <select
                 value={targetCoverage}
                 onChange={(e) => setTargetCoverage(Number(e.target.value) as any)}
-                className={`text-[11px] h-9 rounded-xl px-3 border outline-none font-medium cursor-pointer transition ${
-                  adminTheme === 'light'
-                    ? 'bg-slate-100 border-slate-200 text-slate-700 focus:bg-white focus:ring-1 focus:ring-emerald-500'
-                    : 'bg-slate-950 border-slate-800 text-slate-200 focus:bg-slate-900 focus:ring-1 focus:ring-emerald-500'
-                }`}
+                className="admin-input h-9"
               >
                 <option value={30}>30 Jours de Stock</option>
                 <option value={60}>60 Jours de Stock</option>
@@ -364,11 +357,7 @@ export default function RestockForecastingTab() {
                   max={90}
                   value={leadTime}
                   onChange={(e) => setLeadTime(Math.max(1, Number(e.target.value)))}
-                  className={`w-24 text-[11px] h-9 rounded-xl pl-3 pr-7 border outline-none font-medium transition ${
-                    adminTheme === 'light'
-                      ? 'bg-slate-100 border-slate-200 text-slate-700 focus:bg-white focus:ring-1 focus:ring-emerald-500'
-                      : 'bg-slate-950 border-slate-800 text-slate-200 focus:bg-slate-900 focus:ring-1 focus:ring-emerald-500'
-                  }`}
+                  className="admin-input w-24 h-9 pr-7"
                 />
                 <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400">J</span>
               </div>
@@ -414,17 +403,13 @@ export default function RestockForecastingTab() {
         <div className="flex flex-wrap gap-2.5 w-full md:w-auto">
           {/* Search bar */}
           <div className="relative flex-1 min-w-[200px] md:max-w-xs">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--admin-text-faint)' }} />
             <input
               type="text"
               placeholder="Rechercher produit, marque, SKU..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full text-xs h-9 rounded-xl pl-9 pr-4 border outline-none transition ${
-                adminTheme === 'light'
-                  ? 'bg-white border-slate-200 text-slate-800 focus:ring-1 focus:ring-emerald-500 shadow-sm'
-                  : 'bg-slate-900 border-slate-800 text-slate-200 focus:ring-1 focus:ring-emerald-500'
-              }`}
+              className="admin-input admin-focus-ring w-full pl-9 h-9"
             />
           </div>
 
@@ -432,11 +417,7 @@ export default function RestockForecastingTab() {
           <select
             value={selectedVendor}
             onChange={(e) => setSelectedVendor(e.target.value)}
-            className={`text-xs h-9 rounded-xl px-3 border outline-none font-medium cursor-pointer transition ${
-              adminTheme === 'light'
-                ? 'bg-white border-slate-200 text-slate-700 focus:ring-1 focus:ring-emerald-500 shadow-sm'
-                : 'bg-slate-900 border-slate-800 text-slate-200 focus:ring-1 focus:ring-emerald-500'
-            }`}
+            className="admin-input h-9"
           >
             <option value="all">Tous les fournisseurs ({uniqueVendors.length})</option>
             {uniqueVendors.map(vendor => (
@@ -448,11 +429,7 @@ export default function RestockForecastingTab() {
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className={`text-xs h-9 rounded-xl px-3 border outline-none font-medium cursor-pointer transition ${
-              adminTheme === 'light'
-                ? 'bg-white border-slate-200 text-slate-700 focus:ring-1 focus:ring-emerald-500 shadow-sm'
-                : 'bg-slate-900 border-slate-800 text-slate-200 focus:ring-1 focus:ring-emerald-500'
-            }`}
+            className="admin-input h-9"
           >
             <option value="all">Toutes les catégories</option>
             {uniqueCategories.map(cat => (
@@ -464,11 +441,7 @@ export default function RestockForecastingTab() {
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className={`text-xs h-9 rounded-xl px-3 border outline-none font-medium cursor-pointer transition ${
-              adminTheme === 'light'
-                ? 'bg-white border-slate-200 text-slate-700 focus:ring-1 focus:ring-emerald-500 shadow-sm'
-                : 'bg-slate-900 border-slate-800 text-slate-200 focus:ring-1 focus:ring-emerald-500'
-            }`}
+            className="admin-input h-9"
           >
             <option value="all">Tous les statuts</option>
             <option value="critical">🔴 Critique (Réapprovisionner d&apos;urgence)</option>
@@ -487,11 +460,7 @@ export default function RestockForecastingTab() {
           <button
             onClick={handleOpenWizard}
             disabled={selectedCount === 0 || isReadOnly}
-            className={`h-9 px-4 text-xs font-bold rounded-xl flex items-center justify-center gap-2 cursor-pointer transition duration-200 active:scale-[0.98] w-full md:w-auto ${
-              selectedCount > 0 && !isReadOnly
-                ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/20'
-                : 'bg-slate-200 text-slate-400 border border-slate-300/20 dark:bg-slate-900 dark:border-slate-800/80 dark:text-slate-600 cursor-not-allowed'
-            }`}
+            className="admin-btn admin-btn-primary flex items-center justify-center gap-2 h-9"
           >
             <FileText className="w-4 h-4" />
             Générer un PO ({selectedCount})
@@ -508,9 +477,7 @@ export default function RestockForecastingTab() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className={`border-b text-[10px] font-bold uppercase tracking-wider ${
-                adminTheme === 'light' ? 'bg-slate-50/50 border-slate-200 text-slate-500' : 'bg-slate-900/20 border-slate-800 text-slate-400'
-              }`}>
+              <tr style={{ borderBottom: '1px solid var(--admin-border)', background: 'var(--admin-surface-2)' }}>
                 <th className="px-5 py-4 w-12 text-center">
                   {selectedVendor !== 'all' && (
                     <input
@@ -522,13 +489,11 @@ export default function RestockForecastingTab() {
                     />
                   )}
                 </th>
-                <th className="px-3 py-4">Produit</th>
-                <th className="px-3 py-4">Fournisseur</th>
-                <th className="px-3 py-4 text-center">Stock</th>
-                <th className="px-3 py-4 text-center">Vitesse (Unité/Sem)</th>
-                <th className="px-3 py-4 text-center">Couverture Restante</th>
-                <th className="px-3 py-4 text-center">Statut Ravitaillement</th>
-                <th className="px-5 py-4 text-center">Suggestion (Cible: {targetCoverage}j)</th>
+                {['Produit', 'Fournisseur', 'Stock', 'Vitesse (Unité/Sem)', 'Couverture Restante', 'Statut Ravitaillement', `Suggestion (Cible: ${targetCoverage}j)`].map((h, i) => (
+                  <th key={i} className={`px-3 py-4 font-bold uppercase tracking-widest ${[2,3,4,5,6].includes(i) ? 'text-center' : ''}`} style={{ fontSize: 'var(--admin-text-2xs)', color: 'var(--admin-text-faint)' }}>
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200/50 dark:divide-slate-800/80">
@@ -633,32 +598,18 @@ export default function RestockForecastingTab() {
 
                       {/* Status badge */}
                       <td className="px-3 py-3.5 text-center">
-                        {product.status === 'critical' && (
-                          <span className="inline-flex items-center gap-1 text-[9px] font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-full">
-                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                            CRITIQUE
-                          </span>
-                        )}
-                        {product.status === 'attention' && (
-                          <span className="inline-flex items-center gap-1 text-[9px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                            ATTENTION
-                          </span>
-                        )}
-                        {product.status === 'safe' && (
-                          <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                            SÛR
-                          </span>
-                        )}
+                        <StatusBadge
+                          status={product.status === 'critical' ? 'error' : product.status === 'attention' ? 'warning' : 'success'}
+                          label={product.status === 'critical' ? 'CRITIQUE' : product.status === 'attention' ? 'ATTENTION' : 'SÛR'}
+                          theme={adminTheme}
+                          size="xs"
+                        />
                       </td>
 
                       {/* Suggested Quantity */}
                       <td className="px-5 py-3.5 text-center">
                         {product.suggestedQty > 0 ? (
-                          <span className="inline-flex items-center gap-1 text-xs font-black text-emerald-500 bg-emerald-500/10 border border-emerald-500/15 px-2.5 py-0.5 rounded-lg font-mono">
-                            +{product.suggestedQty}
-                          </span>
+                          <StatusBadge status="success" label={`+${product.suggestedQty}`} dot={false} theme={adminTheme} size="xs" />
                         ) : (
                           <span className="text-slate-400">—</span>
                         )}
@@ -721,9 +672,7 @@ export default function RestockForecastingTab() {
                     type="text"
                     value={supplierName}
                     onChange={(e) => setSupplierName(e.target.value)}
-                    className={`w-full text-xs h-9 rounded-xl px-3 border outline-none transition ${
-                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200 focus:bg-white' : 'bg-slate-950 border-slate-800 focus:bg-slate-900'
-                    }`}
+                    className="admin-input w-full"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -732,9 +681,7 @@ export default function RestockForecastingTab() {
                     type="email"
                     value={supplierEmail}
                     onChange={(e) => setSupplierEmail(e.target.value)}
-                    className={`w-full text-xs h-9 rounded-xl px-3 border outline-none transition ${
-                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200 focus:bg-white' : 'bg-slate-950 border-slate-800 focus:bg-slate-900'
-                    }`}
+                    className="admin-input w-full"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -743,9 +690,7 @@ export default function RestockForecastingTab() {
                     type="text"
                     value={poReference}
                     onChange={(e) => setPoReference(e.target.value)}
-                    className={`w-full text-xs h-9 rounded-xl px-3 border outline-none transition ${
-                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200 focus:bg-white' : 'bg-slate-950 border-slate-800 focus:bg-slate-900'
-                    }`}
+                    className="admin-input w-full"
                   />
                 </div>
                 <div className="md:col-span-2 space-y-1.5">
@@ -754,9 +699,7 @@ export default function RestockForecastingTab() {
                     type="text"
                     value={supplierAddress}
                     onChange={(e) => setSupplierAddress(e.target.value)}
-                    className={`w-full text-xs h-9 rounded-xl px-3 border outline-none transition ${
-                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200 focus:bg-white' : 'bg-slate-950 border-slate-800 focus:bg-slate-900'
-                    }`}
+                    className="admin-input w-full"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -765,9 +708,7 @@ export default function RestockForecastingTab() {
                     type="date"
                     value={poDate}
                     onChange={(e) => setPoDate(e.target.value)}
-                    className={`w-full text-xs h-9 rounded-xl px-3 border outline-none transition ${
-                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200 focus:bg-white' : 'bg-slate-950 border-slate-800 focus:bg-slate-900'
-                    }`}
+                    className="admin-input w-full"
                   />
                 </div>
               </div>
@@ -808,9 +749,7 @@ export default function RestockForecastingTab() {
                                   [product.id]: { ...prev[product.id], quantity: val }
                                 }));
                               }}
-                              className={`w-20 text-center font-mono text-xs h-8 rounded-lg border outline-none focus:ring-1 focus:ring-emerald-500 ${
-                                adminTheme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-950 border-slate-800'
-                              }`}
+                              className="admin-input w-20 text-center"
                             />
                           </td>
                           <td className="px-3 py-3 text-center">
@@ -826,9 +765,7 @@ export default function RestockForecastingTab() {
                                   [product.id]: { ...prev[product.id], unitCost: val }
                                 }));
                               }}
-                              className={`w-24 text-center font-mono text-xs h-8 rounded-lg border outline-none focus:ring-1 focus:ring-emerald-500 ${
-                                adminTheme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-950 border-slate-800'
-                              }`}
+                              className="admin-input w-24 text-center"
                             />
                           </td>
                           <td className="px-4 py-3 text-right font-mono font-bold">
@@ -849,9 +786,7 @@ export default function RestockForecastingTab() {
                     <select
                       value={paymentTerms}
                       onChange={(e) => setPaymentTerms(e.target.value)}
-                      className={`text-xs h-9 rounded-xl px-3 border outline-none font-medium cursor-pointer transition w-full md:w-60 ${
-                        adminTheme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-950 border-slate-800'
-                      }`}
+                      className="admin-input w-full md:w-60"
                     >
                       <option value="Net 30">Net 30 (30 jours de crédit)</option>
                       <option value="Net 45">Net 45 (45 jours de crédit)</option>
@@ -884,9 +819,7 @@ export default function RestockForecastingTab() {
                         max={100}
                         value={vatRate}
                         onChange={(e) => setVatRate(Math.max(0, Number(e.target.value)))}
-                        className={`w-12 text-center font-mono text-[11px] h-7 rounded border outline-none ${
-                          adminTheme === 'light' ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'
-                        }`}
+                        className="admin-input w-16 text-center h-8"
                       />
                       <span>%</span>
                     </div>
@@ -910,11 +843,7 @@ export default function RestockForecastingTab() {
             }`}>
               <button
                 onClick={() => setIsWizardOpen(false)}
-                className={`px-4 h-10 text-xs font-bold rounded-xl border transition ${
-                  adminTheme === 'light'
-                    ? 'hover:bg-slate-100 border-slate-200 text-slate-600'
-                    : 'hover:bg-slate-800 border-slate-800 text-slate-300'
-                }`}
+                className="admin-btn admin-btn-secondary"
               >
                 Annuler
               </button>
@@ -923,7 +852,7 @@ export default function RestockForecastingTab() {
                   setIsWizardOpen(false);
                   setIsPreviewOpen(true);
                 }}
-                className="px-4 h-10 text-xs font-bold rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/20 transition flex items-center gap-1.5"
+                className="admin-btn admin-btn-primary flex items-center gap-1.5"
               >
                 <FileDown className="w-4 h-4" />
                 Visualiser le PO
@@ -945,7 +874,7 @@ export default function RestockForecastingTab() {
                   setIsPreviewOpen(false);
                   setIsWizardOpen(true); // Return to wizard
                 }}
-                className="px-3.5 h-9 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition flex items-center gap-1.5"
+                className="admin-btn admin-btn-secondary flex items-center gap-1.5 h-9"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 Retour au formulaire
@@ -954,13 +883,13 @@ export default function RestockForecastingTab() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setIsPreviewOpen(false)}
-                  className="px-3.5 h-9 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 transition"
+                  className="admin-btn admin-btn-secondary h-9"
                 >
                   Fermer
                 </button>
                 <button
                   onClick={handlePrint}
-                  className="px-4.5 h-9 text-xs font-bold rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/20 transition flex items-center gap-1.5"
+                  className="admin-btn admin-btn-primary flex items-center gap-1.5 h-9"
                 >
                   <Printer className="w-4 h-4" />
                   Imprimer / PDF

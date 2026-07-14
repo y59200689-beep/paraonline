@@ -49,6 +49,18 @@ export async function POST(request: Request) {
       const orderId = paymentIntent.metadata?.orderId;
 
       if (orderId) {
+        // Fetch current order status to prevent duplicate processing
+        const { data: order } = await supabase
+          .from('orders')
+          .select('status')
+          .eq('order_id', orderId)
+          .single();
+
+        if (order?.status === 'Paid') {
+          console.log(`Order ${orderId} is already marked as Paid. Skipping duplicate webhook.`);
+          return NextResponse.json({ received: true });
+        }
+
         // Update order status in database
         const { error: updateError } = await supabase
           .from('orders')
@@ -79,6 +91,23 @@ export async function POST(request: Request) {
       const failureMessage = paymentIntent.last_payment_error?.message || 'Payment declined';
 
       if (orderId) {
+        // Fetch current order status to prevent duplicate or late-arriving failed overwrites
+        const { data: order } = await supabase
+          .from('orders')
+          .select('status')
+          .eq('order_id', orderId)
+          .single();
+
+        if (order?.status === 'Paid') {
+          console.log(`Order ${orderId} is already Paid. Ignoring late-arriving failed payment webhook.`);
+          return NextResponse.json({ received: true });
+        }
+
+        if (order?.status === 'Payment Failed') {
+          console.log(`Order ${orderId} is already marked as Payment Failed. Skipping duplicate failure webhook.`);
+          return NextResponse.json({ received: true });
+        }
+
         // Mark the order as payment failed
         await supabase
           .from('orders')

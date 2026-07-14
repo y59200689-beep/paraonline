@@ -4,6 +4,7 @@ import React from 'react';
 import { useTranslation } from '@/context/LanguageContext';
 import { useUi } from '@/context/UiContext';
 import Image from 'next/image';
+import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 
 export interface TriplePromoCard {
   tagFr: string;
@@ -77,7 +78,7 @@ export const TriplePromoBanners: React.FC<TriplePromoBannersProps> = ({ cards })
               {/* Premium editorial background */}
               <div className="absolute inset-0 rounded-[24px] overflow-hidden">
                 <Image
-                  src={card.bgImage}
+                  src={getOptimizedImageUrl(card.bgImage)}
                   alt=""
                   fill
                   sizes="(max-width: 768px) 100vw, 33vw"
@@ -120,7 +121,7 @@ export const TriplePromoBanners: React.FC<TriplePromoBannersProps> = ({ cards })
               {card.overlayImage && (
                 <div className="absolute right-[-10px] bottom-[-5px] w-[150px] h-[150px] md:w-[170px] md:h-[170px] pointer-events-none select-none transform translate-y-3 translate-x-1 group-hover:scale-105 group-hover:-translate-y-1 transition-all duration-500 filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.12)]">
                   <Image 
-                    src={card.overlayImage} 
+                    src={getOptimizedImageUrl(card.overlayImage)} 
                     alt="" 
                     fill
                     sizes="(max-width: 768px) 150px, 170px"

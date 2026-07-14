@@ -13,6 +13,7 @@ import { useLoyalty } from '@/context/LoyaltyContext';
 import { BeautyWalletDrawer } from './BeautyWalletDrawer';
 import { useUi } from '@/context/UiContext';
 import Image from 'next/image';
+import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -271,7 +272,7 @@ export const Header: React.FC = () => {
             <div className="flex items-center shrink-0">
               <Link href="/" className="flex items-center group active:scale-98 transition-transform duration-300">
                 <Image
-                  src="/images/logo.png"
+                  src={getOptimizedImageUrl("/images/logo.png")}
                   alt="Para Officinal S.A"
                   width={180}
                   height={48}

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import Link from 'next/link';
 import { Search, ShoppingBag, Globe, X } from 'lucide-react';
 import { SearchDropdown } from './SearchDropdown';
@@ -74,7 +75,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
           className="flex items-center group active:scale-98 transition-transform duration-300 shrink-0"
         >
           <Image
-            src="/images/logo.png"
+            src={getOptimizedImageUrl("/images/logo.png")}
             alt="Para Officinal S.A"
             width={120}
             height={32}

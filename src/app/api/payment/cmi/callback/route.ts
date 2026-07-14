@@ -70,6 +70,21 @@ export async function POST(request: Request) {
     const approved = responseCode === '00' && mdStatus === '1';
 
     if (orderId) {
+      // Fetch current order status to prevent duplicate processing or late-arriving failures
+      const { data: order } = await supabase
+        .from('orders')
+        .select('status')
+        .eq('order_id', orderId)
+        .single();
+
+      if (order?.status === 'Paid') {
+        console.log(`Order ${orderId} is already marked as Paid. Skipping duplicate CMI callback.`);
+        return new Response('ACTION=POSTAUTH', {
+          status: 200,
+          headers: { 'Content-Type': 'text/plain' },
+        });
+      }
+
       await supabase
         .from('orders')
         .update({

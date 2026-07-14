@@ -16,6 +16,43 @@ import {
   X,
   Clock
 } from 'lucide-react';
+import { StatusBadge } from '@/components/admin/ui';
+
+// ── Local bento card header ────────────────────────────────────────────────────
+function BentoCardHeader({ eyebrow, title, icon: Icon, action, theme }: {
+  eyebrow: string;
+  title: string;
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  action?: React.ReactNode;
+  theme: 'light' | 'dark';
+}) {
+  return (
+    <div className={`flex ${action ? 'justify-between' : 'items-center'} items-center gap-3 mb-6`}>
+      <div className="flex items-center gap-3">
+        <div className={`p-2 rounded-xl border ${
+          theme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-slate-900 border-slate-800 text-slate-400'
+        }`}>
+          <Icon className="w-4 h-4" strokeWidth={1.5} />
+        </div>
+        <div>
+          <span
+            className="block leading-none"
+            style={{ fontSize: 'var(--admin-text-2xs)', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--admin-text-faint)' }}
+          >
+            {eyebrow}
+          </span>
+          <h3
+            className="leading-none mt-1.5 font-semibold tracking-tight"
+            style={{ fontSize: 'var(--admin-text-sm)', color: 'var(--admin-text-primary)' }}
+          >
+            {title}
+          </h3>
+        </div>
+      </div>
+      {action}
+    </div>
+  );
+}
 
 interface DashboardTabProps {
   setActiveTab: (tab: 'dashboard' | 'analytics' | 'orders' | 'catalog' | 'crm' | 'reviews' | 'settings' | 'loyalty') => void;
@@ -152,19 +189,25 @@ function KpiCard({ label, raw, suffix, icon: Icon, color, bg, theme, isWide, isM
           : 'bg-slate-950/80 backdrop-blur-md text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
       }`}>
         <div className="flex items-center justify-between w-full">
-          <span className={`text-[9px] font-black tracking-[0.2em] uppercase block leading-none ${
-            theme === 'light' ? 'text-slate-400' : 'text-slate-500'
-          }`}>{label}</span>
+          <span
+            className="block leading-none"
+            style={{ fontSize: 'var(--admin-text-2xs)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--admin-text-muted)' }}
+          >
+            {label}
+          </span>
           <div className={`p-2 rounded-xl border ${iconColors.bg} ${iconColors.text} transition duration-300`}>
             <Icon className="w-4 h-4" strokeWidth={1.5} />
           </div>
         </div>
         
         <div className="flex items-end justify-between w-full mt-2">
-          <h3 className="text-3.5xl font-black tracking-tight leading-none" style={{ fontVariantNumeric: 'tabular-nums' }}>
+          <h3
+            className="font-bold tracking-tight leading-none"
+            style={{ fontSize: 'var(--admin-text-2xl)', fontVariantNumeric: 'tabular-nums', color: 'var(--admin-text-primary)' }}
+          >
             {Math.round(value).toLocaleString('fr-FR')}
             {suffix && (
-              <span className={`text-sm font-extrabold ml-1.5 opacity-70`}>
+              <span className="font-semibold ml-1.5 opacity-60" style={{ fontSize: 'var(--admin-text-xs)' }}>
                 {suffix.trim()}
               </span>
             )}
@@ -263,15 +306,16 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
               <button
                 key={range}
                 onClick={() => setAnalyticsRange(range)}
-                className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all duration-300 border-0 cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl font-semibold uppercase tracking-widest transition-all duration-200 border-0 cursor-pointer ${
                   analyticsRange === range
                     ? (adminTheme === 'light'
-                        ? 'bg-white text-slate-800 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08)] font-black'
-                        : 'bg-slate-800 text-emerald-400 shadow-sm border border-slate-700 font-black')
+                        ? 'bg-white text-slate-800 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08)] font-bold'
+                        : 'bg-slate-800 text-emerald-400 shadow-sm border border-slate-700 font-bold')
                     : (adminTheme === 'light'
                         ? 'text-slate-500 hover:text-slate-800 hover:bg-white/40 bg-transparent'
                         : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30 bg-transparent')
                 }`}
+                style={{ fontSize: 'var(--admin-text-2xs)' }}
               >
                 {range === 'today' ? getTodayLabel() : range === '7d' ? '7 Jours' : range === '30d' ? '30 Jours' : range === 'month' ? 'Ce Mois' : range === 'all' ? 'Tout' : 'Personnalisé'}
               </button>
@@ -324,7 +368,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
 
       {/* KPI Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 md:gap-5">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-5 lg:gap-6">
         {[
           { 
             label: "Chiffre d'Affaires", 
@@ -383,22 +427,22 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
           <div className={`rounded-[calc(36px-4px)] p-6 h-full flex flex-col justify-between ${
             adminTheme === 'light' ? 'bg-white text-slate-800 shadow-[inset_0_1px_1px_rgba(255,255,255,0.9)]' : 'bg-slate-950/80 backdrop-blur-md text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
           }`}>
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-xl border ${
-                  adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-slate-900 border-slate-800 text-slate-400'
-                }`}>
-                  <BarChart2 className="w-4 h-4" strokeWidth={1.5} />
-                </div>
-                <div>
-                  <span className={`text-[9px] font-black tracking-[0.2em] uppercase block leading-none ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>Évolution Globale</span>
-                  <h3 className="text-sm font-bold leading-none mt-1.5">Évolution des ventes</h3>
-                </div>
-              </div>
-              <span className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold border ${
-                adminTheme === 'light' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-emerald-950/30 border-emerald-900/40 text-emerald-400'
-              }`}>{dashboardStats.totalSales.toFixed(0)} DH total</span>
-            </div>
+            <BentoCardHeader
+              eyebrow="Évolution Globale"
+              title="Évolution des ventes"
+              icon={BarChart2}
+              theme={adminTheme}
+              action={
+                <span
+                  className={`px-2.5 py-1 rounded-full font-bold border font-mono ${
+                    adminTheme === 'light' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-emerald-950/30 border-emerald-900/40 text-emerald-400'
+                  }`}
+                  style={{ fontSize: 'var(--admin-text-2xs)' }}
+                >
+                  {dashboardStats.totalSales.toFixed(0)} DH total
+                </span>
+              }
+            />
 
             {(() => {
               const data = dashboardStats.last7DaysSales;
@@ -509,17 +553,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
           <div className={`rounded-[calc(36px-4px)] p-6 h-full flex flex-col ${
             adminTheme === 'light' ? 'bg-white text-slate-800 shadow-[inset_0_1px_1px_rgba(255,255,255,0.9)]' : 'bg-slate-950/80 backdrop-blur-md text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
           }`}>
-            <div className="flex items-center gap-3 mb-6">
-              <div className={`p-2 rounded-xl border ${
-                adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-slate-900 border-slate-800 text-slate-400'
-              }`}>
-                <ClipboardList className="w-4 h-4" strokeWidth={1.5} />
-              </div>
-              <div>
-                <span className={`text-[9px] font-black tracking-[0.2em] uppercase block leading-none ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>Conversion</span>
-                <h3 className="text-sm font-bold leading-none mt-1.5">Tunnel des commandes</h3>
-              </div>
-            </div>
+            <BentoCardHeader eyebrow="Conversion" title="Tunnel des commandes" icon={ClipboardList} theme={adminTheme} />
             
             <div className="flex-1 flex flex-col justify-between py-1 min-h-0 gap-3">
               {Object.entries(dashboardStats.statusFunnel).map(([status, count]) => {
@@ -564,27 +598,23 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
             adminTheme === 'light' ? 'bg-white text-slate-800 shadow-[inset_0_1px_1px_rgba(255,255,255,0.9)]' : 'bg-slate-950/80 backdrop-blur-md text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
           }`}>
             <div>
-              <div className="flex justify-between items-center mb-6">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-xl border ${
-                    adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-slate-900 border-slate-800 text-slate-400'
-                  }`}>
-                    <TrendingUp className="w-4 h-4" strokeWidth={1.5} />
-                  </div>
-                  <div>
-                    <span className={`text-[9px] font-black tracking-[0.2em] uppercase block leading-none ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>Audits</span>
-                    <h3 className="text-sm font-bold leading-none mt-1.5">Journal d&apos;activité</h3>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => { setActiveTab('settings'); setActiveSettingsSubTab('logs'); }} 
-                  className={`text-[9px] flex items-center gap-1 font-black uppercase tracking-wider border-0 bg-transparent cursor-pointer hover:underline ${
-                    adminTheme === 'light' ? 'text-emerald-600' : 'text-emerald-400'
-                  }`}
-                >
-                  Tout voir <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
+              <BentoCardHeader
+                eyebrow="Audits"
+                title="Journal d'activité"
+                icon={TrendingUp}
+                theme={adminTheme}
+                action={
+                  <button
+                    onClick={() => { setActiveTab('settings'); setActiveSettingsSubTab('logs'); }}
+                    className={`flex items-center gap-1 font-semibold border-0 bg-transparent cursor-pointer hover:underline ${
+                      adminTheme === 'light' ? 'text-emerald-600' : 'text-emerald-400'
+                    }`}
+                    style={{ fontSize: 'var(--admin-text-2xs)' }}
+                  >
+                    Tout voir <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                }
+              />
               
               {(() => {
                 const getActionBadge = (action: string) => {
@@ -618,17 +648,24 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                     {auditLogs.slice(0, 6).map(log => {
                       const badgeInfo = getActionBadge(log.action);
                       return (
-                        <div key={log.id} className={`p-3 border rounded-2xl text-xs space-y-1.5 transition-all hover:bg-slate-500/[0.02] ${
-                          adminTheme === 'light' ? 'bg-slate-50/50 border-slate-100 hover:border-slate-200' : 'bg-slate-950 border-slate-900 hover:border-slate-800'
-                        }`}>
-                          <div className="flex justify-between items-center gap-2 text-[8.5px]">
-                            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border font-bold uppercase tracking-wider ${badgeInfo.badge}`}>
-                              <span className={`w-1 h-1 rounded-full ${badgeInfo.dot}`} />
-                              {log.action}
+                        <div
+                          key={log.id}
+                          className={`p-3 border rounded-2xl space-y-1.5 transition-all hover:bg-slate-500/[0.02] ${
+                            adminTheme === 'light' ? 'bg-slate-50/50 border-slate-100 hover:border-slate-200' : 'bg-slate-950 border-slate-900 hover:border-slate-800'
+                          }`}
+                        >
+                          <div className="flex justify-between items-center gap-2">
+                            <StatusBadge status={log.action} label={log.action} size="xs" dot={true} theme={adminTheme} />
+                            <span className="font-mono shrink-0" style={{ fontSize: 'var(--admin-text-2xs)', color: 'var(--admin-text-faint)' }}>
+                              {new Date(log.date).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                             </span>
-                            <span className="text-slate-500 font-mono shrink-0">{new Date(log.date).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
                           </div>
-                          <p className={`text-[10.5px] leading-relaxed font-semibold ${adminTheme === 'light' ? 'text-slate-600' : 'text-slate-300'}`}>{log.details}</p>
+                          <p
+                            className="leading-relaxed font-medium"
+                            style={{ fontSize: 'var(--admin-text-xs)', color: 'var(--admin-text-secondary)' }}
+                          >
+                            {log.details}
+                          </p>
                         </div>
                       );
                     })}
@@ -650,22 +687,15 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
             adminTheme === 'light' ? 'bg-white text-slate-800 shadow-[inset_0_1px_1px_rgba(255,255,255,0.9)]' : 'bg-slate-950/80 backdrop-blur-md text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
           }`}>
             <div>
-              <div className="flex items-center gap-3 mb-6">
-                <div className={`p-2 rounded-xl border ${
-                  adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-slate-900 border-slate-800 text-slate-400'
-                }`}>
-                  <ShoppingBag className="w-4 h-4" strokeWidth={1.5} />
-                </div>
-                <div>
-                  <span className={`text-[9px] font-black tracking-[0.2em] uppercase block leading-none ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>Classement</span>
-                  <h3 className="text-sm font-bold leading-none mt-1.5">Top produits (Ventes)</h3>
-                </div>
-              </div>
-              
+              <BentoCardHeader eyebrow="Classement" title="Top produits (Ventes)" icon={ShoppingBag} theme={adminTheme} />
+
               <div className="flex flex-col gap-3">
                 {/* Header row */}
-                <div className="flex items-center justify-between gap-3 text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 pb-2 border-b border-slate-100 dark:border-slate-900/60 px-1">
-                  <div className="flex-1 min-w-0 flex items-center gap-3">
+                <div
+                  className="flex items-center justify-between gap-3 pb-2 border-b px-1"
+                  style={{ borderColor: 'var(--admin-border)', fontSize: 'var(--admin-text-2xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--admin-text-faint)' }}
+                >
+                  <div className="flex-1 min-w-0">
                     <span>Produit</span>
                   </div>
                   <div className="w-16 shrink-0 text-center hidden sm:block">
@@ -766,27 +796,18 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
             adminTheme === 'light' ? 'bg-white text-slate-800 shadow-[inset_0_1px_1px_rgba(255,255,255,0.9)]' : 'bg-slate-950/80 backdrop-blur-md text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
           }`}>
             <div>
-              <div className="flex justify-between items-center mb-6">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-xl border ${
-                    adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-slate-900 border-slate-800 text-slate-400'
-                  }`}>
-                    <ClipboardList className="w-4 h-4" strokeWidth={1.5} />
+              <BentoCardHeader
+                eyebrow="Relances"
+                title="Relance paniers abandonnés"
+                icon={ClipboardList}
+                theme={adminTheme}
+                action={
+                  <div className="flex gap-1.5">
+                    <StatusBadge status="cancelled" label={`${cartRecoveryStats.total} abandons`} dot={false} theme={adminTheme} size="xs" />
+                    <StatusBadge status="active" label={`${cartRecoveryStats.rate}% récup.`} dot={false} theme={adminTheme} size="xs" />
                   </div>
-                  <div>
-                    <span className={`text-[9px] font-black tracking-[0.2em] uppercase block leading-none ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>Relances</span>
-                    <h3 className="text-sm font-bold leading-none mt-1.5">Relance paniers abandonnés</h3>
-                  </div>
-                </div>
-                <div className="flex gap-2 text-[9px] font-mono font-bold">
-                  <span className={`px-2 py-0.5 rounded-full border ${
-                    adminTheme === 'light' ? 'bg-rose-50 border-rose-100 text-rose-700' : 'bg-rose-950/30 border-rose-900/40 text-rose-400'
-                  }`}>{cartRecoveryStats.total} abandons</span>
-                  <span className={`px-2 py-0.5 rounded-full border ${
-                    adminTheme === 'light' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-emerald-950/30 border-emerald-900/40 text-emerald-400'
-                  }`}>{cartRecoveryStats.rate}% récup.</span>
-                </div>
-              </div>
+                }
+              />
               
               {/* Recovery KPIs Summary */}
               <div className="grid grid-cols-3 gap-2.5 text-center mb-4">
@@ -876,10 +897,12 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                           <div className="flex flex-col gap-0.5">
                             <div className="flex gap-1.5 items-center flex-wrap">
                               <span className={`font-bold text-[11px] ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-200'}`}>{cart.name || 'Anonyme'}</span>
-                              <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider border ${statusBadgeStyle}`}>
-                                <span className={`w-1.5 h-1.5 rounded-full ${dotColor} ${status === 'contacted' ? 'animate-pulse' : ''}`} />
-                                {statusLabels[status]}
-                              </span>
+                              <StatusBadge
+                                status={status === 'not_contacted' ? 'inactive' : status === 'recovered' ? 'active' : 'warning'}
+                                label={statusLabels[status]}
+                                size="xs"
+                                theme={adminTheme}
+                              />
                             </div>
                             <span className="text-[9.5px] text-slate-500 font-semibold select-none leading-none">
                               Compte : <span className={cart.clientProfileName ? 'text-indigo-500 font-bold' : 'text-rose-500 italic font-bold'}>{cart.clientProfileName || 'unavailable'}</span>

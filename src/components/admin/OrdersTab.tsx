@@ -25,6 +25,7 @@ import { useAdmin, Order, AbandonedCart } from '@/context/AdminContext';
 import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 import { useAdminUI } from '@/app/admin/AdminUIContext';
+import { StatusBadge } from '@/components/admin/ui';
 
 export default function OrdersTab() {
   const {
@@ -708,24 +709,30 @@ export default function OrdersTab() {
         ] as const).map((tab, idx) => {
           const TabIcon = tab.icon;
           return (
-            <button
+          <button
               key={tab.id}
               ref={el => { ordersBtnRefs.current[idx] = el; }}
               role="tab"
               aria-selected={ordersSubTab === tab.id}
               onClick={() => setOrdersSubTab(tab.id)}
-              className={`relative z-10 px-4 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-colors duration-200 flex items-center gap-1.5 cursor-pointer ${
+              className={`relative z-10 px-4 py-2 rounded-lg font-semibold uppercase tracking-widest transition-colors duration-200 flex items-center gap-1.5 cursor-pointer ${
                 ordersSubTab === tab.id
-                  ? (adminTheme === 'light' ? 'text-slate-800 font-black' : 'text-emerald-400 font-black')
+                  ? (adminTheme === 'light' ? 'text-slate-800 font-bold' : 'text-emerald-400 font-bold')
                   : (adminTheme === 'light' ? 'text-slate-500 hover:text-slate-800' : 'text-slate-500 hover:text-slate-300')
               }`}
+              style={{ fontSize: 'var(--admin-text-xs)' }}
             >
               <TabIcon className="w-3.5 h-3.5" /> {tab.label}
-              <span className={`ml-1 text-[9px] font-black px-1.5 py-0.5 rounded-full transition-colors ${
-                adminTheme === 'light'
-                  ? (ordersSubTab === tab.id ? 'bg-emerald-50 text-emerald-700 border border-emerald-100/85' : 'bg-slate-200/60 text-slate-500 border border-slate-300/30')
-                  : 'bg-slate-700 text-slate-300'
-              }`}>{tab.count}</span>
+              <span
+                className={`ml-1 px-1.5 py-0.5 rounded-full font-bold transition-colors ${
+                  adminTheme === 'light'
+                    ? (ordersSubTab === tab.id ? 'bg-emerald-50 text-emerald-700 border border-emerald-100/85' : 'bg-slate-200/60 text-slate-500 border border-slate-300/30')
+                    : 'bg-slate-700 text-slate-300'
+                }`}
+                style={{ fontSize: 'var(--admin-text-2xs)' }}
+              >
+                {tab.count}
+              </span>
             </button>
           );
         })}
@@ -803,15 +810,19 @@ export default function OrdersTab() {
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr className={`text-[10px] uppercase tracking-wider font-extrabold border-b ${adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-500' : 'bg-slate-900/60 border-slate-800 text-slate-400'}`}>
-                    <th className="p-4">Client</th>
-                    <th className="p-4">Téléphone</th>
-                    <th className="p-4">Articles</th>
-                    <th className="p-4">Total</th>
-                    <th className="p-4">Date</th>
-                    <th className="p-4">Statut</th>
-                    <th className="p-4 text-right">Actions</th>
-                  </tr>
+              <tr
+                  style={{ borderBottom: '1px solid var(--admin-border)', background: 'var(--admin-surface-2)' }}
+                >
+                  {['Client', 'Téléphone', 'Articles', 'Total', 'Date', 'Statut', ''].map((h, i) => (
+                    <th
+                      key={i}
+                      className={`p-4 font-bold uppercase tracking-widest ${i === 6 ? 'text-right' : ''}`}
+                      style={{ fontSize: 'var(--admin-text-2xs)', color: 'var(--admin-text-faint)' }}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
                 </thead>
                 <tbody className={`divide-y text-xs ${adminTheme === 'light' ? 'divide-slate-100 text-slate-700' : 'divide-slate-900 text-slate-300'}`}>
                   {filteredAbandonedCarts.map((cart, idx) => {
@@ -831,7 +842,7 @@ export default function OrdersTab() {
                     }).join(', ') || '—';
                     const dateStr = cart.date ? new Date(cart.date).toLocaleDateString('fr-FR') : '—';
                     return (
-                      <tr key={idx} className={`transition-colors ${adminTheme === 'light' ? 'hover:bg-slate-50/40' : 'hover:bg-slate-900/10'}`}>
+                      <tr key={idx} className={`transition-colors admin-row-enter ${adminTheme === 'light' ? 'hover:bg-slate-50/40' : 'hover:bg-slate-900/10'}`}>
                         <td className="p-4 font-bold">
                           <div className="flex flex-col gap-0.5">
                             <span>{cart.name || 'Anonyme'}</span>
@@ -908,49 +919,46 @@ export default function OrdersTab() {
           {/* Search and status controls */}
           <div className={`flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-2xl border transition-all duration-200 ${
             adminTheme === 'light'
-              ? 'bg-white border-slate-200/80 shadow-sm'
-              : 'bg-slate-900/30 border-slate-900'
+              ? 'bg-white border-[hsl(220_13%_90%)] shadow-[var(--admin-shadow-sm)]'
+              : 'bg-[hsl(224_18%_10%)] border-[hsl(224_15%_16%)]'
           }`}>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto flex-1">
               <div className="relative flex-1 max-w-sm">
-                <Search className="w-4.5 h-4.5 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--admin-text-faint)' }} />
                 <input
                   type="text"
                   placeholder="Rechercher par ID, client, téléphone, ville..."
                   value={orderSearchQuery}
                   onChange={(e) => setOrderSearchQuery(e.target.value)}
-                  className={`w-full text-xs transition outline-none focus:border-emerald-500/50 rounded-xl pl-10 pr-4 py-2 border ${
-                    adminTheme === 'light'
-                      ? 'bg-slate-50 border-slate-200 text-slate-800 focus:bg-white'
-                      : 'bg-slate-950 border-slate-800 text-slate-100'
-                  }`}
+                  className="admin-input admin-focus-ring w-full pl-10"
                 />
               </div>
               <button
                 onClick={() => handleExportOrdersToCsv(filteredOrders)}
-                className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition flex items-center gap-1.5 shrink-0 cursor-pointer rounded-xl border ${
-                  adminTheme === 'light'
-                    ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-sm'
-                    : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 hover:border-slate-700'
-                }`}
+                className="admin-btn admin-btn-secondary flex items-center gap-1.5 shrink-0"
               >
-                <FileText className={`w-4 h-4 transition-colors ${
-                  adminTheme === 'light' ? 'text-emerald-600' : 'text-emerald-400'
-                }`} /> Exporter en CSV
+                <FileText className="w-4 h-4" style={{ color: 'var(--admin-text-muted)' }} /> Exporter en CSV
               </button>
             </div>
 
             {/* Status filtering tabs */}
-            <div className="flex flex-wrap gap-1 bg-slate-950 p-1 rounded-xl border border-slate-900/80">
+            <div className={`flex flex-wrap gap-1 p-1 rounded-xl border ${
+              adminTheme === 'light' ? 'bg-slate-100/80 border-slate-200/60' : 'bg-slate-950 border-slate-900/80'
+            }`}>
               {['ALL', 'PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((status) => (
                 <button
                   key={status}
                   onClick={() => setOrderStatusFilter(status)}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-lg font-semibold uppercase tracking-widest transition cursor-pointer ${
                     orderStatusFilter === status
-                      ? 'bg-slate-800 text-emerald-400 border border-slate-700/50 shadow-sm'
-                      : 'text-slate-400 border-transparent hover:text-slate-200'
+                      ? (adminTheme === 'light'
+                          ? 'bg-white text-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.07)] border border-slate-200/60'
+                          : 'bg-slate-800 text-emerald-400 border border-slate-700/50 shadow-sm')
+                      : (adminTheme === 'light'
+                          ? 'text-slate-500 border-transparent hover:text-slate-800'
+                          : 'text-slate-400 border-transparent hover:text-slate-200')
                   }`}
+                  style={{ fontSize: 'var(--admin-text-2xs)' }}
                 >
                   {status === 'ALL' ? 'Tous' : status}
                 </button>
@@ -965,29 +973,18 @@ export default function OrdersTab() {
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr className={`text-[10px] uppercase tracking-wider font-extrabold border-b ${adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-500' : 'bg-slate-900/60 border-slate-800 text-slate-400'}`}>
-                    <th className="p-4 w-10">
-                      <input
-                        type="checkbox"
-                        className="rounded border-slate-700 bg-slate-950 focus:ring-0 cursor-pointer w-4 h-4"
-                        checked={filteredOrders.length > 0 && selectedOrderIds.length === filteredOrders.length}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedOrderIds(filteredOrders.map(o => o.order_id));
-                          } else {
-                            setSelectedOrderIds([]);
-                          }
-                        }}
-                      />
-                    </th>
-                    <th className="p-4">ID Commande</th>
-                    <th className="p-4">Date</th>
-                    <th className="p-4">Client</th>
-                    <th className="p-4">Dest./Ville</th>
-                    <th className="p-4">Articles</th>
-                    <th className="p-4">Total</th>
-                    <th className="p-4">Statut</th>
-                    <th className="p-4 text-right">Actions</th>
+                  <tr
+                    style={{ borderBottom: '1px solid var(--admin-border)', background: 'var(--admin-surface-2)' }}
+                  >
+                    {['', 'ID Commande', 'Date', 'Client', 'Ville', 'Articles', 'Total', 'Statut', ''].map((h, i) => (
+                      <th
+                        key={i}
+                        className={`p-4 font-bold uppercase tracking-widest ${i === 8 ? 'text-right' : ''}`}
+                        style={{ fontSize: 'var(--admin-text-2xs)', color: 'var(--admin-text-faint)' }}
+                      >
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody className={`divide-y text-xs ${adminTheme === 'light' ? 'divide-slate-100 text-slate-700' : 'divide-slate-900 text-slate-300'}`}>
@@ -1045,11 +1042,12 @@ export default function OrdersTab() {
                         <td className="p-4 font-extrabold font-mono">{order.total.toFixed(2)} DH</td>
                         <td className="p-4">
                           <div className="flex flex-col items-start gap-1">
-                            <span className={`inline-flex px-2 py-0.5 rounded-full border text-[9px] uppercase font-black tracking-wider ${statusColors[sClean] || 'bg-slate-800 text-slate-400'}`}>
-                              {order.status}
-                            </span>
+                            <StatusBadge status={order.status} theme={adminTheme} />
                             {sClean === 'confirmed' && (
-                              <span className="inline-flex items-center gap-0.5 text-[8.5px] font-black uppercase text-emerald-500 tracking-wider">
+                              <span
+                                className="inline-flex items-center gap-0.5 font-semibold uppercase tracking-widest text-emerald-500"
+                                style={{ fontSize: 'var(--admin-text-2xs)' }}
+                              >
                                 ✓ Vérifié WA
                               </span>
                             )}
@@ -1404,7 +1402,7 @@ export default function OrdersTab() {
                       }
 
                       return (
-                        <tr key={o.order_id} className={`transition-colors ${
+                        <tr key={o.order_id} className={`transition-colors admin-row-enter ${
                           adminTheme === 'light' ? 'hover:bg-slate-50/50' : 'hover:bg-slate-900/10'
                         }`}>
                           <td className="p-4">
@@ -1793,7 +1791,7 @@ export default function OrdersTab() {
                                    setSelectedReconRow(row);
                                  }
                                }}
-                               className={`transition-colors ${
+                               className={`transition-colors admin-row-enter ${
                                  adminTheme === 'light' ? 'hover:bg-slate-50/50' : 'hover:bg-slate-900/10'
                                } ${
                                  row.matchType !== 'PERFECT' && row.matchType !== 'ALREADY_RECONCILED'

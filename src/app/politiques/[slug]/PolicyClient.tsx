@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useTranslation } from '@/context/LanguageContext';
 import Image from 'next/image';
+import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { useSettings } from '@/context/SettingsContext';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
@@ -442,7 +443,7 @@ export const PolicyClient: React.FC<PolicyClientProps> = ({ slug }) => {
             
             {/* Brand column */}
             <div className="md:col-span-4 flex flex-col gap-5 text-left" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-              <Image src="/images/logo.png" alt="Para Officinal S.A"
+              <Image src={getOptimizedImageUrl("/images/logo.png")} alt="Para Officinal S.A"
                 width={140}
                 height={40}
                 className="object-contain self-start"

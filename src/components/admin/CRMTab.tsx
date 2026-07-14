@@ -21,6 +21,7 @@ import { useAdmin, Order, DiagnosticData } from '@/context/AdminContext';
 import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 import { useAdminUI } from '@/app/admin/AdminUIContext';
+import { StatusBadge, EmptyState } from '@/components/admin/ui';
 import RFMTab from './RFMTab';
 import AutomationsTab from './AutomationsTab';
 
@@ -68,6 +69,7 @@ export default function CRMTab() {
 
   // Search for Leads
   const [leadsSearchQuery, setLeadsSearchQuery] = useState('');
+  const [selectedDiagnostic, setSelectedDiagnostic] = useState<any | null>(null);
 
   // Selected customer modal state
   const [selectedCustomer, setSelectedCustomer] = useState<{
@@ -296,119 +298,126 @@ export default function CRMTab() {
       }`}>
         <button
           onClick={() => setCrmSubTab('clients')}
-          className={`px-4 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
+          className={`px-4 py-2 rounded-lg font-semibold uppercase tracking-widest transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
             crmSubTab === 'clients' 
               ? (adminTheme === 'light' 
-                  ? 'bg-white text-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] border border-slate-200/50 font-black' 
-                  : 'bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm font-black') 
+                  ? 'bg-white text-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] border border-slate-200/50 font-bold' 
+                  : 'bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm font-bold') 
               : (adminTheme === 'light' 
                   ? 'text-slate-500 hover:text-slate-800 hover:bg-white/40' 
                   : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30')
           }`}
+          style={{ fontSize: 'var(--admin-text-xs)' }}
         >
           <Users className="w-3.5 h-3.5" /> Clients
         </button>
         <button
           onClick={() => setCrmSubTab('diagnostics')}
-          className={`px-4 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
+          className={`px-4 py-2 rounded-lg font-semibold uppercase tracking-widest transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
             crmSubTab === 'diagnostics' 
               ? (adminTheme === 'light' 
-                  ? 'bg-white text-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] border border-slate-200/50 font-black' 
-                  : 'bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm font-black') 
+                  ? 'bg-white text-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] border border-slate-200/50 font-bold' 
+                  : 'bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm font-bold') 
               : (adminTheme === 'light' 
                   ? 'text-slate-500 hover:text-slate-800 hover:bg-white/40' 
                   : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30')
           }`}
+          style={{ fontSize: 'var(--admin-text-xs)' }}
         >
           <Sliders className="w-3.5 h-3.5" /> Diagnostics Peau
-          <span className={`ml-1 text-[9px] font-black px-1.5 py-0.5 rounded-full transition-colors ${
+          <span className={`ml-1 px-1.5 py-0.5 rounded-full transition-colors font-bold ${
             adminTheme === 'light' 
               ? (crmSubTab === 'diagnostics' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100/85' : 'bg-slate-200/60 text-slate-500 border border-slate-300/30')
               : 'bg-slate-700 text-slate-300'
-          }`}>{diagnosticsList.length}</span>
+          }`} style={{ fontSize: 'var(--admin-text-2xs)' }}>{diagnosticsList.length}</span>
         </button>
         <button
           onClick={() => setCrmSubTab('rules')}
-          className={`px-4 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
+          className={`px-4 py-2 rounded-lg font-semibold uppercase tracking-widest transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
             crmSubTab === 'rules' 
               ? (adminTheme === 'light' 
-                  ? 'bg-white text-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] border border-slate-200/50 font-black' 
-                  : 'bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm font-black') 
+                  ? 'bg-white text-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] border border-slate-200/50 font-bold' 
+                  : 'bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm font-bold') 
               : (adminTheme === 'light' 
                   ? 'text-slate-500 hover:text-slate-800 hover:bg-white/40' 
                   : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30')
           }`}
+          style={{ fontSize: 'var(--admin-text-xs)' }}
         >
           <Settings className="w-3.5 h-3.5" /> Règles Diagnostic
-          <span className={`ml-1 text-[9px] font-black px-1.5 py-0.5 rounded-full transition-colors ${
+          <span className={`ml-1 px-1.5 py-0.5 rounded-full transition-colors font-bold ${
             adminTheme === 'light' 
               ? (crmSubTab === 'rules' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100/85' : 'bg-slate-200/60 text-slate-500 border border-slate-300/30')
               : 'bg-slate-700 text-slate-300'
-          }`}>{settings.diagnosticRules?.length || 0}</span>
+          }`} style={{ fontSize: 'var(--admin-text-2xs)' }}>{settings.diagnosticRules?.length || 0}</span>
         </button>
         <button
           onClick={() => setCrmSubTab('leads')}
-          className={`px-4 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
+          className={`px-4 py-2 rounded-lg font-semibold uppercase tracking-widest transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
             crmSubTab === 'leads' 
               ? (adminTheme === 'light' 
-                  ? 'bg-white text-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] border border-slate-200/50 font-black' 
-                  : 'bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm font-black') 
+                  ? 'bg-white text-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] border border-slate-200/50 font-bold' 
+                  : 'bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm font-bold') 
               : (adminTheme === 'light' 
                   ? 'text-slate-500 hover:text-slate-800 hover:bg-white/40' 
                   : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30')
           }`}
+          style={{ fontSize: 'var(--admin-text-xs)' }}
         >
           <ClipboardList className="w-3.5 h-3.5" /> Newsletter Leads
-          <span className={`ml-1 text-[9px] font-black px-1.5 py-0.5 rounded-full transition-colors ${
+          <span className={`ml-1 px-1.5 py-0.5 rounded-full transition-colors font-bold ${
             adminTheme === 'light' 
               ? (crmSubTab === 'leads' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100/85' : 'bg-slate-200/60 text-slate-500 border border-slate-300/30')
               : 'bg-slate-700 text-slate-300'
-          }`}>{leadsList.length}</span>
+          }`} style={{ fontSize: 'var(--admin-text-2xs)' }}>{leadsList.length}</span>
         </button>
         <button
           onClick={() => setCrmSubTab('rfm')}
-          className={`px-4 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
+          className={`px-4 py-2 rounded-lg font-semibold uppercase tracking-widest transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
             crmSubTab === 'rfm' 
               ? (adminTheme === 'light' 
-                  ? 'bg-white text-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] border border-slate-200/50 font-black' 
-                  : 'bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm font-black') 
+                  ? 'bg-white text-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] border border-slate-200/50 font-bold' 
+                  : 'bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm font-bold') 
               : (adminTheme === 'light' 
                   ? 'text-slate-500 hover:text-slate-800 hover:bg-white/40' 
                   : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30')
           }`}
+          style={{ fontSize: 'var(--admin-text-xs)' }}
         >
           <Target className="w-3.5 h-3.5" /> Segmentation RFM
-          <span className={`ml-1 text-[9px] font-black px-1.5 py-0.5 rounded-full transition-colors ${
+          <span className={`ml-1 px-1.5 py-0.5 rounded-full transition-colors font-bold ${
             adminTheme === 'light' 
               ? (crmSubTab === 'rfm' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100/85' : 'bg-slate-200/60 text-slate-500 border border-slate-300/30')
               : 'bg-slate-700 text-slate-300'
-          }`}>{crmCustomers.length}</span>
+          }`} style={{ fontSize: 'var(--admin-text-2xs)' }}>{crmCustomers.length}</span>
         </button>
         <button
           onClick={() => setCrmSubTab('reminders')}
-          className={`px-4 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
+          className={`px-4 py-2 rounded-lg font-semibold uppercase tracking-widest transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
             crmSubTab === 'reminders' 
               ? (adminTheme === 'light' 
-                  ? 'bg-white text-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] border border-slate-200/50 font-black' 
-                  : 'bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm font-black') 
+                  ? 'bg-white text-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] border border-slate-200/50 font-bold' 
+                  : 'bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm font-bold') 
               : (adminTheme === 'light' 
                   ? 'text-slate-500 hover:text-slate-800 hover:bg-white/40' 
                   : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30')
           }`}
+          style={{ fontSize: 'var(--admin-text-xs)' }}
         >
           <Bell className="w-3.5 h-3.5" /> Relances Réassort
         </button>
         <button
           onClick={() => setCrmSubTab('automations')}
-          className={`px-4 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
+          className={`px-4 py-2 rounded-lg font-semibold uppercase tracking-widest transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
             crmSubTab === 'automations' 
               ? (adminTheme === 'light' 
-                  ? 'bg-white text-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] border border-slate-200/50 font-black' 
-                  : 'bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm font-black') 
+                  ? 'bg-white text-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] border border-slate-200/50 font-bold' 
+                  : 'bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm font-bold') 
               : (adminTheme === 'light' 
                   ? 'text-slate-500 hover:text-slate-800 hover:bg-white/40' 
                   : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30')
           }`}
+          style={{ fontSize: 'var(--admin-text-xs)' }}
         >
           <Activity className="w-3.5 h-3.5" /> Automatisation
         </button>
@@ -429,28 +438,20 @@ export default function CRMTab() {
           }`}>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto flex-1">
               <div className="relative flex-1 max-w-sm">
-                <Search className="w-4.5 h-4.5 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--admin-text-faint)' }} />
                 <input
                   type="text"
                   placeholder="Rechercher par nom client, téléphone..."
                   value={crmSearchQuery}
                   onChange={(e) => setCrmSearchQuery(e.target.value)}
-                  className={`w-full text-xs transition outline-none focus:border-emerald-500/50 rounded-xl pl-10 pr-4 py-2 border ${
-                    adminTheme === 'light'
-                      ? 'bg-slate-50 border-slate-200 text-slate-800 focus:bg-white'
-                      : 'bg-slate-950 border-slate-800 text-slate-100'
-                  }`}
+                  className="admin-input admin-focus-ring w-full pl-10"
                 />
               </div>
 
               <select
                 value={crmTierFilter}
                 onChange={(e) => setCrmTierFilter(e.target.value)}
-                className={`text-xs transition outline-none rounded-xl px-3 py-2 border cursor-pointer ${
-                  adminTheme === 'light'
-                    ? 'bg-slate-50 border-slate-200 text-slate-800 focus:bg-white'
-                    : 'bg-slate-950 border-slate-800 text-slate-200'
-                }`}
+                className="admin-input"
               >
                 <option value="ALL">Tous les paliers</option>
                 <option value="Platinum">Palier Platinum</option>
@@ -462,11 +463,7 @@ export default function CRMTab() {
               <select
                 value={crmSkinTypeFilter}
                 onChange={(e) => setCrmSkinTypeFilter(e.target.value)}
-                className={`text-xs transition outline-none rounded-xl px-3 py-2 border cursor-pointer ${
-                  adminTheme === 'light'
-                    ? 'bg-slate-50 border-slate-200 text-slate-800 focus:bg-white'
-                    : 'bg-slate-950 border-slate-800 text-slate-200'
-                }`}
+                className="admin-input"
               >
                 <option value="ALL">Tous les types de peau</option>
                 <option value="Sèche / Dry">Peau Sèche</option>
@@ -478,15 +475,9 @@ export default function CRMTab() {
 
               <button
                 onClick={() => handleExportCustomersToCsv(filteredCrmCustomers)}
-                className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition flex items-center gap-1.5 shrink-0 cursor-pointer rounded-xl border ${
-                  adminTheme === 'light'
-                    ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-sm'
-                    : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 hover:border-slate-700'
-                }`}
+                className="admin-btn admin-btn-secondary flex items-center gap-1.5 shrink-0"
               >
-                <FileText className={`w-4 h-4 transition-colors ${
-                  adminTheme === 'light' ? 'text-emerald-600' : 'text-emerald-400'
-                }`} /> Exporter en CSV
+                <FileText className="w-4 h-4" style={{ color: 'var(--admin-text-muted)' }} /> Exporter en CSV
               </button>
             </div>
 
@@ -509,18 +500,12 @@ export default function CRMTab() {
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr className={`text-[10px] uppercase tracking-wider font-extrabold border-b transition-colors ${
-                    adminTheme === 'light'
-                      ? 'bg-slate-50 border-slate-200 text-slate-500'
-                      : 'bg-slate-900/60 border-slate-800 text-slate-400'
-                  }`}>
-                    <th className="p-4">Client</th>
-                    <th className="p-4">Téléphone</th>
-                    <th className="p-4">Commandes (Total)</th>
-                    <th className="p-4">Dépenses Cumulées</th>
-                    <th className="p-4">Palier Fidélité</th>
-                    <th className="p-4">Solde de Points</th>
-                    <th className="p-4 text-right">Profil</th>
+                  <tr style={{ borderBottom: '1px solid var(--admin-border)', background: 'var(--admin-surface-2)' }}>
+                    {['Client', 'Téléphone', 'Commandes (Total)', 'Dépenses Cumulées', 'Palier Fidélité', 'Solde de Points', ''].map((h, i) => (
+                      <th key={i} className={`p-4 font-bold uppercase tracking-widest ${i === 6 ? 'text-right' : ''}`} style={{ fontSize: 'var(--admin-text-2xs)', color: 'var(--admin-text-faint)' }}>
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody className={`divide-y text-xs ${
@@ -555,9 +540,12 @@ export default function CRMTab() {
                         <td className="p-4 font-bold">{cust.orders.length} commande(s)</td>
                         <td className="p-4 font-extrabold font-mono">{cust.totalSpend.toFixed(2)} DH</td>
                         <td className="p-4">
-                          <span className={`inline-flex px-2 py-0.5 rounded-full border text-[9px] uppercase font-black tracking-wider ${tierColors[tier]}`}>
-                            {tier}
-                          </span>
+                          <StatusBadge
+                            status={tier === 'Bronze' ? 'inactive' : tier === 'Silver' ? 'info' : tier === 'Gold' ? 'warning' : 'active'}
+                            label={tier}
+                            theme={adminTheme}
+                            size="xs"
+                          />
                         </td>
                         <td className={`p-4 font-extrabold font-mono ${adminTheme === 'light' ? 'text-emerald-600' : 'text-emerald-400'}`}>{estimatedPoints} pts</td>
                         <td className="p-4 text-right">
@@ -803,9 +791,7 @@ export default function CRMTab() {
                   <select
                     value={diagSkinTypeFilter}
                     onChange={(e) => setDiagSkinTypeFilter(e.target.value)}
-                    className={`text-xs rounded-xl px-3 py-1.5 border outline-none font-bold ${
-                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-700' : 'bg-slate-950 border-slate-800 text-slate-300'
-                    }`}
+                    className="admin-input"
                   >
                     <option value="ALL">Tous les types</option>
                     <option value="Mixte">Mixte</option>
@@ -822,9 +808,7 @@ export default function CRMTab() {
                   <select
                     value={diagConcernFilter}
                     onChange={(e) => setDiagConcernFilter(e.target.value)}
-                    className={`text-xs rounded-xl px-3 py-1.5 border outline-none font-bold ${
-                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-700' : 'bg-slate-950 border-slate-800 text-slate-300'
-                    }`}
+                    className="admin-input"
                   >
                     <option value="ALL">Toutes</option>
                     <option value="Acné & Imperfections">Acné & Imperfections</option>
@@ -842,9 +826,7 @@ export default function CRMTab() {
                   <select
                     value={diagExposureFilter}
                     onChange={(e) => setDiagExposureFilter(e.target.value)}
-                    className={`text-xs rounded-xl px-3 py-1.5 border outline-none font-bold ${
-                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-700' : 'bg-slate-950 border-slate-800 text-slate-300'
-                    }`}
+                    className="admin-input"
                   >
                     <option value="ALL">Toutes</option>
                     <option value="Faible">Faible</option>
@@ -864,13 +846,9 @@ export default function CRMTab() {
                       (diagExposureFilter === 'ALL' || d.sunExposure === diagExposureFilter)
                     )
                   )}
-                  className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition flex items-center gap-1.5 cursor-pointer rounded-xl border ${
-                    adminTheme === 'light'
-                      ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-sm'
-                      : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800'
-                  }`}
+                  className="admin-btn admin-btn-secondary flex items-center gap-1.5 shrink-0"
                 >
-                  <FileText className={`w-4 h-4 ${adminTheme === 'light' ? 'text-emerald-600' : 'text-emerald-400'}`} /> Exporter en CSV
+                  <FileText className="w-4 h-4" style={{ color: 'var(--admin-text-muted)' }} /> Exporter en CSV
                 </button>
               </div>
             </div>
@@ -906,7 +884,7 @@ export default function CRMTab() {
                         (diagExposureFilter === 'ALL' || d.sunExposure === diagExposureFilter)
                       )
                       .map((d, idx) => (
-                        <tr key={idx} className={`transition-colors ${
+                        <tr key={idx} className={`transition-colors admin-row-enter ${
                           adminTheme === 'light' ? 'hover:bg-slate-50/50' : 'hover:bg-slate-900/10'
                         }`}>
                           <td className="p-4 font-mono">
@@ -921,19 +899,16 @@ export default function CRMTab() {
                             </span>
                           </td>
                           <td className="p-4">
-                            <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[9px] uppercase font-black border tracking-wider ${
-                              d.sunExposure === 'Forte' 
-                                ? (adminTheme === 'light' ? 'bg-rose-50 border-rose-100 text-rose-700' : 'bg-rose-950/20 border-rose-900/40 text-rose-400')
-                                : d.sunExposure === 'Moyenne'
-                                  ? (adminTheme === 'light' ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-amber-950/20 border-amber-900/40 text-amber-400')
-                                  : (adminTheme === 'light' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-emerald-950/20 border-emerald-900/40 text-emerald-400')
-                            }`}>
-                              {d.sunExposure}
-                            </span>
+                            <StatusBadge
+                              status={d.sunExposure === 'Forte' ? 'error' : d.sunExposure === 'Moyenne' ? 'warning' : 'active'}
+                              label={d.sunExposure}
+                              theme={adminTheme}
+                              size="xs"
+                            />
                           </td>
                           <td className="p-4 text-right">
                             <button
-                              onClick={() => showToast(`Détails Diagnostic:\n\nType de Peau: ${d.skinType}\nPréoccupation: ${d.concern}\nExposition Solaire: ${d.sunExposure}\nDate: ${d.date ? new Date(d.date).toLocaleString() : 'N/A'}`, 'info', 6000)}
+                              onClick={() => setSelectedDiagnostic(d)}
                               className={`px-2 py-1 text-[10px] uppercase font-bold rounded-lg border transition cursor-pointer ${
                                 adminTheme === 'light'
                                   ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200/80 shadow-sm'
@@ -972,17 +947,13 @@ export default function CRMTab() {
           }`}>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto flex-1">
               <div className="relative flex-1 max-w-sm">
-                <Search className="w-4.5 h-4.5 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--admin-text-faint)' }} />
                 <input
                   type="text"
                   placeholder="Rechercher par email ou téléphone..."
                   value={leadsSearchQuery}
                   onChange={(e) => setLeadsSearchQuery(e.target.value)}
-                  className={`w-full text-xs transition outline-none focus:border-emerald-500/50 rounded-xl pl-10 pr-4 py-2 border ${
-                    adminTheme === 'light'
-                      ? 'bg-slate-50 border-slate-200 text-slate-800 focus:bg-white'
-                      : 'bg-slate-950 border-slate-800 text-slate-100'
-                  }`}
+                  className="admin-input admin-focus-ring w-full pl-10"
                 />
               </div>
               
@@ -993,13 +964,9 @@ export default function CRMTab() {
                     (l.phone || '').toLowerCase().includes(leadsSearchQuery.toLowerCase())
                   )
                 )}
-                className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition flex items-center gap-1.5 cursor-pointer rounded-xl border ${
-                  adminTheme === 'light'
-                    ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-sm'
-                    : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800'
-                }`}
+                className="admin-btn admin-btn-secondary flex items-center gap-1.5 shrink-0"
               >
-                <FileText className={`w-4 h-4 ${adminTheme === 'light' ? 'text-emerald-600' : 'text-emerald-400'}`} /> Exporter en CSV
+                <FileText className="w-4 h-4" style={{ color: 'var(--admin-text-muted)' }} /> Exporter en CSV
               </button>
             </div>
 
@@ -1022,15 +989,12 @@ export default function CRMTab() {
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr className={`text-[10px] uppercase tracking-wider font-extrabold border-b transition-colors ${
-                    adminTheme === 'light'
-                      ? 'bg-slate-50 border-slate-200 text-slate-500'
-                      : 'bg-slate-900/60 border-slate-800 text-slate-400'
-                  }`}>
-                    <th className="p-4">Email</th>
-                    <th className="p-4">Téléphone</th>
-                    <th className="p-4">Date d'inscription</th>
-                    <th className="p-4 text-right">Source</th>
+                  <tr style={{ borderBottom: '1px solid var(--admin-border)', background: 'var(--admin-surface-2)' }}>
+                    {['Email', 'Téléphone', "Date d'inscription", ''].map((h, i) => (
+                      <th key={i} className={`p-4 font-bold uppercase tracking-widest ${i === 3 ? 'text-right' : ''}`} style={{ fontSize: 'var(--admin-text-2xs)', color: 'var(--admin-text-faint)' }}>
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody className={`divide-y text-xs ${
@@ -1042,7 +1006,7 @@ export default function CRMTab() {
                       (l.phone || '').toLowerCase().includes(leadsSearchQuery.toLowerCase())
                     )
                     .map((l, idx) => (
-                      <tr key={idx} className={`transition-colors ${
+                      <tr key={idx} className={`transition-colors admin-row-enter ${
                         adminTheme === 'light' ? 'hover:bg-slate-50/50' : 'hover:bg-slate-900/10'
                       }`}>
                         <td className="p-4">
@@ -1055,11 +1019,7 @@ export default function CRMTab() {
                           {l.date ? new Date(l.date).toLocaleString('fr-FR') : '—'}
                         </td>
                         <td className="p-4 text-right">
-                          <span className={`inline-flex px-2 py-0.5 rounded text-[8px] tracking-wider uppercase font-black ${
-                            adminTheme === 'light' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-emerald-950/20 text-emerald-400 border border-emerald-900/35'
-                          }`}>
-                            Newsletter
-                          </span>
+                          <StatusBadge status="inactive" label="Newsletter" dot={false} theme={adminTheme} size="xs" />
                         </td>
                       </tr>
                     ))}
@@ -1277,6 +1237,216 @@ export default function CRMTab() {
                 );
               })
             )}
+          </div>
+        </div>
+      )}
+
+      {/* -------------------- MODAL: SKIN DIAGNOSTIC VISUALIZER & HOTSPOTS -------------------- */}
+      {selectedDiagnostic && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-40 select-none animate-in fade-in-50 duration-200">
+          <div className={`border rounded-[32px] max-w-2xl w-full p-6 space-y-6 relative shadow-2xl overflow-hidden transition-all duration-200 ${
+            adminTheme === 'light'
+              ? 'bg-white border-slate-200 text-slate-800'
+              : 'bg-slate-900 border-slate-800 text-slate-200'
+          }`}>
+            {/* Header */}
+            <div className={`flex justify-between items-center border-b pb-4 ${
+              adminTheme === 'light' ? 'border-slate-100' : 'border-slate-800'
+            }`}>
+              <div>
+                <span className="text-[9px] font-mono text-emerald-400 uppercase font-black block tracking-wider bg-emerald-950/40 border border-emerald-900/30 rounded px-1.5 py-0.5 w-fit mb-1">
+                  Analyse Diagnostique
+                </span>
+                <h3 className="text-md font-extrabold flex items-center gap-1.5 font-sans">
+                  Profil Cutané & Diagnostic de Peau
+                </h3>
+              </div>
+              <button 
+                onClick={() => setSelectedDiagnostic(null)} 
+                className={`transition-colors p-1.5 rounded-full border cursor-pointer ${
+                  adminTheme === 'light' ? 'text-slate-400 hover:bg-slate-50 border-slate-200' : 'text-slate-400 hover:bg-slate-800 border-slate-800'
+                }`}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Split layout: Details & Face Hotspots */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+              
+              {/* Left Side: Attributes Info */}
+              <div className="space-y-4 text-left">
+                {/* Date */}
+                <div className="space-y-1">
+                  <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Date du diagnostic</span>
+                  <span className="text-xs font-mono font-extrabold block">
+                    {selectedDiagnostic.date ? new Date(selectedDiagnostic.date).toLocaleString('fr-FR', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    }) : '—'}
+                  </span>
+                </div>
+
+                {/* Skin Type Pill */}
+                <div className="space-y-1">
+                  <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Type de Peau</span>
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-black uppercase border tracking-wider ${
+                    selectedDiagnostic.skinType === 'Gras'
+                      ? 'bg-amber-500/10 text-amber-500 border-amber-500/20 shadow-md shadow-amber-500/5'
+                      : selectedDiagnostic.skinType === 'Sec'
+                      ? 'bg-sky-500/10 text-sky-400 border-sky-500/20 shadow-md shadow-sky-500/5'
+                      : selectedDiagnostic.skinType === 'Sensible'
+                      ? 'bg-rose-500/10 text-rose-400 border-rose-500/20 shadow-md shadow-rose-500/5'
+                      : selectedDiagnostic.skinType === 'Mixte'
+                      ? 'bg-violet-500/10 text-violet-400 border-violet-500/20 shadow-md shadow-violet-500/5'
+                      : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-md shadow-emerald-500/5'
+                  }`}>
+                    {selectedDiagnostic.skinType || 'Normal'}
+                  </span>
+                </div>
+
+                {/* Concern Pill */}
+                <div className="space-y-1">
+                  <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Préoccupation Ciblée</span>
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-black uppercase border tracking-wider ${
+                    selectedDiagnostic.concern === 'Acné' || selectedDiagnostic.concern === 'Imperfections'
+                      ? 'bg-red-500/10 text-red-500 border-red-500/20'
+                      : selectedDiagnostic.concern === 'Sécheresse'
+                      ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
+                      : selectedDiagnostic.concern === 'Rides' || selectedDiagnostic.concern === 'Anti-âge'
+                      ? 'bg-pink-500/10 text-pink-400 border-pink-500/20'
+                      : 'bg-orange-500/10 text-orange-400 border-orange-500/20'
+                  }`}>
+                    {selectedDiagnostic.concern || 'Hydratation'}
+                  </span>
+                </div>
+
+                {/* Sun Exposure */}
+                <div className="space-y-1">
+                  <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Exposition Solaire</span>
+                  <StatusBadge
+                    status={selectedDiagnostic.sunExposure === 'Forte' ? 'error' : selectedDiagnostic.sunExposure === 'Moyenne' ? 'warning' : 'active'}
+                    label={selectedDiagnostic.sunExposure}
+                    theme={adminTheme}
+                    size="sm"
+                  />
+                </div>
+
+                {/* Customer Contact */}
+                {selectedDiagnostic.phone && (
+                  <div className="space-y-1 pt-2 border-t dark:border-slate-800">
+                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Coordonnées Client</span>
+                    <span className="text-xs font-mono font-bold block">{selectedDiagnostic.phone}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Right Side: Graphic Face Vector & Hotspots */}
+              <div className="flex flex-col items-center justify-center p-4 bg-slate-950/20 rounded-3xl border dark:border-slate-800/60 relative overflow-hidden h-[240px]">
+                {/* Stylized Face Outline */}
+                <svg className="w-36 h-36 opacity-30 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.2">
+                  {/* Head outline */}
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 2C7.5 2 4.5 5.5 4.5 10c0 4.5 3 8 7.5 11 4.5-3 7.5-6.5 7.5-11 0-4.5-3-8-7.5-8z" />
+                  {/* Eyes */}
+                  <circle cx="9" cy="9.5" r="0.8" fill="currentColor" />
+                  <circle cx="15" cy="9.5" r="0.8" fill="currentColor" />
+                  {/* Eyebrows */}
+                  <path d="M7.5 8c.5-.5 1.5-.5 2 0M14.5 8c.5-.5 1.5-.5 2 0" strokeLinecap="round" />
+                  {/* Nose */}
+                  <path d="M12 9.5v2.5M11.5 12h1" strokeLinecap="round" />
+                  {/* Mouth */}
+                  <path d="M10 15c1 .5 3 .5 4 0" strokeLinecap="round" />
+                </svg>
+
+                {/* Glowing hotspots overlay based on skin concern */}
+                {(selectedDiagnostic.concern === 'Acné' || selectedDiagnostic.concern === 'Imperfections') && (
+                  <>
+                    {/* Forehead Acne Spot */}
+                    <div className="absolute top-[28%] left-[50%] -translate-x-1/2 w-4 h-4 rounded-full bg-red-500/25 animate-ping border border-red-500" />
+                    <div className="absolute top-[30%] left-[50%] -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-red-500 border border-white" />
+                    
+                    {/* Left Cheek Acne Spot */}
+                    <div className="absolute top-[48%] left-[40%] -translate-x-1/2 w-4 h-4 rounded-full bg-red-500/25 animate-ping border border-red-500" />
+                    <div className="absolute top-[50%] left-[40%] -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-red-500 border border-white" />
+
+                    {/* Right Cheek Acne Spot */}
+                    <div className="absolute top-[48%] left-[60%] -translate-x-1/2 w-4 h-4 rounded-full bg-red-500/25 animate-ping border border-red-500" />
+                    <div className="absolute top-[50%] left-[60%] -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-red-500 border border-white" />
+                    
+                    <span className="absolute bottom-3 text-[9px] font-black uppercase text-red-500 tracking-wider">
+                      Hotspots Acné / Éruption active
+                    </span>
+                  </>
+                )}
+
+                {selectedDiagnostic.concern === 'Sécheresse' && (
+                  <>
+                    {/* Left Cheek Dryness zone */}
+                    <div className="absolute top-[52%] left-[36%] w-6 h-6 rounded-full bg-cyan-500/10 border border-cyan-400/40 animate-pulse" />
+                    {/* Right Cheek Dryness zone */}
+                    <div className="absolute top-[52%] left-[58%] w-6 h-6 rounded-full bg-cyan-500/10 border border-cyan-400/40 animate-pulse" />
+                    {/* Chin dry zone */}
+                    <div className="absolute top-[72%] left-[47%] w-5 h-5 rounded-full bg-cyan-500/10 border border-cyan-400/40 animate-pulse" />
+                    
+                    <span className="absolute bottom-3 text-[9px] font-black uppercase text-cyan-400 tracking-wider">
+                      Zones de Déshydratation / Sècheresse
+                    </span>
+                  </>
+                )}
+
+                {(selectedDiagnostic.concern === 'Rides' || selectedDiagnostic.concern === 'Anti-âge') && (
+                  <>
+                    {/* Forehead wrinkles lines */}
+                    <div className="absolute top-[26%] left-[42%] w-10 h-0.5 bg-pink-500/50 rounded animate-pulse" />
+                    <div className="absolute top-[31%] left-[40%] w-12 h-0.5 bg-pink-500/50 rounded animate-pulse" />
+                    
+                    {/* Crow's feet around eyes */}
+                    <div className="absolute top-[42%] left-[33%] w-3 h-0.5 bg-pink-500/40 rotate-12" />
+                    <div className="absolute top-[42%] left-[61%] w-3 h-0.5 bg-pink-500/40 -rotate-12" />
+
+                    <span className="absolute bottom-3 text-[9px] font-black uppercase text-pink-400 tracking-wider">
+                      Rides & Perte de Fermeté détectées
+                    </span>
+                  </>
+                )}
+
+                {selectedDiagnostic.concern !== 'Acné' && selectedDiagnostic.concern !== 'Imperfections' && selectedDiagnostic.concern !== 'Sécheresse' && selectedDiagnostic.concern !== 'Rides' && selectedDiagnostic.concern !== 'Anti-âge' && (
+                  <>
+                    {/* Hyperpigmentation/Teint hotspots */}
+                    <div className="absolute top-[50%] left-[48%] w-2 h-2 rounded bg-amber-500/40 border border-white" />
+                    <div className="absolute top-[48%] left-[42%] w-1.5 h-1.5 rounded bg-amber-500/40 border border-white" />
+                    <div className="absolute top-[53%] left-[54%] w-1.5 h-1.5 rounded bg-amber-500/40 border border-white" />
+
+                    <span className="absolute bottom-3 text-[9px] font-black uppercase text-amber-500 tracking-wider">
+                      Pigmentation / Taches localisées
+                    </span>
+                  </>
+                )}
+
+                {/* Glowing T-zone outline if skin type is Oily/Gras */}
+                {selectedDiagnostic.skinType === 'Gras' && (
+                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                    <div className="w-[12px] h-[50px] bg-yellow-400/20 absolute top-[25%] left-[47%] blur-sm rounded animate-pulse" />
+                    <div className="w-[60px] h-[12px] bg-yellow-400/20 absolute top-[24%] left-[38%] blur-sm rounded animate-pulse" />
+                    <div className="absolute top-[18%] text-[8px] font-bold text-yellow-500 bg-slate-950 px-1 border border-yellow-500/35 rounded tracking-widest uppercase">T-Zone Grasse</div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end pt-4 border-t dark:border-slate-800">
+              <button
+                onClick={() => setSelectedDiagnostic(null)}
+                className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition cursor-pointer shadow-md shadow-emerald-500/10"
+              >
+                Fermer
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1843,7 +2013,7 @@ export default function CRMTab() {
                       const waLink = `https://wa.me/${r.phone.replace(/[+\s]/g, '')}?text=${encodeURIComponent(msg)}`;
 
                       return (
-                        <tr key={idx} className={adminTheme === 'light' ? 'hover:bg-slate-50/50' : 'hover:bg-slate-950/20'}>
+                        <tr key={idx} className={`admin-row-enter ${adminTheme === 'light' ? 'hover:bg-slate-50/50' : 'hover:bg-slate-950/20'}`}>
                           <td className="p-4 font-bold">{r.customerName}</td>
                           <td className="p-4 font-mono">{r.phone}</td>
                           <td className="p-4 text-slate-600 dark:text-slate-300">{r.productTitle}</td>

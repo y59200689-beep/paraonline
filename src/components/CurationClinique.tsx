@@ -205,7 +205,6 @@ function ProductCardMini({ product, concern, index }: {
               transform: hovered ? 'scale(1.06)' : 'scale(1)',
             }}
             className="absolute inset-0 w-full h-full object-contain p-4"
-            unoptimized
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center text-4xl opacity-10">🧴</div>

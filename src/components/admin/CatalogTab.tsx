@@ -36,6 +36,7 @@ import { useAdmin } from '@/context/AdminContext';
 import { Product } from '@/lib/data';
 import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
+import { StatusBadge, EmptyState } from '@/components/admin/ui';
 
 interface CatalogTabProps {
   catalogStockFilter?: boolean;
@@ -1352,16 +1353,12 @@ export default function CatalogTab({
           {/* Search bar */}
           <div className="relative flex-1 w-full">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
+          <input
               type="text"
               placeholder="Rechercher un produit..."
               value={productSearchQuery}
               onChange={(e) => setProductSearchQuery(e.target.value)}
-              className={`w-full text-xs transition outline-none focus:border-emerald-500/50 rounded-xl pl-10 pr-4 py-2 border ${
-                adminTheme === 'light'
-                  ? 'bg-slate-50 border-slate-200 text-slate-800 focus:bg-white focus:shadow-sm'
-                  : 'bg-slate-950 border-slate-800 text-slate-100 focus:bg-slate-900'
-              }`}
+              className="admin-input admin-focus-ring w-full pl-10"
               disabled={isCatalogBulkMode}
             />
           </div>
@@ -1399,18 +1396,19 @@ export default function CatalogTab({
                   setFilterStatus('all');
                   setCurrentPage(1);
                 }}
-                className={`relative z-10 px-3 py-1.5 rounded-lg transition-colors duration-200 flex items-center gap-1.5 text-xs font-semibold cursor-pointer ${
+                className={`relative z-10 px-3 py-1.5 rounded-lg transition-colors duration-200 flex items-center gap-1.5 font-semibold cursor-pointer ${
                   filterStatus === 'all'
                     ? (adminTheme === 'light' ? 'text-slate-900 font-bold' : 'text-slate-100 font-bold')
                     : (adminTheme === 'light' ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-slate-200')
                 }`}
+                style={{ fontSize: 'var(--admin-text-2xs)', letterSpacing: '0.08em', textTransform: 'uppercase' }}
               >
                 <span>Tous</span>
-                <span className={`px-1.5 py-0.5 text-[9px] rounded-md font-mono ${
+                <span className={`px-1.5 py-0.5 rounded-md font-mono ${
                   filterStatus === 'all'
                     ? (adminTheme === 'light' ? 'bg-slate-200 text-slate-700 font-bold' : 'bg-slate-900 text-slate-300 font-bold')
                     : (adminTheme === 'light' ? 'bg-slate-200/50 text-slate-500' : 'bg-slate-950 text-slate-500')
-                }`}>
+                }`} style={{ fontSize: '9px' }}>
                   {counts.all}
                 </span>
               </button>
@@ -1423,18 +1421,19 @@ export default function CatalogTab({
                   setFilterStatus('live');
                   setCurrentPage(1);
                 }}
-                className={`relative z-10 px-3 py-1.5 rounded-lg transition-colors duration-200 flex items-center gap-1.5 text-xs font-semibold cursor-pointer ${
+                className={`relative z-10 px-3 py-1.5 rounded-lg transition-colors duration-200 flex items-center gap-1.5 font-semibold cursor-pointer ${
                   filterStatus === 'live'
                     ? (adminTheme === 'light' ? 'text-slate-900 font-bold' : 'text-slate-100 font-bold')
                     : (adminTheme === 'light' ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-slate-200')
                 }`}
+                style={{ fontSize: 'var(--admin-text-2xs)', letterSpacing: '0.08em', textTransform: 'uppercase' }}
               >
                 <span>Publiés</span>
-                <span className={`px-1.5 py-0.5 text-[9px] rounded-md font-mono ${
+                <span className={`px-1.5 py-0.5 rounded-md font-mono ${
                   filterStatus === 'live'
                     ? (adminTheme === 'light' ? 'bg-slate-200 text-slate-700 font-bold' : 'bg-slate-900 text-slate-300 font-bold')
                     : (adminTheme === 'light' ? 'bg-slate-200/50 text-slate-500' : 'bg-slate-950 text-slate-500')
-                }`}>
+                }`} style={{ fontSize: '9px' }}>
                   {counts.live}
                 </span>
               </button>
@@ -1447,18 +1446,19 @@ export default function CatalogTab({
                   setFilterStatus('draft');
                   setCurrentPage(1);
                 }}
-                className={`relative z-10 px-3 py-1.5 rounded-lg transition-colors duration-200 flex items-center gap-1.5 text-xs font-semibold cursor-pointer ${
+                className={`relative z-10 px-3 py-1.5 rounded-lg transition-colors duration-200 flex items-center gap-1.5 font-semibold cursor-pointer ${
                   filterStatus === 'draft'
                     ? (adminTheme === 'light' ? 'text-slate-900 font-bold' : 'text-slate-100 font-bold')
                     : (adminTheme === 'light' ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-slate-200')
                 }`}
+                style={{ fontSize: 'var(--admin-text-2xs)', letterSpacing: '0.08em', textTransform: 'uppercase' }}
               >
                 <span>Brouillons</span>
-                <span className={`px-1.5 py-0.5 text-[9px] rounded-md font-mono transition-colors ${
+                <span className={`px-1.5 py-0.5 rounded-md font-mono transition-colors ${
                   filterStatus === 'draft'
                     ? 'bg-rose-500/15 text-rose-500 font-bold'
                     : (adminTheme === 'light' ? 'bg-slate-200/50 text-slate-500 hover:text-rose-500/80' : 'bg-slate-950 text-slate-500 hover:text-rose-500/80')
-                }`}>
+                }`} style={{ fontSize: '9px' }}>
                   {counts.draft}
                 </span>
               </button>
@@ -1495,11 +1495,12 @@ export default function CatalogTab({
                 role="tab"
                 aria-selected={viewMode === 'list'}
                 onClick={() => setViewMode('list')}
-                className={`relative z-10 px-3 py-1.5 rounded-lg transition-colors duration-200 flex items-center gap-1.5 text-xs font-semibold cursor-pointer ${
+                className={`relative z-10 px-3 py-1.5 rounded-lg transition-colors duration-200 flex items-center gap-1.5 font-semibold cursor-pointer ${
                   viewMode === 'list'
                     ? (adminTheme === 'light' ? 'text-slate-900 font-bold' : 'text-slate-100 font-bold')
                     : (adminTheme === 'light' ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-slate-200')
                 }`}
+                style={{ fontSize: 'var(--admin-text-2xs)', letterSpacing: '0.08em', textTransform: 'uppercase' }}
               >
                 <List className="w-3.5 h-3.5" />
                 <span>Liste</span>
@@ -1510,11 +1511,12 @@ export default function CatalogTab({
                 role="tab"
                 aria-selected={viewMode === 'grid'}
                 onClick={() => setViewMode('grid')}
-                className={`relative z-10 px-3 py-1.5 rounded-lg transition-colors duration-200 flex items-center gap-1.5 text-xs font-semibold cursor-pointer ${
+                className={`relative z-10 px-3 py-1.5 rounded-lg transition-colors duration-200 flex items-center gap-1.5 font-semibold cursor-pointer ${
                   viewMode === 'grid'
                     ? (adminTheme === 'light' ? 'text-slate-900 font-bold' : 'text-slate-100 font-bold')
                     : (adminTheme === 'light' ? 'text-slate-500 hover:text-slate-900' : 'text-slate-400 hover:text-slate-200')
                 }`}
+                style={{ fontSize: 'var(--admin-text-2xs)', letterSpacing: '0.08em', textTransform: 'uppercase' }}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
                 <span>Grille</span>
@@ -2119,11 +2121,7 @@ export default function CatalogTab({
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-left text-xs">
                   <thead>
-                    <tr className={`text-[10px] uppercase tracking-wider font-extrabold border-b transition-colors ${
-                      adminTheme === 'light' 
-                        ? 'bg-slate-50/50 text-slate-600 border-slate-200/80' 
-                        : 'bg-slate-950/40 text-slate-400 border-slate-800'
-                    }`}>
+                    <tr style={{ borderBottom: '1px solid var(--admin-border)', background: 'var(--admin-surface-2)' }}>
                       {/* Checkbox Header */}
                       <th className="p-3 w-10 text-center select-none">
                         <input 
@@ -2134,11 +2132,12 @@ export default function CatalogTab({
                         />
                       </th>
                       {/* Image */}
-                      <th className="p-3 font-bold w-12 text-center select-none">Image</th>
+                      <th className="p-3 font-bold w-12 text-center select-none uppercase tracking-widest text-[9px]" style={{ color: 'var(--admin-text-faint)' }}>Image</th>
                       {/* Nom */}
                       <th 
                         onClick={() => handleSort('name')} 
-                        className="p-3 font-bold cursor-pointer select-none hover:text-slate-800 dark:hover:text-slate-200 transition"
+                        className="p-3 font-bold cursor-pointer select-none hover:text-slate-800 dark:hover:text-slate-200 transition uppercase tracking-widest text-[9px]"
+                        style={{ color: 'var(--admin-text-faint)' }}
                       >
                         <div className="flex items-center gap-1">
                           <span>Nom</span>
@@ -2152,7 +2151,8 @@ export default function CatalogTab({
                       {/* SKU */}
                       <th 
                         onClick={() => handleSort('sku')} 
-                        className="p-3 font-bold cursor-pointer select-none hover:text-slate-800 dark:hover:text-slate-200 transition"
+                        className="p-3 font-bold cursor-pointer select-none hover:text-slate-800 dark:hover:text-slate-200 transition uppercase tracking-widest text-[9px]"
+                        style={{ color: 'var(--admin-text-faint)' }}
                       >
                         <div className="flex items-center gap-1">
                           <span>SKU</span>
@@ -2166,7 +2166,8 @@ export default function CatalogTab({
                       {/* Stock */}
                       <th 
                         onClick={() => handleSort('stock')} 
-                        className="p-3 font-bold cursor-pointer select-none hover:text-slate-800 dark:hover:text-slate-200 transition"
+                        className="p-3 font-bold cursor-pointer select-none hover:text-slate-800 dark:hover:text-slate-200 transition uppercase tracking-widest text-[9px]"
+                        style={{ color: 'var(--admin-text-faint)' }}
                       >
                         <div className="flex items-center gap-1">
                           <span>Stock</span>
@@ -2180,7 +2181,8 @@ export default function CatalogTab({
                       {/* Prix */}
                       <th 
                         onClick={() => handleSort('price')} 
-                        className="p-3 font-bold text-right cursor-pointer select-none hover:text-slate-800 dark:hover:text-slate-200 transition"
+                        className="p-3 font-bold text-right cursor-pointer select-none hover:text-slate-800 dark:hover:text-slate-200 transition uppercase tracking-widest text-[9px]"
+                        style={{ color: 'var(--admin-text-faint)' }}
                       >
                         <div className="flex items-center justify-end gap-1">
                           <span>Prix</span>
@@ -2194,7 +2196,8 @@ export default function CatalogTab({
                       {/* Catégorie */}
                       <th 
                         onClick={() => handleSort('category')} 
-                        className="p-3 font-bold cursor-pointer select-none hover:text-slate-800 dark:hover:text-slate-200 transition"
+                        className="p-3 font-bold cursor-pointer select-none hover:text-slate-800 dark:hover:text-slate-200 transition uppercase tracking-widest text-[9px]"
+                        style={{ color: 'var(--admin-text-faint)' }}
                       >
                         <div className="flex items-center gap-1">
                           <span>Catégorie</span>
@@ -2208,7 +2211,8 @@ export default function CatalogTab({
                       {/* Marque */}
                       <th 
                         onClick={() => handleSort('vendor')} 
-                        className="p-3 font-bold cursor-pointer select-none hover:text-slate-800 dark:hover:text-slate-200 transition"
+                        className="p-3 font-bold cursor-pointer select-none hover:text-slate-800 dark:hover:text-slate-200 transition uppercase tracking-widest text-[9px]"
+                        style={{ color: 'var(--admin-text-faint)' }}
                       >
                         <div className="flex items-center gap-1">
                           <span>Marque</span>
@@ -2219,17 +2223,17 @@ export default function CatalogTab({
                           )}
                         </div>
                       </th>
-                  </tr>
-                </thead>
-                <tbody className={`divide-y ${adminTheme === 'light' ? 'divide-slate-100' : 'divide-slate-800'}`}>
-                  {paginatedProducts.map(product => {
-                    const stock = product.stock !== undefined ? product.stock : 100;
-                    
-                    // Stock status
-                    const isOutOfStock = stock === 0;
-                    const isLowStock = stock <= lowStockThreshold && stock > 0;
+                    </tr>
+                  </thead>
+                  <tbody className={`divide-y ${adminTheme === 'light' ? 'divide-slate-100' : 'divide-slate-800'}`}>
+                    {paginatedProducts.map(product => {
+                      const stock = product.stock !== undefined ? product.stock : 100;
+                      
+                      // Stock status
+                      const isOutOfStock = stock === 0;
+                      const isLowStock = stock <= lowStockThreshold && stock > 0;
 
-                    return (
+                      return (
                       <tr key={product.id} className={`group transition-colors duration-150 ${
                         adminTheme === 'light' ? 'hover:bg-slate-50/50' : 'hover:bg-slate-900/10'
                       }`}>
@@ -2274,9 +2278,7 @@ export default function CatalogTab({
                                 {product.nameFr || product.title}
                               </span>
                               {product.status === 'draft' && (
-                                <span className="px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-500 font-extrabold text-[8px] uppercase tracking-wider">
-                                  Brouillon
-                                </span>
+                                <StatusBadge status="inactive" label="Brouillon" dot={false} theme={adminTheme} size="xs" />
                               )}
                             </div>
                             
@@ -2391,20 +2393,13 @@ export default function CatalogTab({
                           {product.sku || '-'}
                         </td>
 
-                        {/* Stock */}
                         <td className="p-3 whitespace-nowrap">
                           {isOutOfStock ? (
-                            <span className="text-red-600 dark:text-red-400 font-semibold text-xs">
-                              Rupture (0)
-                            </span>
+                            <StatusBadge status="error" label="Rupture (0)" dot={true} theme={adminTheme} size="xs" />
                           ) : isLowStock ? (
-                            <span className="text-amber-600 dark:text-amber-400 font-semibold text-xs">
-                              Stock bas ({stock})
-                            </span>
+                            <StatusBadge status="warning" label={`Stock bas (${stock})`} dot={true} theme={adminTheme} size="xs" />
                           ) : (
-                            <span className="text-emerald-600 dark:text-emerald-400 font-semibold text-xs">
-                              En stock ({stock})
-                            </span>
+                            <StatusBadge status="active" label={`En stock (${stock})`} dot={true} theme={adminTheme} size="xs" />
                           )}
                         </td>
 
@@ -2438,32 +2433,22 @@ export default function CatalogTab({
                   {paginatedProducts.length === 0 && (
                     <tr>
                       <td colSpan={10} className="p-12">
-                        <div className={`rich-empty-state max-w-md mx-auto ${
-                          adminTheme === 'light' ? 'rich-empty-state-light' : 'rich-empty-state-dark'
-                        }`}>
-                          <div className={`rich-empty-state-icon ${
-                            adminTheme === 'light' ? 'bg-slate-100 text-slate-400' : 'bg-slate-900 text-slate-500'
-                          }`}>
-                            <Search className="w-5 h-5" />
-                          </div>
-                          <h4 className="text-xs uppercase font-black tracking-wider mb-1">Aucun produit trouvé</h4>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed mb-4">
-                            Aucun produit ne correspond à vos filtres de recherche ou de catégorie actuels.
-                          </p>
-                          <button
-                            type="button"
-                            onClick={() => {
+                        <EmptyState
+                          icon={Search}
+                          title="Aucun produit trouvé"
+                          description="Aucun produit ne correspond à vos filtres de recherche ou de catégorie actuels."
+                          theme={adminTheme}
+                          action={{
+                            label: "Réinitialiser les filtres",
+                            onClick: () => {
                               setProductSearchQuery('');
                               setFilterCategory('all');
                               setFilterVendor('all');
                               setFilterStatus('all');
                               setCatalogStockFilter(false);
-                            }}
-                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[9px] uppercase tracking-wider rounded-lg transition active:scale-95 border-0 outline-none cursor-pointer"
-                          >
-                            Réinitialiser les filtres
-                          </button>
-                        </div>
+                            }
+                          }}
+                        />
                       </td>
                     </tr>
                   )}
@@ -2493,9 +2478,9 @@ export default function CatalogTab({
                       </div>
                     )}
                     {product.status === 'draft' && (
-                      <span className="absolute top-3 left-3 px-2 py-0.5 rounded-full bg-rose-500 text-white font-extrabold text-[8px] uppercase tracking-wider shadow-sm">
-                        Brouillon
-                      </span>
+                      <div className="absolute top-3 left-3">
+                        <StatusBadge status="inactive" label="Brouillon" dot={false} theme={adminTheme} size="xs" />
+                      </div>
                     )}
                     <span className={`absolute top-3 right-3 px-2 py-0.5 rounded-full border text-[9px] uppercase font-bold shadow-sm ${adminTheme === 'light' ? 'bg-white/95 border-slate-200 text-slate-600' : 'bg-slate-950/80 border-slate-800 text-slate-400'}`}>
                       {product.category}
@@ -2524,15 +2509,14 @@ export default function CatalogTab({
                       </div>
 
                       <div className="text-right">
-                        <span className="text-[9px] text-slate-500 uppercase font-semibold block">Stock</span>
-                        <span className={`font-mono text-xs font-bold flex items-center gap-1 ${
-                            stock <= lowStockThreshold
-                              ? (adminTheme === 'light' ? 'text-rose-600 font-black' : 'text-rose-400 font-black')
-                              : (adminTheme === 'light' ? 'text-slate-700' : 'text-slate-300')
-                          }`}>
-                          {stock <= lowStockThreshold && <AlertTriangle className="w-3 h-3 text-rose-500 animate-pulse" />}
-                          {stock} pièces
-                        </span>
+                        <span className="text-[9px] text-slate-500 uppercase font-semibold block mb-0.5">Stock</span>
+                        <StatusBadge
+                          status={stock === 0 ? 'error' : stock <= lowStockThreshold ? 'warning' : 'active'}
+                          label={`${stock} pcs`}
+                          dot={true}
+                          theme={adminTheme}
+                          size="xs"
+                        />
                       </div>
                     </div>
 

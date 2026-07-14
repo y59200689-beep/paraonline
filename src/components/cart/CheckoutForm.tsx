@@ -56,10 +56,11 @@ interface CityComboboxProps {
   isRTL: boolean;
   hasError: boolean;
   placeholder: string;
+  citiesList: Array<{ value: string; labelFr: string; labelAr: string }>;
 }
 
 const CityCombobox: React.FC<CityComboboxProps> = ({
-  value, onChange, language, isRTL, hasError, placeholder,
+  value, onChange, language, isRTL, hasError, placeholder, citiesList,
 }) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -72,8 +73,8 @@ const CityCombobox: React.FC<CityComboboxProps> = ({
 
   // Filter cities based on query matching either FR or AR label
   const filtered = query.trim().length === 0
-    ? MOROCCAN_CITIES
-    : MOROCCAN_CITIES.filter(c => {
+    ? citiesList
+    : citiesList.filter(c => {
         const q = query.toLowerCase();
         return (
           c.labelFr.toLowerCase().includes(q) ||
@@ -83,7 +84,7 @@ const CityCombobox: React.FC<CityComboboxProps> = ({
       });
 
   // Selected city display label
-  const selectedCity = MOROCCAN_CITIES.find(c => c.value === value);
+  const selectedCity = citiesList.find(c => c.value === value);
   const displayLabel = selectedCity
     ? (isFR ? selectedCity.labelFr : selectedCity.labelAr)
     : '';
@@ -333,6 +334,33 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
   t,
 }) => {
   const isFR = language === 'FR';
+  const [cities, setCities] = useState<Array<{ value: string; labelFr: string; labelAr: string }>>(MOROCCAN_CITIES);
+
+  useEffect(() => {
+    const fetchZones = async () => {
+      try {
+        const res = await fetch('/api/shipping/yalidine/zones');
+        const data = await res.json();
+        if (data.success && data.wilayas && data.communes) {
+          const mapped = data.communes.map((c: any) => {
+            const w = data.wilayas.find((wil: any) => String(wil.id) === String(c.wilaya_id));
+            const wName = w ? w.name : 'Wilaya';
+            return {
+              value: `${wName} - ${c.name}`,
+              labelFr: `${c.name} (${wName})`,
+              labelAr: `${c.name} (${wName})`,
+            };
+          });
+          if (mapped.length > 0) {
+            setCities(mapped);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch dynamic shipping zones:', err);
+      }
+    };
+    fetchZones();
+  }, []);
 
   // Steps for indicator
   const steps = onlinePaymentEnabled
@@ -468,6 +496,7 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
               isRTL={isRTL}
               hasError={!!formErrors.city}
               placeholder={isFR ? 'Choisir votre ville...' : 'اختاري مدينتكِ...'}
+              citiesList={cities}
             />
           </Field>
 

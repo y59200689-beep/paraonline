@@ -2,7 +2,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    unoptimized: true, // Serve images directly — avoids Vercel optimizer being blocked by external WordPress host
     minimumCacheTTL: 31536000,
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [

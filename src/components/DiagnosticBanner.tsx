@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { useUi } from '@/context/UiContext';
 import { Sparkles, ArrowRight } from 'lucide-react';
 
@@ -56,7 +57,7 @@ export const DiagnosticBanner: React.FC = () => {
               {/* Texture Image */}
               <div className="absolute inset-0 bg-slate-100 dark:bg-slate-800">
                 <Image
-                  src="/images/skin_diagnostic_scan.png"
+                  src={getOptimizedImageUrl("/images/skin_diagnostic_scan.png")}
                   alt="Diagnostic de Peau Clinique IA"
                   fill
                   sizes="(max-w-768px) 100vw, 50vw"

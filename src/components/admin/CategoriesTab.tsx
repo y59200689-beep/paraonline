@@ -587,84 +587,86 @@ export default function CategoriesTab() {
 
         {/* Dynamic metrics card 1 */}
         <div className={`p-5 rounded-3xl border flex flex-col justify-between transition hover:shadow-md ${
-          adminTheme === 'light' ? 'bg-white border-slate-200/85' : 'bg-slate-900/20 border-slate-900/60'
+          adminTheme === 'light' ? 'bg-white border-slate-200/85 shadow-[var(--admin-shadow-sm)]' : 'bg-slate-900/20 border-slate-900/60'
         }`}>
           <div className="flex justify-between items-start">
             <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-500 border border-indigo-500/20">
               <FolderTree className="w-4 h-4" />
             </div>
-            <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Total Catégories</span>
+            <span className="font-semibold uppercase tracking-widest" style={{ fontSize: 'var(--admin-text-2xs)', color: 'var(--admin-text-faint)' }}>Total Catégories</span>
           </div>
           <div className="mt-3">
-            <h3 className="text-2xl font-black font-mono leading-none">{customCategories.length}</h3>
-            <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-1">Fugures catalogue</span>
+            <h3 className="font-bold font-mono leading-none" style={{ fontSize: 'var(--admin-text-2xl)', color: 'var(--admin-text-primary)' }}>{customCategories.length}</h3>
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-1">Figures catalogue</span>
           </div>
         </div>
 
         {/* Dynamic metrics card 2 */}
         <div className={`p-5 rounded-3xl border flex flex-col justify-between transition hover:shadow-md ${
-          adminTheme === 'light' ? 'bg-white border-slate-200/85' : 'bg-slate-900/20 border-slate-900/60'
+          adminTheme === 'light' ? 'bg-white border-slate-200/85 shadow-[var(--admin-shadow-sm)]' : 'bg-slate-900/20 border-slate-900/60'
         }`}>
           <div className="flex justify-between items-start">
             <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
               <Layers className="w-4 h-4" />
             </div>
-            <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Total Cibles</span>
+            <span className="font-semibold uppercase tracking-widest" style={{ fontSize: 'var(--admin-text-2xs)', color: 'var(--admin-text-faint)' }}>Total Cibles</span>
           </div>
           <div className="mt-3">
-            <h3 className="text-2xl font-black font-mono leading-none">{customConcerns.length}</h3>
+            <h3 className="font-bold font-mono leading-none" style={{ fontSize: 'var(--admin-text-2xl)', color: 'var(--admin-text-primary)' }}>{customConcerns.length}</h3>
             <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-1">Curation Clinique</span>
           </div>
         </div>
 
         {/* Dynamic metrics card 3 */}
         <div className={`p-5 rounded-3xl border flex flex-col justify-between transition hover:shadow-md ${
-          adminTheme === 'light' ? 'bg-white border-slate-200/85' : 'bg-slate-900/20 border-slate-900/60'
+          adminTheme === 'light' ? 'bg-white border-slate-200/85 shadow-[var(--admin-shadow-sm)]' : 'bg-slate-900/20 border-slate-900/60'
         }`}>
           <div className="flex justify-between items-start">
             <div className="p-2.5 rounded-xl bg-teal-500/10 text-teal-500 border border-teal-500/20">
               <Tag className="w-4 h-4" />
             </div>
-            <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Total Marques</span>
+            <span className="font-semibold uppercase tracking-widest" style={{ fontSize: 'var(--admin-text-2xs)', color: 'var(--admin-text-faint)' }}>Total Marques</span>
           </div>
           <div className="mt-3">
-            <h3 className="text-2xl font-black font-mono leading-none">{customBrands.length}</h3>
+            <h3 className="font-bold font-mono leading-none" style={{ fontSize: 'var(--admin-text-2xl)', color: 'var(--admin-text-primary)' }}>{customBrands.length}</h3>
             <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-1">Laboratoires K-Beauty</span>
           </div>
         </div>
 
       </div>
 
-      {/* 2. Selection Tabs between Categories, Concerns and Brands */}
       <div className="flex justify-between items-center flex-wrap gap-4 border-b border-slate-200/40 dark:border-slate-800/60 pb-3">
         <div className="flex gap-2">
           <button
             onClick={() => { setActiveTab('categories'); setEditingItem(null); }}
-            className={`px-4 py-2 rounded-xl text-[11px] font-extrabold uppercase tracking-wider transition ${
+            className={`px-4 py-2 rounded-xl font-semibold uppercase tracking-widest transition ${
               activeTab === 'categories'
                 ? (adminTheme === 'light' ? 'bg-slate-900 text-white shadow' : 'bg-white text-slate-900 shadow')
                 : (adminTheme === 'light' ? 'bg-slate-100 text-slate-500 hover:text-slate-800' : 'bg-slate-900/40 text-slate-400 hover:text-slate-200')
             }`}
+            style={{ fontSize: 'var(--admin-text-xs)' }}
           >
             Catégories
           </button>
           <button
             onClick={() => { setActiveTab('concerns'); setEditingItem(null); }}
-            className={`px-4 py-2 rounded-xl text-[11px] font-extrabold uppercase tracking-wider transition ${
+            className={`px-4 py-2 rounded-xl font-semibold uppercase tracking-widest transition ${
               activeTab === 'concerns'
                 ? (adminTheme === 'light' ? 'bg-slate-900 text-white shadow' : 'bg-white text-slate-900 shadow')
                 : (adminTheme === 'light' ? 'bg-slate-100 text-slate-500 hover:text-slate-800' : 'bg-slate-900/40 text-slate-400 hover:text-slate-200')
             }`}
+            style={{ fontSize: 'var(--admin-text-xs)' }}
           >
             Préoccupations de Peau
           </button>
           <button
             onClick={() => { setActiveTab('brands'); setEditingItem(null); }}
-            className={`px-4 py-2 rounded-xl text-[11px] font-extrabold uppercase tracking-wider transition ${
+            className={`px-4 py-2 rounded-xl font-semibold uppercase tracking-widest transition ${
               activeTab === 'brands'
                 ? (adminTheme === 'light' ? 'bg-slate-900 text-white shadow' : 'bg-white text-slate-900 shadow')
                 : (adminTheme === 'light' ? 'bg-slate-100 text-slate-500 hover:text-slate-800' : 'bg-slate-900/40 text-slate-400 hover:text-slate-200')
             }`}
+            style={{ fontSize: 'var(--admin-text-xs)' }}
           >
             Marques Partenaires
           </button>
@@ -1449,15 +1451,13 @@ export default function CategoriesTab() {
 
             {/* Sticky Search bar */}
             <div className="relative my-4 shrink-0">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--admin-text-faint)' }} />
               <input
                 type="text"
                 placeholder="Filtrer par titre, marque ou SKU..."
                 value={drawerSearchQuery}
                 onChange={e => setDrawerSearchQuery(e.target.value)}
-                className={`w-full text-xs pl-9 pr-4 py-2 border rounded-xl outline-none focus:border-emerald-500/50 ${
-                  adminTheme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-950 border-slate-800 text-slate-200'
-                }`}
+                className="admin-input admin-focus-ring w-full pl-9"
               />
             </div>
 

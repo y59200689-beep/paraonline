@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 
 interface HorizontalPromoBannerProps {
   settings?: {
@@ -44,7 +45,7 @@ export const HorizontalPromoBanner: React.FC<HorizontalPromoBannerProps> = ({ se
               // Custom background with left-to-right gradient overlay to ensure text contrast
               <div className="w-full h-full relative">
                 <img
-                  src={bgImage}
+                  src={getOptimizedImageUrl(bgImage)}
                   alt=""
                   aria-hidden
                   loading="lazy"
@@ -89,7 +90,7 @@ export const HorizontalPromoBanner: React.FC<HorizontalPromoBannerProps> = ({ se
           <div className="relative z-20 shrink-0 flex items-end justify-end mr-4 sm:mr-6 md:mr-8 w-[90px] sm:w-[110px] md:w-[130px] h-[130px] sm:h-[150px] -mb-2 select-none self-end">
             <div className="relative w-full h-full -top-6 sm:-top-8 drop-shadow-[0_12px_24px_rgba(16,185,129,0.3)] group-hover:-translate-y-1.5 transition-transform duration-500 ease-out">
               <Image
-                src={overlayImage}
+                src={getOptimizedImageUrl(overlayImage)}
                 alt="Promotion produit"
                 fill
                 sizes="(max-width: 640px) 90px, (max-width: 768px) 110px, 130px"

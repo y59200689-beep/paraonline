@@ -140,7 +140,7 @@ export const SummerSalePromo: React.FC = () => {
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          backgroundImage: 'url(/images/promo/summer_sale_hero.png)',
+          backgroundImage: `url(${getOptimizedImageUrl('/images/promo/summer_sale_hero.png')})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center top',
           opacity: 0.06,
@@ -165,7 +165,7 @@ export const SummerSalePromo: React.FC = () => {
             {/* Left Card: Cicaplast Duo Pack Image (25% on desktop) */}
             <div className="lg:col-span-3 bg-white rounded-[24px] relative overflow-hidden group min-h-[320px] shadow-[0_8px_30px_rgba(0,0,0,0.015)] border border-slate-100/50">
               <Image 
-                src={leftImage} 
+                src={getOptimizedImageUrl(leftImage)} 
                 alt="Cicaplast Duo Pack" 
                 fill
                 sizes="(max-width: 1024px) 100vw, 25vw"
@@ -262,7 +262,7 @@ export const SummerSalePromo: React.FC = () => {
             {/* Right Card: Vichy Sunscreen Bundle Pack Image (25% on desktop) */}
             <div className="lg:col-span-3 bg-white rounded-[24px] relative overflow-hidden group min-h-[320px] shadow-[0_8px_30px_rgba(0,0,0,0.015)] border border-slate-100/50">
               <Image 
-                src={rightImage} 
+                src={getOptimizedImageUrl(rightImage)} 
                 alt="Vichy Sunscreen Pack" 
                 fill
                 sizes="(max-width: 1024px) 100vw, 25vw"

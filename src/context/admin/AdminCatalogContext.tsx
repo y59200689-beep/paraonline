@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 import { Product } from '@/lib/data';
 import { useAdminAuth } from './AdminAuthContext';
 import { useAdminData } from './AdminDataContext';
@@ -23,108 +23,143 @@ export interface AdminCatalogContextProps {
   handleSaveLoyaltySettings: (formSettings: any) => Promise<boolean>;
   handleSavePaymentSettings: (formSettings: any) => Promise<boolean>;
   handleSaveNotificationTemplates: (formSettings: any, notifTemplates: any) => Promise<boolean>;
-  handleImportProducts: (importedProducts: any[], updateExisting: boolean) => Promise<{ success: boolean; count: number; error?: string; message?: string }>;
+  handleImportProducts: (rawProducts: any[]) => Promise<{ success: boolean; count: number }>;
 }
 
 const AdminCatalogContext = createContext<AdminCatalogContextProps | undefined>(undefined);
 
 export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser } = useAdminAuth();
-  const { products, setProducts, loadProducts, logAdminAction } = useAdminData();
-  const { settings, saveSettings } = useSettings();
+  const { loadProducts, logAdminAction, setProducts, products } = useAdminData();
+  const { loadSettings } = useSettings();
   const { showToast } = useUi();
 
   const handleSaveCoupon = async (couponForm: any): Promise<boolean> => {
-    if (!couponForm.code) return false;
-    const normalizedCode = couponForm.code.trim().toUpperCase();
-    const newCoupon = {
-      code: normalizedCode,
-      discountPercent: couponForm.discountType === 'percent' ? couponForm.discountValue : 0,
-      freeShipping: couponForm.freeShipping,
-      discountType: couponForm.discountType,
-      discountValue: couponForm.discountValue,
-      minPurchase: couponForm.minPurchase,
-      startDate: couponForm.startDate || undefined,
-      expiryDate: couponForm.expiryDate,
-      usageLimit: couponForm.usageLimit ? Number(couponForm.usageLimit) : undefined,
-      isActive: couponForm.isActive
-    };
-
-    type CouponEntry = NonNullable<typeof settings.coupons>[number];
-    const updatedCoupons = [
-      ...(settings.coupons || []).filter((c: CouponEntry) => c.code !== normalizedCode),
-      newCoupon
-    ];
-
-    const success = await saveSettings({ ...settings, coupons: updatedCoupons });
-    if (success) {
-      logAdminAction("Création/Modification Code Promo", `Code ${normalizedCode} enregistré (Valeur: ${couponForm.discountValue} ${couponForm.discountType === 'percent' ? '%' : 'DH'}, Min: ${couponForm.minPurchase} DH).`);
-      return true;
+    if (currentUser?.role === 'logistician' || currentUser?.role === 'support') {
+      showToast("Permission refusée.", 'error');
+      return false;
+    }
+    try {
+      const res = await fetch('/api/admin/coupons', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(couponForm)
+      });
+      const data = await res.json();
+      if (data.success) {
+        await loadProducts();
+        logAdminAction("Configuration Coupon", `Coupon "${couponForm.code}" configuré.`);
+        showToast("Coupon configuré avec succès !", 'success');
+        return true;
+      } else {
+        showToast(data.error || "Erreur lors de la configuration.", 'error');
+      }
+    } catch (e) {
+      showToast("Erreur de connexion.", 'error');
     }
     return false;
   };
 
   const handleDeleteCoupon = async (code: string): Promise<boolean> => {
-    type CouponEntry = NonNullable<typeof settings.coupons>[number];
-    const updatedCoupons = (settings.coupons || []).filter((c: CouponEntry) => c.code !== code);
-    const success = await saveSettings({ ...settings, coupons: updatedCoupons });
-    if (success) {
-      logAdminAction("Suppression Code Promo", `Code ${code} supprimé.`);
-      return true;
+    if (currentUser?.role === 'logistician' || currentUser?.role === 'support') {
+      showToast("Permission refusée.", 'error');
+      return false;
+    }
+    try {
+      const res = await fetch(`/api/admin/coupons?code=${code}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        await loadProducts();
+        logAdminAction("Suppression Coupon", `Coupon "${code}" supprimé.`);
+        showToast("Coupon supprimé !", 'success');
+        return true;
+      }
+    } catch (e) {
+      showToast("Erreur de connexion.", 'error');
     }
     return false;
   };
 
   const handleToggleCouponActive = async (code: string): Promise<boolean> => {
-    type CouponEntry = NonNullable<typeof settings.coupons>[number];
-    const updatedCoupons = (settings.coupons || []).map((c: CouponEntry) => {
-      if (c.code === code) return { ...c, isActive: !c.isActive };
-      return c;
-    });
-
-    const couponState = updatedCoupons.find((c: CouponEntry) => c.code === code)?.isActive;
-    const success = await saveSettings({ ...settings, coupons: updatedCoupons });
-    if (success) {
-      logAdminAction("Statut Code Promo Modifié", `Code ${code} ${couponState ? 'activé' : 'désactivé'}.`);
-      return true;
+    if (currentUser?.role === 'logistician' || currentUser?.role === 'support') {
+      showToast("Permission refusée.", 'error');
+      return false;
+    }
+    try {
+      const res = await fetch('/api/admin/coupons/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+      });
+      const data = await res.json();
+      if (data.success) {
+        await loadProducts();
+        logAdminAction("Statut Coupon", `Statut du coupon "${code}" basculé.`);
+        showToast("Statut du coupon mis à jour !", 'success');
+        return true;
+      }
+    } catch (e) {
+      showToast("Erreur de connexion.", 'error');
     }
     return false;
   };
 
   const handleSaveBanner = async (index: number, bannerForm: HeroCardConfig): Promise<boolean> => {
-    if (!settings.banners) return false;
-    const updatedBanners = [...settings.banners];
-    updatedBanners[index] = bannerForm;
-
-    const success = await saveSettings({ ...settings, banners: updatedBanners });
-    if (success) {
-      logAdminAction("Mise à jour Diaporama Bannières", `Diapositive n°${index + 1} modifiée : "${bannerForm.titleFr}" / "${bannerForm.titleAr}".`);
-      return true;
+    if (currentUser?.role === 'logistician' || currentUser?.role === 'support') {
+      showToast("Permission refusée.", 'error');
+      return false;
+    }
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'banner',
+          index,
+          banner: bannerForm
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        await loadSettings();
+        logAdminAction("Configuration Banner", `Bannière #${index + 1} mise à jour.`);
+        showToast("Bannière enregistrée avec succès !", 'success');
+        return true;
+      }
+    } catch (e) {
+      showToast("Erreur de connexion.", 'error');
     }
     return false;
   };
 
   const handleMoveBanner = async (index: number, direction: 'up' | 'down'): Promise<boolean> => {
-    if (!settings.banners) return false;
-    const newBanners = [...settings.banners];
-    const targetIdx = direction === 'up' ? index - 1 : index + 1;
-    if (targetIdx < 0 || targetIdx >= newBanners.length) return false;
-    
-    const temp = newBanners[index];
-    newBanners[index] = newBanners[targetIdx];
-    newBanners[targetIdx] = temp;
-    
-    const success = await saveSettings({ ...settings, banners: newBanners });
-    if (success) {
-      logAdminAction("Réorganisation Diaporama", `Diapositive n°${index + 1} déplacée vers le ${direction === 'up' ? 'haut' : 'bas'} (échangée avec n°${targetIdx + 1}).`);
-      return true;
+    if (currentUser?.role === 'logistician' || currentUser?.role === 'support') {
+      showToast("Permission refusée.", 'error');
+      return false;
     }
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'banner_move',
+          index,
+          direction
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        await loadSettings();
+        logAdminAction("Mouvement Banner", `Bannière déplacée.`);
+        return true;
+      }
+    } catch (e) {}
     return false;
   };
 
   const handleSaveBulkProducts = async (changedProducts: Product[]): Promise<boolean> => {
-    if (currentUser?.role !== 'owner') {
-      showToast("Permission refusée : Seuls les propriétaires (Owner) peuvent modifier le catalogue produits.", 'error');
+    if (currentUser?.role === 'support') {
+      showToast("Permission refusée.", 'error');
       return false;
     }
     try {
@@ -135,223 +170,312 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
       });
       const data = await res.json();
       if (data.success) {
-        logAdminAction("Modification Catalogue en Masse", `${changedProducts.length} produits mis à jour via le tableur.`);
         await loadProducts();
+        logAdminAction("Modification Catalogue (Lot)", `${changedProducts.length} produits mis à jour.`);
+        showToast(`${changedProducts.length} produits enregistrés !`, 'success');
         return true;
       }
     } catch (e) {
-      console.error(e);
+      showToast("Erreur de connexion.", 'error');
     }
     return false;
   };
 
   const handleCreateProduct = async (productForm: Partial<Product>): Promise<boolean> => {
-    if (currentUser?.role !== 'owner') {
-      showToast("Permission refusée : Seuls les propriétaires (Owner) peuvent ajouter ou modifier des produits.", 'error');
+    if (currentUser?.role === 'support') {
+      showToast("Permission refusée.", 'error');
       return false;
     }
     try {
-      const isEdit = !!productForm.id;
       const res = await fetch('/api/admin/products', {
-        method: isEdit ? 'PUT' : 'POST',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(productForm)
       });
       const data = await res.json();
       if (data.success) {
         await loadProducts();
-        logAdminAction(
-          isEdit ? "Modification Produit" : "Création Produit",
-          isEdit ? `Produit "${data.product.title}" mis à jour (ID: ${data.product.id}).` : `Produit "${data.product.title}" créé avec succès (ID: ${data.product.id}).`
-        );
+        logAdminAction("Création Produit", `Produit "${productForm.title}" créé.`);
+        showToast("Produit créé avec succès !", 'success');
         return true;
+      } else {
+        showToast(data.error || "Erreur de création.", 'error');
       }
     } catch (e) {
-      console.error(e);
+      showToast("Erreur de connexion.", 'error');
     }
     return false;
   };
 
   const handleRestock = async (productId: number, newStock: number): Promise<boolean> => {
+    if (currentUser?.role === 'support') {
+      showToast("Permission refusée.", 'error');
+      return false;
+    }
     try {
-      const res = await fetch('/api/admin/products/bulk', {
+      const res = await fetch('/api/admin/products/restock', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ products: [{ id: productId, stock: newStock }] })
+        body: JSON.stringify({ productId, stock: newStock })
       });
       const data = await res.json();
       if (data.success) {
-        setProducts(prev => prev.map(p => p.id === productId ? { ...p, stock: newStock } : p));
-        logAdminAction('Réapprovisionnement', `Produit #${productId} réapprovisionné à ${newStock} unités.`);
+        await loadProducts();
+        logAdminAction("Réapprovisionnement", `Produit #${productId} réapprovisionné à ${newStock} unités.`);
+        showToast("Stock mis à jour avec succès !", 'success');
         return true;
       }
     } catch (e) {
-      console.error(e);
+      showToast("Erreur de connexion.", 'error');
     }
     return false;
   };
 
   const handleAddFaq = async (faqForm: { q_fr: string; a_fr: string; q_ar: string; a_ar: string }): Promise<boolean> => {
-    if (currentUser?.role === 'logistician') {
-      showToast("Permission refusée : Les logisticiens ne peuvent pas modifier la FAQ.", 'error');
+    if (currentUser?.role === 'logistician' || currentUser?.role === 'support') {
+      showToast("Permission refusée.", 'error');
       return false;
     }
-    const updatedFaq = [...(settings.faq || []), faqForm];
-    const success = await saveSettings({ ...settings, faq: updatedFaq });
-    if (success) {
-      logAdminAction("Ajout FAQ", `Nouvelle question FAQ ajoutée : "${faqForm.q_fr}".`);
-      return true;
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'faq_add',
+          faq: faqForm
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        await loadSettings();
+        logAdminAction("Configuration FAQ", `Nouvelle question FAQ ajoutée.`);
+        showToast("Question FAQ ajoutée !", 'success');
+        return true;
+      }
+    } catch (e) {
+      showToast("Erreur de connexion.", 'error');
     }
     return false;
   };
 
   const handleDeleteFaq = async (index: number): Promise<boolean> => {
-    if (currentUser?.role === 'logistician') {
-      showToast("Permission refusée : Les logisticiens ne peuvent pas modifier la FAQ.", 'error');
+    if (currentUser?.role === 'logistician' || currentUser?.role === 'support') {
+      showToast("Permission refusée.", 'error');
       return false;
     }
-    type FaqEntry = NonNullable<typeof settings.faq>[number];
-    const updatedFaq = (settings.faq || []).filter((_: FaqEntry, i: number) => i !== index);
-    const success = await saveSettings({ ...settings, faq: updatedFaq });
-    if (success) {
-      logAdminAction("Suppression FAQ", `Entrée FAQ n°${index + 1} supprimée.`);
-      return true;
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'faq_delete',
+          index
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        await loadSettings();
+        logAdminAction("Configuration FAQ", `Question FAQ #${index + 1} supprimée.`);
+        showToast("Question FAQ supprimée !", 'success');
+        return true;
+      }
+    } catch (e) {
+      showToast("Erreur de connexion.", 'error');
     }
     return false;
   };
 
   const handleSaveGeneralSettings = async (formSettings: any): Promise<boolean> => {
-    const updatedSettings = { ...settings, ...formSettings };
-    const success = await saveSettings(updatedSettings);
-    if (success) {
-      logAdminAction("Mise à jour Paramètres Généraux", "Changement de la configuration globale du site.");
-      return true;
+    if (currentUser?.role === 'logistician' || currentUser?.role === 'support') {
+      showToast("Permission refusée.", 'error');
+      return false;
+    }
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'general',
+          settings: formSettings
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        await loadSettings();
+        logAdminAction("Configuration Générale", "Paramètres généraux de la boutique mis à jour.");
+        showToast("Paramètres généraux enregistrés !", 'success');
+        return true;
+      }
+    } catch (e) {
+      showToast("Erreur de connexion.", 'error');
     }
     return false;
   };
 
   const handleSaveCourierSettings = async (formSettings: any): Promise<boolean> => {
-    const updatedSettings = { ...settings, ...formSettings };
-    const success = await saveSettings(updatedSettings);
-    if (success) {
-      logAdminAction("Mise à jour Paramètres Messagerie", `Livreur configuré: ${updatedSettings.courierPartner?.toUpperCase()} (${updatedSettings.courierMode}).`);
-      return true;
+    if (currentUser?.role === 'logistician' || currentUser?.role === 'support') {
+      showToast("Permission refusée.", 'error');
+      return false;
+    }
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'couriers',
+          settings: formSettings
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        await loadSettings();
+        logAdminAction("Configuration Livreurs", "Paramètres des transporteurs mis à jour.");
+        showToast("Paramètres transporteurs enregistrés !", 'success');
+        return true;
+      }
+    } catch (e) {
+      showToast("Erreur de connexion.", 'error');
     }
     return false;
   };
 
   const handleSaveLoyaltySettings = async (formSettings: any): Promise<boolean> => {
-    const updatedSettings = { ...settings, ...formSettings };
-    const success = await saveSettings(updatedSettings);
-    if (success) {
-      logAdminAction("Mise à jour Règles Fidélité", "Modification des multiplicateurs de points par paliers.");
-      return true;
+    if (currentUser?.role === 'logistician' || currentUser?.role === 'support') {
+      showToast("Permission refusée.", 'error');
+      return false;
+    }
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'loyalty',
+          settings: formSettings
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        await loadSettings();
+        logAdminAction("Configuration Fidélité", "Règles du programme de fidélité mises à jour.");
+        showToast("Paramètres fidélité enregistrés !", 'success');
+        return true;
+      }
+    } catch (e) {
+      showToast("Erreur de connexion.", 'error');
     }
     return false;
   };
 
   const handleSavePaymentSettings = async (formSettings: any): Promise<boolean> => {
-    const updatedSettings = {
-      ...settings,
-      paymentSettings: {
-        ...(settings.paymentSettings || {}),
-        ...formSettings
-      }
-    };
-    const success = await saveSettings(updatedSettings);
-    if (success) {
-      logAdminAction("Mise à jour Paramètres Paiement", "Modification des clés et paramètres Stripe / CMI.");
-      return true;
-    }
-    return false;
-  };
-
-  const handleSaveNotificationTemplates = async (formSettings: any, templatesInput: any): Promise<boolean> => {
-    const updatedSettings = {
-      ...settings,
-      ...formSettings,
-      notificationTemplates: { ...settings.notificationTemplates, ...templatesInput }
-    };
-    const success = await saveSettings(updatedSettings);
-    if (success) {
-      logAdminAction('Modèles Notifications', 'Configuration WhatsApp et templates mis à jour.');
-      return true;
-    }
-    return false;
-  };
-
-  const handleImportProducts = async (importedProducts: any[], updateExisting: boolean): Promise<{ success: boolean; count: number; error?: string; message?: string }> => {
-    if (currentUser?.role !== 'owner') {
-      showToast("Permission refusée : Seuls les propriétaires (Owner) peuvent importer des produits.", 'error');
-      return { success: false, count: 0, error: "Accès non autorisé" };
+    if (currentUser?.role === 'logistician' || currentUser?.role === 'support') {
+      showToast("Permission refusée.", 'error');
+      return false;
     }
     try {
-      const res = await fetch('/api/admin/import', {
+      const res = await fetch('/api/admin/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ products: importedProducts, updateExisting })
+        body: JSON.stringify({
+          type: 'payment',
+          settings: formSettings
+        })
       });
       const data = await res.json();
       if (data.success) {
-        logAdminAction("Importation Produits", `${data.count} produits importés/mis à jour.`);
-        await loadProducts();
-        return { success: true, count: data.count, message: data.message };
+        await loadSettings();
+        logAdminAction("Configuration Paiement", "Méthodes et clés de paiement mises à jour.");
+        showToast("Paramètres de paiement enregistrés !", 'success');
+        return true;
       }
-      throw new Error(data.error || "API error");
-    } catch (e: any) {
-      console.warn("Database import failed, falling back to local state import:", e);
-      
-      let importCount = 0;
+    } catch (e) {
+      showToast("Erreur de connexion.", 'error');
+    }
+    return false;
+  };
+
+  const handleSaveNotificationTemplates = async (formSettings: any, notifTemplates: any): Promise<boolean> => {
+    if (currentUser?.role === 'logistician' || currentUser?.role === 'support') {
+      showToast("Permission refusée.", 'error');
+      return false;
+    }
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'notifications',
+          settings: formSettings,
+          templates: notifTemplates
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        await loadSettings();
+        logAdminAction("Configuration Notifications", "Modèles de messages SMS/WhatsApp mis à jour.");
+        showToast("Modèles de notifications enregistrés !", 'success');
+        return true;
+      }
+    } catch (e) {
+      showToast("Erreur de connexion.", 'error');
+    }
+    return false;
+  };
+
+  const handleImportProducts = async (rawProducts: any[]): Promise<{ success: boolean; count: number }> => {
+    if (currentUser?.role === 'support') {
+      showToast("Permission refusée.", 'error');
+      return { success: false, count: 0 };
+    }
+    const isSupabaseLive = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_URL !== 'http://127.0.0.1:54321';
+    if (isSupabaseLive) {
+      try {
+        const res = await fetch('/api/admin/products/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ products: rawProducts })
+        });
+        const data = await res.json();
+        if (data.success) {
+          await loadProducts();
+          logAdminAction("Importation Produits (Live)", `${data.count} produits importés/mis à jour.`);
+          return { success: true, count: data.count };
+        }
+      } catch (e) {
+        showToast("Erreur de connexion lors de l'importation.", 'error');
+      }
+      return { success: false, count: 0 };
+    } else {
       const updatedProducts = [...products];
-
-      importedProducts.forEach(newP => {
-        const existingIdx = updatedProducts.findIndex(p => 
-          (newP.id && p.id === Number(newP.id)) || 
-          (newP.sku && p.sku === newP.sku)
-        );
-
-        if (updateExisting) {
-          if (existingIdx > -1) {
-            updatedProducts[existingIdx] = {
-              ...updatedProducts[existingIdx],
-              title: newP.title || updatedProducts[existingIdx].title,
-              name: newP.name || newP.title || updatedProducts[existingIdx].name,
-              nameFr: newP.nameFr || newP.title || updatedProducts[existingIdx].nameFr,
-              vendor: newP.vendor || updatedProducts[existingIdx].vendor,
-              price: newP.price !== undefined ? Number(newP.price) : updatedProducts[existingIdx].price,
-              comparePrice: newP.comparePrice !== undefined ? Number(newP.comparePrice) : updatedProducts[existingIdx].comparePrice,
-              category: newP.category || updatedProducts[existingIdx].category,
-              stock: newP.stock !== undefined ? Number(newP.stock) : updatedProducts[existingIdx].stock,
-              sku: newP.sku || updatedProducts[existingIdx].sku,
-              buyingCost: newP.buyingCost !== undefined ? Number(newP.buyingCost) : updatedProducts[existingIdx].buyingCost,
-              description: newP.description || updatedProducts[existingIdx].description,
-              ingredients: newP.ingredients || updatedProducts[existingIdx].ingredients,
-              usage: newP.usage || updatedProducts[existingIdx].usage,
-              image: newP.image || updatedProducts[existingIdx].image
-            };
-            importCount++;
-          }
+      let importCount = 0;
+      rawProducts.forEach(newP => {
+        const existingIdx = updatedProducts.findIndex(p => p.id === newP.id || p.sku === newP.sku);
+        if (existingIdx !== -1) {
+          updatedProducts[existingIdx] = {
+            ...updatedProducts[existingIdx],
+            ...newP,
+            price: newP.price !== undefined ? Number(newP.price) : updatedProducts[existingIdx].price,
+            comparePrice: newP.comparePrice !== undefined ? Number(newP.comparePrice) : updatedProducts[existingIdx].comparePrice,
+            stock: newP.stock !== undefined ? Number(newP.stock) : updatedProducts[existingIdx].stock,
+            buyingCost: newP.buyingCost ? Number(newP.buyingCost) : updatedProducts[existingIdx].buyingCost
+          };
+          importCount++;
         } else {
-          const hasConflict = existingIdx > -1;
-          const newId = hasConflict ? Math.max(0, ...updatedProducts.map(p => p.id)) + 1 : (newP.id ? Number(newP.id) : Math.max(0, ...updatedProducts.map(p => p.id)) + 1);
-
           const mappedProduct: Product = {
-            id: newId,
-            title: newP.title || "Sans titre",
-            name: newP.name || newP.title || "Sans titre",
-            nameFr: newP.nameFr || newP.title || "Sans titre",
-            vendor: newP.vendor || "Inconnu",
-            image: newP.image || '',
-            images: newP.images || (newP.image ? [newP.image] : []),
-            price: Number(newP.price) || 0,
-            comparePrice: Number(newP.comparePrice || newP.price) || 0,
-            category: newP.category || 'visage',
-            tags: Array.isArray(newP.tags) ? newP.tags : [],
-            rating: Number(newP.rating || 5),
-            reviews: Number(newP.reviews || 0),
+            id: newP.id || Math.floor(Math.random() * 100000) + 10000,
+            title: newP.title || '',
+            nameFr: newP.nameFr || newP.title || '',
             description: newP.description || '',
             ingredients: newP.ingredients || '',
             usage: newP.usage || '',
+            image: newP.image || '',
+            images: newP.images || [],
+            category: newP.category || 'visage',
+            tags: newP.tags || [],
+            price: newP.price !== undefined ? Number(newP.price) : 100,
+            comparePrice: newP.comparePrice !== undefined ? Number(newP.comparePrice) : (newP.price !== undefined ? Number(newP.price) : 100),
+            rating: newP.rating !== undefined ? Number(newP.rating) : 5,
+            reviews: newP.reviews !== undefined ? Number(newP.reviews) : 0,
+            vendor: newP.vendor || '',
             stock: newP.stock !== undefined ? Number(newP.stock) : 100,
             sku: newP.sku || '',
             buyingCost: newP.buyingCost ? Number(newP.buyingCost) : undefined
@@ -360,32 +484,40 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
           importCount++;
         }
       });
-
       setProducts(updatedProducts);
       logAdminAction("Importation Produits (Mémoire)", `${importCount} produits importés/mis à jour en local.`);
       return { success: true, count: importCount };
     }
   };
 
+  const contextValue = useMemo(() => ({
+    handleSaveCoupon,
+    handleDeleteCoupon,
+    handleToggleCouponActive,
+    handleSaveBanner,
+    handleMoveBanner,
+    handleSaveBulkProducts,
+    handleCreateProduct,
+    handleRestock,
+    handleAddFaq,
+    handleDeleteFaq,
+    handleSaveGeneralSettings,
+    handleSaveCourierSettings,
+    handleSaveLoyaltySettings,
+    handleSavePaymentSettings,
+    handleSaveNotificationTemplates,
+    handleImportProducts
+  }), [
+    products,
+    setProducts,
+    currentUser,
+    loadProducts,
+    logAdminAction,
+    loadSettings
+  ]);
+
   return (
-    <AdminCatalogContext.Provider value={{
-      handleSaveCoupon,
-      handleDeleteCoupon,
-      handleToggleCouponActive,
-      handleSaveBanner,
-      handleMoveBanner,
-      handleSaveBulkProducts,
-      handleCreateProduct,
-      handleRestock,
-      handleAddFaq,
-      handleDeleteFaq,
-      handleSaveGeneralSettings,
-      handleSaveCourierSettings,
-      handleSaveLoyaltySettings,
-      handleSavePaymentSettings,
-      handleSaveNotificationTemplates,
-      handleImportProducts
-    }}>
+    <AdminCatalogContext.Provider value={contextValue}>
       {children}
     </AdminCatalogContext.Provider>
   );

@@ -17,6 +17,7 @@ import { useAdmin, Order } from '@/context/AdminContext';
 import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 import { useAdminUI } from '@/app/admin/AdminUIContext';
+import { StatusBadge, EmptyState } from '@/components/admin/ui';
 
 export default function LoyaltyTab() {
   const {
@@ -267,15 +268,16 @@ export default function LoyaltyTab() {
             <button
               key={tab.id}
               onClick={() => setLoyaltySubTab(tab.id)}
-              className={`px-4 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
+              className={`px-4 py-2 rounded-lg font-semibold uppercase tracking-widest transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
                 loyaltySubTab === tab.id
                   ? (adminTheme === 'light'
-                      ? 'bg-white text-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] border border-slate-200/50 font-black'
-                      : 'bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm font-black')
+                      ? 'bg-white text-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] border border-slate-200/50 font-bold'
+                      : 'bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm font-bold')
                   : (adminTheme === 'light'
                       ? 'text-slate-500 hover:text-slate-800 hover:bg-white/40'
                       : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30')
               }`}
+              style={{ fontSize: 'var(--admin-text-xs)' }}
             >
               <TabIcon className="w-3.5 h-3.5" /> {tab.label}
             </button>
@@ -297,13 +299,23 @@ export default function LoyaltyTab() {
               const KpiIcon = kpi.icon;
               const colorMap: Record<string, string> = { emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100', violet: 'bg-violet-50 text-violet-600 border-violet-100', blue: 'bg-blue-50 text-blue-600 border-blue-100', amber: 'bg-amber-50 text-amber-600 border-amber-100' };
               return (
-                <div key={i} className={`p-4 rounded-2xl border flex items-center gap-3 ${adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/30 border-slate-900'}`}>
+                <div key={i} className={`p-4 rounded-2xl border flex items-center gap-3 ${adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-[var(--admin-shadow-sm)]' : 'bg-slate-900/30 border-slate-900'}`}>
                   <div className={`p-2.5 rounded-xl border text-sm ${adminTheme === 'light' ? colorMap[kpi.color] : 'bg-slate-950 border-slate-800 text-slate-400'}`}>
                     <KpiIcon className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className={`text-[10px] font-semibold uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>{kpi.label}</div>
-                    <div className={`text-lg font-extrabold font-mono ${adminTheme === 'light' ? 'text-slate-900' : 'text-slate-100'}`}>{kpi.value.toLocaleString('fr-FR')}</div>
+                    <span
+                      className="block leading-none mb-1 font-semibold uppercase tracking-widest"
+                      style={{ fontSize: 'var(--admin-text-2xs)', color: 'var(--admin-text-faint)' }}
+                    >
+                      {kpi.label}
+                    </span>
+                    <h3
+                      className="font-bold tracking-tight leading-none font-mono"
+                      style={{ fontSize: 'var(--admin-text-xl)', color: 'var(--admin-text-primary)' }}
+                    >
+                      {kpi.value.toLocaleString('fr-FR')}
+                    </h3>
                   </div>
                 </div>
               );
@@ -313,13 +325,13 @@ export default function LoyaltyTab() {
           {/* Search bar */}
           <div className={`flex items-center gap-3 p-4 rounded-2xl border ${adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/30 border-slate-900'}`}>
             <div className="relative flex-1 max-w-sm">
-              <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--admin-text-faint)' }} />
               <input
                 type="text"
                 placeholder="Rechercher client..."
                 value={crmSearchQuery}
                 onChange={e => setCrmSearchQuery(e.target.value)}
-                className={`w-full text-xs outline-none focus:border-emerald-500/50 rounded-xl pl-10 pr-4 py-2 border ${adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800 focus:bg-white' : 'bg-slate-950 border-slate-800 text-slate-100'}`}
+                className="admin-input admin-focus-ring w-full pl-10"
               />
             </div>
             <div className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-[10px] font-mono border ${adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-slate-900 border-slate-800 text-slate-400'}`}>
@@ -333,15 +345,12 @@ export default function LoyaltyTab() {
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr className={`text-[10px] uppercase tracking-wider font-extrabold border-b ${adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-500' : 'bg-slate-900/60 border-slate-800 text-slate-400'}`}>
-                    <th className="p-4">Client</th>
-                    <th className="p-4">Téléphone</th>
-                    <th className="p-4">Commandes</th>
-                    <th className="p-4">Dépenses</th>
-                    <th className="p-4">Palier</th>
-                    <th className="p-4">Solde Points</th>
-                    <th className="p-4">Source</th>
-                    <th className="p-4 text-right">Actions</th>
+                  <tr style={{ borderBottom: '1px solid var(--admin-border)', background: 'var(--admin-surface-2)' }}>
+                    {['Client', 'Téléphone', 'Commandes', 'Dépenses', 'Palier', 'Solde Points', 'Source', ''].map((h, i) => (
+                      <th key={i} className={`p-4 font-bold uppercase tracking-widest ${i === 7 ? 'text-right' : ''}`} style={{ fontSize: 'var(--admin-text-2xs)', color: 'var(--admin-text-faint)' }}>
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody className={`divide-y text-xs ${adminTheme === 'light' ? 'divide-slate-100 text-slate-700' : 'divide-slate-900 text-slate-300'}`}>
@@ -369,14 +378,16 @@ export default function LoyaltyTab() {
                         <td className="p-4 font-bold">{cust.orders.length}</td>
                         <td className="p-4 font-extrabold font-mono">{cust.totalSpend.toFixed(0)} DH</td>
                         <td className="p-4">
-                          <span className={`inline-flex px-2 py-0.5 rounded-full border text-[9px] uppercase font-black tracking-wider ${tierColors[tier]}`}>{tier}</span>
+                          <StatusBadge
+                            status={tier === 'Bronze' ? 'inactive' : tier === 'Silver' ? 'info' : tier === 'Gold' ? 'warning' : 'active'}
+                            label={tier}
+                            theme={adminTheme}
+                            size="xs"
+                          />
                         </td>
                         <td className={`p-4 font-extrabold font-mono ${adminTheme === 'light' ? 'text-emerald-600' : 'text-emerald-400'}`}>{pts} pts</td>
                         <td className="p-4">
-                          {isManual
-                            ? <span className={`text-[9px] px-1.5 py-0.5 rounded border font-bold uppercase ${adminTheme === 'light' ? 'bg-violet-50 border-violet-100 text-violet-700' : 'bg-violet-950/30 border-violet-900/40 text-violet-400'}`}>Manuel</span>
-                            : <span className={`text-[9px] px-1.5 py-0.5 rounded border font-bold uppercase ${adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-500' : 'bg-slate-900 border-slate-800 text-slate-500'}`}>Auto</span>
-                          }
+                          <StatusBadge status={isManual ? 'owner' : 'inactive'} label={isManual ? 'Manuel' : 'Auto'} theme={adminTheme} size="xs" dot={false} />
                         </td>
                         <td className="p-4 text-right">
                           <button
@@ -405,19 +416,19 @@ export default function LoyaltyTab() {
           {/* Filter bar */}
           <div className={`flex flex-wrap items-center gap-3 p-4 rounded-2xl border ${adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/30 border-slate-900'}`}>
             <div className="relative flex-1 min-w-[200px]">
-              <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--admin-text-faint)' }} />
               <input
                 type="text"
                 placeholder="Rechercher produit..."
                 value={productPointsSearch}
                 onChange={e => setProductPointsSearch(e.target.value)}
-                className={`w-full text-xs outline-none focus:border-emerald-500/50 rounded-xl pl-10 pr-4 py-2 border ${adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800 focus:bg-white' : 'bg-slate-950 border-slate-800 text-slate-100'}`}
+                className="admin-input admin-focus-ring w-full pl-10"
               />
             </div>
             <select
               value={productPointsVendorFilter}
               onChange={e => setProductPointsVendorFilter(e.target.value)}
-              className={`text-xs border rounded-xl px-3 py-2 outline-none cursor-pointer ${adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-700' : 'bg-slate-950 border-slate-800 text-slate-300'}`}
+              className="admin-input w-48"
             >
               <option value="ALL">Toutes les marques</option>
               {allVendors.map(v => <option key={v} value={v}>{v}</option>)}
@@ -432,13 +443,12 @@ export default function LoyaltyTab() {
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr className={`text-[10px] uppercase tracking-wider font-extrabold border-b ${adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-500' : 'bg-slate-900/60 border-slate-800 text-slate-400'}`}>
-                    <th className="p-4">Produit</th>
-                    <th className="p-4">Marque</th>
-                    <th className="p-4">Catégorie</th>
-                    <th className="p-4">Prix</th>
-                    <th className="p-4">Points Fidélité</th>
-                    <th className="p-4 text-right">Action</th>
+                  <tr style={{ borderBottom: '1px solid var(--admin-border)', background: 'var(--admin-surface-2)' }}>
+                    {['Produit', 'Marque', 'Catégorie', 'Prix', 'Points Fidélité', ''].map((h, i) => (
+                      <th key={i} className={`p-4 font-bold uppercase tracking-widest ${i === 5 ? 'text-right' : ''}`} style={{ fontSize: 'var(--admin-text-2xs)', color: 'var(--admin-text-faint)' }}>
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody className={`divide-y text-xs ${adminTheme === 'light' ? 'divide-slate-100 text-slate-700' : 'divide-slate-900 text-slate-300'}`}>
@@ -467,11 +477,7 @@ export default function LoyaltyTab() {
                               placeholder="0 pts"
                               value={currentPoints}
                               onChange={e => setProductPointsEdits(prev => ({ ...prev, [product.id]: Number(e.target.value) }))}
-                              className={`w-24 font-mono text-center font-bold border rounded-lg px-2 py-1.5 text-xs outline-none transition ${
-                                hasEdit
-                                  ? (adminTheme === 'light' ? 'border-emerald-400 bg-emerald-50 text-emerald-800 focus:ring-1 focus:ring-emerald-400/30' : 'border-emerald-600 bg-emerald-950/20 text-emerald-300')
-                                  : (adminTheme === 'light' ? 'border-slate-200 bg-slate-50 text-slate-700 focus:border-emerald-400' : 'border-slate-700 bg-slate-900 text-slate-300 focus:border-emerald-500')
-                              }`}
+                              className="admin-input w-24 text-center"
                             />
                             <span className={`text-[10px] ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>pts</span>
                           </div>
@@ -512,19 +518,19 @@ export default function LoyaltyTab() {
               <p className={`text-[10px] mb-3 ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-500'}`}>Filtrez les produits puis sélectionnez ceux auxquels appliquer les points en masse.</p>
               <div className="flex flex-wrap gap-3">
                 <div className="relative flex-1 min-w-[180px]">
-                  <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--admin-text-faint)' }} />
                   <input
                     type="text"
                     placeholder="Rechercher produit..."
                     value={bulkPointsSearch}
                     onChange={e => setBulkPointsSearch(e.target.value)}
-                    className={`w-full text-xs outline-none rounded-xl pl-10 pr-4 py-2 border ${adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800 focus:border-emerald-400' : 'bg-slate-950 border-slate-800 text-slate-100'}`}
+                    className="admin-input admin-focus-ring w-full pl-10"
                   />
                 </div>
                 <select
                   value={bulkPointsVendor}
                   onChange={e => setBulkPointsVendor(e.target.value)}
-                  className={`text-xs border rounded-xl px-3 py-2 outline-none cursor-pointer ${adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-700' : 'bg-slate-950 border-slate-800 text-slate-300'}`}
+                  className="admin-input w-48"
                 >
                   <option value="ALL">Toutes marques</option>
                   {allVendors.map(v => <option key={v} value={v}>{v}</option>)}
@@ -532,7 +538,7 @@ export default function LoyaltyTab() {
                 <select
                   value={bulkPointsCategory}
                   onChange={e => setBulkPointsCategory(e.target.value)}
-                  className={`text-xs border rounded-xl px-3 py-2 outline-none cursor-pointer ${adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-700' : 'bg-slate-950 border-slate-800 text-slate-300'}`}
+                  className="admin-input w-48"
                 >
                   <option value="ALL">Toutes catégories</option>
                   {allCategories.map(c => <option key={c} value={c}>{c}</option>)}
@@ -549,7 +555,7 @@ export default function LoyaltyTab() {
                   placeholder="Ex: 150"
                   value={bulkPointsValue}
                   onChange={e => setBulkPointsValue(e.target.value === '' ? '' : Number(e.target.value))}
-                  className={`font-mono font-bold text-center text-sm border rounded-xl px-4 py-2 outline-none transition w-36 ${adminTheme === 'light' ? 'border-slate-200 bg-slate-50 text-slate-800 focus:border-emerald-400' : 'border-slate-700 bg-slate-900 text-slate-200 focus:border-emerald-500'}`}
+                  className="admin-input w-36 text-center"
                 />
               </div>
               <div className="space-y-1">
@@ -561,11 +567,7 @@ export default function LoyaltyTab() {
               <button
                 onClick={handleBulkSavePointsWrapper}
                 disabled={bulkSelectedIds.length === 0 || !bulkPointsValue || isBulkSaving}
-                className={`px-5 py-2.5 text-xs font-black uppercase tracking-wider transition rounded-xl border cursor-pointer ${
-                  bulkSelectedIds.length > 0 && bulkPointsValue && !isBulkSaving
-                    ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 border-emerald-600 shadow-md shadow-emerald-500/20'
-                    : (adminTheme === 'light' ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed' : 'bg-slate-800 text-slate-600 border-slate-700 cursor-not-allowed')
-                }`}
+                className="admin-btn admin-btn-primary"
               >
                 {isBulkSaving ? 'Application...' : `Appliquer ${bulkPointsValue ? `${bulkPointsValue} pts` : ''} en masse`}
               </button>
@@ -664,11 +666,7 @@ export default function LoyaltyTab() {
               <button
                 type="button"
                 onClick={handleExportLoyaltyLogsToCsv}
-                className={`px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider border flex items-center gap-1.5 transition cursor-pointer ${
-                  adminTheme === 'light'
-                    ? 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-800 shadow-sm'
-                    : 'bg-slate-900 text-slate-300 border border-slate-800 hover:border-slate-700'
-                }`}
+                className="admin-btn admin-btn-secondary flex items-center gap-1.5 shrink-0"
               >
                 <FileText className="w-3.5 h-3.5 text-emerald-500" />
                 Exporter en CSV
@@ -683,33 +681,29 @@ export default function LoyaltyTab() {
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr className={`text-[10px] uppercase tracking-wider font-extrabold border-b ${adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-500' : 'bg-slate-900/60 border-slate-800 text-slate-400'}`}>
-                    <th className="p-4">Date & Heure</th>
-                    <th className="p-4">Opérateur</th>
-                    <th className="p-4">Client</th>
-                    <th className="p-4">Modification</th>
-                    <th className="p-4">Nouveau Solde</th>
-                    <th className="p-4">Motif</th>
+                  <tr style={{ borderBottom: '1px solid var(--admin-border)', background: 'var(--admin-surface-2)' }}>
+                    {['Date & Heure', 'Opérateur', 'Client', 'Modification', 'Nouveau Solde', 'Motif'].map((h, i) => (
+                      <th key={i} className="p-4 font-bold uppercase tracking-widest" style={{ fontSize: 'var(--admin-text-2xs)', color: 'var(--admin-text-faint)' }}>
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody className={`divide-y text-xs ${adminTheme === 'light' ? 'divide-slate-100 text-slate-700' : 'divide-slate-900 text-slate-300'}`}>
                   {parsedLoyaltyLogs.map((log: any) => {
                     const isAdd = !log.pointsChange.startsWith('-');
-                    const changeColor = isAdd
-                      ? (adminTheme === 'light' ? 'text-emerald-700 font-extrabold bg-emerald-50 border border-emerald-100' : 'text-emerald-400 font-black')
-                      : (adminTheme === 'light' ? 'text-rose-700 font-extrabold bg-rose-50 border border-rose-100' : 'text-rose-400 font-black');
                     return (
                       <tr key={log.id} className={`transition-colors ${adminTheme === 'light' ? 'hover:bg-slate-50/50' : 'hover:bg-slate-900/10'}`}>
                         <td className="p-4 font-mono">{new Date(log.date).toLocaleString('fr-FR')}</td>
                         <td className="p-4">
-                          <span className={`font-mono text-[10px] px-2 py-0.5 rounded border ${adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-slate-950 border-slate-800 text-slate-400'}`}>{log.operator}</span>
+                          <StatusBadge status="inactive" label={log.operator} dot={false} theme={adminTheme} size="xs" />
                         </td>
                         <td className="p-4">
                           <span className={`font-extrabold block ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-200'}`}>{log.clientName}</span>
                           <span className={`text-[10px] font-mono ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>{log.clientPhone}</span>
                         </td>
                         <td className="p-4">
-                          <span className={`inline-flex px-2 py-0.5 rounded text-[10px] ${changeColor}`}>{isAdd && '+'}{log.pointsChange} pts</span>
+                          <StatusBadge status={isAdd ? 'success' : 'error'} label={`${isAdd ? '+' : ''}${log.pointsChange} pts`} dot={true} theme={adminTheme} size="xs" />
                         </td>
                         <td className="p-4 font-extrabold font-mono">{log.newBalance}</td>
                         <td className={`p-4 font-light max-w-xs truncate ${adminTheme === 'light' ? 'text-slate-600' : 'text-slate-300'}`} title={log.reason}>{log.reason}</td>

@@ -1,4 +1,222 @@
 /* ==========================================================================
+   ADMIN DESIGN TOKENS — scoped to .admin-light / .admin-dark
+   All vars use --admin- prefix to avoid storefront collisions.
+   ========================================================================== */
+
+:root {
+  /* ── Type Scale (admin-specific, 8 steps) ─────────────────────────────── */
+  --admin-text-2xs:  9px;     /* metadata labels, badges, breadcrumbs        */
+  --admin-text-xs:   11px;    /* secondary body, table cells, captions        */
+  --admin-text-sm:   12.5px;  /* primary body text, form labels               */
+  --admin-text-base: 13.5px;  /* nav items, card titles, descriptions         */
+  --admin-text-lg:   15px;    /* section headings                             */
+  --admin-text-xl:   19px;    /* page-level title (h1)                        */
+  --admin-text-2xl:  24px;    /* KPI numbers                                  */
+  --admin-text-3xl:  32px;    /* hero / summary numbers                       */
+
+  /* ── Spacing Scale (8pt grid) ────────────────────────────────────────── */
+  --admin-space-1:  4px;
+  --admin-space-2:  8px;
+  --admin-space-3:  12px;
+  --admin-space-4:  16px;
+  --admin-space-5:  20px;
+  --admin-space-6:  24px;
+  --admin-space-8:  32px;
+  --admin-space-10: 40px;
+  --admin-space-12: 48px;
+
+  /* ── Border Radii ────────────────────────────────────────────────────── */
+  --admin-radius-sm:  8px;
+  --admin-radius-md:  12px;
+  --admin-radius-lg:  16px;
+  --admin-radius-xl:  20px;
+  --admin-radius-2xl: 28px;
+
+  /* ── Accent ──────────────────────────────────────────────────────────── */
+  --admin-accent:         #10b981;   /* emerald-500 */
+  --admin-accent-hover:   #059669;   /* emerald-600 */
+  --admin-accent-muted:   rgba(16, 185, 129, 0.12);
+  --admin-accent-border:  rgba(16, 185, 129, 0.25);
+
+  /* ── Transitions ─────────────────────────────────────────────────────── */
+  --admin-transition-fast:   150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --admin-transition-base:   220ms cubic-bezier(0.16, 1, 0.3, 1);
+  --admin-transition-slow:   380ms cubic-bezier(0.16, 1, 0.3, 1);
+  --admin-spring:            cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Light mode semantic color roles ──────────────────────────────────── */
+.admin-light {
+  --admin-surface-0:     hsl(220 18% 95%);   /* page background             */
+  --admin-surface-1:     #ffffff;             /* card / panel surface        */
+  --admin-surface-2:     hsl(220 14% 98%);   /* inset / nested surface      */
+  --admin-surface-hover: hsl(220 13% 97%);   /* subtle row hover            */
+
+  --admin-border:        hsl(220 13% 90%);   /* standard border             */
+  --admin-border-strong: hsl(220 13% 83%);   /* separator / divider         */
+
+  --admin-text-primary:  hsl(222 47% 11%);   /* headings, important labels  */
+  --admin-text-secondary:hsl(215 25% 28%);   /* body text                   */
+  --admin-text-muted:    hsl(215 16% 47%);   /* captions, secondary labels  */
+  --admin-text-faint:    hsl(214 14% 65%);   /* placeholders, hints         */
+
+  --admin-shadow-xs: 0 1px 2px rgba(15, 30, 54, 0.04);
+  --admin-shadow-sm: 0 1px 3px rgba(15, 30, 54, 0.04), 0 4px 12px rgba(15, 30, 54, 0.03);
+  --admin-shadow-md: 0 4px 16px rgba(15, 30, 54, 0.06), 0 1px 4px rgba(15, 30, 54, 0.04);
+  --admin-shadow-lg: 0 12px 40px rgba(15, 30, 54, 0.10), 0 4px 12px rgba(15, 30, 54, 0.05);
+}
+
+/* ── Dark mode semantic color roles ───────────────────────────────────── */
+.admin-dark {
+  --admin-surface-0:     hsl(224 20% 6.5%);  /* page background             */
+  --admin-surface-1:     hsl(224 18% 10%);   /* card / panel surface        */
+  --admin-surface-2:     hsl(224 16% 13%);   /* inset / nested surface      */
+  --admin-surface-hover: hsl(224 16% 12%);   /* subtle row hover            */
+
+  --admin-border:        hsl(224 15% 16%);   /* standard border             */
+  --admin-border-strong: hsl(224 14% 20%);   /* separator / divider         */
+
+  --admin-text-primary:  hsl(214 32% 95%);   /* headings, important labels  */
+  --admin-text-secondary:hsl(215 20% 72%);   /* body text                   */
+  --admin-text-muted:    hsl(215 14% 50%);   /* captions, secondary labels  */
+  --admin-text-faint:    hsl(215 12% 34%);   /* placeholders, hints         */
+
+  --admin-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --admin-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.30), 0 4px 12px rgba(0, 0, 0, 0.20);
+  --admin-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35), 0 1px 4px rgba(0, 0, 0, 0.25);
+  --admin-shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.45), 0 4px 12px rgba(0, 0, 0, 0.30);
+}
+
+/* ── Focus ring utilities ─────────────────────────────────────────────── */
+.admin-focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--admin-accent-muted), 0 0 0 1px var(--admin-accent-border);
+}
+.admin-focus-ring-inset:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--admin-accent-border);
+}
+
+/* ── Semantic utility classes ─────────────────────────────────────────── */
+.admin-surface-1 {
+  background-color: var(--admin-surface-1);
+  border: 1px solid var(--admin-border);
+}
+.admin-text-primary   { color: var(--admin-text-primary) !important; }
+.admin-text-secondary { color: var(--admin-text-secondary) !important; }
+.admin-text-muted     { color: var(--admin-text-muted) !important; }
+.admin-text-faint     { color: var(--admin-text-faint) !important; }
+
+/* ── Premium input reset (admin-wide) ────────────────────────────────── */
+.admin-input {
+  font-size: var(--admin-text-sm);
+  font-weight: 500;
+  line-height: 1.5;
+  border-radius: var(--admin-radius-md);
+  padding: 9px 13px;
+  outline: none;
+  transition: border-color var(--admin-transition-fast), box-shadow var(--admin-transition-fast);
+  width: 100%;
+}
+.admin-light .admin-input {
+  background: var(--admin-surface-2);
+  border: 1px solid var(--admin-border);
+  color: var(--admin-text-primary);
+}
+.admin-light .admin-input::placeholder { color: var(--admin-text-faint); }
+.admin-dark .admin-input {
+  background: rgba(2, 5, 12, 0.60);
+  border: 1px solid var(--admin-border);
+  color: var(--admin-text-primary);
+}
+.admin-dark .admin-input::placeholder { color: var(--admin-text-faint); }
+.admin-input:focus {
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px var(--admin-accent-muted);
+}
+
+/* ── Admin button primitives ──────────────────────────────────────────── */
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--admin-space-2);
+  font-size: var(--admin-text-xs);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border-radius: var(--admin-radius-md);
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform var(--admin-transition-fast) var(--admin-spring),
+              background-color var(--admin-transition-base) var(--admin-spring),
+              border-color var(--admin-transition-base) var(--admin-spring),
+              box-shadow var(--admin-transition-base) var(--admin-spring);
+  white-space: nowrap;
+}
+.admin-btn:active { transform: scale(0.97); }
+
+.admin-btn-tactile {
+  transition: transform var(--admin-transition-fast) var(--admin-spring);
+  cursor: pointer;
+}
+.admin-btn-tactile:active {
+  transform: scale(0.97);
+}
+
+/* Primary */
+.admin-btn-primary {
+  background: linear-gradient(135deg, var(--admin-accent) 0%, var(--admin-accent-hover) 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px var(--admin-accent-muted), 0 1px 2px rgba(0,0,0,0.06);
+}
+.admin-btn-primary:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+  transform: translateY(-1px);
+}
+
+/* Secondary (ghost border) */
+.admin-btn-secondary {
+  background: transparent;
+  border-color: var(--admin-border-strong);
+  color: var(--admin-text-secondary);
+}
+.admin-light .admin-btn-secondary:hover {
+  background: var(--admin-surface-2);
+  color: var(--admin-text-primary);
+  border-color: var(--admin-border-strong);
+}
+.admin-dark .admin-btn-secondary:hover {
+  background: var(--admin-surface-2);
+  color: var(--admin-text-primary);
+}
+
+/* Danger */
+.admin-btn-danger {
+  background: transparent;
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+.admin-btn-danger:hover {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+/* Icon-only variant */
+.admin-btn-icon {
+  padding: 7px;
+  border-radius: var(--admin-radius-sm);
+}
+
+/* ── Section divider line ─────────────────────────────────────────────── */
+.admin-divider {
+  border: none;
+  border-top: 1px solid var(--admin-border);
+  margin: 0;
+}
+
+/* ==========================================================================
    PREMIUM VISUAL AUDIT UPGRADES & KINETIC UTILITIES
    ========================================================================== */
 
@@ -99,6 +317,15 @@
   opacity: 0;
   animation: admin-row-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
+.admin-row-enter:nth-child(1) { animation-delay: 0ms; }
+.admin-row-enter:nth-child(2) { animation-delay: 30ms; }
+.admin-row-enter:nth-child(3) { animation-delay: 60ms; }
+.admin-row-enter:nth-child(4) { animation-delay: 90ms; }
+.admin-row-enter:nth-child(5) { animation-delay: 120ms; }
+.admin-row-enter:nth-child(6) { animation-delay: 150ms; }
+.admin-row-enter:nth-child(7) { animation-delay: 180ms; }
+.admin-row-enter:nth-child(8) { animation-delay: 210ms; }
+.admin-row-enter:nth-child(n+9) { animation-delay: 240ms; }
 
 /* Existing luxury backdrop gradient (keep for storefront) */
 .bg-premium-gradient {

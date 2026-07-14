@@ -8,6 +8,7 @@ import { useCurrency } from '@/context/CurrencyContext';
 import { useProducts } from '@/context/ProductsContext';
 import { Zap, ShoppingBag, Star, Clock } from 'lucide-react';
 import { Product } from '@/lib/data';
+import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 
 interface FlashSaleBannerProps {
   titleFr?: string;
@@ -214,7 +215,7 @@ export const FlashSaleBanner: React.FC<FlashSaleBannerProps> = ({
             <div className="relative w-full aspect-[4/3] rounded-[24px] overflow-hidden border border-slate-900 shadow-xl group">
               <div className="absolute inset-0 bg-slate-950">
                 <Image
-                  src={finalBgImage}
+                  src={getOptimizedImageUrl(finalBgImage)}
                   alt={titleFr}
                   fill
                   sizes="(max-w-768px) 100vw, 50vw"

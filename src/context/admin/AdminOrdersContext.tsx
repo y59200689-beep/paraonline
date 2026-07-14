@@ -325,16 +325,26 @@ export const AdminOrdersProvider: React.FC<{ children: React.ReactNode }> = ({ c
     };
   }, [orders]);
 
+  const contextValue = useMemo(() => ({
+    handleUpdateOrderStatus,
+    handleBulkUpdateOrderStatus,
+    handleDeleteOrder,
+    handleRegisterShipping,
+    handleSyncCourierStatuses,
+    handleReconcileOrders,
+    shippingStats
+  }), [
+    handleUpdateOrderStatus,
+    handleBulkUpdateOrderStatus,
+    handleDeleteOrder,
+    handleRegisterShipping,
+    handleSyncCourierStatuses,
+    handleReconcileOrders,
+    shippingStats
+  ]);
+
   return (
-    <AdminOrdersContext.Provider value={{
-      handleUpdateOrderStatus,
-      handleBulkUpdateOrderStatus,
-      handleDeleteOrder,
-      handleRegisterShipping,
-      handleSyncCourierStatuses,
-      handleReconcileOrders,
-      shippingStats
-    }}>
+    <AdminOrdersContext.Provider value={contextValue}>
       {children}
     </AdminOrdersContext.Provider>
   );

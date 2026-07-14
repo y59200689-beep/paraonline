@@ -12,6 +12,7 @@ import { useProducts } from '@/context/ProductsContext';
 import Link from 'next/link';
 import { ShoppingBag, Home as HomeIcon, Store, Sparkles } from 'lucide-react';
 import Image from 'next/image';
+import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 
 // Component Imports
 import dynamic from 'next/dynamic';
@@ -248,7 +249,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children }) => {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-16 stagger-children reveal-on-scroll">
             {/* Brand column */}
             <div className="md:col-span-4 flex flex-col gap-5">
-              <Image src="/images/logo.png" alt="Para Officinal S.A"
+              <Image src={getOptimizedImageUrl("/images/logo.png")} alt="Para Officinal S.A"
                 width={140}
                 height={40}
                 className="object-contain"

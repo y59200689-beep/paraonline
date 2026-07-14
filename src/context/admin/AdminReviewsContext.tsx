@@ -10,6 +10,16 @@ export interface AdminReviewsContextProps {
   handleBulkUpdateReviewStatus: (status: string, selectedIds: string[]) => Promise<void>;
   handleReplyReview: (reviewId: string, text: string) => Promise<boolean>;
   handleDeleteReview: (id: string) => Promise<void>;
+  handleUpdateReview: (
+    id: string,
+    updates: {
+      author?: string;
+      comment?: string;
+      rating?: number;
+      status?: string;
+      reply?: string;
+    }
+  ) => Promise<boolean>;
 }
 
 const AdminReviewsContext = createContext<AdminReviewsContextProps | undefined>(undefined);
@@ -102,12 +112,47 @@ export const AdminReviewsProvider: React.FC<{ children: React.ReactNode }> = ({ 
     } catch (e) {}
   };
 
+  const handleUpdateReview = async (
+    id: string,
+    updates: {
+      author?: string;
+      comment?: string;
+      rating?: number;
+      status?: string;
+      reply?: string;
+    }
+  ): Promise<boolean> => {
+    if (currentUser?.role === 'logistician') {
+      showToast("Permission refusée : Les logisticiens ne peuvent pas modifier les avis.", 'error');
+      return false;
+    }
+    try {
+      const res = await fetch('/api/admin/reviews', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ...updates })
+      });
+      const data = await res.json();
+      if (data.success) {
+        await loadReviews();
+        logAdminAction("Modification Avis", `Avis ${id} mis à jour.`);
+        return true;
+      } else {
+        showToast(data.error || "Erreur lors de la modification de l'avis.", 'error');
+      }
+    } catch (e) {
+      showToast("Erreur de connexion lors de la modification de l'avis.", 'error');
+    }
+    return false;
+  };
+
   return (
     <AdminReviewsContext.Provider value={{
       handleUpdateReviewStatus,
       handleBulkUpdateReviewStatus,
       handleReplyReview,
-      handleDeleteReview
+      handleDeleteReview,
+      handleUpdateReview
     }}>
       {children}
     </AdminReviewsContext.Provider>

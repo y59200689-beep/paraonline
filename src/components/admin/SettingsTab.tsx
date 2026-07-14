@@ -582,7 +582,7 @@ export default function SettingsTab() {
                 setSelectedBannerIndex(null);
                 setIsAddingFaq(false);
               }}
-              className={`shrink-0 flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-semibold tracking-wide border transition-all duration-200 ${
+              className={`shrink-0 flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-semibold uppercase tracking-widest border transition-all duration-200 ${
                 isSubActive
                   ? (adminTheme === 'light'
                       ? 'bg-emerald-50 text-emerald-700 border-emerald-200/40 shadow-sm'
@@ -591,6 +591,7 @@ export default function SettingsTab() {
                       ? 'text-slate-600 border-transparent hover:text-slate-900 hover:bg-slate-50'
                       : 'text-slate-400 border-transparent hover:text-slate-200 hover:bg-slate-900/20')
               }`}
+              style={{ fontSize: 'var(--admin-text-xs)' }}
             >
               <Icon className={`w-4 h-4 shrink-0 transition ${isSubActive ? (adminTheme === 'light' ? 'text-emerald-600' : 'text-emerald-400') : 'text-slate-500'}`} />
               <span>{sub.label}</span>

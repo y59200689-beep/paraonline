@@ -118,31 +118,39 @@ function AnalyticsKpiCard({ label, value, suffix, icon: Icon, pctChange, inverse
         </div>
         
         {pctChange !== null ? (
-          <div className={`flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-black tracking-wide ${pctColor}`}>
+          <div className={`flex items-center gap-0.5 px-2 py-0.5 rounded-full font-bold tracking-wide ${pctColor}`} style={{ fontSize: 'var(--admin-text-2xs)' }}>
             <span>{isPositive ? '↑' : isNegative ? '↓' : ''}</span>
             <span>{Math.abs(pctChange)}%</span>
           </div>
         ) : (
-          <div className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
-            theme === 'light' ? 'text-slate-400 bg-slate-100' : 'text-slate-600 bg-slate-800/60'
-          }`}>
+          <div
+            className={`px-2 py-0.5 rounded-full font-semibold ${
+              theme === 'light' ? 'text-slate-400 bg-slate-100' : 'text-slate-600 bg-slate-800/60'
+            }`}
+            style={{ fontSize: 'var(--admin-text-2xs)' }}
+          >
             1ère période
           </div>
         )}
       </div>
       
       <div className="mt-4">
-        <span className={`text-[11px] font-semibold block leading-none ${
-          theme === 'light' ? 'text-slate-400' : 'text-slate-500'
-        }`}>{label}</span>
-        <h3 className={`text-2xl font-black tracking-tight mt-1.5 font-mono whitespace-nowrap leading-none ${
-          theme === 'light' ? 'text-slate-900' : 'text-slate-100'
-        }`}>
+        <span
+          className="block leading-none"
+          style={{ fontSize: 'var(--admin-text-xs)', fontWeight: 600, color: 'var(--admin-text-muted)' }}
+        >
+          {label}
+        </span>
+        <h3
+          className="font-bold tracking-tight mt-1.5 leading-none font-mono whitespace-nowrap"
+          style={{ fontSize: 'var(--admin-text-xl)', color: theme === 'light' ? 'hsl(222 47% 12%)' : 'hsl(220 20% 93%)' }}
+        >
           {Math.round(animatedValue).toLocaleString('fr-FR')}
           {suffix && (
-            <span className={`text-[11px] font-semibold ml-1.5 ${
-              theme === 'light' ? 'text-slate-400' : 'text-slate-500'
-            }`}>
+            <span
+              className="font-medium ml-1.5"
+              style={{ fontSize: 'var(--admin-text-xs)', color: 'var(--admin-text-muted)' }}
+            >
               {suffix.trim()}
             </span>
           )}
@@ -338,15 +346,16 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
             <button
               key={range}
               onClick={() => setAnalyticsRange(range)}
-              className={`px-3.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all duration-200 border-0 ${
+              className={`px-3.5 py-1.5 rounded-lg font-semibold uppercase tracking-widest transition-all duration-200 border-0 cursor-pointer ${
                 analyticsRange === range
                   ? (adminTheme === 'light'
-                      ? 'bg-white text-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] border border-slate-200/50 font-black'
-                      : 'bg-slate-800 text-emerald-400 shadow-sm border border-slate-700 font-black')
+                      ? 'bg-white text-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] border border-slate-200/50 font-bold'
+                      : 'bg-slate-800 text-emerald-400 shadow-sm border border-slate-700 font-bold')
                   : (adminTheme === 'light'
                       ? 'text-slate-500 hover:text-slate-800 hover:bg-white/40 bg-transparent cursor-pointer'
                       : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30 bg-transparent cursor-pointer')
               }`}
+              style={{ fontSize: 'var(--admin-text-2xs)' }}
             >
               {range === 'today' ? getTodayLabel() : range === '7d' ? '7 Jours' : range === '30d' ? '30 Jours' : range === 'month' ? 'Ce Mois' : range === 'all' ? 'Tout' : 'Personnalisé'}
             </button>
@@ -481,7 +490,12 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 animate-fade-in">
           <div className="flex items-center gap-2">
             <BarChart2 className={`w-4 h-4 ${adminTheme === 'light' ? 'text-emerald-600' : 'text-emerald-400'}`} />
-            <h3 className={`text-xs font-extrabold uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-300'}`}>Comparatif de Revenu Brut</h3>
+            <h3
+              className={`font-bold uppercase tracking-widest ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-300'}`}
+              style={{ fontSize: 'var(--admin-text-xs)' }}
+            >
+              Comparatif de Revenu Brut
+            </h3>
           </div>
           
           <div className="flex items-center gap-4 text-[10px] font-bold">

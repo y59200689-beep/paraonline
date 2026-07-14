@@ -39,6 +39,14 @@ export async function POST(request: Request) {
         const apiId = settings.yalidineApiId;
         const apiKey = settings.yalidineApiKey;
 
+        let toWilayaName = city;
+        let toCommuneName = city;
+        if (city && city.includes(' - ')) {
+          const parts = city.split(' - ');
+          toWilayaName = parts[0].trim();
+          toCommuneName = parts[1].trim();
+        }
+
         if (apiId && apiKey) {
           try {
             const response = await fetch('https://api.yalidine.com/v1/parcels', {
@@ -55,8 +63,8 @@ export async function POST(request: Request) {
                   familyname: customerName.split(' ').slice(1).join(' ') || 'Client',
                   contact_phone: phone,
                   address: address,
-                  to_wilaya_name: city,
-                  to_commune_name: city,
+                  to_wilaya_name: toWilayaName,
+                  to_commune_name: toCommuneName,
                   stop_desk: 0,
                   cod_to_pay: Number(codAmount) || 0,
                   hand_delivery: 1,

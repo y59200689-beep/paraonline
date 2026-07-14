@@ -107,42 +107,52 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
       />
 
       {/* 2. Main content container */}
-      <section className="flex-1 min-w-0 p-6 md:p-8 space-y-6 overflow-y-auto max-h-screen relative z-10 transition-colors duration-300">
+      <section className="flex-1 min-w-0 px-6 py-6 md:px-9 md:py-8 space-y-7 overflow-y-auto max-h-screen relative z-10 transition-colors duration-300">
         
         {/* Loading Skeleton Screen */}
         {isDataLoading && (
           <div className={`absolute inset-0 z-50 p-6 md:p-8 space-y-6 transition-colors duration-300 ${adminTheme === 'light' ? 'bg-slate-50' : 'bg-slate-950'}`}>
-            <div className="space-y-6 animate-pulse">
+            <div className="space-y-6">
               <div className={`flex justify-between items-center pb-4 border-b ${adminTheme === 'light' ? 'border-slate-200' : 'border-slate-900'}`}>
                 <div className="space-y-2">
-                  <div className={`h-6 w-48 rounded-lg ${adminTheme === 'light' ? 'bg-slate-200' : 'bg-slate-800/50'}`} />
-                  <div className={`h-3 w-32 rounded ${adminTheme === 'light' ? 'bg-slate-100' : 'bg-slate-800/30'}`} />
+                  <div className={`h-6 w-48 ${adminTheme === 'light' ? 'admin-skeleton' : 'admin-skeleton-dark'}`} />
+                  <div className={`h-3.5 w-32 ${adminTheme === 'light' ? 'admin-skeleton' : 'admin-skeleton-dark'}`} />
                 </div>
-                <div className={`h-9 w-24 rounded-lg ${adminTheme === 'light' ? 'bg-slate-200' : 'bg-slate-800/50'}`} />
+                <div className={`h-9 w-24 ${adminTheme === 'light' ? 'admin-skeleton' : 'admin-skeleton-dark'}`} />
               </div>
               <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 md:gap-5">
-                <div className={`col-span-2 h-28 rounded-2xl border ${adminTheme === 'light' ? 'bg-slate-100/50 border-slate-200' : 'bg-slate-900/30 border-slate-900'}`} />
-                <div className={`h-28 rounded-2xl border ${adminTheme === 'light' ? 'bg-slate-100/50 border-slate-200' : 'bg-slate-900/30 border-slate-900'}`} />
-                <div className={`h-28 rounded-2xl border ${adminTheme === 'light' ? 'bg-slate-100/50 border-slate-200' : 'bg-slate-900/30 border-slate-900'}`} />
-                <div className={`h-28 rounded-2xl border ${adminTheme === 'light' ? 'bg-slate-100/50 border-slate-200' : 'bg-slate-900/30 border-slate-900'}`} />
+                <div className={`col-span-2 h-28 border ${adminTheme === 'light' ? 'admin-skeleton border-slate-200' : 'admin-skeleton-dark border-slate-900'}`} style={{ borderRadius: 'var(--admin-radius-lg)' }} />
+                <div className={`h-28 border ${adminTheme === 'light' ? 'admin-skeleton border-slate-200' : 'admin-skeleton-dark border-slate-900'}`} style={{ borderRadius: 'var(--admin-radius-lg)' }} />
+                <div className={`h-28 border ${adminTheme === 'light' ? 'admin-skeleton border-slate-200' : 'admin-skeleton-dark border-slate-900'}`} style={{ borderRadius: 'var(--admin-radius-lg)' }} />
+                <div className={`h-28 border ${adminTheme === 'light' ? 'admin-skeleton border-slate-200' : 'admin-skeleton-dark border-slate-900'}`} style={{ borderRadius: 'var(--admin-radius-lg)' }} />
               </div>
             </div>
           </div>
         )}
 
-        {/* Header toolbar */}
-        <header className={`flex justify-between items-center pb-4 border-b flex-wrap gap-4 ${adminTheme === 'light' ? 'border-slate-200' : 'border-slate-900'}`}>
+        {/* ── Header toolbar ─────────────────────────────────────────── */}
+        <header
+          className={`flex justify-between items-center pb-5 border-b flex-wrap gap-4 ${
+            adminTheme === 'light' ? 'border-[hsl(220_13%_90%)]' : 'border-[hsl(224_15%_16%)]'
+          }`}
+        >
+          {/* Left: breadcrumb + title ───────────────────────────────── */}
           <div>
-            {/* Dynamic Breadcrumbs */}
-            <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1 select-none">
+            {/* Breadcrumb */}
+            <nav
+              className="flex items-center gap-1 mb-2 select-none"
+              aria-label="Breadcrumb"
+              style={{ fontSize: 'var(--admin-text-2xs)' }}
+            >
               <button
                 type="button"
                 onClick={() => setActiveTab('dashboard')}
-                className="hover:text-emerald-500 hover:underline transition cursor-pointer border-0 bg-transparent outline-none p-0 text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500"
+                className="font-semibold uppercase tracking-widest transition cursor-pointer border-0 bg-transparent outline-none p-0"
+                style={{ color: 'var(--admin-text-faint)' }}
               >
                 Admin
               </button>
-              <span>/</span>
+              <span style={{ color: 'var(--admin-text-faint)' }}>/</span>
               <button
                 type="button"
                 onClick={() => {
@@ -151,41 +161,47 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
                   if (activeTab === 'loyalty') setLoyaltySubTab('members');
                   if (activeTab === 'settings') setActiveSettingsSubTab('general');
                 }}
-                className="text-emerald-600 dark:text-emerald-400 font-black hover:text-emerald-500 hover:underline transition cursor-pointer border-0 bg-transparent outline-none p-0 text-[9px] uppercase tracking-wider"
+                className="font-bold uppercase tracking-widest transition cursor-pointer border-0 bg-transparent outline-none p-0 text-emerald-500 hover:text-emerald-400"
               >
                 {activeTab}
               </button>
               {activeTab === 'crm' && crmSubTab && crmSubTab !== 'clients' && (
                 <>
-                  <span>/</span>
-                  <span className="text-slate-500 dark:text-slate-400">{crmSubTab}</span>
+                  <span style={{ color: 'var(--admin-text-faint)' }}>/</span>
+                  <span className="font-semibold uppercase tracking-widest" style={{ color: 'var(--admin-text-muted)' }}>{crmSubTab}</span>
                 </>
               )}
               {activeTab === 'orders' && ordersSubTab && ordersSubTab !== 'list' && (
                 <>
-                  <span>/</span>
-                  <span className="text-slate-500 dark:text-slate-400">{ordersSubTab}</span>
+                  <span style={{ color: 'var(--admin-text-faint)' }}>/</span>
+                  <span className="font-semibold uppercase tracking-widest" style={{ color: 'var(--admin-text-muted)' }}>{ordersSubTab}</span>
                 </>
               )}
               {activeTab === 'loyalty' && loyaltySubTab && loyaltySubTab !== 'members' && (
                 <>
-                  <span>/</span>
-                  <span className="text-slate-500 dark:text-slate-400">{loyaltySubTab}</span>
+                  <span style={{ color: 'var(--admin-text-faint)' }}>/</span>
+                  <span className="font-semibold uppercase tracking-widest" style={{ color: 'var(--admin-text-muted)' }}>{loyaltySubTab}</span>
                 </>
               )}
               {activeTab === 'settings' && activeSettingsSubTab && activeSettingsSubTab !== 'general' && (
                 <>
-                  <span>/</span>
-                  <span className="text-slate-500 dark:text-slate-400">{activeSettingsSubTab}</span>
+                  <span style={{ color: 'var(--admin-text-faint)' }}>/</span>
+                  <span className="font-semibold uppercase tracking-widest" style={{ color: 'var(--admin-text-muted)' }}>{activeSettingsSubTab}</span>
                 </>
               )}
-            </div>
+            </nav>
 
-            <h1 className={`text-xl font-black tracking-tight flex items-center gap-2.5 uppercase ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-100'}`}>
+            {/* Page title */}
+            <h1
+              className="font-bold tracking-tight flex items-center gap-2.5"
+              style={{ fontSize: 'var(--admin-text-xl)', color: 'var(--admin-text-primary)' }}
+            >
               <button
                 onClick={() => setIsMobileDrawerOpen(true)}
                 className={`md:hidden p-1.5 rounded-lg border cursor-pointer transition ${
-                  adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50' : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800'
+                  adminTheme === 'light'
+                    ? 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800'
                 }`}
                 title="Ouvrir le menu"
               >
@@ -193,127 +209,154 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
               </button>
               {activeTab === 'dashboard' && 'Tableau de bord'}
               {activeTab === 'analytics' && 'Analytiques'}
-              {activeTab === 'orders' && 'Gestion des Commandes'}
-              {activeTab === 'catalog' && 'Catalogue de Produits'}
+              {activeTab === 'orders' && 'Commandes'}
+              {activeTab === 'catalog' && 'Catalogue Produits'}
               {activeTab === 'crm' && 'Clients & CRM'}
               {activeTab === 'loyalty' && 'Fidélité & Points'}
-              {activeTab === 'reviews' && 'Modération des Avis'}
+              {activeTab === 'reviews' && 'Avis Clients'}
               {activeTab === 'advice' && 'Espace Conseils'}
-              {activeTab === 'branding' && 'Personnalisation & Couleurs'}
+              {activeTab === 'branding' && 'Personnalisation'}
               {activeTab === 'snippets' && 'Snippets de Code'}
-              {activeTab === 'cron' && 'Tâches Planifiées (Cron)'}
+              {activeTab === 'cron' && 'Tâches Planifiées'}
               {activeTab === 'audit-logs' && "Journaux d'Audit"}
-              {activeTab === 'coupons' && 'Promotions & Codes Promo'}
-              {activeTab === 'settings' && 'Paramètres de la Boutique'}
+              {activeTab === 'coupons' && 'Promotions & Promo'}
+              {activeTab === 'settings' && 'Paramètres'}
             </h1>
-            <p className={`text-xs font-light mt-0.5 ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
-              Administrateur • {new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+
+            {/* Subtitle: greeting + date */}
+            <p
+              className="mt-1 font-medium"
+              style={{ fontSize: 'var(--admin-text-xs)', color: 'var(--admin-text-muted)' }}
+            >
+              {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5">
-            {/* Spotlight Search Trigger Button */}
+          {/* Right: toolbar actions ──────────────────────────────────── */}
+          <div className="flex items-center gap-2">
+            {/* Spotlight Search */}
             <button
               onClick={() => setIsSearchOpen(true)}
               title="Rechercher (Cmd+K)"
-              className={`px-3 py-1.5 border rounded-xl transition duration-200 flex items-center gap-2.5 cursor-pointer text-xs shrink-0 select-none ${
-                adminTheme === 'light' 
-                  ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50 shadow-sm' 
-                  : 'bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200'
+              className={`px-3 py-2 border rounded-xl transition duration-200 flex items-center gap-2 cursor-pointer shrink-0 select-none ${
+                adminTheme === 'light'
+                  ? 'bg-white border-[hsl(220_13%_90%)] text-slate-500 hover:text-slate-800 hover:bg-slate-50 shadow-[var(--admin-shadow-xs)]'
+                  : 'bg-[hsl(224_18%_10%)] hover:bg-[hsl(224_16%_13%)] border-[hsl(224_15%_16%)] text-slate-400 hover:text-slate-200'
               }`}
+              style={{ fontSize: 'var(--admin-text-xs)' }}
             >
-              <Search className="w-3.5 h-3.5 text-slate-400" />
-              <span className="hidden sm:inline font-normal text-slate-400 dark:text-slate-500">Rechercher...</span>
-              <kbd className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-slate-100/40 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500">
+              <Search className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--admin-text-faint)' }} />
+              <span className="hidden sm:inline" style={{ color: 'var(--admin-text-faint)' }}>Rechercher...</span>
+              <kbd
+                className={`font-mono px-1.5 py-0.5 rounded border ${
+                  adminTheme === 'light'
+                    ? 'bg-slate-50 border-slate-200 text-slate-400'
+                    : 'bg-slate-950/60 border-slate-800 text-slate-500'
+                }`}
+                style={{ fontSize: 'var(--admin-text-2xs)' }}
+              >
                 ⌘K
               </kbd>
             </button>
 
-            {/* Theme Toggle Button */}
+            {/* Theme Toggle */}
             <button
               onClick={toggleAdminTheme}
-              title={adminTheme === 'light' ? 'Sombre' : 'Clair'}
-              className={`p-2 border rounded-full transition duration-205 flex items-center justify-center shrink-0 cursor-pointer ${
-                adminTheme === 'light' 
-                  ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50 shadow-sm' 
-                  : 'bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200'
+              title={adminTheme === 'light' ? 'Mode sombre' : 'Mode clair'}
+              className={`p-2 border rounded-full transition duration-200 flex items-center justify-center shrink-0 cursor-pointer ${
+                adminTheme === 'light'
+                  ? 'bg-white border-[hsl(220_13%_90%)] text-slate-500 hover:text-slate-800 hover:bg-slate-50 shadow-[var(--admin-shadow-xs)]'
+                  : 'bg-[hsl(224_18%_10%)] hover:bg-[hsl(224_16%_13%)] border-[hsl(224_15%_16%)] text-slate-400 hover:text-slate-200'
               }`}
             >
-              {adminTheme === 'light' ? <Moon className="w-3.5 h-3.5 text-indigo-500" /> : <Sun className="w-3.5 h-3.5 text-amber-400" />}
+              {adminTheme === 'light'
+                ? <Moon className="w-3.5 h-3.5 text-indigo-500" />
+                : <Sun className="w-3.5 h-3.5 text-amber-400" />}
             </button>
 
-            {/* User Profile Hub Dropdown */}
+            {/* User Profile Dropdown */}
             <div className="relative">
               <button
                 onClick={() => setIsProfileOpen(prev => !prev)}
-                className={`flex items-center gap-2 px-2.5 py-1.5 border rounded-xl transition duration-200 cursor-pointer select-none ${
+                className={`flex items-center gap-2 px-2.5 py-2 border rounded-xl transition duration-200 cursor-pointer select-none ${
                   adminTheme === 'light'
-                    ? 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-sm'
-                    : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-slate-100'
+                    ? 'bg-white border-[hsl(220_13%_90%)] text-slate-700 hover:bg-slate-50 shadow-[var(--admin-shadow-xs)]'
+                    : 'bg-[hsl(224_18%_10%)] border-[hsl(224_15%_16%)] text-slate-300 hover:bg-[hsl(224_16%_13%)] hover:text-slate-100'
                 }`}
               >
-                <div className="w-5 h-5 rounded-full bg-emerald-500/10 dark:bg-emerald-400/10 flex items-center justify-center text-[9px] font-black text-emerald-600 dark:text-emerald-400">
+                <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center font-black text-white" style={{ fontSize: 'var(--admin-text-2xs)' }}>
                   {currentUser?.name ? currentUser.name.slice(0, 2).toUpperCase() : 'AD'}
                 </div>
-                <span className="hidden sm:inline text-xs font-bold leading-none">{currentUser?.name || 'Admin'}</span>
-                <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} />
+                <span className="hidden sm:inline font-semibold leading-none" style={{ fontSize: 'var(--admin-text-xs)', color: 'var(--admin-text-secondary)' }}>
+                  {currentUser?.name || 'Admin'}
+                </span>
+                <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--admin-text-faint)' }} />
               </button>
 
               {isProfileOpen && (
                 <>
-                  {/* Backdrop overlay to close on click outside */}
-                  <div 
+                  <div
                     onClick={() => setIsProfileOpen(false)}
                     className="fixed inset-0 z-40 bg-transparent"
                   />
-                  <div className={`absolute right-0 mt-2.5 w-60 rounded-2xl border p-4 shadow-xl z-50 animate-fade-in transition-all duration-200 ${
-                    adminTheme === 'light'
-                      ? 'bg-white border-slate-200 text-slate-800'
-                      : 'bg-slate-900 border-slate-800 text-slate-100'
-                  }`}>
-                    {/* User Profile Header */}
-                    <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-[10px] font-black text-white">
+                  <div
+                    className={`absolute right-0 mt-2 w-60 rounded-2xl border p-4 z-50 animate-fade-in ${
+                      adminTheme === 'light'
+                        ? 'bg-white border-[hsl(220_13%_90%)] shadow-[var(--admin-shadow-md)]'
+                        : 'bg-[hsl(224_18%_10%)] border-[hsl(224_15%_16%)] shadow-[var(--admin-shadow-lg)]'
+                    }`}
+                  >
+                    {/* Profile header */}
+                    <div className={`flex items-center gap-2.5 pb-3 mb-2.5 border-b ${
+                      adminTheme === 'light' ? 'border-slate-100' : 'border-[hsl(224_15%_16%)]'
+                    }`}>
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center font-black text-white" style={{ fontSize: '10px' }}>
                         {currentUser?.name ? currentUser.name.slice(0, 2).toUpperCase() : 'AD'}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <span className="block text-xs font-black truncate">{currentUser?.name || 'Administrateur'}</span>
-                        <span className="block text-[10px] text-slate-400 truncate mt-0.5">{currentUser?.username || 'admin@ecom.ma'}</span>
+                        <span className="block font-bold truncate" style={{ fontSize: 'var(--admin-text-xs)', color: 'var(--admin-text-primary)' }}>
+                          {currentUser?.name || 'Administrateur'}
+                        </span>
+                        <span className="block truncate mt-0.5" style={{ fontSize: 'var(--admin-text-2xs)', color: 'var(--admin-text-faint)' }}>
+                          {currentUser?.username || 'admin@ecom.ma'}
+                        </span>
                       </div>
                     </div>
 
-                    {/* Quick Metadata */}
-                    <div className="py-2.5 space-y-2 text-[10px] font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800">
+                    {/* Meta */}
+                    <div className={`pb-2.5 mb-1 space-y-2 border-b ${
+                      adminTheme === 'light' ? 'border-slate-100' : 'border-[hsl(224_15%_16%)]'
+                    }`} style={{ fontSize: 'var(--admin-text-2xs)' }}>
                       <div className="flex justify-between items-center">
-                        <span>Rôle :</span>
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black tracking-wider uppercase ${
+                        <span style={{ color: 'var(--admin-text-muted)' }}>Rôle</span>
+                        <span className={`px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
                           currentUser?.role === 'owner'
-                            ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400'
-                            : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                            ? (adminTheme === 'light' ? 'bg-indigo-50 text-indigo-700' : 'bg-indigo-950/40 text-indigo-400')
+                            : (adminTheme === 'light' ? 'bg-slate-100 text-slate-600' : 'bg-slate-800/60 text-slate-400')
                         }`}>
                           {currentUser?.role === 'owner' ? 'Propriétaire' : currentUser?.role || 'Admin'}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span>Sécurité MFA :</span>
-                        <span className="flex items-center gap-1 font-black text-slate-400">
-                          <ShieldCheck className="w-3.5 h-3.5" />
-                          Protégé
+                        <span style={{ color: 'var(--admin-text-muted)' }}>Sécurité MFA</span>
+                        <span className="flex items-center gap-1 font-bold" style={{ color: 'var(--admin-text-muted)' }}>
+                          <ShieldCheck className="w-3.5 h-3.5" /> Protégé
                         </span>
                       </div>
                     </div>
 
-                    {/* Actions Menu */}
-                    <div className="pt-2">
+                    {/* Actions */}
+                    <div className="pt-1">
                       <button
                         onClick={() => {
                           setIsProfileOpen(false);
                           setActiveTab('settings');
                           setActiveSettingsSubTab('security');
                         }}
-                        className={`w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold rounded-xl transition cursor-pointer ${
-                          adminTheme === 'light' ? 'hover:bg-slate-50 text-slate-700' : 'hover:bg-slate-800 text-slate-300'
+                        className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-xl transition cursor-pointer ${
+                          adminTheme === 'light' ? 'hover:bg-slate-50 text-slate-600' : 'hover:bg-[hsl(224_16%_13%)] text-slate-400'
                         }`}
+                        style={{ fontSize: 'var(--admin-text-xs)' }}
                       >
                         <Key className="w-3.5 h-3.5" /> Sécurité & Mot de passe
                       </button>
@@ -322,7 +365,8 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
                           setIsProfileOpen(false);
                           handleLogout();
                         }}
-                        className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xl transition cursor-pointer mt-1"
+                        className="w-full flex items-center gap-2 px-2.5 py-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xl transition cursor-pointer font-semibold"
+                        style={{ fontSize: 'var(--admin-text-xs)' }}
                       >
                         <LogOut className="w-3.5 h-3.5" /> Déconnexion
                       </button>
@@ -332,10 +376,17 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
               )}
             </div>
 
-            <span className={`px-2.5 py-1 border rounded-full text-[10px] font-mono font-semibold flex items-center gap-1.5 shrink-0 ${
-              adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-600 shadow-sm' : 'bg-slate-900 border-slate-800 text-slate-400'
-            }`}>
-              <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-md animate-pulse" /> API MAROC ACTIVE
+            {/* API status badge */}
+            <span
+              className={`px-2.5 py-1.5 border rounded-full flex items-center gap-1.5 shrink-0 font-semibold select-none ${
+                adminTheme === 'light'
+                  ? 'bg-white border-[hsl(220_13%_90%)] text-slate-500 shadow-[var(--admin-shadow-xs)]'
+                  : 'bg-[hsl(224_18%_10%)] border-[hsl(224_15%_16%)] text-slate-500'
+              }`}
+              style={{ fontSize: 'var(--admin-text-2xs)', fontFamily: 'var(--font-geist-mono)' }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              API Maroc
             </span>
           </div>
         </header>
