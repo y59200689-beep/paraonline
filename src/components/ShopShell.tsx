@@ -137,6 +137,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children }) => {
     const cities = ['Casablanca', 'Rabat', 'Tanger', 'Fès', 'Marrakech', 'Agadir', 'Oujda', 'Meknès', 'Tétouan'];
     const names = ['Khadija', 'Aminata', 'Fatima', 'Salma', 'Meryem', 'Imane', 'Laila', 'Nadia'];
 
+    /*
     const playSubtleChime = () => {
       try {
         const AudioContextClass = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
@@ -181,6 +182,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children }) => {
         console.log('Chime playback failed:', e);
       }
     };
+    */
 
     const triggerToast = () => {
       if (recentOrders.length > 0) {
@@ -205,7 +207,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children }) => {
         });
       }
       setShowToast(true);
-      playSubtleChime();
+      // playSubtleChime();
       setTimeout(() => setShowToast(false), 5500);
     };
 
