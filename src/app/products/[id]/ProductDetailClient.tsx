@@ -615,7 +615,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   alt={product.title} 
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"
-                  preload={true}
+                  priority={true}
                   loading="eager"
                   className={`object-cover transition-all duration-200 ease-in-out ${
                     isFading ? 'opacity-0 blur-[2px]' : 'opacity-100 blur-0'

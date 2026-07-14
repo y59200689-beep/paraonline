@@ -24,6 +24,7 @@ interface ProductCardProps {
   showMatchScore?: boolean;
   searchQuery?: string;
   singleImage?: boolean;
+  priority?: boolean;
 }
 
 const placeholderSvg = "data:image/svg+xml;utf8," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300' width='100%' height='100%'><rect width='100%' height='100%' fill='#f1f5f9'/><path d='M150 100a40 40 0 1 0 40 40 40 40 0 0 0-40-40zm0 60a20 20 0 1 1 20-20 20 20 0 0 1-20 20z' fill='#94a3b8'/><path d='M180 180h-60a10 10 0 0 0-10 10v10h80v-10a10 10 0 0 0-10-10z' fill='#94a3b8'/><text x='150' y='230' font-family='sans-serif' font-size='12' font-weight='bold' fill='#64748b' text-anchor='middle'>Image Indisponible</text></svg>");
@@ -61,7 +62,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   imageOverlay,
   showMatchScore = false,
   searchQuery,
-  singleImage = false
+  singleImage = false,
+  priority = false
 }) => {
   const { addToCart } = useCart();
   const { language } = useTranslation();
@@ -99,56 +101,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     setRipples(prev => [...prev, { id: Date.now() + Math.random(), x: x - size / 2, y: y - size / 2, size }]);
   };
 
-  const [isVisible, setIsVisible] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    if (!('IntersectionObserver' in window)) {
-      setIsVisible(true);
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: '200px' }
-    );
-
-    const el = cardRef.current;
-    if (el) {
-      observer.observe(el);
-    }
-
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
-
-  if (!isVisible) {
-    return (
-      <div
-        ref={cardRef}
-        className={`group relative bg-white border border-slate-100 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.015)] transition-all duration-300 flex flex-col h-full ${className || ''}`}
-        style={{ ...style, minHeight: '380px' }}
-      >
-        <div className="relative w-[calc(100%-24px)] aspect-square m-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden shrink-0 animate-pulse" />
-        <div className="px-4 pb-4 pt-1 flex flex-col flex-grow space-y-3">
-          <div className="h-3 bg-slate-50/60 rounded w-1/3 animate-pulse" />
-          <div className="h-5 bg-slate-50/60 rounded w-3/4 animate-pulse" />
-          <div className="h-4 bg-slate-50/60 rounded w-1/2 animate-pulse" />
-          <div className="mt-auto pt-2.5">
-            <div className="h-[40px] bg-slate-50/60 rounded-lg w-full animate-pulse" />
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   const getMatchScore = () => {
     if (!diagnostic) return null;
@@ -374,6 +327,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             alt={product.nameFr || product.name || product.title}
             width={300}
             height={300}
+            priority={priority}
             className={`w-full h-full object-cover scale-[1.04] filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.03)] transition-all duration-700 ease-in-out ${
               !singleImage && product.images && product.images.length > 1 ? 'group-hover:opacity-0 group-hover:blur-[1.5px]' : ''
             }`}

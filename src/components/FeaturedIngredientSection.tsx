@@ -249,9 +249,9 @@ function BrandRow({ brand, isAR }: { brand: (typeof BRANDS)[number]; isAR: boole
               </div>
             ))
           ) : brandProducts.length > 0 ? (
-            brandProducts.map((product) => (
+            brandProducts.map((product, idx) => (
               <div key={product.id} className="snap-start shrink-0 w-[270px] md:w-[290px]">
-                <ProductCard product={product} singleImage />
+                <ProductCard product={product} singleImage priority={idx < 3} />
               </div>
             ))
           ) : (

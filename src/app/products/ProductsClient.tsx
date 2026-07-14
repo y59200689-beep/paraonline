@@ -765,9 +765,9 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
                     </div>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-4 gap-6">
-                    {recommendations.map(product => (
+                    {recommendations.map((product, idx) => (
                       <div key={product.id} className="w-full">
-                        <ProductCard product={product} showMatchScore={true} searchQuery={searchQuery} />
+                        <ProductCard product={product} showMatchScore={true} searchQuery={searchQuery} priority={idx < 2} />
                       </div>
                     ))}
                   </div>
@@ -784,7 +784,7 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
                     className="w-full animate-fade-in-up-stagger"
                     style={{ animationDelay: `${Math.min(11, index) * 35}ms` }}
                   >
-                    <ProductCard product={product} showMatchScore={true} searchQuery={searchQuery} />
+                    <ProductCard product={product} showMatchScore={true} searchQuery={searchQuery} priority={index < 4} />
                   </div>
                 ))}
               </div>
