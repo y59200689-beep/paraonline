@@ -296,10 +296,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <span className="absolute top-2.5 left-2.5 bg-rose-600 text-white text-[9px] font-black rounded-[4px] z-30 uppercase tracking-widest shadow-sm px-2 py-1 select-none">
             {language === 'FR' ? 'Hors Stock' : 'غير متوفر'}
           </span>
-        ) : product.stock !== undefined && product.stock > 0 && product.stock <= lowStockThreshold ? (
-          <span className="absolute top-2.5 left-2.5 bg-amber-500 text-white text-[9px] font-black rounded-[4px] z-30 uppercase tracking-widest shadow-sm px-2 py-1 select-none animate-pulse">
-            {language === 'FR' ? `Seulement ${product.stock} restants !` : `متبقي ${product.stock} فقط !`}
-          </span>
         ) : discount ? (
           <span className="absolute top-2.5 left-2.5 bg-primary text-white text-[10px] font-black rounded-[4px] z-30 uppercase tracking-widest shadow-sm px-2 py-1 select-none">
             -{discount}%

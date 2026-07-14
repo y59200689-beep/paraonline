@@ -810,6 +810,18 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
               </div>
             )}
 
+            {/* Low stock warning */}
+            {product.stock !== undefined && product.stock > 0 && product.stock <= lowStockThreshold && (
+              <div className="flex items-center gap-2 text-xs font-black text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 px-3.5 py-2.5 rounded-xl border border-amber-200/30 w-max">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
+                <span>
+                  {language === 'FR' 
+                    ? `Stock limité : plus que ${product.stock} dispo` 
+                    : `مخزون محدود: متبقي ${product.stock} فقط!`}
+                </span>
+              </div>
+            )}
+
             {/* QUANTITY & REGULAR CART FLOW */}
             <div className="flex items-center gap-4 pt-2 border-t border-slate-100 dark:border-slate-900">
               <div className="flex items-center border border-slate-200 dark:border-slate-800 rounded-2xl px-3 bg-slate-50 dark:bg-slate-900 h-13 shrink-0">
