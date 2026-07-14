@@ -87,7 +87,7 @@ export default async function Home() {
     { id: 'topRated-1', type: 'topRated', nameFr: 'Produits les Mieux Notés', visible: hp.showTopRated ?? true, settings: { titleFr: hp.topRatedTitleFr, titleAr: hp.topRatedTitleAr, productIds: hp.topRatedProductIds || [] } },
     { id: 'bestSellers-1', type: 'bestSellers', nameFr: 'Produits les Plus Vendus', visible: (hp.showBestSellers ?? true) || (hp.showWeeklySales ?? true), settings: { titleFr: hp.bestSellersTitleFr, titleAr: hp.bestSellersTitleAr, productIds: hp.bestSellersProductIds || [] } },
     { id: 'routineVisualizer-1', type: 'routineVisualizer', nameFr: 'Visualiseur de Routine de Soins', visible: hp.showRoutineVisualizer ?? true },
-    { id: 'featuredIngredient-1', type: 'featuredIngredient', nameFr: 'Ingrédient Focus de la Semaine', visible: hp.showFeaturedIngredient ?? true },
+    { id: 'featuredIngredient-1', type: 'featuredIngredient', nameFr: 'Marques Vedettes de la Semaine', visible: hp.showFeaturedIngredient ?? true },
     { id: 'ingredientDictionary-1', type: 'ingredientDictionary', nameFr: 'Dictionnaire Clinique des Ingrédients', visible: hp.showIngredientDictionary ?? true },
     { id: 'faq-1', type: 'faq', nameFr: 'Foire Aux Questions (FAQ)', visible: hp.showFaq ?? true },
     { id: 'trustBar-1', type: 'trustBar', nameFr: 'Barre de Confiance Maroc', visible: hp.showTrustBar ?? true }

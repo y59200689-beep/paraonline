@@ -231,6 +231,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   setCustomDateTo
 }) => {
   const {
+    orders,
     getDashboardStats,
     topProductsByRevenue,
     cartRecoveryStats,
@@ -246,6 +247,66 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   const dashboardStats = React.useMemo(() => {
     return getDashboardStats(analyticsRange, customDateFrom, customDateTo);
   }, [getDashboardStats, analyticsRange, customDateFrom, customDateTo]);
+
+  const topProductsByRevenueRanged = React.useMemo(() => {
+    const now = new Date();
+    let startDate: Date | null = null;
+    let endDate: Date | null = null;
+
+    if (analyticsRange === 'today') {
+      startDate = new Date(now);
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date(now);
+      endDate.setHours(23, 59, 59, 999);
+    } else if (analyticsRange === '7d') {
+      startDate = new Date(now.getTime() - 7 * 86400000);
+      endDate = now;
+    } else if (analyticsRange === '30d') {
+      startDate = new Date(now.getTime() - 30 * 86400000);
+      endDate = now;
+    } else if (analyticsRange === 'month') {
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      endDate = now;
+    } else if (analyticsRange === 'custom' && customDateFrom) {
+      startDate = new Date(customDateFrom);
+      startDate.setHours(0, 0, 0, 0);
+      if (customDateTo) {
+        endDate = new Date(customDateTo);
+        endDate.setHours(23, 59, 59, 999);
+      } else {
+        endDate = now;
+      }
+    } else {
+      startDate = new Date(0);
+      endDate = now;
+    }
+
+    const inRange = (dateStr: string | null | undefined, start: Date, end: Date) => {
+      if (!dateStr) return false;
+      const d = new Date(dateStr);
+      return d >= start && d <= end;
+    };
+
+    const rangedOrders = (orders || []).filter(o => 
+      inRange(o.created_at || o.date, startDate || new Date(0), endDate || now)
+    );
+
+    const revenueMap: Record<number, { title: string; revenue: number; qty: number; image: string }> = {};
+    
+    rangedOrders.filter(o => o.status !== 'Cancelled').forEach(o => {
+      o.items.forEach(item => {
+        if (!revenueMap[item.id]) {
+          revenueMap[item.id] = { title: item.title, revenue: 0, qty: 0, image: '' };
+        }
+        revenueMap[item.id].revenue += item.price * item.quantity;
+        revenueMap[item.id].qty += item.quantity;
+      });
+    });
+
+    return Object.entries(revenueMap)
+      .sort((a, b) => b[1].revenue - a[1].revenue)
+      .slice(0, 5);
+  }, [orders, analyticsRange, customDateFrom, customDateTo]);
 
   const getTodayLabel = () => {
     const today = new Date();
@@ -706,11 +767,11 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                   </div>
                 </div>
 
-                {topProductsByRevenue.length === 0 ? (
+                {topProductsByRevenueRanged.length === 0 ? (
                   <p className="text-[11px] text-slate-500 italic text-center py-6">Aucune vente enregistrée</p>
                 ) : (
                   (() => {
-                    const topProductsBySales = [...topProductsByRevenue].sort((a, b) => b[1].qty - a[1].qty);
+                    const topProductsBySales = [...topProductsByRevenueRanged].sort((a, b) => b[1].qty - a[1].qty);
                     const maxQty = topProductsBySales[0]?.[1].qty || 1;
                     return topProductsBySales.slice(0, 4).map(([id, data]: any, idx: number) => {
                       const pct = ((data.qty / maxQty) * 100).toFixed(0);

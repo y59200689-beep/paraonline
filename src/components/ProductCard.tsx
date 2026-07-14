@@ -5,7 +5,7 @@ import { Product } from '@/lib/data';
 import { useCart } from '@/context/CartContext';
 import { useTranslation } from '@/context/LanguageContext';
 import { useCurrency } from '@/context/CurrencyContext';
-import { Star, ShoppingCart, Eye, Heart, Sparkles, Scale, Coins } from 'lucide-react';
+import { Star, ShoppingCart, Eye, Heart, Sparkles, Scale } from 'lucide-react';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { useAmPm } from '@/context/AmPmContext';
 import { useCompare } from '@/context/CompareContext';
@@ -23,6 +23,7 @@ interface ProductCardProps {
   imageOverlay?: React.ReactNode;
   showMatchScore?: boolean;
   searchQuery?: string;
+  singleImage?: boolean;
 }
 
 const placeholderSvg = "data:image/svg+xml;utf8," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300' width='100%' height='100%'><rect width='100%' height='100%' fill='#f1f5f9'/><path d='M150 100a40 40 0 1 0 40 40 40 40 0 0 0-40-40zm0 60a20 20 0 1 1 20-20 20 20 0 0 1-20 20z' fill='#94a3b8'/><path d='M180 180h-60a10 10 0 0 0-10 10v10h80v-10a10 10 0 0 0-10-10z' fill='#94a3b8'/><text x='150' y='230' font-family='sans-serif' font-size='12' font-weight='bold' fill='#64748b' text-anchor='middle'>Image Indisponible</text></svg>");
@@ -59,7 +60,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   customBadge,
   imageOverlay,
   showMatchScore = false,
-  searchQuery
+  searchQuery,
+  singleImage = false
 }) => {
   const { addToCart } = useCart();
   const { language } = useTranslation();
@@ -373,11 +375,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             width={300}
             height={300}
             className={`w-full h-full object-cover scale-[1.04] filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.03)] transition-all duration-700 ease-in-out ${
-              product.images && product.images.length > 1 ? 'group-hover:opacity-0 group-hover:blur-[1.5px]' : ''
+              !singleImage && product.images && product.images.length > 1 ? 'group-hover:opacity-0 group-hover:blur-[1.5px]' : ''
             }`}
             onError={() => setImgError(true)}
           />
-          {product.images && product.images.length > 1 && (
+          {!singleImage && product.images && product.images.length > 1 && (
             <Image
               src={altImgError ? placeholderSvg : getOptimizedImageUrl(product.images[1])}
               alt={`${product.nameFr || product.name || product.title} Alternate`}
@@ -425,17 +427,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
       <div className="px-4 pb-4 pt-1 flex flex-col flex-grow">
         
-        <div className="flex items-center justify-between mb-1 select-none">
-          <span className="text-[10px] font-bold text-slate-400/80 uppercase tracking-wider block text-left">
-            {categoryLabel}
-          </span>
-          {showMatchScore && diagnostic && matchScore && (
+        {showMatchScore && diagnostic && matchScore && (
+          <div className="flex items-center mb-1 select-none">
             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-teal-50 dark:bg-teal-950/30 text-teal-700 dark:text-teal-400 text-[9px] font-black uppercase tracking-wider border border-teal-100/50 dark:border-teal-900/30">
               <Sparkles className="w-2.5 h-2.5 fill-current text-teal-500 dark:text-teal-400" />
               {matchScore}% Match
             </span>
-          )}
-        </div>
+          </div>
+        )}
 
         <h3 className="text-[13.5px] font-bold text-slate-800 hover:text-primary line-clamp-2 leading-snug transition-colors duration-300 min-h-[38px] text-left mb-2.5">
           <a href={`/products/${product.id}`} className="cursor-pointer block">
@@ -454,24 +453,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           )}
         </div>
 
-        {product.stock !== undefined && product.stock > 0 && product.stock <= lowStockThreshold && (
-          <div className="flex items-center gap-1.5 mb-2.5 select-none justify-start">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-            </span>
-            <span className="text-[10px] font-extrabold text-amber-600 animate-pulse">
-              {language === 'FR' ? `Stock limité : plus que ${product.stock} dispo` : `كمية محدودة: متبقي ${product.stock} فقط`}
-            </span>
-          </div>
-        )}
 
-        <div className="flex items-center gap-1.5 mt-1 mb-2.5 select-none justify-start">
-          <Coins className="w-3.5 h-3.5 text-accent" />
-          <span className="text-[9.5px] font-extrabold text-accent">
-            {language === 'FR' ? `+${Math.round(product.price)} Points Beauté` : `+${Math.round(product.price)} نقطة جمال`}
-          </span>
-        </div>
 
         <div className="flex items-center justify-between border-t border-slate-50 pt-2.5 mt-auto select-none">
           <div className="flex items-center gap-1">

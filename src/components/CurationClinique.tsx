@@ -5,9 +5,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Product } from '@/lib/data';
 import { useTranslation } from '@/context/LanguageContext';
-import { ShoppingCart, ArrowRight, Sparkles, Zap, Droplets, Star, Shield, FlaskConical, HelpCircle } from 'lucide-react';
-import { useCart } from '@/context/CartContext';
+import { ArrowRight, Sparkles, Zap, Droplets, Star, Shield, FlaskConical, HelpCircle } from 'lucide-react';
 import { useSettings } from '@/context/SettingsContext';
+import { ProductCard } from './ProductCard';
 
 // ─── Concern Definitions ─────────────────────────────────────────────────────
 
@@ -155,98 +155,6 @@ function ConcernTab({ concern, isActive, onClick }: {
         <span className="whitespace-nowrap">{concern.labelFr}</span>
       </span>
     </button>
-  );
-}
-
-// ─── Product Card ─────────────────────────────────────────────────────────────
-
-function ProductCardMini({ product, concern, index }: {
-  product: Product;
-  concern: Concern;
-  index: number;
-}) {
-  const { addToCart } = useCart();
-  const [hovered, setHovered] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const price = product.price ?? 0;
-  const comparePrice = product.comparePrice ?? 0;
-  const discountPct = comparePrice > price ? Math.round((1 - price / comparePrice) * 100) : null;
-
-  useEffect(() => {
-    const t = setTimeout(() => setMounted(true), index * 60);
-    return () => clearTimeout(t);
-  }, [index]);
-
-  return (
-    <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        opacity: mounted ? 1 : 0,
-        transform: mounted ? 'translateY(0)' : 'translateY(14px)',
-        transition: 'opacity 0.38s ease, transform 0.38s ease, box-shadow 0.3s ease',
-        boxShadow: hovered
-          ? '0 8px 32px rgba(0,0,0,0.10)'
-          : '0 2px 16px rgba(0,0,0,0.05)',
-      }}
-      className="relative bg-white rounded-2xl border border-slate-100 overflow-hidden flex flex-col"
-    >
-      {/* Image */}
-      <Link href={`/products/${product.slug}`} className="block relative overflow-hidden" style={{ aspectRatio: '1/1' }}>
-        <div className="absolute inset-0 bg-slate-50" />
-        {product.image ? (
-          <Image
-            src={product.image}
-            alt={product.nameFr || product.title}
-            width={320}
-            height={320}
-            style={{
-              transition: 'transform 0.4s ease',
-              transform: hovered ? 'scale(1.06)' : 'scale(1)',
-            }}
-            className="absolute inset-0 w-full h-full object-contain p-4"
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-4xl opacity-10">🧴</div>
-        )}
-        {discountPct && (
-          <div
-            className="absolute top-3 left-3 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"
-            style={{ backgroundColor: concern.accentDot }}
-          >
-            -{discountPct}%
-          </div>
-        )}
-      </Link>
-
-      {/* Info */}
-      <div className="flex flex-col gap-2 p-4 flex-1">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 truncate">
-          {product.vendor || 'Para Officinal'}
-        </p>
-        <Link href={`/products/${product.slug}`}>
-          <h3 className="text-sm font-semibold text-slate-800 line-clamp-2 leading-snug hover:text-slate-600 transition-colors">
-            {product.nameFr || product.title}
-          </h3>
-        </Link>
-        <div className="mt-auto pt-2 flex items-center justify-between gap-2">
-          <div className="flex flex-col">
-            <span className="text-base font-bold text-slate-900">{price.toFixed(2)} Dhs</span>
-            {comparePrice > price && (
-              <span className="text-xs text-slate-400 line-through">{comparePrice.toFixed(2)} Dhs</span>
-            )}
-          </div>
-          <button
-            onClick={() => addToCart(product, 1)}
-            className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-full text-white shadow-sm hover:scale-110 active:scale-95 transition-transform duration-150"
-            style={{ backgroundColor: concern.accentDot }}
-            aria-label="Ajouter au panier"
-          >
-            <ShoppingCart size={15} strokeWidth={2} />
-          </button>
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -423,12 +331,11 @@ export const CurationClinique: React.FC = () => {
             </div>
           ) : matchedProducts.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
-              {matchedProducts.map((product, i) => (
-                <ProductCardMini
+              {matchedProducts.map((product) => (
+                <ProductCard
                   key={`${activeConcernKey}-${product.id}`}
                   product={product}
-                  concern={activeConcern}
-                  index={i}
+                  singleImage
                 />
               ))}
             </div>

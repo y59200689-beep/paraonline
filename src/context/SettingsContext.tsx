@@ -329,7 +329,7 @@ export const DEFAULT_SETTINGS: Settings = {
       { id: 'topRated-1', type: 'topRated', nameFr: 'Produits les Mieux Notés', visible: true },
       { id: 'bestSellers-1', type: 'bestSellers', nameFr: 'Produits les Plus Vendus', visible: true },
       { id: 'routineVisualizer-1', type: 'routineVisualizer', nameFr: 'Visualiseur de Routine de Soins', visible: true },
-      { id: 'featuredIngredient-1', type: 'featuredIngredient', nameFr: 'Ingrédient Focus de la Semaine', visible: true },
+      { id: 'featuredIngredient-1', type: 'featuredIngredient', nameFr: 'Marques Vedettes de la Semaine', visible: true },
       { id: 'ingredientDictionary-1', type: 'ingredientDictionary', nameFr: 'Dictionnaire Clinique des Ingrédients', visible: true },
       { id: 'faq-1', type: 'faq', nameFr: 'Foire Aux Questions (FAQ)', visible: true },
       { id: 'trustBar-1', type: 'trustBar', nameFr: 'Barre de Confiance Maroc', visible: true }
@@ -669,6 +669,24 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
         if (!merged.diagnosticRules || merged.diagnosticRules.length === 0) {
           merged.diagnosticRules = DEFAULT_SETTINGS.diagnosticRules;
+        }
+        // Inject any new default sections missing from saved settings, preserving position
+        if (merged.homepageSections?.sectionOrder && DEFAULT_SETTINGS.homepageSections?.sectionOrder) {
+          const savedIds = new Set(merged.homepageSections.sectionOrder.map((s: any) => s.id));
+          const defaultSections = DEFAULT_SETTINGS.homepageSections.sectionOrder;
+          defaultSections.forEach((defaultSection, defaultIdx) => {
+            if (!savedIds.has(defaultSection.id)) {
+              const prevDefaultSection = defaultSections[defaultIdx - 1];
+              const insertAfterIdx = prevDefaultSection
+                ? merged.homepageSections!.sectionOrder!.findIndex((s: any) => s.id === prevDefaultSection.id)
+                : -1;
+              if (insertAfterIdx >= 0) {
+                merged.homepageSections!.sectionOrder!.splice(insertAfterIdx + 1, 0, defaultSection);
+              } else {
+                merged.homepageSections!.sectionOrder!.push(defaultSection);
+              }
+            }
+          });
         }
         setSettings(merged);
         settingsCache = merged;

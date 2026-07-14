@@ -970,6 +970,82 @@ export const PRODUCTS_DB: Product[] = [
     ,
         sku: "SKU-SVR-111",
         buyingCost: 312
+    },
+    {
+        id: 113,
+        title: "CeraVe Gel Nettoyant Moussant Peaux Normales à Grasses 236ml",
+        name: "CeraVe Gel Nettoyant Moussant 236ml",
+        nameFr: "CeraVe Gel Nettoyant Moussant Peaux Normales à Grasses 236ml",
+        vendor: "CeraVe",
+        image: "https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?q=80&w=600&auto=format&fit=crop",
+        images: [
+            "https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?q=80&w=600&auto=format&fit=crop"
+        ],
+        price: 135.00,
+        comparePrice: 160.00,
+        category: "visage",
+        tags: [
+            "visage",
+            "nettoyant"
+        ],
+        rating: 4.8,
+        reviews: 112,
+        description: "Gel nettoyant moussant pour peaux normales à grasses. Élimine l'excès de sébum, les impuretés et le maquillage tout en respectant la barrière protectrice de la peau grâce aux 3 céramides essentiels et à la niacinamide.",
+        ingredients: "Aqua/Water, Cocamidopropyl Hydroxysultaine, Glycerin, Sodium Lauroyl Sarcosinate, Propanediol, PEG-150 Pentaerythrityl Tetrastearate, Ceramide NP, Ceramide AP, Ceramide EOP, Niacinamide, Hyaluronic Acid.",
+        usage: "Faire mousser sur peau humide. Masser délicatement sur le visage et le cou, puis rincer abondamment.",
+        sku: "SKU-CERAVE-104",
+        buyingCost: 50
+    },
+    {
+        id: 114,
+        title: "CeraVe Crème Hydratante Peaux Sèches à Très Sèches 340g",
+        name: "CeraVe Crème Hydratante 340g",
+        nameFr: "CeraVe Crème Hydratante Peaux Sèches à Très Sèches 340g",
+        vendor: "CeraVe",
+        image: "https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=600&auto=format&fit=crop",
+        images: [
+            "https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=600&auto=format&fit=crop"
+        ],
+        price: 165.00,
+        comparePrice: 195.00,
+        category: "visage",
+        tags: [
+            "visage",
+            "corps",
+            "hydratant"
+        ],
+        rating: 4.9,
+        reviews: 154,
+        description: "Crème hydratante riche pour le visage et le corps des peaux sèches à très sèches. Nourrit, hydrate en continu pendant 24h et aide à restaurer la barrière protectrice de la peau grâce aux 3 céramides essentiels.",
+        ingredients: "Aqua/Water, Glycerin, Caprylic/Capric Triglyceride, Niacinamide, Cetearyl Alcohol, Ceramide NP, Ceramide AP, Ceramide EOP, Hyaluronic Acid, Phytosphingosine.",
+        usage: "Appliquer généreusement aussi souvent que nécessaire, ou selon les recommandations de votre dermatologue.",
+        sku: "SKU-CERAVE-105",
+        buyingCost: 65
+    },
+    {
+        id: 115,
+        title: "CeraVe Gel Contrôle des Imperfections BHA & AHA 40ml",
+        name: "CeraVe Gel Contrôle des Imperfections BHA & AHA 40ml",
+        nameFr: "CeraVe Gel Contrôle des Imperfections BHA & AHA 40ml",
+        vendor: "CeraVe",
+        image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=600&auto=format&fit=crop",
+        images: [
+            "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=600&auto=format&fit=crop"
+        ],
+        price: 155.00,
+        comparePrice: 185.00,
+        category: "visage",
+        tags: [
+            "visage",
+            "anti-imperfections"
+        ],
+        rating: 4.7,
+        reviews: 89,
+        description: "Soin ciblé anti-imperfections et anti-marques formulé avec 2% d'acide salicylique (BHA) et des acides alpha-hydroxylés (AHA - glycolique et lactique). Réduit les boutons, resserre les pores et restaure la barrière cutanée.",
+        ingredients: "Aqua/Water, Glycerin, Sodium Hydroxide, Glycolic Acid, Lactic Acid, Salicylic Acid, Niacinamide, Ceramide NP, Ceramide AP, Ceramide EOP, Hyaluronic Acid.",
+        usage: "Appliquer le soir sur l'ensemble du visage propre par de légers mouvements circulaires. Commencer par 1 application tous les 2 jours.",
+        sku: "SKU-CERAVE-106",
+        buyingCost: 60
     }
 ];
 

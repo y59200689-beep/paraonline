@@ -24,6 +24,7 @@ import { RoutineVisualizer } from '@/components/RoutineVisualizer';
 import { IngredientDictionary } from '@/components/IngredientDictionary';
 import { InteractiveFaqWrapper } from '@/components/InteractiveFaqWrapper';
 import { FeaturedIngredientSection } from '@/components/FeaturedIngredientSection';
+import { LaRochePosaySSection } from '@/components/LaRochePosaySSection';
 import { CurationClinique } from '@/components/CurationClinique';
 import { HomepageSectionItem } from '@/context/SettingsContext';
 
@@ -138,6 +139,9 @@ export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps
 
           case 'featuredIngredient':
             return <FeaturedIngredientSection key={section.id} />;
+
+          case 'laRochePosay':
+            return <LaRochePosaySSection key={section.id} />;
 
           case 'ingredientDictionary':
             return <IngredientDictionary key={section.id} />;
