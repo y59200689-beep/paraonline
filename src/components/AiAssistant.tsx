@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { MessageSquare, X, Send, Sparkles, ShieldAlert, CheckCircle, HelpCircle } from 'lucide-react';
 import { useProducts } from '@/context/ProductsContext';
 import { useUi } from '@/context/UiContext';
+import { useCart } from '@/context/CartContext';
 
 interface Message {
   sender: 'user' | 'ai';
@@ -33,8 +34,9 @@ interface Message {
 export const AiAssistant: React.FC = () => {
   const pathname = usePathname();
   const { language } = useTranslation();
+  const { isCartOpen } = useCart();
   
-  if (pathname?.startsWith('/admin')) {
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/checkout') || isCartOpen) {
     return null;
   }
 
