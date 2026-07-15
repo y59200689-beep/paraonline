@@ -93,7 +93,17 @@ export default async function Home() {
     { id: 'trustBar-1', type: 'trustBar', nameFr: 'Barre de Confiance Maroc', visible: hp.showTrustBar ?? true }
   ];
 
-  const sectionsList = hp.sectionOrder || defaultSections;
+  const rawSectionsList = hp.sectionOrder || defaultSections;
+  let sectionsList = [...rawSectionsList];
+  
+  // Programmatically ensure 'featuredIngredient-1' (Spotlight Dermo-Clinique) is under 'routineVisualizer-1' (Routine Skincare)
+  const visualizerIdx = sectionsList.findIndex(s => s.id === 'routineVisualizer-1');
+  const ingredientIdx = sectionsList.findIndex(s => s.id === 'featuredIngredient-1');
+  if (visualizerIdx !== -1 && ingredientIdx !== -1 && ingredientIdx !== visualizerIdx + 1) {
+    const [ingredientItem] = sectionsList.splice(ingredientIdx, 1);
+    const newVisualizerIdx = sectionsList.findIndex(s => s.id === 'routineVisualizer-1');
+    sectionsList.splice(newVisualizerIdx + 1, 0, ingredientItem);
+  }
 
   return (
     <ShopShell>
