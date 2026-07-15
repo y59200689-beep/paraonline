@@ -340,7 +340,10 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children }) => {
       </footer>
 
       {/* ── Mobile Bottom Navigation ─────────────────────────────────── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-100 shadow-lg z-40 flex items-center justify-around py-2 px-3 pb-safe">
+      <nav
+        style={{ paddingBottom: 'calc(8px + env(safe-area-inset-bottom, 0px))' }}
+        className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] z-40 flex items-center justify-around pt-2.5 px-3"
+      >
         {/* Home Link */}
         <button
           onClick={() => {
@@ -459,21 +462,21 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children }) => {
 
       {/* FOMO Toast (hidden when drawers or quiz modals are active to prevent mobile overlaps) */}
       {showToast && !isCartOpen && !isDiagnosticOpen && !isScratchCardOpen && !isRoutineBuilderOpen && !selectedProduct && (
-        <div className="fixed bottom-24 md:bottom-6 left-6 right-6 md:right-auto md:left-8 z-50 bg-white/95 backdrop-blur-md border border-slate-200/50 shadow-[0_15px_35px_rgba(26,37,93,0.08)] py-3.5 px-5 rounded-[12px] flex items-center gap-4 max-w-[340px] animate-slide-in select-none">
-          <div className="w-10 h-10 rounded-[10px] bg-primary/5 border border-primary/10 text-primary flex items-center justify-center shrink-0">
-            <ShoppingBag className="w-4 h-4 stroke-[2.25]" />
+        <div className="fixed bottom-[72px] md:bottom-6 left-3 right-3 md:right-auto md:left-8 z-50 bg-white/95 backdrop-blur-md border border-slate-200/50 shadow-[0_15px_35px_rgba(26,37,93,0.08)] py-2.5 px-3.5 md:py-3.5 md:px-5 rounded-[12px] flex items-center gap-3 md:gap-4 max-w-[92vw] md:max-w-[340px] animate-slide-in select-none">
+          <div className="w-8 h-8 md:w-10 md:h-10 rounded-[8px] md:rounded-[10px] bg-primary/5 border border-primary/10 text-primary flex items-center justify-center shrink-0">
+            <ShoppingBag className="w-3.5 h-3.5 md:w-4 md:h-4 stroke-[2.25]" />
           </div>
-          <div className="flex-1 min-w-0 text-[11.5px] leading-relaxed">
+          <div className="flex-1 min-w-0 text-[10.5px] md:text-[11.5px] leading-relaxed">
             <div className="flex items-center gap-1.5">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
               </span>
-              <span className="font-black text-[9px] tracking-widest uppercase text-slate-500 leading-none">
+              <span className="font-black text-[8.5px] md:text-[9px] tracking-widest uppercase text-slate-500 leading-none">
                 {t('cro_recent_activity_badge')}
               </span>
             </div>
-            <p className="text-slate-700 font-medium mt-1 break-words font-sans">
+            <p className="text-slate-700 font-medium mt-1 line-clamp-2 font-sans">
               {t('cro_toast_text_new')
                 .replace('{name}', toastData.name)
                 .replace('{city}', toastData.city)

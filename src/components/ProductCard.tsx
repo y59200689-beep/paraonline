@@ -428,14 +428,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <button
           onClick={handleAdd}
           disabled={isAdding || (product.stock !== undefined && product.stock <= 0)}
-          className={`mt-3.5 w-full font-bold text-[11px] sm:text-[11px] lg:text-[12px] uppercase tracking-wide h-[40px] rounded-lg flex items-center justify-center gap-1.5 transition-all duration-300 disabled:opacity-70 cursor-pointer px-2 btn-press-feedback ${
+          className={`mt-3.5 w-full font-bold text-[10px] min-[380px]:text-[11px] lg:text-[12px] uppercase tracking-wide min-h-[38px] rounded-lg flex items-center justify-center gap-1 min-[380px]:gap-1.5 transition-all duration-300 disabled:opacity-70 cursor-pointer px-1.5 min-[380px]:px-2 btn-press-feedback ${
             product.stock !== undefined && product.stock <= 0
               ? 'bg-slate-700 text-slate-300 cursor-not-allowed opacity-70'
               : 'btn-gradient'
           }`}
         >
-          <ShoppingCart className={`w-3.5 h-3.5 shrink-0 ${isAdding ? 'animate-bounce' : ''}`} style={{ color: '#ffffff', stroke: '#ffffff' }} />
-          <span className="whitespace-nowrap" style={{ color: '#ffffff', fontWeight: 800, letterSpacing: '0.02em' }}>
+          <ShoppingCart className={`w-3 h-3 min-[380px]:w-3.5 min-[380px]:h-3.5 shrink-0 ${isAdding ? 'animate-bounce' : ''}`} style={{ color: '#ffffff', stroke: '#ffffff' }} />
+          <span className="leading-tight text-center" style={{ color: '#ffffff', fontWeight: 800, letterSpacing: '0.02em' }}>
             {product.stock !== undefined && product.stock <= 0
               ? (language === 'FR' ? 'Rupture de Stock' : 'غير متوفر')
               : isAdding
