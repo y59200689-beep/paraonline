@@ -28,6 +28,7 @@ interface MobileHeaderProps {
   onOpenDiagnostic: () => void;
   t: (key: string) => string;
   isRTL: boolean;
+  pathname?: string;
 }
 
 export const MobileHeader: React.FC<MobileHeaderProps> = ({
@@ -50,6 +51,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
   onOpenDiagnostic,
   t,
   isRTL,
+  pathname,
 }) => {
   const searchDropdownProps = {
     showSearch,
@@ -112,30 +114,32 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
         </div>
       </div>
 
-      {/* Mobile search bar */}
-      <div ref={searchRef} className="relative w-full">
-        <div className="flex items-center gap-2 bg-slate-50/70 border border-slate-200 rounded-2xl px-4 py-2.5 h-[48px] focus-within:border-primary/50 focus-within:bg-white focus-within:ring-4 focus-within:ring-primary/5 transition-all duration-300 shadow-[0_2px_12px_rgba(0,0,0,0.01)]">
-          <Search className="w-4 h-4 text-foreground/60 shrink-0" />
-          <input
-            type="text"
-            placeholder={t('search_placeholder')}
-            value={searchQuery}
-            onChange={(e) => { setSearchQuery(e.target.value); setShowSearch(true); }}
-            onFocus={() => setShowSearch(true)}
-            className="flex-1 bg-transparent text-sm text-slate-700 placeholder-slate-400 focus:outline-none min-w-0"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => { setSearchQuery(''); setShowSearch(false); }}
-              aria-label={language === 'FR' ? 'Effacer la recherche' : 'مسح البحث'}
-            >
-              <X className="w-3.5 h-3.5 text-slate-400 hover:text-slate-600" />
-            </button>
-          )}
-        </div>
+      {/* Mobile search bar (hidden on products and checkout routes to avoid duplicate bars) */}
+      {!(pathname?.startsWith('/products') || pathname?.startsWith('/checkout')) && (
+        <div ref={searchRef} className="relative w-full">
+          <div className="flex items-center gap-2 bg-slate-50/70 border border-slate-200 rounded-2xl px-4 py-2.5 h-[48px] focus-within:border-primary/50 focus-within:bg-white focus-within:ring-4 focus-within:ring-primary/5 transition-all duration-300 shadow-[0_2px_12px_rgba(0,0,0,0.01)]">
+            <Search className="w-4 h-4 text-foreground/60 shrink-0" />
+            <input
+              type="text"
+              placeholder={t('search_placeholder')}
+              value={searchQuery}
+              onChange={(e) => { setSearchQuery(e.target.value); setShowSearch(true); }}
+              onFocus={() => setShowSearch(true)}
+              className="flex-1 bg-transparent text-sm text-slate-700 placeholder-slate-400 focus:outline-none min-w-0"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => { setSearchQuery(''); setShowSearch(false); }}
+                aria-label={language === 'FR' ? 'Effacer la recherche' : 'مسح البحث'}
+              >
+                <X className="w-3.5 h-3.5 text-slate-400 hover:text-slate-600" />
+              </button>
+            )}
+          </div>
 
-        <SearchDropdown {...searchDropdownProps} />
-      </div>
+          <SearchDropdown {...searchDropdownProps} />
+        </div>
+      )}
     </div>
   );
 };

@@ -5,7 +5,7 @@ import { useTranslation } from '@/context/LanguageContext';
 import { Product } from '@/lib/data';
 import { ProductCard } from '@/components/ProductCard';
 import { ShopShell } from '@/components/ShopShell';
-import { Search, SlidersHorizontal, Check, ArrowUpDown, X, AlertTriangle, Sparkles, Filter } from 'lucide-react';
+import { Search, SlidersHorizontal, Check, ArrowUpDown, X, AlertTriangle, Sparkles } from 'lucide-react';
 import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 
@@ -165,7 +165,6 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
   const [sortOption, setSortOption] = useState('popular'); // popular, price-asc, price-desc, rating
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [showOnlyMatches, setShowOnlyMatches] = useState(false);
-  const [isSticky, setIsSticky] = useState(false);
 
   const products = initialProducts;
 
@@ -207,20 +206,6 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
       const q = params.get('search');
       if (q) setSearchQuery(q);
     }
-  }, []);
-
-  // Scroll listener for sticky mobile header
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const handleScroll = () => {
-      if (window.scrollY > 250) {
-        setIsSticky(true);
-      } else {
-        setIsSticky(false);
-      }
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const handleBrandToggle = (brand: string) => {
@@ -307,39 +292,7 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
 
   return (
     <ShopShell>
-      {/* Sticky Mobile Sub-Header */}
-      <div 
-        className={`fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-900 px-4 py-3 flex items-center gap-3 shadow-md transition-all duration-300 transform lg:hidden ${
-          isSticky ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'
-        }`}
-      >
-        {/* Search Input */}
-        <div className="relative flex-grow">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input 
-            type="text"
-            placeholder={language === 'FR' ? 'Rechercher...' : 'بحث...'}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200/40 dark:border-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 text-xs rounded-xl pl-9 pr-4 py-2.5 outline-none"
-          />
-        </div>
-        {/* Filter Trigger Button */}
-        <button
-          onClick={() => setMobileFilterOpen(true)}
-          className="relative px-3.5 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200/40 dark:border-slate-800 rounded-xl text-slate-700 dark:text-slate-300 flex items-center justify-center gap-1 text-xs font-bold shrink-0 cursor-pointer"
-        >
-          <Filter className="w-3.5 h-3.5 text-primary" />
-          <span>{language === 'FR' ? 'Filtrer' : 'تصفية'}</span>
-          {(selectedCategory !== 'all' || selectedBrands.length > 0 || selectedConcerns.length > 0 || searchQuery || maxPrice < 1500 || showOnlyMatches) && (
-            <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-primary text-white text-[9px] font-black flex items-center justify-center">
-              {selectedBrands.length + selectedConcerns.length + (selectedCategory !== 'all' ? 1 : 0) + (searchQuery ? 1 : 0) + (maxPrice < 1500 ? 1 : 0) + (showOnlyMatches ? 1 : 0)}
-            </span>
-          )}
-        </button>
-      </div>
-
-      <main className="max-w-7xl mx-auto px-6 sm:px-10 md:px-16 lg:px-20 xl:px-24 py-12 select-none">
+      <main className="max-w-7xl mx-auto px-6 sm:px-10 md:px-16 lg:px-20 xl:px-24 pt-20 pb-12 lg:py-12 select-none">
         
         {/* Editorial Double-Bezel Header Card */}
         <div className="rounded-[2rem] p-1.5 bg-slate-900/5 dark:bg-white/5 border border-slate-200/40 dark:border-slate-800/40 mb-12">
@@ -545,7 +498,41 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
 
           {/* Right Column: Grid and Toolbar */}
           <div className="flex-grow w-full min-w-0 space-y-6">
-            
+
+            {/* Mobile-only static search bar (replaces removed sticky sub-header) */}
+            <div className="flex items-center gap-2 lg:hidden">
+              <div className="relative flex-grow">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder={language === 'FR' ? 'Rechercher un produit...' : 'ابحثي عن منتج...'}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 text-xs rounded-xl pl-9 pr-4 py-2.5 outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/5 transition-all"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+              <button
+                onClick={() => setMobileFilterOpen(true)}
+                className="relative px-3.5 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-700 dark:text-slate-300 flex items-center gap-1.5 text-xs font-bold shrink-0 cursor-pointer"
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5 text-primary" />
+                <span>{language === 'FR' ? 'Filtrer' : 'تصفية'}</span>
+                {(selectedCategory !== 'all' || selectedBrands.length > 0 || selectedConcerns.length > 0 || searchQuery || maxPrice < 1500 || showOnlyMatches) && (
+                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-primary text-white text-[9px] font-black flex items-center justify-center">
+                    {selectedBrands.length + selectedConcerns.length + (selectedCategory !== 'all' ? 1 : 0) + (searchQuery ? 1 : 0) + (maxPrice < 1500 ? 1 : 0) + (showOnlyMatches ? 1 : 0)}
+                  </span>
+                )}
+              </button>
+            </div>
+
             {/* Skin Diagnostic Profile Banner */}
             {diagnostic && (
               <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-teal-500/10 via-emerald-500/5 to-transparent border border-teal-500/20 dark:border-teal-500/30 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-[0_4px_20px_rgba(13,148,136,0.03)]">
@@ -781,7 +768,7 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
                 {filteredProducts.map((product, index) => (
                   <div 
                     key={product.id} 
-                    className="w-full animate-fade-in-up-stagger"
+                    className="w-full h-full animate-fade-in-up-stagger"
                     style={{ animationDelay: `${Math.min(11, index) * 35}ms` }}
                   >
                     <ProductCard product={product} showMatchScore={true} searchQuery={searchQuery} priority={index < 4} />

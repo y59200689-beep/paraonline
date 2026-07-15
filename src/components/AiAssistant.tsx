@@ -35,13 +35,20 @@ export const AiAssistant: React.FC = () => {
   const pathname = usePathname();
   const { language } = useTranslation();
   const { isCartOpen } = useCart();
+  const { showToast, isDiagnosticOpen, isScratchCardOpen, isRoutineBuilderOpen } = useUi();
   
-  if (pathname?.startsWith('/admin') || pathname?.startsWith('/checkout') || isCartOpen) {
+  if (
+    pathname?.startsWith('/admin') || 
+    pathname?.startsWith('/checkout') || 
+    isCartOpen || 
+    isDiagnosticOpen || 
+    isScratchCardOpen || 
+    isRoutineBuilderOpen
+  ) {
     return null;
   }
 
   const { products } = useProducts();
-  const { showToast } = useUi();
 
   const [activeOrderForm, setActiveOrderForm] = useState<{
     customerName: string;
@@ -382,7 +389,7 @@ export const AiAssistant: React.FC = () => {
 
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end font-sans">
+    <div className="fixed bottom-20 md:bottom-6 right-6 z-50 flex flex-col items-end font-sans">
       
       {/* ─── CHAT PANEL ─── */}
       {isOpen && (

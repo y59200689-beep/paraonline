@@ -457,8 +457,8 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children }) => {
       <CartBubbleCoordinator />
       <OrderSuccessModal />
 
-      {/* FOMO Toast */}
-      {showToast && (
+      {/* FOMO Toast (hidden when drawers or quiz modals are active to prevent mobile overlaps) */}
+      {showToast && !isCartOpen && !isDiagnosticOpen && !isScratchCardOpen && !isRoutineBuilderOpen && !selectedProduct && (
         <div className="fixed bottom-24 md:bottom-6 left-6 right-6 md:right-auto md:left-8 z-50 bg-white/95 backdrop-blur-md border border-slate-200/50 shadow-[0_15px_35px_rgba(26,37,93,0.08)] py-3.5 px-5 rounded-[12px] flex items-center gap-4 max-w-[340px] animate-slide-in select-none">
           <div className="w-10 h-10 rounded-[10px] bg-primary/5 border border-primary/10 text-primary flex items-center justify-center shrink-0">
             <ShoppingBag className="w-4 h-4 stroke-[2.25]" />

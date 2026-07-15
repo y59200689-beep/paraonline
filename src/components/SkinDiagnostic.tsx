@@ -484,9 +484,9 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                 </p>
               </div>
 
-              {/* Redesigned structured Clinical steps details - Horizontal Premium Bento Layout */}
+              {/* Redesigned structured Clinical steps details - Responsive compact bento layout */}
               <div 
-                className="flex flex-col sm:flex-row gap-4 w-full max-w-lg mx-auto"
+                className="grid grid-cols-3 sm:flex sm:flex-row gap-2 sm:gap-4 w-full max-w-lg mx-auto"
                 style={{ direction: isRTL ? 'rtl' : 'ltr' }}
               >
                 {[
@@ -508,16 +508,16 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                 ].map((item, idx) => (
                   <div 
                     key={idx} 
-                    className="flex-1 flex flex-col items-center gap-3 bg-white/40 dark:bg-stone-800/20 rounded-2xl border border-stone-200/20 dark:border-stone-800 hover:border-primary/25 hover:bg-white/60 dark:hover:bg-stone-800/30 transition-all duration-500 shadow-sm text-center group hover:-translate-y-0.5 p-4"
+                    className="flex-1 flex flex-col items-center gap-1.5 sm:gap-3 bg-white/40 dark:bg-stone-800/20 rounded-2xl border border-stone-200/20 dark:border-stone-800 hover:border-primary/25 hover:bg-white/60 dark:hover:bg-stone-800/30 transition-all duration-500 shadow-sm text-center group hover:-translate-y-0.5 p-2.5 sm:p-4"
                   >
                     <div 
-                      className="w-8 h-8 rounded-full bg-stone-100/50 text-primary-dark dark:text-emerald-400 flex items-center justify-center font-black text-xs shrink-0 border border-stone-200/40 dark:border-stone-800 shadow-sm transition-transform duration-300 group-hover:scale-105"
+                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-stone-100/50 text-primary-dark dark:text-emerald-400 flex items-center justify-center font-black text-[10px] sm:text-xs shrink-0 border border-stone-200/40 dark:border-stone-800 shadow-sm transition-transform duration-300 group-hover:scale-105"
                     >
                       {item.num}
                     </div>
                     <div className="flex flex-col gap-1 justify-center items-center">
-                      <h4 className="text-[10.5px] font-black text-primary-dark dark:text-slate-200 uppercase tracking-wider leading-none">{item.title}</h4>
-                      <p className="text-[9.5px] text-slate-500 dark:text-slate-400 font-medium leading-normal mt-1">{item.desc}</p>
+                      <h4 className="text-[9px] sm:text-[10.5px] font-black text-primary-dark dark:text-slate-200 uppercase tracking-wider leading-none">{item.title}</h4>
+                      <p className="text-[8px] sm:text-[9.5px] text-slate-500 dark:text-slate-400 font-medium leading-normal mt-0.5 hidden sm:block">{item.desc}</p>
                     </div>
                   </div>
                 ))}

@@ -293,7 +293,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       >
         
         {product.stock !== undefined && product.stock <= 0 ? (
-          <span className="absolute top-2.5 left-2.5 bg-rose-600 text-white text-[9px] font-black rounded-[4px] z-30 uppercase tracking-widest shadow-sm px-2 py-1 select-none">
+          <span className="absolute top-2.5 left-2.5 bg-rose-500/90 backdrop-blur-sm border border-rose-400/30 text-white text-[9px] font-black rounded-[4px] z-30 uppercase tracking-widest shadow-sm px-2 py-1 select-none">
             {language === 'FR' ? 'Hors Stock' : 'غير متوفر'}
           </span>
         ) : discount ? (

@@ -10,28 +10,28 @@
         {
           "val": "oily",
           "labelKey": "q1_o1",
-          "emoji": "",
+          "emoji": "✨",
           "descFr": "Brillance, pores dilatés",
           "descAr": "مسام واسعة، لمعان مستمر"
         },
         {
           "val": "dry",
           "labelKey": "q1_o2",
-          "emoji": "️",
+          "emoji": "🌵",
           "descFr": "Tiraillements, sécheresse",
           "descAr": "جفاف، شد جلدي وقشور"
         },
         {
           "val": "mixed",
           "labelKey": "q1_o3",
-          "emoji": "️",
+          "emoji": "⚖️",
           "descFr": "Zone T grasse, joues sèches",
           "descAr": "منطقة T دهنية، وخدان جافان"
         },
         {
           "val": "sensitive",
           "labelKey": "q1_o4",
-          "emoji": "",
+          "emoji": "🌸",
           "descFr": "Rougeurs, inconfort",
           "descAr": "احمرار، تهيج وحساسية"
         }
@@ -47,14 +47,14 @@
         {
           "val": "acne",
           "labelKey": "q2_o1",
-          "emoji": "",
+          "emoji": "🌿",
           "descFr": "Boutons, imperfections",
           "descAr": "بثور، رؤوس سوداء وشوائب"
         },
         {
           "val": "spots",
           "labelKey": "q2_o2",
-          "emoji": "",
+          "emoji": "🔆",
           "descFr": "Hyperpigmentation, taches",
           "descAr": "تصبغات، كلف وبقع داكنة"
         },
@@ -68,7 +68,7 @@
         {
           "val": "dryness",
           "labelKey": "q2_o4",
-          "emoji": "",
+          "emoji": "💧",
           "descFr": "Déshydratation intense",
           "descAr": "جفاف شديد، نقص رطوبة شديد"
         }
@@ -84,21 +84,21 @@
         {
           "val": "intense",
           "labelKey": "q3_o1",
-          "emoji": "️",
+          "emoji": "☀️",
           "descFr": "Exposition quotidienne directe importante",
           "descAr": "تعرض يومي مباشر وشديد لأشعة الشمس"
         },
         {
           "val": "moderate",
           "labelKey": "q3_o2",
-          "emoji": "",
+          "emoji": "⛅",
           "descFr": "Exposition modérée (Sorties, transports)",
           "descAr": "تعرض معتدل (خروج مؤقت، مواصلات)"
         },
         {
           "val": "low",
           "labelKey": "q3_o3",
-          "emoji": "",
+          "emoji": "🏠",
           "descFr": "Intérieur majoritairement (Bureau, maison)",
           "descAr": "معظم الوقت داخل البيت أو المكتب المغلق"
         }

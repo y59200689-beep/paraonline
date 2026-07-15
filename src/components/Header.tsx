@@ -15,7 +15,7 @@ import { useUi } from '@/context/UiContext';
 import Image from 'next/image';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 // Sub-components
 import { AnnouncementBar } from './Header/AnnouncementBar';
@@ -32,6 +32,7 @@ const LANGUAGES = [
 
 export const Header: React.FC = () => {
   const router = useRouter();
+  const pathname = usePathname();
   const { t, language, toggleLanguage } = useTranslation();
   const { compareProducts, setIsOpenModal } = useCompare();
   const { cart, addToCart, subtotal, setIsCartOpen } = useCart();
@@ -323,6 +324,7 @@ export const Header: React.FC = () => {
             onCartOpen={() => setIsCartOpen(true)}
             onToggleLanguage={toggleLanguage}
             t={t}
+            pathname={pathname}
             {...sharedSearchProps}
           />
         </div>
