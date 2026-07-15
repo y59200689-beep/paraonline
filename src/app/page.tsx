@@ -88,6 +88,7 @@ export default async function Home() {
     { id: 'bestSellers-1', type: 'bestSellers', nameFr: 'Produits les Plus Vendus', visible: (hp.showBestSellers ?? true) || (hp.showWeeklySales ?? true), settings: { titleFr: hp.bestSellersTitleFr, titleAr: hp.bestSellersTitleAr, productIds: hp.bestSellersProductIds || [] } },
     { id: 'routineVisualizer-1', type: 'routineVisualizer', nameFr: 'Visualiseur de Routine de Soins', visible: hp.showRoutineVisualizer ?? true },
     { id: 'featuredIngredient-1', type: 'featuredIngredient', nameFr: 'Marques Vedettes de la Semaine', visible: hp.showFeaturedIngredient ?? true },
+    { id: 'skincareRoutineSteps-1', type: 'skincareRoutineSteps', nameFr: 'Étapes de la Routine Skincare', visible: hp.showRoutineVisualizer ?? true },
     { id: 'ingredientDictionary-1', type: 'ingredientDictionary', nameFr: 'Dictionnaire Clinique des Ingrédients', visible: hp.showIngredientDictionary ?? true },
     { id: 'faq-1', type: 'faq', nameFr: 'Foire Aux Questions (FAQ)', visible: hp.showFaq ?? true },
     { id: 'trustBar-1', type: 'trustBar', nameFr: 'Barre de Confiance Maroc', visible: hp.showTrustBar ?? true }
@@ -96,13 +97,42 @@ export default async function Home() {
   const rawSectionsList = hp.sectionOrder || defaultSections;
   let sectionsList = [...rawSectionsList];
   
-  // Programmatically ensure 'featuredIngredient-1' (Spotlight Dermo-Clinique) is under 'routineVisualizer-1' (Routine Skincare)
+  // 1. Ensure 'skincareRoutineSteps-1' is in the list
+  if (!sectionsList.some(s => s.id === 'skincareRoutineSteps-1')) {
+    const ingredientIdx = sectionsList.findIndex(s => s.id === 'featuredIngredient-1');
+    if (ingredientIdx !== -1) {
+      sectionsList.splice(ingredientIdx + 1, 0, {
+        id: 'skincareRoutineSteps-1',
+        type: 'skincareRoutineSteps',
+        nameFr: 'Étapes de la Routine Skincare',
+        visible: hp.showRoutineVisualizer ?? true
+      });
+    } else {
+      sectionsList.push({
+        id: 'skincareRoutineSteps-1',
+        type: 'skincareRoutineSteps',
+        nameFr: 'Étapes de la Routine Skincare',
+        visible: hp.showRoutineVisualizer ?? true
+      });
+    }
+  }
+
+  // 2. Programmatically place 'featuredIngredient-1' directly under 'routineVisualizer-1'
   const visualizerIdx = sectionsList.findIndex(s => s.id === 'routineVisualizer-1');
   const ingredientIdx = sectionsList.findIndex(s => s.id === 'featuredIngredient-1');
   if (visualizerIdx !== -1 && ingredientIdx !== -1 && ingredientIdx !== visualizerIdx + 1) {
     const [ingredientItem] = sectionsList.splice(ingredientIdx, 1);
     const newVisualizerIdx = sectionsList.findIndex(s => s.id === 'routineVisualizer-1');
     sectionsList.splice(newVisualizerIdx + 1, 0, ingredientItem);
+  }
+
+  // 3. Programmatically place 'skincareRoutineSteps-1' directly under 'featuredIngredient-1'
+  const newIngredientIdx = sectionsList.findIndex(s => s.id === 'featuredIngredient-1');
+  const stepsIdx = sectionsList.findIndex(s => s.id === 'skincareRoutineSteps-1');
+  if (newIngredientIdx !== -1 && stepsIdx !== -1 && stepsIdx !== newIngredientIdx + 1) {
+    const [stepsItem] = sectionsList.splice(stepsIdx, 1);
+    const updatedIngredientIdx = sectionsList.findIndex(s => s.id === 'featuredIngredient-1');
+    sectionsList.splice(updatedIngredientIdx + 1, 0, stepsItem);
   }
 
   return (

@@ -130,12 +130,10 @@ export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps
             return <BestSellersDualGrid key={section.id} />;
 
           case 'routineVisualizer':
-            return (
-              <React.Fragment key={section.id}>
-                <RoutineVisualizer />
-                <SkincareRoutineSteps />
-              </React.Fragment>
-            );
+            return <RoutineVisualizer key={section.id} />;
+
+          case 'skincareRoutineSteps':
+            return <SkincareRoutineSteps key={section.id} />;
 
           case 'featuredIngredient':
             return <FeaturedIngredientSection key={section.id} />;

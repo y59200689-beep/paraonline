@@ -330,6 +330,7 @@ export const DEFAULT_SETTINGS: Settings = {
       { id: 'bestSellers-1', type: 'bestSellers', nameFr: 'Produits les Plus Vendus', visible: true },
       { id: 'routineVisualizer-1', type: 'routineVisualizer', nameFr: 'Visualiseur de Routine de Soins', visible: true },
       { id: 'featuredIngredient-1', type: 'featuredIngredient', nameFr: 'Marques Vedettes de la Semaine', visible: true },
+      { id: 'skincareRoutineSteps-1', type: 'skincareRoutineSteps', nameFr: 'Étapes de la Routine Skincare', visible: true },
       { id: 'ingredientDictionary-1', type: 'ingredientDictionary', nameFr: 'Dictionnaire Clinique des Ingrédients', visible: true },
       { id: 'faq-1', type: 'faq', nameFr: 'Foire Aux Questions (FAQ)', visible: true },
       { id: 'trustBar-1', type: 'trustBar', nameFr: 'Barre de Confiance Maroc', visible: true }
