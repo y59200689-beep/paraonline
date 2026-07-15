@@ -70,7 +70,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                         <span className="text-[8px] font-extrabold uppercase text-[#846f48] block leading-none">{product.vendor}</span>
                         <span className="text-xs font-bold text-primary-dark truncate block mt-0.5">{product.title}</span>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[10px] font-black text-accent">{convertPrice(product.price)}</span>
+                          <span className="text-[10px] font-black text-primary">{convertPrice(product.price)}</span>
                           {(product.stock ?? 0) <= 0 && (
                             <span className="text-[8px] font-black text-red-500 bg-red-50 px-1.5 py-0.5 rounded uppercase tracking-wider">
                               {language === 'FR' ? 'Rupture' : 'نفد'}
@@ -128,7 +128,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                         <span className="text-[8px] font-extrabold uppercase text-[#846f48] block leading-none">{product.vendor}</span>
                         <span className="text-xs font-bold text-primary-dark truncate block mt-0.5">{product.title}</span>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[10px] font-black text-accent">{convertPrice(product.price)}</span>
+                          <span className="text-[10px] font-black text-primary">{convertPrice(product.price)}</span>
                           {(product.stock ?? 0) <= 0 && (
                             <span className="text-[8px] font-black text-red-500 bg-red-50 px-1.5 py-0.5 rounded uppercase tracking-wider">
                               {language === 'FR' ? 'Rupture' : 'نفد'}

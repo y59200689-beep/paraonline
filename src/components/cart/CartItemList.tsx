@@ -155,7 +155,7 @@ export const CartItemList: React.FC<CartItemListProps> = ({
 
                 {/* Price + Remove */}
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-primary-dark">
+                  <span className="text-xs font-bold text-primary">
                     {(item.product.price * item.quantity).toFixed(2)} DH
                   </span>
                   <button

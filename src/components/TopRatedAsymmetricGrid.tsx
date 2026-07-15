@@ -169,7 +169,7 @@ export const TopRatedAsymmetricGrid: React.FC = () => {
                     {/* Price & Add to Cart */}
                     <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-50">
                       <div className="flex items-baseline gap-1">
-                        <span className="text-[12.5px] font-sans font-black text-slate-800">{product.price} MAD</span>
+                        <span className="text-[12.5px] font-sans font-black text-primary">{product.price} MAD</span>
                         {product.comparePrice > product.price && (
                           <span className="text-[9.5px] font-sans font-medium text-slate-400 line-through">{product.comparePrice} MAD</span>
                         )}
@@ -270,7 +270,7 @@ export const TopRatedAsymmetricGrid: React.FC = () => {
                     <div>
                       <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-4 mt-4">
                         <div className="flex items-baseline gap-1.5">
-                          <span className="text-[17px] sm:text-[19px] font-sans font-black text-slate-800">{product.price} MAD</span>
+                          <span className="text-[17px] sm:text-[19px] font-sans font-black text-primary">{product.price} MAD</span>
                           {product.comparePrice > product.price && (
                             <span className="text-[11px] sm:text-[12px] font-sans font-medium text-slate-400 line-through">{product.comparePrice} MAD</span>
                           )}
@@ -348,7 +348,7 @@ export const TopRatedAsymmetricGrid: React.FC = () => {
                     {/* Price & Add to Cart */}
                     <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-50">
                       <div className="flex items-baseline gap-1">
-                        <span className="text-[12.5px] font-sans font-black text-slate-800">{product.price} MAD</span>
+                        <span className="text-[12.5px] font-sans font-black text-primary">{product.price} MAD</span>
                         {product.comparePrice > product.price && (
                           <span className="text-[9.5px] font-sans font-medium text-slate-400 line-through">{product.comparePrice} MAD</span>
                         )}

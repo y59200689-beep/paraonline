@@ -114,7 +114,7 @@ export const CartUpsells: React.FC<CartUpsellsProps> = ({
                   <p className="text-[9px] font-bold text-slate-600 group-hover/upsell:text-primary transition-colors duration-200 leading-tight line-clamp-2 h-6">
                     {toTitleCase(item.nameFr || item.name || item.title)}
                   </p>
-                  <span className="text-[10.5px] font-bold text-primary-dark mt-1 block">
+                  <span className="text-[10.5px] font-bold text-primary mt-1 block">
                     {item.price} DH
                   </span>
                 </div>

@@ -177,7 +177,7 @@ export const BestSellersDualGrid: React.FC = () => {
                       {/* Price & Add to Cart */}
                       <div className="flex items-center justify-between gap-2 mt-3 pt-2 border-t border-slate-50">
                         <div className="flex items-baseline gap-1.5 flex-wrap">
-                          <span className="text-[14px] font-sans font-black text-accent">{product.price} MAD</span>
+                          <span className="text-[14px] font-sans font-black text-primary">{product.price} MAD</span>
                           {product.comparePrice > product.price && (
                             <span className="text-[10px] font-sans font-medium text-slate-400 line-through">{product.comparePrice} MAD</span>
                           )}
@@ -285,7 +285,7 @@ export const BestSellersDualGrid: React.FC = () => {
                       {/* Price & Add to Cart */}
                       <div className="flex items-center justify-between gap-2 mt-3 pt-2 border-t border-slate-50">
                         <div className="flex items-baseline gap-1.5 flex-wrap">
-                          <span className="text-[14px] font-sans font-black text-accent">{product.price} MAD</span>
+                          <span className="text-[14px] font-sans font-black text-primary">{product.price} MAD</span>
                           {product.comparePrice > product.price && (
                             <span className="text-[10px] font-sans font-medium text-slate-400 line-through">{product.comparePrice} MAD</span>
                           )}

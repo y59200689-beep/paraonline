@@ -140,7 +140,7 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
                     <span className="text-[9px] font-extrabold text-blue-700 uppercase tracking-widest block mt-0.5">
                       {product.vendor}
                     </span>
-                    <span className="text-xs font-black text-slate-800 block mt-1">
+                    <span className="text-xs font-black text-primary block mt-1">
                       {product.price.toFixed(2)} DH
                     </span>
                   </div>

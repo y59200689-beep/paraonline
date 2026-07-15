@@ -728,7 +728,7 @@ export const CompareModal: React.FC = () => {
                           }`}
                         >
                           <span className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-[13px] font-black text-primary-dark">{convertPrice(compareProducts[0].price)}</span>
+                            <span className="text-[13px] font-black text-primary">{convertPrice(compareProducts[0].price)}</span>
                             {compareProducts[0].comparePrice > compareProducts[0].price && (
                               <span className="text-[10px] text-slate-400 line-through font-semibold">{convertPrice(compareProducts[0].comparePrice)}</span>
                             )}
@@ -741,7 +741,7 @@ export const CompareModal: React.FC = () => {
                           }`}
                         >
                           <span className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-[13px] font-black text-primary-dark">{convertPrice(compareProducts[1].price)}</span>
+                            <span className="text-[13px] font-black text-primary">{convertPrice(compareProducts[1].price)}</span>
                             {compareProducts[1].comparePrice > compareProducts[1].price && (
                               <span className="text-[10px] text-slate-400 line-through font-semibold">{convertPrice(compareProducts[1].comparePrice)}</span>
                             )}

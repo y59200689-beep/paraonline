@@ -348,7 +348,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen,
             </div>
 
             <div className="flex items-center gap-3 border-b border-border/30 pb-4 flex-wrap">
-              <span className="text-xl font-black text-primary-dark">{convertPrice(currentProduct.price)}</span>
+              <span className="text-xl font-black text-primary">{convertPrice(currentProduct.price)}</span>
               {hasDiscount && <span className="text-sm text-foreground/50 line-through font-bold">{convertPrice(currentProduct.comparePrice)}</span>}
               {liveStock <= 0 ? (
                 <span className="bg-rose-50 text-rose-600 border border-rose-200 text-[10px] font-black px-2.5 py-0.5 rounded-[4px] uppercase tracking-wider">
