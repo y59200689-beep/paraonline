@@ -342,7 +342,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children }) => {
       {/* ── Mobile Bottom Navigation ─────────────────────────────────── */}
       <nav
         style={{ paddingBottom: 'calc(8px + env(safe-area-inset-bottom, 0px))' }}
-        className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] z-40 flex items-center justify-around pt-2.5 px-3"
+        className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] z-40 flex items-center justify-around pt-2.5 px-3"
       >
         {/* Home Link */}
         <button

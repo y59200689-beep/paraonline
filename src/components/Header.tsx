@@ -23,7 +23,6 @@ import { TopBar } from './Header/TopBar';
 import { SearchPill } from './Header/SearchPill';
 import { DesktopActions } from './Header/DesktopActions';
 import { MobileHeader } from './Header/MobileHeader';
-import { MobileBottomNav } from './Header/MobileBottomNav';
 
 const LANGUAGES = [
   { id: 'FR', label: 'Français', flag: '🇫🇷' },
@@ -256,7 +255,7 @@ export const Header: React.FC = () => {
 
       {/* Main sticky nav */}
       <header
-        className={`sticky top-0 z-40 transition-[padding] duration-300 ease-in-out border-b mb-0 bg-white/75 backdrop-blur-md border-slate-200/40 shadow-glass ${
+        className={`sticky top-0 z-40 transition-[padding] duration-300 ease-in-out border-b mb-0 bg-white border-slate-200/40 shadow-glass ${
           isScrolled ? 'scrolled' : ''
         }`}
         style={{
@@ -330,19 +329,7 @@ export const Header: React.FC = () => {
         </div>
       </header>
 
-      {/* Mobile bottom nav */}
-      <MobileBottomNav
-        language={language}
-        cartCount={cartCount}
-        isBumping={isBumping}
-        isJiggling={isJiggling}
-        points={points}
-        storeWhatsApp={settings.storeWhatsApp || '212660808080'}
-        onCartOpen={() => setIsCartOpen(true)}
-        onWalletOpen={() => setIsWalletOpen(true)}
-        onDiagnosticOpen={() => setDiagnosticOpen(true)}
-        t={t}
-      />
+
 
       {/* Beauty Wallet Drawer */}
       <BeautyWalletDrawer isOpen={isWalletOpen} onClose={() => setIsWalletOpen(false)} />
