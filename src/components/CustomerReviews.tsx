@@ -97,12 +97,20 @@ export const CustomerReviews: React.FC = () => {
           .animate-marquee-left {
             display: flex;
             width: max-content;
-            animation: marqueeLeft 75s linear infinite;
+            animation: marqueeLeft 25s linear infinite;
           }
           .animate-marquee-right {
             display: flex;
             width: max-content;
-            animation: marqueeRight 75s linear infinite;
+            animation: marqueeRight 25s linear infinite;
+          }
+          @media (min-width: 640px) {
+            .animate-marquee-left {
+              animation-duration: 75s;
+            }
+            .animate-marquee-right {
+              animation-duration: 75s;
+            }
           }
           .marquee-container:hover .animate-marquee-left,
           .marquee-container:hover .animate-marquee-right {
@@ -120,8 +128,8 @@ export const CustomerReviews: React.FC = () => {
           <div className="flex w-full overflow-hidden">
             <div className="animate-marquee-left flex gap-4">
               {row1List.map((user, idx) => (
-                <div key={idx} className="flex flex-col glass-card-dark border-white/5 rounded-[20px] p-4 cursor-pointer group w-[280px] sm:w-[320px] shrink-0 text-left font-sans">
-                  <div className="flex items-center gap-3 mb-3">
+                <div key={idx} className="flex flex-col glass-card-dark border-white/5 rounded-[12px] sm:rounded-[20px] p-2.5 sm:p-4 cursor-pointer group w-[120px] sm:w-[320px] shrink-0 text-left font-sans">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-2.5 sm:mb-3">
                     {(() => {
                       const firstLetterFr = user.name.trim().charAt(0).toUpperCase() || '?';
                       const firstLetterAr = user.nameAr.trim().charAt(0).toUpperCase() || '?';
@@ -135,25 +143,26 @@ export const CustomerReviews: React.FC = () => {
                       ];
                       const scheme = schemes[charCode % schemes.length];
                       return (
-                        <div className={`w-11 h-11 shrink-0 rounded-[12px] flex items-center justify-center font-black border text-sm uppercase tracking-wider shadow-sm transition-transform duration-500 ease-out group-hover:scale-105 ${scheme.bg} ${scheme.border} ${scheme.text}`}>
+                        <div className={`w-7 h-7 sm:w-11 sm:h-11 shrink-0 rounded-[8px] sm:rounded-[12px] flex items-center justify-center font-black border text-[9px] sm:text-sm uppercase tracking-wider shadow-sm transition-transform duration-500 ease-out group-hover:scale-105 ${scheme.bg} ${scheme.border} ${scheme.text}`}>
                           <span className="hidden rtl:inline">{firstLetterAr}</span>
                           <span className="inline rtl:hidden">{firstLetterFr}</span>
                         </div>
                       );
                     })()}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1 mb-0.5">
+                      <div className="hidden sm:flex items-center gap-1 mb-0.5">
                         <Check className="w-2.5 h-2.5 text-emerald-400 shrink-0" />
                         <span className="text-[9px] font-bold text-emerald-400 leading-none">
                           <span className="hidden rtl:inline">مشترية موثوقة</span>
                           <span className="inline rtl:hidden">Acheteur vérifié</span>
                         </span>
                       </div>
-                      <h4 className="text-[13px] font-black text-white leading-none truncate font-sans">
+                      <h4 className="text-[10px] sm:text-[13px] font-black text-white leading-none truncate font-sans flex items-center gap-0.5">
+                        <Check className="w-2 h-2 text-emerald-400 shrink-0 sm:hidden" />
                         <span className="hidden rtl:inline">{user.nameAr}</span>
                         <span className="inline rtl:hidden">{user.name}</span>
                       </h4>
-                      <div className="flex items-center gap-1 mt-1 font-sans">
+                      <div className="hidden sm:flex items-center gap-1 mt-1 font-sans">
                         <MapPin className="w-2.5 h-2.5 text-slate-400 shrink-0" />
                         <span className="text-[10px] text-slate-400 font-semibold leading-none">
                           <span className="hidden rtl:inline">{user.cityAr}</span>
@@ -162,11 +171,11 @@ export const CustomerReviews: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-0.5 mb-2">
-                    {[...Array(user.stars)].map((_, i) => (<Star key={i} className="w-3 h-3 text-amber-400 fill-amber-400" />))}
-                    {[...Array(5 - user.stars)].map((_, i) => (<Star key={i} className="w-3 h-3 text-slate-600 fill-slate-600" />))}
+                  <div className="flex gap-0.5 mb-1.5 sm:mb-2">
+                    {[...Array(user.stars)].map((_, i) => (<Star key={i} className="w-2 h-2 sm:w-3 sm:h-3 text-amber-400 fill-amber-400" />))}
+                    {[...Array(5 - user.stars)].map((_, i) => (<Star key={i} className="w-2 h-2 sm:w-3 sm:h-3 text-slate-600 fill-slate-600" />))}
                   </div>
-                  <p className="text-[11px] text-slate-200 leading-relaxed line-clamp-3">
+                  <p className="text-[9px] sm:text-[11px] text-slate-200 leading-relaxed line-clamp-3">
                     <span className="hidden rtl:inline">&ldquo;{user.reviewAr}&rdquo;</span>
                     <span className="inline rtl:hidden">&ldquo;{user.review}&rdquo;</span>
                   </p>
@@ -179,8 +188,8 @@ export const CustomerReviews: React.FC = () => {
           <div className="flex w-full overflow-hidden">
             <div className="animate-marquee-right flex gap-4">
               {row2List.map((user, idx) => (
-                <div key={idx} className="flex flex-col glass-card-dark border-white/5 rounded-[20px] p-4 cursor-pointer group w-[280px] sm:w-[320px] shrink-0 text-left font-sans">
-                  <div className="flex items-center gap-3 mb-3">
+                <div key={idx} className="flex flex-col glass-card-dark border-white/5 rounded-[12px] sm:rounded-[20px] p-2.5 sm:p-4 cursor-pointer group w-[120px] sm:w-[320px] shrink-0 text-left font-sans">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-2.5 sm:mb-3">
                     {(() => {
                       const firstLetterFr = user.name.trim().charAt(0).toUpperCase() || '?';
                       const firstLetterAr = user.nameAr.trim().charAt(0).toUpperCase() || '?';
@@ -194,25 +203,26 @@ export const CustomerReviews: React.FC = () => {
                       ];
                       const scheme = schemes[charCode % schemes.length];
                       return (
-                        <div className={`w-11 h-11 shrink-0 rounded-[12px] flex items-center justify-center font-black border text-sm uppercase tracking-wider shadow-sm transition-transform duration-500 ease-out group-hover:scale-105 ${scheme.bg} ${scheme.border} ${scheme.text}`}>
+                        <div className={`w-7 h-7 sm:w-11 sm:h-11 shrink-0 rounded-[8px] sm:rounded-[12px] flex items-center justify-center font-black border text-[9px] sm:text-sm uppercase tracking-wider shadow-sm transition-transform duration-500 ease-out group-hover:scale-105 ${scheme.bg} ${scheme.border} ${scheme.text}`}>
                           <span className="hidden rtl:inline">{firstLetterAr}</span>
                           <span className="inline rtl:hidden">{firstLetterFr}</span>
                         </div>
                       );
                     })()}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1 mb-0.5">
+                      <div className="hidden sm:flex items-center gap-1 mb-0.5">
                         <Check className="w-2.5 h-2.5 text-emerald-400 shrink-0" />
                         <span className="text-[9px] font-bold text-emerald-400 leading-none">
                           <span className="hidden rtl:inline">مشترية موثوقة</span>
                           <span className="inline rtl:hidden">Acheteur vérifié</span>
                         </span>
                       </div>
-                      <h4 className="text-[13px] font-black text-white leading-none truncate font-sans">
+                      <h4 className="text-[10px] sm:text-[13px] font-black text-white leading-none truncate font-sans flex items-center gap-0.5">
+                        <Check className="w-2 h-2 text-emerald-400 shrink-0 sm:hidden" />
                         <span className="hidden rtl:inline">{user.nameAr}</span>
                         <span className="inline rtl:hidden">{user.name}</span>
                       </h4>
-                      <div className="flex items-center gap-1 mt-1 font-sans">
+                      <div className="hidden sm:flex items-center gap-1 mt-1 font-sans">
                         <MapPin className="w-2.5 h-2.5 text-slate-400 shrink-0" />
                         <span className="text-[10px] text-slate-400 font-semibold leading-none">
                           <span className="hidden rtl:inline">{user.cityAr}</span>
@@ -221,11 +231,11 @@ export const CustomerReviews: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-0.5 mb-2">
-                    {[...Array(user.stars)].map((_, i) => (<Star key={i} className="w-3 h-3 text-amber-400 fill-amber-400" />))}
-                    {[...Array(5 - user.stars)].map((_, i) => (<Star key={i} className="w-3 h-3 text-slate-600 fill-slate-600" />))}
+                  <div className="flex gap-0.5 mb-1.5 sm:mb-2">
+                    {[...Array(user.stars)].map((_, i) => (<Star key={i} className="w-2 h-2 sm:w-3 sm:h-3 text-amber-400 fill-amber-400" />))}
+                    {[...Array(5 - user.stars)].map((_, i) => (<Star key={i} className="w-2 h-2 sm:w-3 sm:h-3 text-slate-600 fill-slate-600" />))}
                   </div>
-                  <p className="text-[11px] text-slate-200 leading-relaxed line-clamp-3">
+                  <p className="text-[9px] sm:text-[11px] text-slate-200 leading-relaxed line-clamp-3">
                     <span className="hidden rtl:inline">&ldquo;{user.reviewAr}&rdquo;</span>
                     <span className="inline rtl:hidden">&ldquo;{user.review}&rdquo;</span>
                   </p>
