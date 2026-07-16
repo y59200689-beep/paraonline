@@ -161,112 +161,101 @@ export const SummerSalePromo: React.FC = () => {
             <div className="orbit-particle orbit-particle-2 top-1/2 left-1/2" />
           </div>
 
-          {/* ── MOBILE: Single triptych card ─────────────────────────────── */}
+          {/* ── MOBILE: Stacked promo card ─────────────────────────────── */}
           <div className="lg:hidden mb-4 relative z-10">
-            <div className="bg-white rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.015)] border border-slate-100/50">
-              {/* Triptych row: image | content | image */}
-              <div className="flex items-stretch" style={{ minHeight: '200px' }}>
-
-                {/* Left image panel */}
-                <div className="relative w-[22%] shrink-0 overflow-hidden">
+            <div className="bg-white rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.015)] border border-slate-100/50 p-5 flex flex-col items-center text-center">
+              
+              {/* Images Row at the top */}
+              <div className="flex justify-center gap-4 mb-4 w-full h-[120px]">
+                <div className="relative w-[45%] rounded-[16px] overflow-hidden border border-slate-100">
                   <Image
                     src={getOptimizedImageUrl(leftImage)}
-                    alt="Cicaplast Duo Pack"
+                    alt=""
                     fill
-                    sizes="22vw"
-                    preload={true}
-                    loading="eager"
+                    sizes="40vw"
                     className="object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/30 pointer-events-none" />
                 </div>
-
-                {/* Center content */}
-                <div className="flex-1 px-3 py-5 flex flex-col items-center justify-center text-center relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-b from-slate-50/30 to-transparent pointer-events-none" />
-
-                  {/* Badges */}
-                  <div className="mb-2 flex items-center justify-center gap-1.5 flex-wrap">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-bold text-white bg-[#7C3AED]/90 tracking-wide">
-                      <Sparkles className="w-2.5 h-2.5" />
-                      {language === 'AR' ? 'أفضل عرض' : 'Best Deal'}
-                    </span>
-                    <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9px] font-black text-emerald-500 bg-emerald-50 border border-emerald-100 animate-pulse">
-                      <span>🔥</span>
-                      <span>{language === 'AR' ? 'نشط الآن' : 'LIVE'}</span>
-                    </span>
-                  </div>
-
-                  {/* Heading */}
-                  <h3 className="text-xl font-black text-slate-800 tracking-tight mb-1 select-none font-heading leading-tight">
-                    {language === 'AR' ? 'تخفيضات الصيف' : 'Summer Sale'}
-                  </h3>
-
-                  {/* Subtext */}
-                  <p className="text-slate-500 text-[10px] leading-relaxed mb-3 font-medium">
-                    {language === 'AR'
-                      ? 'خصومات تصل إلى 30%'
-                      : 'Up to 30% Off everything'}
-                  </p>
-
-                  {/* Countdown */}
-                  <div className="flex items-center gap-1 mb-3 select-none" dir="ltr">
-                    <div className="flex flex-col items-center">
-                      <div className="w-10 h-10 rounded-[8px] bg-slate-50 border border-slate-100 shadow-sm flex flex-col items-center justify-center">
-                        <span className="text-sm font-black text-primary leading-none">
-                          {String(timeLeft.minutes).padStart(2, '0')}
-                        </span>
-                        <span className="text-[6px] font-black text-slate-400 tracking-wider uppercase">
-                          {language === 'AR' ? 'د' : 'MIN'}
-                        </span>
-                      </div>
-                    </div>
-                    <span className="text-sm font-black text-slate-300 animate-pulse">:</span>
-                    <div className="flex flex-col items-center">
-                      <div className="w-10 h-10 rounded-[8px] bg-slate-50 border border-slate-100 shadow-sm flex flex-col items-center justify-center animate-pulse-ring">
-                        <span className="text-sm font-black text-primary leading-none">
-                          {String(timeLeft.seconds).padStart(2, '0')}
-                        </span>
-                        <span className="text-[6px] font-black text-slate-400 tracking-wider uppercase">
-                          {language === 'AR' ? 'ث' : 'SEC'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* CTA */}
-                  <button
-                    onClick={() => {
-                      const el = document.getElementById('boutique-grid');
-                      if (el) el.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className="font-bold text-[11px] px-4 py-2 rounded-full active:scale-95 transition-all duration-300 flex items-center gap-1.5 border-0 outline-none"
-                    style={{
-                      background: 'linear-gradient(160deg, #1a4731 0%, #2d7a4f 55%, #1f5c3a 100%)',
-                      color: '#ffffff',
-                      boxShadow: '0 4px 12px rgba(30,80,55,0.28)',
-                    }}
-                  >
-                    <span style={{ color: '#ffffff' }}>{language === 'AR' ? 'تسوق الآن' : 'Shop Now'}</span>
-                    <ArrowRight className="w-3 h-3" style={{ color: '#ffffff', stroke: '#ffffff' }} />
-                  </button>
-                </div>
-
-                {/* Right image panel */}
-                <div className="relative w-[22%] shrink-0 overflow-hidden">
+                <div className="relative w-[45%] rounded-[16px] overflow-hidden border border-slate-100">
                   <Image
                     src={getOptimizedImageUrl(rightImage)}
-                    alt="Vichy Sunscreen Pack"
+                    alt=""
                     fill
-                    sizes="22vw"
-                    preload={true}
-                    loading="eager"
+                    sizes="40vw"
                     className="object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-l from-transparent to-white/30 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 w-full flex flex-col items-center">
+                {/* Badges */}
+                <div className="mb-2 flex items-center justify-center gap-1.5 flex-wrap">
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold text-white bg-[#7C3AED]/90 tracking-wide">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    {language === 'AR' ? 'أفضل عرض' : 'Best Deal'}
+                  </span>
+                  <span className="inline-flex items-center gap-0.5 px-2.5 py-0.5 rounded-full text-[10px] font-black text-emerald-500 bg-emerald-50 border border-emerald-100 animate-pulse">
+                    <span>🔥</span>
+                    <span>{language === 'AR' ? 'نشط الآن' : 'LIVE'}</span>
+                  </span>
                 </div>
 
+                {/* Heading */}
+                <h3 className="text-2xl font-black text-slate-800 tracking-tight mb-1 select-none font-heading leading-tight">
+                  {language === 'AR' ? 'تخفيضات الصيف' : 'Summer Sale'}
+                </h3>
+
+                {/* Subtext */}
+                <p className="text-slate-500 text-[12px] leading-relaxed mb-4 font-medium max-w-[240px]">
+                  {language === 'AR'
+                    ? 'خصومات تصل إلى 30% على كل شيء'
+                    : 'Up to 30% Off everything'}
+                </p>
+
+                {/* Countdown */}
+                <div className="flex items-center gap-2 mb-4 select-none" dir="ltr">
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 rounded-[10px] bg-slate-50 border border-slate-100 shadow-sm flex flex-col items-center justify-center">
+                      <span className="text-base font-black text-primary leading-none">
+                        {String(timeLeft.minutes).padStart(2, '0')}
+                      </span>
+                      <span className="text-[7.5px] font-black text-slate-400 mt-0.5 tracking-wider uppercase">
+                        {language === 'AR' ? 'د' : 'MIN'}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-base font-black text-slate-300 animate-pulse">:</span>
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 rounded-[10px] bg-slate-50 border border-slate-100 shadow-sm flex flex-col items-center justify-center animate-pulse-ring">
+                      <span className="text-base font-black text-primary leading-none">
+                        {String(timeLeft.seconds).padStart(2, '0')}
+                      </span>
+                      <span className="text-[7.5px] font-black text-slate-400 mt-0.5 tracking-wider uppercase">
+                        {language === 'AR' ? 'ث' : 'SEC'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* CTA */}
+                <button
+                  onClick={() => {
+                    const el = document.getElementById('boutique-grid');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="font-bold text-xs px-6 py-2.5 rounded-full active:scale-95 transition-all duration-300 flex items-center gap-1.5 border-0 outline-none w-full justify-center max-w-[200px]"
+                  style={{
+                    background: 'linear-gradient(160deg, #1a4731 0%, #2d7a4f 55%, #1f5c3a 100%)',
+                    color: '#ffffff',
+                    boxShadow: '0 4px 12px rgba(30,80,55,0.28)',
+                  }}
+                >
+                  <span style={{ color: '#ffffff' }}>{language === 'AR' ? 'تسوق الآن' : 'Shop Now'}</span>
+                  <ArrowRight className="w-3.5 h-3.5" style={{ color: '#ffffff', stroke: '#ffffff' }} />
+                </button>
               </div>
+
             </div>
           </div>
 
