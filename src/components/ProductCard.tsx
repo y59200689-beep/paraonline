@@ -25,6 +25,7 @@ interface ProductCardProps {
   searchQuery?: string;
   singleImage?: boolean;
   priority?: boolean;
+  compact?: boolean;
 }
 
 const placeholderSvg = "data:image/svg+xml;utf8," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300' width='100%' height='100%'><rect width='100%' height='100%' fill='#f1f5f9'/><path d='M150 100a40 40 0 1 0 40 40 40 40 0 0 0-40-40zm0 60a20 20 0 1 1 20-20 20 20 0 0 1-20 20z' fill='#94a3b8'/><path d='M180 180h-60a10 10 0 0 0-10 10v10h80v-10a10 10 0 0 0-10-10z' fill='#94a3b8'/><text x='150' y='230' font-family='sans-serif' font-size='12' font-weight='bold' fill='#64748b' text-anchor='middle'>Image Indisponible</text></svg>");
@@ -63,7 +64,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   showMatchScore = false,
   searchQuery,
   singleImage = false,
-  priority = false
+  priority = false,
+  compact = false
 }) => {
   const { addToCart } = useCart();
   const { language } = useTranslation();
@@ -284,12 +286,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   return (
     <div
       ref={cardRef}
-      className={`group relative bg-white border border-slate-100 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.015)] hover:shadow-[0_12px_30px_rgba(13,148,136,0.06)] hover:border-teal-500/20 hover:-translate-y-1.5 transition-all duration-300 flex flex-col h-full cursor-default card-press-feedback ${className || ''}`}
+      className={`group relative bg-white border border-slate-100 ${compact ? 'rounded-xl sm:rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.01)]' : 'rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.015)]'} hover:shadow-[0_12px_30px_rgba(13,148,136,0.06)] hover:border-teal-500/20 hover:-translate-y-1.5 transition-all duration-300 flex flex-col h-full cursor-default card-press-feedback ${className || ''}`}
       style={{ ...style }}
     >
       <a
         href={`/products/${product.id}`}
-        className="bezel-outer !p-2 bg-[#f8fafc]/90 border border-slate-100/60 block m-3 w-[calc(100%-24px)] aspect-square relative shrink-0 overflow-hidden cursor-pointer rounded-2xl group/img"
+        className={`bezel-outer bg-[#f8fafc]/90 border border-slate-100/60 block ${compact ? 'm-2 !p-1 w-[calc(100%-16px)] rounded-xl sm:m-3 sm:!p-2 sm:w-[calc(100%-24px)] sm:rounded-2xl' : 'm-3 !p-2 w-[calc(100%-24px)] rounded-2xl'} aspect-square relative shrink-0 overflow-hidden cursor-pointer group/img`}
       >
         
         {product.stock !== undefined && product.stock <= 0 ? (
@@ -375,7 +377,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {imageOverlay}
       </a>
 
-      <div className="px-4 pb-4 pt-1 flex flex-col flex-grow">
+      <div className={`${compact ? 'px-2.5 pb-2.5 pt-0.5 sm:px-4 sm:pb-4 sm:pt-1' : 'px-4 pb-4 pt-1'} flex flex-col flex-grow`}>
         
         {showMatchScore && diagnostic && matchScore && (
           <div className="flex items-center mb-1 select-none">
@@ -386,32 +388,30 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         )}
 
-        <h3 className="text-[13.5px] font-bold text-slate-800 hover:text-primary line-clamp-2 leading-snug transition-colors duration-300 min-h-[38px] text-left mb-2.5">
+        <h3 className={`${compact ? 'text-[10.5px] sm:text-[13.5px] min-h-[30px] sm:min-h-[38px] mb-1.5' : 'text-[13.5px] min-h-[38px] mb-2.5'} font-bold text-slate-800 hover:text-primary line-clamp-2 leading-snug transition-colors duration-300 text-left`}>
           <a href={`/products/${product.id}`} className="cursor-pointer block">
             {renderHighlightedTitle(toTitleCase(cleanTitle(product.nameFr || product.name || product.title)), searchQuery)}
           </a>
         </h3>
 
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-[15px] font-black text-primary tracking-tight whitespace-nowrap">
+        <div className="flex items-center gap-1.5 mb-2">
+          <span className={`${compact ? 'text-[12.5px] sm:text-[15px]' : 'text-[15px]'} font-black text-primary tracking-tight whitespace-nowrap`}>
             {convertPrice(product.price)}
           </span>
           {discount && (
-            <span className="text-[11px] text-slate-400 line-through font-semibold whitespace-nowrap">
+            <span className={`${compact ? 'text-[9.5px] sm:text-[11px]' : 'text-[11px]'} text-slate-400 line-through font-semibold whitespace-nowrap`}>
               {convertPrice(product.comparePrice)}
             </span>
           )}
         </div>
 
-
-
-        <div className="flex items-center justify-between border-t border-slate-50 pt-2.5 mt-auto select-none">
+        <div className="flex items-center justify-between border-t border-slate-50 pt-2 mt-auto select-none">
           <div className="flex items-center gap-1">
             <div className="flex items-center gap-0.5">
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star 
                   key={star} 
-                  className={`w-3.5 h-3.5 fill-current ${
+                  className={`${compact ? 'w-2.5 h-2.5 sm:w-3.5 sm:h-3.5' : 'w-3.5 h-3.5'} fill-current ${
                     star <= Math.round(product.rating) 
                       ? 'text-gold fill-gold'
                       : 'text-slate-200 fill-slate-200'
@@ -419,7 +419,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 />
               ))}
             </div>
-            <span className="text-[10.5px] font-bold text-slate-400 mt-0.5">
+            <span className={`${compact ? 'text-[8.5px] sm:text-[10.5px]' : 'text-[10.5px]'} font-bold text-slate-400 mt-0.5`}>
               ({product.rating.toFixed(1)})
             </span>
           </div>
@@ -428,19 +428,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <button
           onClick={handleAdd}
           disabled={isAdding || (product.stock !== undefined && product.stock <= 0)}
-          className={`mt-3.5 w-full font-bold text-[9px] min-[360px]:text-[10px] lg:text-[11px] uppercase tracking-normal min-h-[38px] rounded-lg flex items-center justify-center gap-1 transition-all duration-300 disabled:opacity-70 cursor-pointer px-1 btn-press-feedback ${
+          className={`${compact ? 'mt-2 min-h-[28px] rounded-md text-[8px] min-[360px]:text-[8.5px] sm:text-[11px] sm:min-h-[38px] sm:rounded-lg' : 'mt-3.5 min-h-[38px] rounded-lg text-[9px] min-[360px]:text-[10px] lg:text-[11px]'} w-full font-bold uppercase tracking-normal flex items-center justify-center gap-1 transition-all duration-300 disabled:opacity-70 cursor-pointer px-1 btn-press-feedback ${
             product.stock !== undefined && product.stock <= 0
               ? 'bg-slate-700 text-slate-300 cursor-not-allowed opacity-70'
               : 'btn-gradient'
           }`}
         >
-          <ShoppingCart className={`w-3 h-3 min-[360px]:w-3.5 min-[360px]:h-3.5 shrink-0 ${isAdding ? 'animate-bounce' : ''}`} style={{ color: '#ffffff', stroke: '#ffffff' }} />
+          <ShoppingCart className={`${compact ? 'w-2.5 h-2.5 sm:w-3.5 sm:h-3.5' : 'w-3 h-3 min-[360px]:w-3.5 min-[360px]:h-3.5'} shrink-0 ${isAdding ? 'animate-bounce' : ''}`} style={{ color: '#ffffff', stroke: '#ffffff' }} />
           <span className="whitespace-nowrap text-center" style={{ color: '#ffffff', fontWeight: 800, letterSpacing: '0.01em' }}>
             {product.stock !== undefined && product.stock <= 0
-              ? (language === 'FR' ? 'Rupture de Stock' : 'غير متوفر')
+              ? (compact ? (language === 'FR' ? 'Rupture' : 'غير متوفر') : (language === 'FR' ? 'Rupture de Stock' : 'غير متوفر'))
               : isAdding
               ? (language === 'FR' ? 'Ajouté !' : 'تم !')
-              : (language === 'FR' ? 'Ajouter au panier' : 'أضف إلى السلة')}
+              : (compact ? (language === 'FR' ? '+ Ajouter' : '+ أضف') : (language === 'FR' ? 'Ajouter au panier' : 'أضف إلى السلة'))}
           </span>
         </button>
 

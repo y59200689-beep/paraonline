@@ -240,18 +240,18 @@ function BrandRow({ brand, isAR }: { brand: (typeof BRANDS)[number]; isAR: boole
 
         <div
           ref={scrollRef}
-          className="flex gap-6 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-4 flex-1"
+          className="flex gap-3 sm:gap-6 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-4 flex-1"
         >
           {loading ? (
             Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="snap-start shrink-0 w-[270px] md:w-[290px] animate-pulse">
-                <div className="bg-slate-100 dark:bg-slate-900/60 rounded-2xl h-[380px]" />
+              <div key={i} className="snap-start shrink-0 w-[112px] sm:w-[270px] md:w-[290px] animate-pulse">
+                <div className="bg-slate-100 dark:bg-slate-900/60 rounded-xl sm:rounded-2xl h-[180px] sm:h-[380px]" />
               </div>
             ))
           ) : brandProducts.length > 0 ? (
             brandProducts.map((product, idx) => (
-              <div key={product.id} className="snap-start shrink-0 w-[270px] md:w-[290px]">
-                <ProductCard product={product} singleImage priority={idx < 3} />
+              <div key={product.id} className="snap-start shrink-0 w-[112px] sm:w-[270px] md:w-[290px]">
+                <ProductCard product={product} singleImage priority={idx < 3} compact />
               </div>
             ))
           ) : (
