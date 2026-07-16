@@ -116,7 +116,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, onSele
 
         const queryParams = new URLSearchParams({
           page: page.toString(),
-          limit: '15',
+          limit: '16',
           category: activeCategory,
           concern: activeConcern,
           ingredient: activeIngredient,
@@ -152,7 +152,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, onSele
 
             const pinnedIds = new Set(pinnedList.map(p => p.id));
             const filteredFetched = fetchedList.filter(p => !pinnedIds.has(p.id));
-            list = [...pinnedList, ...filteredFetched].slice(0, 15);
+            list = [...pinnedList, ...filteredFetched].slice(0, 16);
           } else {
             list = fetchedList;
           }
@@ -214,7 +214,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, onSele
         {/* Skeleton loaders */}
         {isLoading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 md:gap-6" style={{ marginTop: '36px' }}>
-            {Array.from({ length: 15 }).map((_, id) => (
+            {Array.from({ length: 16 }).map((_, id) => (
               <div key={id} className="w-full bg-white border border-border/40 rounded-[10px] overflow-hidden animate-pulse shadow-sm">
                 <div className="aspect-square bg-slate-100" />
                 <div className="p-4 space-y-3">
@@ -249,17 +249,14 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, onSele
         ) : (
           <>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 md:gap-6" style={{ marginTop: '40px' }}>
-              {filteredProducts.map((product, idx) => {
-                const isLastOrphan = idx === filteredProducts.length - 1 && filteredProducts.length % 2 !== 0;
-                return (
-                  <div
-                    key={product.id}
-                    className={`w-full ${isLastOrphan ? 'col-span-2 md:col-span-1' : ''}`}
-                  >
-                    <ProductCard product={product} onOpenQuickView={onOpenQuickView} priority={idx < 5} />
-                  </div>
-                );
-              })}
+              {filteredProducts.map((product, idx) => (
+                <div
+                  key={product.id}
+                  className="w-full"
+                >
+                  <ProductCard product={product} onOpenQuickView={onOpenQuickView} priority={idx < 5} />
+                </div>
+              ))}
             </div>
           </>
         )}
