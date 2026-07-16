@@ -64,21 +64,35 @@ export const BrandPartners: React.FC<BrandPartnersProps> = () => {
         }
         .brand-marquee-l-1 {
           display: flex;
-          gap: 1rem;
+          gap: 0.5rem;
           width: max-content;
-          animation: marqueeL 380s linear infinite;
+          animation: marqueeL 120s linear infinite;
         }
         .brand-marquee-r {
           display: flex;
-          gap: 1rem;
+          gap: 0.5rem;
           width: max-content;
-          animation: marqueeR 320s linear infinite;
+          animation: marqueeR 100s linear infinite;
         }
         .brand-marquee-l-2 {
           display: flex;
-          gap: 1rem;
+          gap: 0.5rem;
           width: max-content;
-          animation: marqueeL 440s linear infinite;
+          animation: marqueeL 140s linear infinite;
+        }
+        @media (min-width: 640px) {
+          .brand-marquee-l-1 {
+            gap: 1rem;
+            animation-duration: 380s;
+          }
+          .brand-marquee-r {
+            gap: 1rem;
+            animation-duration: 320s;
+          }
+          .brand-marquee-l-2 {
+            gap: 1rem;
+            animation-duration: 440s;
+          }
         }
         /* Pause animation on hover so users can click reliably */
         .brand-marquee-l-1:hover,
@@ -126,7 +140,7 @@ export const BrandPartners: React.FC<BrandPartnersProps> = () => {
             {/* Ticker Row 1 (Left) */}
             <div className="brand-marquee-l-1">
               {row1Items.map((brand, i) => (
-                <div key={brand.name + '-r1-' + i} className="w-[120px] sm:w-[150px] shrink-0">
+                <div key={brand.name + '-r1-' + i} className="w-[72px] sm:w-[150px] shrink-0">
                   <BrandLogoCard brand={brand} />
                 </div>
               ))}
@@ -135,7 +149,7 @@ export const BrandPartners: React.FC<BrandPartnersProps> = () => {
             {/* Ticker Row 2 (Right) */}
             <div className="brand-marquee-r">
               {row2Items.map((brand, i) => (
-                <div key={brand.name + '-r2-' + i} className="w-[120px] sm:w-[150px] shrink-0">
+                <div key={brand.name + '-r2-' + i} className="w-[72px] sm:w-[150px] shrink-0">
                   <BrandLogoCard brand={brand} />
                 </div>
               ))}
@@ -144,7 +158,7 @@ export const BrandPartners: React.FC<BrandPartnersProps> = () => {
             {/* Ticker Row 3 (Left slower) */}
             <div className="brand-marquee-l-2">
               {row3Items.map((brand, i) => (
-                <div key={brand.name + '-r3-' + i} className="w-[120px] sm:w-[150px] shrink-0">
+                <div key={brand.name + '-r3-' + i} className="w-[72px] sm:w-[150px] shrink-0">
                   <BrandLogoCard brand={brand} />
                 </div>
               ))}
