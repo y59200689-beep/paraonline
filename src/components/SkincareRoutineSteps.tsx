@@ -134,27 +134,7 @@ export const SkincareRoutineSteps: React.FC<SkincareRoutineStepsProps> = ({ onOp
 
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 relative z-10">
         
-        {/* Section Header */}
-        <div 
-          className="flex flex-col items-center text-center space-y-4 w-full"
-          style={{ maxWidth: '768px', marginLeft: 'auto', marginRight: 'auto', marginBottom: '56px', marginTop: '24px' }}
-        >
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-primary/15 rounded-[5px] text-[9px] font-black text-primary uppercase tracking-[0.2em] shadow-sm">
-            <Sparkles className="w-3 h-3 fill-primary stroke-none" />
-            <span>{language === 'FR' ? 'Rituel Clinique Haute Performance' : 'طقوس عيادية عالية الأداء'}</span>
-          </div>
-          <h2 
-            className="text-3.5xl md:text-[36px] font-black font-heading text-slate-800 leading-tight tracking-tight text-center w-full"
-            style={{ marginBottom: '12px' }}
-          >
-            {language === 'FR' ? 'Votre Routine "Glass Skin" en 3 Étapes' : 'روتينكِ للبشرة الزجاجية في 3 خطوات'}
-          </h2>
-          <p className="text-xs md:text-[13px] text-slate-500 leading-relaxed font-medium text-center w-full">
-            {language === 'FR'
-              ? 'Trois gestes fondamentaux recommandés par nos pharmaciens pour purifier, traiter et protéger votre visage au quotidien.'
-              : 'ثلاث خطوات أساسية يوصي بها صيادلتنا لتطهير ومعالجة وحماية بشرتكِ يومياً.'}
-          </p>
-        </div>
+
 
         {/* Stepper Navigation */}
         {isTestCompleted && (
