@@ -367,40 +367,34 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
 
           </div>
 
-          {/* MOBILE ONLY HORIZONTAL SCROLL STRIP FOR CARDS 2, 3, 4 */}
-          <div 
-            className="flex md:hidden flex-row gap-4 overflow-x-auto snap-x scrollbar-none pb-2 mt-2" 
-            style={{ 
-              WebkitOverflowScrolling: 'touch',
-              scrollbarWidth: 'none'
-            }}
-          >
+          {/* MOBILE ONLY 3-COLUMN GRID FOR CARDS 2, 3, 4 */}
+          <div className="grid grid-cols-3 gap-2 md:hidden mt-2 w-full">
             
             {/* Mobile Card 2 */}
             <div 
               onClick={CARDS.card2.action}
-              className="hero-card-gsap w-[60vw] shrink-0 snap-start snap-always relative group overflow-hidden rounded-2xl border border-slate-200/50 bg-white h-[160px] cursor-pointer shimmer-sweep-2 card-press-feedback"
+              className="hero-card-gsap w-full relative group overflow-hidden rounded-xl border border-slate-200/50 bg-white h-[110px] cursor-pointer shimmer-sweep-2 card-press-feedback"
               style={{ opacity: mounted ? 0 : 1 }}
             >
               <Image
                 src={CARDS.card2.bgImage}
                 alt=""
                 fill
-                sizes="60vw"
+                sizes="33vw"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2000ms] ease-[var(--ease-out-premium)] group-hover:scale-[1.06]"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-primary-dark/90 via-primary-dark/45 to-transparent" />
-              <div className="absolute inset-0 p-4 flex flex-col justify-end text-white">
-                <div className="space-y-1.5">
-                  <span className="text-[7.5px] font-black uppercase tracking-wider text-accent block">
+              <div className="absolute inset-0 bg-gradient-to-t from-primary-dark/95 via-primary-dark/50 to-transparent" />
+              <div className="absolute inset-0 p-2 flex flex-col justify-end text-white">
+                <div className="space-y-1">
+                  <span className="text-[6.5px] font-black uppercase tracking-wider text-accent block">
                     {isRTL ? CARDS.card2.tag_ar : CARDS.card2.tag_fr}
                   </span>
-                  <h3 className="text-[13.5px] font-black leading-tight font-heading text-white">
+                  <h3 className="text-[9.5px] font-black leading-tight font-heading text-white line-clamp-2">
                     {isRTL ? CARDS.card2.title_ar : CARDS.card2.title_fr}
                   </h3>
-                  <div className="inline-flex items-center gap-0.5 text-[9px] font-black uppercase tracking-wider text-accent">
+                  <div className="inline-flex items-center gap-0.5 text-[7.5px] font-black uppercase tracking-wider text-accent mt-0.5">
                     <span>{isRTL ? CARDS.card2.cta_ar : CARDS.card2.cta_fr}</span>
-                    {isRTL ? <ArrowLeft className="w-2.5 h-2.5" /> : <ArrowRight className="w-2.5 h-2.5" />}
+                    {isRTL ? <ArrowLeft className="w-2 h-2" /> : <ArrowRight className="w-2 h-2" />}
                   </div>
                 </div>
               </div>
@@ -409,28 +403,28 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
             {/* Mobile Card 3 */}
             <div 
               onClick={CARDS.card3.action}
-              className="hero-card-gsap w-[60vw] shrink-0 snap-start snap-always relative group overflow-hidden rounded-2xl border border-slate-200/50 bg-white h-[160px] cursor-pointer shimmer-sweep-3 card-press-feedback"
+              className="hero-card-gsap w-full relative group overflow-hidden rounded-xl border border-slate-200/50 bg-white h-[110px] cursor-pointer shimmer-sweep-3 card-press-feedback"
               style={{ opacity: mounted ? 0 : 1 }}
             >
               <Image
                 src={CARDS.card3.bgImage}
                 alt=""
                 fill
-                sizes="60vw"
+                sizes="33vw"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2000ms] ease-[var(--ease-out-premium)] group-hover:scale-[1.06]"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-primary-dark/90 via-primary-dark/45 to-transparent" />
-              <div className="absolute inset-0 p-4 flex flex-col justify-end text-white">
-                <div className="space-y-1.5">
-                  <span className="text-[7.5px] font-black uppercase tracking-wider text-accent block">
+              <div className="absolute inset-0 bg-gradient-to-t from-primary-dark/95 via-primary-dark/50 to-transparent" />
+              <div className="absolute inset-0 p-2 flex flex-col justify-end text-white">
+                <div className="space-y-1">
+                  <span className="text-[6.5px] font-black uppercase tracking-wider text-accent block">
                     {isRTL ? CARDS.card3.tag_ar : CARDS.card3.tag_fr}
                   </span>
-                  <h3 className="text-[13.5px] font-black leading-tight font-heading text-white">
+                  <h3 className="text-[9.5px] font-black leading-tight font-heading text-white line-clamp-2">
                     {isRTL ? CARDS.card3.title_ar : CARDS.card3.title_fr}
                   </h3>
-                  <div className="inline-flex items-center gap-0.5 text-[9px] font-black uppercase tracking-wider text-accent">
+                  <div className="inline-flex items-center gap-0.5 text-[7.5px] font-black uppercase tracking-wider text-accent mt-0.5">
                     <span>{isRTL ? CARDS.card3.cta_ar : CARDS.card3.cta_fr}</span>
-                    {isRTL ? <ArrowLeft className="w-2.5 h-2.5" /> : <ArrowRight className="w-2.5 h-2.5" />}
+                    {isRTL ? <ArrowLeft className="w-2 h-2" /> : <ArrowRight className="w-2 h-2" />}
                   </div>
                 </div>
               </div>
@@ -439,28 +433,28 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
             {/* Mobile Card 4 */}
             <div 
               onClick={CARDS.card4.action}
-              className="hero-card-gsap w-[60vw] shrink-0 snap-start snap-always relative group overflow-hidden rounded-2xl border border-slate-200/50 bg-white h-[160px] cursor-pointer shimmer-sweep-3 card-press-feedback"
+              className="hero-card-gsap w-full relative group overflow-hidden rounded-xl border border-slate-200/50 bg-white h-[110px] cursor-pointer shimmer-sweep-3 card-press-feedback"
               style={{ opacity: mounted ? 0 : 1 }}
             >
               <Image
                 src={CARDS.card4.bgImage}
                 alt=""
                 fill
-                sizes="60vw"
+                sizes="33vw"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2000ms] ease-[var(--ease-out-premium)] group-hover:scale-[1.06]"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-primary-dark/90 via-primary-dark/45 to-transparent" />
-              <div className="absolute inset-0 p-4 flex flex-col justify-end text-white">
-                <div className="space-y-1.5">
-                  <span className="text-[7.5px] font-black uppercase tracking-wider text-accent block">
+              <div className="absolute inset-0 bg-gradient-to-t from-primary-dark/95 via-primary-dark/50 to-transparent" />
+              <div className="absolute inset-0 p-2 flex flex-col justify-end text-white">
+                <div className="space-y-1">
+                  <span className="text-[6.5px] font-black uppercase tracking-wider text-accent block">
                     {isRTL ? CARDS.card4.tag_ar : CARDS.card4.tag_fr}
                   </span>
-                  <h3 className="text-[13.5px] font-black leading-tight font-heading text-white">
+                  <h3 className="text-[9.5px] font-black leading-tight font-heading text-white line-clamp-2">
                     {isRTL ? CARDS.card4.title_ar : CARDS.card4.title_fr}
                   </h3>
-                  <div className="inline-flex items-center gap-0.5 text-[9px] font-black uppercase tracking-wider text-accent">
+                  <div className="inline-flex items-center gap-0.5 text-[7.5px] font-black uppercase tracking-wider text-accent mt-0.5">
                     <span>{isRTL ? CARDS.card4.cta_ar : CARDS.card4.cta_fr}</span>
-                    {isRTL ? <ArrowLeft className="w-2.5 h-2.5" /> : <ArrowRight className="w-2.5 h-2.5" />}
+                    {isRTL ? <ArrowLeft className="w-2 h-2" /> : <ArrowRight className="w-2 h-2" />}
                   </div>
                 </div>
               </div>
