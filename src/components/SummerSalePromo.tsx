@@ -9,11 +9,13 @@ import { Sparkles, ArrowRight, Star } from 'lucide-react';
 import Image from 'next/image';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { useSettings } from '@/context/SettingsContext';
+import { useCurrency } from '@/context/CurrencyContext';
 
 export const SummerSalePromo: React.FC = () => {
   const { language } = useTranslation();
   const { products } = useProducts();
   const { settings } = useSettings();
+  const { convertPrice } = useCurrency();
   const hp = settings?.homepageSections;
   const showSummerSale = hp?.showSummerSale ?? true;
 
@@ -445,8 +447,10 @@ export const SummerSalePromo: React.FC = () => {
                   </div>
                   {/* Price */}
                   <div className="flex items-baseline gap-1">
-                    <span className="text-xs font-black text-primary">{item.price} MAD</span>
-                    <span className="text-[9px] font-semibold text-slate-400 line-through">{item.comparePrice}</span>
+                    <span className="text-xs font-black text-primary">{convertPrice(item.price)}</span>
+                    {item.comparePrice > item.price && (
+                      <span className="text-[9px] font-semibold text-slate-400 line-through">{convertPrice(item.comparePrice)}</span>
+                    )}
                   </div>
                 </div>
               ))}
@@ -521,11 +525,13 @@ export const SummerSalePromo: React.FC = () => {
                     {/* Price */}
                     <div className="flex items-baseline gap-2 mt-0.5">
                       <span className="text-base font-black text-primary leading-none">
-                        {item.price} MAD
+                        {convertPrice(item.price)}
                       </span>
-                      <span className="text-[11px] font-semibold text-slate-400/80 line-through leading-none">
-                        {item.comparePrice} MAD
-                      </span>
+                      {item.comparePrice > item.price && (
+                        <span className="text-[11px] font-semibold text-slate-400/80 line-through leading-none">
+                          {convertPrice(item.comparePrice)}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

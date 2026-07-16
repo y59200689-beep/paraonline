@@ -54,6 +54,11 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children }) => {
 
   const [isBundleDrawerOpen, setIsBundleDrawerOpen] = useState(false);
   const [activeMobileTab, setActiveMobileTab] = useState('home');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const [showToast, setShowToast] = useState(false);
@@ -340,102 +345,104 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children }) => {
       </footer>
 
       {/* ── Mobile Bottom Navigation ─────────────────────────────────── */}
-      <nav
-        style={{ paddingBottom: 'calc(8px + env(safe-area-inset-bottom, 0px))' }}
-        className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] z-40 flex items-center justify-around pt-2.5 px-3"
-      >
-        {/* Home Link */}
-        <button
-          onClick={() => {
-            if (pathname === '/') {
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            } else {
-              router.push('/');
-            }
-            setActiveMobileTab('home');
-          }}
-          aria-current={activeMobileTab === 'home' ? 'page' : undefined}
-          className={`flex flex-col items-center justify-center gap-1.5 w-full py-1 transition-all duration-300 ${
-            activeMobileTab === 'home' 
-              ? 'text-primary' 
-              : 'text-slate-400 hover:text-slate-600'
-          }`}
+      {mounted && (
+        <nav
+          style={{ paddingBottom: 'calc(8px + env(safe-area-inset-bottom, 0px))' }}
+          className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] z-40 flex items-center justify-around pt-2.5 px-3"
         >
-          <HomeIcon className={`w-5 h-5 transition-transform duration-300 ${activeMobileTab === 'home' ? 'scale-110' : ''}`} />
-          <span className={`text-[10px] tracking-wider uppercase font-heading ${activeMobileTab === 'home' ? 'font-black text-primary-dark' : 'font-semibold text-slate-400'}`}>
-            {language === 'AR' ? 'الرئيسية' : 'Accueil'}
-          </span>
-        </button>
+          {/* Home Link */}
+          <button
+            onClick={() => {
+              if (pathname === '/') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              } else {
+                router.push('/');
+              }
+              setActiveMobileTab('home');
+            }}
+            aria-current={activeMobileTab === 'home' ? 'page' : undefined}
+            className={`flex flex-col items-center justify-center gap-1.5 w-full py-1 transition-all duration-300 ${
+              activeMobileTab === 'home' 
+                ? 'text-primary' 
+                : 'text-slate-400 hover:text-slate-600'
+            }`}
+          >
+            <HomeIcon className={`w-5 h-5 transition-transform duration-300 ${activeMobileTab === 'home' ? 'scale-110' : ''}`} />
+            <span className={`text-[10px] tracking-wider uppercase font-heading ${activeMobileTab === 'home' ? 'font-black text-primary-dark' : 'font-semibold text-slate-400'}`}>
+              {language === 'AR' ? 'الرئيسية' : 'Accueil'}
+            </span>
+          </button>
 
-        {/* Boutique Link */}
-        <button
-          onClick={() => {
-            if (pathname === '/') {
-              const el = document.getElementById('boutique-grid');
-              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            } else {
-              router.push('/products');
-            }
-            setActiveMobileTab('boutique');
-          }}
-          aria-current={activeMobileTab === 'boutique' ? 'page' : undefined}
-          className={`flex flex-col items-center justify-center gap-1.5 w-full py-1 transition-all duration-300 ${
-            activeMobileTab === 'boutique' 
-              ? 'text-primary' 
-              : 'text-slate-400 hover:text-slate-600'
-          }`}
-        >
-          <Store className={`w-5 h-5 transition-transform duration-300 ${activeMobileTab === 'boutique' ? 'scale-110' : ''}`} />
-          <span className={`text-[10px] tracking-wider uppercase font-heading ${activeMobileTab === 'boutique' ? 'font-black text-primary-dark' : 'font-semibold text-slate-400'}`}>
-            {language === 'AR' ? 'المتجر' : 'Boutique'}
-          </span>
-        </button>
+          {/* Boutique Link */}
+          <button
+            onClick={() => {
+              if (pathname === '/') {
+                const el = document.getElementById('boutique-grid');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              } else {
+                router.push('/products');
+              }
+              setActiveMobileTab('boutique');
+            }}
+            aria-current={activeMobileTab === 'boutique' ? 'page' : undefined}
+            className={`flex flex-col items-center justify-center gap-1.5 w-full py-1 transition-all duration-300 ${
+              activeMobileTab === 'boutique' 
+                ? 'text-primary' 
+                : 'text-slate-400 hover:text-slate-600'
+            }`}
+          >
+            <Store className={`w-5 h-5 transition-transform duration-300 ${activeMobileTab === 'boutique' ? 'scale-110' : ''}`} />
+            <span className={`text-[10px] tracking-wider uppercase font-heading ${activeMobileTab === 'boutique' ? 'font-black text-primary-dark' : 'font-semibold text-slate-400'}`}>
+              {language === 'AR' ? 'المتجر' : 'Boutique'}
+            </span>
+          </button>
 
-        {/* Diagnostic Link */}
-        <button
-          onClick={() => {
-            setDiagnosticOpen(true);
-            setActiveMobileTab('diagnostic');
-          }}
-          aria-current={activeMobileTab === 'diagnostic' ? 'page' : undefined}
-          className={`flex flex-col items-center justify-center gap-1.5 w-full py-1 transition-all duration-300 ${
-            activeMobileTab === 'diagnostic' 
-              ? 'text-primary' 
-              : 'text-slate-400 hover:text-slate-600'
-          }`}
-        >
-          <Sparkles className={`w-5 h-5 transition-transform duration-300 ${activeMobileTab === 'diagnostic' ? 'scale-110 text-accent animate-pulse' : ''}`} />
-          <span className={`text-[10px] tracking-wider uppercase font-heading ${activeMobileTab === 'diagnostic' ? 'font-black text-primary-dark' : 'font-semibold text-slate-400'}`}>
-            {language === 'AR' ? 'تشخيص' : 'Diagnostic'}
-          </span>
-        </button>
+          {/* Diagnostic Link */}
+          <button
+            onClick={() => {
+              setDiagnosticOpen(true);
+              setActiveMobileTab('diagnostic');
+            }}
+            aria-current={activeMobileTab === 'diagnostic' ? 'page' : undefined}
+            className={`flex flex-col items-center justify-center gap-1.5 w-full py-1 transition-all duration-300 ${
+              activeMobileTab === 'diagnostic' 
+                ? 'text-primary' 
+                : 'text-slate-400 hover:text-slate-600'
+            }`}
+          >
+            <Sparkles className={`w-5 h-5 transition-transform duration-300 ${activeMobileTab === 'diagnostic' ? 'scale-110 text-accent animate-pulse' : ''}`} />
+            <span className={`text-[10px] tracking-wider uppercase font-heading ${activeMobileTab === 'diagnostic' ? 'font-black text-primary-dark' : 'font-semibold text-slate-400'}`}>
+              {language === 'AR' ? 'تشخيص' : 'Diagnostic'}
+            </span>
+          </button>
 
-        {/* Cart Link */}
-        <button
-          onClick={() => {
-            setIsCartOpen(true);
-            setActiveMobileTab('cart');
-          }}
-          aria-current={activeMobileTab === 'cart' ? 'page' : undefined}
-          className={`flex flex-col items-center justify-center gap-1.5 w-full py-1 transition-all duration-300 relative ${
-            activeMobileTab === 'cart' 
-              ? 'text-primary' 
-              : 'text-slate-400 hover:text-slate-600'
-          }`}
-        >
-          <div className="relative">
-            <ShoppingBag className={`w-5 h-5 transition-transform duration-300 ${activeMobileTab === 'cart' ? 'scale-110' : ''}`} />
-            {cartCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-primary text-white text-[8px] font-black rounded-full flex items-center justify-center border border-white">
-                {cartCount}
-              </span>
-            )}
-          </div>
-          <span className={`text-[10px] tracking-wider uppercase font-heading ${activeMobileTab === 'cart' ? 'font-black text-primary-dark' : 'font-semibold text-slate-400'}`}>
-            {language === 'AR' ? 'السلة' : 'Panier'}
-          </span>
-        </button>
-      </nav>
+          {/* Cart Link */}
+          <button
+            onClick={() => {
+              setIsCartOpen(true);
+              setActiveMobileTab('cart');
+            }}
+            aria-current={activeMobileTab === 'cart' ? 'page' : undefined}
+            className={`flex flex-col items-center justify-center gap-1.5 w-full py-1 transition-all duration-300 relative ${
+              activeMobileTab === 'cart' 
+                ? 'text-primary' 
+                : 'text-slate-400 hover:text-slate-600'
+            }`}
+          >
+            <div className="relative">
+              <ShoppingBag className={`w-5 h-5 transition-transform duration-300 ${activeMobileTab === 'cart' ? 'scale-110' : ''}`} />
+              {cartCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-primary text-white text-[8px] font-black rounded-full flex items-center justify-center border border-white">
+                  {cartCount}
+                </span>
+              )}
+            </div>
+            <span className={`text-[10px] tracking-wider uppercase font-heading ${activeMobileTab === 'cart' ? 'font-black text-primary-dark' : 'font-semibold text-slate-400'}`}>
+              {language === 'AR' ? 'السلة' : 'Panier'}
+            </span>
+          </button>
+        </nav>
+      )}
 
       {/* Drawers & Modals */}
       <CartDrawer
@@ -462,7 +469,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children }) => {
 
       {/* FOMO Toast (hidden when drawers or quiz modals are active to prevent mobile overlaps) */}
       {showToast && !isCartOpen && !isDiagnosticOpen && !isScratchCardOpen && !isRoutineBuilderOpen && !selectedProduct && (
-        <div className="fixed bottom-[72px] md:bottom-6 left-3 right-3 md:right-auto md:left-8 z-50 bg-white/95 backdrop-blur-md border border-slate-200/50 shadow-[0_15px_35px_rgba(26,37,93,0.08)] py-2.5 px-3.5 md:py-3.5 md:px-5 rounded-[12px] flex items-center gap-3 md:gap-4 max-w-[92vw] md:max-w-[340px] animate-slide-in select-none">
+        <div className="fixed bottom-[72px] md:bottom-6 left-3 md:left-8 right-auto z-50 bg-white/95 backdrop-blur-md border border-slate-200/50 shadow-[0_15px_35px_rgba(26,37,93,0.08)] py-2.5 px-3.5 md:py-3.5 md:px-5 rounded-[12px] flex items-center gap-3 md:gap-4 w-[280px] md:w-auto max-w-[calc(100vw-24px)] md:max-w-[340px] animate-slide-in select-none">
           <div className="w-8 h-8 md:w-10 md:h-10 rounded-[8px] md:rounded-[10px] bg-primary/5 border border-primary/10 text-primary flex items-center justify-center shrink-0">
             <ShoppingBag className="w-3.5 h-3.5 md:w-4 md:h-4 stroke-[2.25]" />
           </div>

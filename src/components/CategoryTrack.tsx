@@ -128,7 +128,7 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
 
 
           {/* Navigation Arrows positioned relative to centered boundary */}
-          <div className="absolute inset-x-0 top-[50%] -translate-y-1/2 -mx-4 pointer-events-none z-20 flex justify-between">
+          <div className="hidden md:flex absolute inset-x-0 top-[50%] -translate-y-1/2 -mx-4 pointer-events-none z-20 justify-between">
             {/* Left Navigation Arrow */}
             <button
               onClick={() => scroll(isRTL ? 'right' : 'left')}

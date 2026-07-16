@@ -265,7 +265,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const categoryLabel = getCategoryLabel();
 
   const cleanTitle = (title: string) => {
-    let clean = title;
+    let clean = title.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
     const vendorPrefixes = [
       "Hada Labo Tokyo", "Hada Labo", "La Roche-Posay", "La Roche Posay",
       "Vichy", "CeraVe", "Eucerin", "Bioderma", "SVR", "Cetaphil",

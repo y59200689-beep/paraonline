@@ -249,14 +249,17 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, onSele
         ) : (
           <>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 md:gap-6" style={{ marginTop: '40px' }}>
-              {filteredProducts.map((product, idx) => (
-                <div
-                  key={product.id}
-                  className="w-full"
-                >
-                  <ProductCard product={product} onOpenQuickView={onOpenQuickView} priority={idx < 5} />
-                </div>
-              ))}
+              {filteredProducts.map((product, idx) => {
+                const isLastOrphan = idx === filteredProducts.length - 1 && filteredProducts.length % 2 !== 0;
+                return (
+                  <div
+                    key={product.id}
+                    className={`w-full ${isLastOrphan ? 'col-span-2 md:col-span-1' : ''}`}
+                  >
+                    <ProductCard product={product} onOpenQuickView={onOpenQuickView} priority={idx < 5} />
+                  </div>
+                );
+              })}
             </div>
           </>
         )}
