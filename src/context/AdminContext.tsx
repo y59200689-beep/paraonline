@@ -50,6 +50,8 @@ export interface AdminContextProps {
   adviceArticles: any[];
   isDataLoading: boolean;
   setIsDataLoading: (loading: boolean) => void;
+  isProductsLoading: boolean;
+  isReviewsLoading: boolean;
 
   // Actions
   loadAllData: () => Promise<void>;
@@ -235,6 +237,8 @@ export const useAdmin = (): AdminContextProps => {
     adviceArticles: data.adviceArticles,
     isDataLoading: data.isDataLoading,
     setIsDataLoading: data.setIsDataLoading,
+    isProductsLoading: data.isProductsLoading,
+    isReviewsLoading: data.isReviewsLoading,
     cartRecoveryStatus: data.cartRecoveryStatus,
 
     // Data Loaders

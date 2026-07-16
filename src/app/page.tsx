@@ -80,6 +80,7 @@ export default async function Home() {
     { id: 'summerSale-1', type: 'summerSale', nameFr: "Offres d'Été (Summer Sale)", visible: hp.showSummerSale ?? true },
     { id: 'skinConcerns-1', type: 'skinConcerns', nameFr: 'Bento de Préoccupations Cutanées', visible: hp.showSkinConcerns ?? true },
     { id: 'curationClinique-1', type: 'curationClinique', nameFr: 'Curation Clinique par Préoccupation', visible: true },
+    { id: 'dermoCorner-1', type: 'dermoCorner', nameFr: 'Dermo Corner (Acné vs Taches)', visible: true },
     { id: 'flashSale-1', type: 'flashSale', nameFr: 'Bannière de Vente Flash', visible: hp.showFlashSale ?? true },
     { id: 'horizontalPromo-1', type: 'horizontalPromo', nameFr: 'Bannière Promotionnelle Horizontale', visible: hp.showHorizontalPromo ?? true },
     { id: 'customerReviews-1', type: 'customerReviews', nameFr: 'Témoignages & Avis Clients', visible: hp.showCustomerReviews ?? true },
@@ -89,8 +90,10 @@ export default async function Home() {
     { id: 'routineVisualizer-1', type: 'routineVisualizer', nameFr: 'Visualiseur de Routine de Soins', visible: hp.showRoutineVisualizer ?? true },
     { id: 'featuredIngredient-1', type: 'featuredIngredient', nameFr: 'Marques Vedettes de la Semaine', visible: hp.showFeaturedIngredient ?? true },
     { id: 'skincareRoutineSteps-1', type: 'skincareRoutineSteps', nameFr: 'Étapes de la Routine Skincare', visible: hp.showRoutineVisualizer ?? true },
+    { id: 'activeIngredients-1', type: 'activeIngredients', nameFr: 'Molécules & Ingrédients Actifs', visible: true },
     { id: 'ingredientDictionary-1', type: 'ingredientDictionary', nameFr: 'Dictionnaire Clinique des Ingrédients', visible: hp.showIngredientDictionary ?? true },
     { id: 'faq-1', type: 'faq', nameFr: 'Foire Aux Questions (FAQ)', visible: hp.showFaq ?? true },
+    { id: 'officialDistributor-1', type: 'officialDistributor', nameFr: 'Badge Distributeur Officiel', visible: true },
     { id: 'trustBar-1', type: 'trustBar', nameFr: 'Barre de Confiance Maroc', visible: hp.showTrustBar ?? true }
   ];
 
@@ -114,6 +117,36 @@ export default async function Home() {
         nameFr: 'Étapes de la Routine Skincare',
         visible: hp.showRoutineVisualizer ?? true
       });
+    }
+  }
+
+  // 1b. Ensure 'dermoCorner-1' is in the list
+  if (!sectionsList.some(s => s.id === 'dermoCorner-1')) {
+    const curationIdx = sectionsList.findIndex(s => s.id === 'curationClinique-1');
+    if (curationIdx !== -1) {
+      sectionsList.splice(curationIdx + 1, 0, { id: 'dermoCorner-1', type: 'dermoCorner', nameFr: 'Dermo Corner (Acné vs Taches)', visible: true });
+    } else {
+      sectionsList.push({ id: 'dermoCorner-1', type: 'dermoCorner', nameFr: 'Dermo Corner (Acné vs Taches)', visible: true });
+    }
+  }
+
+  // 1c. Ensure 'activeIngredients-1' is in the list
+  if (!sectionsList.some(s => s.id === 'activeIngredients-1')) {
+    const dictIdx = sectionsList.findIndex(s => s.id === 'ingredientDictionary-1');
+    if (dictIdx !== -1) {
+      sectionsList.splice(dictIdx, 0, { id: 'activeIngredients-1', type: 'activeIngredients', nameFr: 'Molécules & Ingrédients Actifs', visible: true });
+    } else {
+      sectionsList.push({ id: 'activeIngredients-1', type: 'activeIngredients', nameFr: 'Molécules & Ingrédients Actifs', visible: true });
+    }
+  }
+
+  // 1d. Ensure 'officialDistributor-1' is in the list
+  if (!sectionsList.some(s => s.id === 'officialDistributor-1')) {
+    const trustIdx = sectionsList.findIndex(s => s.id === 'trustBar-1');
+    if (trustIdx !== -1) {
+      sectionsList.splice(trustIdx, 0, { id: 'officialDistributor-1', type: 'officialDistributor', nameFr: 'Badge Distributeur Officiel', visible: true });
+    } else {
+      sectionsList.push({ id: 'officialDistributor-1', type: 'officialDistributor', nameFr: 'Badge Distributeur Officiel', visible: true });
     }
   }
 

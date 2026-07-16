@@ -321,7 +321,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         <div className="bezel-inner absolute inset-2 bg-white rounded-xl border-0 flex items-center justify-center overflow-hidden z-0 transition-transform duration-500 ease-out group-hover/img:scale-[1.02]">
           <Image
-            src={imgError ? placeholderSvg : getOptimizedImageUrl(product.image)}
+            src={(!product.image || imgError) ? placeholderSvg : getOptimizedImageUrl(product.image)}
             alt={product.nameFr || product.name || product.title}
             width={300}
             height={300}
@@ -333,7 +333,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           />
           {!singleImage && product.images && product.images.length > 1 && (
             <Image
-              src={altImgError ? placeholderSvg : getOptimizedImageUrl(product.images[1])}
+              src={(!product.images[1] || altImgError) ? placeholderSvg : getOptimizedImageUrl(product.images[1])}
               alt={`${product.nameFr || product.name || product.title} Alternate`}
               width={300}
               height={300}

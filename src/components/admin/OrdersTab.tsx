@@ -678,10 +678,10 @@ export default function OrdersTab() {
 
       {/* Sub-tab navigation — sliding pill */}
       <div
-        className={`relative flex flex-wrap items-center gap-0 border rounded-xl p-1 w-fit transition-all duration-200 ${
+        className={`relative flex flex-wrap items-center gap-1 border p-1.5 w-fit transition-all duration-300 rounded-2xl ${
           adminTheme === 'light'
-            ? 'bg-slate-100/80 border-slate-200/60 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]'
-            : 'bg-slate-900/60 border-slate-900'
+            ? 'bg-slate-50 border-slate-200/60 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)] shadow-sm'
+            : 'bg-slate-900/30 border-slate-900 shadow-md'
         }`}
         role="tablist"
       >
@@ -689,14 +689,19 @@ export default function OrdersTab() {
         <span
           ref={ordersPillRef}
           aria-hidden="true"
-          className="absolute left-1 top-1 pointer-events-none rounded-lg"
+          className="absolute left-1.5 top-1.5 pointer-events-none rounded-xl"
           style={{
-            height: 'calc(100% - 8px)',
-            background: adminTheme === 'light' ? '#ffffff' : 'hsl(224 18% 15%)',
+            height: 'calc(100% - 12px)',
+            background: adminTheme === 'light'
+              ? '#ffffff'
+              : 'hsl(224 18% 12%)',
+            border: adminTheme === 'light'
+              ? '1px solid rgba(0,0,0,0.03)'
+              : '1px solid rgba(255,255,255,0.03)',
             boxShadow: adminTheme === 'light'
-              ? '0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)'
-              : '0 1px 6px rgba(0,0,0,0.3)',
-            transition: 'transform 250ms cubic-bezier(0.22,1,0.36,1), width 250ms cubic-bezier(0.22,1,0.36,1)',
+              ? '0 4px 12px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.02)'
+              : '0 4px 20px rgba(0,0,0,0.4)',
+            transition: 'transform 280ms cubic-bezier(0.25, 1, 0.5, 1), width 280ms cubic-bezier(0.25, 1, 0.5, 1)',
             willChange: 'transform, width',
             zIndex: 0,
           }}
@@ -709,27 +714,31 @@ export default function OrdersTab() {
         ] as const).map((tab, idx) => {
           const TabIcon = tab.icon;
           return (
-          <button
+            <button
               key={tab.id}
               ref={el => { ordersBtnRefs.current[idx] = el; }}
               role="tab"
               aria-selected={ordersSubTab === tab.id}
               onClick={() => setOrdersSubTab(tab.id)}
-              className={`relative z-10 px-4 py-2 rounded-lg font-semibold uppercase tracking-widest transition-colors duration-200 flex items-center gap-1.5 cursor-pointer ${
+              className={`relative z-10 px-4.5 py-2.5 rounded-xl font-bold uppercase tracking-wider transition-all duration-300 flex items-center gap-2 cursor-pointer group active:scale-[0.98] ${
                 ordersSubTab === tab.id
-                  ? (adminTheme === 'light' ? 'text-slate-800 font-bold' : 'text-emerald-400 font-bold')
-                  : (adminTheme === 'light' ? 'text-slate-500 hover:text-slate-800' : 'text-slate-500 hover:text-slate-300')
+                  ? (adminTheme === 'light' ? 'text-slate-800' : 'text-emerald-400')
+                  : (adminTheme === 'light' ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-slate-200')
               }`}
               style={{ fontSize: 'var(--admin-text-xs)' }}
             >
-              <TabIcon className="w-3.5 h-3.5" /> {tab.label}
+              <TabIcon className={`w-3.5 h-3.5 transition-transform duration-300 group-hover:scale-110 ${
+                ordersSubTab === tab.id
+                  ? (adminTheme === 'light' ? 'text-slate-800' : 'text-emerald-400')
+                  : 'text-slate-400'
+              }`} /> 
+              <span>{tab.label}</span>
               <span
-                className={`ml-1 px-1.5 py-0.5 rounded-full font-bold transition-colors ${
-                  adminTheme === 'light'
-                    ? (ordersSubTab === tab.id ? 'bg-emerald-50 text-emerald-700 border border-emerald-100/85' : 'bg-slate-200/60 text-slate-500 border border-slate-300/30')
-                    : 'bg-slate-700 text-slate-300'
+                className={`ml-1 px-2 py-0.5 rounded-full font-bold text-[10px] border transition-colors duration-300 ${
+                  ordersSubTab === tab.id
+                    ? (adminTheme === 'light' ? 'bg-emerald-50 text-emerald-700 border-emerald-200/40' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20')
+                    : (adminTheme === 'light' ? 'bg-slate-200/50 text-slate-500 border-transparent' : 'bg-slate-900 text-slate-500 border-transparent')
                 }`}
-                style={{ fontSize: 'var(--admin-text-2xs)' }}
               >
                 {tab.count}
               </span>
@@ -915,101 +924,163 @@ export default function OrdersTab() {
 
       {/* ---- ORDERS LIST VIEW ---- */}
       {ordersSubTab === 'list' && (
-        <div className="t-panel space-y-0">
+        <div className="t-panel space-y-5 animate-fade-in">
           {/* Search and status controls */}
-          <div className={`flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-2xl border transition-all duration-200 ${
+          <div className={`flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-5 rounded-3xl border transition-all duration-300 ${
             adminTheme === 'light'
-              ? 'bg-white border-[hsl(220_13%_90%)] shadow-[var(--admin-shadow-sm)]'
-              : 'bg-[hsl(224_18%_10%)] border-[hsl(224_15%_16%)]'
+              ? 'bg-slate-50/50 border-slate-200/80 shadow-sm'
+              : 'bg-slate-900/25 border-slate-800/40'
           }`}>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto flex-1">
               <div className="relative flex-1 max-w-sm">
-                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--admin-text-faint)' }} />
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                 <input
                   type="text"
                   placeholder="Rechercher par ID, client, téléphone, ville..."
                   value={orderSearchQuery}
                   onChange={(e) => setOrderSearchQuery(e.target.value)}
-                  className="admin-input admin-focus-ring w-full pl-10"
+                  className={`w-full text-xs font-semibold rounded-xl pl-10 pr-4 py-2.5 border transition outline-none focus:ring-1 focus:ring-emerald-500/40 ${
+                    adminTheme === 'light'
+                      ? 'bg-white border-slate-200 text-slate-800 focus:border-slate-350 shadow-2xs'
+                      : 'bg-slate-950 border-slate-900 text-slate-200 focus:border-slate-800'
+                  }`}
                 />
               </div>
               <button
                 onClick={() => handleExportOrdersToCsv(filteredOrders)}
-                className="admin-btn admin-btn-secondary flex items-center gap-1.5 shrink-0"
+                className={`flex items-center justify-center gap-2 px-4 py-2.5 border rounded-xl text-xs font-bold uppercase transition duration-200 cursor-pointer shadow-2xs ${
+                  adminTheme === 'light'
+                    ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                    : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300'
+                }`}
               >
-                <FileText className="w-4 h-4" style={{ color: 'var(--admin-text-muted)' }} /> Exporter en CSV
+                <FileText className="w-4 h-4 text-slate-400 dark:text-slate-500" /> 
+                <span>Exporter en CSV</span>
               </button>
             </div>
 
             {/* Status filtering tabs */}
-            <div className={`flex flex-wrap gap-1 p-1 rounded-xl border ${
-              adminTheme === 'light' ? 'bg-slate-100/80 border-slate-200/60' : 'bg-slate-950 border-slate-900/80'
+            <div className={`flex flex-wrap gap-1 p-1 rounded-2xl border transition ${
+              adminTheme === 'light' ? 'bg-slate-100/60 border-slate-200/50' : 'bg-slate-950 border-slate-900/60'
             }`}>
-              {['ALL', 'PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((status) => (
-                <button
-                  key={status}
-                  onClick={() => setOrderStatusFilter(status)}
-                  className={`px-3 py-1.5 rounded-lg font-semibold uppercase tracking-widest transition cursor-pointer ${
-                    orderStatusFilter === status
-                      ? (adminTheme === 'light'
-                          ? 'bg-white text-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.07)] border border-slate-200/60'
-                          : 'bg-slate-800 text-emerald-400 border border-slate-700/50 shadow-sm')
-                      : (adminTheme === 'light'
-                          ? 'text-slate-500 border-transparent hover:text-slate-800'
-                          : 'text-slate-400 border-transparent hover:text-slate-200')
-                  }`}
-                  style={{ fontSize: 'var(--admin-text-2xs)' }}
-                >
-                  {status === 'ALL' ? 'Tous' : status}
-                </button>
-              ))}
+              {['ALL', 'PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((status) => {
+                const isActive = orderStatusFilter === status;
+                
+                const activeColors: Record<string, { text: string; bg: string; border: string; ring: string }> = {
+                  ALL: {
+                    text: adminTheme === 'light' ? 'text-slate-800' : 'text-slate-200',
+                    bg: adminTheme === 'light' ? 'bg-white' : 'bg-slate-900',
+                    border: adminTheme === 'light' ? 'border-slate-250' : 'border-slate-800',
+                    ring: adminTheme === 'light' ? 'shadow-sm' : 'shadow-md shadow-black/20'
+                  },
+                  PENDING: {
+                    text: 'text-amber-600 dark:text-amber-400',
+                    bg: adminTheme === 'light' ? 'bg-amber-50' : 'bg-amber-500/10',
+                    border: adminTheme === 'light' ? 'border-amber-200' : 'border-amber-500/20',
+                    ring: ''
+                  },
+                  CONFIRMED: {
+                    text: 'text-blue-600 dark:text-blue-400',
+                    bg: adminTheme === 'light' ? 'bg-blue-50' : 'bg-blue-500/10',
+                    border: adminTheme === 'light' ? 'border-blue-200' : 'border-blue-500/20',
+                    ring: ''
+                  },
+                  SHIPPED: {
+                    text: 'text-indigo-600 dark:text-indigo-400',
+                    bg: adminTheme === 'light' ? 'bg-indigo-50' : 'bg-indigo-500/10',
+                    border: adminTheme === 'light' ? 'border-indigo-200' : 'border-indigo-500/20',
+                    ring: ''
+                  },
+                  DELIVERED: {
+                    text: 'text-emerald-600 dark:text-emerald-400',
+                    bg: adminTheme === 'light' ? 'bg-emerald-50' : 'bg-emerald-500/10',
+                    border: adminTheme === 'light' ? 'border-emerald-200' : 'border-emerald-500/20',
+                    ring: ''
+                  },
+                  CANCELLED: {
+                    text: 'text-rose-600 dark:text-rose-400',
+                    bg: adminTheme === 'light' ? 'bg-rose-50' : 'bg-rose-500/10',
+                    border: adminTheme === 'light' ? 'border-rose-200' : 'border-rose-500/20',
+                    ring: ''
+                  }
+                };
+
+                const ac = activeColors[status] || activeColors.ALL;
+
+                return (
+                  <button
+                    key={status}
+                    onClick={() => setOrderStatusFilter(status)}
+                    className={`px-3 py-1.5 rounded-xl font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer text-[9.5px] border ${
+                      isActive
+                        ? `${ac.text} ${ac.bg} ${ac.border} ${ac.ring || 'shadow-sm'}`
+                        : (adminTheme === 'light'
+                            ? 'text-slate-500 border-transparent hover:text-slate-800'
+                            : 'text-slate-400 border-transparent hover:text-slate-200')
+                    }`}
+                  >
+                    {status === 'ALL' ? 'Tous' : status}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* Orders list table */}
-          <div className={`border rounded-2xl overflow-hidden transition-all duration-200 ${
-            adminTheme === 'light' ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-900/30 border-slate-900 shadow-xl'
+          {/* Orders list table container */}
+          <div className={`border rounded-3xl overflow-hidden transition-all duration-300 shadow-sm ${
+            adminTheme === 'light' ? 'bg-white border-slate-200/80' : 'bg-slate-900/10 border-slate-900 shadow-xl'
           }`}>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr
-                    style={{ borderBottom: '1px solid var(--admin-border)', background: 'var(--admin-surface-2)' }}
-                  >
+                  <tr className={`border-b transition-colors ${
+                    adminTheme === 'light' ? 'border-slate-100 bg-slate-50/50' : 'border-slate-900/60 bg-slate-950/20'
+                  }`}>
                     {['', 'ID Commande', 'Date', 'Client', 'Ville', 'Articles', 'Total', 'Statut', ''].map((h, i) => (
                       <th
                         key={i}
-                        className={`p-4 font-bold uppercase tracking-widest ${i === 8 ? 'text-right' : ''}`}
-                        style={{ fontSize: 'var(--admin-text-2xs)', color: 'var(--admin-text-faint)' }}
+                        className={`p-4 font-black uppercase tracking-widest text-[10px] ${
+                          i === 8 ? 'text-right' : ''
+                        } ${
+                          adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'
+                        }`}
                       >
                         {h}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className={`divide-y text-xs ${adminTheme === 'light' ? 'divide-slate-100 text-slate-700' : 'divide-slate-900 text-slate-300'}`}>
+                <tbody className={`divide-y text-xs transition-colors ${
+                  adminTheme === 'light' ? 'divide-slate-100 text-slate-700' : 'divide-slate-900 text-slate-300'
+                }`}>
                   {filteredOrders.map((order, idx) => {
                     const dateObj = new Date(order.created_at || order.date || Date.now());
-                    const statusColors: Record<string, string> = {
-                      pending: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-                      confirmed: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-                      shipped: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
-                      delivered: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-                      cancelled: 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                    };
                     const sClean = order.status.toLowerCase();
-                    const itemsText = order.items?.map(i => `${i.title} (x${i.quantity})`).join(', ');
+                    
+                    const sideBorderColors: Record<string, string> = {
+                      pending: 'hover:border-l-amber-500',
+                      confirmed: 'hover:border-l-blue-500',
+                      shipped: 'hover:border-l-indigo-500',
+                      delivered: 'hover:border-l-emerald-500',
+                      cancelled: 'hover:border-l-rose-500'
+                    };
+
+                    const borderClass = sideBorderColors[sClean] || 'hover:border-l-emerald-500';
 
                     return (
                       <tr 
                         key={order.order_id} 
-                        className={`group border-l-2 border-l-transparent hover:border-l-emerald-500/60 hover:bg-slate-800/20 transition-all duration-150 cursor-pointer admin-row-enter`} 
+                        className={`group border-l-3 border-l-transparent hover:bg-slate-500/5 transition-all duration-200 cursor-pointer admin-row-enter ${borderClass}`} 
                         onClick={() => setSelectedOrder(order)}
                       >
                         <td className="p-4 w-10" onClick={(e) => e.stopPropagation()}>
                           <input
                             type="checkbox"
-                            className="rounded border-slate-700 bg-slate-950 focus:ring-0 cursor-pointer w-4 h-4"
+                            className={`rounded border focus:ring-0 cursor-pointer w-4 h-4 transition ${
+                              adminTheme === 'light'
+                                ? 'border-slate-300 bg-white text-emerald-600 focus:ring-offset-0'
+                                : 'border-slate-800 bg-slate-950 text-emerald-500 focus:ring-offset-0'
+                            }`}
                             checked={selectedOrderIds.includes(order.order_id)}
                             onChange={(e) => {
                               if (e.target.checked) {
@@ -1021,32 +1092,89 @@ export default function OrdersTab() {
                           />
                         </td>
                         <td className="p-4 font-mono font-bold">
-                          <div className="flex flex-col gap-1">
-                            <span>{order.order_id}</span>
+                          <div className="flex flex-col gap-1.5">
+                            <span className={`${
+                              adminTheme === 'light' ? 'text-slate-800' : 'text-slate-100'
+                            }`}>{order.order_id}</span>
                             {order.notes?.includes('Ai Chat') && (
-                              <span className="inline-flex px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 max-w-fit select-none">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-wider border max-w-fit select-none ${
+                                adminTheme === 'light'
+                                  ? 'bg-indigo-50 text-indigo-700 border-indigo-200/50'
+                                  : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
+                              }`}>
                                 Ai Chat
                               </span>
                             )}
                           </div>
                         </td>
-                        <td className="p-4 font-mono text-[10px]">{dateObj.toLocaleDateString()} {dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+                        <td className="p-4 font-mono text-[10px]">
+                          <span className="block font-bold">{dateObj.toLocaleDateString()}</span>
+                          <span className="text-slate-400 dark:text-slate-500 font-semibold">{dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        </td>
                         <td className="p-4">
-                          <span className="font-bold block">{order.customer_name}</span>
-                          <span className="text-[10px] text-slate-500 font-mono">{order.phone_number}</span>
+                          <div className="flex flex-col gap-0.5">
+                            <span className={`font-extrabold block text-sm ${
+                              adminTheme === 'light' ? 'text-slate-700 font-semibold' : 'text-slate-200'
+                            }`}>{order.customer_name}</span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono font-medium">{order.phone_number}</span>
+                              <a
+                                href={`https://wa.me/${order.phone_number.trim()}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className={`transition p-0.5 rounded-md ${
+                                  adminTheme === 'light' ? 'text-emerald-600 hover:bg-emerald-50' : 'text-emerald-400 hover:bg-emerald-950/20'
+                                }`}
+                                title="WhatsApp rapide"
+                              >
+                                <svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3">
+                                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.5-5.739-1.453L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.858-4.37 9.862-9.743.002-2.602-1.01-5.05-2.85-6.893-1.839-1.843-4.285-2.859-6.883-2.86-5.442 0-9.863 4.37-9.867 9.744-.002 1.83.486 3.62 1.412 5.187l-.952 3.473 3.57-.932zm9.845-6.811c-.266-.134-1.576-.777-1.82-.865-.243-.089-.422-.132-.599.135-.178.266-.688.865-.842 1.042-.155.177-.309.199-.575.066-.266-.134-1.124-.414-2.141-1.321-.79-.705-1.325-1.577-1.48-1.843-.155-.266-.016-.41.118-.543.12-.119.266-.31.399-.465.133-.155.178-.266.266-.443.089-.177.044-.332-.022-.465-.067-.133-.599-1.44-.821-1.973-.217-.52-.455-.45-.63-.459-.163-.008-.35-.01-.537-.01-.186 0-.488.07-.743.348-.256.278-.975.953-.975 2.325 0 1.372.998 2.697 1.131 2.874.133.177 1.965 3.001 4.76 4.204.665.286 1.184.457 1.588.585.667.213 1.275.183 1.756.111.536-.08 1.576-.643 1.796-1.263.22-.62.22-1.152.155-1.263-.066-.111-.243-.178-.51-.311z"/>
+                                </svg>
+                              </a>
+                            </div>
+                          </div>
                         </td>
-                        <td className="p-4 font-medium">{order.city}</td>
-                        <td className="p-4 max-w-[180px] truncate text-slate-400 italic text-[11px]" title={itemsText}>
-                          {itemsText || 'Aucun produit'}
+                        <td className="p-4 font-semibold text-slate-700 dark:text-slate-200">
+                          <div className="flex items-center gap-1.5">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-3.5 h-3.5 text-slate-400 shrink-0">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                            </svg>
+                            <span>{order.city}</span>
+                          </div>
                         </td>
-                        <td className="p-4 font-extrabold font-mono">{order.total.toFixed(2)} DH</td>
+                        <td className="p-4 max-w-[200px]" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex flex-wrap gap-1">
+                            {order.items?.slice(0, 2).map((item, idx2) => (
+                              <span key={idx2} className={`px-2 py-0.5 rounded-lg text-[9px] font-bold truncate max-w-[125px] border ${
+                                adminTheme === 'light'
+                                  ? 'bg-slate-100 text-slate-750 border-slate-200/50 shadow-2xs'
+                                  : 'bg-slate-950 text-slate-400 border-slate-900'
+                              }`}>
+                                {item.title} <span className="font-semibold text-slate-400 dark:text-slate-500">x{item.quantity}</span>
+                              </span>
+                            ))}
+                            {order.items && order.items.length > 2 && (
+                              <span className={`px-1.5 py-0.5 rounded-lg text-[9px] font-mono font-bold border ${
+                                adminTheme === 'light'
+                                  ? 'bg-slate-200/60 text-slate-600 border-slate-300/40'
+                                  : 'bg-slate-900 text-slate-400 border-slate-800'
+                              }`}>
+                                +{order.items.length - 2}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-4 font-mono font-black text-slate-800 dark:text-slate-100 text-xs">
+                          {order.total.toFixed(2)} DH
+                        </td>
                         <td className="p-4">
                           <div className="flex flex-col items-start gap-1">
                             <StatusBadge status={order.status} theme={adminTheme} />
                             {sClean === 'confirmed' && (
                               <span
-                                className="inline-flex items-center gap-0.5 font-semibold uppercase tracking-widest text-emerald-500"
-                                style={{ fontSize: 'var(--admin-text-2xs)' }}
+                                className="inline-flex items-center gap-0.5 font-extrabold uppercase tracking-wider text-emerald-500 text-[8px]"
                               >
                                 ✓ Vérifié WA
                               </span>
@@ -1059,16 +1187,26 @@ export default function OrdersTab() {
                               <button
                                 onClick={() => handleNotifyWhatsApp(order, (sClean === 'confirmed' ? 'pending' : sClean) as any, 'Fr')}
                                 title="Envoyer notification WhatsApp FR"
-                                className="p-1.5 bg-emerald-950/40 text-emerald-400 border border-emerald-900/30 hover:bg-emerald-900/30 rounded-lg transition cursor-pointer"
+                                className={`p-1.5 rounded-lg border transition cursor-pointer ${
+                                  adminTheme === 'light'
+                                    ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200/40 shadow-2xs'
+                                    : 'bg-emerald-950/40 hover:bg-emerald-900/30 text-emerald-400 border-emerald-900/30'
+                                }`}
                               >
-                                <MessageSquare className="w-3.5 h-3.5" />
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-3.5 h-3.5">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                                </svg>
                               </button>
                             )}
                             <button 
                               onClick={() => setSelectedOrder(order)}
-                              className="px-2 py-1 bg-slate-900 text-slate-300 border border-slate-800 hover:border-slate-700 rounded-lg text-[10px] font-bold uppercase transition cursor-pointer"
+                              className={`px-3 py-1.5 rounded-xl text-[9.5px] font-black uppercase tracking-wider transition border cursor-pointer ${
+                                adminTheme === 'light'
+                                  ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-2xs'
+                                  : 'bg-slate-950 hover:bg-slate-900 text-slate-300 border-slate-800'
+                              }`}
                             >
-                              Ouvrir
+                              Gérer
                             </button>
                           </div>
                         </td>
@@ -1096,7 +1234,7 @@ export default function OrdersTab() {
                               setOrderSearchQuery('');
                               setOrderStatusFilter('ALL');
                             }}
-                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[9px] uppercase tracking-wider rounded-lg transition active:scale-95 border-0 outline-none cursor-pointer"
+                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[10px] uppercase tracking-wider rounded-xl transition active:scale-95 border-0 outline-none cursor-pointer shadow-md shadow-emerald-600/10"
                           >
                             Réinitialiser les filtres
                           </button>
@@ -1997,408 +2135,406 @@ export default function OrdersTab() {
       )}
 
       {/* -------------------- DETAILS MODAL: SINGLE ORDER -------------------- */}
-      {selectedOrder && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-md flex justify-end z-45 select-none animate-in fade-in duration-200" onClick={() => setSelectedOrder(null)}>
-          <div 
-            className="bg-slate-900 border-l border-slate-800 w-full max-w-xl h-screen p-6 space-y-6 relative overflow-y-auto shadow-2xl flex flex-col justify-between animate-in slide-in-from-right duration-300"
-            onClick={(e) => e.stopPropagation()}
+      {selectedOrder && (() => {
+        const st = selectedOrder.status.toLowerCase();
+        const isDark = adminTheme === 'dark';
+        const statusMeta: Record<string, { label: string; color: string; ring: string; dot: string }> = {
+          pending:   { label: 'En attente',  color: isDark ? 'text-amber-400'   : 'text-amber-600',   ring: isDark ? 'border-amber-500/30'   : 'border-amber-400/50',   dot: 'bg-amber-400' },
+          confirmed: { label: 'Confirmée',   color: isDark ? 'text-sky-400'     : 'text-sky-600',     ring: isDark ? 'border-sky-500/30'     : 'border-sky-400/50',     dot: 'bg-sky-400' },
+          shipped:   { label: 'Expédiée',    color: isDark ? 'text-indigo-400'  : 'text-indigo-600',  ring: isDark ? 'border-indigo-500/30'  : 'border-indigo-400/50',  dot: 'bg-indigo-400' },
+          delivered: { label: 'Livrée',      color: isDark ? 'text-emerald-400' : 'text-emerald-600', ring: isDark ? 'border-emerald-500/30' : 'border-emerald-400/50', dot: 'bg-emerald-400' },
+          cancelled: { label: 'Annulée',     color: isDark ? 'text-rose-400'    : 'text-rose-600',    ring: isDark ? 'border-rose-500/30'    : 'border-rose-400/50',    dot: 'bg-rose-400' },
+          returned:  { label: 'Retournée',   color: isDark ? 'text-orange-400'  : 'text-orange-600',  ring: isDark ? 'border-orange-500/30'  : 'border-orange-400/50',  dot: 'bg-orange-400' },
+        };
+        const sm = statusMeta[st] ?? statusMeta.pending;
+        const steps = st === 'cancelled'
+          ? [{ k:'pending',done:true,red:false,orange:false },{ k:'cancelled',done:true,red:true,orange:false }]
+          : st === 'returned'
+          ? [{ k:'pending',done:true,red:false,orange:false },{ k:'confirmed',done:true,red:false,orange:false },{ k:'shipped',done:true,red:false,orange:false },{ k:'returned',done:true,red:false,orange:true }]
+          : [
+              { k:'pending',   done:['pending','confirmed','shipped','delivered'].includes(st), red:false, orange:false },
+              { k:'confirmed', done:['confirmed','shipped','delivered'].includes(st), red:false, orange:false },
+              { k:'shipped',   done:['shipped','delivered'].includes(st), red:false, orange:false },
+              { k:'delivered', done:st==='delivered', red:false, orange:false },
+            ];
+        const stepLabels: Record<string,string> = { pending:'Enregistrée', confirmed:'Confirmée', shipped:'Expédiée', delivered:'Livrée', cancelled:'Annulée', returned:'Retournée' };
+        const doneCount = steps.filter(s=>s.done).length;
+        const progress = steps.length <= 1 ? 100 : ((doneCount - 1) / (steps.length - 1)) * 100;
+        const shippingFee = Math.max(0, selectedOrder.total - selectedOrder.subtotal + selectedOrder.discount_amount);
+        const orderDate = new Date(selectedOrder.created_at || selectedOrder.date || Date.now());
+
+        return (
+          <div
+            className="fixed inset-0 z-45 select-none flex justify-end"
+            style={{ background: isDark ? 'rgba(0,0,0,0.72)' : 'rgba(10,18,38,0.45)', backdropFilter:'blur(10px)', WebkitBackdropFilter:'blur(10px)' } as React.CSSProperties}
+            onClick={() => setSelectedOrder(null)}
           >
-            {/* Top Close bar */}
-            <div className="flex justify-between items-start border-b border-slate-800 pb-3">
-              <div>
-                <span className="text-[9px] font-mono text-emerald-400 uppercase font-black block tracking-wider bg-emerald-950/40 border border-emerald-900/30 rounded px-1.5 py-0.5 w-fit mb-1.5">Commande active</span>
-                <h3 className="text-base font-extrabold text-slate-100 flex items-center gap-1.5 font-mono">
-                  {selectedOrder.order_id} 
-                </h3>
-              </div>
-              <button onClick={() => setSelectedOrder(null)} className="text-slate-400 hover:text-slate-200 cursor-pointer">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+            <div
+              className="relative w-full max-w-[480px] h-screen flex flex-col overflow-hidden animate-in slide-in-from-right duration-300"
+              style={{
+                background: isDark
+                  ? 'linear-gradient(160deg,hsl(224,28%,9%) 0%,hsl(228,24%,7%) 100%)'
+                  : 'linear-gradient(160deg,#ffffff 0%,#f7f8fc 100%)',
+                borderLeft: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.07)',
+                boxShadow: isDark
+                  ? '-24px 0 80px rgba(0,0,0,0.6)'
+                  : '-24px 0 80px rgba(0,0,0,0.14)',
+              } as React.CSSProperties}
+              onClick={(e) => e.stopPropagation()}
+            >
 
-            {/* Visual Shipping Timeline */}
-            <div className="bg-slate-950 p-4 rounded-2xl border border-slate-900 space-y-4 w-full">
-              <div className="flex justify-between items-center border-b border-slate-900/60 pb-2">
-                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                  <Truck className="w-3.5 h-3.5 text-emerald-400" />
-                  Timeline d&apos;Expédition & Suivi COD
-                </h4>
-                <span className="text-[9px] font-mono text-slate-500">
-                  Statut actuel: <span className="font-extrabold text-slate-300">{selectedOrder.status}</span>
-                </span>
-              </div>
+              {/* HERO HEADER */}
+              <div
+                className="relative shrink-0 px-7 pt-7 pb-6 overflow-hidden"
+                style={{
+                  background: isDark
+                    ? 'linear-gradient(135deg,rgba(16,185,129,0.08) 0%,rgba(99,102,241,0.06) 50%,transparent 100%)'
+                    : 'linear-gradient(135deg,rgba(16,185,129,0.06) 0%,rgba(99,102,241,0.04) 50%,transparent 100%)',
+                  borderBottom: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.06)',
+                } as React.CSSProperties}
+              >
+                <div className="pointer-events-none absolute -top-20 -right-20 w-56 h-56 rounded-full opacity-[0.07]"
+                  style={{ background: 'radial-gradient(circle,#10b981,transparent 70%)' } as React.CSSProperties} />
 
-              {(() => {
-                const status = selectedOrder.status.toLowerCase();
-                const creationDateStr = new Date(selectedOrder.created_at || selectedOrder.date || Date.now()).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-                
-                let steps: { id: string; label: string; desc: string; active: boolean; done: boolean; isRed?: boolean; isOrange?: boolean; }[] = [
-                  { id: 'pending', label: 'Enregistrée', desc: creationDateStr, active: true, done: ['pending', 'confirmed', 'shipped', 'delivered'].includes(status) },
-                  { id: 'confirmed', label: 'Confirmée', desc: 'Validée par appel', active: ['confirmed', 'shipped', 'delivered'].includes(status), done: ['confirmed', 'shipped', 'delivered'].includes(status) },
-                  { id: 'shipped', label: 'Expédiée', desc: selectedOrder.courier ? `${selectedOrder.courier.toUpperCase()}` : 'En transit', active: ['shipped', 'delivered'].includes(status), done: ['shipped', 'delivered'].includes(status) },
-                  { id: 'delivered', label: 'Livrée', desc: 'Encaissée', active: status === 'delivered', done: status === 'delivered' }
-                ];
-
-                if (status === 'cancelled') {
-                  steps = [
-                    { id: 'pending', label: 'Enregistrée', desc: creationDateStr, active: true, done: true },
-                    { id: 'cancelled', label: 'Annulée', desc: 'Par le staff', active: true, done: true, isRed: true }
-                  ];
-                } else if (status === 'returned') {
-                  steps = [
-                    { id: 'pending', label: 'Enregistrée', desc: creationDateStr, active: true, done: true },
-                    { id: 'confirmed', label: 'Confirmée', desc: 'Validée par appel', active: true, done: true },
-                    { id: 'shipped', label: 'Expédiée', desc: selectedOrder.courier ? `${selectedOrder.courier.toUpperCase()}` : 'En transit', active: true, done: true },
-                    { id: 'returned', label: 'Retournée', desc: 'Retour dépôt', active: true, done: true, isOrange: true }
-                  ];
-                }
-
-                return (
-                  <div className="relative flex justify-between items-start pt-2 px-2">
-                    {/* Connecting line */}
-                    <div className="absolute top-[14px] left-[35px] right-[35px] h-0.5 bg-slate-900 z-0">
-                      {/* Progress highlight line */}
-                      <div 
-                        className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500" 
-                        style={{ 
-                          width: `${
-                            steps.filter(s => s.done).length === steps.length 
-                              ? 100 
-                              : ((steps.filter(s => s.done).length - 1) / Math.max(1, steps.length - 1)) * 100
-                          }%` 
-                        }}
-                      />
-                    </div>
-
-                    {/* Timeline items */}
-                    {steps.map((step, idx) => {
-                      const isDone = step.done;
-                      const isActive = step.active;
-                      
-                      let circleColor = 'border-slate-800 bg-slate-950 text-slate-600';
-                      if (isDone) {
-                        if (step.isRed) {
-                          circleColor = 'border-rose-500 bg-rose-950 text-rose-400 ring-4 ring-rose-500/10';
-                        } else if (step.isOrange) {
-                          circleColor = 'border-amber-500 bg-amber-950 text-amber-400 ring-4 ring-amber-500/10';
-                        } else {
-                          circleColor = 'border-emerald-500 bg-emerald-950 text-emerald-400 ring-4 ring-emerald-500/10';
-                        }
-                      } else if (isActive) {
-                        circleColor = 'border-blue-500 bg-blue-950 text-blue-400 ring-4 ring-blue-500/10';
-                      }
-
-                      return (
-                        <div key={step.id} className="relative z-10 flex flex-col items-center text-center max-w-[90px] group">
-                          {/* Dot */}
-                          <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center text-[10px] font-black transition-all duration-300 ${circleColor}`}>
-                            {isDone ? (
-                              step.isRed ? '✕' : step.isOrange ? '↩' : '✓'
-                            ) : (
-                              idx + 1
-                            )}
-                          </div>
-                          
-                          {/* Labels */}
-                          <span className={`text-[10px] font-bold mt-2 leading-tight transition-colors duration-300 ${
-                            isDone 
-                              ? (step.isRed ? 'text-rose-400' : step.isOrange ? 'text-amber-400' : 'text-emerald-400') 
-                              : 'text-slate-400'
-                          }`}>
-                            {step.label}
-                          </span>
-                          <span className="text-[8.5px] text-slate-500 leading-snug font-mono mt-0.5 whitespace-pre-wrap max-w-[80px]">
-                            {step.desc}
-                          </span>
-                        </div>
-                      );
-                    })}
+                <div className="flex items-start justify-between mb-5">
+                  <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${sm.color} ${sm.ring}`}
+                    style={{ background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.7)' } as React.CSSProperties}>
+                    <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${sm.dot}`} />
+                    {sm.label}
                   </div>
-                );
-              })()}
-            </div>
-
-            {/* Split layout: customer info & order details */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              
-              {/* Customer Column */}
-              <div className="space-y-4">
-                <div className="bg-slate-950 p-4 rounded-2xl border border-slate-900 space-y-2.5">
-                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block border-b border-slate-900/60 pb-1.5">Coordonnées Client</h4>
-                  
-                  <div className="text-xs space-y-1 font-light">
-                    <strong className="text-slate-200 block font-semibold text-sm">{selectedOrder.customer_name}</strong>
-                    <div className="flex gap-2 items-center">
-                      <span className="text-slate-400 font-mono">{selectedOrder.phone_number}</span>
-                      <a 
-                        href={`https://wa.me/${selectedOrder.phone_number.trim()}`} 
-                        target="_blank" 
-                        rel="noreferrer" 
-                        className="text-emerald-400 hover:text-emerald-300 flex items-center gap-0.5 text-[10px] font-extrabold uppercase"
-                      >
-                        WhatsApp <ExternalLink className="w-3 h-3" />
-                      </a>
-                    </div>
-                    <p className="text-slate-300 mt-1 leading-relaxed">{selectedOrder.address}, <strong className="font-bold">{selectedOrder.city}</strong></p>
-                  </div>
+                  <button
+                    onClick={() => setSelectedOrder(null)}
+                    className="p-2 rounded-full cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95"
+                    style={{
+                      background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+                      border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)',
+                    } as React.CSSProperties}
+                  >
+                    <X className={`w-4 h-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
+                  </button>
                 </div>
 
-                {/* Order notes / Special instructions */}
-                {selectedOrder.notes && (
-                  <div className="bg-slate-950 p-4 rounded-2xl border border-slate-900 space-y-2.5">
-                    <h4 className="text-[10px] font-bold text-amber-400 uppercase tracking-widest block border-b border-slate-900/60 pb-1.5 flex items-center gap-1.5">
-                      <svg viewBox="0 0 24 24" fill="none" className="w-3.5 h-3.5 text-amber-500" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                      </svg>
-                      Instructions Spéciales / Note
-                    </h4>
-                    <p className="text-xs text-slate-300 font-light whitespace-pre-wrap italic bg-slate-900/40 p-2.5 rounded-xl border border-slate-900/50">
-                      "{selectedOrder.notes}"
+                <div className="mb-1">
+                  <p className={`text-[10px] font-mono font-bold uppercase tracking-[0.18em] mb-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Commande</p>
+                  <h2 className={`text-3xl font-black tracking-tighter font-mono leading-none ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                    {selectedOrder.order_id}
+                  </h2>
+                </div>
+
+                <div className="flex items-end justify-between mt-3">
+                  <p className={`text-[10.5px] font-mono ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                    {orderDate.toLocaleDateString('fr-FR',{ weekday:'short', day:'numeric', month:'long', year:'numeric' })}
+                    {' · '}{orderDate.toLocaleTimeString('fr-FR',{ hour:'2-digit', minute:'2-digit' })}
+                  </p>
+                  <div className="text-right">
+                    <p className={`text-[9px] font-black uppercase tracking-widest mb-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Total</p>
+                    <p className="text-2xl font-black tracking-tight" style={{ color: isDark ? '#34d399' : '#059669' } as React.CSSProperties}>
+                      {selectedOrder.total.toFixed(2)}<span className={`text-sm ml-1 font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>DH</span>
                     </p>
                   </div>
-                )}
-
-                {/* Skin diagnostic metadata info if exists */}
-                {selectedOrder.skin_diagnostic ? (
-                  <div className="bg-gradient-to-tr from-violet-950/20 to-indigo-950/20 p-4 rounded-2xl border border-indigo-900/40 space-y-2">
-                    <h4 className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest block border-b border-indigo-900/60 pb-1">Bilan Routine Diagnostic IA</h4>
-                    <div className="grid grid-cols-3 gap-2 font-mono text-[9px] text-center text-slate-300">
-                      <div className="bg-slate-950/80 p-2 rounded-lg border border-slate-900">
-                        <span className="text-slate-500 block">Peau</span>
-                        <strong className="font-extrabold text-indigo-400 uppercase">{selectedOrder.skin_diagnostic.skinType}</strong>
-                      </div>
-                      <div className="bg-slate-950/80 p-2 rounded-lg border border-slate-900">
-                        <span className="text-slate-500 block">Problème</span>
-                        <strong className="font-extrabold text-indigo-400 uppercase">{selectedOrder.skin_diagnostic.concern}</strong>
-                      </div>
-                      <div className="bg-slate-950/80 p-2 rounded-lg border border-slate-900">
-                        <span className="text-slate-500 block">Soleil</span>
-                        <strong className="font-extrabold text-indigo-400 uppercase">{selectedOrder.skin_diagnostic.sunExposure}</strong>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="p-3 bg-slate-950/50 rounded-xl border border-slate-900 text-[10px] font-mono text-slate-500 italic text-center">
-                    Aucun historique de diagnostic lié à cette commande.
-                  </div>
-                )}
-
-                {/* Courier / Shipping Tracking Details */}
-                {selectedOrder.tracking_number ? (
-                  <div className="bg-indigo-950/15 border border-indigo-900/40 rounded-2xl p-4 space-y-2 text-xs">
-                    <h4 className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest block border-b border-indigo-900/60 pb-1">Logistique Messagerie</h4>
-                    <div className="space-y-1 font-mono text-[10px]">
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">Livreur:</span>
-                        <strong className="text-slate-200 uppercase">{selectedOrder.courier}</strong>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">Code Suivi:</span>
-                        <strong className="text-slate-200">{selectedOrder.tracking_number}</strong>
-                      </div>
-                      <div className="flex justify-between pt-1">
-                        <a 
-                          href={selectedOrder.tracking_link} 
-                          target="_blank" 
-                          rel="noreferrer" 
-                          className="text-indigo-400 hover:text-indigo-300 underline inline-flex items-center gap-1 font-bold"
-                        >
-                          Suivre sur la plateforme <ExternalLink className="w-3 h-3" />
-                        </a>
-                      </div>
-                    </div>
-                    <div className="pt-2">
-                      <button
-                        onClick={() => {
-                          setActiveLabelData({
-                            orderId: selectedOrder.order_id,
-                            courier: selectedOrder.courier?.toUpperCase() || '',
-                            trackingNumber: selectedOrder.tracking_number || '',
-                            codAmount: selectedOrder.total,
-                            customerName: selectedOrder.customer_name,
-                            phone: selectedOrder.phone_number,
-                            city: selectedOrder.city,
-                            address: selectedOrder.address,
-                            shippingDate: new Date().toLocaleDateString('fr-FR')
-                          });
-                          setIsPrintLabelOpen(true);
-                        }}
-                        className="w-full py-1.5 bg-indigo-950/50 border border-indigo-900 text-indigo-300 hover:text-indigo-200 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition cursor-pointer"
-                      >
-                        <Printer className="w-3.5 h-3.5" /> Réimprimer l&apos;étiquette A6
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  selectedOrder.status.toLowerCase() === 'confirmed' && (
-                    <button
-                      onClick={() => handleOpenShippingPanel(selectedOrder)}
-                      className="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black rounded-xl text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition shadow-lg shadow-emerald-500/10 cursor-pointer"
-                    >
-                      <Truck className="w-4 h-4 text-slate-950" /> Enregistrer l&apos;expédition Maroc
-                    </button>
-                  )
-                )}
+                </div>
               </div>
 
-              {/* Items / Prices Column */}
-              <div className="space-y-4">
-                <div className="bg-slate-950 p-4 rounded-2xl border border-slate-900 space-y-3">
-                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block border-b border-slate-900/60 pb-1.5">Articles Commandés</h4>
-                  
-                  <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
-                    {selectedOrder.items?.map((item, index) => (
-                      <div key={index} className="flex justify-between items-center text-xs gap-3">
-                        <div className="min-w-0">
-                          <span className="font-semibold text-slate-200 block truncate">{item.title}</span>
-                          <span className="text-[10px] text-slate-500 font-mono">Qte: {item.quantity} • {item.price} DH / u</span>
+              {/* SCROLLABLE BODY */}
+              <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth:'thin' } as React.CSSProperties}>
+
+                {/* PROGRESS TRACK */}
+                <div className="px-7 pt-6 pb-5">
+                  <div className="relative">
+                    <div className="absolute top-[14px] left-3.5 right-3.5 h-px" style={{ background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)' } as React.CSSProperties}>
+                      <div className="h-full transition-all duration-700"
+                        style={{ width:`${Math.max(0,progress)}%`, background:'linear-gradient(90deg,#10b981,#6366f1)' } as React.CSSProperties} />
+                    </div>
+                    <div className="relative flex justify-between">
+                      {steps.map((step, i) => {
+                        const nodeColor = step.red ? '#f43f5e' : step.orange ? '#f59e0b' : step.done ? '#10b981' : (isDark ? '#1e293b' : '#e2e8f0');
+                        const textColor = step.red ? (isDark?'#fb7185':'#e11d48') : step.orange ? (isDark?'#fbbf24':'#d97706') : step.done ? (isDark?'#34d399':'#059669') : (isDark?'#475569':'#94a3b8');
+                        return (
+                          <div key={step.k} className="flex flex-col items-center" style={{ width:`${100/steps.length}%` }}>
+                            <div className="w-7 h-7 rounded-full border-2 flex items-center justify-center text-[9px] font-black transition-all duration-500 z-10 relative"
+                              style={{
+                                background: step.done ? nodeColor : (isDark?'hsl(224,28%,12%)':'#fff'),
+                                borderColor: step.done ? nodeColor : (isDark?'rgba(255,255,255,0.1)':'rgba(0,0,0,0.1)'),
+                                color: step.done ? '#fff' : (isDark?'#475569':'#94a3b8'),
+                                boxShadow: step.done ? `0 0 16px ${nodeColor}40` : 'none',
+                              } as React.CSSProperties}>
+                              {step.done ? (step.red ? '✕' : step.orange ? '↩' : '✓') : i+1}
+                            </div>
+                            <span className="text-[8.5px] font-bold mt-1.5 text-center leading-tight" style={{ color:textColor } as React.CSSProperties}>
+                              {stepLabels[step.k]}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="px-7 space-y-px">
+
+                  {/* CLIENT */}
+                  <div className="pb-5 mb-1" style={{ borderBottom: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)' } as React.CSSProperties}>
+                    <p className={`text-[9px] font-black uppercase tracking-[0.2em] mb-3 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>Client</p>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-black shrink-0"
+                          style={{ background: isDark ? 'rgba(16,185,129,0.12)' : 'rgba(16,185,129,0.1)', color: isDark ? '#34d399' : '#059669' } as React.CSSProperties}>
+                          {selectedOrder.customer_name?.charAt(0)?.toUpperCase() || '?'}
                         </div>
-                        <span className="font-bold text-slate-300 shrink-0 font-mono">{(item.price * item.quantity).toFixed(0)} DH</span>
+                        <div>
+                          <p className={`font-black text-sm leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>{selectedOrder.customer_name}</p>
+                          <p className={`text-[10.5px] font-mono mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{selectedOrder.phone_number}</p>
+                        </div>
                       </div>
-                    ))}
-                    {selectedOrder.gift_item && (
-                      <div className="flex justify-between items-center text-xs pt-1.5 border-t border-slate-900 text-emerald-400 font-light italic">
-                        <span>Cadeau: {selectedOrder.gift_item}</span>
-                        <span className="font-mono">OFFERT</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="border-t border-slate-900 pt-3 space-y-1 font-mono text-[10px] text-slate-400">
-                    <div className="flex justify-between">
-                      <span>Sous-Total:</span>
-                      <span className="text-slate-300">{selectedOrder.subtotal.toFixed(2)} DH</span>
+                      <a href={`https://wa.me/${selectedOrder.phone_number?.replace(/\s/g,'')}`} target="_blank" rel="noreferrer"
+                        className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9.5px] font-black cursor-pointer transition-all duration-200 hover:scale-105 active:scale-95 no-underline"
+                        style={{ background:'linear-gradient(135deg,#25d366,#128c7e)', color:'#fff', boxShadow:'0 4px 12px rgba(37,211,102,0.3)' } as React.CSSProperties}>
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.479 4.999 1.48 5.444 0 9.875-4.43 9.878-9.875.002-5.446-4.421-9.875-9.866-9.877-5.444 0-9.874 4.43-9.877 9.875-.001 1.853.52 3.677 1.508 5.27l-.999 3.648 3.357-.521z"/></svg>
+                        WhatsApp
+                      </a>
                     </div>
-                    {selectedOrder.discount_amount > 0 && (
-                      <div className="flex justify-between text-rose-400">
-                        <span>Réduction ({selectedOrder.applied_coupon || 'Quiz'}):</span>
-                        <span>-{selectedOrder.discount_amount.toFixed(2)} DH</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span>Frais d&apos;expédition:</span>
-                      <span className="text-slate-300">{(selectedOrder.total - selectedOrder.subtotal + selectedOrder.discount_amount > 0 ? (selectedOrder.total - selectedOrder.subtotal + selectedOrder.discount_amount) : 0).toFixed(2)} DH</span>
-                    </div>
-                    <div className="flex justify-between text-xs font-bold text-slate-200 border-t border-slate-900/60 pt-2">
-                      <span>TOTAL COMMANDE:</span>
-                      <span className="text-emerald-400 font-extrabold">{selectedOrder.total.toFixed(2)} DH</span>
+                    <div className="flex items-start gap-2 mt-3 pl-1">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isDark?'text-slate-600':'text-slate-400'}`}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/>
+                      </svg>
+                      <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                        {selectedOrder.address}
+                        {selectedOrder.city && <><span className="mx-1 opacity-40">·</span><strong className={`font-extrabold ${isDark?'text-slate-200':'text-slate-700'}`}>{selectedOrder.city}</strong></>}
+                      </p>
                     </div>
                   </div>
-                </div>
 
-                {/* Status selector */}
-                <div className="bg-slate-950 p-4 rounded-2xl border border-slate-900 space-y-2">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Modifier le Statut Commande</label>
-                  <select 
-                    value={selectedOrder.status}
-                    onChange={(e) => handleUpdateOrderStatus(selectedOrder.order_id, e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 focus:border-emerald-500/50 rounded-xl px-3 py-2 text-xs text-slate-200"
-                  >
-                    <option value="Pending">Pending (En attente confirmation)</option>
-                    <option value="Confirmed">Confirmed (Confirmé par téléphone)</option>
-                    <option value="Shipped">Shipped (Expédié / Colis en transit)</option>
-                    <option value="Delivered">Delivered (Livré & Encaissé)</option>
-                    <option value="Cancelled">Cancelled (Annulé)</option>
-                  </select>
-                </div>
-
-                {/* WhatsApp Notification Center */}
-                <div className="bg-slate-950 p-4 rounded-2xl border border-slate-900 space-y-3">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Notification Client (WhatsApp)</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {/* Confirmation */}
-                    <div className="flex flex-col items-center justify-between p-2 rounded-xl border border-slate-900 bg-slate-900/40 gap-1.5">
-                      <span className="text-[9px] font-extrabold uppercase tracking-wide text-slate-300">Confirmation</span>
-                      <div className="flex gap-1 w-full">
-                        <button
-                          type="button"
-                          onClick={() => handleNotifyWhatsApp(selectedOrder, 'pending', 'Fr')}
-                          className="flex-1 py-1 bg-emerald-950/40 text-emerald-400 hover:bg-emerald-900/30 border border-emerald-900/30 rounded-lg text-[9px] font-bold transition text-center cursor-pointer"
-                        >
-                          FR
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleNotifyWhatsApp(selectedOrder, 'pending', 'Ar')}
-                          className="flex-1 py-1 bg-emerald-950/40 text-emerald-400 hover:bg-emerald-900/30 border border-emerald-900/30 rounded-lg text-[9px] font-bold transition text-center cursor-pointer"
-                        >
-                          AR
-                        </button>
+                  {/* NOTE */}
+                  {selectedOrder.notes && (
+                    <div className="py-4" style={{ borderBottom: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)' } as React.CSSProperties}>
+                      <p className={`text-[9px] font-black uppercase tracking-[0.2em] mb-2 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>Note client</p>
+                      <div className="flex items-start gap-2.5 p-3 rounded-2xl"
+                        style={{ background: isDark ? 'rgba(245,158,11,0.07)' : 'rgba(245,158,11,0.06)', border: isDark ? '1px solid rgba(245,158,11,0.15)' : '1px solid rgba(245,158,11,0.2)' } as React.CSSProperties}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" className="w-3.5 h-3.5 shrink-0 mt-0.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        <p className={`text-[11px] font-semibold italic leading-relaxed ${isDark ? 'text-amber-200/80' : 'text-amber-800'}`}>&#34;{selectedOrder.notes}&#34;</p>
                       </div>
-                    </div>
-
-                    {/* Expédition */}
-                    <div className="flex flex-col items-center justify-between p-2 rounded-xl border border-slate-900 bg-slate-900/40 gap-1.5">
-                      <span className="text-[9px] font-extrabold uppercase tracking-wide text-slate-300">Expédition</span>
-                      <div className="flex gap-1 w-full">
-                        <button
-                          type="button"
-                          onClick={() => handleNotifyWhatsApp(selectedOrder, 'shipped', 'Fr')}
-                          className="flex-1 py-1 bg-indigo-950/40 text-indigo-400 hover:bg-indigo-900/30 border border-indigo-900/30 rounded-lg text-[9px] font-bold transition text-center cursor-pointer"
-                        >
-                          FR
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleNotifyWhatsApp(selectedOrder, 'shipped', 'Ar')}
-                          className="flex-1 py-1 bg-indigo-950/40 text-indigo-400 hover:bg-indigo-900/30 border border-indigo-900/30 rounded-lg text-[9px] font-bold transition text-center cursor-pointer"
-                        >
-                          AR
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Livraison */}
-                    <div className="flex flex-col items-center justify-between p-2 rounded-xl border border-slate-900 bg-slate-900/40 gap-1.5">
-                      <span className="text-[9px] font-extrabold uppercase tracking-wide text-slate-300">Livraison</span>
-                      <div className="flex gap-1 w-full">
-                        <button
-                          type="button"
-                          onClick={() => handleNotifyWhatsApp(selectedOrder, 'delivered', 'Fr')}
-                          className="flex-1 py-1 bg-teal-950/40 text-teal-400 hover:bg-teal-900/30 border border-teal-900/30 rounded-lg text-[9px] font-bold transition text-center cursor-pointer"
-                        >
-                          FR
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleNotifyWhatsApp(selectedOrder, 'delivered', 'Ar')}
-                          className="flex-1 py-1 bg-teal-950/40 text-teal-400 hover:bg-teal-900/30 border border-teal-900/30 rounded-lg text-[9px] font-bold transition text-center cursor-pointer"
-                        >
-                          AR
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {selectedOrder.notified_at && (
-                    <div className="text-[9px] text-slate-500 font-mono flex items-center justify-between border-t border-slate-900/50 pt-1.5">
-                      <span>Dernière notification :</span>
-                      <span>{new Date(selectedOrder.notified_at).toLocaleString('fr-FR')}</span>
                     </div>
                   )}
+
+                  {/* AI DIAGNOSTIC */}
+                  {selectedOrder.skin_diagnostic && (
+                    <div className="py-4" style={{ borderBottom: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)' } as React.CSSProperties}>
+                      <p className={`text-[9px] font-black uppercase tracking-[0.2em] mb-3 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>Diagnostic IA · Routine Peau</p>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { label:'Type Peau',  val:selectedOrder.skin_diagnostic.skinType,    accent:'#8b5cf6' },
+                          { label:'Problème',   val:selectedOrder.skin_diagnostic.concern,     accent:'#6366f1' },
+                          { label:'Exposition', val:selectedOrder.skin_diagnostic.sunExposure, accent:'#3b82f6' },
+                        ].map(d => (
+                          <div key={d.label} className="p-2.5 rounded-2xl text-center"
+                            style={{ background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.05)' } as React.CSSProperties}>
+                            <p className="text-[7.5px] font-bold uppercase tracking-widest mb-1" style={{ color: isDark ? '#475569' : '#94a3b8' } as React.CSSProperties}>{d.label}</p>
+                            <p className="text-[10.5px] font-extrabold uppercase leading-tight" style={{ color: d.accent } as React.CSSProperties}>{d.val || '—'}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ARTICLES */}
+                  <div className="py-4" style={{ borderBottom: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)' } as React.CSSProperties}>
+                    <p className={`text-[9px] font-black uppercase tracking-[0.2em] mb-3 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>Articles commandés</p>
+                    <div className="space-y-2.5 max-h-[180px] overflow-y-auto pr-1">
+                      {selectedOrder.items?.map((item, i) => (
+                        <div key={i} className="flex items-center gap-3">
+                          <div className="w-7 h-7 rounded-xl flex items-center justify-center text-[10px] font-black shrink-0"
+                            style={{ background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', color: isDark ? '#94a3b8' : '#64748b' } as React.CSSProperties}>
+                            {item.quantity}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-[11.5px] font-bold truncate leading-tight ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{item.title}</p>
+                            <p className={`text-[10px] font-mono ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{item.price} DH / u</p>
+                          </div>
+                          <p className={`text-[11.5px] font-black font-mono shrink-0 ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
+                            {(item.price * item.quantity).toFixed(0)} DH
+                          </p>
+                        </div>
+                      ))}
+                      {selectedOrder.gift_item && (
+                        <div className="flex items-center gap-3 p-2 rounded-xl"
+                          style={{ background: isDark ? 'rgba(16,185,129,0.07)' : 'rgba(16,185,129,0.06)', border: isDark ? '1px solid rgba(16,185,129,0.15)' : '1px solid rgba(16,185,129,0.2)' } as React.CSSProperties}>
+                          <div className="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 text-base">🎁</div>
+                          <p className={`text-[10.5px] font-bold italic flex-1 ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>{selectedOrder.gift_item}</p>
+                          <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
+                            style={{ background: isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.12)', color: isDark ? '#34d399' : '#059669' } as React.CSSProperties}>OFFERT</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* totals */}
+                    <div className="mt-4 space-y-1.5">
+                      <div className="flex justify-between text-[10.5px] font-mono">
+                        <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>Sous-Total</span>
+                        <span className={isDark ? 'text-slate-300' : 'text-slate-600'}>{selectedOrder.subtotal.toFixed(2)} DH</span>
+                      </div>
+                      {selectedOrder.discount_amount > 0 && (
+                        <div className="flex justify-between text-[10.5px] font-mono font-semibold text-rose-400">
+                          <span>Réduction ({selectedOrder.applied_coupon || 'Quiz'})</span>
+                          <span>-{selectedOrder.discount_amount.toFixed(2)} DH</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-[10.5px] font-mono">
+                        <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>Livraison</span>
+                        <span className={isDark ? 'text-slate-300' : 'text-slate-600'}>{shippingFee.toFixed(2)} DH</span>
+                      </div>
+                      <div className="flex justify-between items-baseline pt-2" style={{ borderTop: isDark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.07)' } as React.CSSProperties}>
+                        <span className={`text-xs font-black uppercase tracking-wider ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Total</span>
+                        <span className="text-xl font-black font-mono" style={{ color: isDark ? '#34d399' : '#059669' } as React.CSSProperties}>
+                          {selectedOrder.total.toFixed(2)} <span className="text-sm">DH</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* LOGISTIQUE */}
+                  {selectedOrder.tracking_number ? (
+                    <div className="py-4" style={{ borderBottom: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)' } as React.CSSProperties}>
+                      <p className={`text-[9px] font-black uppercase tracking-[0.2em] mb-3 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>Logistique</p>
+                      <div className="p-4 rounded-2xl space-y-3"
+                        style={{ background: isDark ? 'rgba(99,102,241,0.07)' : 'rgba(99,102,241,0.05)', border: isDark ? '1px solid rgba(99,102,241,0.2)' : '1px solid rgba(99,102,241,0.15)' } as React.CSSProperties}>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className={`text-[9px] uppercase tracking-wider font-bold ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Transporteur</p>
+                            <p className={`text-sm font-black uppercase mt-0.5 ${isDark ? 'text-indigo-300' : 'text-indigo-700'}`}>{selectedOrder.courier}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className={`text-[9px] uppercase tracking-wider font-bold ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Code Suivi</p>
+                            <p className={`text-xs font-extrabold font-mono mt-0.5 ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{selectedOrder.tracking_number}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 pt-1">
+                          <a href={selectedOrder.tracking_link} target="_blank" rel="noreferrer"
+                            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-black cursor-pointer transition-all duration-200 hover:scale-[1.02] no-underline"
+                            style={{ background: isDark ? 'rgba(99,102,241,0.15)' : 'rgba(99,102,241,0.1)', color: isDark ? '#a5b4fc' : '#4f46e5', border: isDark ? '1px solid rgba(99,102,241,0.25)' : '1px solid rgba(99,102,241,0.2)' } as React.CSSProperties}>
+                            <ExternalLink className="w-3 h-3" /> Suivre
+                          </a>
+                          <button
+                            onClick={() => {
+                              setActiveLabelData({ orderId:selectedOrder.order_id, courier:selectedOrder.courier?.toUpperCase()||'', trackingNumber:selectedOrder.tracking_number||'', codAmount:selectedOrder.total, customerName:selectedOrder.customer_name, phone:selectedOrder.phone_number, city:selectedOrder.city, address:selectedOrder.address, shippingDate:new Date().toLocaleDateString('fr-FR') });
+                              setIsPrintLabelOpen(true);
+                            }}
+                            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-black cursor-pointer transition-all duration-200 hover:scale-[1.02]"
+                            style={{ background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', color: isDark ? '#94a3b8' : '#64748b', border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.07)' } as React.CSSProperties}>
+                            <Printer className="w-3 h-3" /> Étiquette A6
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : selectedOrder.status.toLowerCase() === 'confirmed' && (
+                    <div className="py-4" style={{ borderBottom: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)' } as React.CSSProperties}>
+                      <button onClick={() => handleOpenShippingPanel(selectedOrder)}
+                        className="w-full py-3.5 rounded-2xl text-sm font-black flex items-center justify-center gap-2 cursor-pointer transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                        style={{ background:'linear-gradient(135deg,#10b981,#0891b2)', color:'#fff', boxShadow:'0 8px 24px rgba(16,185,129,0.3)' } as React.CSSProperties}>
+                        <Truck className="w-4 h-4" /> Enregistrer l&apos;expédition
+                      </button>
+                    </div>
+                  )}
+
+                  {/* STATUT + WHATSAPP */}
+                  <div className="py-5 space-y-5">
+                    <div>
+                      <p className={`text-[9px] font-black uppercase tracking-[0.2em] mb-2.5 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>Modifier le statut</p>
+                      <div className="relative">
+                        <select
+                          value={selectedOrder.status}
+                          onChange={(e) => {
+                            const newStatus = e.target.value;
+                            setSelectedOrder(prev => prev ? { ...prev, status: newStatus } : null);
+                            handleUpdateOrderStatus(selectedOrder.order_id, newStatus);
+                          }}
+                          className="w-full appearance-none pl-4 pr-10 py-3 rounded-2xl text-[11px] font-bold cursor-pointer outline-none transition-all duration-200"
+                          style={{
+                            background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+                            border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)',
+                            color: isDark ? '#e2e8f0' : '#1e293b',
+                          } as React.CSSProperties}
+                        >
+                          <option value="Pending">🕐 Pending — En attente confirmation</option>
+                          <option value="Confirmed">✅ Confirmed — Confirmé par téléphone</option>
+                          <option value="Shipped">🚚 Shipped — Expédié / En transit</option>
+                          <option value="Delivered">📦 Delivered — Livré &amp; Encaissé</option>
+                          <option value="Cancelled">❌ Cancelled — Annulé</option>
+                        </select>
+                        <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={`w-4 h-4 ${isDark?'text-slate-500':'text-slate-400'}`}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className={`text-[9px] font-black uppercase tracking-[0.2em] mb-3 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>Notifier via WhatsApp</p>
+                      <div className="grid grid-cols-3 gap-2">
+                        {([
+                          { label:'Confirm.', status:'pending'   as 'pending'|'shipped'|'delivered', grad:'linear-gradient(135deg,#10b981,#059669)', shadow:'rgba(16,185,129,0.3)' },
+                          { label:'Expéd.',   status:'shipped'   as 'pending'|'shipped'|'delivered', grad:'linear-gradient(135deg,#6366f1,#4f46e5)', shadow:'rgba(99,102,241,0.3)' },
+                          { label:'Livraison',status:'delivered' as 'pending'|'shipped'|'delivered', grad:'linear-gradient(135deg,#0891b2,#0e7490)', shadow:'rgba(8,145,178,0.3)' },
+                        ]).map(n => (
+                          <div key={n.label} className="rounded-2xl overflow-hidden"
+                            style={{ background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.05)' } as React.CSSProperties}>
+                            <p className={`text-center text-[8px] font-black uppercase tracking-wider pt-2 pb-1.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{n.label}</p>
+                            <div className="flex gap-1 p-1.5 pt-0">
+                              {(['Fr','Ar'] as const).map(lang => (
+                                <button key={lang}
+                                  type="button"
+                                  onClick={() => handleNotifyWhatsApp(selectedOrder, n.status, lang)}
+                                  className="flex-1 py-1.5 rounded-xl text-[9px] font-black text-white cursor-pointer transition-all duration-200 hover:scale-105 active:scale-95"
+                                  style={{ background:n.grad, boxShadow:`0 4px 10px ${n.shadow}` } as React.CSSProperties}>
+                                  {lang.toUpperCase()}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      {selectedOrder.notified_at && (
+                        <p className={`text-[9px] font-mono text-center mt-2.5 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
+                          Dernière notification : {new Date(selectedOrder.notified_at).toLocaleString('fr-FR')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="h-6" />
                 </div>
               </div>
 
-            </div>
-
-            {/* Bottom Actions */}
-            <div className="pt-4 border-t border-slate-800 flex justify-between items-center text-xs">
-              <button 
-                onClick={() => handleDeleteOrder(selectedOrder.order_id)}
-                className="text-rose-400 hover:text-rose-300 font-black uppercase tracking-wider flex items-center gap-0.5 cursor-pointer"
-              >
-                <Trash2 className="w-3.5 h-3.5" /> Supprimer la commande
-              </button>
-              <button 
-                onClick={() => setSelectedOrder(null)} 
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 font-bold uppercase rounded-xl border border-slate-700 cursor-pointer"
-              >
-                Fermer
-              </button>
+              {/* STICKY FOOTER */}
+              <div className="shrink-0 px-7 py-5 flex items-center justify-between"
+                style={{
+                  background: isDark
+                    ? 'linear-gradient(0deg,hsl(224,28%,8%) 0%,rgba(0,0,0,0) 100%)'
+                    : 'linear-gradient(0deg,#f8f9fc 0%,rgba(248,249,252,0) 100%)',
+                  borderTop: isDark ? '1px solid rgba(255,255,255,0.04)' : '1px solid rgba(0,0,0,0.04)',
+                } as React.CSSProperties}>
+                <button
+                  onClick={() => handleDeleteOrder(selectedOrder.order_id)}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-[10.5px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                  style={{ background: isDark ? 'rgba(244,63,94,0.08)' : 'rgba(244,63,94,0.07)', color: isDark ? '#fb7185' : '#e11d48', border: isDark ? '1px solid rgba(244,63,94,0.15)' : '1px solid rgba(244,63,94,0.15)' } as React.CSSProperties}>
+                  <Trash2 className="w-3.5 h-3.5" /> Supprimer
+                </button>
+                <button
+                  onClick={() => setSelectedOrder(null)}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-[10.5px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                  style={{ background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', color: isDark ? '#94a3b8' : '#64748b', border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.07)' } as React.CSSProperties}>
+                  Fermer
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
+
+
 
       {/* -------------------- SHIPPING INTEGRATION REGISTRATION SIDEBAR/MODAL -------------------- */}
       {isShippingPanelOpen && (
@@ -2673,35 +2809,36 @@ export default function OrdersTab() {
       {/* Floating Bulk Action Bar for Orders */}
       {selectedOrderIds.length > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-2xl px-4 animate-scale-up">
-          <div className={`backdrop-blur-xl border rounded-2xl p-4 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-3 transition-colors duration-200 ${
+          <div className={`backdrop-blur-2xl border p-4.5 shadow-2xl rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-3.5 transition-all duration-300 ${
             adminTheme === 'light'
-              ? 'bg-white/90 border-slate-200 text-slate-800'
-              : 'bg-slate-950/90 border-emerald-500/30 text-slate-200'
+              ? 'bg-white/95 border-slate-200/80 shadow-[0_20px_50px_rgba(15,30,54,0.12)] text-slate-800'
+              : 'bg-slate-950/85 border-slate-850/60 shadow-[0_20px_50px_rgba(0,0,0,0.5)] text-slate-200'
           }`}>
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className={`text-xs font-mono font-bold ${
-                adminTheme === 'light' ? 'text-slate-800' : 'text-slate-200'
-              }`}>
+            <div className="flex items-center gap-2.5">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span className="text-xs font-mono font-bold">
                 {selectedOrderIds.length} commande(s) sélectionnée(s)
               </span>
             </div>
             <div className="flex flex-wrap gap-2 justify-end">
               <button
                 onClick={() => handleBulkUpdate('Confirmed')}
-                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-[10px] uppercase tracking-wider rounded-xl transition cursor-pointer"
+                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-[9.5px] uppercase tracking-wider rounded-xl transition-all duration-200 cursor-pointer shadow-sm shadow-blue-600/10 active:scale-95"
               >
                 Confirmer
               </button>
               <button
                 onClick={() => handleBulkUpdate('Shipped')}
-                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-[10px] uppercase tracking-wider rounded-xl transition cursor-pointer"
+                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[9.5px] uppercase tracking-wider rounded-xl transition-all duration-200 cursor-pointer shadow-sm shadow-indigo-600/10 active:scale-95"
               >
                 Expédier
               </button>
               <button
                 onClick={() => handleBulkUpdate('Cancelled')}
-                className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-[10px] uppercase tracking-wider rounded-xl transition cursor-pointer"
+                className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-black text-[9.5px] uppercase tracking-wider rounded-xl transition-all duration-200 cursor-pointer shadow-sm shadow-rose-600/10 active:scale-95"
               >
                 Annuler
               </button>
@@ -2711,10 +2848,10 @@ export default function OrdersTab() {
                   const toExport = orders.filter(o => selectedOrderIds.includes(o.order_id));
                   handleExportOrdersToCsv(toExport);
                 }}
-                className={`px-3 py-1.5 font-extrabold text-[10px] uppercase tracking-wider rounded-xl transition cursor-pointer border ${
+                className={`px-3 py-1.5 font-black text-[9.5px] uppercase tracking-wider rounded-xl transition-all duration-200 cursor-pointer border shadow-2xs ${
                   adminTheme === 'light'
-                    ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-sm'
-                    : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800'
+                    ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                    : 'bg-slate-900 hover:bg-slate-800 text-slate-350 border-slate-800'
                 }`}
               >
                 Exporter (CSV)
@@ -2725,9 +2862,9 @@ export default function OrdersTab() {
                   const toExport = orders.filter(o => selectedOrderIds.includes(o.order_id));
                   handleExportYalidineManifest(toExport);
                 }}
-                className={`px-3 py-1.5 font-extrabold text-[10px] uppercase tracking-wider rounded-xl transition cursor-pointer border ${
+                className={`px-3 py-1.5 font-black text-[9.5px] uppercase tracking-wider rounded-xl transition-all duration-200 cursor-pointer border shadow-2xs ${
                   adminTheme === 'light'
-                    ? 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200 shadow-sm'
+                    ? 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200'
                     : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20'
                 }`}
               >
@@ -2739,9 +2876,9 @@ export default function OrdersTab() {
                   const toExport = orders.filter(o => selectedOrderIds.includes(o.order_id));
                   handleExportCathedisManifest(toExport);
                 }}
-                className={`px-3 py-1.5 font-extrabold text-[10px] uppercase tracking-wider rounded-xl transition cursor-pointer border ${
+                className={`px-3 py-1.5 font-black text-[9.5px] uppercase tracking-wider rounded-xl transition-all duration-200 cursor-pointer border shadow-2xs ${
                   adminTheme === 'light'
-                    ? 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200 shadow-sm'
+                    ? 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'
                     : 'bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20'
                 }`}
               >
@@ -2749,10 +2886,10 @@ export default function OrdersTab() {
               </button>
               <button
                 onClick={() => setSelectedOrderIds([])}
-                className={`px-2.5 py-1.5 bg-transparent font-extrabold text-[10px] uppercase tracking-wider rounded-xl transition cursor-pointer ${
+                className={`px-3 py-1.5 bg-transparent font-black text-[9.5px] uppercase tracking-wider rounded-xl transition-all duration-200 cursor-pointer ${
                   adminTheme === 'light'
-                    ? 'text-slate-500 hover:text-slate-800 hover:bg-slate-100/50'
-                    : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
+                    ? 'text-slate-400 hover:text-slate-700 hover:bg-slate-100/60'
+                    : 'text-slate-500 hover:bg-slate-900 hover:text-slate-300'
                 }`}
               >
                 Désélectionner

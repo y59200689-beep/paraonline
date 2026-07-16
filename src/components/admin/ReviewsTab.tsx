@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Star, 
   Search, 
@@ -34,6 +34,7 @@ export default function ReviewsTab() {
     handleReplyReview,
     handleDeleteReview,
     handleUpdateReview,
+    isReviewsLoading,
   } = useAdmin();
 
   // Local UI state
@@ -130,6 +131,23 @@ export default function ReviewsTab() {
       return true;
     });
   }, [reviews, products, reviewSearchQuery, statusFilter, ratingFilter]);
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(50);
+
+  // Recompute total pages
+  const totalPages = Math.ceil(filteredReviews.length / itemsPerPage) || 1;
+
+  // Paginated reviews
+  const paginatedReviews = useMemo(() => {
+    return filteredReviews.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  }, [filteredReviews, currentPage, itemsPerPage]);
+
+  // Reset to page 1 on filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [reviewSearchQuery, statusFilter, ratingFilter, showNoReviewProducts, itemsPerPage]);
 
   const handleBulkUpdate = (status: string) => {
     handleBulkUpdateReviewStatus(status, selectedReviewIds);
@@ -634,10 +652,15 @@ export default function ReviewsTab() {
       )}
 
       {/* 📑 Reviews Grid + List (hidden while smart filter is active) */}
-      {!showNoReviewProducts && (viewMode === 'grid' ? (
+      {!showNoReviewProducts && (isReviewsLoading ? (
+        <div className="flex flex-col items-center justify-center py-24 gap-4">
+          <div className="w-8 h-8 border-4 border-slate-600 border-t-emerald-500 rounded-full animate-spin" />
+          <p className="text-xs text-slate-500 font-medium animate-pulse">Chargement des avis clients...</p>
+        </div>
+      ) : viewMode === 'grid' ? (
         // Grid View Layout
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          {filteredReviews.map(rev => {
+          {paginatedReviews.map(rev => {
             const prod = products.find(p => p.id === rev.productId);
             const isPending = rev.status.toLowerCase() === 'pending';
             const isHidden = rev.status.toLowerCase() === 'hidden';
@@ -910,7 +933,7 @@ export default function ReviewsTab() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200/10">
-                {filteredReviews.map(rev => {
+                {paginatedReviews.map(rev => {
                   const prod = products.find(p => p.id === rev.productId);
                   const isPending = rev.status.toLowerCase() === 'pending';
                   const isHidden = rev.status.toLowerCase() === 'hidden';
@@ -1022,6 +1045,63 @@ export default function ReviewsTab() {
           </div>
         </div>
       ))}
+
+      {/* 📑 Pagination Controls */}
+      {!showNoReviewProducts && filteredReviews.length > 0 && !isReviewsLoading && (
+        <div className={`mt-6 p-4 flex flex-col sm:flex-row justify-between items-center gap-4 rounded-2xl border transition-all duration-200 ${
+          adminTheme === 'light'
+            ? 'bg-white border-slate-200/80 shadow-sm text-slate-700'
+            : 'bg-slate-900/30 border-slate-900 text-slate-300'
+        }`}>
+          <div className="text-xs text-slate-500 font-medium">
+            <span>Affichage de <b>{(currentPage - 1) * itemsPerPage + 1}</b> à <b>{Math.min(currentPage * itemsPerPage, filteredReviews.length)}</b> sur <b>{filteredReviews.length}</b> avis</span>
+          </div>
+          
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+              <span>Par page:</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className={`px-2 py-1 rounded-lg border outline-none text-xs cursor-pointer font-medium ${
+                  adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-700' : 'bg-slate-900 border-slate-800 text-slate-300'
+                }`}
+              >
+                {[10, 20, 50, 100].map(val => (
+                  <option key={val} value={val}>{val}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className={`px-2.5 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition ${
+                  adminTheme === 'light' ? 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700' : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300'
+                }`}
+              >
+                Précédent
+              </button>
+              <span className="text-xs text-slate-500 px-2 font-medium">Page <b>{currentPage}</b> sur <b>{totalPages}</b></span>
+              <button
+                type="button"
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className={`px-2.5 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition ${
+                  adminTheme === 'light' ? 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700' : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300'
+                }`}
+              >
+                Suivant
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ⚠️ Empty State — only when NOT showing the smart filter panel */}
       {!showNoReviewProducts && filteredReviews.length === 0 && (

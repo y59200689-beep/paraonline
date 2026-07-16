@@ -1,0 +1,219 @@
+'use client';
+
+import React, { useRef } from 'react';
+import { useTranslation } from '@/context/LanguageContext';
+import { ProductCard } from './ProductCard';
+import { PRODUCTS_DB } from '@/lib/data';
+import { Sparkles, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import Image from 'next/image';
+
+export const DermoCorner: React.FC = () => {
+  const { language } = useTranslation();
+  const isAR = language === 'AR';
+
+  // Refs for horizontal scrolling
+  const acneScrollRef = useRef<HTMLDivElement>(null);
+  const spotScrollRef = useRef<HTMLDivElement>(null);
+
+  // Get targeted products from PRODUCTS_DB
+  const acneProducts = PRODUCTS_DB.filter(p => [115, 113, 112, 107, 101].includes(p.id));
+  const spotProducts = PRODUCTS_DB.filter(p => [14, 16, 3, 105, 13].includes(p.id));
+
+  const handleScroll = (ref: React.RefObject<HTMLDivElement | null>, dir: 'left' | 'right') => {
+    if (ref.current) {
+      const scrollAmount = 300;
+      ref.current.scrollBy({
+        left: dir === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  return (
+    <section className="relative py-16 md:py-24 overflow-hidden bg-slate-50/50 dark:bg-slate-950/10 border-t border-b border-slate-100 dark:border-white/5">
+      {/* Dynamic ambient gradients */}
+      <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-emerald-500/3 dark:bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-indigo-500/3 dark:bg-indigo-500/5 blur-[120px] rounded-full pointer-events-none" />
+
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 relative z-10 space-y-12 md:space-y-16">
+        
+        {/* Section Header */}
+        <div className="text-center max-w-2xl mx-auto mb-10 space-y-3">
+          <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.2em] bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-100/50 dark:border-emerald-900/30">
+            <Sparkles className="w-3 h-3 text-emerald-500" />
+            {isAR ? 'كورنر الجلدية' : 'DERMO CORNER'}
+          </div>
+          <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-800 dark:text-white leading-tight">
+            {isAR ? (
+              <>
+                علاجات سريرية <span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">حسب نوع مشكلتكِ</span>
+              </>
+            ) : (
+              <>
+                Solutions Cliniques <span className="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">Ciblées par Préoccupation</span>
+              </>
+            )}
+          </h2>
+        </div>
+
+        {/* Stacked Full-Width Layout */}
+        <div className="space-y-10 md:space-y-12">
+          
+          {/* Row 1: Acne & Imperfections */}
+          <div className="flex flex-col lg:flex-row gap-6 p-6 rounded-[28px] bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 shadow-md hover:shadow-xl transition-all duration-300">
+            
+            {/* Model Card Left */}
+            <div className="w-full lg:w-[280px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6">
+              <Image
+                src="https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=600&auto=format&fit=crop"
+                alt="Acne & Imperfections skin concern model"
+                fill
+                className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex flex-col justify-end p-5 z-10">
+                <span className="text-[9.5px] font-black uppercase tracking-wider text-emerald-400 mb-1">
+                  {isAR ? 'البشرة الدهنية والشوائب' : 'Peaux Normales à Grasses'}
+                </span>
+                <h3 className="text-xl font-black text-white leading-tight">
+                  {isAR ? 'حب الشباب والمسام' : 'Acné & Imperfections'}
+                </h3>
+                <p className="text-[11px] text-slate-200 mt-2 leading-relaxed max-w-xs font-medium">
+                  {isAR
+                    ? 'يمنع ظهور البثور، يقشر بلطف وينعم نسيج البشرة دون إتلاف حاجزها الواقي.'
+                    : 'Purifie en profondeur, régule l\'excès de sébum et cible les imperfections sans altérer le film hydrolipidique.'}
+                </p>
+                <div className="pt-4 mt-2 border-t border-white/10">
+                  <a
+                    href="/products?category=visage&q=cerave"
+                    className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-emerald-400 hover:text-emerald-300 transition-colors"
+                  >
+                    {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* Products Selection Right */}
+            <div className="flex-1 flex flex-col justify-between min-w-0">
+              
+              {/* Header inside row with controls */}
+              <div className="flex justify-between items-center mb-4 border-b border-slate-50 dark:border-white/5 pb-3">
+                <h4 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">
+                  {isAR ? 'بروتوكول التحكم بالدهون' : 'Protocole Sébo-Régulateur'}
+                </h4>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleScroll(acneScrollRef, 'left')}
+                    className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer outline-none"
+                    title={isAR ? 'السابق' : 'Précédent'}
+                  >
+                    <ChevronLeft className="w-4.5 h-4.5" />
+                  </button>
+                  <button
+                    onClick={() => handleScroll(acneScrollRef, 'right')}
+                    className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer outline-none"
+                    title={isAR ? 'التالي' : 'Suivant'}
+                  >
+                    <ChevronRight className="w-4.5 h-4.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Side Scrollable Products Container */}
+              <div
+                ref={acneScrollRef}
+                className="flex gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory pb-2 select-none"
+              >
+                {acneProducts.map(product => (
+                  <div key={product.id} className="snap-start shrink-0 w-[180px] sm:w-[220px] transition-all duration-200 hover:-translate-y-0.5">
+                    <ProductCard product={product} compact={true} />
+                  </div>
+                ))}
+              </div>
+
+            </div>
+          </div>
+
+          {/* Row 2: Spot & Brightening */}
+          <div className="flex flex-col lg:flex-row gap-6 p-6 rounded-[28px] bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 shadow-md hover:shadow-xl transition-all duration-300">
+            
+            {/* Model Card Left */}
+            <div className="w-full lg:w-[280px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6">
+              <Image
+                src="https://images.unsplash.com/photo-1612817288484-6f916006741a?q=80&w=600&auto=format&fit=crop"
+                alt="Spots & Pigmentation skin concern model"
+                fill
+                className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex flex-col justify-end p-5 z-10">
+                <span className="text-[9.5px] font-black uppercase tracking-wider text-indigo-400 mb-1">
+                  {isAR ? 'البقع الداكنة وتوحيد اللون' : 'Hyperpigmentation'}
+                </span>
+                <h3 className="text-xl font-black text-white leading-tight">
+                  {isAR ? 'التصبغات والنضارة' : 'Anti-Taches & Éclat'}
+                </h3>
+                <p className="text-[11px] text-slate-200 mt-2 leading-relaxed max-w-xs font-medium">
+                  {isAR
+                    ? 'يستهدف بقع الميلانين، يوحد لون البشرة ويرطبها بعمق لنضارة إشعاعية تدom.'
+                    : 'Cible efficacement la production de mélanine, réduit les taches et redonne de l\'éclat aux peaux ternes.'}
+                </p>
+                <div className="pt-4 mt-2 border-t border-white/10">
+                  <a
+                    href="/products?category=visage&q=serum"
+                    className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-indigo-400 hover:text-indigo-300 transition-colors"
+                  >
+                    {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* Products Selection Right */}
+            <div className="flex-1 flex flex-col justify-between min-w-0">
+              
+              {/* Header inside row with controls */}
+              <div className="flex justify-between items-center mb-4 border-b border-slate-50 dark:border-white/5 pb-3">
+                <h4 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">
+                  {isAR ? 'بروتوكول توحيد اللون' : 'Protocole Éclaircissant'}
+                </h4>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleScroll(spotScrollRef, 'left')}
+                    className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer outline-none"
+                    title={isAR ? 'السابق' : 'Précédent'}
+                  >
+                    <ChevronLeft className="w-4.5 h-4.5" />
+                  </button>
+                  <button
+                    onClick={() => handleScroll(spotScrollRef, 'right')}
+                    className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer outline-none"
+                    title={isAR ? 'التالي' : 'Suivant'}
+                  >
+                    <ChevronRight className="w-4.5 h-4.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Side Scrollable Products Container */}
+              <div
+                ref={spotScrollRef}
+                className="flex gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory pb-2 select-none"
+              >
+                {spotProducts.map(product => (
+                  <div key={product.id} className="snap-start shrink-0 w-[180px] sm:w-[220px] transition-all duration-200 hover:-translate-y-0.5">
+                    <ProductCard product={product} compact={true} />
+                  </div>
+                ))}
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+  );
+};

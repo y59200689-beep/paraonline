@@ -42,155 +42,224 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isMobileDrawerOpen,
   setIsMobileDrawerOpen
 }) => {
-  const {
-    orders,
-    reviews,
-    currentUser,
-    adminTheme,
-    handleLogout
-  } = useAdmin();
+  const { orders, reviews, currentUser, adminTheme, handleLogout } = useAdmin();
   const { settings } = useSettings();
+
+  const isDark = adminTheme === 'dark';
+
+  const groups = [
+    {
+      label: 'Opérations',
+      items: [
+        { id: 'dashboard', label: 'Tableau de bord', icon: LayoutDashboard, count: orders.filter(o => o.status.toLowerCase() === 'pending').length || undefined, countColor: '#f43f5e' },
+        { id: 'analytics', label: 'Analytiques', icon: BarChart2 },
+        { id: 'orders', label: 'Commandes', icon: ShoppingBag, count: orders.filter(o => o.status.toLowerCase() === 'pending').length || undefined, countColor: '#f43f5e' },
+        { id: 'catalog', label: 'Catalogue', icon: Table },
+      ],
+    },
+    {
+      label: 'Clients',
+      items: [
+        { id: 'crm', label: 'CRM & Clients', icon: Users },
+        { id: 'loyalty', label: 'Fidélité', icon: Award },
+        { id: 'reviews', label: 'Avis Clients', icon: Star, count: reviews.filter(r => r.status === 'pending').length || undefined, countColor: '#f59e0b' },
+      ],
+    },
+    {
+      label: 'Boutique',
+      items: [
+        { id: 'advice', label: 'Espace Conseils', icon: BookOpen },
+        { id: 'branding', label: 'Personnalisation', icon: Palette },
+        { id: 'snippets', label: 'Snippets Code', icon: Code },
+        { id: 'cron', label: 'Tâches Planifiées', icon: Clock },
+        { id: 'coupons', label: 'Promotions', icon: Ticket },
+        ...(currentUser?.role === 'owner' ? [{ id: 'audit-logs', label: "Journaux d'Audit", icon: Shield, count: undefined, countColor: undefined }] : []),
+        { id: 'settings', label: 'Paramètres', icon: Sliders },
+      ],
+    },
+  ];
+
+  const sidebarStyle: React.CSSProperties = {
+    background: isDark
+      ? 'linear-gradient(180deg, hsl(224,30%,8%) 0%, hsl(228,28%,6%) 100%)'
+      : 'linear-gradient(180deg, #ffffff 0%, hsl(220,20%,98.5%) 100%)',
+    borderRight: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.07)',
+    scrollbarWidth: 'none',
+    msOverflowStyle: 'none',
+  } as React.CSSProperties;
 
   return (
     <>
+      {/* Mobile backdrop */}
       {isMobileDrawerOpen && (
-        <div 
+        <div
           onClick={() => setIsMobileDrawerOpen(false)}
-          className="fixed inset-0 bg-slate-950/60 backdrop-blur-[1px] z-40 md:hidden transition-opacity duration-300 animate-fade-in"
+          className="fixed inset-0 z-40 md:hidden"
+          style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' } as React.CSSProperties}
         />
       )}
-      
-      <aside 
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        className={`shrink-0 flex flex-col p-3 space-y-6 justify-between transition-all duration-300 h-full overflow-y-auto ${
-          isMobileDrawerOpen 
-            ? 'fixed inset-y-0 left-0 w-64 z-50 flex shadow-2xl animate-slide-in' 
+
+      <aside
+        style={sidebarStyle}
+        className={`shrink-0 flex flex-col justify-between transition-all duration-300 h-full overflow-y-auto ${
+          isMobileDrawerOpen
+            ? 'fixed inset-y-0 left-0 w-64 z-50 flex shadow-2xl animate-slide-in'
             : 'hidden md:flex'
-        } ${
-          sidebarCollapsed ? 'md:w-16' : 'md:w-64'
-        } ${
-          adminTheme === 'light' ? 'admin-sidebar-light' : 'admin-sidebar-dark'
-        }`}
+        } ${sidebarCollapsed ? 'md:w-[68px]' : 'md:w-64'}`}
       >
-        <div className="space-y-5">
-          {/* Brand header */}
-          <div className={`flex items-center gap-3 px-1 ${sidebarCollapsed ? 'justify-center' : ''}`}>
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center font-black text-white text-[13px] shadow-md shadow-emerald-500/20 shrink-0 tracking-tight">
+        {/* ── TOP SECTION ───────────────────────────────────────────── */}
+        <div className="flex flex-col gap-5 p-3">
+
+          {/* Brand mark */}
+          <div className={`flex items-center gap-3 px-2 pt-1 ${sidebarCollapsed ? 'justify-center' : ''}`}>
+            {/* Logo */}
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-white text-[13px] shrink-0 tracking-tight"
+              style={{
+                background: 'linear-gradient(135deg, #10b981 0%, #0891b2 100%)',
+                boxShadow: isDark
+                  ? '0 4px 16px rgba(16,185,129,0.35), 0 0 0 1px rgba(16,185,129,0.2)'
+                  : '0 4px 12px rgba(16,185,129,0.30)',
+              } as React.CSSProperties}
+            >
               PO
             </div>
             {!sidebarCollapsed && (
-              <div>
-                <h2 className={`font-bold text-[13px] tracking-tight leading-tight ${adminTheme === 'light' ? 'text-slate-900' : 'text-slate-100'}`}>
+              <div className="min-w-0">
+                <h2 className={`font-black text-[13px] tracking-tight leading-tight truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>
                   {settings?.storeName || 'Para Officinal'}
                 </h2>
-                <span className={`text-[10px] font-medium flex items-center gap-1.5 mt-0.5 ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${adminTheme === 'light' ? 'bg-emerald-500' : 'bg-emerald-400'}`} />
-                  Base active
-                </span>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-[10px] font-semibold" style={{ color: isDark ? '#475569' : '#94a3b8' }}>
+                    Base active
+                  </span>
+                </div>
               </div>
             )}
           </div>
 
-          <nav className="space-y-0.5">
-            {/* ── Group helper ── */}
-            {[
-              {
-                groupLabel: 'Opérations',
-                items: [
-                  { id: 'dashboard', label: 'Tableau de bord', icon: LayoutDashboard, count: orders.filter(o => o.status.toLowerCase() === 'pending').length > 0 ? orders.filter(o => o.status.toLowerCase() === 'pending').length : undefined, countColor: 'bg-rose-500' },
-                  { id: 'analytics', label: 'Analytiques', icon: BarChart2 },
-                  { id: 'orders', label: 'Commandes', icon: ShoppingBag, count: orders.filter(o => o.status.toLowerCase() === 'pending').length },
-                  { id: 'catalog', label: 'Catalogue', icon: Table },
-                ],
-              },
-              {
-                groupLabel: 'Clients',
-                items: [
-                  { id: 'crm', label: 'CRM & Clients', icon: Users },
-                  { id: 'loyalty', label: 'Fidélité', icon: Award },
-                  { id: 'reviews', label: 'Avis Clients', icon: Star, count: reviews.filter(r => r.status === 'pending').length },
-                ],
-              },
-              {
-                groupLabel: 'Boutique',
-                items: [
-                  { id: 'advice', label: 'Espace Conseils', icon: BookOpen },
-                  { id: 'branding', label: 'Personnalisation', icon: Palette },
-                  { id: 'snippets', label: 'Snippets Code', icon: Code },
-                  { id: 'cron', label: 'Tâches Planifiées', icon: Clock },
-                  { id: 'coupons', label: 'Promotions', icon: Ticket },
-                  ...(currentUser?.role === 'owner' ? [{ id: 'audit-logs', label: "Journaux d'Audit", icon: Shield }] : []),
-                  { id: 'settings', label: 'Paramètres', icon: Sliders },
-                ],
-              },
-            ].map((group, gIdx) => (
-              <div key={group.groupLabel} className={gIdx > 0 ? 'pt-3 mt-1' : ''}>
-                {/* Group separator + label */}
+          {/* Nav groups */}
+          <nav className="space-y-1">
+            {groups.map((group, gIdx) => (
+              <div key={group.label} className={gIdx > 0 ? 'pt-4' : ''}>
+                {/* Group divider */}
                 {gIdx > 0 && (
-                  <hr
-                    className="mb-2.5 mx-1"
-                    style={{
-                      border: 'none',
-                      borderTop: `1px solid var(--admin-border)`,
-                    }}
+                  <div
+                    className="mb-2 mx-2"
+                    style={{ height: '1px', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)' }}
                   />
                 )}
+
+                {/* Group label */}
                 {!sidebarCollapsed && (
-                  <span
-                    className="block px-3 mb-1"
-                    style={{
-                      fontSize: 'var(--admin-text-2xs)',
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.14em',
-                      color: 'var(--admin-text-faint)',
-                    }}
+                  <p
+                    className="px-3 mb-1.5 text-[9px] font-black uppercase tracking-[0.2em]"
+                    style={{ color: isDark ? '#2d3a4d' : '#c4cdd9' }}
                   >
-                    {group.groupLabel}
-                  </span>
+                    {group.label}
+                  </p>
                 )}
 
-                {/* Nav items */}
+                {/* Items */}
                 <div className="space-y-0.5">
                   {group.items.map(item => {
                     const Icon = item.icon;
                     const isActive = activeTab === item.id;
-                    const badgeColor = (item as any).countColor || 'bg-emerald-500';
+                    const count = (item as any).count as number | undefined;
+                    const countColor = (item as any).countColor as string | undefined;
+
                     return (
                       <Link
                         key={item.id}
                         href={item.id === 'dashboard' ? '/admin' : `/admin/${item.id}`}
                         prefetch={true}
                         title={sidebarCollapsed ? item.label : undefined}
-                        onClick={() => {
-                          setIsMobileDrawerOpen(false);
-                        }}
-                        className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-between'} px-3 py-2.5 rounded-xl border transition-all ease-out-premium hover:translate-x-0.5 active:scale-[0.97] relative cursor-pointer ${
-                          isActive
-                            ? (adminTheme === 'light'
-                                ? `admin-nav-active-light text-emerald-700 font-bold ${!sidebarCollapsed ? 'border-l-2 border-l-emerald-500 border-y-transparent border-r-transparent pl-[11px]' : ''}`
-                                : `admin-nav-active-dark text-emerald-400 font-bold ${!sidebarCollapsed ? 'border-l-2 border-l-emerald-400 border-y-transparent border-r-transparent pl-[11px]' : ''}`)
-                            : (adminTheme === 'light'
-                                ? 'border-transparent hover:bg-slate-100/80 text-slate-500 hover:text-slate-800'
-                                : 'border-transparent hover:bg-white/[0.04] text-slate-500 hover:text-slate-200')
+                        onClick={() => setIsMobileDrawerOpen(false)}
+                        className={`relative flex items-center rounded-xl border transition-all duration-150 cursor-pointer select-none group ${
+                          sidebarCollapsed ? 'justify-center px-2 py-2.5' : 'justify-between px-3 py-2.5'
                         }`}
-                        style={{ fontSize: 'var(--admin-text-xs)', fontWeight: isActive ? 700 : 500 }}
+                        style={{
+                          background: isActive
+                            ? (isDark
+                              ? 'linear-gradient(135deg, rgba(16,185,129,0.13) 0%, rgba(99,102,241,0.08) 100%)'
+                              : 'linear-gradient(135deg, rgba(16,185,129,0.09) 0%, rgba(99,102,241,0.05) 100%)')
+                            : 'transparent',
+                          borderColor: isActive
+                            ? (isDark ? 'rgba(16,185,129,0.22)' : 'rgba(16,185,129,0.28)')
+                            : 'transparent',
+                          boxShadow: isActive && isDark ? 'inset 0 0 0 1px rgba(16,185,129,0.07)' : 'none',
+                        } as React.CSSProperties}
+                        onMouseEnter={e => {
+                          if (!isActive) {
+                            (e.currentTarget as HTMLElement).style.background = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)';
+                          }
+                        }}
+                        onMouseLeave={e => {
+                          if (!isActive) {
+                            (e.currentTarget as HTMLElement).style.background = 'transparent';
+                          }
+                        }}
                       >
-                        <div className={`flex items-center ${sidebarCollapsed ? '' : 'gap-2.5'}`}>
-                          <Icon className={`w-4 h-4 shrink-0 transition ${
-                            isActive
-                              ? (adminTheme === 'light' ? 'text-emerald-600' : 'text-emerald-400')
-                              : (adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500')
-                          }`} />
-                          {!sidebarCollapsed && <span>{item.label}</span>}
+                        <div className={`flex items-center ${sidebarCollapsed ? '' : 'gap-2.5'} min-w-0`}>
+                          {/* Left accent bar for active */}
+                          {isActive && !sidebarCollapsed && (
+                            <div
+                              className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full"
+                              style={{ background: 'linear-gradient(180deg, #10b981, #6366f1)' }}
+                            />
+                          )}
+                          <Icon
+                            className="w-4 h-4 shrink-0"
+                            style={{
+                              color: isActive
+                                ? (isDark ? '#34d399' : '#059669')
+                                : (isDark ? '#3d4f65' : '#b0bcc9'),
+                              transition: 'color 0.15s',
+                            }}
+                          />
+                          {!sidebarCollapsed && (
+                            <span
+                              className="text-[12px] font-semibold truncate"
+                              style={{
+                                color: isActive
+                                  ? (isDark ? '#d1fae5' : '#065f46')
+                                  : (isDark ? '#64748b' : '#64748b'),
+                                fontWeight: isActive ? 700 : 500,
+                              }}
+                            >
+                              {item.label}
+                            </span>
+                          )}
                         </div>
-                        {!sidebarCollapsed && item.count !== undefined && item.count > 0 && (
-                          <span className={`${badgeColor} text-white font-bold px-1.5 py-0.5 rounded-full min-w-4 text-center`} style={{ fontSize: 'var(--admin-text-2xs)' }}>
-                            {item.count}
+
+                        {/* Count badge — expanded */}
+                        {!sidebarCollapsed && count !== undefined && count > 0 && (
+                          <span
+                            className="text-white font-black px-1.5 py-0.5 rounded-full min-w-[18px] text-center shrink-0 text-[9px]"
+                            style={{ background: countColor || '#10b981' }}
+                          >
+                            {count}
                           </span>
                         )}
-                        {sidebarCollapsed && item.count !== undefined && item.count > 0 && (
-                          <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-rose-500" />
+
+                        {/* Count dot — collapsed */}
+                        {sidebarCollapsed && count !== undefined && count > 0 && (
+                          <span
+                            className="absolute top-1 right-1 w-2 h-2 rounded-full border-2"
+                            style={{
+                              background: countColor || '#10b981',
+                              borderColor: isDark ? 'hsl(224,30%,8%)' : '#fff',
+                            }}
+                          />
+                        )}
+
+                        {/* Active dot — collapsed */}
+                        {isActive && sidebarCollapsed && (
+                          <span
+                            className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
+                            style={{ background: '#10b981' }}
+                          />
                         )}
                       </Link>
                     );
@@ -199,19 +268,85 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
             ))}
           </nav>
-
         </div>
 
-        <div className={`pt-4 border-t space-y-2 ${adminTheme === 'light' ? 'border-slate-100' : 'border-slate-900/80'}`}>
+        {/* ── BOTTOM SECTION ────────────────────────────────────────────── */}
+        <div className="p-3 space-y-1">
+          {/* Divider */}
+          <div
+            className="mb-3 mx-1"
+            style={{ height: '1px', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)' }}
+          />
+
+          {/* User card */}
+          {!sidebarCollapsed && (
+            <div
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl mb-1"
+              style={{
+                background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
+                border: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)',
+              } as React.CSSProperties}
+            >
+              <div
+                className="w-7 h-7 rounded-xl flex items-center justify-center text-white font-black text-[10px] shrink-0"
+                style={{ background: 'linear-gradient(135deg, #10b981, #6366f1)' }}
+              >
+                {currentUser?.name ? currentUser.name.slice(0, 2).toUpperCase() : 'AD'}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] font-bold truncate" style={{ color: isDark ? '#cbd5e1' : '#334155' }}>
+                  {currentUser?.name || 'Admin'}
+                </p>
+                <p className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: isDark ? '#334155' : '#94a3b8' }}>
+                  {currentUser?.role === 'owner' ? 'Propriétaire' : currentUser?.role || 'Admin'}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Collapse toggle */}
           <button
             onClick={() => setSidebarCollapsed(c => !c)}
-            className={`hidden md:flex w-full items-center justify-center px-3 py-2 text-[10px] font-semibold rounded-xl border border-transparent transition duration-205 gap-1 cursor-pointer ${
-              adminTheme === 'light'
-                ? 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 hover:border-slate-200/40'
-                : 'text-slate-600 hover:text-slate-400 hover:bg-slate-900/50'
-            }`}
+            className="hidden md:flex w-full items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-semibold transition-all duration-200 cursor-pointer"
+            style={{
+              color: isDark ? '#2d3a4d' : '#c4cdd9',
+              background: 'transparent',
+              border: 'none',
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.background = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)';
+              (e.currentTarget as HTMLElement).style.color = isDark ? '#94a3b8' : '#64748b';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.background = 'transparent';
+              (e.currentTarget as HTMLElement).style.color = isDark ? '#2d3a4d' : '#c4cdd9';
+            }}
           >
-            {sidebarCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <><ChevronLeft className="w-3.5 h-3.5" /><span>Réduire</span></>}
+            {sidebarCollapsed
+              ? <ChevronRight className="w-3.5 h-3.5" />
+              : <><ChevronLeft className="w-3.5 h-3.5" /><span>Réduire</span></>}
+          </button>
+
+          {/* Logout */}
+          <button
+            onClick={handleLogout}
+            className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-2.5'} px-3 py-2 rounded-xl text-[11px] font-semibold transition-all duration-200 cursor-pointer`}
+            style={{
+              color: isDark ? '#3d4f65' : '#b0bcc9',
+              background: 'transparent',
+              border: 'none',
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.background = 'rgba(244,63,94,0.08)';
+              (e.currentTarget as HTMLElement).style.color = isDark ? '#fb7185' : '#e11d48';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.background = 'transparent';
+              (e.currentTarget as HTMLElement).style.color = isDark ? '#3d4f65' : '#b0bcc9';
+            }}
+          >
+            <LogOut className="w-3.5 h-3.5 shrink-0" />
+            {!sidebarCollapsed && <span>Déconnexion</span>}
           </button>
         </div>
       </aside>

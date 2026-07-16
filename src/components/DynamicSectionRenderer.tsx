@@ -26,6 +26,9 @@ import { InteractiveFaqWrapper } from '@/components/InteractiveFaqWrapper';
 import { FeaturedIngredientSection } from '@/components/FeaturedIngredientSection';
 import { LaRochePosaySSection } from '@/components/LaRochePosaySSection';
 import { CurationClinique } from '@/components/CurationClinique';
+import { DermoCorner } from '@/components/DermoCorner';
+import { ActiveIngredients } from '@/components/ActiveIngredients';
+import { OfficialDistributorBadge } from '@/components/OfficialDistributorBadge';
 import { HomepageSectionItem } from '@/context/SettingsContext';
 
 interface DynamicSectionRendererProps {
@@ -146,6 +149,15 @@ export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps
 
           case 'curationClinique':
             return <CurationClinique key={section.id} />;
+
+          case 'dermoCorner':
+            return <DermoCorner key={section.id} />;
+
+          case 'activeIngredients':
+            return <ActiveIngredients key={section.id} />;
+
+          case 'officialDistributor':
+            return <OfficialDistributorBadge key={section.id} />;
 
           case 'faq':
             return <InteractiveFaqWrapper key={section.id} />;

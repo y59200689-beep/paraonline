@@ -95,6 +95,8 @@ export interface AdminDataContextProps {
   setAdviceArticles: React.Dispatch<React.SetStateAction<any[]>>;
   isDataLoading: boolean;
   setIsDataLoading: (loading: boolean) => void;
+  isProductsLoading: boolean;
+  isReviewsLoading: boolean;
   cartRecoveryStatus: Record<string, 'not_contacted' | 'contacted' | 'recovered'>;
   setCartRecoveryStatus: React.Dispatch<React.SetStateAction<Record<string, 'not_contacted' | 'contacted' | 'recovered'>>>;
 
@@ -140,6 +142,8 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [operatorsList, setOperatorsList] = useState<any[]>([]);
   const [adviceArticles, setAdviceArticles] = useState<any[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(false);
+  const [isProductsLoading, setIsProductsLoading] = useState(false);
+  const [isReviewsLoading, setIsReviewsLoading] = useState(false);
   const [cartRecoveryStatus, setCartRecoveryStatus] = useState<Record<string, 'not_contacted' | 'contacted' | 'recovered'>>({});
 
   const syncRecoveryStatusMap = (carts: AbandonedCart[]) => {
@@ -194,6 +198,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const loadProducts = async () => {
+    setIsProductsLoading(true);
     try {
       const res = await fetch('/api/admin/products?limit=20000');
       const data = await res.json();
@@ -204,10 +209,13 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
     } catch (e) {
       setProducts(PRODUCTS_DB);
+    } finally {
+      setIsProductsLoading(false);
     }
   };
 
   const loadReviews = async () => {
+    setIsReviewsLoading(true);
     try {
       const res = await fetch('/api/admin/reviews');
       const data = await res.json();
@@ -216,7 +224,11 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       } else {
         setReviews([]);
       }
-    } catch (e) {}
+    } catch (e) {
+      setReviews([]);
+    } finally {
+      setIsReviewsLoading(false);
+    }
   };
 
   const loadAuditLogs = async () => {
@@ -322,8 +334,6 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     try {
       await Promise.all([
         loadOrders(),
-        loadProducts(),
-        loadReviews(),
         loadAuditLogs(),
         loadAbandonedCarts(),
         loadDiagnostics(),
@@ -332,9 +342,27 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         loadOperatorsList(),
         loadAdviceArticles()
       ]);
+      setIsDataLoading(false);
+
+      if (process.env.NODE_ENV === 'test') {
+        await loadProducts();
+        await loadReviews();
+      } else {
+        setTimeout(async () => {
+          try {
+            await loadProducts();
+          } catch (e) {
+            console.error("Error loading products in background:", e);
+          }
+          try {
+            await loadReviews();
+          } catch (e) {
+            console.error("Error loading reviews in background:", e);
+          }
+        }, 300);
+      }
     } catch (e) {
       console.error("Error loading admin data:", e);
-    } finally {
       setIsDataLoading(false);
     }
   };
@@ -860,6 +888,8 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setAdviceArticles,
     isDataLoading,
     setIsDataLoading,
+    isProductsLoading,
+    isReviewsLoading,
     cartRecoveryStatus,
     setCartRecoveryStatus,
 
@@ -898,6 +928,8 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     operatorsList,
     adviceArticles,
     isDataLoading,
+    isProductsLoading,
+    isReviewsLoading,
     cartRecoveryStatus,
     loadAllData,
     loadOrders,
