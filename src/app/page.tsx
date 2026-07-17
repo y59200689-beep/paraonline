@@ -79,9 +79,7 @@ export default async function Home() {
     { id: 'diagnosticBanner-1', type: 'diagnosticBanner', nameFr: 'Diagnostic de Peau IA', visible: hp.showDiagnosticBanner ?? false },
     { id: 'summerSale-1', type: 'summerSale', nameFr: "Offres d'Été (Summer Sale)", visible: hp.showSummerSale ?? true },
     { id: 'skinConcerns-1', type: 'skinConcerns', nameFr: 'Bento de Préoccupations Cutanées', visible: hp.showSkinConcerns ?? true },
-    { id: 'curationClinique-1', type: 'curationClinique', nameFr: 'Curation Clinique par Préoccupation', visible: true },
-    { id: 'dermoCorner-1', type: 'dermoCorner', nameFr: 'Dermo Corner (Acné vs Taches)', visible: true },
-    { id: 'flashSale-1', type: 'flashSale', nameFr: 'Bannière de Vente Flash', visible: hp.showFlashSale ?? true },
+    { id: 'dermoCorner-1', type: 'dermoCorner', nameFr: 'Dermo Corner (Acné vs Taches)', visible: hp.showDermoCorner ?? true },
     { id: 'horizontalPromo-1', type: 'horizontalPromo', nameFr: 'Bannière Promotionnelle Horizontale', visible: hp.showHorizontalPromo ?? true },
     { id: 'customerReviews-1', type: 'customerReviews', nameFr: 'Témoignages & Avis Clients', visible: hp.showCustomerReviews ?? true },
     { id: 'triplePromo-1', type: 'triplePromo', nameFr: 'Bannières Triple Promotionnelles', visible: hp.showTriplePromo ?? true },
@@ -97,7 +95,9 @@ export default async function Home() {
     { id: 'trustBar-1', type: 'trustBar', nameFr: 'Barre de Confiance Maroc', visible: hp.showTrustBar ?? true }
   ];
 
-  const rawSectionsList = hp.sectionOrder || defaultSections;
+  const rawSectionsList = hp.sectionOrder 
+    ? hp.sectionOrder.filter((s: any) => s.type !== 'flashSale' && s.type !== 'curationClinique')
+    : defaultSections;
   let sectionsList = [...rawSectionsList];
   
   // 1. Ensure 'skincareRoutineSteps-1' is in the list
@@ -122,12 +122,7 @@ export default async function Home() {
 
   // 1b. Ensure 'dermoCorner-1' is in the list
   if (!sectionsList.some(s => s.id === 'dermoCorner-1')) {
-    const curationIdx = sectionsList.findIndex(s => s.id === 'curationClinique-1');
-    if (curationIdx !== -1) {
-      sectionsList.splice(curationIdx + 1, 0, { id: 'dermoCorner-1', type: 'dermoCorner', nameFr: 'Dermo Corner (Acné vs Taches)', visible: true });
-    } else {
-      sectionsList.push({ id: 'dermoCorner-1', type: 'dermoCorner', nameFr: 'Dermo Corner (Acné vs Taches)', visible: true });
-    }
+    sectionsList.push({ id: 'dermoCorner-1', type: 'dermoCorner', nameFr: 'Dermo Corner (Acné vs Taches)', visible: hp.showDermoCorner ?? true });
   }
 
   // 1c. Ensure 'activeIngredients-1' is in the list

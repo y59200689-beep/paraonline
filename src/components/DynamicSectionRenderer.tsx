@@ -12,7 +12,6 @@ import { BrandPartners } from '@/components/BrandPartners';
 import { DiagnosticBanner } from '@/components/DiagnosticBanner';
 import { SummerSalePromo } from '@/components/SummerSalePromo';
 import { SkinConcernsSelector } from '@/components/SkinConcernsSelector';
-import { FlashSaleBanner } from '@/components/FlashSaleBanner';
 import { HorizontalPromoBanner } from '@/components/HorizontalPromoBanner';
 import { MoroccoTrustBar } from '@/components/MoroccoTrustBar';
 import { CustomerReviews } from '@/components/CustomerReviews';
@@ -25,7 +24,6 @@ import { IngredientDictionary } from '@/components/IngredientDictionary';
 import { InteractiveFaqWrapper } from '@/components/InteractiveFaqWrapper';
 import { FeaturedIngredientSection } from '@/components/FeaturedIngredientSection';
 import { LaRochePosaySSection } from '@/components/LaRochePosaySSection';
-import { CurationClinique } from '@/components/CurationClinique';
 import { DermoCorner } from '@/components/DermoCorner';
 import { ActiveIngredients } from '@/components/ActiveIngredients';
 import { OfficialDistributorBadge } from '@/components/OfficialDistributorBadge';
@@ -100,20 +98,6 @@ export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps
           case 'skinConcerns':
             return <SkinConcernsSelector key={section.id} />;
 
-          case 'flashSale':
-            return (
-              <FlashSaleBanner 
-                key={section.id} 
-                titleFr={section.settings?.titleFr}
-                titleAr={section.settings?.titleAr}
-                descFr={section.settings?.descFr}
-                descAr={section.settings?.descAr}
-                productId={section.settings?.productIds?.[0]}
-                discountPercent={section.settings?.discountPercent}
-                bgImage={section.settings?.bgImage}
-              />
-            );
-
           case 'horizontalPromo':
             return <HorizontalPromoBanner key={section.id} settings={section.settings} />;
 
@@ -146,9 +130,6 @@ export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps
 
           case 'ingredientDictionary':
             return <IngredientDictionary key={section.id} />;
-
-          case 'curationClinique':
-            return <CurationClinique key={section.id} />;
 
           case 'dermoCorner':
             return <DermoCorner key={section.id} />;

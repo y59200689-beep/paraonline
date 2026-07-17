@@ -14,10 +14,18 @@ export const DermoCorner: React.FC = () => {
   // Refs for horizontal scrolling
   const acneScrollRef = useRef<HTMLDivElement>(null);
   const spotScrollRef = useRef<HTMLDivElement>(null);
+  const antiAgeScrollRef = useRef<HTMLDivElement>(null);
+  const hydrateScrollRef = useRef<HTMLDivElement>(null);
+  const sootheScrollRef = useRef<HTMLDivElement>(null);
+  const solarScrollRef = useRef<HTMLDivElement>(null);
 
   // Get targeted products from PRODUCTS_DB
   const acneProducts = PRODUCTS_DB.filter(p => [115, 113, 112, 107, 101].includes(p.id));
   const spotProducts = PRODUCTS_DB.filter(p => [14, 16, 3, 105, 13].includes(p.id));
+  const antiAgeProducts = PRODUCTS_DB.filter(p => [8, 106, 6, 7, 5].includes(p.id));
+  const hydrateProducts = PRODUCTS_DB.filter(p => [101, 114, 104, 17, 13].includes(p.id));
+  const sootheProducts = PRODUCTS_DB.filter(p => [110, 109, 22, 101, 16].includes(p.id));
+  const solarProducts = PRODUCTS_DB.filter(p => [13, 17, 107, 102, 9].includes(p.id));
 
   const handleScroll = (ref: React.RefObject<HTMLDivElement | null>, dir: 'left' | 'right') => {
     if (ref.current) {
@@ -63,7 +71,7 @@ export const DermoCorner: React.FC = () => {
           <div className="flex flex-col lg:flex-row gap-6 p-6 rounded-[28px] bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 shadow-md hover:shadow-xl transition-all duration-300">
             
             {/* Model Card Left */}
-            <div className="w-full lg:w-[280px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6">
+            <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6">
               <Image
                 src="https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=600&auto=format&fit=crop"
                 alt="Acne & Imperfections skin concern model"
@@ -126,7 +134,7 @@ export const DermoCorner: React.FC = () => {
                 className="flex gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory pb-2 select-none"
               >
                 {acneProducts.map(product => (
-                  <div key={product.id} className="snap-start shrink-0 w-[180px] sm:w-[220px] transition-all duration-200 hover:-translate-y-0.5">
+                  <div key={product.id} className="snap-start shrink-0 w-[180px] sm:w-[220px] lg:w-[168px] transition-all duration-200 hover:-translate-y-0.5">
                     <ProductCard product={product} compact={true} />
                   </div>
                 ))}
@@ -136,10 +144,10 @@ export const DermoCorner: React.FC = () => {
           </div>
 
           {/* Row 2: Spot & Brightening */}
-          <div className="flex flex-col lg:flex-row gap-6 p-6 rounded-[28px] bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 shadow-md hover:shadow-xl transition-all duration-300">
+          <div className="flex flex-col lg:flex-row-reverse gap-6 p-6 rounded-[28px] bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 shadow-md hover:shadow-xl transition-all duration-300">
             
             {/* Model Card Left */}
-            <div className="w-full lg:w-[280px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6">
+            <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6">
               <Image
                 src="https://images.unsplash.com/photo-1612817288484-6f916006741a?q=80&w=600&auto=format&fit=crop"
                 alt="Spots & Pigmentation skin concern model"
@@ -202,7 +210,311 @@ export const DermoCorner: React.FC = () => {
                 className="flex gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory pb-2 select-none"
               >
                 {spotProducts.map(product => (
-                  <div key={product.id} className="snap-start shrink-0 w-[180px] sm:w-[220px] transition-all duration-200 hover:-translate-y-0.5">
+                  <div key={product.id} className="snap-start shrink-0 w-[180px] sm:w-[220px] lg:w-[168px] transition-all duration-200 hover:-translate-y-0.5">
+                    <ProductCard product={product} compact={true} />
+                  </div>
+                ))}
+              </div>
+
+            </div>
+          </div>
+
+          {/* Row 3: Anti-âge & Fermeté */}
+          <div className="flex flex-col lg:flex-row gap-6 p-6 rounded-[28px] bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 shadow-md hover:shadow-xl transition-all duration-300">
+            
+            {/* Model Card Left */}
+            <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6">
+              <Image
+                src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=600&auto=format&fit=crop"
+                alt="Anti-aging & Firmness skin concern model"
+                fill
+                className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex flex-col justify-end p-5 z-10">
+                <span className="text-[9.5px] font-black uppercase tracking-wider text-emerald-400 mb-1">
+                  {isAR ? 'التجاعيد وفقدان المرونة' : 'Rides & Perte de Fermeté'}
+                </span>
+                <h3 className="text-xl font-black text-white leading-tight">
+                  {isAR ? 'مقاومة التجاعيد وشد البشرة' : 'Anti-âge & Fermeté'}
+                </h3>
+                <p className="text-[11px] text-slate-200 mt-2 leading-relaxed max-w-xs font-medium">
+                  {isAR
+                    ? 'يستهدف التجاعيد، الخطوط الدقيقة وارتخاء الجلد لاستعادة مرونة البشرة وشدها بشكل ملحوظ.'
+                    : 'Cible les rides, ridules et le relâchement cutané pour redonner de la fermeté et de l\'élasticité à la peau.'}
+                </p>
+                <div className="pt-4 mt-2 border-t border-white/10">
+                  <a
+                    href="/products?category=visage&q=anti-age"
+                    className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-emerald-400 hover:text-emerald-300 transition-colors"
+                  >
+                    {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* Products Selection Right */}
+            <div className="flex-1 flex flex-col justify-between min-w-0">
+              
+              {/* Header inside row with controls */}
+              <div className="flex justify-between items-center mb-4 border-b border-slate-50 dark:border-white/5 pb-3">
+                <h4 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">
+                  {isAR ? 'بروتوكول شد وملء البشرة' : 'Protocole Anti-Rides & Fermeté'}
+                </h4>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleScroll(antiAgeScrollRef, 'left')}
+                    className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer outline-none"
+                    title={isAR ? 'السابق' : 'Précédent'}
+                  >
+                    <ChevronLeft className="w-4.5 h-4.5" />
+                  </button>
+                  <button
+                    onClick={() => handleScroll(antiAgeScrollRef, 'right')}
+                    className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer outline-none"
+                    title={isAR ? 'التالي' : 'Suivant'}
+                  >
+                    <ChevronRight className="w-4.5 h-4.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Side Scrollable Products Container */}
+              <div
+                ref={antiAgeScrollRef}
+                className="flex gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory pb-2 select-none"
+              >
+                {antiAgeProducts.map(product => (
+                  <div key={product.id} className="snap-start shrink-0 w-[180px] sm:w-[220px] lg:w-[168px] transition-all duration-200 hover:-translate-y-0.5">
+                    <ProductCard product={product} compact={true} />
+                  </div>
+                ))}
+              </div>
+
+            </div>
+          </div>
+
+          {/* Row 4: Hydratation & Barrière */}
+          <div className="flex flex-col lg:flex-row-reverse gap-6 p-6 rounded-[28px] bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 shadow-md hover:shadow-xl transition-all duration-300">
+            
+            {/* Model Card Right */}
+            <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6">
+              <Image
+                src="https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?q=80&w=600&auto=format&fit=crop"
+                alt="Hydration & Barrier skin concern model"
+                fill
+                className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex flex-col justify-end p-5 z-10">
+                <span className="text-[9.5px] font-black uppercase tracking-wider text-indigo-400 mb-1">
+                  {isAR ? 'البشرة الجافة وشديدة الجفاف' : 'Peaux Sèches & Déshydratées'}
+                </span>
+                <h3 className="text-xl font-black text-white leading-tight">
+                  {isAR ? 'الترطيب وحاجز البشرة' : 'Hydratation & Barrière'}
+                </h3>
+                <p className="text-[11px] text-slate-200 mt-2 leading-relaxed max-w-xs font-medium">
+                  {isAR
+                    ? 'يعمل على ترميم حاجز البشرة، حبس الرطوبة وتهدئة الجفاف لراحة تدوم طوال اليوم وبشرة ناعمة.'
+                    : 'Restaure la barrière cutanée, retient l\'eau et soulage les tiraillements pour une peau souple, douce et protégée.'}
+                </p>
+                <div className="pt-4 mt-2 border-t border-white/10">
+                  <a
+                    href="/products?category=visage&q=ceramide"
+                    className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-indigo-400 hover:text-indigo-300 transition-colors"
+                  >
+                    {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* Products Selection Left */}
+            <div className="flex-1 flex flex-col justify-between min-w-0">
+              
+              {/* Header inside row with controls */}
+              <div className="flex justify-between items-center mb-4 border-b border-slate-50 dark:border-white/5 pb-3">
+                <h4 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">
+                  {isAR ? 'بروتوكول الترطيب الفائق والترميم' : 'Protocole Hydratation & Réparation'}
+                </h4>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleScroll(hydrateScrollRef, 'left')}
+                    className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer outline-none"
+                    title={isAR ? 'السابق' : 'Précédent'}
+                  >
+                    <ChevronLeft className="w-4.5 h-4.5" />
+                  </button>
+                  <button
+                    onClick={() => handleScroll(hydrateScrollRef, 'right')}
+                    className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer outline-none"
+                    title={isAR ? 'التالي' : 'Suivant'}
+                  >
+                    <ChevronRight className="w-4.5 h-4.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Side Scrollable Products Container */}
+              <div
+                ref={hydrateScrollRef}
+                className="flex gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory pb-2 select-none"
+              >
+                {hydrateProducts.map(product => (
+                  <div key={product.id} className="snap-start shrink-0 w-[180px] sm:w-[220px] lg:w-[168px] transition-all duration-200 hover:-translate-y-0.5">
+                    <ProductCard product={product} compact={true} />
+                  </div>
+                ))}
+              </div>
+
+            </div>
+          </div>
+
+          {/* Row 5: Apaisant & Sensibilité */}
+          <div className="flex flex-col lg:flex-row gap-6 p-6 rounded-[28px] bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 shadow-md hover:shadow-xl transition-all duration-300">
+            
+            {/* Model Card Left */}
+            <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6">
+              <Image
+                src="https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=80&w=600&auto=format&fit=crop"
+                alt="Soothing & Sensitive skin concern model"
+                fill
+                className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex flex-col justify-end p-5 z-10">
+                <span className="text-[9.5px] font-black uppercase tracking-wider text-emerald-400 mb-1">
+                  {isAR ? 'الاحمرار والبشرة الحساسة' : 'Rougeurs & Peaux Réactives'}
+                </span>
+                <h3 className="text-xl font-black text-white leading-tight">
+                  {isAR ? 'العناية الملطفة والتهدئة' : 'Apaisant & Sensibilité'}
+                </h3>
+                <p className="text-[11px] text-slate-200 mt-2 leading-relaxed max-w-xs font-medium">
+                  {isAR
+                    ? 'يهدئ تهيج البشرة فوراً، يخفف الاحمرار ويقوي دفاعات البشرة الحساسة وسريعة التهيج.'
+                    : 'Calme instantanément les irritations, réduit les rougeurs et renforce le seuil de tolérance des peaux les plus sensibles.'}
+                </p>
+                <div className="pt-4 mt-2 border-t border-white/10">
+                  <a
+                    href="/products?category=visage&q=centella"
+                    className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-emerald-400 hover:text-emerald-300 transition-colors"
+                  >
+                    {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* Products Selection Right */}
+            <div className="flex-1 flex flex-col justify-between min-w-0">
+              
+              {/* Header inside row with controls */}
+              <div className="flex justify-between items-center mb-4 border-b border-slate-50 dark:border-white/5 pb-3">
+                <h4 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">
+                  {isAR ? 'بروتوكول تهدئة وتلطيف البشرة' : 'Protocole Soignant & Apaisant'}
+                </h4>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleScroll(sootheScrollRef, 'left')}
+                    className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer outline-none"
+                    title={isAR ? 'السابق' : 'Précédent'}
+                  >
+                    <ChevronLeft className="w-4.5 h-4.5" />
+                  </button>
+                  <button
+                    onClick={() => handleScroll(sootheScrollRef, 'right')}
+                    className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer outline-none"
+                    title={isAR ? 'التالي' : 'Suivant'}
+                  >
+                    <ChevronRight className="w-4.5 h-4.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Side Scrollable Products Container */}
+              <div
+                ref={sootheScrollRef}
+                className="flex gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory pb-2 select-none"
+              >
+                {sootheProducts.map(product => (
+                  <div key={product.id} className="snap-start shrink-0 w-[180px] sm:w-[220px] lg:w-[168px] transition-all duration-200 hover:-translate-y-0.5">
+                    <ProductCard product={product} compact={true} />
+                  </div>
+                ))}
+              </div>
+
+            </div>
+          </div>
+
+          {/* Row 6: Solaire & Protection */}
+          <div className="flex flex-col lg:flex-row-reverse gap-6 p-6 rounded-[28px] bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 shadow-md hover:shadow-xl transition-all duration-300">
+            
+            {/* Model Card Right */}
+            <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6">
+              <Image
+                src="https://images.unsplash.com/photo-1520038410233-7141be7e6f97?q=80&w=600&auto=format&fit=crop"
+                alt="Solaire & Protection concern model"
+                fill
+                className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex flex-col justify-end p-5 z-10">
+                <span className="text-[9.5px] font-black uppercase tracking-wider text-indigo-400 mb-1">
+                  {isAR ? 'الحماية من أشعة الشمس وفوق البنفسجية' : 'Protection UV & Anti-Photovieillissement'}
+                </span>
+                <h3 className="text-xl font-black text-white leading-tight">
+                  {isAR ? 'الحماية والوقاية من الشمس' : 'Solaire & Protection'}
+                </h3>
+                <p className="text-[11px] text-slate-200 mt-2 leading-relaxed max-w-xs font-medium">
+                  {isAR
+                    ? 'يوفر حماية فائقة ضد الأشعة فوق البنفسجية، يمنع البقع الناتجة عن الشمس ويحارب علامات التقدم في السن.'
+                    : 'Protège efficacement contre les UVA/UVB, prévient les taches solaires et lutte contre le vieillissement prématuré.'}
+                </p>
+                <div className="pt-4 mt-2 border-t border-white/10">
+                  <a
+                    href="/products?category=solaire"
+                    className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-indigo-400 hover:text-indigo-300 transition-colors"
+                  >
+                    {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* Products Selection Left */}
+            <div className="flex-1 flex flex-col justify-between min-w-0">
+              
+              {/* Header inside row with controls */}
+              <div className="flex justify-between items-center mb-4 border-b border-slate-50 dark:border-white/5 pb-3">
+                <h4 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">
+                  {isAR ? 'بروتوكول الوقاية والحماية القصوى' : 'Protocole Haute Protection Solaire'}
+                </h4>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleScroll(solarScrollRef, 'left')}
+                    className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer outline-none"
+                    title={isAR ? 'السابق' : 'Précédent'}
+                  >
+                    <ChevronLeft className="w-4.5 h-4.5" />
+                  </button>
+                  <button
+                    onClick={() => handleScroll(solarScrollRef, 'right')}
+                    className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer outline-none"
+                    title={isAR ? 'التالي' : 'Suivant'}
+                  >
+                    <ChevronRight className="w-4.5 h-4.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Side Scrollable Products Container */}
+              <div
+                ref={solarScrollRef}
+                className="flex gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory pb-2 select-none"
+              >
+                {solarProducts.map(product => (
+                  <div key={product.id} className="snap-start shrink-0 w-[180px] sm:w-[220px] lg:w-[168px] transition-all duration-200 hover:-translate-y-0.5">
                     <ProductCard product={product} compact={true} />
                   </div>
                 ))}

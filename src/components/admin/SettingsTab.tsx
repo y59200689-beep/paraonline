@@ -37,7 +37,8 @@ import {
   Heart,
   Activity,
   Gift,
-  Eye
+  Eye,
+  FlaskConical
 } from 'lucide-react';
 import { useAdmin } from '@/context/AdminContext';
 import { useSettings, HeroCardConfig } from '@/context/SettingsContext';
@@ -153,8 +154,7 @@ export default function SettingsTab() {
           } 
         },
         { id: 'skinConcerns-1', type: 'skinConcerns', nameFr: 'Bento de Préoccupations Cutanées', visible: hp.showSkinConcerns ?? true },
-        { id: 'curationClinique-1', type: 'curationClinique', nameFr: 'Curation Clinique par Préoccupation', visible: true },
-        { id: 'flashSale-1', type: 'flashSale', nameFr: 'Bannière de Vente Flash', visible: hp.showFlashSale ?? true },
+        { id: 'dermoCorner-1', type: 'dermoCorner', nameFr: 'Dermo Corner (Acné vs Taches)', visible: hp.showDermoCorner ?? true },
         { id: 'horizontalPromo-1', type: 'horizontalPromo', nameFr: 'Bannière Promotionnelle Horizontale', visible: hp.showHorizontalPromo ?? true },
         { id: 'customerReviews-1', type: 'customerReviews', nameFr: 'Témoignages & Avis Clients', visible: hp.showCustomerReviews ?? true },
         { id: 'triplePromo-1', type: 'triplePromo', nameFr: 'Bannières Triple Promotionnelles', visible: hp.showTriplePromo ?? true },
@@ -163,11 +163,16 @@ export default function SettingsTab() {
         { id: 'weeklySales-1', type: 'weeklySales', nameFr: 'Meilleures Ventes de la Semaine', visible: hp.showWeeklySales ?? true, settings: { titleFr: hp.weeklySalesTitleFr, titleAr: hp.weeklySalesTitleAr, productIds: hp.weeklySalesProductIds || [] } },
         { id: 'routineVisualizer-1', type: 'routineVisualizer', nameFr: 'Visualiseur de Routine de Soins', visible: hp.showRoutineVisualizer ?? true },
         { id: 'featuredIngredient-1', type: 'featuredIngredient', nameFr: 'Ingrédient Focus de la Semaine', visible: hp.showFeaturedIngredient ?? true },
+        { id: 'activeIngredients-1', type: 'activeIngredients', nameFr: 'Molécules & Ingrédients Actifs', visible: hp.showActiveIngredients ?? true },
         { id: 'ingredientDictionary-1', type: 'ingredientDictionary', nameFr: 'Dictionnaire Clinique des Ingrédients', visible: hp.showIngredientDictionary ?? true },
         { id: 'faq-1', type: 'faq', nameFr: 'Foire Aux Questions (FAQ)', visible: hp.showFaq ?? true },
+        { id: 'officialDistributor-1', type: 'officialDistributor', nameFr: 'Badge Distributeur Officiel', visible: hp.showOfficialDistributor ?? true },
         { id: 'trustBar-1', type: 'trustBar', nameFr: 'Barre de Confiance Maroc', visible: hp.showTrustBar ?? true }
       ];
-      setSectionsList(hp.sectionOrder && hp.sectionOrder.length > 0 ? hp.sectionOrder : defaultOrder);
+      const filteredOrder = hp.sectionOrder && hp.sectionOrder.length > 0
+        ? hp.sectionOrder.filter((s: any) => s.type !== 'flashSale' && s.type !== 'curationClinique')
+        : defaultOrder;
+      setSectionsList(filteredOrder);
     }
   }, [settings, products]);
 
@@ -194,7 +199,7 @@ export default function SettingsTab() {
         showDiagnosticBanner: findVisible('diagnosticBanner'),
         showSummerSale: findVisible('summerSale'),
         showSkinConcerns: findVisible('skinConcerns'),
-        showFlashSale: findVisible('flashSale'),
+        showDermoCorner: findVisible('dermoCorner'),
         showHorizontalPromo: findVisible('horizontalPromo'),
         showTrustBar: findVisible('trustBar'),
         showCustomerReviews: findVisible('customerReviews'),
@@ -204,8 +209,10 @@ export default function SettingsTab() {
         showWeeklySales: findVisible('weeklySales'),
         showRoutineVisualizer: findVisible('routineVisualizer'),
         showFeaturedIngredient: findVisible('featuredIngredient'),
+        showActiveIngredients: findVisible('activeIngredients'),
         showIngredientDictionary: findVisible('ingredientDictionary'),
         showFaq: findVisible('faq'),
+        showOfficialDistributor: findVisible('officialDistributor'),
 
         topRatedTitleFr: topRatedSec.titleFr || '',
         topRatedTitleAr: topRatedSec.titleAr || '',
@@ -713,7 +720,7 @@ export default function SettingsTab() {
             diagnosticBanner: { nameFr: 'Diagnostic de Peau IA', descFr: 'Bannière d\'incitation au diagnostic IA.', icon: Activity, color: 'from-indigo-500 to-blue-500' },
             summerSale: { nameFr: 'Offres d\'Été (Summer Sale)', descFr: 'Deal Box d\'été avec compte à rebours.', icon: Gift, color: 'from-orange-500 to-red-500' },
             skinConcerns: { nameFr: 'Bento Préoccupations Cutanées', descFr: 'Sélecteur interactif de type de peau.', icon: Sliders, color: 'from-violet-500 to-purple-500' },
-            flashSale: { nameFr: 'Bannière de Vente Flash', descFr: 'Bannière promotionnelle flash animée.', icon: Zap, color: 'from-yellow-500 to-orange-500' },
+            dermoCorner: { nameFr: 'Dermo Corner (Acné vs Taches)', descFr: 'Sélecteur d\'alternance avec cartes et produits.', icon: Heart, color: 'from-emerald-500 to-teal-500' },
             horizontalPromo: { nameFr: 'Bannière Horizontale', descFr: 'Bannière publicitaire épurée.', icon: FileText, color: 'from-emerald-500 to-teal-500' },
             trustBar: { nameFr: 'Barre de Confiance Maroc', descFr: 'Indicateurs de réassurance client.', icon: Truck, color: 'from-cyan-500 to-blue-500' },
             customerReviews: { nameFr: 'Témoignages & Avis Clients', descFr: 'Carrousel des avis et témoignages.', icon: Star, color: 'from-amber-400 to-yellow-500' },
@@ -723,8 +730,10 @@ export default function SettingsTab() {
             weeklySales: { nameFr: 'Meilleures Ventes de la Semaine', descFr: 'Sélection de produits hebdomadaires.', icon: Sliders, color: 'from-pink-500 to-purple-500' },
             routineVisualizer: { nameFr: 'Visualiseur de Routine de Soins', descFr: 'Parcours interactif de soins matin/soir.', icon: Activity, color: 'from-teal-500 to-cyan-500' },
             featuredIngredient: { nameFr: 'Ingrédient Focus de la Semaine', descFr: 'Section focus sur un ingrédient.', icon: Star, color: 'from-purple-500 to-indigo-500' },
+            activeIngredients: { nameFr: 'Molécules & Ingrédients Actifs', descFr: 'Filtrer les produits par molécules / ingrédients actifs.', icon: FlaskConical, color: 'from-blue-500 to-indigo-600' },
             ingredientDictionary: { nameFr: 'Dictionnaire des Ingrédients', descFr: 'Encyclopédie clinique des ingrédients.', icon: BookOpen, color: 'from-blue-500 to-teal-500' },
             faq: { nameFr: 'Foire Aux Questions (FAQ)', descFr: 'FAQ et centre d\'aide interactif.', icon: HelpCircle, color: 'from-emerald-500 to-blue-500' },
+            officialDistributor: { nameFr: 'Badge Distributeur Officiel', descFr: 'Badge de réassurance d\'authenticité et partenaires.', icon: ShieldCheck, color: 'from-emerald-500 to-teal-500' },
             customHtml: { nameFr: 'Code HTML Personnalisé', descFr: 'Bloc de code HTML ou scripts embeds libre.', icon: Terminal, color: 'from-slate-700 to-slate-900' },
             richText: { nameFr: 'Texte Enrichi & CTA', descFr: 'Bannière de texte avec titre, description et bouton.', icon: FileText, color: 'from-rose-500 to-amber-500' }
           };
@@ -2196,164 +2205,7 @@ export default function SettingsTab() {
                           </div>
                         )}
 
-                        {/* Flash Sale Editor */}
-                        {activeSection.type === 'flashSale' && (
-                          <div className="space-y-4 font-sans">
-                            <div className="border-b pb-2">
-                              <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                                Édition de la Vente Flash
-                              </label>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-3">
-                              <div className="space-y-1">
-                                <label className="text-[9px] font-bold text-slate-400 uppercase">Titre personnalisé (FR)</label>
-                                <input
-                                  type="text"
-                                  value={activeSection.settings?.titleFr || ''}
-                                  placeholder="Optionnel (généré automatiquement)"
-                                  onChange={(e) => updateActiveSectionSettings({ titleFr: e.target.value })}
-                                  className={`w-full text-xs rounded-xl px-2.5 py-1.5 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-900 text-slate-202 border-slate-800'}`}
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <label className="text-[9px] font-bold text-slate-400 uppercase">Titre personnalisé (AR)</label>
-                                <input
-                                  type="text"
-                                  value={activeSection.settings?.titleAr || ''}
-                                  placeholder="Optionnel"
-                                  onChange={(e) => updateActiveSectionSettings({ titleAr: e.target.value })}
-                                  className={`w-full text-xs rounded-xl px-2.5 py-1.5 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-900 text-slate-202 border-slate-800'}`}
-                                  dir="rtl"
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <label className="text-[9px] font-bold text-slate-400 uppercase">Description (FR)</label>
-                                <textarea
-                                  value={activeSection.settings?.descFr || ''}
-                                  placeholder="Optionnel"
-                                  onChange={(e) => updateActiveSectionSettings({ descFr: e.target.value })}
-                                  className={`w-full text-xs rounded-xl px-2.5 py-1.5 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-900 text-slate-202 border-slate-800'}`}
-                                  rows={2}
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <label className="text-[9px] font-bold text-slate-400 uppercase">Description (AR)</label>
-                                <textarea
-                                  value={activeSection.settings?.descAr || ''}
-                                  placeholder="Optionnel"
-                                  onChange={(e) => updateActiveSectionSettings({ descAr: e.target.value })}
-                                  className={`w-full text-xs rounded-xl px-2.5 py-1.5 border text-right ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-900 text-slate-202 border-slate-800'}`}
-                                  dir="rtl"
-                                  rows={2}
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <label className="text-[9px] font-bold text-slate-400 uppercase">Pourcentage de réduction (%)</label>
-                                <input
-                                  type="number"
-                                  value={activeSection.settings?.discountPercent !== undefined ? activeSection.settings.discountPercent : 30}
-                                  onChange={(e) => updateActiveSectionSettings({ discountPercent: Number(e.target.value) })}
-                                  className={`w-full text-xs rounded-xl px-2.5 py-1.5 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-900 text-slate-202 border-slate-800'}`}
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <label className="text-[9px] font-bold text-slate-400 uppercase">Image publicitaire (URL)</label>
-                                <input
-                                  type="text"
-                                  value={activeSection.settings?.bgImage || ''}
-                                  placeholder="Optionnel (photo produit par défaut)"
-                                  onChange={(e) => updateActiveSectionSettings({ bgImage: e.target.value })}
-                                  className={`w-full text-xs rounded-xl px-2.5 py-1.5 border ${adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-900 text-slate-202 border-slate-800'}`}
-                                />
-                              </div>
-                            </div>
 
-                            {/* Link product selection */}
-                            <div className="space-y-2 pt-2 border-t border-slate-200/50 dark:border-slate-800/40">
-                              <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 block">Produit lié à la vente flash</label>
-                              {activeSection.settings?.productIds?.[0] ? (() => {
-                                const prod = products.find(p => p.id === activeSection.settings.productIds[0]);
-                                if (!prod) return null;
-                                return (
-                                  <div className={`flex items-center justify-between p-2 rounded-xl border ${
-                                    adminTheme === 'light' ? 'bg-white border-slate-100' : 'bg-slate-900/60 border-slate-800'
-                                  }`}>
-                                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                      <div className="w-9 h-9 rounded-lg overflow-hidden bg-slate-100 shrink-0">
-                                        <img src={prod.image} alt="" className="w-full h-full object-cover" />
-                                      </div>
-                                      <div className="min-w-0 flex-1">
-                                        <p className="text-xs font-bold truncate">{prod.nameFr || prod.title}</p>
-                                        <p className="text-[9.5px] text-slate-400">{prod.price} DH</p>
-                                      </div>
-                                    </div>
-                                    <button
-                                      type="button"
-                                      onClick={() => updateActiveSectionSettings({ productIds: [] })}
-                                      className="p-1.5 text-rose-500 hover:bg-rose-50 rounded"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
-                                  </div>
-                                );
-                              })() : (
-                                <div className="relative">
-                                  {!trOpen ? (
-                                    <button
-                                      type="button"
-                                      onClick={() => setTrOpen(true)}
-                                      className={`w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-dashed text-xs font-bold ${
-                                        adminTheme === 'light' ? 'border-slate-200 text-slate-400 bg-slate-50/50' : 'border-slate-800 text-slate-500'
-                                      }`}
-                                    >
-                                      <Plus className="w-3.5 h-3.5" />
-                                      Associer le produit flash
-                                    </button>
-                                  ) : (
-                                    <div className={`rounded-xl border shadow-xl overflow-hidden ${
-                                      adminTheme === 'light' ? 'bg-white border-slate-100' : 'bg-slate-900 border-slate-800 font-sans'
-                                    }`}>
-                                      <div className="flex items-center gap-2 px-3 py-2 border-b">
-                                        <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                        <input
-                                          type="text"
-                                          autoFocus
-                                          value={trSearch}
-                                          onChange={(e) => setTrSearch(e.target.value)}
-                                          placeholder="Rechercher par nom..."
-                                          className="flex-1 bg-transparent outline-none text-xs"
-                                        />
-                                        <button type="button" onClick={() => { setTrOpen(false); setTrSearch(''); }}>
-                                          <X className="w-3.5 h-3.5" />
-                                        </button>
-                                      </div>
-                                      <div className="max-h-40 overflow-y-auto">
-                                        {products
-                                          .filter(p => !trSearch || (p.nameFr || p.title || '').toLowerCase().includes(trSearch.toLowerCase()))
-                                          .slice(0, 8)
-                                          .map(p => (
-                                            <button
-                                              type="button"
-                                              key={p.id}
-                                              onClick={() => {
-                                                updateActiveSectionSettings({ productIds: [p.id] });
-                                                setTrOpen(false);
-                                                setTrSearch('');
-                                              }}
-                                              className="w-full flex items-center gap-3 px-3 py-2 text-left border-b last:border-0 text-xs hover:bg-slate-50 dark:hover:bg-slate-800"
-                                            >
-                                              <span className="flex-1 truncate">{p.nameFr || p.title}</span>
-                                            </button>
-                                          ))}
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
 
                         {/* Triple Promo Cards Editor */}
                         {activeSection.type === 'triplePromo' && (
@@ -2878,8 +2730,7 @@ export default function SettingsTab() {
                          activeSection.type !== 'trustBar' && 
                          activeSection.type !== 'brandPartners' && 
                          activeSection.type !== 'horizontalPromo' && 
-                         activeSection.type !== 'flashSale' && 
-                         activeSection.type !== 'triplePromo' && 
+                         activeSection.type !== 'triplePromo' &&  
                          activeSection.type !== 'skinConcerns' && 
                          activeSection.type !== 'customerReviews' && (
                           <div className="space-y-4 py-8 text-center">

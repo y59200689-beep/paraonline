@@ -227,7 +227,6 @@ export interface HomepageSectionConfig {
   showDiagnosticBanner?: boolean;
   showSummerSale?: boolean;
   showSkinConcerns?: boolean;
-  showFlashSale?: boolean;
   showHorizontalPromo?: boolean;
   showTrustBar?: boolean;
   showCustomerReviews?: boolean;
@@ -239,6 +238,9 @@ export interface HomepageSectionConfig {
   showFeaturedIngredient?: boolean;
   showIngredientDictionary?: boolean;
   showFaq?: boolean;
+  showDermoCorner?: boolean;
+  showActiveIngredients?: boolean;
+  showOfficialDistributor?: boolean;
 
   topRatedTitleFr?: string;
   topRatedTitleAr?: string;
@@ -287,7 +289,6 @@ export const DEFAULT_SETTINGS: Settings = {
     showDiagnosticBanner: false,
     showSummerSale: true,
     showSkinConcerns: true,
-    showFlashSale: true,
     showHorizontalPromo: true,
     showTrustBar: true,
     showCustomerReviews: true,
@@ -299,6 +300,9 @@ export const DEFAULT_SETTINGS: Settings = {
     showFeaturedIngredient: true,
     showIngredientDictionary: true,
     showFaq: true,
+    showDermoCorner: true,
+    showActiveIngredients: true,
+    showOfficialDistributor: true,
 
     topRatedTitleFr: "Produits les Mieux Notés",
     topRatedTitleAr: "المنتجات الأعلى تقييماً",
@@ -321,8 +325,7 @@ export const DEFAULT_SETTINGS: Settings = {
       { id: 'diagnosticBanner-1', type: 'diagnosticBanner', nameFr: 'Diagnostic de Peau IA', visible: false },
       { id: 'summerSale-1', type: 'summerSale', nameFr: "Offres d'Été (Summer Sale)", visible: true },
       { id: 'skinConcerns-1', type: 'skinConcerns', nameFr: 'Bento de Préoccupations Cutanées', visible: true },
-      { id: 'curationClinique-1', type: 'curationClinique', nameFr: 'Curation Clinique par Préoccupation', visible: true },
-      { id: 'flashSale-1', type: 'flashSale', nameFr: 'Bannière de Vente Flash', visible: true },
+      { id: 'dermoCorner-1', type: 'dermoCorner', nameFr: 'Dermo Corner (Acné vs Taches)', visible: true },
       { id: 'horizontalPromo-1', type: 'horizontalPromo', nameFr: 'Bannière Promotionnelle Horizontale', visible: true },
       { id: 'customerReviews-1', type: 'customerReviews', nameFr: 'Témoignages & Avis Clients', visible: true },
       { id: 'triplePromo-1', type: 'triplePromo', nameFr: 'Bannières Triple Promotionnelles', visible: true },
@@ -331,8 +334,10 @@ export const DEFAULT_SETTINGS: Settings = {
       { id: 'routineVisualizer-1', type: 'routineVisualizer', nameFr: 'Visualiseur de Routine de Soins', visible: true },
       { id: 'featuredIngredient-1', type: 'featuredIngredient', nameFr: 'Marques Vedettes de la Semaine', visible: true },
       { id: 'skincareRoutineSteps-1', type: 'skincareRoutineSteps', nameFr: 'Étapes de la Routine Skincare', visible: true },
+      { id: 'activeIngredients-1', type: 'activeIngredients', nameFr: 'Molécules & Ingrédients Actifs', visible: true },
       { id: 'ingredientDictionary-1', type: 'ingredientDictionary', nameFr: 'Dictionnaire Clinique des Ingrédients', visible: true },
       { id: 'faq-1', type: 'faq', nameFr: 'Foire Aux Questions (FAQ)', visible: true },
+      { id: 'officialDistributor-1', type: 'officialDistributor', nameFr: 'Badge Distributeur Officiel', visible: true },
       { id: 'trustBar-1', type: 'trustBar', nameFr: 'Barre de Confiance Maroc', visible: true }
     ]
   },
