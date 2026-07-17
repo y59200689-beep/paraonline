@@ -78,8 +78,8 @@ export default async function Home() {
     { id: 'brandPartners-1', type: 'brandPartners', nameFr: 'Marques Partenaires', visible: hp.showBrandPartners ?? true },
     { id: 'diagnosticBanner-1', type: 'diagnosticBanner', nameFr: 'Diagnostic de Peau IA', visible: hp.showDiagnosticBanner ?? false },
     { id: 'summerSale-1', type: 'summerSale', nameFr: "Offres d'Été (Summer Sale)", visible: hp.showSummerSale ?? true },
-    { id: 'skinConcerns-1', type: 'skinConcerns', nameFr: 'Bento de Préoccupations Cutanées', visible: hp.showSkinConcerns ?? true },
     { id: 'dermoCorner-1', type: 'dermoCorner', nameFr: 'Dermo Corner (Acné vs Taches)', visible: hp.showDermoCorner ?? true },
+    { id: 'skinConcerns-1', type: 'skinConcerns', nameFr: 'Bento de Préoccupations Cutanées', visible: hp.showSkinConcerns ?? true },
     { id: 'horizontalPromo-1', type: 'horizontalPromo', nameFr: 'Bannière Promotionnelle Horizontale', visible: hp.showHorizontalPromo ?? true },
     { id: 'customerReviews-1', type: 'customerReviews', nameFr: 'Témoignages & Avis Clients', visible: hp.showCustomerReviews ?? true },
     { id: 'triplePromo-1', type: 'triplePromo', nameFr: 'Bannières Triple Promotionnelles', visible: hp.showTriplePromo ?? true },
@@ -161,6 +161,15 @@ export default async function Home() {
     const [stepsItem] = sectionsList.splice(stepsIdx, 1);
     const updatedIngredientIdx = sectionsList.findIndex(s => s.id === 'featuredIngredient-1');
     sectionsList.splice(updatedIngredientIdx + 1, 0, stepsItem);
+  }
+
+  // 4. Programmatically place 'dermoCorner-1' directly under 'summerSale-1'
+  const summerSaleIdx = sectionsList.findIndex(s => s.id === 'summerSale-1');
+  const dermoCornerIdx = sectionsList.findIndex(s => s.id === 'dermoCorner-1');
+  if (summerSaleIdx !== -1 && dermoCornerIdx !== -1 && dermoCornerIdx !== summerSaleIdx + 1) {
+    const [dermoCornerItem] = sectionsList.splice(dermoCornerIdx, 1);
+    const newSummerSaleIdx = sectionsList.findIndex(s => s.id === 'summerSale-1');
+    sectionsList.splice(newSummerSaleIdx + 1, 0, dermoCornerItem);
   }
 
   return (
