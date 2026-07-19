@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { PRODUCTS_DB } from '@/lib/data';
 import { supabase } from '@/lib/supabase';
+import { BRANDS_DATA, slugify } from '@/lib/brands';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://paraofficinal.ma';
 
@@ -22,6 +23,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
+      url: `${SITE_URL}/advice`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 0.8,
+    },
+    {
       url: `${SITE_URL}/politiques/conditions-vente`,
       lastModified: now,
       changeFrequency: 'monthly',
@@ -41,9 +48,36 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // ── Dynamic product pages ────────────────────────────────────────────────────
-  let productIds: string[] = [];
+  // ── Dynamic brand pages ──────────────────────────────────────────────────────
+  const brandPages: MetadataRoute.Sitemap = BRANDS_DATA.map((brand) => ({
+    url: `${SITE_URL}/brand/${slugify(brand.name)}`,
+    lastModified: now,
+    changeFrequency: 'weekly',
+    priority: 0.6,
+  }));
 
+  // ── Dynamic advice pages ─────────────────────────────────────────────────────
+  let advicePages: MetadataRoute.Sitemap = [];
+  try {
+    const { data: articles, error: articlesError } = await supabase
+      .from('advice_articles')
+      .select('slug, created_at')
+      .eq('status', 'published');
+
+    if (!articlesError && articles && articles.length > 0) {
+      advicePages = articles.map((article: any) => ({
+        url: `${SITE_URL}/advice/${article.slug}`,
+        lastModified: article.created_at ? new Date(article.created_at) : now,
+        changeFrequency: 'weekly',
+        priority: 0.8,
+      }));
+    }
+  } catch (err) {
+    console.error("Error loading advice articles for sitemap:", err);
+  }
+
+  // ── Dynamic product pages ────────────────────────────────────────────────────
+  let productPages: MetadataRoute.Sitemap = [];
   try {
     const { data, error } = await supabase
       .from('products')
@@ -51,25 +85,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .limit(1000);
 
     if (!error && data && data.length > 0) {
-      const productPages: MetadataRoute.Sitemap = data.map((row: any) => ({
+      productPages = data.map((row: any) => ({
         url: `${SITE_URL}/products/${row.id}`,
         lastModified: row.updated_at ? new Date(row.updated_at) : now,
         changeFrequency: 'weekly' as const,
         priority: 0.7,
       }));
-      return [...staticPages, ...productPages];
+    } else {
+      // Fallback: use local PRODUCTS_DB
+      productPages = PRODUCTS_DB.map((product) => ({
+        url: `${SITE_URL}/products/${product.id}`,
+        lastModified: now,
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+      }));
     }
   } catch {
-    // Fall back to static product DB
+    // Fallback: use local PRODUCTS_DB
+    productPages = PRODUCTS_DB.map((product) => ({
+      url: `${SITE_URL}/products/${product.id}`,
+      lastModified: now,
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    }));
   }
 
-  // Fallback: use local PRODUCTS_DB
-  const fallbackProductPages: MetadataRoute.Sitemap = PRODUCTS_DB.map((product) => ({
-    url: `${SITE_URL}/products/${product.id}`,
-    lastModified: now,
-    changeFrequency: 'weekly' as const,
-    priority: 0.7,
-  }));
-
-  return [...staticPages, ...fallbackProductPages];
+  return [...staticPages, ...brandPages, ...advicePages, ...productPages];
 }
+

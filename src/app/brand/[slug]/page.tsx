@@ -1,6 +1,7 @@
 import { PRODUCTS_DB, Product } from '@/lib/data';
 import { BRANDS_DATA, slugify, getBrandBySlug } from '@/lib/brands';
 import BrandClient from './BrandClient';
+import LaRochePosayCustomPage from '@/components/LaRochePosayCustomPage';
 
 export const revalidate = 3600; // Cache for 1 hour
 
@@ -12,7 +13,13 @@ export async function generateStaticParams() {
 
 export default async function BrandPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  
+
+  // ── Custom branded pages ──────────────────────────────────────────────
+  if (slug === 'la-roche-posay') {
+    return <LaRochePosayCustomPage />;
+  }
+
+  // ── Generic brand page ────────────────────────────────────────────────
   // Resolve the brand config
   let brand = getBrandBySlug(slug);
   
