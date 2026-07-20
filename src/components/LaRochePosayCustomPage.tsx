@@ -386,29 +386,35 @@ export default function LaRochePosayCustomPage() {
               <div className="lg:col-span-6 relative">
                 <div className="relative flex flex-col items-center">
                   
-                  {/* Floating 3 Flagship Products on Water Splash Backdrop */}
-                  <div className="grid grid-cols-3 gap-3 sm:gap-4 w-full items-end justify-center py-4">
+                  {/* Floating 3 Pristine White Flagship Product Cards */}
+                  <div className="grid grid-cols-3 gap-3.5 sm:gap-4 w-full items-stretch justify-center py-2">
                     {[
                       {
                         range: 'EFFACLAR',
+                        title: 'DUO+M',
                         tag: 'Acné & Imperfections',
-                        accent: '#38bdf8',
+                        accent: '#2563eb',
+                        bg: '#eff6ff',
+                        border: '#bfdbfe',
                         prod: products.find(p => (p.title ?? '').toLowerCase().includes('effaclar duo + m 40 ml') || (p.title ?? '').toLowerCase().includes('effaclar duo')),
-                        h: 'h-48 lg:h-56',
                       },
                       {
                         range: 'ANTHELIOS',
-                        tag: 'Protection Solaire',
-                        accent: '#fb923c',
+                        title: 'UVMUNE 400',
+                        tag: 'Protection SPF50+',
+                        accent: '#ea580c',
+                        bg: '#fff7ed',
+                        border: '#fed7aa',
                         prod: products.find(p => (p.title ?? '').toLowerCase().includes('anthelios ecran spf 50+ gel') || (p.title ?? '').toLowerCase().includes('anthelios')),
-                        h: 'h-52 lg:h-60',
                       },
                       {
                         range: 'CICAPLAST',
+                        title: 'BAUME B5+',
                         tag: 'Réparation Cutanée',
-                        accent: '#4ade80',
+                        accent: '#16a34a',
+                        bg: '#f0fdf4',
+                        border: '#bbf7d0',
                         prod: products.find(p => (p.title ?? '').toLowerCase().includes('cicaplast b5 baume gm 100 ml') || (p.title ?? '').toLowerCase().includes('cicaplast b5 baume mm 40 ml')),
-                        h: 'h-44 lg:h-52',
                         overrideImg: 'https://paraofficinal.store/wp-content/uploads/2025/12/La-Roche-Posay-ProductPage-Damaged-Cicaplast-Baume-B5-100ml-3337872413018-Front.png',
                       },
                     ].map((item, idx) => {
@@ -417,26 +423,23 @@ export default function LaRochePosayCustomPage() {
                         <div
                           key={idx}
                           onClick={() => selectRange(RANGES[idx]?.id || 'acne')}
-                          className="group relative flex flex-col items-center text-center cursor-pointer transition-all duration-500 hover:-translate-y-2 bg-white/10 border border-white/15 rounded-3xl p-3.5 backdrop-blur-md hover:bg-white/15 hover:border-sky-400/50"
+                          className="group relative bg-white border border-slate-200/80 rounded-3xl p-4 flex flex-col justify-between items-center text-center cursor-pointer shadow-2xl shadow-sky-950/40 transition-all duration-300 hover:-translate-y-2 hover:shadow-sky-500/20 hover:border-sky-300"
                         >
-                          {/* Floating range badge */}
-                          <div className="mb-2 px-2.5 py-1 rounded-full bg-white/10 border border-white/20 backdrop-blur-md">
-                            <p className="text-[10px] font-black" style={{ color: item.accent }}>
-                              {item.range}
-                            </p>
-                            <p className="text-[8px] text-slate-300 font-bold hidden sm:block">
-                              {item.tag}
-                            </p>
-                          </div>
+                          {/* Top Range Badge */}
+                          <span
+                            className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border mb-2"
+                            style={{ background: item.bg, color: item.accent, borderColor: item.border }}
+                          >
+                            {item.range}
+                          </span>
 
-                          {/* Product bottle standing in water aura */}
-                          <div className={`w-full ${item.h} flex items-center justify-center relative p-2 bg-white/5 rounded-2xl border border-white/10`}>
-                            <div className="absolute inset-x-2 bottom-0 h-4 bg-sky-400/20 rounded-full blur-md group-hover:bg-sky-400/40 transition-colors" />
+                          {/* Pure White Product Image Frame with Ample Margins */}
+                          <div className="w-full h-36 sm:h-40 flex items-center justify-center p-2 relative my-1">
                             {imgUrl ? (
                               <img
                                 src={imgUrl}
                                 alt={item.range}
-                                className="max-h-full max-w-[85%] object-contain drop-shadow-[0_15px_30px_rgba(56,189,248,0.3)] group-hover:scale-110 transition-all duration-500"
+                                className="max-h-32 sm:max-h-36 max-w-[85%] object-contain drop-shadow-md group-hover:scale-110 transition-transform duration-500"
                               />
                             ) : (
                               <div className="w-16 h-28 rounded-xl flex items-center justify-center text-white text-[9px] font-bold" style={{ background: item.accent }}>
@@ -445,9 +448,19 @@ export default function LaRochePosayCustomPage() {
                             )}
                           </div>
 
-                          {/* Price Tag below */}
+                          {/* Product Label & Concern */}
+                          <div className="w-full my-1">
+                            <p className="text-[11px] font-black text-slate-900 leading-tight">
+                              {item.title}
+                            </p>
+                            <p className="text-[9px] font-semibold text-slate-500 mt-0.5 line-clamp-1">
+                              {item.tag}
+                            </p>
+                          </div>
+
+                          {/* Sky-Blue Price Pill Tag at Bottom */}
                           {item.prod && (
-                            <div className="mt-2.5 px-3 py-0.5 rounded-full bg-sky-500/20 border border-sky-400/30 text-sky-300 text-[10px] font-mono font-bold group-hover:bg-sky-500 group-hover:text-white transition-colors">
+                            <div className="mt-2 px-3.5 py-1 rounded-full bg-sky-500 text-white font-mono font-bold text-[10px] shadow-sm shadow-sky-500/30 group-hover:bg-sky-600 transition-colors">
                               {item.prod.price} DH
                             </div>
                           )}
