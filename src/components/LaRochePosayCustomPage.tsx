@@ -315,196 +315,158 @@ export default function LaRochePosayCustomPage() {
             §1. HERO
         ══════════════════════════════════════════════════════════ */}
         {/* ══════════════════════════════════════════════════════════
-            §1. HERO (ULTRA-PROFESSIONAL REDESIGN)
+            §1. HERO (LUXURY EDITORIAL FLAGSHIP REDESIGN)
         ══════════════════════════════════════════════════════════ */}
         <section className="bg-white border-b border-slate-100 relative overflow-hidden">
-          {/* Subtle background sky-blue radial lighting aura */}
-          <div className="absolute top-10 right-10 w-[550px] h-[550px] bg-sky-100/60 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-10 w-96 h-96 bg-blue-50/50 rounded-full blur-3xl pointer-events-none" />
+          {/* Ambient sky-blue water glow background */}
+          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-sky-100/70 via-blue-50/40 to-transparent rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-10 left-10 w-80 h-80 bg-sky-50/60 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="max-w-[1280px] mx-auto px-5 lg:px-10 py-14 lg:py-20 relative z-10">
+          <div className="max-w-[1280px] mx-auto px-5 lg:px-10 py-16 lg:py-24 relative z-10">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
 
-              {/* Left Column: Brand Authority & Call to Actions */}
+              {/* Left Column: Brand Authority & High Impact Copy */}
               <div className="lg:col-span-6 space-y-6">
-                <div className="space-y-3">
-                  <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] bg-sky-500 text-white shadow-sm shadow-sky-500/20">
-                    <Sparkles className="w-3.5 h-3.5" /> LABORATOIRE DERMATOLOGIQUE · FRANCE
-                  </span>
-                  
-                  <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-black leading-[1.05] tracking-tight text-slate-900">
-                    CHANGER LA VIE<br />
-                    DE TOUTES LES<br />
-                    <span className="bg-gradient-to-r from-sky-500 to-blue-600 bg-clip-text text-transparent">PEAUX</span>
-                  </h1>
-                </div>
-
-                <p className="text-sm lg:text-base text-slate-600 font-medium leading-relaxed max-w-lg">
-                  Soins dermatologiques d'exception formulés avec l'eau thermale apaisante de La Roche-Posay. Recommandés par plus de 90 000 dermatologues dans le monde.
+                <p className="text-xs font-black uppercase tracking-[0.22em] text-sky-600">
+                  LABORATOIRE DERMATOLOGIQUE · LA ROCHE-POSAY FRANCE
                 </p>
 
-                {/* N°1 Clinical Badge */}
-                <div className="inline-flex items-center gap-3 bg-slate-50 border border-slate-200/80 px-4 py-3 rounded-2xl shadow-sm">
-                  <span className="text-3xl font-black text-red-600 leading-none">N°1</span>
-                  <div className="text-left">
-                    <p className="text-xs font-black text-slate-900 leading-tight">MARQUE DERMATOLOGIQUE MONDIALE</p>
-                    <p className="text-[10px] font-semibold text-slate-500 mt-0.5">Recommandée par les professionnels de santé*</p>
-                  </div>
-                </div>
+                <h1 className="text-4xl sm:text-5xl lg:text-[3.8rem] font-black leading-[1.04] tracking-tight text-slate-900">
+                  CHANGER LA VIE<br />
+                  DE TOUTES LES<br />
+                  <span className="bg-gradient-to-r from-sky-500 to-blue-600 bg-clip-text text-transparent">PEAUX</span>
+                </h1>
 
-                {/* Action Buttons */}
-                <div className="flex flex-wrap gap-4 pt-1">
+                <p className="text-base lg:text-lg text-slate-600 font-medium leading-relaxed max-w-lg">
+                  Le soin dermatologique N°1 recommandé par plus de 90 000 dermatologues. Formules d'exception enrichies à l'eau thermale apaisante.
+                </p>
+
+                {/* Authority Row: Red N°1 Seal + Primary CTA */}
+                <div className="flex flex-wrap items-center gap-5 pt-2">
+                  <div className="flex items-center gap-3 bg-red-50 border border-red-200/80 px-4 py-2.5 rounded-2xl shadow-xs">
+                    <span className="text-3xl font-black text-red-600 leading-none">N°1</span>
+                    <div className="text-left">
+                      <p className="text-[11px] font-black text-slate-900 uppercase leading-none">MARQUE DERMATOLOGIQUE</p>
+                      <p className="text-[9px] font-bold text-red-600 mt-0.5">MONDIALE</p>
+                    </div>
+                  </div>
+
                   <Link
                     href="#ranges"
-                    className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-black text-white bg-sky-500 hover:bg-sky-600 shadow-lg shadow-sky-500/25 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                    className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl text-sm font-black text-white bg-sky-500 hover:bg-sky-600 shadow-xl shadow-sky-500/25 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                   >
-                    Nos gammes dermatologiques <ChevronRight className="w-4 h-4" />
-                  </Link>
-
-                  <Link
-                    href="#catalog"
-                    className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-black border-2 border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white transition-all duration-300"
-                  >
-                    Explorer le catalogue
+                    DÉCOUVRIR LES GAMMES <ChevronRight className="w-4 h-4" />
                   </Link>
                 </div>
 
-                {/* Trust Claims Row */}
-                <div className="pt-4 border-t border-slate-100 flex flex-wrap gap-y-2 gap-x-6 text-[11px] font-bold text-slate-600">
-                  <span className="flex items-center gap-1.5">
-                    <Check className="w-3.5 h-3.5 text-sky-500 stroke-[3]" /> 100% Hypoallergénique
+                {/* Clinical Trust Claims */}
+                <div className="pt-6 border-t border-slate-100 flex flex-wrap gap-y-2.5 gap-x-6 text-xs font-bold text-slate-600">
+                  <span className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-sky-500 stroke-[3]" /> 100% Hypoallergénique
                   </span>
-                  <span className="flex items-center gap-1.5">
-                    <Check className="w-3.5 h-3.5 text-sky-500 stroke-[3]" /> Eau Thermale Riche en Sélénium
+                  <span className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-sky-500 stroke-[3]" /> Eau Thermale de La Roche-Posay
                   </span>
-                  <span className="flex items-center gap-1.5">
-                    <Check className="w-3.5 h-3.5 text-sky-500 stroke-[3]" /> Testé sur Peaux Sensibles
+                  <span className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-sky-500 stroke-[3]" /> Testé Peaux Sensibles
                   </span>
                 </div>
 
-                <p className="text-[9px] text-slate-400">*Source: IQVIA survey, dermatologists worldwide, 2023</p>
+                <p className="text-[9px] text-slate-400">*Source: IQVIA survey, 90,000 dermatologists worldwide, 2023</p>
               </div>
 
-              {/* Right Column: Luxury Flagship Products Showcase (Refined) */}
+              {/* Right Column: Open Floating Flagship Product Visual (No Nested Box!) */}
               <div className="lg:col-span-6 relative">
-                <div className="relative bg-gradient-to-b from-sky-100/80 via-blue-50/50 to-white border border-sky-200/60 rounded-3xl p-6 lg:p-8 shadow-xl shadow-sky-500/10 backdrop-blur-sm">
+                <div className="relative flex flex-col items-center">
                   
-                  {/* Top Header Badge inside Showcase */}
-                  <div className="flex items-center justify-between mb-6">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-sky-700 bg-white/80 border border-sky-200 px-3.5 py-1 rounded-full shadow-xs">
-                      ✨ SOINS DERMATOLOGIQUES D'EXCEPTION
-                    </span>
-                    <span className="text-[10px] font-mono font-bold text-sky-600">
-                      LA ROCHE-POSAY
-                    </span>
-                  </div>
-
-                  {/* 3 Flagship Products Showcase Row */}
-                  <div className="grid grid-cols-3 gap-3.5 mb-6">
+                  {/* Floating 3 Products Showcase directly on the canvas */}
+                  <div className="grid grid-cols-3 gap-4 lg:gap-6 w-full items-end justify-center py-4">
                     {[
                       {
-                        range: 'EFFACLAR',
-                        title: 'DUO+M',
+                        range: 'EFFACLAR DUO+M',
                         tag: 'Acné & Imperfections',
                         accent: '#2563eb',
-                        badgeBg: '#eff6ff',
                         prod: products.find(p => (p.title ?? '').toLowerCase().includes('effaclar duo + m 40 ml') || (p.title ?? '').toLowerCase().includes('effaclar duo')),
+                        h: 'h-48 lg:h-56',
                       },
                       {
-                        range: 'ANTHELIOS',
-                        title: 'UVMUNE 400',
-                        tag: 'Protection SPF50+',
+                        range: 'ANTHELIOS UVMUNE',
+                        tag: 'Protection Solaire SPF50+',
                         accent: '#ea580c',
-                        badgeBg: '#fff7ed',
                         prod: products.find(p => (p.title ?? '').toLowerCase().includes('anthelios ecran spf 50+ gel') || (p.title ?? '').toLowerCase().includes('anthelios')),
+                        h: 'h-52 lg:h-60',
                       },
                       {
-                        range: 'CICAPLAST',
-                        title: 'BAUME B5+',
+                        range: 'CICAPLAST BAUME B5+',
                         tag: 'Réparation Cutanée',
                         accent: '#16a34a',
-                        badgeBg: '#f0fdf4',
                         prod: products.find(p => (p.title ?? '').toLowerCase().includes('cicaplast b5 baume gm 100 ml') || (p.title ?? '').toLowerCase().includes('cicaplast b5 baume mm 40 ml')),
+                        h: 'h-44 lg:h-52',
+                        overrideImg: 'https://paraofficinal.store/wp-content/uploads/2025/12/La-Roche-Posay-ProductPage-Damaged-Cicaplast-Baume-B5-100ml-3337872413018-Front.png',
                       },
                     ].map((item, idx) => {
-                      const rawImg = item.prod ? firstImage(item.prod) : '';
-                      // Ensure clean image URL for Cicaplast
-                      const imgUrl = (item.range === 'CICAPLAST' && rawImg.includes('cicaplast_bundle'))
-                        ? 'https://paraofficinal.store/wp-content/uploads/2025/12/La-Roche-Posay-ProductPage-Damaged-Cicaplast-Baume-B5-100ml-3337872413018-Front.png'
-                        : rawImg;
-
+                      const imgUrl = item.overrideImg || (item.prod ? firstImage(item.prod) : '');
                       return (
                         <div
                           key={idx}
-                          className="group relative bg-white border border-slate-200/90 rounded-2xl p-4 flex flex-col items-center justify-between transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5 hover:border-sky-400"
+                          onClick={() => selectRange(RANGES[idx]?.id || 'acne')}
+                          className="group relative flex flex-col items-center text-center cursor-pointer transition-all duration-500 hover:-translate-y-2"
                         >
-                          {/* Range Badge */}
-                          <span
-                            className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md mb-2"
-                            style={{ background: item.badgeBg, color: item.accent }}
-                          >
-                            {item.range}
-                          </span>
+                          {/* Floating badge */}
+                          <div className="mb-3 px-3 py-1 rounded-full bg-white/90 shadow-md border border-slate-200/80 backdrop-blur-sm transition-transform group-hover:scale-105">
+                            <p className="text-[10px] font-black" style={{ color: item.accent }}>
+                              {item.range}
+                            </p>
+                            <p className="text-[8px] text-slate-500 font-bold hidden sm:block">
+                              {item.tag}
+                            </p>
+                          </div>
 
-                          {/* Image Box */}
-                          <div className="h-36 w-full flex items-center justify-center py-2 relative bg-slate-50/50 rounded-xl my-1 border border-slate-100/80">
+                          {/* Product bottle standing on soft pedestal glow */}
+                          <div className={`w-full ${item.h} flex items-center justify-center relative`}>
+                            <div className="absolute inset-x-2 bottom-0 h-4 bg-sky-900/10 rounded-full blur-md group-hover:bg-sky-500/20 transition-colors" />
                             {imgUrl ? (
                               <img
                                 src={imgUrl}
                                 alt={item.range}
-                                className="max-h-32 max-w-[85%] object-contain drop-shadow-md group-hover:scale-110 transition-transform duration-500"
+                                className="max-h-full max-w-[90%] object-contain drop-shadow-[0_15px_25px_rgba(0,0,0,0.12)] group-hover:drop-shadow-[0_20px_35px_rgba(14,165,233,0.3)] transition-all duration-500"
                               />
                             ) : (
-                              <div
-                                className="w-16 h-24 rounded-lg flex items-center justify-center text-white text-[9px] font-bold"
-                                style={{ background: item.accent }}
-                              >
+                              <div className="w-16 h-28 rounded-xl flex items-center justify-center text-white text-[9px] font-bold" style={{ background: item.accent }}>
                                 {item.range}
                               </div>
                             )}
                           </div>
 
-                          {/* Product Label & Price */}
-                          <div className="text-center w-full mt-2">
-                            <p className="text-[11px] font-black text-slate-900 leading-tight">
-                              {item.title}
-                            </p>
-                            <p className="text-[9px] text-slate-500 font-medium mt-0.5 line-clamp-1">
-                              {item.tag}
-                            </p>
-                            {item.prod && (
-                              <p className="text-[10px] font-black text-sky-600 mt-1 font-mono">
-                                {item.prod.price} DH
-                              </p>
-                            )}
-                          </div>
+                          {/* Price Tag below */}
+                          {item.prod && (
+                            <div className="mt-3 px-3 py-0.5 rounded-full bg-slate-900 text-white text-[10px] font-mono font-bold group-hover:bg-sky-500 transition-colors">
+                              {item.prod.price} DH
+                            </div>
+                          )}
                         </div>
                       );
                     })}
                   </div>
 
-                  {/* Interactive Quick Filter Range Chips */}
-                  <div className="pt-4 border-t border-slate-200/80">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2.5 text-center">
-                      Accès rapide aux gammes par besoin :
-                    </p>
-                    <div className="flex flex-wrap gap-1.5 justify-center">
-                      {RANGES.map(r => (
-                        <button
-                          key={r.id}
-                          onClick={() => selectRange(r.id)}
-                          className="text-[10px] font-extrabold px-3 py-1 rounded-full border cursor-pointer transition-all hover:scale-105"
-                          style={{
-                            background: activeRange === r.id ? r.accent : 'white',
-                            color: activeRange === r.id ? 'white' : '#475569',
-                            borderColor: activeRange === r.id ? r.accent : '#cbd5e1',
-                          }}
-                        >
-                          {r.name}
-                        </button>
-                      ))}
-                    </div>
+                  {/* Range Chips Bar */}
+                  <div className="mt-6 flex flex-wrap gap-2 justify-center w-full pt-4 border-t border-slate-200/60">
+                    {RANGES.map(r => (
+                      <button
+                        key={r.id}
+                        onClick={() => selectRange(r.id)}
+                        className="text-[11px] font-extrabold px-3.5 py-1.5 rounded-full border bg-white shadow-xs cursor-pointer transition-all hover:bg-slate-900 hover:text-white hover:border-slate-900"
+                        style={{
+                          color: activeRange === r.id ? 'white' : '#475569',
+                          background: activeRange === r.id ? r.accent : 'white',
+                          borderColor: activeRange === r.id ? r.accent : '#e2e8f0',
+                        }}
+                      >
+                        {r.name}
+                      </button>
+                    ))}
                   </div>
+
                 </div>
               </div>
 
