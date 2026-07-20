@@ -397,6 +397,7 @@ export default function LaRochePosayCustomPage() {
                         bg: '#eff6ff',
                         border: '#bfdbfe',
                         prod: products.find(p => (p.title ?? '').toLowerCase().includes('effaclar duo + m 40 ml') || (p.title ?? '').toLowerCase().includes('effaclar duo')),
+                        overrideImg: '/images/effaclar_hero_packshot.png',
                       },
                       {
                         range: 'ANTHELIOS',
@@ -406,6 +407,7 @@ export default function LaRochePosayCustomPage() {
                         bg: '#fff7ed',
                         border: '#fed7aa',
                         prod: products.find(p => (p.title ?? '').toLowerCase().includes('anthelios ecran spf 50+ gel') || (p.title ?? '').toLowerCase().includes('anthelios')),
+                        overrideImg: '/images/anthelios_hero_packshot.png',
                       },
                       {
                         range: 'CICAPLAST',
@@ -415,7 +417,7 @@ export default function LaRochePosayCustomPage() {
                         bg: '#f0fdf4',
                         border: '#bbf7d0',
                         prod: products.find(p => (p.title ?? '').toLowerCase().includes('cicaplast b5 baume gm 100 ml') || (p.title ?? '').toLowerCase().includes('cicaplast b5 baume mm 40 ml')),
-                        overrideImg: 'https://paraofficinal.store/wp-content/uploads/2025/12/La-Roche-Posay-ProductPage-Damaged-Cicaplast-Baume-B5-100ml-3337872413018-Front.png',
+                        overrideImg: '/images/cicaplast_hero_packshot.png',
                       },
                     ].map((item, idx) => {
                       const imgUrl = item.overrideImg || (item.prod ? firstImage(item.prod) : '');
@@ -434,12 +436,12 @@ export default function LaRochePosayCustomPage() {
                           </span>
 
                           {/* Pure White Product Image Frame with Ample Margins */}
-                          <div className="w-full h-36 sm:h-40 flex items-center justify-center p-2 relative my-1">
+                          <div className="w-full h-36 sm:h-40 flex items-center justify-center p-1 relative my-1">
                             {imgUrl ? (
                               <img
                                 src={imgUrl}
                                 alt={item.range}
-                                className="max-h-32 sm:max-h-36 max-w-[85%] object-contain drop-shadow-md group-hover:scale-110 transition-transform duration-500"
+                                className="max-h-32 sm:max-h-36 max-w-[90%] object-contain drop-shadow-md group-hover:scale-110 transition-transform duration-500"
                               />
                             ) : (
                               <div className="w-16 h-28 rounded-xl flex items-center justify-center text-white text-[9px] font-bold" style={{ background: item.accent }}>
