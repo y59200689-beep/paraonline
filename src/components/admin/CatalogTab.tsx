@@ -179,6 +179,164 @@ function SearchableDropdown({
   );
 }
 
+/* ── Searchable & Creatable Brand Combobox ────────────────────────────────── */
+interface BrandComboboxProps {
+  value: string;
+  onChange: (val: string) => void;
+  availableVendors: string[];
+  adminTheme: 'light' | 'dark';
+}
+
+function BrandCombobox({
+  value,
+  onChange,
+  availableVendors,
+  adminTheme,
+}: BrandComboboxProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const containerRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Combine unique vendors from catalog + popular dermo brands
+  const allBrands = useMemo(() => {
+    const defaultBrands = [
+      'La Roche-Posay', 'CeraVe', 'Vichy', 'Solgar', 'Mixa Bébé', 'Garnier', 
+      'Hada Labo', 'Bioderma', 'Avène', 'Skin1004', 'Cosrx', 'Beauty of Joseon', 
+      'Nivea', 'Eucerin', 'The Ordinary', 'SVR', 'Uriage', 'A-Derma', 'Ducray', 
+      'Mustela', 'Kérastase', 'L\'Oréal Professionnel', 'Filorga', 'Isdin', 'Cetaphil'
+    ];
+    const set = new Set<string>();
+    availableVendors.forEach(v => v && v.trim() && set.add(v.trim()));
+    defaultBrands.forEach(b => set.add(b));
+    return Array.from(set).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+  }, [availableVendors]);
+
+  // Filter brands based on query
+  const filteredBrands = useMemo(() => {
+    if (!searchQuery.trim()) return allBrands;
+    const q = searchQuery.toLowerCase();
+    return allBrands.filter(b => b.toLowerCase().includes(q));
+  }, [allBrands, searchQuery]);
+
+  // Check if query exactly matches an existing brand
+  const exactMatch = searchQuery.trim() && allBrands.some(b => b.toLowerCase() === searchQuery.trim().toLowerCase());
+
+  // Close on click outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+        setSearchQuery('');
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleOpen = () => {
+    setIsOpen(true);
+    setSearchQuery('');
+    setTimeout(() => searchInputRef.current?.focus(), 50);
+  };
+
+  const handleSelect = (brand: string) => {
+    onChange(brand);
+    setIsOpen(false);
+    setSearchQuery('');
+  };
+
+  return (
+    <div ref={containerRef} className="relative w-full">
+      {/* Trigger Input Button */}
+      <button 
+        type="button"
+        onClick={handleOpen}
+        className={`w-full flex items-center justify-between gap-2 text-xs font-semibold border rounded-xl px-3.5 py-2.5 cursor-pointer transition outline-none ${
+          adminTheme === 'light'
+            ? 'bg-white border-slate-200 text-slate-800 hover:border-emerald-500 shadow-xs'
+            : 'bg-slate-900 border-slate-800 text-slate-200 hover:border-emerald-500'
+        }`}
+      >
+        <div className="flex items-center gap-2 truncate">
+          <span className={value ? 'font-bold text-slate-900 dark:text-slate-100' : 'text-slate-400 font-normal'}>
+            {value || 'Sélectionner ou ajouter une marque...'}
+          </span>
+        </div>
+        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-emerald-500' : ''}`} />
+      </button>
+
+      {/* Popover Dropdown Menu */}
+      {isOpen && (
+        <div className={`absolute left-0 right-0 top-full mt-1.5 z-50 rounded-2xl border shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 ${
+          adminTheme === 'light' 
+            ? 'bg-white border-slate-200 text-slate-800 shadow-emerald-500/10' 
+            : 'bg-slate-900 border-slate-800 text-slate-100 shadow-slate-950/80'
+        }`}>
+          {/* Search Bar Input */}
+          <div className="p-2 border-b border-slate-100 dark:border-slate-800 relative flex items-center">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-4 pointer-events-none" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Rechercher ou saisir une nouvelle marque..."
+              className={`w-full text-xs border-0 outline-none pl-8 pr-3 py-1.5 rounded-xl font-medium ${
+                adminTheme === 'light'
+                  ? 'bg-slate-100/80 text-slate-800 placeholder-slate-400'
+                  : 'bg-slate-950 text-slate-200 placeholder-slate-500'
+              }`}
+            />
+          </div>
+
+          {/* Options List */}
+          <div className="max-h-56 overflow-y-auto p-1.5 space-y-0.5 custom-scrollbar">
+            {/* Custom Create Option if typing a new brand name */}
+            {searchQuery.trim() && !exactMatch && (
+              <button
+                type="button"
+                onClick={() => handleSelect(searchQuery.trim())}
+                className="w-full text-left px-3 py-2 text-xs font-bold rounded-xl text-emerald-600 dark:text-emerald-400 bg-emerald-50/90 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/80 transition flex items-center gap-2 cursor-pointer mb-1 border border-emerald-300/60 dark:border-emerald-700/60 shadow-2xs"
+              >
+                <Plus className="w-4 h-4 shrink-0" />
+                <span className="truncate">Créer <b className="underline">&quot;{searchQuery.trim()}&quot;</b></span>
+              </button>
+            )}
+
+            {filteredBrands.map((brand) => {
+              const isSelected = value.toLowerCase() === brand.toLowerCase();
+              return (
+                <button
+                  key={brand}
+                  type="button"
+                  onClick={() => handleSelect(brand)}
+                  className={`w-full text-left px-3 py-2 text-xs font-semibold rounded-xl transition flex items-center justify-between gap-2 cursor-pointer ${
+                    isSelected
+                      ? 'bg-emerald-500 text-white font-black shadow-xs'
+                      : adminTheme === 'light'
+                        ? 'hover:bg-slate-100 text-slate-700'
+                        : 'hover:bg-slate-800 text-slate-300'
+                  }`}
+                >
+                  <span className="truncate">{brand}</span>
+                  {isSelected && <Check className="w-4 h-4 shrink-0 text-white" />}
+                </button>
+              );
+            })}
+
+            {filteredBrands.length === 0 && !searchQuery.trim() && (
+              <div className="p-4 text-center text-xs text-slate-400">
+                Aucune marque disponible. Tapez pour en créer une.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function CatalogTab({
   catalogStockFilter: propCatalogStockFilter,
   setCatalogStockFilter: propSetCatalogStockFilter
@@ -2965,17 +3123,11 @@ export default function CatalogTab({
 
                       <div className="space-y-1.5">
                         <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Marque / Laboratoire</label>
-                        <input 
-                          type="text" 
-                          value={productForm.vendor} 
-                          onChange={(e) => setProductForm({...productForm, vendor: e.target.value})} 
-                          className={`w-full text-xs font-semibold border rounded-xl px-3.5 py-2.5 transition outline-none ${
-                            adminTheme === 'light'
-                              ? 'bg-white border-slate-200 text-slate-800 focus:border-emerald-500 shadow-xs'
-                              : 'bg-slate-900 border-slate-800 text-slate-200 focus:border-emerald-500'
-                          }`} 
-                          placeholder="e.g. La Roche-Posay"
-                          required 
+                        <BrandCombobox
+                          value={productForm.vendor || ''}
+                          onChange={(val) => setProductForm({ ...productForm, vendor: val })}
+                          availableVendors={uniqueVendors}
+                          adminTheme={adminTheme}
                         />
                       </div>
                     </div>
