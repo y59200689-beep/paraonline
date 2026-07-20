@@ -510,31 +510,106 @@ export default function LaRochePosayCustomPage() {
 
 
         {/* ══════════════════════════════════════════════════════════
-            §6. STATS BANNER
+            §6. STATS BANNER (REDESIGNED)
         ══════════════════════════════════════════════════════════ */}
-        <section style={{ background: '#bfdbfe', borderTop: '1px solid #93c5fd' }}>
-          <div className="max-w-[1280px] mx-auto px-5 lg:px-10 py-10">
-            <div className="flex flex-col lg:flex-row items-stretch divide-y lg:divide-y-0 lg:divide-x divide-blue-300">
-              <div className="flex items-center justify-center py-6 lg:py-0 lg:pr-8 lg:w-[180px] shrink-0">
+        <section className="py-16 bg-[#0f172a] border-y border-slate-800 relative overflow-hidden">
+          {/* Subtle background glow circles */}
+          <div className="absolute top-1/2 left-10 -translate-y-1/2 w-80 h-80 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-1/2 right-10 -translate-y-1/2 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="max-w-[1280px] mx-auto px-5 lg:px-10 relative z-10">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-10 pb-6 border-b border-slate-800">
+              <div>
+                <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] bg-sky-500/15 text-sky-400 border border-sky-400/30 mb-2">
+                  <Microscope className="w-3.5 h-3.5" /> RÉSULTATS CLINIQUES PROUVÉS
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                  EFFICACITÉ DERMATOLOGIQUE MESURÉE
+                </h2>
+              </div>
+              <p className="text-xs text-slate-400 max-w-xs leading-relaxed">
+                Études cliniques menées sous contrôle dermatologique strict sur des sujets à peau sensible.
+              </p>
+            </div>
+
+            {/* Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+              {/* Product Spotlight Card (4 cols) */}
+              <div className="lg:col-span-4 bg-gradient-to-b from-white/10 to-white/5 border border-white/10 rounded-3xl p-8 flex flex-col items-center justify-center relative group overflow-hidden backdrop-blur-md">
+                <div className="absolute inset-0 bg-sky-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl pointer-events-none" />
+                
                 {effaclarProduct && firstImage(effaclarProduct) ? (
-                  <img src={firstImage(effaclarProduct)} alt="Effaclar" className="h-32 object-contain drop-shadow-lg" />
+                  <img
+                    src={firstImage(effaclarProduct)}
+                    alt="Effaclar"
+                    className="h-48 lg:h-56 object-contain drop-shadow-[0_20px_30px_rgba(56,189,248,0.25)] group-hover:scale-105 transition-transform duration-500"
+                  />
                 ) : (
-                  <div className="w-20 h-28 bg-white rounded-xl flex items-center justify-center shadow" style={{ border: `2px solid ${LRP_BLUE}` }}>
-                    <span className="text-[9px] font-black text-center" style={{ color: LRP_DARK }}>EFFACLAR<br />DUO+M</span>
+                  <div className="w-28 h-40 bg-white/10 rounded-2xl border border-sky-400/30 flex items-center justify-center p-4 text-center">
+                    <span className="text-xs font-black text-sky-300">EFFACLAR DUO+M</span>
                   </div>
                 )}
-              </div>
-              {[
-                { num: '100%', label: 'PÉNÉTRATION\nDES BOUTONS', desc: 'Formule à pénétration profonde testée cliniquement.' },
-                { num: '-38%', label: 'IMPERFECTIONS\nvisibles', desc: 'Réduction visible dès la première semaine d\'utilisation.' },
-                { num: '-25%', label: 'IRRITATIONS\nsur peaux sensibles', desc: 'Tolérance exceptionnelle sur les peaux les plus réactives.' },
-              ].map(stat => (
-                <div key={stat.num} className="flex-1 flex flex-col justify-center px-8 py-6">
-                  <p className="text-5xl lg:text-6xl font-black leading-none" style={{ color: '#1e3a5f' }}>{stat.num}</p>
-                  <p className="text-sm font-black mt-1 leading-snug whitespace-pre-line" style={{ color: '#1e3a5f' }}>{stat.label}</p>
-                  <p className="text-xs mt-2 leading-relaxed" style={{ color: '#1d4ed8' }}>{stat.desc}</p>
+                
+                <div className="mt-4 text-center">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-sky-400 bg-sky-400/10 px-3 py-1 rounded-full border border-sky-400/20">
+                    Soin Référence
+                  </span>
+                  <p className="text-xs font-extrabold text-white mt-2">EFFACLAR DUO+M</p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Soin Triple Correction Anti-Imperfections</p>
                 </div>
-              ))}
+              </div>
+
+              {/* 3 Metric Cards (8 cols) */}
+              <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-5">
+                {[
+                  {
+                    num: '100%',
+                    label: 'PÉNÉTRATION DES BOUTONS',
+                    desc: 'Formule à pénétration profonde testée sous contrôle dermatologique.',
+                    tag: 'Action Rapide',
+                  },
+                  {
+                    num: '-38%',
+                    label: 'RÉDUCTION DES IMPERFECTIONS',
+                    desc: 'Diminution visible des lésions rétentionnelles et inflammatoires dès 7 jours.',
+                    tag: 'Résultat 7 Jours',
+                  },
+                  {
+                    num: '-25%',
+                    label: 'TOLÉRANCE MAXIMALE',
+                    desc: 'Réduction significative des irritations et rougeurs sur peaux très réactives.',
+                    tag: 'Haute Tolérance',
+                  },
+                ].map((stat, i) => (
+                  <div
+                    key={i}
+                    className="bg-white/5 border border-white/10 hover:border-sky-400/40 rounded-3xl p-6 flex flex-col justify-between hover:bg-white/[0.08] transition-all duration-300 group"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 bg-white/5 px-2.5 py-1 rounded-md border border-white/5 group-hover:border-sky-400/30 group-hover:text-sky-300 transition-colors">
+                          {stat.tag}
+                        </span>
+                        <div className="w-2 h-2 rounded-full bg-sky-400 group-hover:animate-ping" />
+                      </div>
+
+                      {/* Metric gradient number */}
+                      <p className="text-4xl lg:text-5xl font-black bg-gradient-to-r from-sky-400 via-cyan-300 to-blue-400 bg-clip-text text-transparent leading-none mb-3">
+                        {stat.num}
+                      </p>
+
+                      <h3 className="text-xs font-black text-white leading-snug tracking-tight mb-2">
+                        {stat.label}
+                      </h3>
+                    </div>
+
+                    <p className="text-[11px] text-slate-400 leading-relaxed mt-4 pt-3 border-t border-white/5">
+                      {stat.desc}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
