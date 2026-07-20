@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { 
   Search, 
@@ -189,6 +190,11 @@ export default function CatalogTab({
   const { settings } = useSettings();
   const { showToast } = useUi();
   const lowStockThreshold = settings.lowStockThreshold || 5;
+
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Search & Filters
   const [productSearchQuery, setProductSearchQuery] = useState('');
@@ -1044,41 +1050,47 @@ export default function CatalogTab({
   // Sync bulkProducts when catalog quick edit is toggled or products update
   useEffect(() => {
     if (isCatalogBulkMode) {
-      setBulkProducts(JSON.parse(JSON.stringify(products))); // deep clone
+      const source = paginatedProducts.length > 0 ? paginatedProducts : products;
+      setBulkProducts(JSON.parse(JSON.stringify(source))); // deep clone
       setChangedProductIds(new Set());
     }
-  }, [isCatalogBulkMode, products]);
+  }, [isCatalogBulkMode, products, paginatedProducts]);
 
   // Get unique categories and vendors for filtering select boxes
   const uniqueCategories = useMemo(() => {
-    const cats = new Set(products.map(p => p.category).filter(Boolean));
+    const cats = new Set<string>();
+    products.forEach(p => p.category && cats.add(p.category));
+    paginatedProducts.forEach(p => p.category && cats.add(p.category));
     return Array.from(cats);
-  }, [products]);
+  }, [products, paginatedProducts]);
 
   const uniqueVendors = useMemo(() => {
-    const vends = new Set(products.map(p => p.vendor).filter(Boolean));
+    const vends = new Set<string>();
+    products.forEach(p => p.vendor && vends.add(p.vendor));
+    paginatedProducts.forEach(p => p.vendor && vends.add(p.vendor));
     return Array.from(vends);
-  }, [products]);
+  }, [products, paginatedProducts]);
 
   const counts = useMemo(() => {
-    let all = products.length;
     let live = 0;
     let draft = 0;
-    products.forEach((p: any) => {
+    const sourceList = products.length > 0 ? products : paginatedProducts;
+    sourceList.forEach((p: any) => {
       if (p.status === 'draft') draft++;
       else live++;
     });
+    const all = Math.max(totalProducts, sourceList.length);
     return { all, live, draft };
-  }, [products]);
+  }, [products, paginatedProducts, totalProducts]);
 
   // Pagination calculations
   const totalPages = Math.ceil(totalProducts / itemsPerPage) || 1;
 
   useEffect(() => {
-    if (currentPage > totalPages) {
+    if (!isLocalLoading && totalProducts > 0 && currentPage > totalPages) {
       setCurrentPage(1);
     }
-  }, [totalProducts, totalPages, currentPage]);
+  }, [totalProducts, totalPages, currentPage, isLocalLoading]);
 
   const isAllOnPageSelected = useMemo(() => {
     if (paginatedProducts.length === 0) return false;
@@ -1183,8 +1195,13 @@ export default function CatalogTab({
           setBulkCategory('');
 
           try {
-            const changedProducts = products
-              .filter(p => idsSet.has(p.id))
+            const productMap = new Map<number, Product>();
+            products.forEach(p => productMap.set(p.id, p));
+            paginatedProducts.forEach(p => productMap.set(p.id, p));
+
+            const changedProducts = Array.from(idsSet)
+              .map(id => productMap.get(id))
+              .filter((p): p is Product => Boolean(p))
               .map(p => ({ ...p, category: bulkCategory }));
             
             const success = await handleSaveBulkProducts(changedProducts);
@@ -1215,8 +1232,13 @@ export default function CatalogTab({
           setBulkAction('');
 
           try {
-            const changedProducts = products
-              .filter(p => idsSet.has(p.id))
+            const productMap = new Map<number, Product>();
+            products.forEach(p => productMap.set(p.id, p));
+            paginatedProducts.forEach(p => productMap.set(p.id, p));
+
+            const changedProducts = Array.from(idsSet)
+              .map(id => productMap.get(id))
+              .filter((p): p is Product => Boolean(p))
               .map(p => ({ ...p, status: 'live' as const }));
             
             const success = await handleSaveBulkProducts(changedProducts);
@@ -1247,8 +1269,13 @@ export default function CatalogTab({
           setBulkAction('');
 
           try {
-            const changedProducts = products
-              .filter(p => idsSet.has(p.id))
+            const productMap = new Map<number, Product>();
+            products.forEach(p => productMap.set(p.id, p));
+            paginatedProducts.forEach(p => productMap.set(p.id, p));
+
+            const changedProducts = Array.from(idsSet)
+              .map(id => productMap.get(id))
+              .filter((p): p is Product => Boolean(p))
               .map(p => ({ ...p, status: 'draft' as const }));
             
             const success = await handleSaveBulkProducts(changedProducts);
@@ -1337,14 +1364,37 @@ export default function CatalogTab({
     e.preventDefault();
     setIsSavingProduct(true);
     try {
-      const success = await handleCreateProduct(productForm);
-      if (success) {
-        setIsNewProductModalOpen(false);
-        setProductForm({
-          title: '', vendor: '', price: 0, comparePrice: 0, category: 'visage', tags: [], stock: 100, description: '', ingredients: '', usage: '', image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop', sku: '', buyingCost: 0, status: 'live'
+      if (productForm.id) {
+        const res = await fetch('/api/admin/products', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(productForm)
         });
-        await fetchPaginatedProducts();
+        const data = await res.json();
+        if (data.success) {
+          showToast('Produit mis à jour avec succès !', 'success');
+          setIsNewProductModalOpen(false);
+          setProductForm({
+            title: '', vendor: '', price: 0, comparePrice: 0, category: 'visage', tags: [], stock: 100, description: '', ingredients: '', usage: '', image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop', sku: '', buyingCost: 0, status: 'live'
+          });
+          await loadProducts();
+          await fetchPaginatedProducts();
+        } else {
+          showToast(data.error || "Erreur lors de la mise à jour du produit.", 'error');
+        }
+      } else {
+        const success = await handleCreateProduct(productForm);
+        if (success) {
+          setIsNewProductModalOpen(false);
+          setProductForm({
+            title: '', vendor: '', price: 0, comparePrice: 0, category: 'visage', tags: [], stock: 100, description: '', ingredients: '', usage: '', image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop', sku: '', buyingCost: 0, status: 'live'
+          });
+          await loadProducts();
+          await fetchPaginatedProducts();
+        }
       }
+    } catch {
+      showToast("Erreur de connexion lors de l'enregistrement.", 'error');
     } finally {
       setIsSavingProduct(false);
     }
@@ -1919,8 +1969,66 @@ export default function CatalogTab({
 
           {/* Right Side: Action Buttons */}
           <div className="flex flex-wrap items-center gap-2 shrink-0">
-            {/* Bulk Actions when items are selected */}
-            {/* Bulk Actions replaced by floating bar */}
+            {/* Top Selection Control Toolbar when items are selected */}
+            {selectedProductIds.size > 0 && !isCatalogBulkMode && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/60 rounded-xl shadow-xs animate-in fade-in slide-in-from-right-2 duration-200">
+                <span className="text-xs font-black text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5 whitespace-nowrap">
+                  <CheckSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  {selectedProductIds.size} sélectionné(s)
+                </span>
+                
+                <div className="w-px h-5 bg-emerald-300 dark:bg-emerald-700" />
+
+                <select
+                  value={bulkAction}
+                  onChange={(e) => setBulkAction(e.target.value)}
+                  className={`text-xs h-8 outline-none rounded-lg px-2 border font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                    adminTheme === 'light'
+                      ? 'bg-white border-emerald-300 text-slate-800'
+                      : 'bg-slate-900 border-slate-700 text-slate-200'
+                  }`}
+                >
+                  <option value="">Actions groupées...</option>
+                  <option value="delete">🗑️ Supprimer définitivement</option>
+                  <option value="categorize">📁 Assigner catégorie</option>
+                  <option value="publish">🟢 Publier</option>
+                  <option value="draft">🟡 Mettre en brouillon</option>
+                </select>
+
+                {bulkAction === 'categorize' && (
+                  <select
+                    value={bulkCategory}
+                    onChange={(e) => setBulkCategory(e.target.value)}
+                    className={`text-xs h-8 outline-none rounded-lg px-2 border font-medium ${
+                      adminTheme === 'light' ? 'bg-white border-emerald-300 text-slate-800' : 'bg-slate-900 border-slate-700 text-slate-200'
+                    }`}
+                  >
+                    <option value="">Choisir...</option>
+                    {uniqueCategories.map(cat => (
+                      <option key={cat} value={cat}>{cat.toUpperCase()}</option>
+                    ))}
+                  </select>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleApplyBulkAction}
+                  disabled={!bulkAction}
+                  className="px-3 h-8 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-lg shadow-sm disabled:opacity-40 cursor-pointer transition"
+                >
+                  Appliquer
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setSelectedProductIds(new Set()); setBulkAction(''); }}
+                  className="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer transition"
+                  title="Désélectionner tout"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
 
             {/* Importer */}
             <button
@@ -2613,7 +2721,7 @@ export default function CatalogTab({
       {/* -------------------- MODAL: CREATE / EDIT SINGLE PRODUCT -------------------- */}
       {isNewProductModalOpen && (
         <div 
-          className="fixed inset-0 bg-slate-950/60 backdrop-blur-md flex justify-end z-45 select-none animate-in fade-in duration-200"
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-md flex justify-end z-50 select-none animate-in fade-in duration-200"
           onClick={() => {
             setIsNewProductModalOpen(false);
             setModalTab('general');
@@ -3187,7 +3295,7 @@ export default function CatalogTab({
 
       {/* -------------------- MODAL: CSV / EXCEL WIZARD IMPORTER -------------------- */}
       {isImportModalOpen && (
-      <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-md flex items-center justify-center z-45 animate-in fade-in duration-200 select-none">
+      <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-md flex items-center justify-center z-50 animate-in fade-in duration-200 select-none">
         <div className={`w-full max-w-3xl rounded-3xl border shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-250 ${
           adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-800' : 'bg-slate-900 border-slate-800 text-slate-200'
         }`}>
@@ -3848,69 +3956,72 @@ export default function CatalogTab({
         </div>
       )}
 
-      {/* FLOATING GLASSMORPHIC BULK ACTIONS BAR */}
-      <div className={`floating-bulk-bar ${selectedProductIds.size > 0 && !isCatalogBulkMode ? 'active' : ''} ${
-        adminTheme === 'light' ? 'floating-bulk-bar-light' : 'floating-bulk-bar-dark'
-      }`}>
-        <span className="flex items-center gap-1.5 text-xs font-black text-emerald-600 dark:text-emerald-400">
-          <CheckSquare className="w-4 h-4 text-emerald-500" />
-          {selectedProductIds.size} produits sélectionnés
-        </span>
-        
-        <div className="w-px h-6 bg-slate-200 dark:bg-slate-800" />
-        
-        <select
-          value={bulkAction}
-          onChange={(e) => setBulkAction(e.target.value)}
-          className={`text-xs h-9 outline-none rounded-xl px-3 border cursor-pointer font-bold uppercase tracking-wider transition-colors duration-150 ${
-            adminTheme === 'light'
-              ? 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
-              : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
-          }`}
-        >
-          <option value="">Actions groupées</option>
-          <option value="categorize">Changer de Catégorie</option>
-          <option value="publish">Publier (Live)</option>
-          <option value="draft">Mettre en brouillon</option>
-          <option value="delete">Supprimer définitivement</option>
-        </select>
-
-        {bulkAction === 'categorize' && (
+      {/* FLOATING GLASSMORPHIC BULK ACTIONS BAR (PORTAL TO DOCUMENT.BODY) */}
+      {isMounted && selectedProductIds.size > 0 && !isCatalogBulkMode && createPortal(
+        <div className={`floating-bulk-bar active ${
+          adminTheme === 'light' ? 'floating-bulk-bar-light' : 'floating-bulk-bar-dark'
+        }`}>
+          <span className="flex items-center gap-1.5 text-xs font-black text-emerald-600 dark:text-emerald-400">
+            <CheckSquare className="w-4 h-4 text-emerald-500" />
+            {selectedProductIds.size} produits sélectionnés
+          </span>
+          
+          <div className="w-px h-6 bg-slate-200 dark:bg-slate-800" />
+          
           <select
-            value={bulkCategory}
-            onChange={(e) => setBulkCategory(e.target.value)}
-            className={`text-xs h-9 outline-none rounded-xl px-3 border cursor-pointer font-semibold transition-colors duration-150 ${
+            value={bulkAction}
+            onChange={(e) => setBulkAction(e.target.value)}
+            className={`text-xs h-9 outline-none rounded-xl px-3 border cursor-pointer font-bold uppercase tracking-wider transition-colors duration-150 ${
               adminTheme === 'light'
                 ? 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
                 : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
             }`}
           >
-            <option value="">Choisir...</option>
-            {uniqueCategories.map(cat => (
-              <option key={cat} value={cat}>{cat.toUpperCase()}</option>
-            ))}
+            <option value="">Actions groupées</option>
+            <option value="categorize">Changer de Catégorie</option>
+            <option value="publish">Publier (Live)</option>
+            <option value="draft">Mettre en brouillon</option>
+            <option value="delete">Supprimer définitivement</option>
           </select>
-        )}
 
-        <button
-          onClick={handleApplyBulkAction}
-          disabled={!bulkAction}
-          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition active:scale-95 cursor-pointer border-0 outline-none"
-        >
-          Appliquer
-        </button>
+          {bulkAction === 'categorize' && (
+            <select
+              value={bulkCategory}
+              onChange={(e) => setBulkCategory(e.target.value)}
+              className={`text-xs h-9 outline-none rounded-xl px-3 border cursor-pointer font-semibold transition-colors duration-150 ${
+                adminTheme === 'light'
+                  ? 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                  : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
+              }`}
+            >
+              <option value="">Choisir...</option>
+              {uniqueCategories.map(cat => (
+                <option key={cat} value={cat}>{cat.toUpperCase()}</option>
+              ))}
+            </select>
+          )}
 
-        <button
-          onClick={() => {
-            setSelectedProductIds(new Set());
-            setBulkAction('');
-          }}
-          className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition p-1 cursor-pointer border-0 bg-transparent outline-none"
-          title="Annuler la sélection"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      </div>
+          <button
+            onClick={handleApplyBulkAction}
+            disabled={!bulkAction}
+            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition active:scale-95 cursor-pointer border-0 outline-none"
+          >
+            Appliquer
+          </button>
+
+          <button
+            onClick={() => {
+              setSelectedProductIds(new Set());
+              setBulkAction('');
+            }}
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition p-1 cursor-pointer border-0 bg-transparent outline-none"
+            title="Annuler la sélection"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
