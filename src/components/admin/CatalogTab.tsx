@@ -2788,9 +2788,9 @@ export default function CatalogTab({
     )}
 
       {/* -------------------- MODAL: CREATE / EDIT SINGLE PRODUCT -------------------- */}
-      {isNewProductModalOpen && (
+      {isMounted && isNewProductModalOpen && createPortal(
         <div 
-          className="fixed inset-0 bg-slate-950/60 backdrop-blur-md flex justify-end z-50 select-none animate-in fade-in duration-200"
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-md flex justify-end z-[999999] select-none animate-in fade-in duration-200"
           onClick={() => {
             setIsNewProductModalOpen(false);
             setModalTab('general');
@@ -3359,12 +3359,13 @@ export default function CatalogTab({
             </button>
           </div>
         </form>
-      </div>
+      </div>,
+        document.body
       )}
 
       {/* -------------------- MODAL: CSV / EXCEL WIZARD IMPORTER -------------------- */}
-      {isImportModalOpen && (
-      <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-md flex items-center justify-center z-50 animate-in fade-in duration-200 select-none">
+      {isMounted && isImportModalOpen && createPortal(
+      <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-md flex items-center justify-center z-[999999] animate-in fade-in duration-200 select-none">
         <div className={`w-full max-w-3xl rounded-3xl border shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-250 ${
           adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-800' : 'bg-slate-900 border-slate-800 text-slate-200'
         }`}>
@@ -3956,20 +3957,21 @@ export default function CatalogTab({
             )}
           </div>
         </div>
-      </div>
+      </div>,
+        document.body
       )}
 
-      {/* Unified Custom Confirmation Modal */}
-      {confirmDialog && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      {/* Unified Custom Confirmation Modal (PORTAL TO DOCUMENT.BODY FOR VIEWPORT CENTERING) */}
+      {isMounted && confirmDialog && createPortal(
+        <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4">
           <div 
-            className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm cursor-pointer"
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm cursor-pointer"
             onClick={() => {
               if (confirmDialog.openedAt && Date.now() - confirmDialog.openedAt < 100) return;
               setConfirmDialog(null);
             }}
           />
-          <div className={`relative w-full max-w-sm rounded-2xl border p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150 ${
+          <div className={`relative z-10 w-full max-w-sm rounded-2xl border p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150 ${
             adminTheme === 'light' 
               ? 'bg-white border-slate-200 text-slate-800' 
               : 'bg-slate-900 border-slate-800 text-slate-100'
@@ -4022,7 +4024,8 @@ export default function CatalogTab({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* FLOATING GLASSMORPHIC BULK ACTIONS DOCK (PORTAL TO DOCUMENT.BODY) */}
