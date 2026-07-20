@@ -1128,34 +1128,38 @@ export default function CatalogTab({
     if (!bulkAction || selectedProductIds.size === 0) return;
     
     if (bulkAction === 'delete') {
+      const idsToDelete = Array.from(selectedProductIds);
       setConfirmDialog({
         title: 'Supprimer la sélection ?',
-        message: `Voulez-vous supprimer les ${selectedProductIds.size} produits sélectionnés ? Cette action est définitive.`,
+        message: `Voulez-vous supprimer les ${idsToDelete.length} produit(s) sélectionné(s) ? Cette action est définitive.`,
         confirmText: 'Supprimer',
         confirmStyle: 'danger',
         openedAt: Date.now(),
         onConfirm: async () => {
-          setIsDataLoading(true);
+          // Instant optimistic local update (0ms delay!)
+          const deletedSet = new Set(idsToDelete);
+          setPaginatedProducts(prev => prev.filter(p => !deletedSet.has(p.id)));
+          setTotalProducts((prev: number) => Math.max(0, prev - idsToDelete.length));
+          setSelectedProductIds(new Set());
+          setBulkAction('');
+
           try {
-            let successCount = 0;
-            for (const id of Array.from(selectedProductIds)) {
-              const res = await fetch(`/api/admin/products?id=${id}`, {
-                method: 'DELETE'
-              });
-              const data = await res.json();
-              if (data.success) {
-                successCount++;
-              }
+            // Single batch API request
+            const res = await fetch(`/api/admin/products?ids=${idsToDelete.join(',')}`, {
+              method: 'DELETE'
+            });
+            const data = await res.json();
+            if (data.success) {
+              showToast(`${data.count || idsToDelete.length} produit(s) supprimé(s) avec succès.`, 'success');
+            } else {
+              showToast(data.error || "Erreur lors de la suppression.", "error");
             }
-            showToast(`${successCount} produit(s) supprimé(s) avec succès.`, 'success');
-            setSelectedProductIds(new Set());
-            setBulkAction('');
-            await loadProducts();
-            await fetchPaginatedProducts();
-          } catch (err) {
+          } catch {
             showToast("Erreur lors de la suppression des produits.", "error");
           } finally {
-            setIsDataLoading(false);
+            // Quiet background refresh without skeleton takeover
+            loadProducts();
+            fetchPaginatedProducts();
           }
         }
       });
@@ -1171,26 +1175,28 @@ export default function CatalogTab({
         confirmStyle: 'primary',
         openedAt: Date.now(),
         onConfirm: async () => {
-          setIsDataLoading(true);
+          const idsSet = new Set(selectedProductIds);
+          // Optimistic local update
+          setPaginatedProducts(prev => prev.map(p => idsSet.has(p.id) ? { ...p, category: bulkCategory } : p));
+          setSelectedProductIds(new Set());
+          setBulkAction('');
+          setBulkCategory('');
+
           try {
             const changedProducts = products
-              .filter(p => selectedProductIds.has(p.id))
+              .filter(p => idsSet.has(p.id))
               .map(p => ({ ...p, category: bulkCategory }));
             
             const success = await handleSaveBulkProducts(changedProducts);
             if (success) {
               showToast(`${changedProducts.length} produits mis à jour avec la catégorie "${bulkCategory}".`, 'success');
-              setSelectedProductIds(new Set());
-              setBulkAction('');
-              setBulkCategory('');
-              await fetchPaginatedProducts();
             } else {
               showToast("Erreur lors de la mise à jour des produits.", 'error');
             }
-          } catch (err) {
+          } catch {
             showToast("Erreur de connexion.", 'error');
           } finally {
-            setIsDataLoading(false);
+            fetchPaginatedProducts();
           }
         }
       });
@@ -1202,25 +1208,27 @@ export default function CatalogTab({
         confirmStyle: 'primary',
         openedAt: Date.now(),
         onConfirm: async () => {
-          setIsDataLoading(true);
+          const idsSet = new Set(selectedProductIds);
+          // Optimistic local update
+          setPaginatedProducts(prev => prev.map(p => idsSet.has(p.id) ? { ...p, status: 'live' as const } : p));
+          setSelectedProductIds(new Set());
+          setBulkAction('');
+
           try {
             const changedProducts = products
-              .filter(p => selectedProductIds.has(p.id))
+              .filter(p => idsSet.has(p.id))
               .map(p => ({ ...p, status: 'live' as const }));
             
             const success = await handleSaveBulkProducts(changedProducts);
             if (success) {
               showToast(`${changedProducts.length} produits publiés avec succès.`, 'success');
-              setSelectedProductIds(new Set());
-              setBulkAction('');
-              await fetchPaginatedProducts();
             } else {
               showToast("Erreur lors de la publication des produits.", 'error');
             }
-          } catch (err) {
+          } catch {
             showToast("Erreur de connexion.", 'error');
           } finally {
-            setIsDataLoading(false);
+            fetchPaginatedProducts();
           }
         }
       });
@@ -1232,25 +1240,27 @@ export default function CatalogTab({
         confirmStyle: 'warning',
         openedAt: Date.now(),
         onConfirm: async () => {
-          setIsDataLoading(true);
+          const idsSet = new Set(selectedProductIds);
+          // Optimistic local update
+          setPaginatedProducts(prev => prev.map(p => idsSet.has(p.id) ? { ...p, status: 'draft' as const } : p));
+          setSelectedProductIds(new Set());
+          setBulkAction('');
+
           try {
             const changedProducts = products
-              .filter(p => selectedProductIds.has(p.id))
+              .filter(p => idsSet.has(p.id))
               .map(p => ({ ...p, status: 'draft' as const }));
             
             const success = await handleSaveBulkProducts(changedProducts);
             if (success) {
               showToast(`${changedProducts.length} produits remis en brouillon avec succès.`, 'success');
-              setSelectedProductIds(new Set());
-              setBulkAction('');
-              await fetchPaginatedProducts();
             } else {
               showToast("Erreur lors du passage en brouillon des produits.", 'error');
             }
-          } catch (err) {
+          } catch {
             showToast("Erreur de connexion.", 'error');
           } finally {
-            setIsDataLoading(false);
+            fetchPaginatedProducts();
           }
         }
       });
@@ -1353,7 +1363,7 @@ export default function CatalogTab({
           {/* Search bar */}
           <div className="relative flex-1 w-full">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-          <input
+            <input
               type="text"
               placeholder="Rechercher un produit..."
               value={productSearchQuery}
@@ -2321,7 +2331,10 @@ export default function CatalogTab({
                                     confirmStyle: 'danger',
                                     openedAt: Date.now(),
                                     onConfirm: async () => {
-                                      setIsDataLoading(true);
+                                      // Instant optimistic removal (0ms delay!)
+                                      setPaginatedProducts(prev => prev.filter(p => p.id !== product.id));
+                                      setTotalProducts((prev: number) => Math.max(0, prev - 1));
+
                                       try {
                                         const res = await fetch(`/api/admin/products?id=${product.id}`, {
                                           method: 'DELETE'
@@ -2329,15 +2342,15 @@ export default function CatalogTab({
                                         const data = await res.json();
                                         if (data.success) {
                                           showToast('Produit supprimé.', 'success');
-                                          await loadProducts();
-                                          await fetchPaginatedProducts();
                                         } else {
                                           showToast(data.error || 'Erreur lors de la suppression.', 'error');
                                         }
-                                      } catch (err) {
+                                      } catch {
                                         showToast('Erreur de connexion.', 'error');
                                       } finally {
-                                        setIsDataLoading(false);
+                                        // Quiet background sync without skeleton takeover
+                                        loadProducts();
+                                        fetchPaginatedProducts();
                                       }
                                     }
                                   });
@@ -2361,7 +2374,6 @@ export default function CatalogTab({
                                 type="button"
                                 onClick={async (e) => {
                                   e.stopPropagation();
-                                  setIsDataLoading(true);
                                   try {
                                     const { id, ...copyData } = product;
                                     copyData.title = `${copyData.title} (Copie)`;
@@ -2369,15 +2381,12 @@ export default function CatalogTab({
                                     const success = await handleCreateProduct(copyData);
                                     if (success) {
                                       showToast('Produit dupliqué.', 'success');
-                                      await loadProducts();
-                                      await fetchPaginatedProducts();
+                                      fetchPaginatedProducts();
                                     } else {
                                       showToast('Erreur lors de la duplication.', 'error');
                                     }
-                                  } catch (err) {
+                                  } catch {
                                     showToast('Erreur de connexion.', 'error');
-                                  } finally {
-                                    setIsDataLoading(false);
                                   }
                                 }}
                                 className="text-sky-600 dark:text-sky-400 hover:text-sky-500 dark:hover:text-sky-300 cursor-pointer"

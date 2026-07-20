@@ -295,7 +295,7 @@ export async function PUT(request: Request) {
   }
 }
 
-// DELETE: Delete a product
+// DELETE: Delete single or multiple products
 export async function DELETE(request: Request) {
   try {
     const session = await verifyAdminSession();
@@ -304,25 +304,44 @@ export async function DELETE(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const idStr = searchParams.get('id');
-    if (!idStr) {
-      return NextResponse.json({ success: false, error: 'Product ID is required' }, { status: 400 });
+    const singleId = searchParams.get('id');
+    const idsStr = searchParams.get('ids');
+
+    let idsToDelete: number[] = [];
+
+    if (idsStr) {
+      idsToDelete = idsStr.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n));
+    } else if (singleId) {
+      const num = Number(singleId);
+      if (!isNaN(num)) idsToDelete.push(num);
+    } else {
+      try {
+        const body = await request.json();
+        if (Array.isArray(body.ids)) {
+          idsToDelete = body.ids.map(Number).filter((n: number) => !isNaN(n));
+        } else if (body.id) {
+          idsToDelete = [Number(body.id)];
+        }
+      } catch {
+        // Body reading error fallback
+      }
     }
 
-    const productId = Number(idStr);
+    if (idsToDelete.length === 0) {
+      return NextResponse.json({ success: false, error: 'Product ID(s) required' }, { status: 400 });
+    }
 
     const { error } = await supabase
       .from('products')
       .delete()
-      .eq('id', productId);
+      .in('id', idsToDelete);
 
     if (error) throw error;
 
     revalidatePath('/products');
-    revalidatePath(`/products/${productId}`);
     revalidatePath('/');
 
-    return NextResponse.json({ success: true, deletedId: productId });
+    return NextResponse.json({ success: true, count: idsToDelete.length, deletedIds: idsToDelete });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message || 'Server error' }, { status: 500 });
   }
