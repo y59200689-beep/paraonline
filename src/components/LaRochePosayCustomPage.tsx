@@ -589,59 +589,6 @@ export default function LaRochePosayCustomPage() {
           </div>
         </section>
 
-        {/* ══════════════════════════════════════════════════════════
-            §7. BRAND STORY — Eau Thermale (new section)
-        ══════════════════════════════════════════════════════════ */}
-        <section className="bg-white border-t border-slate-100">
-          <div className="max-w-[1280px] mx-auto px-5 lg:px-10 py-14">
-            <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-10 items-center">
-              {/* Visual — spring water editorial */}
-              <div className="relative rounded-2xl overflow-hidden h-72 lg:h-96" style={{ background: 'linear-gradient(135deg,#0f4c2a 0%,#166534 40%,#22c55e 100%)' }}>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center space-y-2 px-8">
-                    <p className="text-6xl">🌿</p>
-                    <p className="text-white font-black text-xl">Source Thermale</p>
-                    <p className="text-white/60 text-xs">La Roche-Posay, France</p>
-                  </div>
-                </div>
-                {/* Overlay label */}
-                <div className="absolute bottom-4 left-4 right-4">
-                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-white/15 text-white">
-                    📍 Source Naturelle · Haute-Vienne · France
-                  </div>
-                </div>
-              </div>
-              {/* Text */}
-              <div className="space-y-5">
-                <p className="text-[10px] font-black uppercase tracking-[0.22em]" style={{ color: LRP_BLUE }}>Notre origine · depuis 1975</p>
-                <h2 className="text-3xl lg:text-4xl font-black leading-tight" style={{ color: LRP_DARK }}>
-                  L'EAU THERMALE<br />AU CŒUR DE<br />CHAQUE SOIN
-                </h2>
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  Depuis 1975, l'eau thermale de La Roche-Posay, riche en sélénium, apaise et protège les peaux les plus sensibles au monde. Chaque formule est enrichie de cette eau unique, reconnue par les dermatologues pour ses propriétés apaisantes exceptionnelles.
-                </p>
-                <div className="pt-2" style={{ borderTop: `2px solid ${LRP_BLUE}20` }}>
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                    DERMATOLOGIE · HYPOALLERGÉNIQUE · CLINIQUEMENT TESTÉ
-                  </p>
-                </div>
-                <div className="grid grid-cols-2 gap-3 pt-1">
-                  {[
-                    { v: '50+', l: 'ans de dermatologie' },
-                    { v: '90+', l: 'pays dans le monde' },
-                    { v: '60k', l: 'dermatologues partenaires' },
-                    { v: '100%', l: 'hypoallergénique' },
-                  ].map(s => (
-                    <div key={s.v} className="rounded-xl p-3" style={{ background: '#f0f9ff' }}>
-                      <p className="text-xl font-black" style={{ color: LRP_BLUE }}>{s.v}</p>
-                      <p className="text-[10px] font-medium text-slate-500 leading-snug">{s.l}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* ══════════════════════════════════════════════════════════
             §8. NOS ACTIFS DERMATOLOGIQUES (new section)
