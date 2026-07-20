@@ -314,79 +314,178 @@ export default function LaRochePosayCustomPage() {
         {/* ══════════════════════════════════════════════════════════
             §1. HERO
         ══════════════════════════════════════════════════════════ */}
-        <section style={{ background: LRP_CREAM, borderBottom: '1px solid #ede8e0' }}>
-          <div className="max-w-[1280px] mx-auto px-5 lg:px-10 py-12 lg:py-16">
-            <div className="flex flex-col lg:flex-row items-center gap-10">
+        {/* ══════════════════════════════════════════════════════════
+            §1. HERO (ULTRA-PROFESSIONAL REDESIGN)
+        ══════════════════════════════════════════════════════════ */}
+        <section className="bg-white border-b border-slate-100 relative overflow-hidden">
+          {/* Subtle background sky-blue radial lighting aura */}
+          <div className="absolute top-10 right-10 w-[550px] h-[550px] bg-sky-100/60 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-10 w-96 h-96 bg-blue-50/50 rounded-full blur-3xl pointer-events-none" />
 
-              {/* Left text */}
-              <div className="lg:w-[44%] space-y-5">
-                <p className="text-[10px] font-black uppercase tracking-[0.22em]" style={{ color: LRP_BLUE }}>
-                  La Roche-Posay · Laboratoire Dermatologique
+          <div className="max-w-[1280px] mx-auto px-5 lg:px-10 py-14 lg:py-20 relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+
+              {/* Left Column: Brand Authority & Call to Actions */}
+              <div className="lg:col-span-6 space-y-6">
+                <div className="space-y-3">
+                  <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] bg-sky-500 text-white shadow-sm shadow-sky-500/20">
+                    <Sparkles className="w-3.5 h-3.5" /> LABORATOIRE DERMATOLOGIQUE · FRANCE
+                  </span>
+                  
+                  <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-black leading-[1.05] tracking-tight text-slate-900">
+                    CHANGER LA VIE<br />
+                    DE TOUTES LES<br />
+                    <span className="bg-gradient-to-r from-sky-500 to-blue-600 bg-clip-text text-transparent">PEAUX</span>
+                  </h1>
+                </div>
+
+                <p className="text-sm lg:text-base text-slate-600 font-medium leading-relaxed max-w-lg">
+                  Soins dermatologiques d'exception formulés avec l'eau thermale apaisante de La Roche-Posay. Recommandés par plus de 90 000 dermatologues dans le monde.
                 </p>
-                <h1 className="text-4xl sm:text-5xl lg:text-[3.6rem] font-black leading-[1.0] tracking-tight" style={{ color: LRP_DARK }}>
-                  CHANGER<br />LA VIE DE<br />TOUTES<br />LES PEAUX
-                </h1>
-                <div className="inline-flex items-start gap-3 bg-white border border-gray-200 shadow px-4 py-3 rounded-xl max-w-[270px]">
-                  <span className="text-3xl font-black leading-none mt-0.5" style={{ color: '#dc2626' }}>N°1</span>
-                  <p className="text-[11px] font-semibold leading-snug" style={{ color: LRP_DARK }}>
-                    RECOMMANDÉE PAR<br /><strong>LES DERMATOLOGUES</strong><br />DANS LE MONDE<sup className="text-[8px]">*</sup>
-                  </p>
+
+                {/* N°1 Clinical Badge */}
+                <div className="inline-flex items-center gap-3 bg-slate-50 border border-slate-200/80 px-4 py-3 rounded-2xl shadow-sm">
+                  <span className="text-3xl font-black text-red-600 leading-none">N°1</span>
+                  <div className="text-left">
+                    <p className="text-xs font-black text-slate-900 leading-tight">MARQUE DERMATOLOGIQUE MONDIALE</p>
+                    <p className="text-[10px] font-semibold text-slate-500 mt-0.5">Recommandée par les professionnels de santé*</p>
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-3 pt-1">
-                  <Link href="#ranges" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold text-white hover:opacity-90 transition" style={{ background: LRP_BLUE }}>
-                    Nos gammes <ChevronRight className="w-4 h-4" />
+
+                {/* Action Buttons */}
+                <div className="flex flex-wrap gap-4 pt-1">
+                  <Link
+                    href="#ranges"
+                    className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-black text-white bg-sky-500 hover:bg-sky-600 shadow-lg shadow-sky-500/25 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    Nos gammes dermatologiques <ChevronRight className="w-4 h-4" />
                   </Link>
-                  <Link href="#catalog" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold border-2 hover:bg-slate-50 transition" style={{ borderColor: LRP_DARK, color: LRP_DARK }}>
-                    Tous les produits
+
+                  <Link
+                    href="#catalog"
+                    className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-black border-2 border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white transition-all duration-300"
+                  >
+                    Explorer le catalogue
                   </Link>
                 </div>
-                <p className="text-[9px] text-gray-400">*Source: IQVIA survey, dermatologists, 2023</p>
+
+                {/* Trust Claims Row */}
+                <div className="pt-4 border-t border-slate-100 flex flex-wrap gap-y-2 gap-x-6 text-[11px] font-bold text-slate-600">
+                  <span className="flex items-center gap-1.5">
+                    <Check className="w-3.5 h-3.5 text-sky-500 stroke-[3]" /> 100% Hypoallergénique
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Check className="w-3.5 h-3.5 text-sky-500 stroke-[3]" /> Eau Thermale Riche en Sélénium
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Check className="w-3.5 h-3.5 text-sky-500 stroke-[3]" /> Testé sur Peaux Sensibles
+                  </span>
+                </div>
+
+                <p className="text-[9px] text-slate-400">*Source: IQVIA survey, dermatologists worldwide, 2023</p>
               </div>
 
-              {/* Right: range tiles mini-preview */}
-              <div className="lg:w-[56%] w-full">
-                {loading ? (
-                  <div className="grid grid-cols-3 gap-3">
-                    {Array.from({ length: 6 }).map((_,i) => (
-                      <div key={i} className="animate-pulse bg-slate-100 rounded-2xl h-32" />
-                    ))}
+              {/* Right Column: Luxury Flagship Products Showcase */}
+              <div className="lg:col-span-6 relative">
+                <div className="relative bg-gradient-to-b from-slate-50/80 to-slate-100/50 border border-slate-200/60 rounded-3xl p-6 lg:p-8 shadow-xl shadow-slate-200/50 backdrop-blur-sm">
+                  {/* Top Header Badge inside Showcase */}
+                  <div className="flex items-center justify-between mb-6">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 bg-white border border-slate-200 px-3 py-1 rounded-full shadow-xs">
+                      SOINS ICONIQUES DERMATOLOGIQUES
+                    </span>
+                    <span className="text-[10px] font-mono font-bold text-sky-600">
+                      LA ROCHE-POSAY
+                    </span>
                   </div>
-                ) : (
-                  <div className="grid grid-cols-3 gap-3">
-                    {RANGES.map(rng => {
-                      const img = rangeImages[rng.id];
+
+                  {/* 3 Flagship Products Row */}
+                  <div className="grid grid-cols-3 gap-4 mb-6">
+                    {[
+                      {
+                        range: 'EFFACLAR',
+                        tag: 'Acné & Imperfections',
+                        accent: '#2563eb',
+                        bg: '#eff6ff',
+                        prod: products.find(p => (p.title ?? '').toLowerCase().includes('effaclar')),
+                      },
+                      {
+                        range: 'ANTHELIOS',
+                        tag: 'Protection Solaire',
+                        accent: '#ea580c',
+                        bg: '#fff7ed',
+                        prod: products.find(p => (p.title ?? '').toLowerCase().includes('anthelios')),
+                      },
+                      {
+                        range: 'CICAPLAST',
+                        tag: 'Cicatrisation',
+                        accent: '#16a34a',
+                        bg: '#f0fdf4',
+                        prod: products.find(p => (p.title ?? '').toLowerCase().includes('cicaplast')),
+                      },
+                    ].map((item, idx) => {
+                      const imgUrl = item.prod ? firstImage(item.prod) : '';
                       return (
-                        <button
-                          key={rng.id}
-                          onClick={() => selectRange(rng.id)}
-                          className="group relative rounded-2xl overflow-hidden cursor-pointer border-2 transition-all hover:scale-[1.03] hover:shadow-xl"
-                          style={{
-                            borderColor: activeRange === rng.id ? rng.accent : 'transparent',
-                            height: 130,
-                          }}
+                        <div
+                          key={idx}
+                          className="group bg-white border border-slate-200/80 rounded-2xl p-4 flex flex-col items-center justify-between transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-sky-300"
                         >
-                          {img ? (
-                            <img src={img} alt={rng.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full" style={rng.bgStyle} />
-                          )}
-                          <div
-                            className="absolute inset-0 flex flex-col justify-end p-2"
-                            style={{ background: `linear-gradient(to top, ${rng.overlayColor} 0%, transparent 60%)` }}
+                          <span
+                            className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md mb-2"
+                            style={{ background: item.bg, color: item.accent }}
                           >
-                            <p className="text-[10px] font-black text-white leading-tight whitespace-pre-line">{rng.label}</p>
+                            {item.range}
+                          </span>
+
+                          <div className="h-32 w-full flex items-center justify-center py-2 relative">
+                            {imgUrl ? (
+                              <img
+                                src={imgUrl}
+                                alt={item.range}
+                                className="max-h-28 max-w-[85%] object-contain drop-shadow-md group-hover:scale-105 transition-transform duration-300"
+                              />
+                            ) : (
+                              <div
+                                className="w-16 h-24 rounded-lg flex items-center justify-center text-white text-[9px] font-bold"
+                                style={{ background: item.accent }}
+                              >
+                                {item.range}
+                              </div>
+                            )}
                           </div>
-                          {activeRange === rng.id && (
-                            <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: rng.accent }}>
-                              <Check className="w-3 h-3 text-white stroke-[3]" />
-                            </div>
-                          )}
-                        </button>
+
+                          <p className="text-[10px] font-extrabold text-slate-800 text-center leading-tight mt-1 line-clamp-1">
+                            {item.tag}
+                          </p>
+                        </div>
                       );
                     })}
                   </div>
-                )}
+
+                  {/* Interactive Quick Filter Range Chips */}
+                  <div className="pt-4 border-t border-slate-200/80">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2.5 text-center">
+                      Accès rapide aux gammes par besoin :
+                    </p>
+                    <div className="flex flex-wrap gap-1.5 justify-center">
+                      {RANGES.map(r => (
+                        <button
+                          key={r.id}
+                          onClick={() => selectRange(r.id)}
+                          className="text-[10px] font-extrabold px-3 py-1 rounded-full border cursor-pointer transition-all hover:scale-105"
+                          style={{
+                            background: activeRange === r.id ? r.accent : 'white',
+                            color: activeRange === r.id ? 'white' : '#475569',
+                            borderColor: activeRange === r.id ? r.accent : '#cbd5e1',
+                          }}
+                        >
+                          {r.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
+
             </div>
           </div>
         </section>
