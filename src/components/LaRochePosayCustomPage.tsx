@@ -536,26 +536,26 @@ export default function LaRochePosayCustomPage() {
             {/* Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
               {/* Product Spotlight Card (4 cols) */}
-              <div className="lg:col-span-4 bg-gradient-to-b from-white/10 to-white/5 border border-white/10 rounded-3xl p-8 flex flex-col items-center justify-center relative group overflow-hidden backdrop-blur-md">
+              <div className="lg:col-span-4 bg-gradient-to-b from-white/10 to-white/5 border border-white/10 rounded-3xl p-6 flex flex-col items-center justify-center relative group overflow-hidden backdrop-blur-md">
                 <div className="absolute inset-0 bg-sky-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl pointer-events-none" />
                 
                 {effaclarProduct && firstImage(effaclarProduct) ? (
                   <img
                     src={firstImage(effaclarProduct)}
                     alt="Effaclar"
-                    className="h-48 lg:h-56 object-contain drop-shadow-[0_20px_30px_rgba(56,189,248,0.25)] group-hover:scale-105 transition-transform duration-500"
+                    className="h-36 lg:h-40 object-contain drop-shadow-[0_20px_30px_rgba(56,189,248,0.25)] group-hover:scale-105 transition-transform duration-500"
                   />
                 ) : (
-                  <div className="w-28 h-40 bg-white/10 rounded-2xl border border-sky-400/30 flex items-center justify-center p-4 text-center">
+                  <div className="w-24 h-32 bg-white/10 rounded-2xl border border-sky-400/30 flex items-center justify-center p-3 text-center">
                     <span className="text-xs font-black text-sky-300">EFFACLAR DUO+M</span>
                   </div>
                 )}
                 
-                <div className="mt-4 text-center">
+                <div className="mt-3 text-center">
                   <span className="text-[10px] font-black uppercase tracking-widest text-sky-400 bg-sky-400/10 px-3 py-1 rounded-full border border-sky-400/20">
                     Soin Référence
                   </span>
-                  <p className="text-xs font-extrabold text-white mt-2">EFFACLAR DUO+M</p>
+                  <p className="text-xs font-extrabold text-white mt-1.5">EFFACLAR DUO+M</p>
                   <p className="text-[10px] text-slate-400 mt-0.5">Soin Triple Correction Anti-Imperfections</p>
                 </div>
               </div>
@@ -590,7 +590,7 @@ export default function LaRochePosayCustomPage() {
                 ].map((stat, i) => (
                   <div
                     key={i}
-                    className="bg-white/5 border border-white/10 hover:border-sky-400/40 rounded-3xl p-6 flex flex-col justify-start gap-4 hover:bg-white/[0.08] transition-all duration-300 group"
+                    className="bg-white/5 border border-white/10 hover:border-sky-400/40 rounded-3xl p-5 flex flex-col justify-start gap-3.5 hover:bg-white/[0.08] transition-all duration-300 group"
                   >
                     {/* Top Tag & Indicator */}
                     <div className="flex items-center justify-between">
@@ -630,7 +630,7 @@ export default function LaRochePosayCustomPage() {
                     </p>
 
                     {/* Clinical Feature Bullets */}
-                    <div className="mt-auto pt-3 border-t border-white/5 space-y-1.5">
+                    <div className="pt-3 border-t border-white/5 space-y-1.5">
                       {stat.bullets.map((b, bi) => (
                         <div key={bi} className="flex items-center gap-2 text-[10px] text-slate-400">
                           <Check className="w-3 h-3 text-sky-400 shrink-0" />
