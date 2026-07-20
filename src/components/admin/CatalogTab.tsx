@@ -31,7 +31,14 @@ import {
   Percent,
   Coins,
   FileText,
-  CheckSquare
+  CheckSquare,
+  Trash2,
+  FolderPlus,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  Sparkles,
+  ChevronRight
 } from 'lucide-react';
 import { useAdmin } from '@/context/AdminContext';
 import { Product } from '@/lib/data';
@@ -195,6 +202,9 @@ export default function CatalogTab({
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  const [isCatPopoverOpen, setIsCatPopoverOpen] = useState(false);
+  const [isFloatingCatPopoverOpen, setIsFloatingCatPopoverOpen] = useState(false);
 
   // Search & Filters
   const [productSearchQuery, setProductSearchQuery] = useState('');
@@ -1136,10 +1146,12 @@ export default function CatalogTab({
     }
   };
 
-  const handleApplyBulkAction = async () => {
-    if (!bulkAction || selectedProductIds.size === 0) return;
+  const handleApplyBulkAction = async (actionOverride?: string, categoryOverride?: string) => {
+    const actionToRun = actionOverride || bulkAction;
+    const categoryToUse = categoryOverride || bulkCategory;
+    if (!actionToRun || selectedProductIds.size === 0) return;
     
-    if (bulkAction === 'delete') {
+    if (actionToRun === 'delete') {
       const idsToDelete = Array.from(selectedProductIds);
       setConfirmDialog({
         title: 'Supprimer la sélection ?',
@@ -1175,21 +1187,21 @@ export default function CatalogTab({
           }
         }
       });
-    } else if (bulkAction === 'categorize') {
-      if (!bulkCategory) {
+    } else if (actionToRun === 'categorize') {
+      if (!categoryToUse) {
         showToast("Veuillez sélectionner une catégorie.", "error");
         return;
       }
       setConfirmDialog({
         title: 'Assigner la catégorie ?',
-        message: `Voulez-vous assigner la catégorie "${bulkCategory}" aux ${selectedProductIds.size} produits sélectionnés ?`,
+        message: `Voulez-vous assigner la catégorie "${categoryToUse}" aux ${selectedProductIds.size} produits sélectionnés ?`,
         confirmText: 'Assigner',
         confirmStyle: 'primary',
         openedAt: Date.now(),
         onConfirm: async () => {
           const idsSet = new Set(selectedProductIds);
           // Optimistic local update
-          setPaginatedProducts(prev => prev.map(p => idsSet.has(p.id) ? { ...p, category: bulkCategory } : p));
+          setPaginatedProducts(prev => prev.map(p => idsSet.has(p.id) ? { ...p, category: categoryToUse } : p));
           setSelectedProductIds(new Set());
           setBulkAction('');
           setBulkCategory('');
@@ -1202,11 +1214,11 @@ export default function CatalogTab({
             const changedProducts = Array.from(idsSet)
               .map(id => productMap.get(id))
               .filter((p): p is Product => Boolean(p))
-              .map(p => ({ ...p, category: bulkCategory }));
+              .map(p => ({ ...p, category: categoryToUse }));
             
             const success = await handleSaveBulkProducts(changedProducts);
             if (success) {
-              showToast(`${changedProducts.length} produits mis à jour avec la catégorie "${bulkCategory}".`, 'success');
+              showToast(`${changedProducts.length} produits mis à jour avec la catégorie "${categoryToUse}".`, 'success');
             } else {
               showToast("Erreur lors de la mise à jour des produits.", 'error');
             }
@@ -1217,7 +1229,7 @@ export default function CatalogTab({
           }
         }
       });
-    } else if (bulkAction === 'publish') {
+    } else if (actionToRun === 'publish') {
       setConfirmDialog({
         title: 'Publier la sélection ?',
         message: `Voulez-vous publier les ${selectedProductIds.size} produits sélectionnés ?`,
@@ -1254,7 +1266,7 @@ export default function CatalogTab({
           }
         }
       });
-    } else if (bulkAction === 'draft') {
+    } else if (actionToRun === 'draft') {
       setConfirmDialog({
         title: 'Mettre en brouillon ?',
         message: `Voulez-vous remettre en brouillon les ${selectedProductIds.size} produits sélectionnés ?`,
@@ -2158,73 +2170,117 @@ export default function CatalogTab({
         </div>
       ) : (
         <div className="space-y-4">
-          {/* DEDICATED FULL-WIDTH SELECTION BANNER ROW (SHOPIFY / STRIPE STYLE) */}
+          {/* DEDICATED FULL-WIDTH SELECTION BANNER ROW (DIRECT ACTION PILLS & POP-OVER) */}
           {selectedProductIds.size > 0 && (
-            <div className={`p-3.5 rounded-2xl border flex flex-wrap items-center justify-between gap-3 shadow-sm transition-all duration-200 ${
+            <div className={`p-3 rounded-2xl border flex flex-wrap items-center justify-between gap-3 shadow-md transition-all duration-200 ${
               adminTheme === 'light'
-                ? 'bg-emerald-50/90 border-emerald-200/90 text-slate-800'
-                : 'bg-emerald-950/40 border-emerald-800/60 text-slate-200'
+                ? 'bg-gradient-to-r from-emerald-50/90 via-teal-50/70 to-emerald-50/90 border-emerald-200 text-slate-800 shadow-emerald-500/5'
+                : 'bg-gradient-to-r from-slate-900/90 via-emerald-950/30 to-slate-900/90 border-emerald-800/40 text-slate-200'
             }`}>
               <div className="flex items-center gap-3">
-                <span className="inline-flex items-center gap-2 text-xs font-black text-emerald-700 dark:text-emerald-300">
+                <span className="inline-flex items-center gap-2 text-xs font-black text-emerald-700 dark:text-emerald-300 bg-white/80 dark:bg-emerald-950/60 px-3 py-1.5 rounded-xl border border-emerald-200/80 dark:border-emerald-800/60 shadow-2xs">
                   <CheckSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   {selectedProductIds.size} produit(s) sélectionné(s)
                 </span>
                 <span className="text-xs font-medium text-slate-500 dark:text-slate-400 hidden sm:inline">
-                  (sur {totalProducts} au total)
+                  sur {totalProducts} au total
                 </span>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <select
-                  value={bulkAction}
-                  onChange={(e) => setBulkAction(e.target.value)}
-                  className={`text-xs h-9 outline-none rounded-xl px-3 border font-bold uppercase tracking-wider transition-colors cursor-pointer ${
-                    adminTheme === 'light'
-                      ? 'bg-white border-emerald-300 text-slate-800 shadow-xs'
-                      : 'bg-slate-900 border-slate-700 text-slate-200'
-                  }`}
-                >
-                  <option value="">Choisir une action groupée...</option>
-                  <option value="delete">🗑️ Supprimer définitivement</option>
-                  <option value="categorize">📁 Assigner une catégorie</option>
-                  <option value="publish">🟢 Publier (Live)</option>
-                  <option value="draft">🟡 Mettre en brouillon</option>
-                </select>
-
-                {bulkAction === 'categorize' && (
-                  <select
-                    value={bulkCategory}
-                    onChange={(e) => setBulkCategory(e.target.value)}
-                    className={`text-xs h-9 outline-none rounded-xl px-3 border font-medium cursor-pointer ${
-                      adminTheme === 'light'
-                        ? 'bg-white border-emerald-300 text-slate-800 shadow-xs'
-                        : 'bg-slate-900 border-slate-700 text-slate-200'
-                    }`}
-                  >
-                    <option value="">Sélectionner une catégorie...</option>
-                    {uniqueCategories.map(cat => (
-                      <option key={cat} value={cat}>{cat.toUpperCase()}</option>
-                    ))}
-                  </select>
-                )}
-
+              <div className="flex flex-wrap items-center gap-2 relative">
+                {/* 1-Click Action: Supprimer */}
                 <button
                   type="button"
-                  onClick={handleApplyBulkAction}
-                  disabled={!bulkAction}
-                  className="px-4 h-9 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-sm disabled:opacity-40 cursor-pointer transition"
+                  onClick={() => handleApplyBulkAction('delete')}
+                  className="px-3.5 py-1.5 bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-bold text-xs rounded-xl shadow-md shadow-rose-500/20 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
                 >
-                  Appliquer
+                  <Trash2 className="w-3.5 h-3.5 text-white" />
+                  <span>Supprimer ({selectedProductIds.size})</span>
                 </button>
 
+                {/* 1-Click Action: Publier */}
+                <button
+                  type="button"
+                  onClick={() => handleApplyBulkAction('publish')}
+                  className="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                  <span>Publier</span>
+                </button>
+
+                {/* 1-Click Action: Brouillon */}
+                <button
+                  type="button"
+                  onClick={() => handleApplyBulkAction('draft')}
+                  className={`px-3.5 py-1.5 border font-bold text-xs rounded-xl active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 ${
+                    adminTheme === 'light'
+                      ? 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
+                      : 'bg-amber-500/10 text-amber-300 border-amber-500/30 hover:bg-amber-500/20'
+                  }`}
+                >
+                  <FileText className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Brouillon</span>
+                </button>
+
+                {/* Custom Popover: Catégorie */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsCatPopoverOpen(prev => !prev)}
+                    className={`px-3.5 py-1.5 border font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+                      adminTheme === 'light'
+                        ? 'bg-white border-slate-200 text-slate-700 hover:border-slate-300 shadow-2xs'
+                        : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-600'
+                    }`}
+                  >
+                    <FolderPlus className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>Catégorie</span>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isCatPopoverOpen ? 'rotate-180 text-emerald-500' : 'text-slate-400'}`} />
+                  </button>
+
+                  {isCatPopoverOpen && (
+                    <div className={`absolute right-0 top-full mt-2 w-52 rounded-2xl border p-2 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 ${
+                      adminTheme === 'light'
+                        ? 'bg-white/95 border-slate-200/90 text-slate-800 backdrop-blur-xl'
+                        : 'bg-slate-900/95 border-slate-800 text-slate-200 backdrop-blur-xl'
+                    }`}>
+                      <div className="px-2 py-1 text-[10px] uppercase tracking-wider font-extrabold text-slate-400 border-b border-slate-100 dark:border-slate-800/80 mb-1">
+                        Assigner Catégorie
+                      </div>
+                      <div className="space-y-1">
+                        {uniqueCategories.map(cat => (
+                          <button
+                            key={cat}
+                            type="button"
+                            onClick={() => {
+                              setIsCatPopoverOpen(false);
+                              handleApplyBulkAction('categorize', cat);
+                            }}
+                            className={`w-full text-left px-2.5 py-1.5 text-xs font-semibold rounded-xl flex items-center justify-between transition cursor-pointer ${
+                              adminTheme === 'light'
+                                ? 'hover:bg-emerald-50 hover:text-emerald-700 text-slate-700'
+                                : 'hover:bg-emerald-950/50 hover:text-emerald-400 text-slate-300'
+                            }`}
+                          >
+                            <span>{cat.toUpperCase()}</span>
+                            <ChevronRight className="w-3.5 h-3.5 text-slate-400 opacity-60" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 mx-1" />
+
+                {/* Cancel Selection */}
                 <button
                   type="button"
                   onClick={() => { setSelectedProductIds(new Set()); setBulkAction(''); }}
-                  className="px-3 h-9 text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 font-bold text-xs cursor-pointer transition flex items-center gap-1"
+                  className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 font-bold text-xs cursor-pointer transition rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                  title="Désélectionner tout"
                 >
                   <X className="w-4 h-4" />
-                  <span className="hidden sm:inline">Désélectionner tout</span>
                 </button>
               </div>
             </div>
@@ -2500,7 +2556,8 @@ export default function CatalogTab({
                                     const success = await handleCreateProduct(copyData);
                                     if (success) {
                                       showToast('Produit dupliqué.', 'success');
-                                      fetchPaginatedProducts();
+                                      await loadProducts();
+                                      await fetchPaginatedProducts();
                                     } else {
                                       showToast('Erreur lors de la duplication.', 'error');
                                     }
@@ -2573,6 +2630,7 @@ export default function CatalogTab({
                               setFilterCategory('all');
                               setFilterVendor('all');
                               setFilterStatus('all');
+                              setFilterSpecial('all');
                               setCatalogStockFilter(false);
                             }
                           }}
@@ -3967,66 +4025,112 @@ export default function CatalogTab({
         </div>
       )}
 
-      {/* FLOATING GLASSMORPHIC BULK ACTIONS BAR (PORTAL TO DOCUMENT.BODY) */}
+      {/* FLOATING GLASSMORPHIC BULK ACTIONS DOCK (PORTAL TO DOCUMENT.BODY) */}
       {isMounted && selectedProductIds.size > 0 && !isCatalogBulkMode && createPortal(
         <div className={`floating-bulk-bar active ${
           adminTheme === 'light' ? 'floating-bulk-bar-light' : 'floating-bulk-bar-dark'
         }`}>
-          <span className="flex items-center gap-1.5 text-xs font-black text-emerald-600 dark:text-emerald-400">
-            <CheckSquare className="w-4 h-4 text-emerald-500" />
-            {selectedProductIds.size} produits sélectionnés
+          <span className="flex items-center gap-2 text-xs font-black text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
+            <CheckSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            {selectedProductIds.size} sélectionné(s)
           </span>
           
-          <div className="w-px h-6 bg-slate-200 dark:bg-slate-800" />
+          <div className="w-px h-5 bg-slate-200 dark:bg-slate-800" />
           
-          <select
-            value={bulkAction}
-            onChange={(e) => setBulkAction(e.target.value)}
-            className={`text-xs h-9 outline-none rounded-xl px-3 border cursor-pointer font-bold uppercase tracking-wider transition-colors duration-150 ${
-              adminTheme === 'light'
-                ? 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
-                : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
-            }`}
-          >
-            <option value="">Actions groupées</option>
-            <option value="categorize">Changer de Catégorie</option>
-            <option value="publish">Publier (Live)</option>
-            <option value="draft">Mettre en brouillon</option>
-            <option value="delete">Supprimer définitivement</option>
-          </select>
-
-          {bulkAction === 'categorize' && (
-            <select
-              value={bulkCategory}
-              onChange={(e) => setBulkCategory(e.target.value)}
-              className={`text-xs h-9 outline-none rounded-xl px-3 border cursor-pointer font-semibold transition-colors duration-150 ${
-                adminTheme === 'light'
-                  ? 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
-                  : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
-              }`}
-            >
-              <option value="">Choisir...</option>
-              {uniqueCategories.map(cat => (
-                <option key={cat} value={cat}>{cat.toUpperCase()}</option>
-              ))}
-            </select>
-          )}
-
+          {/* Direct Button 1: Supprimer */}
           <button
-            onClick={handleApplyBulkAction}
-            disabled={!bulkAction}
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition active:scale-95 cursor-pointer border-0 outline-none"
+            type="button"
+            onClick={() => handleApplyBulkAction('delete')}
+            className="px-3.5 py-1.5 bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-bold text-xs rounded-xl shadow-md shadow-rose-500/20 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 border-0 outline-none"
           >
-            Appliquer
+            <Trash2 className="w-3.5 h-3.5 text-white" />
+            <span>Supprimer</span>
           </button>
 
+          {/* Direct Button 2: Publier */}
           <button
+            type="button"
+            onClick={() => handleApplyBulkAction('publish')}
+            className="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 border-0 outline-none"
+          >
+            <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+            <span>Publier</span>
+          </button>
+
+          {/* Direct Button 3: Brouillon */}
+          <button
+            type="button"
+            onClick={() => handleApplyBulkAction('draft')}
+            className={`px-3.5 py-1.5 border font-bold text-xs rounded-xl active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 outline-none ${
+              adminTheme === 'light'
+                ? 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
+                : 'bg-amber-500/10 text-amber-300 border-amber-500/30 hover:bg-amber-500/20'
+            }`}
+          >
+            <FileText className="w-3.5 h-3.5 text-amber-500" />
+            <span>Brouillon</span>
+          </button>
+
+          {/* Custom Popover: Catégorie */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setIsFloatingCatPopoverOpen(prev => !prev)}
+              className={`px-3.5 py-1.5 border font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5 outline-none ${
+                adminTheme === 'light'
+                  ? 'bg-white border-slate-200 text-slate-700 hover:border-slate-300 shadow-2xs'
+                  : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-600'
+              }`}
+            >
+              <FolderPlus className="w-3.5 h-3.5 text-emerald-500" />
+              <span>Catégorie</span>
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isFloatingCatPopoverOpen ? 'rotate-180 text-emerald-500' : 'text-slate-400'}`} />
+            </button>
+
+            {isFloatingCatPopoverOpen && (
+              <div className={`absolute bottom-full mb-3 right-0 w-52 rounded-2xl border p-2 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 ${
+                adminTheme === 'light'
+                  ? 'bg-white/95 border-slate-200/90 text-slate-800 backdrop-blur-xl'
+                  : 'bg-slate-900/95 border-slate-800 text-slate-200 backdrop-blur-xl'
+              }`}>
+                <div className="px-2 py-1 text-[10px] uppercase tracking-wider font-extrabold text-slate-400 border-b border-slate-100 dark:border-slate-800/80 mb-1">
+                  Assigner Catégorie
+                </div>
+                <div className="space-y-1">
+                  {uniqueCategories.map(cat => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => {
+                        setIsFloatingCatPopoverOpen(false);
+                        handleApplyBulkAction('categorize', cat);
+                      }}
+                      className={`w-full text-left px-2.5 py-1.5 text-xs font-semibold rounded-xl flex items-center justify-between transition cursor-pointer border-0 outline-none ${
+                        adminTheme === 'light'
+                          ? 'hover:bg-emerald-50 hover:text-emerald-700 text-slate-700'
+                          : 'hover:bg-emerald-950/50 hover:text-emerald-400 text-slate-300'
+                      }`}
+                    >
+                      <span>{cat.toUpperCase()}</span>
+                      <ChevronRight className="w-3.5 h-3.5 text-slate-400 opacity-60" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="w-px h-5 bg-slate-200 dark:bg-slate-800" />
+
+          {/* Dismiss */}
+          <button
+            type="button"
             onClick={() => {
               setSelectedProductIds(new Set());
               setBulkAction('');
             }}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition p-1 cursor-pointer border-0 bg-transparent outline-none"
-            title="Annuler la sélection"
+            className="text-slate-400 hover:text-rose-500 transition p-1.5 cursor-pointer border-0 bg-transparent outline-none rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+            title="Désélectionner tout"
           >
             <X className="w-4 h-4" />
           </button>
