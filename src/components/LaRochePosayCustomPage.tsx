@@ -47,7 +47,7 @@ const CATEGORY_TILES = [
   { id: 'sensibles',    label: 'PEAUX SENSIBLES & ALLERGIQUES',sub: 'TOLERIANE', accent: '#0284c7', bg: '#f0f9ff', keywords: ['toleriane','sensible','allergi'] },
   { id: 'hydra',        label: 'PEAUX DÉSHYDRATÉES',           sub: 'HYDRAPHASE',accent: '#059669', bg: '#ecfdf5', keywords: ['hydraphase','hydra','déshydra'] },
   { id: 'makeup',       label: 'MAQUILLAGE PEAUX SENSIBLES',   sub: '',           accent: '#c026d3', bg: '#fdf4ff', keywords: ['maquillage','mascara','fond de teint','makeup','toleriane teint'] },
-  { id: 'toilette',     label: 'TOILETTE PEAUX SENSIBLES',     sub: '',           accent: '#475569', bg: '#f8fafc', keywords: ['toilette','gel nettoyant','mousse nettoyante','huile nettoyante','nettoyant doux'] },
+  { id: 'toilette',     label: 'TOILETTE PEAUX SENSIBLES',     sub: '',           accent: '#475569', bg: '#f8fafc', keywords: ['toilette','gel nettoyant','mousse nettoyante','huile nettoyante','nettoyant doux','lavant','lavante'] },
 ];
 
 /* ─── Trust claims ───────────────────────────────────────────────── */
