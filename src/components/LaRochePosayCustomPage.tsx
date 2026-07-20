@@ -592,24 +592,60 @@ export default function LaRochePosayCustomPage() {
 
 
         {/* ══════════════════════════════════════════════════════════
-            §9. BRAND TRUST CLAIMS
+            §9. BRAND TRUST CLAIMS (REDESIGNED)
         ══════════════════════════════════════════════════════════ */}
-        <section style={{ background: '#f5efdf', borderTop: '1px solid #dfd7c5' }} className="py-12">
-          <div className="max-w-[1280px] mx-auto px-5 lg:px-10">
-            <h2 className="text-xl font-black mb-8" style={{ color: LRP_DARK }}>NOS ENGAGEMENTS</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-px" style={{ background: '#c9bfaa' }}>
+        <section className="py-20 bg-slate-50/70 border-t border-slate-100 relative overflow-hidden">
+          {/* Subtle background blur accent circles */}
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-sky-200/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-200/20 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="max-w-[1280px] mx-auto px-5 lg:px-10 relative z-10">
+            {/* Header */}
+            <div className="text-center max-w-2xl mx-auto mb-14 space-y-3">
+              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] bg-sky-100/80 text-sky-600 border border-sky-200/50">
+                <ShieldCheck className="w-3.5 h-3.5" /> CHARTE DE SÉCURITÉ DERMATOLOGIQUE
+              </span>
+              <h2 className="text-3xl sm:text-4xl font-black tracking-tight" style={{ color: LRP_DARK }}>
+                NOS 4 ENGAGEMENTS FONDAMENTAUX
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
+                Chaque formule La Roche-Posay répond à des exigences cliniques très strictes pour garantir une tolérance et une efficacité optimales.
+              </p>
+            </div>
+
+            {/* 4 Cards Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {TRUST_CLAIMS.map((c, i) => {
                 const Icon = c.Icon;
                 return (
-                  <div key={i} className="flex flex-col gap-4 p-8" style={{ background: '#f5efdf' }}>
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs font-black text-gray-400">{c.num}</span>
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: LRP_DARK }}>
-                        <Icon className="w-4 h-4 text-white" />
+                  <div
+                    key={i}
+                    className="group relative bg-white border border-slate-100 rounded-3xl p-7 shadow-lg shadow-slate-100/80 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-sky-500/10 hover:border-sky-300/60 flex flex-col justify-between overflow-hidden"
+                  >
+                    <div>
+                      {/* Top row: Icon + Ghost number */}
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-white shadow-md shadow-sky-400/30 group-hover:scale-110 transition-transform duration-300">
+                          <Icon className="w-6 h-6 stroke-[2.2]" />
+                        </div>
+                        <span className="text-3xl font-black font-mono text-slate-200 group-hover:text-sky-300 transition-colors duration-300">
+                          {c.num}
+                        </span>
                       </div>
+
+                      {/* Content */}
+                      <h3 className="text-base font-black leading-snug mb-3 tracking-tight group-hover:text-sky-600 transition-colors duration-300" style={{ color: LRP_DARK }}>
+                        {c.title}
+                      </h3>
+                      <p className="text-xs leading-relaxed text-slate-500 font-normal">
+                        {c.body}
+                      </p>
                     </div>
-                    <h3 className="text-xl font-black leading-tight" style={{ color: LRP_DARK }}>{c.title}</h3>
-                    <p className="text-sm leading-relaxed text-gray-600">{c.body}</p>
+
+                    {/* Bottom accent glow bar */}
+                    <div className="mt-6 pt-2">
+                      <div className="h-1 w-full bg-gradient-to-r from-sky-400 to-blue-600 rounded-full opacity-30 group-hover:opacity-100 transition-opacity duration-300" />
+                    </div>
                   </div>
                 );
               })}
