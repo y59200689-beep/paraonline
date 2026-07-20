@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ShopShell } from '@/components/ShopShell';
 import { ProductCard } from '@/components/ProductCard';
 import { Product } from '@/lib/data';
+import { useUi } from '@/context/UiContext';
 import {
   Search,
   SlidersHorizontal,
@@ -19,35 +20,147 @@ import {
   Check,
   Star,
   ChevronLeft,
+  Sparkles,
+  Droplets,
+  Sun,
+  Zap,
+  Heart,
+  Leaf,
 } from 'lucide-react';
 
 /* ─── Brand palette ───────────────────────────────────────────────── */
-const LRP_BLUE    = '#0ea5e9';
-const LRP_DARK    = '#1a2744';
-const LRP_NAVY    = '#0f172a';
-const LRP_CREAM   = '#fdf8f2';
+const LRP_BLUE  = '#0ea5e9';
+const LRP_DARK  = '#1a2744';
+const LRP_NAVY  = '#0f172a';
+const LRP_CREAM = '#fdf8f2';
 
-/* ─── Tab definitions ────────────────────────────────────────────── */
-const SKIN_TABS = [
-  { id: 'all',       label: 'Toutes les gammes' },
-  { id: 'sensibles', label: 'Peaux sensibles'   },
-  { id: 'acne',      label: 'Acné'              },
-  { id: 'antiage',   label: 'Anti-âge'          },
-  { id: 'solaire',   label: 'Protection solaire' },
+/* ─── Sub-category definitions (the main upgrade) ───────────────── */
+const RANGES = [
+  {
+    id: 'acne',
+    name: 'EFFACLAR',
+    label: 'Acné &\nImperfections',
+    tagline: 'Peaux grasses, acnéiques & à imperfections',
+    description: 'La gamme Effaclar est formulée pour les peaux grasses, mixtes et sujettes aux imperfections. Actifs : Acide Salicylique, Niacinamide, LHA.',
+    molecules: ['Acide Salicylique', 'Niacinamide', 'LHA'],
+    accent: '#2563eb',
+    lightBg: '#eff6ff',
+    gradient: 'from-[#1e3a8a] to-[#2563eb]',
+    overlayColor: 'rgba(30,58,138,0.72)',
+    keywords: ['effaclar','acné','acne','imperfection','sébum'],
+    Icon: Zap,
+    /* Real product photo served via API — used as card bg, fallback to gradient */
+    bgStyle: { background: 'linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%)' },
+  },
+  {
+    id: 'solaire',
+    name: 'ANTHELIOS',
+    label: 'Protection\nSolaire SPF50+',
+    tagline: 'La protection solaire dermatologique N°1',
+    description: 'Anthelios propose la technologie UV-Mune 400® pour filtrer les UVA longs, invisibles mais responsables du vieillissement cutané.',
+    molecules: ['Mexoryl SX', 'UV-Mune 400', 'SPF 50+'],
+    accent: '#ea580c',
+    lightBg: '#fff7ed',
+    gradient: 'from-[#9a3412] to-[#ea580c]',
+    overlayColor: 'rgba(154,52,18,0.65)',
+    keywords: ['anthelios','solaire','spf','sun','uv'],
+    Icon: Sun,
+    bgStyle: { background: 'linear-gradient(135deg,#78350f 0%,#f97316 100%)' },
+  },
+  {
+    id: 'cicatrisation',
+    name: 'CICAPLAST',
+    label: 'Cicatrisation\n& Réparation',
+    tagline: 'Soin réparateur pour les peaux abîmées',
+    description: 'Cicaplast Baume B5+ répare intensément les peaux irritées, craquelées ou post-procédure dermatologique. Actif : Panthénol B5.',
+    molecules: ['Panthénol B5', 'Bisabolol', 'Manganèse'],
+    accent: '#16a34a',
+    lightBg: '#f0fdf4',
+    gradient: 'from-[#14532d] to-[#16a34a]',
+    overlayColor: 'rgba(20,83,45,0.68)',
+    keywords: ['cicaplast','cicatri','repair','baume','b5'],
+    Icon: Heart,
+    bgStyle: { background: 'linear-gradient(135deg,#14532d 0%,#4ade80 100%)' },
+  },
+  {
+    id: 'taches',
+    name: 'MELA B3',
+    label: 'Taches\n& Éclat',
+    tagline: 'Correction des taches pigmentaires et éclat',
+    description: 'La gamme Mela B3 cible les taches brunes et les irrégularités de teint grâce au trio Niacinamide + Acide Tranexamique + Rétinol.',
+    molecules: ['Niacinamide', 'Ac. Tranexamique', 'Rétinol'],
+    accent: '#7c3aed',
+    lightBg: '#faf5ff',
+    gradient: 'from-[#4c1d95] to-[#7c3aed]',
+    overlayColor: 'rgba(76,29,149,0.70)',
+    keywords: ['mela','tache','pigment','éclat'],
+    Icon: Sparkles,
+    bgStyle: { background: 'linear-gradient(135deg,#4c1d95 0%,#a855f7 100%)' },
+  },
+  {
+    id: 'secheresse',
+    name: 'LIPIKAR',
+    label: 'Sécheresse\n& Eczéma',
+    tagline: 'Hydratation intense pour peaux très sèches',
+    description: 'Lipikar reconstitue le film lipidique des peaux sèches à très sèches et atopiques. Actif exclusif AP+M pour réduire le prurit.',
+    molecules: ['AP+M', 'Niacinamide', 'Huile de Karité'],
+    accent: '#d97706',
+    lightBg: '#fffbeb',
+    gradient: 'from-[#92400e] to-[#d97706]',
+    overlayColor: 'rgba(146,64,14,0.65)',
+    keywords: ['lipikar','eczéma','sèche','atopique','ap+','lavant','lavante'],
+    Icon: Droplets,
+    bgStyle: { background: 'linear-gradient(135deg,#78350f 0%,#fbbf24 100%)' },
+  },
+  {
+    id: 'sensibles',
+    name: 'TOLERIANE',
+    label: 'Peaux\nSensibles',
+    tagline: 'Soins doux pour peaux sensibles & réactives',
+    description: 'Toleriane est la gamme de référence pour les peaux sensibles, réactives et allergiques. Formule ultra-tolérante sans conservateurs.',
+    molecules: ['Neurosensine', 'Prébiologiques', 'Eau Thermale'],
+    accent: '#0284c7',
+    lightBg: '#f0f9ff',
+    gradient: 'from-[#075985] to-[#0284c7]',
+    overlayColor: 'rgba(7,89,133,0.68)',
+    keywords: ['toleriane','sensible','allergi','réactive'],
+    Icon: Leaf,
+    bgStyle: { background: 'linear-gradient(135deg,#0c4a6e 0%,#38bdf8 100%)' },
+  },
 ];
 
-/* ─── Category tiles ─────────────────────────────────────────────── */
-const CATEGORY_TILES = [
-  { id: 'solaire',      label: 'PROTECTION SOLAIRE',           sub: 'ANTHELIOS', accent: '#f97316', bg: '#fff8f0', keywords: ['anthelios','solaire','spf','sun'] },
-  { id: 'acne',         label: 'PEAUX GRASSES & ACNÉIQUES',    sub: 'EFFACLAR',  accent: '#2563eb', bg: '#eff6ff', keywords: ['effaclar','acné','acne','imperfection'] },
-  { id: 'cicatrisation',label: 'CICATRISATION',                sub: 'CICAPLAST', accent: '#16a34a', bg: '#f0fdf4', keywords: ['cicaplast','cicatri','repair','baume'] },
-  { id: 'secheresse',   label: 'SÉCHERESSE & ECZÉMA',          sub: 'LIPIKAR',   accent: '#d97706', bg: '#fffbeb', keywords: ['lipikar','eczéma','sèche','atopique','ap+'] },
-  { id: 'fermete',      label: 'RIDE & PERTE DE FERMETÉ',      sub: 'SÉRUMS & SOINS', accent: '#7c3aed', bg: '#faf5ff', keywords: ['retinol','redermic','hyalu b5','sérum','pure vitamin'] },
-  { id: 'taches',       label: 'TACHES PIGMENTAIRES',          sub: 'MELA B3',   accent: '#db2777', bg: '#fdf2f8', keywords: ['mela','tache','pigment'] },
-  { id: 'sensibles',    label: 'PEAUX SENSIBLES & ALLERGIQUES',sub: 'TOLERIANE', accent: '#0284c7', bg: '#f0f9ff', keywords: ['toleriane','sensible','allergi'] },
-  { id: 'hydra',        label: 'PEAUX DÉSHYDRATÉES',           sub: 'HYDRAPHASE',accent: '#059669', bg: '#ecfdf5', keywords: ['hydraphase','hydra','déshydra'] },
-  { id: 'makeup',       label: 'MAQUILLAGE PEAUX SENSIBLES',   sub: '',           accent: '#c026d3', bg: '#fdf4ff', keywords: ['maquillage','mascara','fond de teint','makeup','toleriane teint'] },
-  { id: 'toilette',     label: 'TOILETTE PEAUX SENSIBLES',     sub: '',           accent: '#475569', bg: '#f8fafc', keywords: ['toilette','gel nettoyant','mousse nettoyante','huile nettoyante','nettoyant doux','lavant','lavante'] },
+/* ─── Active ingredients (new section) ──────────────────────────── */
+const ACTIFS = [
+  {
+    id: 'niacinamide',
+    name: 'Niacinamide',
+    desc: 'Réduit les pores dilatés, unifie le teint et régule la production de sébum. Cet actif polyvalent agit sur les taches brunes et l\'éclat.',
+    keywords: ['niacinamide','mela','effaclar','toleriane'],
+  },
+  {
+    id: 'salicylic',
+    name: 'Ac. Salicylique',
+    desc: 'Exfoliant BHA qui pénètre dans les pores pour les désobstruer, éliminer les comédons et prévenir les récidives d\'imperfections.',
+    keywords: ['effaclar','salicylique','acide','imperfection'],
+  },
+  {
+    id: 'hyaluronic',
+    name: 'Ac. Hyaluronique',
+    desc: 'Hydratant puissant qui attire et retient l\'eau dans les couches profondes de la peau, pour un effet repulpant et lissant immédiat.',
+    keywords: ['hydraphase','hyalu','sérum','hydra'],
+  },
+  {
+    id: 'vitaminC',
+    name: 'Vitamine C Pure',
+    desc: 'Antioxydant clinique qui neutralise les radicaux libres, stimule le collagène et révèle un éclat naturel dès les premières applications.',
+    keywords: ['pure vitamin','vitamine c','sérum','redermic'],
+  },
+  {
+    id: 'retinol',
+    name: 'Rétinol',
+    desc: 'Dérivé de vitamine A qui accélère le renouvellement cellulaire, lisse les rides profondes et améliore la texture de la peau.',
+    keywords: ['retinol','redermic','anti-age','sérum'],
+  },
 ];
 
 /* ─── Trust claims ───────────────────────────────────────────────── */
@@ -55,42 +168,52 @@ const TRUST_CLAIMS = [
   {
     num: '01', Icon: ShieldCheck,
     title: 'TOUS LES PRODUITS SONT HYPOALLERGÉNIQUES.',
-    body: 'Nos formules sont élaborées sans conservateurs ou parfums allergisants potentiels. Chaque produit fait l\'objet de tests dermatologiques rigoureux pour garantir une tolérance maximale, même sur les peaux les plus exigeantes.',
+    body: 'Nos formules sont élaborées sans conservateurs ou parfums allergisants potentiels. Chaque produit fait l\'objet de tests dermatologiques rigoureux pour garantir une tolérance maximale.',
   },
   {
     num: '02', Icon: Microscope,
     title: 'TESTÉS SUR DES PEAUX TRÈS SENSIBLES.',
-    body: 'Les produits font l\'objet d\'essais cliniques approfondis menés sur un panel de sujets ayant une peau sensible, réactive ou atopique, afin de confirmer leur efficacité et leur haute tolérance au quotidien.',
+    body: 'Les produits font l\'objet d\'essais cliniques approfondis sur un panel de sujets ayant une peau sensible, réactive ou atopique pour confirmer leur efficacité.',
   },
   {
     num: '03', Icon: FlaskConical,
     title: 'À LA JUSTE DOSE ACTIVE.',
-    body: 'Nous nous engageons à n\'utiliser que les concentrations optimales d\'actifs dermatologiques, soigneusement sélectionnées et dosées pour maximiser l\'efficacité tout en évitant les risques d\'irritation.',
+    body: 'Nous nous engageons à n\'utiliser que les concentrations optimales d\'actifs dermatologiques, dosées pour maximiser l\'efficacité tout en évitant les risques d\'irritation.',
   },
   {
     num: '04', Icon: Package,
     title: 'PROTECTION DE LA FORMULE JUSQU\'AU BOUT.',
-    body: 'L\'emballage est rigoureusement étudié pour assurer l\'intégrité de la formule. Un système airless empêche toute contamination et garantit la pureté des actifs jusqu\'à la fin de l\'utilisation.',
+    body: 'L\'emballage est rigoureusement étudié pour assurer l\'intégrité de la formule. Un système airless empêche toute contamination et garantit la pureté des actifs.',
   },
 ];
 
+const SKIN_TABS = [
+  { id: 'all',       label: 'Toutes les gammes' },
+  { id: 'acne',      label: 'Acné'              },
+  { id: 'solaire',   label: 'Protection solaire' },
+  { id: 'taches',    label: 'Anti-taches'       },
+  { id: 'antiage',   label: 'Anti-âge & Sérums' },
+  { id: 'secheresse',label: 'Sécheresse'        },
+  { id: 'sensibles', label: 'Peaux sensibles'   },
+];
+
 const SORT_OPTIONS = [
-  { value: 'popular',   label: 'Popularité'        },
-  { value: 'price-asc', label: 'Prix croissant'     },
-  { value: 'price-desc',label: 'Prix décroissant'   },
-  { value: 'rating',    label: 'Meilleures notes'   },
+  { value: 'popular',   label: 'Popularité'      },
+  { value: 'price-asc', label: 'Prix croissant'   },
+  { value: 'price-desc',label: 'Prix décroissant' },
+  { value: 'rating',    label: 'Meilleures notes' },
 ];
 
 /* ─── Helpers ────────────────────────────────────────────────────── */
-const matchTileKeywords = (p: Product, tile: typeof CATEGORY_TILES[0]) => {
-  const text = `${p.title ?? ''} ${p.description ?? ''} ${(p.tags ?? []).join(' ')} ${p.category ?? ''}`.toLowerCase();
-  return tile.keywords.some(k => text.includes(k));
+const matchByKeywords = (p: Product, kwds: string[]) => {
+  const text = `${p.title ?? ''} ${(p.tags ?? []).join(' ')} ${p.category ?? ''}`.toLowerCase();
+  return kwds.some(k => text.includes(k));
 };
 
 const matchTab = (p: Product, tabId: string) => {
   if (tabId === 'all') return true;
-  const tile = CATEGORY_TILES.find(t => t.id === tabId);
-  return tile ? matchTileKeywords(p, tile) : true;
+  const range = RANGES.find(r => r.id === tabId);
+  return range ? matchByKeywords(p, range.keywords) : true;
 };
 
 const sortProducts = (list: Product[], opt: string) => {
@@ -109,19 +232,21 @@ const firstImage = (p: Product): string => {
 
 /* ─── Component ──────────────────────────────────────────────────── */
 export default function LaRochePosayCustomPage() {
-  const [products, setProducts]           = useState<Product[]>([]);
-  const [loading, setLoading]             = useState(true);
-  const [activeTab, setActiveTab]         = useState('all');
-  const [activeTile, setActiveTile]       = useState<string | null>(null);
-  const [maxPrice, setMaxPrice]           = useState(1500);
-  const [sortOption, setSortOption]       = useState('popular');
+  const { setDiagnosticOpen } = useUi();
+
+  const [products, setProducts]         = useState<Product[]>([]);
+  const [loading, setLoading]           = useState(true);
+  const [activeRange, setActiveRange]   = useState<string | null>(null);
+  const [activeTab, setActiveTab]       = useState('all');
+  const [activeActif, setActiveActif]   = useState('niacinamide');
+  const [maxPrice, setMaxPrice]         = useState(1500);
+  const [sortOption, setSortOption]     = useState('popular');
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
 
-  /* Fetch */
+  /* Fetch all LRP products */
   useEffect(() => {
     let dead = false;
-    setLoading(true);
     fetch('/api/products?vendor=La+Roche-Posay&limit=500')
       .then(r => r.json())
       .then(d => { if (!dead && d.success) setProducts(d.products ?? []); })
@@ -130,145 +255,135 @@ export default function LaRochePosayCustomPage() {
     return () => { dead = true; };
   }, []);
 
-  /* Per-category hero images — first product image found per tile */
-  const tileImages = useMemo(() => {
+  /* Range card image — first product image per range */
+  const rangeImages = useMemo(() => {
     const map: Record<string, string> = {};
-    CATEGORY_TILES.forEach(tile => {
-      const match = products.find(p => matchTileKeywords(p, tile));
-      if (match) map[tile.id] = firstImage(match);
+    RANGES.forEach(rng => {
+      const p = products.find(pr => matchByKeywords(pr, rng.keywords));
+      if (p) map[rng.id] = firstImage(p);
     });
     return map;
   }, [products]);
 
-  /* Hero mosaic — pick one product per unique category */
-  const heroProducts = useMemo(() => {
-    const seen = new Set<string>();
-    const out: { title: string; img: string; accent: string }[] = [];
-    for (const tile of CATEGORY_TILES) {
-      if (out.length >= 6) break;
-      const p = products.find(pr => matchTileKeywords(pr, tile));
-      if (p && !seen.has(tile.id)) {
-        seen.add(tile.id);
-        out.push({ title: tile.sub || tile.label, img: firstImage(p), accent: tile.accent });
-      }
-    }
-    return out;
-  }, [products]);
+  /* Actif products */
+  const actifProducts = useMemo(() => {
+    const actif = ACTIFS.find(a => a.id === activeActif) || ACTIFS[0];
+    return sortProducts(products.filter(p => matchByKeywords(p, actif.keywords)), 'popular').slice(0, 4);
+  }, [products, activeActif]);
 
-  /* Effaclar spotlight product */
+  /* Essentials carousel (tab-filtered) */
+  const essentialProducts = useMemo(() =>
+    sortProducts(products.filter(p => matchTab(p, activeTab)), 'popular').slice(0, 10),
+    [products, activeTab]
+  );
+
+  /* Effaclar hero product */
   const effaclarProduct = useMemo(() =>
     products.find(p => (p.title ?? '').toLowerCase().includes('effaclar duo')),
     [products]
   );
 
-  /* Essentials grid */
-  const essentialProducts = useMemo(() =>
-    sortProducts(products.filter(p => matchTab(p, activeTab)), 'popular').slice(0, 8),
-    [products, activeTab]
-  );
-
-  /* Full catalog */
+  /* Catalog (range-filtered or all) */
   const catalogProducts = useMemo(() => {
-    let list = activeTile
-      ? products.filter(p => matchTileKeywords(p, CATEGORY_TILES.find(t => t.id === activeTile)!))
+    let list = activeRange
+      ? products.filter(p => matchByKeywords(p, RANGES.find(r => r.id === activeRange)!.keywords))
       : products;
     list = list.filter(p => p.price <= maxPrice);
     return sortProducts(list, sortOption);
-  }, [products, activeTile, maxPrice, sortOption]);
+  }, [products, activeRange, maxPrice, sortOption]);
 
   const scrollCarousel = (dir: 'left' | 'right') => {
-    if (carouselRef.current) {
-      carouselRef.current.scrollBy({ left: dir === 'left' ? -320 : 320, behavior: 'smooth' });
-    }
+    carouselRef.current?.scrollBy({ left: dir === 'left' ? -300 : 300, behavior: 'smooth' });
   };
 
-  /* ── render ──────────────────────────────────────────────────── */
+  const selectRange = (id: string) => {
+    const next = activeRange === id ? null : id;
+    setActiveRange(next);
+    setActiveTab(next || 'all');
+    setTimeout(() => document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
+  };
+
+  const activeRangeObj = RANGES.find(r => r.id === activeRange);
+  const activeActifObj = ACTIFS.find(a => a.id === activeActif) || ACTIFS[0];
+
+  /* ── render ─────────────────────────────────────────────────── */
   return (
     <ShopShell>
-      <main className="min-h-screen bg-white" style={{ fontFamily: "'Inter','Helvetica Neue',sans-serif" }}>
+      <main style={{ fontFamily: "'Inter','Helvetica Neue',sans-serif", background: '#fff' }}>
 
         {/* ══════════════════════════════════════════════════════════
-            1. HERO
+            §1. HERO
         ══════════════════════════════════════════════════════════ */}
         <section style={{ background: LRP_CREAM, borderBottom: '1px solid #ede8e0' }}>
-          <div className="max-w-[1280px] mx-auto px-5 lg:px-10 py-10 lg:py-14">
-            <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-0">
+          <div className="max-w-[1280px] mx-auto px-5 lg:px-10 py-12 lg:py-16">
+            <div className="flex flex-col lg:flex-row items-center gap-10">
 
-              {/* Left: text */}
-              <div className="lg:w-[42%] space-y-5 z-10">
-                {/* tagline */}
+              {/* Left text */}
+              <div className="lg:w-[44%] space-y-5">
                 <p className="text-[10px] font-black uppercase tracking-[0.22em]" style={{ color: LRP_BLUE }}>
                   La Roche-Posay · Laboratoire Dermatologique
                 </p>
-
                 <h1 className="text-4xl sm:text-5xl lg:text-[3.6rem] font-black leading-[1.0] tracking-tight" style={{ color: LRP_DARK }}>
                   CHANGER<br />LA VIE DE<br />TOUTES<br />LES PEAUX
                 </h1>
-
-                {/* N°1 badge */}
                 <div className="inline-flex items-start gap-3 bg-white border border-gray-200 shadow px-4 py-3 rounded-xl max-w-[270px]">
                   <span className="text-3xl font-black leading-none mt-0.5" style={{ color: '#dc2626' }}>N°1</span>
                   <p className="text-[11px] font-semibold leading-snug" style={{ color: LRP_DARK }}>
-                    RECOMMANDÉE PAR<br />
-                    <strong>LES DERMATOLOGUES</strong><br />
-                    DANS LE MONDE<sup className="text-[8px]">*</sup>
+                    RECOMMANDÉE PAR<br /><strong>LES DERMATOLOGUES</strong><br />DANS LE MONDE<sup className="text-[8px]">*</sup>
                   </p>
                 </div>
-
                 <div className="flex flex-wrap gap-3 pt-1">
-                  <Link
-                    href="#catalog"
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold text-white transition hover:opacity-90 active:scale-95"
-                    style={{ background: LRP_BLUE }}
-                  >
-                    Découvrir la gamme <ChevronRight className="w-4 h-4" />
+                  <Link href="#ranges" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold text-white hover:opacity-90 transition" style={{ background: LRP_BLUE }}>
+                    Nos gammes <ChevronRight className="w-4 h-4" />
                   </Link>
-                  <Link
-                    href="#essentiels"
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold border-2 transition hover:bg-slate-50"
-                    style={{ borderColor: LRP_DARK, color: LRP_DARK }}
-                  >
-                    Les essentiels
+                  <Link href="#catalog" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold border-2 hover:bg-slate-50 transition" style={{ borderColor: LRP_DARK, color: LRP_DARK }}>
+                    Tous les produits
                   </Link>
                 </div>
                 <p className="text-[9px] text-gray-400">*Source: IQVIA survey, dermatologists, 2023</p>
               </div>
 
-              {/* Right: product mosaic */}
-              <div className="lg:w-[58%] flex items-center justify-end">
+              {/* Right: range tiles mini-preview */}
+              <div className="lg:w-[56%] w-full">
                 {loading ? (
-                  <div className="w-full max-w-[520px] h-56 flex items-center justify-center">
-                    <Loader2 className="w-6 h-6 animate-spin text-slate-300" />
+                  <div className="grid grid-cols-3 gap-3">
+                    {Array.from({ length: 6 }).map((_,i) => (
+                      <div key={i} className="animate-pulse bg-slate-100 rounded-2xl h-32" />
+                    ))}
                   </div>
                 ) : (
-                  <div className="relative w-full max-w-[520px]">
-                    {/* decorative blob */}
-                    <div className="absolute inset-0 rounded-[40px] opacity-20 blur-3xl" style={{ background: LRP_BLUE }} />
-                    <div className="relative grid grid-cols-3 gap-3">
-                      {heroProducts.map((item, i) => (
-                        <div
-                          key={i}
-                          className="flex flex-col items-center justify-between rounded-2xl overflow-hidden border bg-white shadow-sm transition-transform hover:scale-[1.03] hover:shadow-md"
-                          style={{ borderColor: `${item.accent}35`, minHeight: 130 }}
+                  <div className="grid grid-cols-3 gap-3">
+                    {RANGES.map(rng => {
+                      const img = rangeImages[rng.id];
+                      return (
+                        <button
+                          key={rng.id}
+                          onClick={() => selectRange(rng.id)}
+                          className="group relative rounded-2xl overflow-hidden cursor-pointer border-2 transition-all hover:scale-[1.03] hover:shadow-xl"
+                          style={{
+                            borderColor: activeRange === rng.id ? rng.accent : 'transparent',
+                            height: 130,
+                          }}
                         >
-                          {item.img ? (
-                            <img
-                              src={item.img}
-                              alt={item.title}
-                              className="w-full h-[90px] object-contain p-2"
-                              loading="lazy"
-                            />
+                          {img ? (
+                            <img src={img} alt={rng.name} className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-full h-[90px] flex items-center justify-center" style={{ background: item.accent + '18' }}>
-                              <span className="text-2xl">🧴</span>
+                            <div className="w-full h-full" style={rng.bgStyle} />
+                          )}
+                          <div
+                            className="absolute inset-0 flex flex-col justify-end p-2"
+                            style={{ background: `linear-gradient(to top, ${rng.overlayColor} 0%, transparent 60%)` }}
+                          >
+                            <p className="text-[10px] font-black text-white leading-tight whitespace-pre-line">{rng.label}</p>
+                          </div>
+                          {activeRange === rng.id && (
+                            <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: rng.accent }}>
+                              <Check className="w-3 h-3 text-white stroke-[3]" />
                             </div>
                           )}
-                          <div className="px-2 pb-2 w-full text-center">
-                            <p className="text-[9px] font-black leading-tight" style={{ color: LRP_DARK }}>{item.title}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -277,35 +392,134 @@ export default function LaRochePosayCustomPage() {
         </section>
 
         {/* ══════════════════════════════════════════════════════════
-            2. EFFACLAR DUO+M BANNER
+            §2. RANGES — NOS GAMMES PAR PRÉOCCUPATION (main upgrade)
         ══════════════════════════════════════════════════════════ */}
-        <section className="py-6 px-5 lg:px-10">
-          <div className="max-w-[1280px] mx-auto rounded-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-2 shadow-lg">
-            {/* dark left */}
-            <div
-              className="flex flex-col justify-center px-8 py-10 space-y-4"
-              style={{ background: 'linear-gradient(135deg,#0c1b36 0%,#1e3a6e 100%)' }}
-            >
-              <p className="text-[10px] font-black uppercase tracking-[0.22em]" style={{ color: '#60a5fa' }}>
-                La Roche-Posay · Laboratoire Dermatologique
-              </p>
+        <section id="ranges" className="py-14 bg-white border-b border-slate-100">
+          <div className="max-w-[1280px] mx-auto px-5 lg:px-10">
+            <div className="flex items-end justify-between mb-8">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] mb-2" style={{ color: LRP_BLUE }}>Dermatologie clinique</p>
+                <h2 className="text-2xl lg:text-3xl font-black leading-tight" style={{ color: LRP_DARK }}>
+                  NOS GAMMES PAR PRÉOCCUPATION
+                </h2>
+              </div>
+              {activeRange && (
+                <button onClick={() => { setActiveRange(null); setActiveTab('all'); }}
+                  className="text-xs font-bold px-3 py-1.5 rounded-full border cursor-pointer hover:bg-red-50 transition"
+                  style={{ borderColor: '#dc2626', color: '#dc2626' }}>
+                  × Effacer le filtre
+                </button>
+              )}
+            </div>
+
+            {/* 3×2 bento grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              {RANGES.map(rng => {
+                const img = rangeImages[rng.id];
+                const isActive = activeRange === rng.id;
+                const count = products.filter(p => matchByKeywords(p, rng.keywords)).length;
+                const RngIcon = rng.Icon;
+                return (
+                  <button
+                    key={rng.id}
+                    onClick={() => selectRange(rng.id)}
+                    className="group relative rounded-2xl overflow-hidden cursor-pointer text-left transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] active:scale-[0.99]"
+                    style={{
+                      height: 280,
+                      boxShadow: isActive ? `0 0 0 3px ${rng.accent}` : '0 4px 20px rgba(0,0,0,0.08)',
+                    }}
+                  >
+                    {/* Background image or gradient */}
+                    {img ? (
+                      <img src={img} alt={rng.label} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    ) : (
+                      <div className="absolute inset-0" style={rng.bgStyle} />
+                    )}
+
+                    {/* Gradient overlay */}
+                    <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${rng.overlayColor} 0%, rgba(0,0,0,0.15) 60%, transparent 100%)` }} />
+
+                    {/* Icon badge top-left */}
+                    <div className="absolute top-3 left-3 w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(8px)' }}>
+                      <RngIcon className="w-4 h-4 text-white" />
+                    </div>
+
+                    {/* Active check top-right */}
+                    {isActive && (
+                      <div className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center" style={{ background: rng.accent }}>
+                        <Check className="w-4 h-4 text-white stroke-[2.5]" />
+                      </div>
+                    )}
+
+                    {/* Bottom text */}
+                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                      <p className="text-[10px] font-black text-white/75 uppercase tracking-[0.18em] mb-0.5">{rng.name}</p>
+                      <h3 className="text-base font-black text-white leading-tight whitespace-pre-line mb-1">{rng.label}</h3>
+                      <p className="text-[10px] text-white/70 leading-snug line-clamp-2 mb-2 hidden sm:block">{rng.tagline}</p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex gap-1 flex-wrap">
+                          {rng.molecules.slice(0,2).map(m => (
+                            <span key={m} className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(6px)', color: 'white' }}>{m}</span>
+                          ))}
+                        </div>
+                        {count > 0 && (
+                          <span className="text-[10px] font-bold text-white/80">{count} produits →</span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Range detail panel — slides in when a range is selected */}
+            {activeRangeObj && (
+              <div
+                className="mt-4 rounded-2xl p-6 lg:p-8 flex flex-col sm:flex-row gap-6 items-start"
+                style={{ background: activeRangeObj.lightBg, border: `1.5px solid ${activeRangeObj.accent}30` }}
+              >
+                <div className="flex-1">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: activeRangeObj.accent }}>{activeRangeObj.name}</p>
+                  <h3 className="text-xl font-black mb-2" style={{ color: LRP_DARK }}>{activeRangeObj.label.replace('\n', ' ')}</h3>
+                  <p className="text-sm text-slate-600 leading-relaxed mb-4">{activeRangeObj.description}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {activeRangeObj.molecules.map(m => (
+                      <span key={m} className="text-[10px] font-bold px-2.5 py-1 rounded-full border"
+                        style={{ borderColor: activeRangeObj.accent + '60', color: activeRangeObj.accent, background: activeRangeObj.accent + '12' }}>
+                        {m}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 sm:flex-col sm:items-end">
+                  <button
+                    onClick={() => document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth' })}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white cursor-pointer transition hover:opacity-90"
+                    style={{ background: activeRangeObj.accent }}
+                  >
+                    Voir les produits <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* ══════════════════════════════════════════════════════════
+            §3. EFFACLAR DUO+M BANNER
+        ══════════════════════════════════════════════════════════ */}
+        <section className="py-6 px-5 lg:px-10 bg-white">
+          <div className="max-w-[1280px] mx-auto rounded-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-2 shadow-xl">
+            <div className="flex flex-col justify-center px-8 py-10 space-y-4" style={{ background: 'linear-gradient(135deg,#0c1b36 0%,#1e3a6e 100%)' }}>
+              <p className="text-[10px] font-black uppercase tracking-[0.22em]" style={{ color: '#60a5fa' }}>La Roche-Posay · Effaclar</p>
               <h2 className="text-4xl lg:text-5xl font-black text-white leading-none">
-                EFFACLAR<br />
-                <span style={{ color: '#93c5fd' }}>DUO+M</span>
+                EFFACLAR<br /><span style={{ color: '#93c5fd' }}>DUO+M</span>
               </h2>
               <div className="flex items-end gap-3">
                 <span className="text-7xl font-black leading-none" style={{ color: '#38bdf8' }}>3H</span>
-                <div className="text-sm font-bold text-white/80 pb-2 leading-snug">
-                  Effet visible<br />dès <strong className="text-white">3H*</strong>
-                </div>
+                <div className="text-sm font-bold text-white/80 pb-2 leading-snug">Effet visible<br />dès <strong className="text-white">3H*</strong></div>
               </div>
-              <p className="text-base font-extrabold text-white leading-snug">
-                VISIBLEMENT LES BOUTONS<br />ATTEINTS ET RÉDUITS
-              </p>
-              <p className="text-xs text-white/60 leading-relaxed max-w-xs">
-                Soin Correcteur, Désincrustant, Anti-Marques, Anti-Récidive.
-                Efficacité prouvée cliniquement sur les imperfections sévères et persistantes.
-              </p>
+              <p className="text-base font-extrabold text-white leading-snug">VISIBLEMENT LES BOUTONS<br />ATTEINTS ET RÉDUITS</p>
               <div className="flex flex-wrap gap-2">
                 {['Anti-boutons', 'Anti-marques', 'Anti-récidive'].map(tag => (
                   <span key={tag} className="text-[10px] font-bold px-2.5 py-1 rounded-full border text-white/90" style={{ borderColor: '#60a5fa60' }}>{tag}</span>
@@ -316,27 +530,13 @@ export default function LaRochePosayCustomPage() {
                 Découvrir Effaclar <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
-
-            {/* light right — product photo */}
-            <div
-              className="relative flex items-center justify-center px-8 py-10"
-              style={{ background: 'linear-gradient(135deg,#dbeafe 0%,#eff6ff 100%)' }}
-            >
-              <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full opacity-30" style={{ background: '#bfdbfe' }} />
-                <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full opacity-20" style={{ background: '#93c5fd' }} />
-              </div>
+            <div className="relative flex items-center justify-center px-8 py-10" style={{ background: 'linear-gradient(135deg,#dbeafe 0%,#eff6ff 100%)' }}>
+              <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full opacity-30 blur-3xl" style={{ background: '#bfdbfe' }} />
               {effaclarProduct && firstImage(effaclarProduct) ? (
-                <img
-                  src={firstImage(effaclarProduct)}
-                  alt={effaclarProduct.title}
-                  className="relative z-10 h-52 lg:h-64 object-contain drop-shadow-2xl"
-                />
+                <img src={firstImage(effaclarProduct)} alt={effaclarProduct.title} className="relative z-10 h-52 lg:h-64 object-contain drop-shadow-2xl" />
               ) : (
-                <div className="relative z-10 w-36 h-48 rounded-2xl bg-white border-2 flex flex-col items-center justify-center gap-2 shadow-xl" style={{ borderColor: LRP_BLUE }}>
-                  <div className="w-8 h-8 rounded" style={{ background: LRP_BLUE }} />
-                  <p className="text-[10px] font-black text-center" style={{ color: LRP_DARK }}>EFFACLAR<br /><span style={{ color: '#38bdf8' }}>DUO+M</span></p>
-                  <p className="text-[8px] text-gray-400 text-center">SOIN CORRECTEUR GLOBAL</p>
+                <div className="w-36 h-48 rounded-2xl border-2 bg-white flex items-center justify-center" style={{ borderColor: LRP_BLUE }}>
+                  <p className="text-[10px] font-black text-center" style={{ color: LRP_DARK }}>EFFACLAR<br />DUO+M</p>
                 </div>
               )}
             </div>
@@ -344,15 +544,80 @@ export default function LaRochePosayCustomPage() {
         </section>
 
         {/* ══════════════════════════════════════════════════════════
-            3. LES ESSENTIELS — tabs + product grid
+            §4. DERMO-SCAN IA BANNER (new section)
         ══════════════════════════════════════════════════════════ */}
-        <section id="essentiels" style={{ background: '#f8fafc', borderTop: '1px solid #e8ecf0' }} className="py-10">
+        <section className="py-6 px-5 lg:px-10 bg-white">
+          <div className="max-w-[1280px] mx-auto">
+            <div
+              className="rounded-2xl overflow-hidden relative flex flex-col lg:flex-row items-center justify-between gap-8 px-8 lg:px-14 py-12"
+              style={{ background: LRP_NAVY }}
+            >
+              {/* Grid texture overlay */}
+              <div className="absolute inset-0 opacity-[0.04]" style={{
+                backgroundImage: 'linear-gradient(rgba(56,189,248,1) 1px, transparent 1px), linear-gradient(90deg, rgba(56,189,248,1) 1px, transparent 1px)',
+                backgroundSize: '40px 40px',
+              }} />
+
+              {/* Left: text */}
+              <div className="relative z-10 flex-1 space-y-4 text-center lg:text-left">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em]" style={{ color: '#38bdf8' }}>
+                  Intelligence Artificielle · Dermatologie
+                </p>
+                <h2 className="text-3xl lg:text-4xl font-black text-white leading-tight">
+                  DÉCOUVREZ VOTRE<br />
+                  <span style={{ color: '#38bdf8' }}>ROUTINE DERMATOLOGIQUE</span>
+                </h2>
+                <p className="text-sm text-white/60 max-w-sm leading-relaxed">
+                  Technologie IA clinique · Analyse biométrique · Recommandations personnalisées pour votre type de peau exact.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
+                  <button
+                    onClick={() => setDiagnosticOpen(true)}
+                    className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-black text-white cursor-pointer transition hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
+                    style={{ background: LRP_BLUE }}
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    LANCER LE DERMO-SCAN
+                  </button>
+                  <p className="text-[9px] text-white/30 self-center">Gratuit · Sans inscription · 2 min</p>
+                </div>
+              </div>
+
+              {/* Right: HUD visual */}
+              <div className="relative z-10 flex-shrink-0">
+                <div className="relative w-48 h-48">
+                  {/* Outer ring */}
+                  <div className="absolute inset-0 rounded-full border-2 border-sky-400/30 animate-pulse" />
+                  <div className="absolute inset-2 rounded-full border border-sky-400/20" />
+                  {/* Center cross */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-full h-px" style={{ background: 'rgba(56,189,248,0.25)' }} />
+                  </div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-full w-px" style={{ background: 'rgba(56,189,248,0.25)' }} />
+                  </div>
+                  {/* Center dot */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-3 h-3 rounded-full" style={{ background: '#38bdf8' }} />
+                  </div>
+                  {/* HUD labels */}
+                  <div className="absolute top-3 left-4 text-[9px] font-mono" style={{ color: '#38bdf8' }}>HYDRATION: --</div>
+                  <div className="absolute bottom-3 right-4 text-[9px] font-mono" style={{ color: '#38bdf8' }}>SCAN READY</div>
+                  <div className="absolute bottom-3 left-4 text-[9px] font-mono text-white/30">DERMO-IA v2</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ══════════════════════════════════════════════════════════
+            §5. LES ESSENTIELS — tabs + carousel
+        ══════════════════════════════════════════════════════════ */}
+        <section id="essentiels" style={{ background: '#f8fafc', borderTop: '1px solid #e8ecf0' }} className="py-12">
           <div className="max-w-[1280px] mx-auto px-5 lg:px-10">
             <div className="text-center mb-6">
               <h2 className="text-2xl lg:text-3xl font-black" style={{ color: LRP_DARK }}>LES ESSENTIELS À LA ROCHE-POSAY</h2>
             </div>
-
-            {/* Tab pills */}
             <div className="flex flex-wrap gap-2 justify-center mb-8">
               {SKIN_TABS.map(tab => (
                 <button
@@ -367,8 +632,6 @@ export default function LaRochePosayCustomPage() {
                 </button>
               ))}
             </div>
-
-            {/* Carousel arrows + product row */}
             <div className="relative">
               <button onClick={() => scrollCarousel('left')} className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 z-10 w-9 h-9 rounded-full bg-white border border-slate-200 shadow flex items-center justify-center hover:bg-slate-50 transition cursor-pointer">
                 <ChevronLeft className="w-4 h-4 text-slate-600" />
@@ -376,19 +639,12 @@ export default function LaRochePosayCustomPage() {
               <button onClick={() => scrollCarousel('right')} className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 z-10 w-9 h-9 rounded-full bg-white border border-slate-200 shadow flex items-center justify-center hover:bg-slate-50 transition cursor-pointer">
                 <ChevronRight className="w-4 h-4 text-slate-600" />
               </button>
-
               {loading ? (
                 <div className="flex gap-4 overflow-hidden">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="animate-pulse shrink-0 w-[220px]">
-                      <div className="bg-slate-100 rounded-2xl h-56 mb-3" />
-                      <div className="bg-slate-100 rounded h-4 mb-2 w-3/4" />
-                      <div className="bg-slate-100 rounded h-3 w-1/3" />
-                    </div>
-                  ))}
+                  {Array.from({ length: 4 }).map((_,i) => <div key={i} className="animate-pulse shrink-0 w-[220px] bg-slate-100 rounded-2xl h-56" />)}
                 </div>
               ) : essentialProducts.length > 0 ? (
-                <div ref={carouselRef} className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-2">
+                <div ref={carouselRef} className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2" style={{ scrollbarWidth: 'none' }}>
                   {essentialProducts.map(p => (
                     <div key={p.id} className="snap-start shrink-0 w-[220px] sm:w-[240px]">
                       <ProductCard product={p} />
@@ -402,194 +658,160 @@ export default function LaRochePosayCustomPage() {
                 </div>
               )}
             </div>
-
-            {!loading && essentialProducts.length > 0 && (
-              <div className="text-center mt-8">
-                <Link href="#catalog" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold border-2 transition hover:bg-slate-50" style={{ borderColor: LRP_BLUE, color: LRP_BLUE }}>
-                  Voir tous les produits <ChevronRight className="w-4 h-4" />
-                </Link>
-              </div>
-            )}
           </div>
         </section>
 
         {/* ══════════════════════════════════════════════════════════
-            4. STATS BANNER (Effaclar)
+            §6. STATS BANNER
         ══════════════════════════════════════════════════════════ */}
         <section style={{ background: '#bfdbfe', borderTop: '1px solid #93c5fd' }}>
           <div className="max-w-[1280px] mx-auto px-5 lg:px-10 py-10">
             <div className="flex flex-col lg:flex-row items-stretch divide-y lg:divide-y-0 lg:divide-x divide-blue-300">
-
-              {/* Effaclar product image */}
               <div className="flex items-center justify-center py-6 lg:py-0 lg:pr-8 lg:w-[180px] shrink-0">
                 {effaclarProduct && firstImage(effaclarProduct) ? (
-                  <img src={firstImage(effaclarProduct)} alt="Effaclar DUO+M" className="h-32 object-contain drop-shadow-lg" />
+                  <img src={firstImage(effaclarProduct)} alt="Effaclar" className="h-32 object-contain drop-shadow-lg" />
                 ) : (
                   <div className="w-20 h-28 bg-white rounded-xl flex items-center justify-center shadow" style={{ border: `2px solid ${LRP_BLUE}` }}>
                     <span className="text-[9px] font-black text-center" style={{ color: LRP_DARK }}>EFFACLAR<br />DUO+M</span>
                   </div>
                 )}
               </div>
+              {[
+                { num: '100%', label: 'PÉNÉTRATION\nDES BOUTONS', desc: 'Formule à pénétration profonde testée cliniquement.' },
+                { num: '-38%', label: 'IMPERFECTIONS\nvisibles', desc: 'Réduction visible dès la première semaine d\'utilisation.' },
+                { num: '-25%', label: 'IRRITATIONS\nsur peaux sensibles', desc: 'Tolérance exceptionnelle sur les peaux les plus réactives.' },
+              ].map(stat => (
+                <div key={stat.num} className="flex-1 flex flex-col justify-center px-8 py-6">
+                  <p className="text-5xl lg:text-6xl font-black leading-none" style={{ color: '#1e3a5f' }}>{stat.num}</p>
+                  <p className="text-sm font-black mt-1 leading-snug whitespace-pre-line" style={{ color: '#1e3a5f' }}>{stat.label}</p>
+                  <p className="text-xs mt-2 leading-relaxed" style={{ color: '#1d4ed8' }}>{stat.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
-              {/* Stat 1 */}
-              <div className="flex-1 flex flex-col justify-center px-8 py-6">
-                <p className="text-5xl lg:text-6xl font-black leading-none" style={{ color: '#1e3a5f' }}>100%</p>
-                <p className="text-sm font-black mt-1 leading-snug" style={{ color: '#1e3a5f' }}>PÉNÉTRATION<br />DES BOUTONS</p>
-                <p className="text-xs mt-2 leading-relaxed" style={{ color: '#1d4ed8' }}>Formule à pénétration profonde testée cliniquement pour atteindre les boutons au cœur de l'imperfection.</p>
+        {/* ══════════════════════════════════════════════════════════
+            §7. BRAND STORY — Eau Thermale (new section)
+        ══════════════════════════════════════════════════════════ */}
+        <section className="bg-white border-t border-slate-100">
+          <div className="max-w-[1280px] mx-auto px-5 lg:px-10 py-14">
+            <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-10 items-center">
+              {/* Visual — spring water editorial */}
+              <div className="relative rounded-2xl overflow-hidden h-72 lg:h-96" style={{ background: 'linear-gradient(135deg,#0f4c2a 0%,#166534 40%,#22c55e 100%)' }}>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center space-y-2 px-8">
+                    <p className="text-6xl">🌿</p>
+                    <p className="text-white font-black text-xl">Source Thermale</p>
+                    <p className="text-white/60 text-xs">La Roche-Posay, France</p>
+                  </div>
+                </div>
+                {/* Overlay label */}
+                <div className="absolute bottom-4 left-4 right-4">
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-white/15 text-white">
+                    📍 Source Naturelle · Haute-Vienne · France
+                  </div>
+                </div>
               </div>
-
-              {/* Stat 2 */}
-              <div className="flex-1 flex flex-col justify-center px-8 py-6">
-                <p className="text-5xl lg:text-6xl font-black leading-none" style={{ color: '#1e3a5f' }}>-38%</p>
-                <p className="text-sm font-black mt-1 leading-snug" style={{ color: '#1e3a5f' }}>IMPERFECTIONS<br /><span className="font-normal text-xs">visibles</span></p>
-                <p className="text-xs mt-2 leading-relaxed" style={{ color: '#1d4ed8' }}>Réduction visible des imperfections dès la première semaine d'utilisation continue.</p>
-              </div>
-
-              {/* Stat 3 */}
-              <div className="flex-1 flex flex-col justify-center px-8 py-6">
-                <p className="text-5xl lg:text-6xl font-black leading-none" style={{ color: '#1e3a5f' }}>-25%</p>
-                <p className="text-sm font-black mt-1 leading-snug" style={{ color: '#1e3a5f' }}>IRRITATIONS<br /><span className="font-normal text-xs">sur peaux sensibles</span></p>
-                <p className="text-xs mt-2 leading-relaxed" style={{ color: '#1d4ed8' }}>Tolérance exceptionnelle confirmée sur les peaux les plus sensibles et réactives.</p>
+              {/* Text */}
+              <div className="space-y-5">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em]" style={{ color: LRP_BLUE }}>Notre origine · depuis 1975</p>
+                <h2 className="text-3xl lg:text-4xl font-black leading-tight" style={{ color: LRP_DARK }}>
+                  L'EAU THERMALE<br />AU CŒUR DE<br />CHAQUE SOIN
+                </h2>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Depuis 1975, l'eau thermale de La Roche-Posay, riche en sélénium, apaise et protège les peaux les plus sensibles au monde. Chaque formule est enrichie de cette eau unique, reconnue par les dermatologues pour ses propriétés apaisantes exceptionnelles.
+                </p>
+                <div className="pt-2" style={{ borderTop: `2px solid ${LRP_BLUE}20` }}>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                    DERMATOLOGIE · HYPOALLERGÉNIQUE · CLINIQUEMENT TESTÉ
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  {[
+                    { v: '50+', l: 'ans de dermatologie' },
+                    { v: '90+', l: 'pays dans le monde' },
+                    { v: '60k', l: 'dermatologues partenaires' },
+                    { v: '100%', l: 'hypoallergénique' },
+                  ].map(s => (
+                    <div key={s.v} className="rounded-xl p-3" style={{ background: '#f0f9ff' }}>
+                      <p className="text-xl font-black" style={{ color: LRP_BLUE }}>{s.v}</p>
+                      <p className="text-[10px] font-medium text-slate-500 leading-snug">{s.l}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </section>
 
         {/* ══════════════════════════════════════════════════════════
-            5. EFFACLAR product spotlight (2-column)
+            §8. NOS ACTIFS DERMATOLOGIQUES (new section)
         ══════════════════════════════════════════════════════════ */}
-        {effaclarProduct && (
-          <section className="py-10 bg-white border-t border-slate-100">
-            <div className="max-w-[1280px] mx-auto px-5 lg:px-10">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-                <div className="rounded-2xl overflow-hidden bg-slate-50 flex items-center justify-center min-h-[280px]">
-                  {firstImage(effaclarProduct) ? (
-                    <img src={firstImage(effaclarProduct)} alt={effaclarProduct.title} className="h-64 object-contain p-4" />
-                  ) : (
-                    <div className="w-40 h-52 bg-blue-100 rounded-xl" />
-                  )}
-                </div>
-                <div className="space-y-4">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: LRP_BLUE }}>EFFACLAR</p>
-                  <h3 className="text-2xl lg:text-3xl font-black leading-tight" style={{ color: LRP_DARK }}>
-                    {effaclarProduct.title}
-                  </h3>
-                  {effaclarProduct.description && (
-                    <p className="text-sm text-slate-500 leading-relaxed line-clamp-4">{effaclarProduct.description}</p>
-                  )}
-                  {effaclarProduct.rating && (
-                    <div className="flex items-center gap-1">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star key={i} className="w-4 h-4 fill-current" style={{ color: i < Math.round(effaclarProduct.rating!) ? '#f59e0b' : '#e2e8f0' }} />
-                      ))}
-                      <span className="text-xs text-slate-400 ml-1">({effaclarProduct.reviews || 0} avis)</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-4">
-                    <span className="text-2xl font-black" style={{ color: LRP_DARK }}>{effaclarProduct.price} DH</span>
-                    {effaclarProduct.comparePrice && effaclarProduct.comparePrice > effaclarProduct.price && (
-                      <span className="text-sm text-slate-400 line-through">{effaclarProduct.comparePrice} DH</span>
-                    )}
-                  </div>
-                  <Link
-                    href={`/products/${effaclarProduct.id}`}
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold text-white transition hover:opacity-90"
-                    style={{ background: LRP_BLUE }}
+        <section className="py-14 border-t border-slate-100" style={{ background: '#f8fafc' }}>
+          <div className="max-w-[1280px] mx-auto px-5 lg:px-10">
+            <div className="flex flex-col lg:flex-row items-start gap-8 mb-8">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] mb-2" style={{ color: LRP_BLUE }}>Science & Formulation</p>
+                <h2 className="text-2xl lg:text-3xl font-black" style={{ color: LRP_DARK }}>NOS ACTIFS DERMATOLOGIQUES</h2>
+              </div>
+              <div className="flex flex-wrap gap-2 lg:mt-auto">
+                {ACTIFS.map(a => (
+                  <button
+                    key={a.id}
+                    onClick={() => setActiveActif(a.id)}
+                    className="px-4 py-2 rounded-full text-xs font-bold cursor-pointer transition-all border"
+                    style={activeActif === a.id
+                      ? { background: LRP_DARK, color: 'white', borderColor: LRP_DARK }
+                      : { background: 'white', color: '#64748b', borderColor: '#e2e8f0' }}
                   >
-                    Acheter maintenant <ChevronRight className="w-4 h-4" />
-                  </Link>
-                </div>
+                    {a.name}
+                  </button>
+                ))}
               </div>
             </div>
-          </section>
-        )}
 
-        {/* ══════════════════════════════════════════════════════════
-            6. CATEGORY TILES GRID
-        ══════════════════════════════════════════════════════════ */}
-        <section className="py-10 bg-white border-t border-slate-100">
-          <div className="max-w-[1280px] mx-auto px-5 lg:px-10">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-black" style={{ color: LRP_DARK }}>NOS GAMMES DE SOINS</h2>
-              {activeTile && (
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-6">
+              {/* Molecule description panel */}
+              <div className="rounded-2xl p-6 space-y-4 border border-slate-200 bg-white">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: '#eff6ff' }}>
+                  <FlaskConical className="w-7 h-7" style={{ color: LRP_BLUE }} />
+                </div>
+                <h3 className="text-lg font-black" style={{ color: LRP_DARK }}>{activeActifObj.name}</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">{activeActifObj.desc}</p>
                 <button
-                  onClick={() => setActiveTile(null)}
-                  className="text-xs font-bold px-3 py-1.5 rounded-full border cursor-pointer transition hover:bg-red-50"
-                  style={{ borderColor: '#dc2626', color: '#dc2626' }}
+                  onClick={() => document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="inline-flex items-center gap-2 text-sm font-bold cursor-pointer hover:gap-3 transition-all"
+                  style={{ color: LRP_BLUE }}
                 >
-                  × Effacer le filtre
+                  Voir les produits avec cet actif <ChevronRight className="w-4 h-4" />
                 </button>
+              </div>
+
+              {/* Products with this actif */}
+              {loading ? (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {Array.from({ length: 4 }).map((_,i) => <div key={i} className="animate-pulse bg-slate-100 rounded-2xl h-56" />)}
+                </div>
+              ) : actifProducts.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {actifProducts.map(p => <ProductCard key={p.id} product={p} />)}
+                </div>
+              ) : (
+                <div className="flex items-center justify-center rounded-2xl border border-dashed border-slate-200 min-h-[200px] text-slate-400">
+                  <p className="text-sm">Aucun produit trouvé pour cet actif.</p>
+                </div>
               )}
             </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-              {CATEGORY_TILES.map(tile => {
-                const isActive = activeTile === tile.id;
-                const count    = products.filter(p => matchTileKeywords(p, tile)).length;
-                const imgSrc   = tileImages[tile.id];
-                return (
-                  <button
-                    key={tile.id}
-                    onClick={() => {
-                      setActiveTile(isActive ? null : tile.id);
-                      setTimeout(() => document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth' }), 80);
-                    }}
-                    className="relative group flex flex-col items-start text-left rounded-2xl border-2 transition-all duration-200 cursor-pointer overflow-hidden hover:shadow-lg hover:scale-[1.025] active:scale-[0.98]"
-                    style={{
-                      background: isActive ? tile.accent : tile.bg,
-                      borderColor: isActive ? tile.accent : `${tile.accent}50`,
-                    }}
-                  >
-                    {/* Product image */}
-                    <div className="w-full h-28 flex items-center justify-center p-3 relative">
-                      {imgSrc ? (
-                        <img src={imgSrc} alt={tile.label} className="h-24 w-full object-contain" loading="lazy" />
-                      ) : (
-                        <div className="w-16 h-20 rounded-xl" style={{ background: `${tile.accent}25` }} />
-                      )}
-                      {isActive && (
-                        <div className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center bg-white/30">
-                          <Check className="w-3 h-3 text-white stroke-[3]" />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Text */}
-                    <div className="px-3 pb-3 w-full">
-                      <p className="text-[11px] font-black leading-tight" style={{ color: isActive ? 'white' : LRP_DARK }}>
-                        {tile.label}
-                      </p>
-                      {tile.sub && (
-                        <p className="text-[10px] font-semibold mt-0.5" style={{ color: isActive ? 'rgba(255,255,255,0.75)' : tile.accent }}>
-                          {tile.sub}
-                        </p>
-                      )}
-                      {count > 0 && (
-                        <span
-                          className="inline-block mt-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-                          style={{
-                            background: isActive ? 'rgba(255,255,255,0.2)' : `${tile.accent}18`,
-                            color: isActive ? 'white' : tile.accent,
-                          }}
-                        >
-                          {count} produits
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
           </div>
         </section>
 
         {/* ══════════════════════════════════════════════════════════
-            7. BRAND TRUST CLAIMS
+            §9. BRAND TRUST CLAIMS
         ══════════════════════════════════════════════════════════ */}
         <section style={{ background: '#f5efdf', borderTop: '1px solid #dfd7c5' }} className="py-12">
           <div className="max-w-[1280px] mx-auto px-5 lg:px-10">
             <h2 className="text-xl font-black mb-8" style={{ color: LRP_DARK }}>NOS ENGAGEMENTS</h2>
-            {/* 2×2 grid with dividers */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-px" style={{ background: '#c9bfaa' }}>
               {TRUST_CLAIMS.map((c, i) => {
                 const Icon = c.Icon;
@@ -611,39 +833,30 @@ export default function LaRochePosayCustomPage() {
         </section>
 
         {/* ══════════════════════════════════════════════════════════
-            8. FULL CATALOG
+            §10. FULL CATALOG
         ══════════════════════════════════════════════════════════ */}
         <section id="catalog" className="py-12 bg-white border-t border-slate-100">
           <div className="max-w-[1280px] mx-auto px-5 lg:px-10">
-
-            {/* Header row */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
               <div>
                 <h2 className="text-xl font-black" style={{ color: LRP_DARK }}>
-                  {activeTile
-                    ? (CATEGORY_TILES.find(t => t.id === activeTile)?.label || 'Produits')
-                    : 'TOUS LES PRODUITS LA ROCHE-POSAY'}
+                  {activeRangeObj ? activeRangeObj.name : 'TOUS LES PRODUITS'}
+                  <span className="text-lg ml-2 font-normal" style={{ color: activeRangeObj ? activeRangeObj.accent : LRP_BLUE }}>
+                    {activeRangeObj ? `— ${activeRangeObj.label.replace('\n',' ')}` : 'La Roche-Posay'}
+                  </span>
                 </h2>
-                <p className="text-sm text-gray-400 mt-0.5">
-                  {loading ? 'Chargement…' : `${catalogProducts.length} produits trouvés`}
-                </p>
+                <p className="text-sm text-gray-400 mt-0.5">{loading ? 'Chargement…' : `${catalogProducts.length} produits trouvés`}</p>
               </div>
               <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setMobileFilterOpen(true)}
-                  className="flex lg:hidden items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold cursor-pointer bg-white transition hover:bg-slate-50"
-                  style={{ borderColor: '#e2e8f0', color: '#374151' }}
-                >
-                  <SlidersHorizontal className="w-4 h-4" style={{ color: LRP_BLUE }} />
-                  Filtres
+                <button onClick={() => setMobileFilterOpen(true)}
+                  className="flex lg:hidden items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold cursor-pointer bg-white hover:bg-slate-50 transition"
+                  style={{ borderColor: '#e2e8f0', color: '#374151' }}>
+                  <SlidersHorizontal className="w-4 h-4" style={{ color: LRP_BLUE }} /> Filtres
                 </button>
                 <div className="relative">
-                  <select
-                    value={sortOption}
-                    onChange={e => setSortOption(e.target.value)}
+                  <select value={sortOption} onChange={e => setSortOption(e.target.value)}
                     className="w-48 px-3.5 py-2.5 text-xs font-bold bg-white border rounded-xl outline-none cursor-pointer appearance-none pr-8"
-                    style={{ borderColor: '#e2e8f0', color: '#374151' }}
-                  >
+                    style={{ borderColor: '#e2e8f0', color: '#374151' }}>
                     {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
                   <ArrowUpDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-3 pointer-events-none" />
@@ -651,12 +864,9 @@ export default function LaRochePosayCustomPage() {
               </div>
             </div>
 
-            {/* Layout: sidebar + grid */}
             <div className="flex gap-8 items-start">
-
               {/* Desktop sidebar */}
-              <aside className="hidden lg:block w-56 shrink-0 sticky top-6 space-y-6">
-                {/* Price */}
+              <aside className="hidden lg:block w-52 shrink-0 sticky top-6 space-y-6">
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Prix max</h3>
@@ -665,33 +875,26 @@ export default function LaRochePosayCustomPage() {
                   <input type="range" min={20} max={1500} step={10} value={maxPrice}
                     onChange={e => setMaxPrice(Number(e.target.value))}
                     className="w-full h-1.5 rounded-lg appearance-none cursor-pointer"
-                    style={{ accentColor: LRP_BLUE }}
-                  />
+                    style={{ accentColor: LRP_BLUE }} />
                 </div>
-
-                {/* Gamme */}
                 <div className="space-y-1.5">
                   <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Gamme</h3>
-                  <button
-                    onClick={() => setActiveTile(null)}
+                  <button onClick={() => setActiveRange(null)}
                     className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer transition"
-                    style={activeTile === null ? { background: '#eff6ff', color: LRP_BLUE } : { color: '#64748b' }}
-                  >
+                    style={activeRange === null ? { background: '#eff6ff', color: LRP_BLUE } : { color: '#64748b' }}>
                     <span>Toutes</span>
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-400">{products.length}</span>
                   </button>
-                  {CATEGORY_TILES.map(tile => {
-                    const count = products.filter(p => matchTileKeywords(p, tile)).length;
-                    if (!count) return null;
-                    const isActive = activeTile === tile.id;
+                  {RANGES.map(rng => {
+                    const cnt = products.filter(p => matchByKeywords(p, rng.keywords)).length;
+                    if (!cnt) return null;
+                    const isA = activeRange === rng.id;
                     return (
-                      <button key={tile.id}
-                        onClick={() => setActiveTile(isActive ? null : tile.id)}
+                      <button key={rng.id} onClick={() => setActiveRange(isA ? null : rng.id)}
                         className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer transition"
-                        style={isActive ? { background: '#eff6ff', color: LRP_BLUE } : { color: '#64748b' }}
-                      >
-                        <span>{tile.sub || tile.label.split(' ')[0]}</span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-400">{count}</span>
+                        style={isA ? { background: '#eff6ff', color: LRP_BLUE } : { color: '#64748b' }}>
+                        <span>{rng.name}</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-400">{cnt}</span>
                       </button>
                     );
                   })}
@@ -702,7 +905,7 @@ export default function LaRochePosayCustomPage() {
               <div className="flex-1 min-w-0">
                 {loading ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">
-                    {Array.from({ length: 9 }).map((_, i) => (
+                    {Array.from({ length: 9 }).map((_,i) => (
                       <div key={i} className="animate-pulse">
                         <div className="bg-slate-100 rounded-2xl h-60 mb-3" />
                         <div className="bg-slate-100 rounded h-4 mb-2 w-3/4" />
@@ -712,19 +915,15 @@ export default function LaRochePosayCustomPage() {
                   </div>
                 ) : catalogProducts.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">
-                    {catalogProducts.map(p => (
-                      <ProductCard key={p.id} product={p} />
-                    ))}
+                    {catalogProducts.map(p => <ProductCard key={p.id} product={p} />)}
                   </div>
                 ) : (
                   <div className="flex flex-col items-center py-20 gap-4 text-slate-400">
                     <Search className="w-8 h-8" />
                     <p className="text-sm font-bold text-slate-600">Aucun produit trouvé</p>
-                    <button onClick={() => { setActiveTile(null); setMaxPrice(1500); }}
+                    <button onClick={() => { setActiveRange(null); setMaxPrice(1500); }}
                       className="px-5 py-2.5 rounded-lg text-xs font-bold text-white cursor-pointer"
-                      style={{ background: LRP_BLUE }}>
-                      Réinitialiser
-                    </button>
+                      style={{ background: LRP_BLUE }}>Réinitialiser</button>
                   </div>
                 )}
               </div>
@@ -732,23 +931,20 @@ export default function LaRochePosayCustomPage() {
           </div>
         </section>
 
-        {/* ── Mobile Filter Drawer ────────────────────────────────── */}
+        {/* ── Mobile Filter Drawer ───────────────────────────────── */}
         {mobileFilterOpen && (
           <div className="fixed inset-0 z-50 lg:hidden flex justify-end">
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setMobileFilterOpen(false)} />
             <div className="relative w-80 max-w-[90vw] h-full bg-white shadow-2xl flex flex-col overflow-y-auto z-50">
               <div className="flex justify-between items-center px-6 py-5 border-b border-slate-100">
                 <span className="text-xs font-black uppercase tracking-widest text-slate-800 flex items-center gap-2">
-                  <SlidersHorizontal className="w-4 h-4" style={{ color: LRP_BLUE }} />
-                  Filtres
+                  <SlidersHorizontal className="w-4 h-4" style={{ color: LRP_BLUE }} /> Filtres
                 </span>
                 <button onClick={() => setMobileFilterOpen(false)} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-50 cursor-pointer">
                   <X className="w-4 h-4" />
                 </button>
               </div>
-
               <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
-                {/* Price */}
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Prix maximum</h3>
@@ -757,39 +953,30 @@ export default function LaRochePosayCustomPage() {
                   <input type="range" min={20} max={1500} step={10} value={maxPrice}
                     onChange={e => setMaxPrice(Number(e.target.value))}
                     className="w-full h-1.5 rounded-lg appearance-none cursor-pointer"
-                    style={{ accentColor: LRP_BLUE }}
-                  />
+                    style={{ accentColor: LRP_BLUE }} />
                 </div>
-
-                {/* Gamme */}
                 <div className="space-y-1.5">
                   <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Gamme</h3>
-                  {[{ id: null, label: 'Toutes', count: products.length },
-                    ...CATEGORY_TILES.map(t => ({ id: t.id, label: t.sub || t.label, count: products.filter(p => matchTileKeywords(p, t)).length }))
+                  {[{ id: null as string | null, name: 'Toutes', count: products.length },
+                    ...RANGES.map(r => ({ id: r.id, name: r.name, count: products.filter(p => matchByKeywords(p, r.keywords)).length }))
                   ].filter(x => x.count > 0).map(item => (
                     <button key={String(item.id)}
-                      onClick={() => { setActiveTile(item.id as string | null); setMobileFilterOpen(false); }}
+                      onClick={() => { setActiveRange(item.id); setMobileFilterOpen(false); }}
                       className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer transition"
-                      style={activeTile === item.id ? { background: '#eff6ff', color: LRP_BLUE } : { color: '#64748b' }}
-                    >
-                      <span>{item.label}</span>
+                      style={activeRange === item.id ? { background: '#eff6ff', color: LRP_BLUE } : { color: '#64748b' }}>
+                      <span>{item.name}</span>
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-400">{item.count}</span>
                     </button>
                   ))}
                 </div>
               </div>
-
               <div className="px-6 py-5 border-t border-slate-100 flex gap-3">
-                <button onClick={() => { setActiveTile(null); setMaxPrice(1500); setMobileFilterOpen(false); }}
+                <button onClick={() => { setActiveRange(null); setMaxPrice(1500); setMobileFilterOpen(false); }}
                   className="flex-1 py-2.5 border rounded-xl text-xs font-bold text-slate-600 cursor-pointer"
-                  style={{ borderColor: '#e2e8f0' }}>
-                  Effacer
-                </button>
+                  style={{ borderColor: '#e2e8f0' }}>Effacer</button>
                 <button onClick={() => setMobileFilterOpen(false)}
                   className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white cursor-pointer"
-                  style={{ background: LRP_BLUE }}>
-                  Appliquer
-                </button>
+                  style={{ background: LRP_BLUE }}>Appliquer</button>
               </div>
             </div>
           </div>
