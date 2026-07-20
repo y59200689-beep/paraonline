@@ -255,12 +255,16 @@ export default function LaRochePosayCustomPage() {
     return () => { dead = true; };
   }, []);
 
-  /* Range card image — first product image per range */
+  /* Range card image — custom banner for Anthelios, fallback to first product image */
   const rangeImages = useMemo(() => {
-    const map: Record<string, string> = {};
+    const map: Record<string, string> = {
+      solaire: '/images/anthelios_banner_card.png',
+    };
     RANGES.forEach(rng => {
-      const p = products.find(pr => matchByKeywords(pr, rng.keywords));
-      if (p) map[rng.id] = firstImage(p);
+      if (!map[rng.id]) {
+        const p = products.find(pr => matchByKeywords(pr, rng.keywords));
+        if (p) map[rng.id] = firstImage(p);
+      }
     });
     return map;
   }, [products]);
@@ -556,12 +560,14 @@ export default function LaRochePosayCustomPage() {
                     </div>
 
                     {/* Centered Product Image Container with 4-directional Margins */}
-                    <div className="w-full bg-slate-50/80 border border-slate-100 rounded-2xl p-6 flex items-center justify-center h-48 my-2 relative overflow-hidden group-hover:bg-slate-100/60 transition-colors duration-300">
+                    <div className="w-full bg-slate-50/80 border border-slate-100 rounded-2xl p-3 flex items-center justify-center h-48 my-2 relative overflow-hidden group-hover:bg-slate-100/60 transition-colors duration-300">
                       {img ? (
                         <img
                           src={img}
                           alt={rng.label}
-                          className="max-h-36 max-w-[80%] object-contain drop-shadow-md group-hover:scale-110 transition-transform duration-500"
+                          className={rng.id === 'solaire'
+                            ? "w-full h-full object-cover rounded-xl shadow-xs group-hover:scale-105 transition-transform duration-500"
+                            : "max-h-36 max-w-[80%] object-contain drop-shadow-md group-hover:scale-110 transition-transform duration-500"}
                         />
                       ) : (
                         <div className="w-20 h-28 rounded-xl flex items-center justify-center" style={{ background: rng.accent }}>
