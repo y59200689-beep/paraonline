@@ -412,8 +412,8 @@ export default function LaRochePosayCustomPage() {
               )}
             </div>
 
-            {/* 3×2 bento grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {/* 3×2 bento grid — White Cards with Centered Product Images */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {RANGES.map(rng => {
                 const img = rangeImages[rng.id];
                 const isActive = activeRange === rng.id;
@@ -423,48 +423,78 @@ export default function LaRochePosayCustomPage() {
                   <button
                     key={rng.id}
                     onClick={() => selectRange(rng.id)}
-                    className="group relative rounded-2xl overflow-hidden cursor-pointer text-left transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] active:scale-[0.99]"
+                    className="group relative bg-white border rounded-3xl p-5 text-left transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col justify-between overflow-hidden cursor-pointer"
                     style={{
-                      height: 280,
-                      boxShadow: isActive ? `0 0 0 3px ${rng.accent}` : '0 4px 20px rgba(0,0,0,0.08)',
+                      borderColor: isActive ? rng.accent : '#e2e8f0',
+                      boxShadow: isActive ? `0 10px 30px ${rng.accent}20` : undefined,
                     }}
                   >
-                    {/* Background image or gradient */}
-                    {img ? (
-                      <img src={img} alt={rng.label} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                    ) : (
-                      <div className="absolute inset-0" style={rng.bgStyle} />
-                    )}
-
-                    {/* Gradient overlay */}
-                    <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${rng.overlayColor} 0%, rgba(0,0,0,0.15) 60%, transparent 100%)` }} />
-
-                    {/* Icon badge top-left */}
-                    <div className="absolute top-3 left-3 w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(8px)' }}>
-                      <RngIcon className="w-4 h-4 text-white" />
+                    {/* Top Header Row */}
+                    <div className="flex items-center justify-between mb-3 w-full">
+                      <span
+                        className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border"
+                        style={{
+                          background: `${rng.accent}12`,
+                          color: rng.accent,
+                          borderColor: `${rng.accent}30`,
+                        }}
+                      >
+                        <RngIcon className="w-3.5 h-3.5" />
+                        {rng.name}
+                      </span>
+                      
+                      {isActive ? (
+                        <span className="w-6 h-6 rounded-full flex items-center justify-center text-white" style={{ background: rng.accent }}>
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-mono font-bold text-slate-400">
+                          {count} prods
+                        </span>
+                      )}
                     </div>
 
-                    {/* Active check top-right */}
-                    {isActive && (
-                      <div className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center" style={{ background: rng.accent }}>
-                        <Check className="w-4 h-4 text-white stroke-[2.5]" />
-                      </div>
-                    )}
+                    {/* Centered Product Image Container with 4-directional Margins */}
+                    <div className="w-full bg-slate-50/80 border border-slate-100 rounded-2xl p-6 flex items-center justify-center h-48 my-2 relative overflow-hidden group-hover:bg-slate-100/60 transition-colors duration-300">
+                      {img ? (
+                        <img
+                          src={img}
+                          alt={rng.label}
+                          className="max-h-36 max-w-[80%] object-contain drop-shadow-md group-hover:scale-110 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="w-20 h-28 rounded-xl flex items-center justify-center" style={{ background: rng.accent }}>
+                          <span className="text-[9px] font-black text-white text-center">{rng.name}</span>
+                        </div>
+                      )}
+                    </div>
 
-                    {/* Bottom text */}
-                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                      <p className="text-[10px] font-black text-white/75 uppercase tracking-[0.18em] mb-0.5">{rng.name}</p>
-                      <h3 className="text-base font-black text-white leading-tight whitespace-pre-line mb-1">{rng.label}</h3>
-                      <p className="text-[10px] text-white/70 leading-snug line-clamp-2 mb-2 hidden sm:block">{rng.tagline}</p>
-                      <div className="flex items-center justify-between">
-                        <div className="flex gap-1 flex-wrap">
-                          {rng.molecules.slice(0,2).map(m => (
-                            <span key={m} className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(6px)', color: 'white' }}>{m}</span>
+                    {/* Bottom Details (Dark readable typography on White) */}
+                    <div className="mt-2 space-y-2">
+                      <h3 className="text-base font-black text-slate-900 leading-snug whitespace-pre-line tracking-tight group-hover:text-sky-600 transition-colors">
+                        {rng.label}
+                      </h3>
+                      
+                      <p className="text-xs text-slate-500 font-medium line-clamp-1 leading-relaxed">
+                        {rng.tagline}
+                      </p>
+
+                      {/* Molecule Badges */}
+                      <div className="flex items-center justify-between pt-1">
+                        <div className="flex gap-1.5 flex-wrap">
+                          {rng.molecules.slice(0, 2).map(m => (
+                            <span
+                              key={m}
+                              className="text-[9px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/60"
+                            >
+                              {m}
+                            </span>
                           ))}
                         </div>
-                        {count > 0 && (
-                          <span className="text-[10px] font-bold text-white/80">{count} produits →</span>
-                        )}
+
+                        <span className="text-[10px] font-black text-sky-600 group-hover:translate-x-0.5 transition-transform">
+                          Voir →
+                        </span>
                       </div>
                     </div>
                   </button>
