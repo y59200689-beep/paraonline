@@ -2787,10 +2787,10 @@ export default function CatalogTab({
       </div>
     )}
 
-      {/* -------------------- MODAL: CREATE / EDIT SINGLE PRODUCT -------------------- */}
+      {/* -------------------- FULL-SCREEN PRODUCT WORKSPACE STUDIO -------------------- */}
       {isMounted && isNewProductModalOpen && createPortal(
         <div 
-          className="fixed inset-0 bg-slate-950/60 backdrop-blur-md flex justify-end z-[999999] select-none animate-in fade-in duration-200"
+          className="fixed inset-0 bg-slate-950/80 backdrop-blur-2xl flex items-center justify-center p-3 md:p-6 z-[999999] select-none animate-in fade-in duration-200"
           onClick={() => {
             setIsNewProductModalOpen(false);
             setModalTab('general');
@@ -2801,300 +2801,318 @@ export default function CatalogTab({
         >
           <form 
             onSubmit={handleCreateProductSubmit} 
-            className={`border-l w-full max-w-xl h-screen flex flex-col relative shadow-2xl transition-all duration-200 animate-in slide-in-from-right duration-300 ${
+            className={`w-full max-w-7xl h-[92vh] max-h-[950px] rounded-3xl border shadow-2xl flex flex-col overflow-hidden transition-all duration-200 animate-in zoom-in-95 duration-250 ${
               adminTheme === 'light'
                 ? 'bg-white border-slate-200 text-slate-800'
                 : 'bg-slate-900 border-slate-800 text-slate-200'
             }`}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className={`flex justify-between items-center border-b p-6 flex-shrink-0 ${
-              adminTheme === 'light' ? 'border-slate-100' : 'border-slate-800'
+            {/* Top Studio Header */}
+            <div className={`flex flex-wrap items-center justify-between border-b px-6 py-4 flex-shrink-0 gap-4 ${
+              adminTheme === 'light' ? 'border-slate-100 bg-slate-50/50' : 'border-slate-800 bg-slate-950/50'
             }`}>
-              <div>
-                <h3 className={`text-sm font-extrabold uppercase tracking-wider ${
-                  adminTheme === 'light' ? 'text-emerald-700' : 'text-emerald-400'
-                }`}>
-                  {productForm.id ? `Modifier le Produit #${productForm.id}` : 'Créer un Nouveau Produit'}
-                </h3>
+              {/* Product Info Summary */}
+              <div className="flex items-center gap-3">
+                <div className="relative w-11 h-11 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950 shrink-0">
+                  <Image 
+                    src={productForm.image || '/placeholder.png'} 
+                    alt={productForm.title || 'Produit'} 
+                    fill 
+                    className="object-cover"
+                  />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-extrabold truncate max-w-md">
+                      {productForm.title || 'Nouveau Produit'}
+                    </h3>
+                    <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${
+                      productForm.status === 'live' 
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-800'
+                        : 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-400 dark:border-amber-800'
+                    }`}>
+                      {productForm.status === 'live' ? '🟢 Publié' : '🟡 Brouillon'}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-400 font-mono">
+                    {productForm.id ? `ID Produit #${productForm.id} • SKU: ${productForm.sku || 'N/A'}` : 'Création nouveau produit dans le catalogue'}
+                  </p>
+                </div>
               </div>
-              <button 
-                type="button" 
-                onClick={() => {
-                  setIsNewProductModalOpen(false);
-                  setModalTab('general');
-                  setProductForm({
-                    title: '', vendor: '', price: 0, comparePrice: 0, category: 'visage', tags: [], stock: 100, description: '', ingredients: '', usage: '', image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop', sku: '', buyingCost: 0, status: 'live'
-                  });
-                }} 
-                className={`transition-colors cursor-pointer ${
-                  adminTheme === 'light' ? 'text-slate-400 hover:text-slate-600' : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <X className="w-5 h-5" />
-              </button>
+
+              {/* Center Navigation Tabs */}
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-950/80 p-1 rounded-2xl border border-slate-200/60 dark:border-slate-800">
+                {[
+                  { id: 'general', label: 'Général & Médias', icon: Edit3 },
+                  { id: 'pricing', label: 'Tarifs & Marge', icon: Coins },
+                  { id: 'variants', label: 'Variantes', icon: Layers },
+                  { id: 'seo', label: 'Google SEO', icon: Globe },
+                ].map(({ id, label, icon: Icon }) => {
+                  const active = modalTab === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setModalTab(id as any)}
+                      className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer border-0 outline-none ${
+                        active
+                          ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm font-extrabold'
+                          : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      <span>{label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Right Action CTA */}
+              <div className="flex items-center gap-3">
+                <button 
+                  type="submit" 
+                  disabled={isSavingProduct}
+                  className="px-5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs rounded-xl shadow-md shadow-emerald-600/20 transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  <Check className="w-4 h-4 text-white" />
+                  <span>{isSavingProduct ? 'Sauvegarde...' : 'Enregistrer'}</span>
+                </button>
+
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setIsNewProductModalOpen(false);
+                    setModalTab('general');
+                  }} 
+                  className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800"
+                  title="Fermer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
-            {/* Modal Tabs Switching Bar */}
-            <div className={`flex border-b px-6 flex-shrink-0 select-none ${
-              adminTheme === 'light' ? 'border-slate-100 bg-slate-50/40' : 'border-slate-800 bg-slate-900/10'
-            }`}>
-              {(['general', 'pricing', 'variants', 'seo'] as const).map((tab) => {
-                const label =
-                  tab === 'general' ? 'Général' :
-                  tab === 'pricing' ? 'Tarifs & Stock' :
-                  tab === 'variants' ? 'Variantes' : 'Référencement (SEO)';
-                const active = modalTab === tab;
-                return (
-                  <button
-                    key={tab}
-                    type="button"
-                    onClick={() => setModalTab(tab)}
-                    className={`px-4 py-3 text-[10px] font-black uppercase tracking-wider transition-all border-b-2 cursor-pointer outline-none bg-transparent ${
-                      active
-                        ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
-                        : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="space-y-4 text-xs">
+            {/* Split Workspace Body */}
+            <div className="flex-1 overflow-y-auto grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-100 dark:divide-slate-800">
+              {/* Main Content Area (8 Cols) */}
+              <div className="lg:col-span-8 p-6 space-y-6">
                 {modalTab === 'general' && (
-                  <div className="space-y-4 animate-in fade-in duration-200">
+                  <div className="space-y-6 animate-in fade-in duration-200">
+                    {/* Packshot Image Card */}
+                    <div className={`p-4 rounded-2xl border ${
+                      adminTheme === 'light' ? 'bg-slate-50/50 border-slate-200' : 'bg-slate-950/40 border-slate-800'
+                    }`}>
+                      <label className="text-xs font-black uppercase tracking-wider block mb-3 text-slate-500">
+                        Visuel du Produit
+                      </label>
+                      <div className="flex flex-col sm:flex-row gap-4 items-center">
+                        <div className="relative w-28 h-28 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shrink-0 shadow-sm">
+                          <Image src={productForm.image || '/placeholder.png'} alt={productForm.title || ''} fill className="object-cover" />
+                        </div>
+                        <div className="flex-1 space-y-3 w-full">
+                          <div className="flex gap-2">
+                            <input 
+                              type="text" 
+                              value={productForm.image} 
+                              onChange={(e) => setProductForm({...productForm, image: e.target.value})} 
+                              className={`flex-1 font-mono text-xs border rounded-xl px-3 py-2 transition outline-none ${
+                                adminTheme === 'light'
+                                  ? 'bg-white border-slate-200 text-slate-800 focus:border-emerald-500'
+                                  : 'bg-slate-900 border-slate-800 text-slate-200 focus:border-emerald-500'
+                              }`} 
+                              placeholder="https://..."
+                              required 
+                            />
+                            <label 
+                              htmlFor="product-file-input"
+                              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl cursor-pointer flex items-center gap-1.5 transition shrink-0"
+                            >
+                              <Upload className="w-4 h-4" />
+                              <span>{isUploading ? 'Chargement...' : 'Fichier'}</span>
+                            </label>
+                            <input 
+                              id="product-file-input"
+                              type="file" 
+                              accept="image/*" 
+                              onChange={handleImageUpload} 
+                              className="hidden" 
+                            />
+                          </div>
+                          <p className="text-[10px] text-slate-400">
+                            Recommandé: Format carré WebP ou PNG avec fond blanc transparent (minimum 800x800 px).
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Title & Brand */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <label className={`text-[9px] font-bold uppercase tracking-wider ${
-                          adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                        }`}>Titre Français</label>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Titre Français</label>
                         <input 
                           type="text" 
                           value={productForm.nameFr || productForm.title} 
                           onChange={(e) => setProductForm({...productForm, title: e.target.value, nameFr: e.target.value})} 
-                          className={`w-full border rounded-xl px-3 py-2 transition outline-none ${
+                          className={`w-full text-xs font-semibold border rounded-xl px-3.5 py-2.5 transition outline-none ${
                             adminTheme === 'light'
-                              ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
-                              : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
+                              ? 'bg-white border-slate-200 text-slate-800 focus:border-emerald-500 shadow-xs'
+                              : 'bg-slate-900 border-slate-800 text-slate-200 focus:border-emerald-500'
                           }`} 
                           required 
                         />
                       </div>
 
-                      <div className="space-y-1">
-                        <label className={`text-[9px] font-bold uppercase tracking-wider ${
-                          adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                        }`}>Marque / Fournisseur</label>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Marque / Laboratoire</label>
                         <input 
                           type="text" 
                           value={productForm.vendor} 
                           onChange={(e) => setProductForm({...productForm, vendor: e.target.value})} 
-                          className={`w-full border rounded-xl px-3 py-2 transition outline-none ${
+                          className={`w-full text-xs font-semibold border rounded-xl px-3.5 py-2.5 transition outline-none ${
                             adminTheme === 'light'
-                              ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
-                              : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
+                              ? 'bg-white border-slate-200 text-slate-800 focus:border-emerald-500 shadow-xs'
+                              : 'bg-slate-900 border-slate-800 text-slate-200 focus:border-emerald-500'
                           }`} 
+                          placeholder="e.g. La Roche-Posay"
                           required 
                         />
                       </div>
-
-                      <div className="space-y-1">
-                        <label className={`text-[9px] font-bold uppercase tracking-wider ${
-                          adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                        }`}>Catégorie</label>
-                        <select 
-                          value={productForm.category} 
-                          onChange={(e) => setProductForm({...productForm, category: e.target.value})}
-                          className={`w-full border rounded-xl px-3 py-2 transition outline-none cursor-pointer ${
-                            adminTheme === 'light'
-                              ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
-                              : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
-                          }`}
-                        >
-                          {['visage', 'kbeauty', 'garnier', 'hadalabo', 'offers'].map(cat => (
-                            <option key={cat} value={cat}>{cat}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className={`text-[9px] font-bold uppercase tracking-wider ${
-                          adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                        }`}>Statut du Produit</label>
-                        <select 
-                          value={productForm.status || 'live'} 
-                          onChange={(e) => setProductForm({...productForm, status: e.target.value as any})}
-                          className={`w-full border rounded-xl px-3 py-2 transition outline-none cursor-pointer ${
-                            adminTheme === 'light'
-                              ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
-                              : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
-                          }`}
-                        >
-                          <option value="live">Publié (Live)</option>
-                          <option value="draft">Brouillon (Draft)</option>
-                        </select>
-                      </div>
                     </div>
 
+                    {/* Description Textarea */}
                     <div className="space-y-1.5">
-                      <label className={`text-[9px] font-bold uppercase tracking-wider block ${
-                        adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                      }`}>Image du produit URL</label>
-                      <div className="flex gap-4 items-center">
-                        <input 
-                          type="text" 
-                          value={productForm.image} 
-                          onChange={(e) => setProductForm({...productForm, image: e.target.value})} 
-                          className={`flex-1 font-mono border rounded-xl px-3 py-2 transition outline-none ${
-                            adminTheme === 'light'
-                              ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
-                              : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
-                          }`} 
-                          required 
-                        />
-                        <label 
-                          htmlFor="product-file-input"
-                          className={`px-3 py-2 border font-bold rounded-xl text-xs uppercase cursor-pointer flex items-center gap-1 transition-all ${
-                            adminTheme === 'light'
-                              ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-sm'
-                              : 'bg-slate-950 hover:bg-slate-800 border-slate-800 text-slate-300'
-                          }`}
-                        >
-                          <Upload className="w-4.5 h-4.5" />
-                          {isUploading ? 'Upload...' : 'File'}
-                        </label>
-                        <input 
-                          id="product-file-input"
-                          type="file" 
-                          accept="image/*" 
-                          onChange={handleImageUpload} 
-                          className="hidden" 
-                        />
+                      <div className="flex justify-between items-center">
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Description Produit</label>
+                        <span className="text-[10px] text-slate-400 font-mono">{productForm.description?.length || 0} caractères</span>
                       </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className={`text-[9px] font-bold uppercase tracking-wider ${
-                        adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                      }`}>Tags (Séparés par virgules)</label>
-                      <input 
-                        type="text" 
-                        value={Array.isArray(productForm.tags) ? productForm.tags.join(', ') : ''} 
-                        onChange={(e) => setProductForm({...productForm, tags: e.target.value.split(',').map(t => t.trim())})} 
-                        placeholder="visage, hydratant, solaire" 
-                        className={`w-full border rounded-xl px-3 py-2 transition outline-none ${
-                          adminTheme === 'light'
-                            ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
-                            : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
-                        }`} 
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className={`text-[9px] font-bold uppercase tracking-wider ${
-                        adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                      }`}>Description Produit</label>
                       <textarea 
                         value={productForm.description} 
                         onChange={(e) => setProductForm({...productForm, description: e.target.value})} 
-                        className={`w-full border rounded-xl p-3 transition outline-none ${
+                        className={`w-full text-xs border rounded-2xl p-4 transition outline-none leading-relaxed ${
                           adminTheme === 'light'
-                            ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
-                            : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
+                            ? 'bg-white border-slate-200 text-slate-800 focus:border-emerald-500 shadow-xs'
+                            : 'bg-slate-900 border-slate-800 text-slate-200 focus:border-emerald-500'
                         }`} 
-                        rows={4} 
+                        rows={5} 
+                        placeholder="Description complète des bienfaits, principes actifs et résultats scientifiques..."
                       />
+                    </div>
+
+                    {/* Ingrédients et Conseils Dermo */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Formule & Ingrédients Actifs</label>
+                        <textarea 
+                          value={productForm.ingredients || ''} 
+                          onChange={(e) => setProductForm({...productForm, ingredients: e.target.value})} 
+                          className={`w-full text-xs border rounded-xl p-3 transition outline-none ${
+                            adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-800 focus:border-emerald-500' : 'bg-slate-900 border-slate-800 text-slate-200 focus:border-emerald-500'
+                          }`} 
+                          rows={3} 
+                          placeholder="Aqua / Water, Niacinamide, Glycerin..."
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Conseils d&apos;utilisation</label>
+                        <textarea 
+                          value={productForm.usage || ''} 
+                          onChange={(e) => setProductForm({...productForm, usage: e.target.value})} 
+                          className={`w-full text-xs border rounded-xl p-3 transition outline-none ${
+                            adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-800 focus:border-emerald-500' : 'bg-slate-900 border-slate-800 text-slate-200 focus:border-emerald-500'
+                          }`} 
+                          rows={3} 
+                          placeholder="Appliquer matin et soir sur une peau propre..."
+                        />
+                      </div>
                     </div>
                   </div>
                 )}
 
                 {modalTab === 'pricing' && (
-                  <div className="space-y-4 animate-in fade-in duration-200">
+                  <div className="space-y-6 animate-in fade-in duration-200">
+                    {/* Live Margin Calculation Cards */}
+                    {(() => {
+                      const price = Number(productForm.price) || 0;
+                      const cost = Number(productForm.buyingCost) || 0;
+                      const profit = price - cost;
+                      const marginPct = price > 0 ? Math.round((profit / price) * 100) : 0;
+                      const stock = Number(productForm.stock) || 0;
+                      const stockVal = price * stock;
+
+                      return (
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div className={`p-4 rounded-2xl border ${adminTheme === 'light' ? 'bg-emerald-50/70 border-emerald-200' : 'bg-emerald-950/30 border-emerald-800/50'}`}>
+                            <span className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 block">Marge Brute %</span>
+                            <span className="text-xl font-black text-emerald-700 dark:text-emerald-300">{marginPct}%</span>
+                            <span className="text-[10px] text-slate-500 block mt-0.5">Rentabilité calculée</span>
+                          </div>
+
+                          <div className={`p-4 rounded-2xl border ${adminTheme === 'light' ? 'bg-sky-50/70 border-sky-200' : 'bg-sky-950/30 border-sky-800/50'}`}>
+                            <span className="text-[10px] font-black uppercase text-sky-600 dark:text-sky-400 block">Profit Unitaire</span>
+                            <span className="text-xl font-black text-sky-700 dark:text-sky-300">+{profit.toFixed(2)} DH</span>
+                            <span className="text-[10px] text-slate-500 block mt-0.5">Par vente</span>
+                          </div>
+
+                          <div className={`p-4 rounded-2xl border ${adminTheme === 'light' ? 'bg-purple-50/70 border-purple-200' : 'bg-purple-950/30 border-purple-800/50'}`}>
+                            <span className="text-[10px] font-black uppercase text-purple-600 dark:text-purple-400 block">Valeur Stock</span>
+                            <span className="text-xl font-black text-purple-700 dark:text-purple-300">{stockVal.toLocaleString()} DH</span>
+                            <span className="text-[10px] text-slate-500 block mt-0.5">{stock} unités en stock</span>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <label className={`text-[9px] font-bold uppercase tracking-wider ${
-                          adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                        }`}>Prix Public (DH)</label>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Prix Vente Public (DH)</label>
                         <input 
                           type="number" 
                           value={productForm.price || ''} 
                           onChange={(e) => setProductForm({...productForm, price: Number(e.target.value)})} 
-                          className={`w-full border rounded-xl px-3 py-2 text-right font-mono transition outline-none ${
-                            adminTheme === 'light'
-                              ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
-                              : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
+                          className={`w-full text-xs font-mono font-bold border rounded-xl px-3.5 py-2.5 text-right transition outline-none ${
+                            adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-800 focus:border-emerald-500' : 'bg-slate-900 border-slate-800 text-slate-200 focus:border-emerald-500'
                           }`} 
                           required 
                         />
                       </div>
 
-                      <div className="space-y-1">
-                        <label className={`text-[9px] font-bold uppercase tracking-wider ${
-                          adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                        }`}>Prix Comparatif (DH)</label>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Prix Barré / Promo (DH)</label>
                         <input 
                           type="number" 
                           value={productForm.comparePrice || ''} 
                           onChange={(e) => setProductForm({...productForm, comparePrice: Number(e.target.value)})} 
-                          className={`w-full border rounded-xl px-3 py-2 text-right font-mono transition outline-none ${
-                            adminTheme === 'light'
-                              ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
-                              : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
+                          className={`w-full text-xs font-mono border rounded-xl px-3.5 py-2.5 text-right transition outline-none ${
+                            adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-800 focus:border-emerald-500' : 'bg-slate-900 border-slate-800 text-slate-200 focus:border-emerald-500'
                           }`} 
                         />
                       </div>
 
-                      <div className="space-y-1">
-                        <label className={`text-[9px] font-bold uppercase tracking-wider ${
-                          adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                        }`}>Quantité en Stock</label>
-                        <input 
-                          type="number" 
-                          value={productForm.stock !== undefined ? productForm.stock : 100} 
-                          onChange={(e) => setProductForm({...productForm, stock: Number(e.target.value)})} 
-                          className={`w-full border rounded-xl px-3 py-2 text-right font-mono transition outline-none ${
-                            adminTheme === 'light'
-                              ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
-                              : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
-                          }`} 
-                          required 
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className={`text-[9px] font-bold uppercase tracking-wider ${
-                          adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                        }`}>Code SKU</label>
-                        <input 
-                          type="text" 
-                          value={productForm.sku || ''} 
-                          onChange={(e) => setProductForm({...productForm, sku: e.target.value})} 
-                          className={`w-full border rounded-xl px-3 py-2 transition outline-none ${
-                            adminTheme === 'light'
-                              ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
-                              : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
-                          }`} 
-                          placeholder="e.g. SKU-BRAND-001"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className={`text-[9px] font-bold uppercase tracking-wider ${
-                          adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                        }`}>Coût d&apos;achat (DH)</label>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Coût d&apos;Achat Fournisseur (DH)</label>
                         <input 
                           type="number" 
                           value={productForm.buyingCost || ''} 
                           onChange={(e) => setProductForm({...productForm, buyingCost: Number(e.target.value)})} 
-                          className={`w-full border rounded-xl px-3 py-2 text-right font-mono transition outline-none ${
-                            adminTheme === 'light'
-                              ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-accent/50'
-                              : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
+                          className={`w-full text-xs font-mono border rounded-xl px-3.5 py-2.5 text-right transition outline-none ${
+                            adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-800 focus:border-emerald-500' : 'bg-slate-900 border-slate-800 text-slate-200 focus:border-emerald-500'
                           }`} 
                           placeholder="0"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Quantité en Stock</label>
+                        <input 
+                          type="number" 
+                          value={productForm.stock !== undefined ? productForm.stock : 100} 
+                          onChange={(e) => setProductForm({...productForm, stock: Number(e.target.value)})} 
+                          className={`w-full text-xs font-mono font-bold border rounded-xl px-3.5 py-2.5 text-right transition outline-none ${
+                            adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-800 focus:border-emerald-500' : 'bg-slate-900 border-slate-800 text-slate-200 focus:border-emerald-500'
+                          }`} 
+                          required 
                         />
                       </div>
                     </div>
@@ -3104,33 +3122,29 @@ export default function CatalogTab({
                 {modalTab === 'variants' && (
                   <div className="space-y-4 animate-in fade-in duration-200">
                     <div className="flex justify-between items-center">
-                      <p className="text-[10px] text-slate-500">Configurez des variations pour ce produit avec des prix et stocks distincts.</p>
+                      <p className="text-xs text-slate-500">Configurez des variations pour ce produit avec des prix et stocks distincts.</p>
                       <button
                         type="button"
                         onClick={() => {
                           const currentVariants = productForm.variants || [];
                           const nextId = `var_${Date.now()}`;
                           const updated = [...currentVariants, { id: nextId, title: 'Option Sizing', price: productForm.price || 0, comparePrice: productForm.comparePrice || productForm.price || 0, stock: 10 }];
-                          
                           const sumStock = updated.reduce((sum, v) => sum + v.stock, 0);
-                          setProductForm({
-                            ...productForm,
-                            variants: updated,
-                            stock: sumStock
-                          });
+                          setProductForm({ ...productForm, variants: updated, stock: sumStock });
                         }}
-                        className="px-2 py-1 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded-lg text-[9px] font-bold uppercase transition cursor-pointer border-0 outline-none"
+                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold uppercase transition cursor-pointer border-0 outline-none flex items-center gap-1"
                       >
-                        + Ajouter Variante
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Ajouter Variante</span>
                       </button>
                     </div>
 
                     {productForm.variants && productForm.variants.length > 0 ? (
                       <div className="space-y-3">
                         {productForm.variants.map((v, idx) => (
-                          <div key={v.id} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end border-b border-slate-100 dark:border-slate-800 pb-3 md:pb-1.5 last:border-b-0 last:pb-0">
+                          <div key={v.id} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end border border-slate-200 dark:border-slate-800 rounded-2xl p-3 bg-slate-50/30 dark:bg-slate-950/30">
                             <div className="md:col-span-4 space-y-1">
-                              <label className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Option (Ex: 30ml, 50ml)</label>
+                              <label className="text-[10px] font-bold text-slate-400 uppercase">Titre Option</label>
                               <input
                                 type="text"
                                 value={v.title}
@@ -3139,53 +3153,26 @@ export default function CatalogTab({
                                   updated[idx] = { ...v, title: e.target.value };
                                   setProductForm({ ...productForm, variants: updated });
                                 }}
-                                className={`w-full border rounded-lg px-2 py-1.5 transition outline-none ${
-                                  adminTheme === 'light'
-                                    ? 'bg-white border-slate-200 text-slate-800 focus:border-accent/50'
-                                    : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
-                                  }`}
+                                className="w-full text-xs border rounded-xl px-3 py-1.5 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 outline-none"
                                 required
                               />
                             </div>
-                            <div className="md:col-span-2 space-y-1">
-                              <label className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Prix (DH)</label>
+                            <div className="md:col-span-3 space-y-1">
+                              <label className="text-[10px] font-bold text-slate-400 uppercase">Prix (DH)</label>
                               <input
                                 type="number"
                                 value={v.price}
                                 onChange={(e) => {
                                   const updated = [...(productForm.variants || [])];
                                   updated[idx] = { ...v, price: Number(e.target.value) };
-                                  const mainPrice = idx === 0 ? Number(e.target.value) : (productForm.price || 0);
-                                  setProductForm({ ...productForm, price: mainPrice, variants: updated });
+                                  setProductForm({ ...productForm, variants: updated });
                                 }}
-                                className={`w-full border rounded-lg px-2 py-1.5 transition outline-none ${
-                                  adminTheme === 'light'
-                                    ? 'bg-white border-slate-200 text-slate-800 focus:border-accent/50'
-                                    : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
-                                  }`}
+                                className="w-full text-xs font-mono border rounded-xl px-3 py-1.5 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-right outline-none"
                                 required
                               />
                             </div>
-                            <div className="md:col-span-2 space-y-1">
-                              <label className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Barré (DH)</label>
-                              <input
-                                type="number"
-                                value={v.comparePrice || ''}
-                                onChange={(e) => {
-                                  const updated = [...(productForm.variants || [])];
-                                  updated[idx] = { ...v, comparePrice: Number(e.target.value) };
-                                  const mainCompare = idx === 0 ? Number(e.target.value) : (productForm.comparePrice || 0);
-                                  setProductForm({ ...productForm, comparePrice: mainCompare, variants: updated });
-                                }}
-                                className={`w-full border rounded-lg px-2 py-1.5 transition outline-none ${
-                                  adminTheme === 'light'
-                                    ? 'bg-white border-slate-200 text-slate-800 focus:border-accent/50'
-                                    : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
-                                }`}
-                              />
-                            </div>
-                            <div className="md:col-span-2 space-y-1">
-                              <label className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Stock</label>
+                            <div className="md:col-span-3 space-y-1">
+                              <label className="text-[10px] font-bold text-slate-400 uppercase">Stock</label>
                               <input
                                 type="number"
                                 value={v.stock}
@@ -3195,11 +3182,7 @@ export default function CatalogTab({
                                   const sumStock = updated.reduce((sum, item) => sum + item.stock, 0);
                                   setProductForm({ ...productForm, stock: sumStock, variants: updated });
                                 }}
-                                className={`w-full border rounded-lg px-2 py-1.5 transition outline-none ${
-                                  adminTheme === 'light'
-                                    ? 'bg-white border-slate-200 text-slate-800 focus:border-accent/50'
-                                    : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
-                                }`}
+                                className="w-full text-xs font-mono border rounded-xl px-3 py-1.5 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-right outline-none"
                                 required
                               />
                             </div>
@@ -3211,155 +3194,169 @@ export default function CatalogTab({
                                   const sumStock = updated.reduce((sum, item) => sum + item.stock, 0);
                                   setProductForm({ ...productForm, stock: sumStock, variants: updated.length > 0 ? updated : undefined });
                                 }}
-                                className="px-2.5 py-1.5 bg-rose-500/10 text-rose-400 hover:bg-rose-500/25 border border-rose-500/15 rounded-lg text-[9px] uppercase font-bold transition-all w-full md:w-auto cursor-pointer outline-none"
+                                className="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition cursor-pointer"
+                                title="Supprimer variante"
                               >
-                                Supprimer
+                                <Trash2 className="w-4 h-4" />
                               </button>
                             </div>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-8 text-[10px] text-slate-500">
-                        Aucune variante active. Le produit utilise le prix et le stock globaux saisis dans l&apos;onglet Tarifs.
+                      <div className="text-center py-10 text-xs text-slate-400 border rounded-2xl border-dashed border-slate-200 dark:border-slate-800">
+                        Aucune variante configurée. Le produit utilise le prix et le stock globaux.
                       </div>
                     )}
                   </div>
                 )}
 
                 {modalTab === 'seo' && (
-                  <div className="space-y-4 animate-in fade-in duration-200">
-                    <div className="space-y-1">
-                      <div className="flex justify-between items-center">
-                        <label className={`text-[9px] font-bold uppercase tracking-wider ${
-                          adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                        }`}>Slug URL personnalisé</label>
-                        <span className="text-[9px] font-mono text-slate-500">para-officinal.ma/produit/<b className="text-emerald-500 dark:text-emerald-400">{productForm.slug || 'url-slug'}</b></span>
+                  <div className="space-y-6 animate-in fade-in duration-200">
+                    {/* Google SERP Live Preview Card */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-wider text-slate-500 block">
+                        Aperçu Google Search (SERP)
+                      </label>
+                      <div className={`p-4 rounded-2xl border shadow-xs ${
+                        adminTheme === 'light' ? 'bg-white border-slate-200' : 'bg-slate-950 border-slate-800'
+                      }`}>
+                        <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-1 truncate">
+                          <span className="font-bold text-slate-700 dark:text-slate-300">paraonline.ma</span>
+                          <span>›</span>
+                          <span>produit</span>
+                          <span>›</span>
+                          <span className="text-slate-400 font-mono text-[11px]">{productForm.slug || 'url-slug'}</span>
+                        </div>
+                        <h4 className="text-base text-[#1a0dab] dark:text-sky-400 hover:underline font-semibold truncate">
+                          {productForm.metaTitle || productForm.title || 'Titre du Produit'}
+                        </h4>
+                        <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mt-1 font-light break-words">
+                          {productForm.metaDescription || productForm.description || 'Description optimisée pour les moteurs de recherche.'}
+                        </p>
                       </div>
-                      <input
-                        type="text"
-                        value={productForm.slug || ''}
-                        onChange={(e) => {
-                          const val = e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '-').replace(/-+/g, '-');
-                          setProductForm({ ...productForm, slug: val });
-                        }}
-                        placeholder="exemple-slug-de-produit"
-                        className={`w-full border rounded-xl px-3 py-1.5 transition outline-none font-mono ${
-                          adminTheme === 'light'
-                            ? 'bg-white border-slate-200 text-slate-800 focus:border-accent/50'
-                            : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
-                        }`}
-                      />
                     </div>
 
-                    <div className="space-y-1">
-                      <div className="flex justify-between items-center">
-                        <label className={`text-[9px] font-bold uppercase tracking-wider ${
-                          adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                        }`}>Méta-Titre (Balise Title)</label>
-                        <span className={`text-[9px] font-mono ${(productForm.metaTitle?.length || 0) > 60 ? 'text-rose-400 font-bold' : 'text-slate-500'}`}>
-                          {productForm.metaTitle?.length || 0}/60 caract.
-                        </span>
-                      </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Méta-Titre (Balise Title)</label>
                       <input
                         type="text"
                         maxLength={60}
                         value={productForm.metaTitle || ''}
                         onChange={(e) => setProductForm({ ...productForm, metaTitle: e.target.value })}
                         placeholder={productForm.title || "Titre pour Google"}
-                        className={`w-full border rounded-xl px-3 py-1.5 transition outline-none ${
-                          adminTheme === 'light'
-                            ? 'bg-white border-slate-200 text-slate-800 focus:border-accent/50'
-                            : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
+                        className={`w-full text-xs border rounded-xl px-3.5 py-2.5 transition outline-none ${
+                          adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-800 focus:border-emerald-500' : 'bg-slate-900 border-slate-800 text-slate-200 focus:border-emerald-500'
                         }`}
                       />
                     </div>
 
-                    <div className="space-y-1">
-                      <div className="flex justify-between items-center">
-                        <label className={`text-[9px] font-bold uppercase tracking-wider ${
-                          adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                        }`}>Méta-Description</label>
-                        <span className={`text-[9px] font-mono ${(productForm.metaDescription?.length || 0) > 160 ? 'text-rose-400 font-bold' : 'text-slate-500'}`}>
-                          {productForm.metaDescription?.length || 0}/160 caract.
-                        </span>
-                      </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Méta-Description</label>
                       <textarea
                         maxLength={160}
                         value={productForm.metaDescription || ''}
                         onChange={(e) => setProductForm({ ...productForm, metaDescription: e.target.value })}
                         placeholder={productForm.description || "Description courte résumant le produit pour les moteurs de recherche."}
-                        className={`w-full border rounded-xl p-3 transition outline-none ${
-                          adminTheme === 'light'
-                            ? 'bg-white border-slate-200 text-slate-800 focus:border-accent/50'
-                            : 'bg-slate-950 border-slate-800 text-slate-200 focus:border-accent/50'
+                        className={`w-full text-xs border rounded-xl p-3 transition outline-none ${
+                          adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-800 focus:border-emerald-500' : 'bg-slate-900 border-slate-800 text-slate-200 focus:border-emerald-500'
                         }`}
                         rows={3}
                       />
                     </div>
-
-                    {/* Google SERP Live Preview */}
-                    <div className="space-y-1.5">
-                      <label className={`text-[9px] font-bold uppercase tracking-wider block ${
-                        adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
-                      }`}>Aperçu Google (SERP)</label>
-                      <div className={`p-3 rounded-xl border font-sans select-text ${
-                        adminTheme === 'light'
-                          ? 'bg-white border-slate-200 text-slate-900 shadow-[0_1px_2px_rgba(0,0,0,0.02)]'
-                          : 'bg-white text-slate-900 border-slate-300 shadow-inner'
-                      }`}>
-                        <div className="flex items-center gap-1.5 text-[10px] text-slate-600 mb-0.5 truncate">
-                          <span className="font-semibold text-slate-800">para-officinal.ma</span>
-                          <span>›</span>
-                          <span>produit</span>
-                          <span>›</span>
-                          <span className="text-slate-500 font-mono text-[9px]">{productForm.slug || 'slug-produit'}</span>
-                        </div>
-                        <h4 className="text-[13px] text-[#1a0dab] hover:underline leading-tight font-medium truncate font-sans">
-                          {productForm.metaTitle || productForm.title || 'Méta-Titre du Produit'}
-                        </h4>
-                        <p className="text-[10px] text-[#4d5156] leading-relaxed mt-0.5 font-light font-sans break-words">
-                          {productForm.metaDescription || productForm.description || 'Veuillez saisir une méta-description.'}
-                        </p>
-                      </div>
-                    </div>
                   </div>
                 )}
               </div>
-            </div>
 
-          <div className={`p-6 border-t flex justify-end gap-3 text-xs flex-shrink-0 ${
-            adminTheme === 'light'
-              ? 'border-slate-100 bg-slate-50/50'
-              : 'border-slate-800 bg-slate-950/20'
-          }`}>
-            <button 
-              type="button" 
-              onClick={() => {
-                setIsNewProductModalOpen(false);
-                setModalTab('general');
-                setProductForm({
-                  title: '', vendor: '', price: 0, comparePrice: 0, category: 'visage', tags: [], stock: 100, description: '', ingredients: '', usage: '', image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop', sku: '', buyingCost: 0, status: 'live'
-                });
-              }} 
-              className={`px-5 py-2.5 border font-bold rounded-xl text-xs uppercase tracking-wider transition-all duration-150 cursor-pointer ${
-                adminTheme === 'light'
-                  ? 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-sm'
-                  : 'bg-slate-900 hover:bg-slate-800 border-slate-700 text-slate-300 hover:text-slate-200'
-              }`}
-            >
-              Annuler
-            </button>
-            <button 
-              type="submit" 
-              disabled={isSavingProduct}
-              className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 shadow-md shadow-emerald-500/10 hover:shadow-lg hover:shadow-emerald-500/20 transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSavingProduct ? 'Sauvegarde...' : (productForm.id ? 'Sauvegarder' : 'Créer le Produit')}
-            </button>
-          </div>
-        </form>
-      </div>,
+              {/* Right Sidebar Panel (4 Cols) */}
+              <div className="lg:col-span-4 p-6 space-y-6 bg-slate-50/50 dark:bg-slate-950/20">
+                {/* Status Toggle Card */}
+                <div className={`p-4 rounded-2xl border space-y-3 ${
+                  adminTheme === 'light' ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'
+                }`}>
+                  <label className="text-xs font-black uppercase tracking-wider text-slate-500 block">
+                    Statut de Publication
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setProductForm({ ...productForm, status: 'live' })}
+                      className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer outline-none ${
+                        productForm.status === 'live'
+                          ? 'bg-emerald-50 border-emerald-300 text-emerald-700 dark:bg-emerald-950/60 dark:border-emerald-700 dark:text-emerald-300'
+                          : 'bg-slate-50 border-slate-200 text-slate-500 dark:bg-slate-950 dark:border-slate-800'
+                      }`}
+                    >
+                      <span>🟢 Live (Publié)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setProductForm({ ...productForm, status: 'draft' })}
+                      className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer outline-none ${
+                        productForm.status === 'draft'
+                          ? 'bg-amber-50 border-amber-300 text-amber-800 dark:bg-amber-950/60 dark:border-amber-700 dark:text-amber-300'
+                          : 'bg-slate-50 border-slate-200 text-slate-500 dark:bg-slate-950 dark:border-slate-800'
+                      }`}
+                    >
+                      <span>🟡 Brouillon</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Category & Organization */}
+                <div className={`p-4 rounded-2xl border space-y-4 ${
+                  adminTheme === 'light' ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'
+                }`}>
+                  <label className="text-xs font-black uppercase tracking-wider text-slate-500 block">
+                    Catégorie & Organisation
+                  </label>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-slate-400 uppercase">Catégorie Principale</label>
+                    <select 
+                      value={productForm.category} 
+                      onChange={(e) => setProductForm({...productForm, category: e.target.value})}
+                      className={`w-full text-xs font-semibold border rounded-xl px-3 py-2 transition outline-none cursor-pointer ${
+                        adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-800 text-slate-200'
+                      }`}
+                    >
+                      {['visage', 'kbeauty', 'garnier', 'hadalabo', 'offers'].map(cat => (
+                        <option key={cat} value={cat}>{cat.toUpperCase()}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-slate-400 uppercase">SKU Référence</label>
+                    <input 
+                      type="text" 
+                      value={productForm.sku || ''} 
+                      onChange={(e) => setProductForm({...productForm, sku: e.target.value})} 
+                      className={`w-full text-xs font-mono border rounded-xl px-3 py-2 transition outline-none ${
+                        adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-800 text-slate-200'
+                      }`} 
+                      placeholder="e.g. LRP-EFF-001"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-slate-400 uppercase">Tags du Produit</label>
+                    <input 
+                      type="text" 
+                      value={Array.isArray(productForm.tags) ? productForm.tags.join(', ') : ''} 
+                      onChange={(e) => setProductForm({...productForm, tags: e.target.value.split(',').map(t => t.trim())})} 
+                      placeholder="visage, hydratant, solaire" 
+                      className={`w-full text-xs border rounded-xl px-3 py-2 transition outline-none ${
+                        adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-800 text-slate-200'
+                      }`} 
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>,
         document.body
       )}
 
