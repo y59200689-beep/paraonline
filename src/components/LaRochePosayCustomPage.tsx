@@ -590,66 +590,6 @@ export default function LaRochePosayCustomPage() {
         </section>
 
 
-        {/* ══════════════════════════════════════════════════════════
-            §8. NOS ACTIFS DERMATOLOGIQUES (new section)
-        ══════════════════════════════════════════════════════════ */}
-        <section className="py-14 border-t border-slate-100" style={{ background: '#f8fafc' }}>
-          <div className="max-w-[1280px] mx-auto px-5 lg:px-10">
-            <div className="flex flex-col lg:flex-row items-start gap-8 mb-8">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.22em] mb-2" style={{ color: LRP_BLUE }}>Science & Formulation</p>
-                <h2 className="text-2xl lg:text-3xl font-black" style={{ color: LRP_DARK }}>NOS ACTIFS DERMATOLOGIQUES</h2>
-              </div>
-              <div className="flex flex-wrap gap-2 lg:mt-auto">
-                {ACTIFS.map(a => (
-                  <button
-                    key={a.id}
-                    onClick={() => setActiveActif(a.id)}
-                    className="px-4 py-2 rounded-full text-xs font-bold cursor-pointer transition-all border"
-                    style={activeActif === a.id
-                      ? { background: LRP_DARK, color: 'white', borderColor: LRP_DARK }
-                      : { background: 'white', color: '#64748b', borderColor: '#e2e8f0' }}
-                  >
-                    {a.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-6">
-              {/* Molecule description panel */}
-              <div className="rounded-2xl p-6 space-y-4 border border-slate-200 bg-white">
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: '#eff6ff' }}>
-                  <FlaskConical className="w-7 h-7" style={{ color: LRP_BLUE }} />
-                </div>
-                <h3 className="text-lg font-black" style={{ color: LRP_DARK }}>{activeActifObj.name}</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">{activeActifObj.desc}</p>
-                <button
-                  onClick={() => document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="inline-flex items-center gap-2 text-sm font-bold cursor-pointer hover:gap-3 transition-all"
-                  style={{ color: LRP_BLUE }}
-                >
-                  Voir les produits avec cet actif <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Products with this actif */}
-              {loading ? (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  {Array.from({ length: 4 }).map((_,i) => <div key={i} className="animate-pulse bg-slate-100 rounded-2xl h-56" />)}
-                </div>
-              ) : actifProducts.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  {actifProducts.map(p => <ProductCard key={p.id} product={p} />)}
-                </div>
-              ) : (
-                <div className="flex items-center justify-center rounded-2xl border border-dashed border-slate-200 min-h-[200px] text-slate-400">
-                  <p className="text-sm">Aucun produit trouvé pour cet actif.</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
 
         {/* ══════════════════════════════════════════════════════════
             §9. BRAND TRUST CLAIMS
