@@ -385,63 +385,74 @@ export default function LaRochePosayCustomPage() {
                 <p className="text-[9px] text-slate-400">*Source: IQVIA survey, dermatologists worldwide, 2023</p>
               </div>
 
-              {/* Right Column: Luxury Flagship Products Showcase */}
+              {/* Right Column: Luxury Flagship Products Showcase (Refined) */}
               <div className="lg:col-span-6 relative">
-                <div className="relative bg-gradient-to-b from-slate-50/80 to-slate-100/50 border border-slate-200/60 rounded-3xl p-6 lg:p-8 shadow-xl shadow-slate-200/50 backdrop-blur-sm">
+                <div className="relative bg-gradient-to-b from-sky-100/80 via-blue-50/50 to-white border border-sky-200/60 rounded-3xl p-6 lg:p-8 shadow-xl shadow-sky-500/10 backdrop-blur-sm">
+                  
                   {/* Top Header Badge inside Showcase */}
                   <div className="flex items-center justify-between mb-6">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 bg-white border border-slate-200 px-3 py-1 rounded-full shadow-xs">
-                      SOINS ICONIQUES DERMATOLOGIQUES
+                    <span className="text-[10px] font-black uppercase tracking-widest text-sky-700 bg-white/80 border border-sky-200 px-3.5 py-1 rounded-full shadow-xs">
+                      ✨ SOINS DERMATOLOGIQUES D'EXCEPTION
                     </span>
                     <span className="text-[10px] font-mono font-bold text-sky-600">
                       LA ROCHE-POSAY
                     </span>
                   </div>
 
-                  {/* 3 Flagship Products Row */}
-                  <div className="grid grid-cols-3 gap-4 mb-6">
+                  {/* 3 Flagship Products Showcase Row */}
+                  <div className="grid grid-cols-3 gap-3.5 mb-6">
                     {[
                       {
                         range: 'EFFACLAR',
+                        title: 'DUO+M',
                         tag: 'Acné & Imperfections',
                         accent: '#2563eb',
-                        bg: '#eff6ff',
-                        prod: products.find(p => (p.title ?? '').toLowerCase().includes('effaclar')),
+                        badgeBg: '#eff6ff',
+                        prod: products.find(p => (p.title ?? '').toLowerCase().includes('effaclar duo + m 40 ml') || (p.title ?? '').toLowerCase().includes('effaclar duo')),
                       },
                       {
                         range: 'ANTHELIOS',
-                        tag: 'Protection Solaire',
+                        title: 'UVMUNE 400',
+                        tag: 'Protection SPF50+',
                         accent: '#ea580c',
-                        bg: '#fff7ed',
-                        prod: products.find(p => (p.title ?? '').toLowerCase().includes('anthelios')),
+                        badgeBg: '#fff7ed',
+                        prod: products.find(p => (p.title ?? '').toLowerCase().includes('anthelios ecran spf 50+ gel') || (p.title ?? '').toLowerCase().includes('anthelios')),
                       },
                       {
                         range: 'CICAPLAST',
-                        tag: 'Cicatrisation',
+                        title: 'BAUME B5+',
+                        tag: 'Réparation Cutanée',
                         accent: '#16a34a',
-                        bg: '#f0fdf4',
-                        prod: products.find(p => (p.title ?? '').toLowerCase().includes('cicaplast')),
+                        badgeBg: '#f0fdf4',
+                        prod: products.find(p => (p.title ?? '').toLowerCase().includes('cicaplast b5 baume gm 100 ml') || (p.title ?? '').toLowerCase().includes('cicaplast b5 baume mm 40 ml')),
                       },
                     ].map((item, idx) => {
-                      const imgUrl = item.prod ? firstImage(item.prod) : '';
+                      const rawImg = item.prod ? firstImage(item.prod) : '';
+                      // Ensure clean image URL for Cicaplast
+                      const imgUrl = (item.range === 'CICAPLAST' && rawImg.includes('cicaplast_bundle'))
+                        ? 'https://paraofficinal.store/wp-content/uploads/2025/12/La-Roche-Posay-ProductPage-Damaged-Cicaplast-Baume-B5-100ml-3337872413018-Front.png'
+                        : rawImg;
+
                       return (
                         <div
                           key={idx}
-                          className="group bg-white border border-slate-200/80 rounded-2xl p-4 flex flex-col items-center justify-between transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-sky-300"
+                          className="group relative bg-white border border-slate-200/90 rounded-2xl p-4 flex flex-col items-center justify-between transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5 hover:border-sky-400"
                         >
+                          {/* Range Badge */}
                           <span
                             className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md mb-2"
-                            style={{ background: item.bg, color: item.accent }}
+                            style={{ background: item.badgeBg, color: item.accent }}
                           >
                             {item.range}
                           </span>
 
-                          <div className="h-32 w-full flex items-center justify-center py-2 relative">
+                          {/* Image Box */}
+                          <div className="h-36 w-full flex items-center justify-center py-2 relative bg-slate-50/50 rounded-xl my-1 border border-slate-100/80">
                             {imgUrl ? (
                               <img
                                 src={imgUrl}
                                 alt={item.range}
-                                className="max-h-28 max-w-[85%] object-contain drop-shadow-md group-hover:scale-105 transition-transform duration-300"
+                                className="max-h-32 max-w-[85%] object-contain drop-shadow-md group-hover:scale-110 transition-transform duration-500"
                               />
                             ) : (
                               <div
@@ -453,9 +464,20 @@ export default function LaRochePosayCustomPage() {
                             )}
                           </div>
 
-                          <p className="text-[10px] font-extrabold text-slate-800 text-center leading-tight mt-1 line-clamp-1">
-                            {item.tag}
-                          </p>
+                          {/* Product Label & Price */}
+                          <div className="text-center w-full mt-2">
+                            <p className="text-[11px] font-black text-slate-900 leading-tight">
+                              {item.title}
+                            </p>
+                            <p className="text-[9px] text-slate-500 font-medium mt-0.5 line-clamp-1">
+                              {item.tag}
+                            </p>
+                            {item.prod && (
+                              <p className="text-[10px] font-black text-sky-600 mt-1 font-mono">
+                                {item.prod.price} DH
+                              </p>
+                            )}
+                          </div>
                         </div>
                       );
                     })}
@@ -463,7 +485,7 @@ export default function LaRochePosayCustomPage() {
 
                   {/* Interactive Quick Filter Range Chips */}
                   <div className="pt-4 border-t border-slate-200/80">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2.5 text-center">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2.5 text-center">
                       Accès rapide aux gammes par besoin :
                     </p>
                     <div className="flex flex-wrap gap-1.5 justify-center">
