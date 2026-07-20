@@ -565,48 +565,79 @@ export default function LaRochePosayCustomPage() {
                 {[
                   {
                     num: '100%',
+                    percent: 100,
                     label: 'PÉNÉTRATION DES BOUTONS',
                     desc: 'Formule à pénétration profonde testée sous contrôle dermatologique.',
                     tag: 'Action Rapide',
+                    bullets: ['Élimine les comédons', 'Agit au cœur des pores'],
                   },
                   {
                     num: '-38%',
+                    percent: 38,
                     label: 'RÉDUCTION DES IMPERFECTIONS',
                     desc: 'Diminution visible des lésions rétentionnelles et inflammatoires dès 7 jours.',
                     tag: 'Résultat 7 Jours',
+                    bullets: ['Réduit les marques', 'Prévient les récidives'],
                   },
                   {
                     num: '-25%',
+                    percent: 25,
                     label: 'TOLÉRANCE MAXIMALE',
                     desc: 'Réduction significative des irritations et rougeurs sur peaux très réactives.',
                     tag: 'Haute Tolérance',
+                    bullets: ['0% alcool / parfum', 'Hypoallergénique'],
                   },
                 ].map((stat, i) => (
                   <div
                     key={i}
-                    className="bg-white/5 border border-white/10 hover:border-sky-400/40 rounded-3xl p-6 flex flex-col justify-between hover:bg-white/[0.08] transition-all duration-300 group"
+                    className="bg-white/5 border border-white/10 hover:border-sky-400/40 rounded-3xl p-6 flex flex-col justify-start gap-4 hover:bg-white/[0.08] transition-all duration-300 group"
                   >
-                    <div>
-                      <div className="flex items-center justify-between mb-4">
-                        <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 bg-white/5 px-2.5 py-1 rounded-md border border-white/5 group-hover:border-sky-400/30 group-hover:text-sky-300 transition-colors">
-                          {stat.tag}
-                        </span>
-                        <div className="w-2 h-2 rounded-full bg-sky-400 group-hover:animate-ping" />
+                    {/* Top Tag & Indicator */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 bg-white/5 px-2.5 py-1 rounded-md border border-white/5 group-hover:border-sky-400/30 group-hover:text-sky-300 transition-colors">
+                        {stat.tag}
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="text-[9px] font-mono text-emerald-400 font-bold">ACTIF</span>
                       </div>
+                    </div>
 
-                      {/* Metric gradient number */}
-                      <p className="text-4xl lg:text-5xl font-black bg-gradient-to-r from-sky-400 via-cyan-300 to-blue-400 bg-clip-text text-transparent leading-none mb-3">
+                    {/* Metric gradient number */}
+                    <div>
+                      <p className="text-4xl lg:text-5xl font-black bg-gradient-to-r from-sky-400 via-cyan-300 to-blue-400 bg-clip-text text-transparent leading-none mb-2">
                         {stat.num}
                       </p>
 
-                      <h3 className="text-xs font-black text-white leading-snug tracking-tight mb-2">
+                      <h3 className="text-xs font-black text-white leading-snug tracking-tight">
                         {stat.label}
                       </h3>
                     </div>
 
-                    <p className="text-[11px] text-slate-400 leading-relaxed mt-4 pt-3 border-t border-white/5">
+                    {/* Glowing Progress Bar */}
+                    <div className="space-y-1">
+                      <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-sky-400 to-blue-500 rounded-full transition-all duration-1000 group-hover:shadow-[0_0_12px_rgba(56,189,248,0.8)]"
+                          style={{ width: `${stat.percent}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Description (directly below, no huge gap) */}
+                    <p className="text-[11px] text-slate-300 leading-relaxed">
                       {stat.desc}
                     </p>
+
+                    {/* Clinical Feature Bullets */}
+                    <div className="mt-auto pt-3 border-t border-white/5 space-y-1.5">
+                      {stat.bullets.map((b, bi) => (
+                        <div key={bi} className="flex items-center gap-2 text-[10px] text-slate-400">
+                          <Check className="w-3 h-3 text-sky-400 shrink-0" />
+                          <span>{b}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>
