@@ -315,91 +315,98 @@ export default function LaRochePosayCustomPage() {
             §1. HERO
         ══════════════════════════════════════════════════════════ */}
         {/* ══════════════════════════════════════════════════════════
-            §1. HERO (LUXURY EDITORIAL FLAGSHIP REDESIGN)
+            §1. HERO (CINEMATIC BRAND FLAGSHIP HERO)
         ══════════════════════════════════════════════════════════ */}
-        <section className="bg-white border-b border-slate-100 relative overflow-hidden">
-          {/* Ambient sky-blue water glow background */}
-          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-sky-100/70 via-blue-50/40 to-transparent rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-10 left-10 w-80 h-80 bg-sky-50/60 rounded-full blur-3xl pointer-events-none" />
+        <section className="relative bg-[#091727] py-12 lg:py-20 overflow-hidden border-b border-slate-800">
+          {/* Background Thermal Water Splash Graphic Overlay */}
+          <div
+            className="absolute inset-0 z-0 opacity-40 mix-blend-screen pointer-events-none bg-cover bg-center"
+            style={{
+              backgroundImage: `url('https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=1920&q=80')`,
+            }}
+          />
+          {/* Dark Navy Radial & Linear Gradients for 100% Readable White Text */}
+          <div className="absolute inset-0 z-0 bg-gradient-to-r from-[#071220] via-[#091b30]/95 to-sky-950/40 pointer-events-none" />
+          <div className="absolute top-0 right-1/4 w-96 h-96 bg-sky-500/15 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="max-w-[1280px] mx-auto px-5 lg:px-10 py-16 lg:py-24 relative z-10">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          <div className="max-w-[1280px] mx-auto px-5 lg:px-10 relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
 
-              {/* Left Column: Brand Authority & High Impact Copy */}
+              {/* Left Column: Dark Mode High-Impact Copy */}
               <div className="lg:col-span-6 space-y-6">
-                <p className="text-xs font-black uppercase tracking-[0.22em] text-sky-600">
-                  LABORATOIRE DERMATOLOGIQUE · LA ROCHE-POSAY FRANCE
-                </p>
+                <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] bg-sky-500/20 text-sky-300 border border-sky-400/30">
+                  <Sparkles className="w-3.5 h-3.5" /> LABORATOIRE DERMATOLOGIQUE · FRANCE
+                </span>
 
-                <h1 className="text-4xl sm:text-5xl lg:text-[3.8rem] font-black leading-[1.04] tracking-tight text-slate-900">
+                <h1 className="text-4xl sm:text-5xl lg:text-[3.6rem] font-black leading-[1.05] tracking-tight text-white">
                   CHANGER LA VIE<br />
                   DE TOUTES LES<br />
-                  <span className="bg-gradient-to-r from-sky-500 to-blue-600 bg-clip-text text-transparent">PEAUX</span>
+                  <span className="bg-gradient-to-r from-sky-400 via-cyan-300 to-blue-400 bg-clip-text text-transparent">PEAUX</span>
                 </h1>
 
-                <p className="text-base lg:text-lg text-slate-600 font-medium leading-relaxed max-w-lg">
-                  Le soin dermatologique N°1 recommandé par plus de 90 000 dermatologues. Formules d'exception enrichies à l'eau thermale apaisante.
+                <p className="text-sm lg:text-base text-slate-300 font-medium leading-relaxed max-w-lg">
+                  Le soin dermatologique N°1 recommandé par plus de 90 000 dermatologues dans le monde. Formules d'exception enrichies à l'eau thermale apaisante de La Roche-Posay.
                 </p>
 
-                {/* Authority Row: Red N°1 Seal + Primary CTA */}
+                {/* Authority Row: Red N°1 Seal + Primary Sky-Blue Button */}
                 <div className="flex flex-wrap items-center gap-5 pt-2">
-                  <div className="flex items-center gap-3 bg-red-50 border border-red-200/80 px-4 py-2.5 rounded-2xl shadow-xs">
-                    <span className="text-3xl font-black text-red-600 leading-none">N°1</span>
+                  <div className="flex items-center gap-3 bg-white/10 border border-white/15 px-4 py-2.5 rounded-2xl backdrop-blur-md">
+                    <span className="text-3xl font-black text-red-500 leading-none">N°1</span>
                     <div className="text-left">
-                      <p className="text-[11px] font-black text-slate-900 uppercase leading-none">MARQUE DERMATOLOGIQUE</p>
-                      <p className="text-[9px] font-bold text-red-600 mt-0.5">MONDIALE</p>
+                      <p className="text-[11px] font-black text-white uppercase leading-none">MARQUE DERMATOLOGIQUE</p>
+                      <p className="text-[9px] font-bold text-sky-300 mt-0.5">MONDIALE</p>
                     </div>
                   </div>
 
                   <Link
                     href="#ranges"
-                    className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl text-sm font-black text-white bg-sky-500 hover:bg-sky-600 shadow-xl shadow-sky-500/25 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                    className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl text-sm font-black text-white bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 shadow-lg shadow-sky-500/30 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                   >
                     DÉCOUVRIR LES GAMMES <ChevronRight className="w-4 h-4" />
                   </Link>
                 </div>
 
                 {/* Clinical Trust Claims */}
-                <div className="pt-6 border-t border-slate-100 flex flex-wrap gap-y-2.5 gap-x-6 text-xs font-bold text-slate-600">
+                <div className="pt-6 border-t border-white/10 flex flex-wrap gap-y-2.5 gap-x-6 text-xs font-bold text-slate-300">
                   <span className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-sky-500 stroke-[3]" /> 100% Hypoallergénique
+                    <Check className="w-4 h-4 text-sky-400 stroke-[3]" /> 100% Hypoallergénique
                   </span>
                   <span className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-sky-500 stroke-[3]" /> Eau Thermale de La Roche-Posay
+                    <Check className="w-4 h-4 text-sky-400 stroke-[3]" /> Eau Thermale de La Roche-Posay
                   </span>
                   <span className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-sky-500 stroke-[3]" /> Testé Peaux Sensibles
+                    <Check className="w-4 h-4 text-sky-400 stroke-[3]" /> Testé Peaux Sensibles
                   </span>
                 </div>
 
                 <p className="text-[9px] text-slate-400">*Source: IQVIA survey, 90,000 dermatologists worldwide, 2023</p>
               </div>
 
-              {/* Right Column: Open Floating Flagship Product Visual (No Nested Box!) */}
+              {/* Right Column: Cinematic Thermal Water Splash & Flagship Renders */}
               <div className="lg:col-span-6 relative">
                 <div className="relative flex flex-col items-center">
                   
-                  {/* Floating 3 Products Showcase directly on the canvas */}
-                  <div className="grid grid-cols-3 gap-4 lg:gap-6 w-full items-end justify-center py-4">
+                  {/* Floating 3 Flagship Products on Water Splash Backdrop */}
+                  <div className="grid grid-cols-3 gap-3 sm:gap-4 w-full items-end justify-center py-4">
                     {[
                       {
-                        range: 'EFFACLAR DUO+M',
+                        range: 'EFFACLAR',
                         tag: 'Acné & Imperfections',
-                        accent: '#2563eb',
+                        accent: '#38bdf8',
                         prod: products.find(p => (p.title ?? '').toLowerCase().includes('effaclar duo + m 40 ml') || (p.title ?? '').toLowerCase().includes('effaclar duo')),
                         h: 'h-48 lg:h-56',
                       },
                       {
-                        range: 'ANTHELIOS UVMUNE',
-                        tag: 'Protection Solaire SPF50+',
-                        accent: '#ea580c',
+                        range: 'ANTHELIOS',
+                        tag: 'Protection Solaire',
+                        accent: '#fb923c',
                         prod: products.find(p => (p.title ?? '').toLowerCase().includes('anthelios ecran spf 50+ gel') || (p.title ?? '').toLowerCase().includes('anthelios')),
                         h: 'h-52 lg:h-60',
                       },
                       {
-                        range: 'CICAPLAST BAUME B5+',
+                        range: 'CICAPLAST',
                         tag: 'Réparation Cutanée',
-                        accent: '#16a34a',
+                        accent: '#4ade80',
                         prod: products.find(p => (p.title ?? '').toLowerCase().includes('cicaplast b5 baume gm 100 ml') || (p.title ?? '').toLowerCase().includes('cicaplast b5 baume mm 40 ml')),
                         h: 'h-44 lg:h-52',
                         overrideImg: 'https://paraofficinal.store/wp-content/uploads/2025/12/La-Roche-Posay-ProductPage-Damaged-Cicaplast-Baume-B5-100ml-3337872413018-Front.png',
@@ -410,26 +417,26 @@ export default function LaRochePosayCustomPage() {
                         <div
                           key={idx}
                           onClick={() => selectRange(RANGES[idx]?.id || 'acne')}
-                          className="group relative flex flex-col items-center text-center cursor-pointer transition-all duration-500 hover:-translate-y-2"
+                          className="group relative flex flex-col items-center text-center cursor-pointer transition-all duration-500 hover:-translate-y-2 bg-white/10 border border-white/15 rounded-3xl p-3.5 backdrop-blur-md hover:bg-white/15 hover:border-sky-400/50"
                         >
-                          {/* Floating badge */}
-                          <div className="mb-3 px-3 py-1 rounded-full bg-white/90 shadow-md border border-slate-200/80 backdrop-blur-sm transition-transform group-hover:scale-105">
+                          {/* Floating range badge */}
+                          <div className="mb-2 px-2.5 py-1 rounded-full bg-white/10 border border-white/20 backdrop-blur-md">
                             <p className="text-[10px] font-black" style={{ color: item.accent }}>
                               {item.range}
                             </p>
-                            <p className="text-[8px] text-slate-500 font-bold hidden sm:block">
+                            <p className="text-[8px] text-slate-300 font-bold hidden sm:block">
                               {item.tag}
                             </p>
                           </div>
 
-                          {/* Product bottle standing on soft pedestal glow */}
-                          <div className={`w-full ${item.h} flex items-center justify-center relative`}>
-                            <div className="absolute inset-x-2 bottom-0 h-4 bg-sky-900/10 rounded-full blur-md group-hover:bg-sky-500/20 transition-colors" />
+                          {/* Product bottle standing in water aura */}
+                          <div className={`w-full ${item.h} flex items-center justify-center relative p-2 bg-white/5 rounded-2xl border border-white/10`}>
+                            <div className="absolute inset-x-2 bottom-0 h-4 bg-sky-400/20 rounded-full blur-md group-hover:bg-sky-400/40 transition-colors" />
                             {imgUrl ? (
                               <img
                                 src={imgUrl}
                                 alt={item.range}
-                                className="max-h-full max-w-[90%] object-contain drop-shadow-[0_15px_25px_rgba(0,0,0,0.12)] group-hover:drop-shadow-[0_20px_35px_rgba(14,165,233,0.3)] transition-all duration-500"
+                                className="max-h-full max-w-[85%] object-contain drop-shadow-[0_15px_30px_rgba(56,189,248,0.3)] group-hover:scale-110 transition-all duration-500"
                               />
                             ) : (
                               <div className="w-16 h-28 rounded-xl flex items-center justify-center text-white text-[9px] font-bold" style={{ background: item.accent }}>
@@ -440,7 +447,7 @@ export default function LaRochePosayCustomPage() {
 
                           {/* Price Tag below */}
                           {item.prod && (
-                            <div className="mt-3 px-3 py-0.5 rounded-full bg-slate-900 text-white text-[10px] font-mono font-bold group-hover:bg-sky-500 transition-colors">
+                            <div className="mt-2.5 px-3 py-0.5 rounded-full bg-sky-500/20 border border-sky-400/30 text-sky-300 text-[10px] font-mono font-bold group-hover:bg-sky-500 group-hover:text-white transition-colors">
                               {item.prod.price} DH
                             </div>
                           )}
@@ -450,17 +457,13 @@ export default function LaRochePosayCustomPage() {
                   </div>
 
                   {/* Range Chips Bar */}
-                  <div className="mt-6 flex flex-wrap gap-2 justify-center w-full pt-4 border-t border-slate-200/60">
+                  <div className="mt-4 flex flex-wrap gap-1.5 justify-center w-full pt-4 border-t border-white/10">
                     {RANGES.map(r => (
                       <button
                         key={r.id}
                         onClick={() => selectRange(r.id)}
-                        className="text-[11px] font-extrabold px-3.5 py-1.5 rounded-full border bg-white shadow-xs cursor-pointer transition-all hover:bg-slate-900 hover:text-white hover:border-slate-900"
-                        style={{
-                          color: activeRange === r.id ? 'white' : '#475569',
-                          background: activeRange === r.id ? r.accent : 'white',
-                          borderColor: activeRange === r.id ? r.accent : '#e2e8f0',
-                        }}
+                        className="text-[10px] font-extrabold px-3 py-1 rounded-full border border-white/15 bg-white/5 text-slate-300 cursor-pointer transition-all hover:bg-sky-500 hover:text-white hover:border-sky-500"
+                        style={activeRange === r.id ? { background: r.accent, color: 'white', borderColor: r.accent } : undefined}
                       >
                         {r.name}
                       </button>
