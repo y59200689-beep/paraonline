@@ -2178,9 +2178,9 @@ export default function CatalogTab({
                 : 'bg-gradient-to-r from-slate-900/90 via-emerald-950/30 to-slate-900/90 border-emerald-800/40 text-slate-200'
             }`}>
               <div className="flex items-center gap-3">
-                <span className="inline-flex items-center gap-2 text-xs font-black text-emerald-700 dark:text-emerald-300 bg-white/80 dark:bg-emerald-950/60 px-3 py-1.5 rounded-xl border border-emerald-200/80 dark:border-emerald-800/60 shadow-2xs">
-                  <CheckSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                  {selectedProductIds.size} produit(s) sélectionné(s)
+                <span className="whitespace-nowrap shrink-0 inline-flex items-center gap-2 text-xs font-black text-emerald-700 dark:text-emerald-300 bg-white/90 dark:bg-emerald-950/70 px-3.5 py-1.5 rounded-xl border border-emerald-200/90 dark:border-emerald-800/80 shadow-2xs">
+                  <CheckSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span>{selectedProductIds.size} {selectedProductIds.size > 1 ? 'produits sélectionnés' : 'produit sélectionné'}</span>
                 </span>
                 <span className="text-xs font-medium text-slate-500 dark:text-slate-400 hidden sm:inline">
                   sur {totalProducts} au total
@@ -4030,9 +4030,9 @@ export default function CatalogTab({
         <div className={`floating-bulk-bar active ${
           adminTheme === 'light' ? 'floating-bulk-bar-light' : 'floating-bulk-bar-dark'
         }`}>
-          <span className="flex items-center gap-2 text-xs font-black text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
-            <CheckSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            {selectedProductIds.size} sélectionné(s)
+          <span className="whitespace-nowrap shrink-0 inline-flex items-center gap-1.5 text-xs font-black text-emerald-700 dark:text-emerald-300 bg-emerald-50/90 dark:bg-emerald-950/80 px-3.5 py-1.5 rounded-full border border-emerald-300/80 dark:border-emerald-700/80 shadow-2xs">
+            <CheckSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span>{selectedProductIds.size} {selectedProductIds.size > 1 ? 'sélectionnés' : 'sélectionné'}</span>
           </span>
           
           <div className="w-px h-5 bg-slate-200 dark:bg-slate-800" />
