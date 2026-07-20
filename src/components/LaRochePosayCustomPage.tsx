@@ -508,56 +508,6 @@ export default function LaRochePosayCustomPage() {
 
 
 
-        {/* ══════════════════════════════════════════════════════════
-            §5. LES ESSENTIELS — tabs + carousel
-        ══════════════════════════════════════════════════════════ */}
-        <section id="essentiels" style={{ background: '#f8fafc', borderTop: '1px solid #e8ecf0' }} className="py-12">
-          <div className="max-w-[1280px] mx-auto px-5 lg:px-10">
-            <div className="text-center mb-6">
-              <h2 className="text-2xl lg:text-3xl font-black" style={{ color: LRP_DARK }}>LES ESSENTIELS À LA ROCHE-POSAY</h2>
-            </div>
-            <div className="flex flex-wrap gap-2 justify-center mb-8">
-              {SKIN_TABS.map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className="px-5 py-2 rounded-full text-sm font-semibold transition-all cursor-pointer border"
-                  style={activeTab === tab.id
-                    ? { background: LRP_BLUE, color: 'white', borderColor: LRP_BLUE }
-                    : { background: 'white', color: '#475569', borderColor: '#cbd5e1' }}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-            <div className="relative">
-              <button onClick={() => scrollCarousel('left')} className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 z-10 w-9 h-9 rounded-full bg-white border border-slate-200 shadow flex items-center justify-center hover:bg-slate-50 transition cursor-pointer">
-                <ChevronLeft className="w-4 h-4 text-slate-600" />
-              </button>
-              <button onClick={() => scrollCarousel('right')} className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 z-10 w-9 h-9 rounded-full bg-white border border-slate-200 shadow flex items-center justify-center hover:bg-slate-50 transition cursor-pointer">
-                <ChevronRight className="w-4 h-4 text-slate-600" />
-              </button>
-              {loading ? (
-                <div className="flex gap-4 overflow-hidden">
-                  {Array.from({ length: 4 }).map((_,i) => <div key={i} className="animate-pulse shrink-0 w-[220px] bg-slate-100 rounded-2xl h-56" />)}
-                </div>
-              ) : essentialProducts.length > 0 ? (
-                <div ref={carouselRef} className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2" style={{ scrollbarWidth: 'none' }}>
-                  {essentialProducts.map(p => (
-                    <div key={p.id} className="snap-start shrink-0 w-[220px] sm:w-[240px]">
-                      <ProductCard product={p} />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-16 text-slate-400">
-                  <Search className="w-8 h-8 mx-auto mb-3" />
-                  <p className="text-sm">Aucun produit pour cette gamme.</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
 
         {/* ══════════════════════════════════════════════════════════
             §6. STATS BANNER
