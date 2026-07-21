@@ -173,15 +173,6 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
       return rawData;
     }
 
-    const baselineGross = 124850;
-    const baselineNet = 118500;
-    const baselineCount = 142;
-    const baselineAvg = 879.2;
-    const baselineMargin = 48500;
-    const baselineLtv = 1450;
-    const baselineCancelled = 2;
-    const baselineCoupons = 18;
-
     const baseChartData = [
       { date: '22 juin', amount: 3200, prevAmount: 2800, count: 4, prevCount: 3 },
       { date: '26 juin', amount: 4800, prevAmount: 3900, count: 6, prevCount: 5 },
@@ -193,16 +184,35 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
       { date: '20 juil.', amount: 11400, prevAmount: 8900, count: 13, prevCount: 9 },
     ];
 
+    // sortedDailyRows must match the schema used in the table and CSV export
+    const baseSortedDailyRows = baseChartData.map(d => ({
+      date: d.date,
+      orders: d.count,
+      gross: d.amount,
+      net: Math.round(d.amount * 0.95),
+      avg: Math.round(d.amount / d.count),
+    }));
+
     return {
       currMetrics: {
-        gross: baselineGross,
-        net: baselineNet,
-        count: baselineCount,
-        avg: baselineAvg,
-        netMargin: baselineMargin,
-        avgLtv: baselineLtv,
-        cancelledCount: baselineCancelled,
-        couponsUsed: baselineCoupons,
+        gross: 124850,
+        net: 118500,
+        count: 142,
+        avg: 879.2,
+        netMargin: 48500,
+        avgLtv: 1450,
+        cancelledCount: 2,
+        couponsUsed: 18,
+      },
+      prevMetrics: {
+        gross: 105400,
+        net: 100200,
+        count: 126,
+        avg: 836.5,
+        netMargin: 39700,
+        avgLtv: 1335,
+        cancelledCount: 3,
+        couponsUsed: 14,
       },
       pct: {
         gross: 18.4,
@@ -215,20 +225,22 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
         couponsUsed: 25.0,
       },
       chartData: baseChartData,
-      dailyRows: baseChartData.map(d => ({
-        date: d.date,
-        orders: d.count,
-        gross: d.amount,
-        net: Math.round(d.amount * 0.95),
-        avg: Math.round(d.amount / d.count),
-      })),
+      sortedDailyRows: baseSortedDailyRows,
+      topProducts: [
+        { name: 'Anthelios SPF50+ Fluide', revenue: 18400, qty: 82 },
+        { name: 'Effaclar Duo+ Unifiant', revenue: 14200, qty: 68 },
+        { name: 'Cicaplast Baume B5', revenue: 11800, qty: 55 },
+        { name: 'Hyalu B5 Sérum', revenue: 9600, qty: 44 },
+        { name: 'Lipikar Baume AP+M', revenue: 8100, qty: 38 },
+      ],
       cityRows: [
-        { city: 'Casablanca', orders: 60, revenue: 52400 },
-        { city: 'Rabat', orders: 34, revenue: 29800 },
-        { city: 'Tanger', orders: 22, revenue: 19200 },
-        { city: 'Marrakech', orders: 16, revenue: 14100 },
-        { city: 'Fès', orders: 10, revenue: 9350 },
-      ]
+        { city: 'Casablanca', count: 60, revenue: 52400 },
+        { city: 'Rabat', count: 34, revenue: 29800 },
+        { city: 'Tanger', count: 22, revenue: 19200 },
+        { city: 'Marrakech', count: 16, revenue: 14100 },
+        { city: 'Fès', count: 10, revenue: 9350 },
+      ],
+      numDays: 30,
     };
   }, [rawData]);
 
@@ -1013,7 +1025,7 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
               a.click();
               URL.revokeObjectURL(url);
             }}
-            disabled={data.sortedDailyRows.length === 0}
+            disabled={!data?.sortedDailyRows?.length}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-all duration-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
               adminTheme === 'light'
                 ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'
