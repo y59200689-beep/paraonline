@@ -164,85 +164,8 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
     return `Aujourd'hui (${formattedDate})`;
   };
 
-  // Evaluate computed calculations based on ranges and custom bounds
-  const rawData = analyticsData(analyticsRange, customDateFrom, customDateTo, analyticsSortCol, analyticsSortDir);
-
-  // Baseline fallback values for executive presentation when real database orders are zero
-  const data = React.useMemo(() => {
-    if (rawData && rawData.currMetrics && (rawData.currMetrics.gross > 0 || rawData.currMetrics.count > 0)) {
-      return rawData;
-    }
-
-    const baseChartData = [
-      { date: '22 juin', amount: 3200, prevAmount: 2800, count: 4, prevCount: 3 },
-      { date: '26 juin', amount: 4800, prevAmount: 3900, count: 6, prevCount: 5 },
-      { date: '30 juin', amount: 6100, prevAmount: 4500, count: 7, prevCount: 5 },
-      { date: '4 juil.', amount: 5400, prevAmount: 4200, count: 6, prevCount: 4 },
-      { date: '8 juil.', amount: 7800, prevAmount: 5100, count: 9, prevCount: 6 },
-      { date: '12 juil.', amount: 9200, prevAmount: 6400, count: 11, prevCount: 7 },
-      { date: '16 juil.', amount: 8500, prevAmount: 7100, count: 10, prevCount: 8 },
-      { date: '20 juil.', amount: 11400, prevAmount: 8900, count: 13, prevCount: 9 },
-    ];
-
-    // sortedDailyRows must match the schema used in the table and CSV export
-    const baseSortedDailyRows = baseChartData.map(d => ({
-      date: d.date,
-      orders: d.count,
-      gross: d.amount,
-      net: Math.round(d.amount * 0.95),
-      avg: Math.round(d.amount / d.count),
-    }));
-
-    return {
-      currMetrics: {
-        gross: 124850,
-        net: 118500,
-        count: 142,
-        avg: 879.2,
-        netMargin: 48500,
-        avgLtv: 1450,
-        cancelledCount: 2,
-        couponsUsed: 18,
-      },
-      prevMetrics: {
-        gross: 105400,
-        net: 100200,
-        count: 126,
-        avg: 836.5,
-        netMargin: 39700,
-        avgLtv: 1335,
-        cancelledCount: 3,
-        couponsUsed: 14,
-      },
-      pct: {
-        gross: 18.4,
-        net: 15.2,
-        count: 12.5,
-        avg: 5.2,
-        netMargin: 22.1,
-        avgLtv: 8.6,
-        cancelledCount: -14.2,
-        couponsUsed: 25.0,
-      },
-      chartData: baseChartData,
-      sortedDailyRows: baseSortedDailyRows,
-      topProducts: [
-        { name: 'Anthelios SPF50+ Fluide', revenue: 18400, qty: 82 },
-        { name: 'Effaclar Duo+ Unifiant', revenue: 14200, qty: 68 },
-        { name: 'Cicaplast Baume B5', revenue: 11800, qty: 55 },
-        { name: 'Hyalu B5 Sérum', revenue: 9600, qty: 44 },
-        { name: 'Lipikar Baume AP+M', revenue: 8100, qty: 38 },
-      ],
-      cityRows: [
-        { city: 'Casablanca', count: 60, revenue: 52400 },
-        { city: 'Rabat', count: 34, revenue: 29800 },
-        { city: 'Tanger', count: 22, revenue: 19200 },
-        { city: 'Marrakech', count: 16, revenue: 14100 },
-        { city: 'Fès', count: 10, revenue: 9350 },
-      ],
-      numDays: 30,
-    };
-  }, [rawData]);
+  // Compute analytics for the selected date range
+  const data = analyticsData(analyticsRange, customDateFrom, customDateTo, analyticsSortCol, analyticsSortDir);
 
   const getCohortData = () => {
     const customerOrdersMap: Record<string, typeof orders> = {};
