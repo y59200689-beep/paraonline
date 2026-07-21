@@ -5,8 +5,8 @@ import { useRouter, usePathname } from 'next/navigation';
 
 export interface AdminUIContextProps {
   // Navigation / Tabs
-  activeTab: 'dashboard' | 'analytics' | 'orders' | 'catalog' | 'crm' | 'reviews' | 'settings' | 'loyalty' | 'branding' | 'advice' | 'snippets' | 'cron' | 'audit-logs' | 'coupons';
-  setActiveTab: (tab: 'dashboard' | 'analytics' | 'orders' | 'catalog' | 'crm' | 'reviews' | 'settings' | 'loyalty' | 'branding' | 'advice' | 'snippets' | 'cron' | 'audit-logs' | 'coupons') => void;
+  activeTab: 'dashboard' | 'analytics' | 'orders' | 'catalog' | 'crm' | 'reviews' | 'settings' | 'loyalty' | 'branding' | 'advice' | 'snippets' | 'cron' | 'audit-logs' | 'coupons' | 'gallery';
+  setActiveTab: (tab: 'dashboard' | 'analytics' | 'orders' | 'catalog' | 'crm' | 'reviews' | 'settings' | 'loyalty' | 'branding' | 'advice' | 'snippets' | 'cron' | 'audit-logs' | 'coupons' | 'gallery') => void;
   sidebarCollapsed: boolean;
   setSidebarCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
   isMobileDrawerOpen: boolean;
@@ -71,7 +71,7 @@ export const AdminUIProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setActiveTabState(getTabFromPathname(pathname));
   }, [pathname]);
 
-  const setActiveTab = useCallback((tab: 'dashboard' | 'analytics' | 'orders' | 'catalog' | 'crm' | 'reviews' | 'settings' | 'loyalty' | 'branding' | 'advice' | 'snippets' | 'cron' | 'audit-logs' | 'coupons') => {
+  const setActiveTab = useCallback((tab: 'dashboard' | 'analytics' | 'orders' | 'catalog' | 'crm' | 'reviews' | 'settings' | 'loyalty' | 'branding' | 'advice' | 'snippets' | 'cron' | 'audit-logs' | 'coupons' | 'gallery') => {
     if (tab === 'dashboard') {
       router.push('/admin');
     } else {
@@ -121,7 +121,8 @@ export const AdminUIProvider: React.FC<{ children: React.ReactNode }> = ({ child
       'snippets',
       'cron',
       'audit-logs',
-      'coupons'
+      'coupons',
+      'gallery'
     ];
     router.prefetch('/admin');
     adminTabs.forEach(tab => {

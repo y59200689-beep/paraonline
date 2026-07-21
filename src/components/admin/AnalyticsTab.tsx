@@ -228,82 +228,7 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
 
   const cohorts = getCohortData();
 
-  const [funnelHoverIdx, setFunnelHoverIdx] = React.useState<number | null>(null);
 
-  // Helper to filter orders and abandoned carts by range for conversion funnel
-  const getFilteredData = () => {
-    const now = new Date();
-    let startDate = new Date(0);
-    let endDate = now;
-
-    if (analyticsRange === 'today') {
-      startDate = new Date(now);
-      startDate.setHours(0, 0, 0, 0);
-      endDate = new Date(now);
-      endDate.setHours(23, 59, 59, 999);
-    } else if (analyticsRange === '7d') {
-      startDate = new Date(now.getTime() - 7 * 86400000);
-    } else if (analyticsRange === '30d') {
-      startDate = new Date(now.getTime() - 30 * 86400000);
-    } else if (analyticsRange === 'month') {
-      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-    } else if (analyticsRange === 'custom' && customDateFrom) {
-      startDate = new Date(customDateFrom);
-      startDate.setHours(0, 0, 0, 0);
-      if (customDateTo) {
-        endDate = new Date(customDateTo);
-        endDate.setHours(23, 59, 59, 999);
-      }
-    }
-
-    const inRange = (dStr: string) => {
-      if (!dStr) return false;
-      const d = new Date(dStr);
-      return d >= startDate && d <= endDate;
-    };
-
-    const rangeOrders = orders.filter(o => inRange(o.created_at || o.date || ''));
-    const rangeAbandoned = abandonedCarts.filter(c => inRange(c.date || ''));
-
-    return { rangeOrders, rangeAbandoned };
-  };
-
-  const { rangeOrders, rangeAbandoned } = getFilteredData();
-
-  const visits = Math.max(120, Math.round((rangeOrders.length + rangeAbandoned.length) * 12 + 55));
-  const addtoCart = Math.max(18, Math.round((rangeOrders.length + rangeAbandoned.length) * 1.8 + 12));
-  const checkoutStarts = Math.max(6, rangeOrders.length + rangeAbandoned.length);
-  const paidOrders = rangeOrders.filter(o => o.status !== 'Cancelled').length;
-
-  const funnelSteps = [
-    { label: 'Visites', count: visits, pctOfVisits: 100, pctOfPrev: 100, desc: 'Sessions sur la boutique' },
-    { label: 'Ajouts au panier', count: addtoCart, pctOfVisits: Math.round((addtoCart / Math.max(1, visits)) * 100), pctOfPrev: Math.round((addtoCart / Math.max(1, visits)) * 100), desc: 'Intention d\'achat' },
-    { label: 'Débuts de commande', count: checkoutStarts, pctOfVisits: Math.round((checkoutStarts / Math.max(1, visits)) * 100), pctOfPrev: addtoCart > 0 ? Math.round((checkoutStarts / addtoCart) * 100) : 0, desc: 'Saisie coordonnées' },
-    { label: 'Commandes payées', count: paidOrders, pctOfVisits: Math.round((paidOrders / Math.max(1, visits)) * 100), pctOfPrev: checkoutStarts > 0 ? Math.round((paidOrders / checkoutStarts) * 100) : 0, desc: 'Conversions réussies' },
-  ];
-
-  const cx = 300;
-  const innerW = 320;
-  const w0 = innerW;
-  const w1 = Math.max(40, (funnelSteps[1].pctOfVisits / 100) * innerW);
-  const w2 = Math.max(30, (funnelSteps[2].pctOfVisits / 100) * innerW);
-  const w3 = Math.max(20, (funnelSteps[3].pctOfVisits / 100) * innerW);
-
-  const x_start_0 = cx - w0 / 2;
-  const x_end_0 = cx + w0 / 2;
-  const y_0 = 10;
-
-  const x_start_1 = cx - w1 / 2;
-  const x_end_1 = cx + w1 / 2;
-  const y_1 = 82;
-
-  const x_start_2 = cx - w2 / 2;
-  const x_end_2 = cx + w2 / 2;
-  const y_2 = 154;
-
-  const x_start_3 = cx - w3 / 2;
-  const x_end_3 = cx + w3 / 2;
-  const y_3 = 226;
 
   return (
     <div className="space-y-6 admin-tab-enter">
@@ -671,10 +596,7 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
         })()}
       </div>
 
-      {/* Entonnoir de Conversion Card */}
-      <div className={`border rounded-3xl p-6 transition duration-300 hover:shadow-lg ${
-        adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/40 border-slate-900'
-      }`}>
+      {/* Daily stats sortable table */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
           <div className="flex items-center gap-2">
             <Percent className={`w-4 h-4 ${adminTheme === 'light' ? 'text-emerald-600' : 'text-emerald-400'}`} />

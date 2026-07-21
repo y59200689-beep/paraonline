@@ -22,7 +22,8 @@ import {
   Code,
   Clock,
   Ticket,
-  Shield
+  Shield,
+  Images
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -70,6 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       items: [
         { id: 'advice', label: 'Espace Conseils', icon: BookOpen },
         { id: 'branding', label: 'Personnalisation', icon: Palette },
+        { id: 'gallery', label: 'Galerie Médias', icon: Images },
         { id: 'snippets', label: 'Snippets Code', icon: Code },
         { id: 'cron', label: 'Tâches Planifiées', icon: Clock },
         { id: 'coupons', label: 'Promotions', icon: Ticket },

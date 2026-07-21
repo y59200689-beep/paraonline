@@ -228,6 +228,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
               {activeTab === 'audit-logs' && "Journaux d'Audit"}
               {activeTab === 'coupons' && 'Promotions & Promo'}
               {activeTab === 'settings' && 'Paramètres'}
+              {activeTab === 'gallery' && 'Galerie Médias'}
             </h1>
 
             {/* Subtitle: greeting + date */}

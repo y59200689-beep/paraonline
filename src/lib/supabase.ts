@@ -255,15 +255,12 @@ if (isPlaceholder) {
         return p;
       });
 
-      // Ensure all standard products from PRODUCTS_DB are present and correct in the mock database
+      // Ensure fields on existing products match defaults without resurrecting deleted products
       const initialProducts = getInitialProducts();
       let productsMutated = false;
       for (const initP of initialProducts) {
         const idx = globalForMock.mockDb.products.findIndex((p: any) => p.id === initP.id);
-        if (idx === -1) {
-          globalForMock.mockDb.products.push(initP);
-          productsMutated = true;
-        } else {
+        if (idx !== -1) {
           const existing = globalForMock.mockDb.products[idx];
           if (existing.title !== initP.title || existing.name_fr !== initP.name_fr || existing.price !== initP.price) {
             globalForMock.mockDb.products[idx] = {

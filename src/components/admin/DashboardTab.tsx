@@ -245,38 +245,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   const { settings } = useSettings();
 
   const dashboardStats = React.useMemo(() => {
-    const raw = getDashboardStats(analyticsRange, customDateFrom, customDateTo);
-    if (raw && (raw.totalSales > 0 || raw.ordersCount > 0)) {
-      return raw;
-    }
-
-    // Enterprise demonstration baseline when database is empty for selected range
-    const baseChart = [
-      { date: '22 juin', amount: 3200, count: 4 },
-      { date: '26 juin', amount: 4800, count: 6 },
-      { date: '30 juin', amount: 6100, count: 7 },
-      { date: '4 juil.', amount: 5400, count: 6 },
-      { date: '8 juil.', amount: 7800, count: 9 },
-      { date: '12 juil.', amount: 9200, count: 11 },
-      { date: '16 juil.', amount: 8500, count: 10 },
-      { date: '20 juil.', amount: 11400, count: 13 },
-    ];
-
-    return {
-      totalSales: 124850,
-      ordersCount: 142,
-      avgOrderValue: 879.2,
-      abandonedCartsCount: 14,
-      conversionRate: 3.4,
-      statusFunnel: {
-        Pending: 17,
-        Confirmed: 64,
-        Shipped: 40,
-        Delivered: 21,
-        Cancelled: 2,
-      },
-      last7DaysSales: baseChart,
-    };
+    return getDashboardStats(analyticsRange, customDateFrom, customDateTo);
   }, [getDashboardStats, analyticsRange, customDateFrom, customDateTo]);
 
   const topProductsByRevenueRanged = React.useMemo(() => {
@@ -541,7 +510,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
               const W = 600, H = 180, padL = 48, padR = 12, padT = 10, padB = 28;
               const innerW = W - padL - padR;
               const innerH = H - padT - padB;
-              const maxVal = Math.max(...data.map((d: any) => d.amount), 2500);
+              const maxVal = Math.max(...data.map((d: any) => d.amount), 1);
               const pts = data.map((d: any, i: number) => ({
                 x: padL + (i / Math.max(data.length - 1, 1)) * innerW,
                 y: padT + innerH - (d.amount / maxVal) * innerH,
