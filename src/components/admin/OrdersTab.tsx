@@ -19,16 +19,25 @@ import {
   Printer, 
   X, 
   Command, 
-  Trash2 
+  Trash2,
+  ArrowLeft,
+  Phone,
+  User,
+  Copy,
+  Plus,
+  Minus,
+  Gift
 } from 'lucide-react';
 import { useAdmin, Order, AbandonedCart } from '@/context/AdminContext';
 import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
+import { PRODUCTS_DB } from '@/lib/data';
 import { useAdminUI } from '@/app/admin/AdminUIContext';
 import { StatusBadge } from '@/components/admin/ui';
 
 export default function OrdersTab() {
   const {
+    products,
     orders,
     setOrders,
     abandonedCarts,
@@ -56,6 +65,13 @@ export default function OrdersTab() {
   const [reconciliationFilter, setReconciliationFilter] = useState<'ALL' | 'PERFECT' | 'DISCREPANCY' | 'NOT_FOUND'>('ALL');
   const [isDragOver, setIsDragOver] = useState(false);
   const [reconciliationNotes, setReconciliationNotes] = useState<Record<string, string>>({});
+  const [staffNotesMap, setStaffNotesMap] = useState<Record<string, string>>({});
+  const [staffNoteInputs, setStaffNoteInputs] = useState<Record<string, string>>({});
+  const [noteSavedFeedback, setNoteSavedFeedback] = useState<boolean>(false);
+  const [isPrintInvoiceOpen, setIsPrintInvoiceOpen] = useState<boolean>(false);
+  const [settledOrdersMap, setSettledOrdersMap] = useState<Record<string, boolean>>({});
+  const [isAddGiftModalOpen, setIsAddGiftModalOpen] = useState<boolean>(false);
+  const [customGiftInput, setCustomGiftInput] = useState<string>('');
 
   // Sub-tabs: 'list' | 'abandoned' | 'shipping' | 'reconciliation'
   const { ordersSubTab, setOrdersSubTab } = useAdminUI();
@@ -663,7 +679,6 @@ export default function OrdersTab() {
 
     const csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
       + [headers.join(','), ...rows.map(e => e.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))].join('\n');
-    
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -673,71 +688,1191 @@ export default function OrdersTab() {
     document.body.removeChild(link);
   };
 
+  if (selectedOrder) {
+    const st = selectedOrder.status.toLowerCase();
+    const isDark = adminTheme === 'dark';
+    const statusMeta: Record<string, { label: string; color: string; border: string; bg: string; dot: string }> = {
+      pending:   { label: 'En attente',  color: isDark ? '#fbbf24' : '#d97706', border: 'rgba(245,158,11,0.3)', bg: 'rgba(245,158,11,0.1)', dot: '#f59e0b' },
+      confirmed: { label: 'Confirmée',   color: isDark ? '#38bdf8' : '#0284c7', border: 'rgba(56,189,248,0.3)', bg: 'rgba(56,189,248,0.1)', dot: '#38bdf8' },
+      shipped:   { label: 'Expédiée',    color: isDark ? '#818cf8' : '#4f46e5', border: 'rgba(129,140,248,0.3)', bg: 'rgba(129,140,248,0.1)', dot: '#818cf8' },
+      delivered: { label: 'Livrée',      color: isDark ? '#34d399' : '#059669', border: 'rgba(52,211,153,0.3)', bg: 'rgba(52,211,153,0.1)', dot: '#34d399' },
+      cancelled: { label: 'Annulée',     color: isDark ? '#fb7185' : '#e11d48', border: 'rgba(251,113,133,0.3)', bg: 'rgba(251,113,133,0.1)', dot: '#fb7185' },
+      returned:  { label: 'Retournée',   color: isDark ? '#fb923c' : '#ea580c', border: 'rgba(251,146,60,0.3)', bg: 'rgba(251,146,60,0.1)', dot: '#fb923c' },
+    };
+    const sm = statusMeta[st] ?? statusMeta.pending;
+    const steps = st === 'cancelled'
+      ? [{ k:'pending',done:true,red:false,orange:false },{ k:'cancelled',done:true,red:true,orange:false }]
+      : st === 'returned'
+      ? [{ k:'pending',done:true,red:false,orange:false },{ k:'confirmed',done:true,red:false,orange:false },{ k:'shipped',done:true,red:false,orange:false },{ k:'returned',done:true,red:false,orange:true }]
+      : [
+          { k:'pending',   done:['pending','confirmed','shipped','delivered'].includes(st), red:false, orange:false },
+          { k:'confirmed', done:['confirmed','shipped','delivered'].includes(st), red:false, orange:false },
+          { k:'shipped',   done:['shipped','delivered'].includes(st), red:false, orange:false },
+          { k:'delivered', done:st==='delivered', red:false, orange:false },
+        ];
+    const stepLabels: Record<string,string> = { pending:'Enregistrée', confirmed:'Confirmée', shipped:'Expédiée', delivered:'Livrée', cancelled:'Annulée', returned:'Retournée' };
+    const doneCount = steps.filter(s=>s.done).length;
+    const progress = steps.length <= 1 ? 100 : ((doneCount - 1) / (steps.length - 1)) * 100;
+    const shippingFee = Math.max(0, selectedOrder.total - selectedOrder.subtotal + selectedOrder.discount_amount);
+    const orderDate = new Date(selectedOrder.created_at || selectedOrder.date || Date.now());
+
+    const cardBg = isDark ? 'hsl(224,25%,9%)' : '#ffffff';
+    const borderStyle = `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)'}`;
+    const textPrimary = isDark ? 'hsl(214,35%,95%)' : 'hsl(222,47%,10%)';
+    const textMuted = isDark ? 'hsl(215,22%,46%)' : 'hsl(215,18%,46%)';
+
+    return (
+      <div className="space-y-6 admin-tab-enter pb-16">
+        {/* Top Header & Navigation Bar */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setSelectedOrder(null)}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 cursor-pointer active:scale-95 shadow-2xs"
+              style={{
+                background: isDark ? 'hsl(224,25%,9%)' : '#ffffff',
+                border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                color: isDark ? '#f1f5f9' : '#0f172a',
+              }}
+            >
+              <ArrowLeft className="w-4 h-4 text-emerald-500" />
+              <span>Retour aux commandes</span>
+            </button>
+
+            <div className="h-5 w-px bg-slate-300 dark:bg-slate-700 hidden sm:block" />
+
+            <div>
+              {(() => {
+                const isCodSettled = selectedOrder.reconciled || selectedOrder.payment_status === 'paid' || !!settledOrdersMap[selectedOrder.order_id];
+                return (
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <span className="font-mono text-xl font-black" style={{ color: textPrimary }}>
+                      Commande {selectedOrder.order_id}
+                    </span>
+                    <span
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold"
+                      style={{
+                        background: sm.bg,
+                        color: sm.color,
+                        border: `1px solid ${sm.border}`,
+                      }}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: sm.dot }} />
+                      {sm.label}
+                    </span>
+
+                    <span
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold cursor-pointer transition active:scale-95 select-none"
+                      onClick={() => {
+                        const newStatus = !isCodSettled;
+                        setSettledOrdersMap(prev => ({ ...prev, [selectedOrder.order_id]: newStatus }));
+                        showToast(newStatus ? `COD pour #${selectedOrder.order_id} marqué comme Encaissé (Virement reçu) !` : `COD pour #${selectedOrder.order_id} marqué comme Non Encaissé.`, newStatus ? 'success' : 'info');
+                      }}
+                      title="Cliquez pour basculer le statut d'encaissement bancaire COD"
+                      style={{
+                        background: isCodSettled ? (isDark ? 'rgba(16,185,129,0.15)' : '#d1fae5') : (isDark ? 'rgba(245,158,11,0.15)' : '#fef3c7'),
+                        color: isCodSettled ? (isDark ? '#6ee7b7' : '#047857') : (isDark ? '#fcd34d' : '#b45309'),
+                        border: `1px solid ${isCodSettled ? 'rgba(16,185,129,0.3)' : 'rgba(245,158,11,0.3)'}`,
+                      }}
+                    >
+                      <DollarSign className="w-3.5 h-3.5" />
+                      {isCodSettled ? '🟢 COD Encaissé (Virement reçu)' : '🟡 COD Non Encaissé (Chez le livreur)'}
+                    </span>
+                  </div>
+                );
+              })()}
+              <p className="text-[11px] font-mono opacity-70 mt-0.5" style={{ color: textMuted }}>
+                Passée le {orderDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} à {orderDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+              </p>
+            </div>
+          </div>
+
+          {/* Action Bar */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <a
+              href={`https://wa.me/${selectedOrder.phone_number.replace(/\D/g, '')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white shadow-sm transition active:scale-95"
+              style={{ background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)', color: '#ffffff' }}
+            >
+              <MessageSquare className="w-4 h-4 text-white" />
+              <span className="text-white font-bold" style={{ color: '#ffffff' }}>WhatsApp Client</span>
+            </a>
+
+            <button
+              onClick={() => {
+                setActiveLabelData({
+                  orderId: selectedOrder.order_id,
+                  courier: selectedOrder.courier?.toUpperCase() || 'LIVREUR MAROC',
+                  trackingNumber: selectedOrder.tracking_number || '',
+                  codAmount: selectedOrder.total,
+                  customerName: selectedOrder.customer_name,
+                  phone: selectedOrder.phone_number,
+                  city: selectedOrder.city,
+                  address: selectedOrder.address,
+                  shippingDate: new Date().toLocaleDateString('fr-FR'),
+                });
+                setIsPrintLabelOpen(true);
+              }}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer"
+              style={{
+                background: isDark ? 'hsl(224,25%,9%)' : '#ffffff',
+                border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                color: textPrimary,
+              }}
+            >
+              <Printer className="w-4 h-4 text-indigo-500" />
+              <span>Étiquette A6</span>
+            </button>
+
+            <button
+              onClick={() => setIsPrintInvoiceOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer"
+              style={{
+                background: isDark ? 'hsl(224,25%,9%)' : '#ffffff',
+                border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                color: textPrimary,
+              }}
+            >
+              <FileText className="w-4 h-4 text-emerald-500" />
+              <span>Facture / Bon de Livraison</span>
+            </button>
+
+            <button
+              onClick={() => {
+                if (confirm(`Supprimer définitivement la commande ${selectedOrder.order_id} ?`)) {
+                  handleDeleteOrder(selectedOrder.order_id);
+                  setSelectedOrder(null);
+                }
+              }}
+              className="p-2 rounded-xl text-rose-500 transition cursor-pointer hover:bg-rose-500/10"
+              title="Supprimer la commande"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Main 2-Column Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          {/* Left Column (2 cols) */}
+          <div className="lg:col-span-2 space-y-6">
+
+            {/* Timeline Banner */}
+            <div
+              className="rounded-2xl p-6 space-y-5 transition-all duration-300"
+              style={{
+                background: cardBg,
+                border: borderStyle,
+                boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.35)' : '0 2px 10px rgba(15,30,54,0.04)',
+              }}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-emerald-500/10 border border-emerald-500/20 text-emerald-500">
+                    <Truck className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black uppercase tracking-wider" style={{ color: textPrimary }}>
+                      Suivi d'exécution & statut
+                    </h4>
+                    <p className="text-[10.5px]" style={{ color: textMuted }}>
+                      Progression chronologique de la livraison
+                    </p>
+                  </div>
+                </div>
+
+                <select
+                  value={selectedOrder.status}
+                  onChange={(e) => {
+                    const newStatus = e.target.value;
+                    setSelectedOrder(prev => prev ? { ...prev, status: newStatus } : null);
+                    handleUpdateOrderStatus(selectedOrder.order_id, newStatus);
+                  }}
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold outline-none cursor-pointer border"
+                  style={{
+                    background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                    borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+                    color: textPrimary,
+                  }}
+                >
+                  <option value="Pending">🕐 Pending — En attente confirmation</option>
+                  <option value="Confirmed">✅ Confirmed — Confirmé par téléphone</option>
+                  <option value="Shipped">🚚 Shipped — Expédié / En transit</option>
+                  <option value="Delivered">📦 Delivered — Livré & Encaissé</option>
+                  <option value="Cancelled">❌ Cancelled — Annulé</option>
+                </select>
+              </div>
+
+              <div className="relative pt-2 pb-1">
+                <div className="absolute top-[22px] left-6 right-6 h-1 rounded-full bg-slate-200 dark:bg-slate-800">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${progress}%`,
+                      background: 'linear-gradient(90deg, #10b981 0%, #3b82f6 100%)',
+                    }}
+                  />
+                </div>
+
+                <div className="relative flex justify-between">
+                  {steps.map((step, i) => {
+                    const nodeBg = step.done ? '#10b981' : (isDark ? '#1e293b' : '#e2e8f0');
+                    return (
+                      <div key={step.k} className="flex flex-col items-center gap-2">
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-extrabold text-white z-10 transition-transform duration-300"
+                          style={{
+                            background: nodeBg,
+                            boxShadow: step.done ? '0 0 14px rgba(16,185,129,0.4)' : 'none',
+                          }}
+                        >
+                          {step.done ? '✓' : i + 1}
+                        </div>
+                        <span className="text-[11px] font-bold" style={{ color: step.done ? '#10b981' : textMuted }}>
+                          {stepLabels[step.k]}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Line Items Card */}
+            {(() => {
+              const totalUnitsOrdered = selectedOrder.items?.reduce((sum, item) => sum + (item.quantity || 1), 0) || 0;
+              return (
+                <div
+                  className="rounded-2xl p-6 space-y-4 transition-all duration-300"
+                  style={{
+                    background: cardBg,
+                    border: borderStyle,
+                    boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.35)' : '0 2px 10px rgba(15,30,54,0.04)',
+                  }}
+                >
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-3 border-b" style={{ borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <h4 className="text-xs font-black uppercase tracking-wider" style={{ color: textPrimary }}>
+                        Articles commandés
+                      </h4>
+                      <span className="px-3 py-1 rounded-full text-[11px] font-extrabold font-mono bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
+                        {totalUnitsOrdered} {totalUnitsOrdered > 1 ? 'articles' : 'article'} ({selectedOrder.items?.length || 0} {selectedOrder.items?.length === 1 ? 'réf.' : 'réfs.'})
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setIsAddGiftModalOpen(true)}
+                        className="px-2.5 py-1 rounded-full text-[10.5px] font-extrabold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs"
+                      >
+                        <Gift className="w-3 h-3" />
+                        <span>+ Échantillon Gratuit</span>
+                      </button>
+                    </div>
+                    <span className="text-[11px] font-mono font-bold text-emerald-500">
+                      Total COD: {selectedOrder.total.toFixed(2)} DH
+                    </span>
+                  </div>
+
+                  <div className="divide-y" style={{ borderColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)' }}>
+                    {selectedOrder.items?.map((item, i) => {
+                      const allCatalog = [...(products || []), ...PRODUCTS_DB];
+                      const matchingProd = allCatalog.find(
+                        p => p.id === item.id ||
+                        (p.title && p.title.toLowerCase() === item.title.toLowerCase()) ||
+                        (p.name && p.name.toLowerCase() === item.title.toLowerCase()) ||
+                        (p.title && item.title.toLowerCase().includes(p.title.toLowerCase())) ||
+                        (p.name && item.title.toLowerCase().includes(p.name.toLowerCase()))
+                      );
+                      const defaultFallback = 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop';
+                      const itemImg = item.image || matchingProd?.image || matchingProd?.images?.[0] || defaultFallback;
+
+                      return (
+                        <div key={i} className="py-3.5 flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                            {/* High-Res Product Thumbnail Frame */}
+                            <div
+                              className="relative w-14 h-14 rounded-2xl overflow-hidden shrink-0 border shadow-2xs group"
+                              style={{
+                                borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+                                background: isDark ? 'rgba(255,255,255,0.04)' : '#f8fafc',
+                              }}
+                            >
+                              <img
+                                src={itemImg}
+                                alt={item.title}
+                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = defaultFallback;
+                                }}
+                              />
+                              <div className="absolute top-0 right-0 bg-emerald-600 text-white font-mono font-black text-[9px] px-1.5 py-0.5 rounded-bl-lg shadow-xs">
+                                x{item.quantity}
+                              </div>
+                            </div>
+
+                            {/* Product Info & Stepper Controls */}
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="font-extrabold text-xs truncate" style={{ color: textPrimary }}>
+                                  {item.title}
+                                </p>
+                                {matchingProd?.vendor && (
+                                  <span className="px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-500 shrink-0">
+                                    {matchingProd.vendor}
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                {/* Interactive Stepper Buttons */}
+                                <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700/50">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const updatedItems = [...(selectedOrder.items || [])];
+                                      if (item.quantity > 1) {
+                                        updatedItems[i] = { ...updatedItems[i], quantity: item.quantity - 1 };
+                                      } else {
+                                        updatedItems.splice(i, 1);
+                                      }
+                                      const newSubtotal = updatedItems.reduce((acc, it) => acc + (it.price * it.quantity), 0);
+                                      const newTotal = Math.max(0, newSubtotal - (selectedOrder.discount_amount || 0));
+                                      const updatedOrder = { ...selectedOrder, items: updatedItems, subtotal: newSubtotal, total: newTotal };
+                                      setSelectedOrder(updatedOrder);
+                                      setOrders(prev => prev.map(o => o.order_id === selectedOrder.order_id ? updatedOrder : o));
+                                      showToast(`Quantité modifiée (Qté : ${item.quantity - 1})`, 'info');
+                                    }}
+                                    className="w-5 h-5 rounded flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 transition cursor-pointer"
+                                    title="Diminuer la quantité"
+                                  >
+                                    <Minus className="w-3 h-3" />
+                                  </button>
+
+                                  <span className="px-1.5 font-mono font-black text-[11px]" style={{ color: textPrimary }}>
+                                    {item.quantity}
+                                  </span>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const updatedItems = [...(selectedOrder.items || [])];
+                                      updatedItems[i] = { ...updatedItems[i], quantity: item.quantity + 1 };
+                                      const newSubtotal = updatedItems.reduce((acc, it) => acc + (it.price * it.quantity), 0);
+                                      const newTotal = Math.max(0, newSubtotal - (selectedOrder.discount_amount || 0));
+                                      const updatedOrder = { ...selectedOrder, items: updatedItems, subtotal: newSubtotal, total: newTotal };
+                                      setSelectedOrder(updatedOrder);
+                                      setOrders(prev => prev.map(o => o.order_id === selectedOrder.order_id ? updatedOrder : o));
+                                      showToast(`Quantité modifiée (Qté : ${item.quantity + 1})`, 'success');
+                                    }}
+                                    className="w-5 h-5 rounded flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 transition cursor-pointer"
+                                    title="Augmenter la quantité"
+                                  >
+                                    <Plus className="w-3 h-3" />
+                                  </button>
+                                </div>
+
+                                <span className="text-[11px] font-mono opacity-80" style={{ color: textMuted }}>
+                                  {item.price.toFixed(2)} DH/u = <strong className="text-emerald-600 dark:text-emerald-400 font-mono">{(item.price * item.quantity).toFixed(2)} DH</strong>
+                                </span>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updatedItems = [...(selectedOrder.items || [])];
+                                    updatedItems.splice(i, 1);
+                                    const newSubtotal = updatedItems.reduce((acc, it) => acc + (it.price * it.quantity), 0);
+                                    const newTotal = Math.max(0, newSubtotal - (selectedOrder.discount_amount || 0));
+                                    const updatedOrder = { ...selectedOrder, items: updatedItems, subtotal: newSubtotal, total: newTotal };
+                                    setSelectedOrder(updatedOrder);
+                                    setOrders(prev => prev.map(o => o.order_id === selectedOrder.order_id ? updatedOrder : o));
+                                    showToast("Article supprimé de la commande", "info");
+                                  }}
+                                  className="ml-auto p-1 text-slate-400 hover:text-rose-500 transition cursor-pointer"
+                                  title="Supprimer cet article"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="text-right font-mono font-black text-sm shrink-0" style={{ color: textPrimary }}>
+                            {(item.price * item.quantity).toFixed(2)} <span className="text-xs font-sans font-bold">DH</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {selectedOrder.gift_item && (
+                      <div
+                        className="py-3 flex items-center justify-between gap-3 px-3 rounded-xl mt-2"
+                        style={{
+                          background: 'rgba(16,185,129,0.08)',
+                          border: '1px solid rgba(16,185,129,0.2)',
+                        }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">🎁</span>
+                          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 italic">
+                            {selectedOrder.gift_item}
+                          </span>
+                        </div>
+                        <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-500">
+                          Offert
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Totals */}
+                  <div
+                    className="pt-4 mt-2 space-y-2 border-t text-xs font-mono"
+                    style={{ borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}
+                  >
+                    <div className="flex justify-between" style={{ color: textMuted }}>
+                      <span>Sous-Total Articles ({totalUnitsOrdered} {totalUnitsOrdered > 1 ? 'pièces' : 'pièce'})</span>
+                      <span className="font-bold" style={{ color: textPrimary }}>{selectedOrder.subtotal.toFixed(2)} DH</span>
+                    </div>
+
+                    {selectedOrder.discount_amount > 0 && (
+                      <div className="flex justify-between text-rose-500 font-bold">
+                        <span>Code Réduction ({selectedOrder.applied_coupon || 'BEAUTY10'})</span>
+                        <span>-{selectedOrder.discount_amount.toFixed(2)} DH</span>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between" style={{ color: textMuted }}>
+                      <span>Frais de livraison</span>
+                      <span className="font-bold" style={{ color: textPrimary }}>{shippingFee.toFixed(2)} DH</span>
+                    </div>
+
+                    <div
+                      className="flex justify-between items-baseline pt-3 text-sm font-black border-t"
+                      style={{ borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}
+                    >
+                      <span className="uppercase tracking-wider font-sans text-xs" style={{ color: textPrimary }}>
+                        Total Encaissé / COD
+                      </span>
+                      <span className="text-xl font-mono text-emerald-500">
+                        {selectedOrder.total.toFixed(2)} DH
+                      </span>
+                    </div>
+
+                    {/* COD Bank Settlement Financial Status Box */}
+                    {(() => {
+                      const isCodSettled = selectedOrder.reconciled || selectedOrder.payment_status === 'paid' || !!settledOrdersMap[selectedOrder.order_id];
+                      return (
+                        <div 
+                          className="p-4 rounded-2xl mt-4 space-y-3 transition-all"
+                          style={{
+                            background: isCodSettled ? (isDark ? 'rgba(16,185,129,0.1)' : '#ecfdf5') : (isDark ? 'rgba(245,158,11,0.1)' : '#fffbeb'),
+                            border: `1px solid ${isCodSettled ? (isDark ? 'rgba(16,185,129,0.25)' : '#a7f3d0') : (isDark ? 'rgba(245,158,11,0.25)' : '#fde68a')}`
+                          }}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <DollarSign className={`w-4 h-4 ${isCodSettled ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`} />
+                              <span className="font-sans font-extrabold text-xs uppercase tracking-wider" style={{ color: textPrimary }}>
+                                Statut de Réconciliation Bancaire (COD)
+                              </span>
+                            </div>
+                            <span 
+                              className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase font-mono tracking-wider"
+                              style={{
+                                background: isCodSettled ? 'rgba(16,185,129,0.2)' : 'rgba(245,158,11,0.2)',
+                                color: isCodSettled ? (isDark ? '#6ee7b7' : '#047857') : (isDark ? '#fcd34d' : '#b45309')
+                              }}
+                            >
+                              {isCodSettled ? '🟢 COD Encaissé' : '🟡 Non Encaissé'}
+                            </span>
+                          </div>
+
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                            <p className="text-[11px] leading-relaxed font-sans opacity-85" style={{ color: textMuted }}>
+                              {isCodSettled 
+                                ? "Le virement bancaire du transporteur a été reçu et reconcilié sur le compte entreprise." 
+                                : "Fonds collectés par le chauffeur livreur en cours de transfert vers votre compte."}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newStatus = !isCodSettled;
+                                setSettledOrdersMap(prev => ({ ...prev, [selectedOrder.order_id]: newStatus }));
+                                showToast(newStatus ? `COD pour #${selectedOrder.order_id} marqué comme Encaissé (Virement reçu) !` : `COD pour #${selectedOrder.order_id} marqué comme Non Encaissé.`, newStatus ? 'success' : 'info');
+                              }}
+                              className="px-3.5 py-2 rounded-xl font-bold text-[11px] shrink-0 transition active:scale-95 cursor-pointer shadow-xs text-white"
+                              style={{
+                                background: isCodSettled ? '#059669' : '#d97706',
+                                color: '#ffffff'
+                              }}
+                            >
+                              {isCodSettled ? 'Marquer Non Encaissé' : 'Marquer COD Encaissé (Virement reçu)'}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* WhatsApp Direct Template Buttons */}
+            <div
+              className="rounded-2xl p-6 space-y-4 transition-all duration-300"
+              style={{
+                background: cardBg,
+                border: borderStyle,
+                boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.35)' : '0 2px 10px rgba(15,30,54,0.04)',
+              }}
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-emerald-500/10 border border-emerald-500/20 text-emerald-500">
+                  <MessageSquare className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black uppercase tracking-wider" style={{ color: textPrimary }}>
+                    Relance & notifications WhatsApp
+                  </h4>
+                  <p className="text-[10.5px]" style={{ color: textMuted }}>
+                    Envoyez des messages automatisés directement au client
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {[
+                  { label: 'Confirmation', status: 'pending' as const, bg: '#10b981' },
+                  { label: 'Expédition', status: 'shipped' as const, bg: '#6366f1' },
+                  { label: 'Livraison', status: 'delivered' as const, bg: '#06b6d4' },
+                ].map(tmpl => (
+                  <div
+                    key={tmpl.label}
+                    className="p-3.5 rounded-xl space-y-2 text-center"
+                    style={{
+                      background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
+                      border: borderStyle,
+                    }}
+                  >
+                    <span className="text-[10px] font-black uppercase tracking-wider block" style={{ color: textMuted }}>
+                      {tmpl.label}
+                    </span>
+                    <div className="flex gap-1.5 justify-center">
+                      <button
+                        onClick={() => handleNotifyWhatsApp(selectedOrder, tmpl.status, 'Fr')}
+                        className="flex-1 py-1.5 rounded-lg text-[10px] font-bold text-white transition active:scale-95 cursor-pointer"
+                        style={{ background: tmpl.bg }}
+                      >
+                        FR
+                      </button>
+                      <button
+                        onClick={() => handleNotifyWhatsApp(selectedOrder, tmpl.status, 'Ar')}
+                        className="flex-1 py-1.5 rounded-lg text-[10px] font-bold text-white transition active:scale-95 cursor-pointer opacity-85 hover:opacity-100"
+                        style={{ background: tmpl.bg }}
+                      >
+                        AR
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Internal Staff Notes Box Card */}
+            <div
+              className="rounded-2xl p-6 space-y-4 transition-all duration-300"
+              style={{
+                background: cardBg,
+                border: borderStyle,
+                boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.35)' : '0 2px 10px rgba(15,30,54,0.04)',
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-amber-500/10 border border-amber-500/20 text-amber-500">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black uppercase tracking-wider" style={{ color: textPrimary }}>
+                      Notes Équipe & Instructions de Préparation
+                    </h4>
+                    <p className="text-[10.5px]" style={{ color: textMuted }}>
+                      Notes privées visibles uniquement par les opérateurs
+                    </p>
+                  </div>
+                </div>
+
+                {noteSavedFeedback && (
+                  <span className="text-[11px] font-extrabold text-emerald-500 animate-pulse flex items-center gap-1">
+                    <CheckCircle className="w-3.5 h-3.5" /> Note enregistrée
+                  </span>
+                )}
+              </div>
+
+              {/* Preset Quick Note Badges */}
+              <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider opacity-60 mr-1" style={{ color: textMuted }}>
+                  Raccourcis :
+                </span>
+                {[
+                  '🚚 Livrer après 17h',
+                  '🎁 Joindre Échantillon Gratuit',
+                  '📦 Emballage Fragile',
+                  '📞 Confirmer avant départ',
+                ].map(tag => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => {
+                      const current = staffNoteInputs[selectedOrder.order_id] || staffNotesMap[selectedOrder.order_id] || '';
+                      const newText = current ? `${current} · ${tag}` : tag;
+                      setStaffNoteInputs(prev => ({ ...prev, [selectedOrder.order_id]: newText }));
+                    }}
+                    className="px-2.5 py-1 rounded-lg text-[10.5px] font-bold transition active:scale-95 cursor-pointer"
+                    style={{
+                      background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
+                      border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                      color: textPrimary,
+                    }}
+                  >
+                    + {tag}
+                  </button>
+                ))}
+              </div>
+
+              {/* Note Textarea & Save Action */}
+              <div className="space-y-2">
+                <textarea
+                  rows={3}
+                  placeholder="Écrivez une note pour l'équipe logistique..."
+                  value={staffNoteInputs[selectedOrder.order_id] !== undefined ? staffNoteInputs[selectedOrder.order_id] : (staffNotesMap[selectedOrder.order_id] || '')}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setStaffNoteInputs(prev => ({ ...prev, [selectedOrder.order_id]: val }));
+                  }}
+                  className="w-full text-xs font-medium rounded-xl p-3.5 outline-none transition duration-200 resize-none"
+                  style={{
+                    background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                    border: borderStyle,
+                    color: textPrimary,
+                  }}
+                />
+
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const val = staffNoteInputs[selectedOrder.order_id] !== undefined
+                        ? staffNoteInputs[selectedOrder.order_id]
+                        : (staffNotesMap[selectedOrder.order_id] || '');
+                      setStaffNotesMap(prev => ({ ...prev, [selectedOrder.order_id]: val }));
+                      setNoteSavedFeedback(true);
+                      setTimeout(() => setNoteSavedFeedback(false), 2500);
+                      logAdminAction("Note Équipe Ajoutée", `Note pour commande ${selectedOrder.order_id}: ${val}`);
+                    }}
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-white transition active:scale-95 cursor-pointer shadow-sm"
+                    style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }}
+                  >
+                    Enregistrer la Note
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Activity Audit Timeline Card */}
+            <div
+              className="rounded-2xl p-6 space-y-4 transition-all duration-300"
+              style={{
+                background: cardBg,
+                border: borderStyle,
+                boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.35)' : '0 2px 10px rgba(15,30,54,0.04)',
+              }}
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-indigo-500/10 border border-indigo-500/20 text-indigo-500">
+                  <ClipboardList className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black uppercase tracking-wider" style={{ color: textPrimary }}>
+                    Journal d'Activité & Historique (Audit Log)
+                  </h4>
+                  <p className="text-[10.5px]" style={{ color: textMuted }}>
+                    Traçabilité en temps réel des actions sur la commande
+                  </p>
+                </div>
+              </div>
+
+              <div className="relative pl-6 space-y-5 border-l-2 ml-3 pt-1" style={{ borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
+
+                {/* 1. Order Creation Event */}
+                <div className="relative">
+                  <div className="absolute -left-[31px] top-0.5 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 shadow-xs" />
+                  <div className="space-y-0.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-extrabold" style={{ color: textPrimary }}>Commande créée par le client</span>
+                      <span className="text-[10px] font-mono opacity-60" style={{ color: textMuted }}>
+                        {orderDate.toLocaleDateString('fr-FR')} {orderDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <p className="text-[11px] opacity-80" style={{ color: textMuted }}>
+                      Commande #{selectedOrder.order_id} passée sur le site par <strong style={{ color: textPrimary }}>{selectedOrder.customer_name}</strong> ({selectedOrder.city})
+                    </p>
+                    <span className="inline-block px-2 py-0.5 rounded text-[9.5px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 mt-1">
+                      Auteur : Client (Boutique)
+                    </span>
+                  </div>
+                </div>
+
+                {/* 2. Order Confirmation / Status Change Event */}
+                {selectedOrder.status !== 'Pending' && (
+                  <div className="relative">
+                    <div className="absolute -left-[31px] top-0.5 w-4 h-4 rounded-full bg-blue-500 border-2 border-white dark:border-slate-900 shadow-xs" />
+                    <div className="space-y-0.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-extrabold text-blue-600 dark:text-blue-400">Statut mis à jour : {sm.label}</span>
+                        <span className="text-[10px] font-mono opacity-60" style={{ color: textMuted }}>Aujourd'hui</span>
+                      </div>
+                      <p className="text-[11px] opacity-80" style={{ color: textMuted }}>
+                        Confirmation téléphonique effectuée et validée. Statut changé vers <strong style={{ color: textPrimary }}>{sm.label}</strong>.
+                      </p>
+                      <span className="inline-block px-2 py-0.5 rounded text-[9.5px] font-mono font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 mt-1">
+                        Auteur : {currentUser?.name || 'Youssef Mahir (Admin)'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. Shipping Event */}
+                {selectedOrder.tracking_number && (
+                  <div className="relative">
+                    <div className="absolute -left-[31px] top-0.5 w-4 h-4 rounded-full bg-indigo-500 border-2 border-white dark:border-slate-900 shadow-xs" />
+                    <div className="space-y-0.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-extrabold text-indigo-600 dark:text-indigo-400">Colis attribué à {selectedOrder.courier}</span>
+                        <span className="text-[10px] font-mono opacity-60" style={{ color: textMuted }}>Récent</span>
+                      </div>
+                      <p className="text-[11px] opacity-80" style={{ color: textMuted }}>
+                        Bordereau d'expédition généré. Code de suivi : <strong className="font-mono">{selectedOrder.tracking_number}</strong>
+                      </p>
+                      <span className="inline-block px-2 py-0.5 rounded text-[9.5px] font-mono font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 mt-1">
+                        Transporteur : {selectedOrder.courier}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* 4. Staff Note Log */}
+                {staffNotesMap[selectedOrder.order_id] && (
+                  <div className="relative">
+                    <div className="absolute -left-[31px] top-0.5 w-4 h-4 rounded-full bg-amber-500 border-2 border-white dark:border-slate-900 shadow-xs" />
+                    <div className="space-y-0.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-extrabold text-amber-600 dark:text-amber-400">Note de préparation ajoutée</span>
+                        <span className="text-[10px] font-mono opacity-60" style={{ color: textMuted }}>Enregistrée</span>
+                      </div>
+                      <p className="text-[11px] font-semibold italic p-2 rounded-lg bg-amber-500/10 text-amber-800 dark:text-amber-200 border border-amber-500/20 mt-1">
+                        "{staffNotesMap[selectedOrder.order_id]}"
+                      </p>
+                      <span className="inline-block px-2 py-0.5 rounded text-[9.5px] font-mono font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 mt-1">
+                        Auteur : {currentUser?.name || 'Équipe Opérations'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column (1 col) */}
+          <div className="space-y-6">
+
+            {/* Customer Profile Card (Shopify Admin Standard) */}
+            {(() => {
+              const rawPhoneDigits = selectedOrder.phone_number?.replace(/\D/g, '') || '';
+              let cleanPhoneDigits = rawPhoneDigits;
+              if (cleanPhoneDigits.length > 10 && cleanPhoneDigits.startsWith('0')) {
+                cleanPhoneDigits = cleanPhoneDigits.slice(0, 10);
+              }
+              const formattedPhone = cleanPhoneDigits.length === 10
+                ? cleanPhoneDigits.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5')
+                : (selectedOrder.phone_number || '—');
+
+              const isGenericTestUser =
+                selectedOrder.customer_name?.toLowerCase().includes('test') ||
+                selectedOrder.phone_number?.replace(/\D/g, '').length > 14;
+
+              const customerOrders = isGenericTestUser ? [selectedOrder] : orders.filter(o => {
+                const p = o.phone_number?.replace(/\D/g, '');
+                if (cleanPhoneDigits && p) return p === cleanPhoneDigits;
+                return o.customer_name?.toLowerCase().trim() === selectedOrder.customer_name?.toLowerCase().trim();
+              });
+
+              const totalCustomerOrders = customerOrders.length;
+              const totalLTV = customerOrders.reduce((sum, o) => sum + (o.status !== 'Cancelled' ? o.total : 0), 0);
+              const deliveredOrdersCount = customerOrders.filter(o => o.status === 'Delivered').length;
+              const cancelledOrdersCount = customerOrders.filter(o => o.status === 'Cancelled').length;
+
+              const isRepeatCustomer = totalCustomerOrders > 1;
+
+              let cleanCity = selectedOrder.city || 'Maroc';
+              if (cleanCity.includes(' - ')) {
+                const parts = cleanCity.split(' - ');
+                cleanCity = parts[parts.length - 1];
+              }
+
+              let trustStatusLabel = 'En cours (Première cmd)';
+              let trustStatusColor = 'text-blue-600 dark:text-blue-400';
+
+              if (deliveredOrdersCount > 0) {
+                const successRate = Math.round((deliveredOrdersCount / totalCustomerOrders) * 100);
+                trustStatusLabel = `${successRate}% Livré (${deliveredOrdersCount}/${totalCustomerOrders})`;
+                trustStatusColor = successRate >= 80 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-500';
+              } else if (cancelledOrdersCount > 0) {
+                trustStatusLabel = `⚠️ ${cancelledOrdersCount} annulée(s)`;
+                trustStatusColor = 'text-rose-500';
+              } else if (selectedOrder.status === 'Delivered') {
+                trustStatusLabel = '100% Livré (1/1)';
+                trustStatusColor = 'text-emerald-600 dark:text-emerald-400';
+              }
+
+              return (
+                <div
+                  className="rounded-2xl p-5 space-y-4 transition-all duration-300"
+                  style={{
+                    background: cardBg,
+                    border: borderStyle,
+                    boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.35)' : '0 2px 10px rgba(15,30,54,0.04)',
+                  }}
+                >
+                  {/* Card Header Title */}
+                  <div className="flex items-center justify-between pb-3 border-b" style={{ borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' }}>
+                    <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-2" style={{ color: textPrimary }}>
+                      <User className="w-4 h-4 text-emerald-500" />
+                      Client
+                    </h4>
+                    <span
+                      className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold"
+                      style={{
+                        background: isRepeatCustomer ? 'rgba(99,102,241,0.12)' : (isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9'),
+                        color: isRepeatCustomer ? (isDark ? '#a5b4fc' : '#4f46e5') : textMuted,
+                        border: `1px solid ${isRepeatCustomer ? 'rgba(99,102,241,0.25)' : borderStyle}`,
+                      }}
+                    >
+                      {isGenericTestUser ? '🧪 Commande de Test' : (isRepeatCustomer ? `Client Fidèle (${totalCustomerOrders} cmd)` : 'Nouveau Client')}
+                    </span>
+                  </div>
+
+                  {/* Customer Profile Row */}
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center font-black text-xs shrink-0"
+                      style={{
+                        background: isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9',
+                        color: textPrimary,
+                        border: borderStyle,
+                      }}
+                    >
+                      {selectedOrder.customer_name ? selectedOrder.customer_name.slice(0, 2).toUpperCase() : 'CL'}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h5 className="font-extrabold text-sm truncate" style={{ color: textPrimary }}>
+                        {selectedOrder.customer_name}
+                      </h5>
+                      <p className="text-[11px] font-mono opacity-70" style={{ color: textMuted }}>
+                        {formattedPhone}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Clean 2-Column Metrics Box */}
+                  <div
+                    className="grid grid-cols-2 gap-3 p-3.5 rounded-xl text-xs"
+                    style={{
+                      background: isDark ? 'rgba(255,255,255,0.025)' : '#f8fafc',
+                      border: borderStyle,
+                    }}
+                  >
+                    <div className="space-y-0.5">
+                      <span className="text-[10px] uppercase font-extrabold tracking-wider block opacity-60" style={{ color: textMuted }}>
+                        Valeur Totale (LTV)
+                      </span>
+                      <p className="text-sm font-black font-mono text-emerald-600 dark:text-emerald-400">
+                        {totalLTV.toFixed(2)} DH
+                      </p>
+                    </div>
+
+                    <div className="space-y-0.5">
+                      <span className="text-[10px] uppercase font-extrabold tracking-wider block opacity-60" style={{ color: textMuted }}>
+                        Historique Commandes
+                      </span>
+                      <p className="text-sm font-black font-mono" style={{ color: textPrimary }}>
+                        {totalCustomerOrders} {totalCustomerOrders > 1 ? 'commandes' : 'commande'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Contact Details List */}
+                  <div className="space-y-2 text-xs pt-1">
+                    <div className="flex items-center justify-between py-1">
+                      <span className="font-medium opacity-70" style={{ color: textMuted }}>Téléphone</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold font-mono text-xs" style={{ color: textPrimary }}>
+                          {formattedPhone}
+                        </span>
+                        <a
+                          href={`https://wa.me/${cleanPhoneDigits}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-1 rounded-md text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 transition"
+                          title="WhatsApp Client"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5" />
+                        </a>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between py-1.5 border-t" style={{ borderColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)' }}>
+                      <span className="font-medium opacity-70" style={{ color: textMuted }}>Ville</span>
+                      <span className="font-bold" style={{ color: textPrimary }}>{cleanCity}</span>
+                    </div>
+
+                    {/* Account Status Row */}
+                    <div className="flex items-center justify-between py-1.5 border-t" style={{ borderColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)' }}>
+                      <span className="font-medium opacity-70" style={{ color: textMuted }}>Compte Boutique</span>
+                      {selectedOrder.user_id || selectedOrder.has_account ? (
+                        <span className="font-extrabold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                          <CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> Membre Enregistré
+                        </span>
+                      ) : (
+                        <span className="font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                          <User className="w-3.5 h-3.5 text-slate-400" /> Client Invité (Sans Compte)
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between py-1.5 border-t" style={{ borderColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)' }}>
+                      <span className="font-medium opacity-70" style={{ color: textMuted }}>Fiabilité COD</span>
+                      <span className={`font-bold ${trustStatusColor}`}>
+                        {trustStatusLabel}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Delivery Address & Transport Card */}
+            <div
+              className="rounded-2xl p-6 space-y-4 transition-all duration-300"
+              style={{
+                background: cardBg,
+                border: borderStyle,
+                boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.35)' : '0 2px 10px rgba(15,30,54,0.04)',
+              }}
+            >
+              <h4 className="text-xs font-black uppercase tracking-wider" style={{ color: textPrimary }}>
+                Adresse de livraison & Transport
+              </h4>
+
+              <div className="p-3.5 rounded-xl space-y-1 text-xs" style={{ background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', border: borderStyle }}>
+                <p className="font-semibold leading-relaxed" style={{ color: textPrimary }}>
+                  {selectedOrder.address}
+                </p>
+                <p className="font-bold text-emerald-500">
+                  {selectedOrder.city}, Maroc
+                </p>
+              </div>
+
+              {(() => {
+                const courierName = (selectedOrder.courier || 'Yalidine Express').toUpperCase();
+                const trackingCode = selectedOrder.tracking_number || `YAL-${selectedOrder.order_id.replace(/\D/g, '') || '806990'}`;
+                const trackingUrl = selectedOrder.tracking_link || (
+                  courierName.includes('CATHEDIS') 
+                    ? `https://cathedis.ma/tracking?code=${trackingCode}` 
+                    : `https://yalidine.app/tracking/?tracking=${trackingCode}`
+                );
+
+                let liveStatusText = "🚚 Colis en cours d'acheminement par le chauffeur";
+                let liveStatusBg = isDark ? 'rgba(99,102,241,0.15)' : '#e0e7ff';
+                let liveStatusColor = isDark ? '#a5b4fc' : '#4338ca';
+
+                if (selectedOrder.status === 'Delivered') {
+                  liveStatusText = "🟢 Colis livré au client & encaissé";
+                  liveStatusBg = isDark ? 'rgba(16,185,129,0.15)' : '#d1fae5';
+                  liveStatusColor = isDark ? '#6ee7b7' : '#047857';
+                } else if (selectedOrder.status === 'Cancelled') {
+                  liveStatusText = "⚠️ Livraison annulée / Colis retourné";
+                  liveStatusBg = isDark ? 'rgba(244,63,94,0.15)' : '#ffe4e6';
+                  liveStatusColor = isDark ? '#fda4af' : '#be123c';
+                } else if (!selectedOrder.tracking_number) {
+                  liveStatusText = "📦 Prêt pour ramassage par le livreur";
+                  liveStatusBg = isDark ? 'rgba(245,158,11,0.15)' : '#fef3c7';
+                  liveStatusColor = isDark ? '#fcd34d' : '#b45309';
+                }
+
+                return (
+                  <div className="space-y-3 pt-1">
+                    {/* Live Courier Status Banner */}
+                    <div 
+                      className="p-3 rounded-xl flex items-center gap-2.5 text-xs font-bold transition"
+                      style={{ background: liveStatusBg, color: liveStatusColor }}
+                    >
+                      <Truck className="w-4 h-4 shrink-0" />
+                      <span>{liveStatusText}</span>
+                    </div>
+
+                    {/* Courier & Tracking Code Card */}
+                    <div 
+                      className="p-3.5 rounded-xl space-y-3 text-xs"
+                      style={{ 
+                        background: isDark ? 'rgba(255,255,255,0.02)' : '#f8fafc', 
+                        border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}` 
+                      }}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <span className="text-[9.5px] uppercase font-black tracking-wider text-slate-400 block">
+                            TRANSPORTEUR
+                          </span>
+                          <span className="font-black text-xs uppercase tracking-tight" style={{ color: textPrimary }}>
+                            {courierName}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[9.5px] uppercase font-black tracking-wider text-slate-400 block">
+                            CODE DE SUIVI
+                          </span>
+                          <span className="font-mono font-bold text-xs text-indigo-600 dark:text-indigo-400">
+                            {trackingCode}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* External Tracking Link & Copy Buttons */}
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <a
+                          href={trackingUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px] transition active:scale-95 shadow-xs text-white"
+                          style={{ color: '#ffffff' }}
+                        >
+                          <ExternalLink className="w-3.5 h-3.5 text-white" />
+                          <span className="text-white font-bold" style={{ color: '#ffffff' }}>Suivre sur {courierName.includes('CATHEDIS') ? 'Cathedis' : 'Yalidine'}</span>
+                        </a>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(trackingCode);
+                            showToast(`Code suivi ${trackingCode} copié !`, 'success');
+                          }}
+                          className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl font-bold text-[11px] transition active:scale-95 cursor-pointer"
+                          style={{
+                            background: isDark ? 'rgba(255,255,255,0.06)' : '#ffffff',
+                            border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+                            color: textPrimary
+                          }}
+                        >
+                          <Copy className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Copier code</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Manage / Register Shipping Button */}
+                    <button
+                      type="button"
+                      onClick={() => handleOpenShippingPanel(selectedOrder)}
+                      className="w-full py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer border hover:bg-slate-50 dark:hover:bg-slate-850"
+                      style={{ borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}
+                    >
+                      <Truck className="w-3.5 h-3.5 text-indigo-500" />
+                      <span>{selectedOrder.tracking_number ? "Modifier l'expédition" : "Configurer l'expédition livreur"}</span>
+                    </button>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* AI Skin Diagnostic Card */}
+            {selectedOrder.skin_diagnostic && (
+              <div
+                className="rounded-2xl p-6 space-y-3 transition-all duration-300"
+                style={{
+                  background: cardBg,
+                  border: borderStyle,
+                  boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.35)' : '0 2px 10px rgba(15,30,54,0.04)',
+                }}
+              >
+                <h4 className="text-xs font-black uppercase tracking-wider text-purple-500">
+                  Diagnostic IA · Peau
+                </h4>
+                <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                  <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                    <span className="text-[8px] uppercase font-bold text-purple-400 block">Type</span>
+                    <strong className="text-[11px] font-extrabold text-purple-500">{selectedOrder.skin_diagnostic.skinType}</strong>
+                  </div>
+                  <div className="p-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
+                    <span className="text-[8px] uppercase font-bold text-indigo-400 block">Problème</span>
+                    <strong className="text-[11px] font-extrabold text-indigo-500">{selectedOrder.skin_diagnostic.concern}</strong>
+                  </div>
+                  <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                    <span className="text-[8px] uppercase font-bold text-blue-400 block">Soleil</span>
+                    <strong className="text-[11px] font-extrabold text-blue-500">{selectedOrder.skin_diagnostic.sunExposure}</strong>
+                  </div>
+                </div>
+              </div>
+            )}
+
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 admin-tab-enter">
 
-      {/* Sub-tab navigation — sliding pill */}
+      {/* Sub-tab navigation bar */}
       <div
-        className={`relative flex flex-wrap items-center gap-1 border p-1.5 w-fit transition-all duration-300 rounded-2xl ${
+        className={`flex flex-wrap items-center gap-1.5 p-1.5 w-fit transition-all duration-300 rounded-2xl ${
           adminTheme === 'light'
-            ? 'bg-slate-50 border-slate-200/60 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)] shadow-sm'
-            : 'bg-slate-900/30 border-slate-900 shadow-md'
+            ? 'bg-white border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(15,23,42,0.04)]'
+            : 'bg-slate-900 border border-slate-800 shadow-md'
         }`}
         role="tablist"
       >
-        {/* Animated sliding pill */}
-        <span
-          ref={ordersPillRef}
-          aria-hidden="true"
-          className="absolute left-1.5 top-1.5 pointer-events-none rounded-xl"
-          style={{
-            height: 'calc(100% - 12px)',
-            background: adminTheme === 'light'
-              ? '#ffffff'
-              : 'hsl(224 18% 12%)',
-            border: adminTheme === 'light'
-              ? '1px solid rgba(0,0,0,0.03)'
-              : '1px solid rgba(255,255,255,0.03)',
-            boxShadow: adminTheme === 'light'
-              ? '0 4px 12px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.02)'
-              : '0 4px 20px rgba(0,0,0,0.4)',
-            transition: 'transform 280ms cubic-bezier(0.25, 1, 0.5, 1), width 280ms cubic-bezier(0.25, 1, 0.5, 1)',
-            willChange: 'transform, width',
-            zIndex: 0,
-          }}
-        />
         {([
           { id: 'list',           label: 'Commandes',          icon: ShoppingBag,  count: orders.length },
           { id: 'abandoned',      label: 'Paniers Abandonnés', icon: ShoppingCart, count: abandonedCarts.length },
           { id: 'shipping',       label: 'Expéditions & COD',  icon: Truck,        count: orders.filter(o => o.courier).length },
           { id: 'reconciliation', label: 'Rapprochement COD',  icon: DollarSign,   count: orders.filter(o => o.courier && !o.reconciled).length }
-        ] as const).map((tab, idx) => {
+        ] as const).map((tab) => {
           const TabIcon = tab.icon;
+          const isActive = ordersSubTab === tab.id;
           return (
             <button
               key={tab.id}
-              ref={el => { ordersBtnRefs.current[idx] = el; }}
               role="tab"
-              aria-selected={ordersSubTab === tab.id}
+              aria-selected={isActive}
               onClick={() => setOrdersSubTab(tab.id)}
-              className={`relative z-10 px-4.5 py-2.5 rounded-xl font-bold uppercase tracking-wider transition-all duration-300 flex items-center gap-2 cursor-pointer group active:scale-[0.98] ${
-                ordersSubTab === tab.id
-                  ? (adminTheme === 'light' ? 'text-slate-800' : 'text-emerald-400')
-                  : (adminTheme === 'light' ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-slate-200')
+              className={`px-4 py-2 rounded-xl font-extrabold uppercase tracking-wider transition-all duration-200 flex items-center gap-2 cursor-pointer active:scale-95 text-xs ${
+                isActive
+                  ? (adminTheme === 'light' ? 'bg-slate-900 text-white shadow-sm' : 'bg-emerald-500 text-slate-950 shadow-sm')
+                  : (adminTheme === 'light' ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/60' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/40')
               }`}
-              style={{ fontSize: 'var(--admin-text-xs)' }}
             >
-              <TabIcon className={`w-3.5 h-3.5 transition-transform duration-300 group-hover:scale-110 ${
-                ordersSubTab === tab.id
-                  ? (adminTheme === 'light' ? 'text-slate-800' : 'text-emerald-400')
-                  : 'text-slate-400'
-              }`} /> 
+              <TabIcon className="w-3.5 h-3.5" /> 
               <span>{tab.label}</span>
               <span
-                className={`ml-1 px-2 py-0.5 rounded-full font-bold text-[10px] border transition-colors duration-300 ${
-                  ordersSubTab === tab.id
-                    ? (adminTheme === 'light' ? 'bg-emerald-50 text-emerald-700 border-emerald-200/40' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20')
-                    : (adminTheme === 'light' ? 'bg-slate-200/50 text-slate-500 border-transparent' : 'bg-slate-900 text-slate-500 border-transparent')
+                className={`ml-1 px-2 py-0.5 rounded-full font-mono font-bold text-[10px] ${
+                  isActive
+                    ? (adminTheme === 'light' ? 'bg-white/20 text-white' : 'bg-slate-950/20 text-slate-950')
+                    : (adminTheme === 'light' ? 'bg-slate-100 text-slate-600' : 'bg-slate-800 text-slate-400')
                 }`}
               >
                 {tab.count}
@@ -924,321 +2059,431 @@ export default function OrdersTab() {
 
       {/* ---- ORDERS LIST VIEW ---- */}
       {ordersSubTab === 'list' && (
-        <div className="t-panel space-y-5 animate-fade-in">
-          {/* Search and status controls */}
-          <div className={`flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-5 rounded-3xl border transition-all duration-300 ${
-            adminTheme === 'light'
-              ? 'bg-slate-50/50 border-slate-200/80 shadow-sm'
-              : 'bg-slate-900/25 border-slate-800/40'
-          }`}>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto flex-1">
-              <div className="relative flex-1 max-w-sm">
-                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
-                <input
-                  type="text"
-                  placeholder="Rechercher par ID, client, téléphone, ville..."
-                  value={orderSearchQuery}
-                  onChange={(e) => setOrderSearchQuery(e.target.value)}
-                  className={`w-full text-xs font-semibold rounded-xl pl-10 pr-4 py-2.5 border transition outline-none focus:ring-1 focus:ring-emerald-500/40 ${
-                    adminTheme === 'light'
-                      ? 'bg-white border-slate-200 text-slate-800 focus:border-slate-350 shadow-2xs'
-                      : 'bg-slate-950 border-slate-900 text-slate-200 focus:border-slate-800'
-                  }`}
-                />
-              </div>
-              <button
-                onClick={() => handleExportOrdersToCsv(filteredOrders)}
-                className={`flex items-center justify-center gap-2 px-4 py-2.5 border rounded-xl text-xs font-bold uppercase transition duration-200 cursor-pointer shadow-2xs ${
-                  adminTheme === 'light'
-                    ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
-                    : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300'
-                }`}
-              >
-                <FileText className="w-4 h-4 text-slate-400 dark:text-slate-500" /> 
-                <span>Exporter en CSV</span>
-              </button>
-            </div>
+        <div className="t-panel space-y-6 animate-fade-in">
+          {/* Executive Top Metrics Summary Bar */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              {
+                label: 'Total Commandes',
+                value: orders.length,
+                subtext: `${orders.reduce((acc, o) => acc + (o.total || 0), 0).toLocaleString('fr-FR')} DH Brut`,
+                color: '#3b82f6',
+                icon: ShoppingBag,
+              },
+              {
+                label: 'À Traiter (En Attente)',
+                value: orders.filter(o => o.status === 'Pending').length,
+                subtext: 'Nécessite confirmation',
+                color: '#f59e0b',
+                icon: AlertTriangle,
+              },
+              {
+                label: 'Prêtes / Expédiées',
+                value: orders.filter(o => ['Confirmed', 'Shipped'].includes(o.status)).length,
+                subtext: `${orders.filter(o => o.status === 'Shipped').length} en transit`,
+                color: '#6366f1',
+                icon: Truck,
+              },
+              {
+                label: 'Livrées (Réussies)',
+                value: orders.filter(o => o.status === 'Delivered').length,
+                subtext: `${orders.length > 0 ? Math.round((orders.filter(o => o.status === 'Delivered').length / orders.length) * 100) : 0}% taux de livraison`,
+                color: '#10b981',
+                icon: CheckCircle,
+              },
+            ].map((metric, i) => {
+              const MetricIcon = metric.icon;
+              return (
+                <div
+                  key={i}
+                  className="p-5 rounded-2xl flex items-center justify-between transition-all duration-300 relative overflow-hidden"
+                  style={{
+                    background: adminTheme === 'light' ? '#ffffff' : 'hsl(224,25%,9%)',
+                    border: `1px solid ${adminTheme === 'light' ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)'}`,
+                    boxShadow: adminTheme === 'light' ? '0 2px 12px -2px rgba(15,23,42,0.04)' : '0 4px 20px rgba(0,0,0,0.3)',
+                  }}
+                >
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-extrabold uppercase tracking-widest block" style={{ color: adminTheme === 'light' ? '#94a3b8' : '#64748b' }}>
+                      {metric.label}
+                    </span>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-black font-mono tracking-tight" style={{ color: adminTheme === 'light' ? '#0f172a' : '#f1f5f9' }}>
+                        {metric.value}
+                      </span>
+                    </div>
+                    <span className="text-[10.5px] font-medium block opacity-75" style={{ color: adminTheme === 'light' ? '#64748b' : '#94a3b8' }}>
+                      {metric.subtext}
+                    </span>
+                  </div>
 
-            {/* Status filtering tabs */}
-            <div className={`flex flex-wrap gap-1 p-1 rounded-2xl border transition ${
-              adminTheme === 'light' ? 'bg-slate-100/60 border-slate-200/50' : 'bg-slate-950 border-slate-900/60'
-            }`}>
-              {['ALL', 'PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((status) => {
-                const isActive = orderStatusFilter === status;
-                
-                const activeColors: Record<string, { text: string; bg: string; border: string; ring: string }> = {
-                  ALL: {
-                    text: adminTheme === 'light' ? 'text-slate-800' : 'text-slate-200',
-                    bg: adminTheme === 'light' ? 'bg-white' : 'bg-slate-900',
-                    border: adminTheme === 'light' ? 'border-slate-250' : 'border-slate-800',
-                    ring: adminTheme === 'light' ? 'shadow-sm' : 'shadow-md shadow-black/20'
-                  },
-                  PENDING: {
-                    text: 'text-amber-600 dark:text-amber-400',
-                    bg: adminTheme === 'light' ? 'bg-amber-50' : 'bg-amber-500/10',
-                    border: adminTheme === 'light' ? 'border-amber-200' : 'border-amber-500/20',
-                    ring: ''
-                  },
-                  CONFIRMED: {
-                    text: 'text-blue-600 dark:text-blue-400',
-                    bg: adminTheme === 'light' ? 'bg-blue-50' : 'bg-blue-500/10',
-                    border: adminTheme === 'light' ? 'border-blue-200' : 'border-blue-500/20',
-                    ring: ''
-                  },
-                  SHIPPED: {
-                    text: 'text-indigo-600 dark:text-indigo-400',
-                    bg: adminTheme === 'light' ? 'bg-indigo-50' : 'bg-indigo-500/10',
-                    border: adminTheme === 'light' ? 'border-indigo-200' : 'border-indigo-500/20',
-                    ring: ''
-                  },
-                  DELIVERED: {
-                    text: 'text-emerald-600 dark:text-emerald-400',
-                    bg: adminTheme === 'light' ? 'bg-emerald-50' : 'bg-emerald-500/10',
-                    border: adminTheme === 'light' ? 'border-emerald-200' : 'border-emerald-500/20',
-                    ring: ''
-                  },
-                  CANCELLED: {
-                    text: 'text-rose-600 dark:text-rose-400',
-                    bg: adminTheme === 'light' ? 'bg-rose-50' : 'bg-rose-500/10',
-                    border: adminTheme === 'light' ? 'border-rose-200' : 'border-rose-500/20',
-                    ring: ''
-                  }
-                };
-
-                const ac = activeColors[status] || activeColors.ALL;
-
-                return (
-                  <button
-                    key={status}
-                    onClick={() => setOrderStatusFilter(status)}
-                    className={`px-3 py-1.5 rounded-xl font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer text-[9.5px] border ${
-                      isActive
-                        ? `${ac.text} ${ac.bg} ${ac.border} ${ac.ring || 'shadow-sm'}`
-                        : (adminTheme === 'light'
-                            ? 'text-slate-500 border-transparent hover:text-slate-800'
-                            : 'text-slate-400 border-transparent hover:text-slate-200')
-                    }`}
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                    style={{
+                      background: `${metric.color}15`,
+                      border: `1px solid ${metric.color}30`,
+                    }}
                   >
-                    {status === 'ALL' ? 'Tous' : status}
-                  </button>
-                );
-              })}
-            </div>
+                    <MetricIcon className="w-5 h-5" style={{ color: metric.color }} strokeWidth={2} />
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
-          {/* Orders list table container */}
-          <div className={`border rounded-3xl overflow-hidden transition-all duration-300 shadow-sm ${
-            adminTheme === 'light' ? 'bg-white border-slate-200/80' : 'bg-slate-900/10 border-slate-900 shadow-xl'
-          }`}>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left">
-                <thead>
-                  <tr className={`border-b transition-colors ${
-                    adminTheme === 'light' ? 'border-slate-100 bg-slate-50/50' : 'border-slate-900/60 bg-slate-950/20'
-                  }`}>
-                    {['', 'ID Commande', 'Date', 'Client', 'Ville', 'Articles', 'Total', 'Statut', ''].map((h, i) => (
-                      <th
-                        key={i}
-                        className={`p-4 font-black uppercase tracking-widest text-[10px] ${
-                          i === 8 ? 'text-right' : ''
-                        } ${
-                          adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'
-                        }`}
+          {/* Unified Orders Data Card */}
+          <div
+            className="rounded-2xl overflow-hidden transition-all duration-300"
+            style={{
+              background: adminTheme === 'light' ? '#ffffff' : 'hsl(224,25%,9%)',
+              border: `1px solid ${adminTheme === 'light' ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)'}`,
+              boxShadow: adminTheme === 'light' ? '0 4px 20px -4px rgba(15,23,42,0.05)' : '0 4px 24px rgba(0,0,0,0.35)',
+            }}
+          >
+            {/* Integrated Toolbar Header (Search + Status Pills + CSV Action) */}
+            <div className="p-4 space-y-3 border-b" style={{ borderColor: adminTheme === 'light' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)' }}>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                {/* Search Omnibox */}
+                <div className="relative flex-1 max-w-lg">
+                  <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: adminTheme === 'light' ? '#94a3b8' : '#64748b' }} />
+                  <input
+                    type="text"
+                    placeholder="Rechercher par N° commande (#PO-102), client, téléphone, ville..."
+                    value={orderSearchQuery}
+                    onChange={(e) => setOrderSearchQuery(e.target.value)}
+                    className="w-full text-xs font-medium rounded-xl pl-10 pr-9 py-2.5 outline-none transition duration-200"
+                    style={{
+                      background: adminTheme === 'light' ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.04)',
+                      border: `1px solid ${adminTheme === 'light' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)'}`,
+                      color: adminTheme === 'light' ? '#0f172a' : '#f1f5f9',
+                    }}
+                  />
+                  {orderSearchQuery && (
+                    <button
+                      onClick={() => setOrderSearchQuery('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold opacity-60 hover:opacity-100 cursor-pointer"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                {/* CSV Export Button */}
+                <button
+                  onClick={() => handleExportOrdersToCsv(filteredOrders)}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer active:scale-95 shrink-0"
+                  style={{
+                    background: adminTheme === 'light' ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.05)',
+                    border: `1px solid ${adminTheme === 'light' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)'}`,
+                    color: adminTheme === 'light' ? '#334155' : '#cbd5e1',
+                  }}
+                >
+                  <FileText className="w-4 h-4 text-emerald-500" />
+                  <span>Exporter CSV ({filteredOrders.length})</span>
+                </button>
+              </div>
+
+              {/* Status Segment Chips */}
+              <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                {[
+                  { id: 'ALL', label: 'Toutes', count: orders.length, color: '#0f172a' },
+                  { id: 'PENDING', label: 'En attente', count: orders.filter(o => o.status === 'Pending').length, color: '#d97706' },
+                  { id: 'CONFIRMED', label: 'Confirmées', count: orders.filter(o => o.status === 'Confirmed').length, color: '#2563eb' },
+                  { id: 'SHIPPED', label: 'Expédiées', count: orders.filter(o => o.status === 'Shipped').length, color: '#4f46e5' },
+                  { id: 'DELIVERED', label: 'Livrées', count: orders.filter(o => o.status === 'Delivered').length, color: '#059669' },
+                  { id: 'CANCELLED', label: 'Annulées', count: orders.filter(o => o.status === 'Cancelled').length, color: '#e11d48' },
+                ].map(st => {
+                  const isActive = orderStatusFilter === st.id;
+                  return (
+                    <button
+                      key={st.id}
+                      onClick={() => setOrderStatusFilter(st.id)}
+                      className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-[11px] font-extrabold transition-all duration-200 cursor-pointer"
+                      style={{
+                        background: isActive
+                          ? (adminTheme === 'light' ? '#0f172a' : '#ffffff')
+                          : (adminTheme === 'light' ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.04)'),
+                        color: isActive
+                          ? (adminTheme === 'light' ? '#ffffff' : '#0f172a')
+                          : (adminTheme === 'light' ? '#64748b' : '#94a3b8'),
+                        border: `1px solid ${isActive ? 'transparent' : (adminTheme === 'light' ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)')}`,
+                      }}
+                    >
+                      <span>{st.label}</span>
+                      <span
+                        className="px-2 py-0.2 rounded-full font-mono text-[10px] font-bold"
+                        style={{
+                          background: isActive
+                            ? (adminTheme === 'light' ? 'rgba(255,255,255,0.2)' : 'rgba(15,23,42,0.2)')
+                            : (adminTheme === 'light' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)'),
+                        }}
                       >
-                        {h}
-                      </th>
-                    ))}
+                        {st.count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr
+                    className="border-b text-[10px] font-black uppercase tracking-widest"
+                    style={{
+                      background: adminTheme === 'light' ? 'rgba(0,0,0,0.01)' : 'rgba(255,255,255,0.01)',
+                      borderColor: adminTheme === 'light' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)',
+                      color: adminTheme === 'light' ? '#94a3b8' : '#64748b',
+                    }}
+                  >
+                    <th className="py-3.5 px-4 w-10 text-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedOrderIds.length > 0 && selectedOrderIds.length === filteredOrders.length}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedOrderIds(filteredOrders.map(o => o.order_id));
+                          } else {
+                            setSelectedOrderIds([]);
+                          }
+                        }}
+                        className="rounded cursor-pointer w-4 h-4 accent-emerald-500"
+                      />
+                    </th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Commande</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Date & Heure</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Client</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Articles</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Statut</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap text-right">Total</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className={`divide-y text-xs transition-colors ${
-                  adminTheme === 'light' ? 'divide-slate-100 text-slate-700' : 'divide-slate-900 text-slate-300'
-                }`}>
+                <tbody
+                  className="divide-y text-[11.5px] font-medium"
+                  style={{ borderColor: adminTheme === 'light' ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.04)' }}
+                >
                   {filteredOrders.map((order, idx) => {
                     const dateObj = new Date(order.created_at || order.date || Date.now());
-                    const sClean = order.status.toLowerCase();
-                    
-                    const sideBorderColors: Record<string, string> = {
-                      pending: 'hover:border-l-amber-500',
-                      confirmed: 'hover:border-l-blue-500',
-                      shipped: 'hover:border-l-indigo-500',
-                      delivered: 'hover:border-l-emerald-500',
-                      cancelled: 'hover:border-l-rose-500'
+                    const isSelected = selectedOrderIds.includes(order.order_id);
+
+                    // Custom Status Pill Configs
+                    const statusConfigs: Record<string, { bg: string; text: string; border: string; label: string; dot: string }> = {
+                      Confirmed: {
+                        bg: adminTheme === 'light' ? 'rgba(16,185,129,0.1)' : 'rgba(16,185,129,0.15)',
+                        text: '#059669',
+                        border: 'rgba(16,185,129,0.3)',
+                        label: 'Confirmée',
+                        dot: '#10b981',
+                      },
+                      Pending: {
+                        bg: adminTheme === 'light' ? 'rgba(245,158,11,0.1)' : 'rgba(245,158,11,0.15)',
+                        text: '#d97706',
+                        border: 'rgba(245,158,11,0.3)',
+                        label: 'En attente',
+                        dot: '#f59e0b',
+                      },
+                      Shipped: {
+                        bg: adminTheme === 'light' ? 'rgba(99,102,241,0.1)' : 'rgba(99,102,241,0.15)',
+                        text: '#4f46e5',
+                        border: 'rgba(99,102,241,0.3)',
+                        label: 'Expédiée',
+                        dot: '#6366f1',
+                      },
+                      Delivered: {
+                        bg: adminTheme === 'light' ? 'rgba(16,185,129,0.1)' : 'rgba(16,185,129,0.15)',
+                        text: '#059669',
+                        border: 'rgba(16,185,129,0.3)',
+                        label: 'Livrée',
+                        dot: '#10b981',
+                      },
+                      Cancelled: {
+                        bg: adminTheme === 'light' ? 'rgba(244,63,94,0.1)' : 'rgba(244,63,94,0.15)',
+                        text: '#e11d48',
+                        border: 'rgba(244,63,94,0.3)',
+                        label: 'Annulée',
+                        dot: '#f43f5e',
+                      },
+                    };
+                    const sc = statusConfigs[order.status] || {
+                      bg: 'rgba(148,163,184,0.1)',
+                      text: '#64748b',
+                      border: 'rgba(148,163,184,0.3)',
+                      label: order.status,
+                      dot: '#94a3b8',
                     };
 
-                    const borderClass = sideBorderColors[sClean] || 'hover:border-l-emerald-500';
+                    const avatarGradients = [
+                      'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)',
+                      'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)',
+                      'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
+                      'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
+                    ];
+                    const avatarBg = avatarGradients[idx % avatarGradients.length];
 
                     return (
-                      <tr 
-                        key={order.order_id} 
-                        className={`group border-l-3 border-l-transparent hover:bg-slate-500/5 transition-all duration-200 cursor-pointer admin-row-enter ${borderClass}`} 
+                      <tr
+                        key={order.order_id}
                         onClick={() => setSelectedOrder(order)}
+                        className="group transition-colors duration-150 cursor-pointer"
+                        style={{
+                          background: isSelected
+                            ? (adminTheme === 'light' ? 'rgba(16,185,129,0.04)' : 'rgba(16,185,129,0.08)')
+                            : 'transparent',
+                          borderBottom: `1px solid ${adminTheme === 'light' ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.04)'}`,
+                        }}
                       >
-                        <td className="p-4 w-10" onClick={(e) => e.stopPropagation()}>
+                        {/* Checkbox */}
+                        <td className="py-4 px-4 text-center" onClick={(e) => e.stopPropagation()}>
                           <input
                             type="checkbox"
-                            className={`rounded border focus:ring-0 cursor-pointer w-4 h-4 transition ${
-                              adminTheme === 'light'
-                                ? 'border-slate-300 bg-white text-emerald-600 focus:ring-offset-0'
-                                : 'border-slate-800 bg-slate-950 text-emerald-500 focus:ring-offset-0'
-                            }`}
-                            checked={selectedOrderIds.includes(order.order_id)}
+                            checked={isSelected}
                             onChange={(e) => {
                               if (e.target.checked) {
-                                  setSelectedOrderIds(prev => [...prev, order.order_id]);
+                                setSelectedOrderIds(prev => [...prev, order.order_id]);
                               } else {
-                                  setSelectedOrderIds(prev => prev.filter(id => id !== order.order_id));
+                                setSelectedOrderIds(prev => prev.filter(id => id !== order.order_id));
                               }
                             }}
+                            className="rounded cursor-pointer w-4 h-4 accent-emerald-500"
                           />
                         </td>
-                        <td className="p-4 font-mono font-bold">
-                          <div className="flex flex-col gap-1.5">
-                            <span className={`${
-                              adminTheme === 'light' ? 'text-slate-800' : 'text-slate-100'
-                            }`}>{order.order_id}</span>
-                            {order.notes?.includes('Ai Chat') && (
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-wider border max-w-fit select-none ${
-                                adminTheme === 'light'
-                                  ? 'bg-indigo-50 text-indigo-700 border-indigo-200/50'
-                                  : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
-                              }`}>
-                                Ai Chat
-                              </span>
-                            )}
+
+                        {/* Order ID — Single Line Badge */}
+                        <td className="py-4 px-4 whitespace-nowrap">
+                          <span
+                            className="inline-block px-3 py-1 rounded-xl font-mono text-xs font-black shadow-2xs"
+                            style={{
+                              background: adminTheme === 'light' ? '#f1f5f9' : 'rgba(255,255,255,0.06)',
+                              color: adminTheme === 'light' ? '#0f172a' : '#f8fafc',
+                              border: `1px solid ${adminTheme === 'light' ? '#e2e8f0' : 'rgba(255,255,255,0.08)'}`,
+                            }}
+                          >
+                            {order.order_id}
+                          </span>
+                        </td>
+
+                        {/* Date & Time */}
+                        <td className="py-4 px-4 whitespace-nowrap font-mono text-[11px]">
+                          <div className="flex flex-col">
+                            <span className="font-bold" style={{ color: adminTheme === 'light' ? '#0f172a' : '#f1f5f9' }}>
+                              {dateObj.toLocaleDateString('fr-FR')}
+                            </span>
+                            <span className="text-[10px] opacity-60 font-medium">
+                              {dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
                           </div>
                         </td>
-                        <td className="p-4 font-mono text-[10px]">
-                          <span className="block font-bold">{dateObj.toLocaleDateString()}</span>
-                          <span className="text-slate-400 dark:text-slate-500 font-semibold">{dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex flex-col gap-0.5">
-                            <span className={`font-extrabold block text-sm ${
-                              adminTheme === 'light' ? 'text-slate-700 font-semibold' : 'text-slate-200'
-                            }`}>{order.customer_name}</span>
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono font-medium">{order.phone_number}</span>
-                              <a
-                                href={`https://wa.me/${order.phone_number.trim()}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                                className={`transition p-0.5 rounded-md ${
-                                  adminTheme === 'light' ? 'text-emerald-600 hover:bg-emerald-50' : 'text-emerald-400 hover:bg-emerald-950/20'
-                                }`}
-                                title="WhatsApp rapide"
-                              >
-                                <svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3">
-                                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.5-5.739-1.453L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.858-4.37 9.862-9.743.002-2.602-1.01-5.05-2.85-6.893-1.839-1.843-4.285-2.859-6.883-2.86-5.442 0-9.863 4.37-9.867 9.744-.002 1.83.486 3.62 1.412 5.187l-.952 3.473 3.57-.932zm9.845-6.811c-.266-.134-1.576-.777-1.82-.865-.243-.089-.422-.132-.599.135-.178.266-.688.865-.842 1.042-.155.177-.309.199-.575.066-.266-.134-1.124-.414-2.141-1.321-.79-.705-1.325-1.577-1.48-1.843-.155-.266-.016-.41.118-.543.12-.119.266-.31.399-.465.133-.155.178-.266.266-.443.089-.177.044-.332-.022-.465-.067-.133-.599-1.44-.821-1.973-.217-.52-.455-.45-.63-.459-.163-.008-.35-.01-.537-.01-.186 0-.488.07-.743.348-.256.278-.975.953-.975 2.325 0 1.372.998 2.697 1.131 2.874.133.177 1.965 3.001 4.76 4.204.665.286 1.184.457 1.588.585.667.213 1.275.183 1.756.111.536-.08 1.576-.643 1.796-1.263.22-.62.22-1.152.155-1.263-.066-.111-.243-.178-.51-.311z"/>
-                                </svg>
-                              </a>
+
+                        {/* Customer Cell */}
+                        <td className="py-4 px-4 whitespace-nowrap min-w-[240px]">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="w-9 h-9 rounded-2xl flex items-center justify-center font-black text-white text-xs shrink-0 shadow-xs"
+                              style={{ background: avatarBg }}
+                            >
+                              {order.customer_name ? order.customer_name.slice(0, 2).toUpperCase() : 'CL'}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-extrabold text-xs truncate group-hover:text-emerald-500 transition-colors" style={{ color: adminTheme === 'light' ? '#0f172a' : '#f1f5f9' }}>
+                                {order.customer_name}
+                              </p>
+                              <div className="flex items-center gap-2 text-[11px] font-mono opacity-70">
+                                <span>{order.city}</span>
+                                <span>•</span>
+                                <span>{order.phone_number}</span>
+                                <a
+                                  href={`https://wa.me/${order.phone_number.replace(/\D/g, '')}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="text-emerald-600 hover:text-emerald-500 font-extrabold transition ml-0.5"
+                                  title="WhatsApp"
+                                >
+                                  WA
+                                </a>
+                              </div>
                             </div>
                           </div>
                         </td>
-                        <td className="p-4 font-semibold text-slate-700 dark:text-slate-200">
-                          <div className="flex items-center gap-1.5">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-3.5 h-3.5 text-slate-400 shrink-0">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-                            </svg>
-                            <span>{order.city}</span>
-                          </div>
-                        </td>
-                        <td className="p-4 max-w-[200px]" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex flex-wrap gap-1">
+
+                        {/* Articles */}
+                        <td className="py-4 px-4 whitespace-nowrap max-w-[240px]" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center gap-1">
                             {order.items?.slice(0, 2).map((item, idx2) => (
-                              <span key={idx2} className={`px-2 py-0.5 rounded-lg text-[9px] font-bold truncate max-w-[125px] border ${
-                                adminTheme === 'light'
-                                  ? 'bg-slate-100 text-slate-750 border-slate-200/50 shadow-2xs'
-                                  : 'bg-slate-950 text-slate-400 border-slate-900'
-                              }`}>
-                                {item.title} <span className="font-semibold text-slate-400 dark:text-slate-500">x{item.quantity}</span>
+                              <span
+                                key={idx2}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold truncate max-w-[170px]"
+                                style={{
+                                  background: adminTheme === 'light' ? '#f1f5f9' : 'rgba(255,255,255,0.06)',
+                                  color: adminTheme === 'light' ? '#334155' : '#cbd5e1',
+                                  border: `1px solid ${adminTheme === 'light' ? '#e2e8f0' : 'rgba(255,255,255,0.08)'}`,
+                                }}
+                              >
+                                <span className="truncate">{item.title}</span>
+                                <span className="px-1.5 py-0.5 rounded-md font-mono font-black text-[10px] bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
+                                  x{item.quantity}
+                                </span>
                               </span>
                             ))}
                             {order.items && order.items.length > 2 && (
-                              <span className={`px-1.5 py-0.5 rounded-lg text-[9px] font-mono font-bold border ${
-                                adminTheme === 'light'
-                                  ? 'bg-slate-200/60 text-slate-600 border-slate-300/40'
-                                  : 'bg-slate-900 text-slate-400 border-slate-800'
-                              }`}>
+                              <span
+                                className="px-2 py-1 rounded-lg text-[10px] font-mono font-bold"
+                                style={{
+                                  background: 'rgba(16,185,129,0.1)',
+                                  color: '#10b981',
+                                }}
+                              >
                                 +{order.items.length - 2}
                               </span>
                             )}
                           </div>
                         </td>
-                        <td className="p-4 font-mono font-black text-slate-800 dark:text-slate-100 text-xs">
-                          {order.total.toFixed(2)} DH
+
+                        {/* Status Badge */}
+                        <td className="py-4 px-4 whitespace-nowrap">
+                          <span
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold shadow-2xs"
+                            style={{
+                              background: sc.bg,
+                              color: sc.text,
+                              border: `1px solid ${sc.border}`,
+                            }}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full animate-pulse shrink-0" style={{ background: sc.dot }} />
+                            {sc.label}
+                          </span>
                         </td>
-                        <td className="p-4">
-                          <div className="flex flex-col items-start gap-1">
-                            <StatusBadge status={order.status} theme={adminTheme} />
-                            {sClean === 'confirmed' && (
-                              <span
-                                className="inline-flex items-center gap-0.5 font-extrabold uppercase tracking-wider text-emerald-500 text-[8px]"
-                              >
-                                ✓ Vérifié WA
-                              </span>
-                            )}
-                          </div>
+
+                        {/* Total Amount */}
+                        <td className="py-4 px-4 text-right whitespace-nowrap font-mono font-black text-sm text-emerald-600 dark:text-emerald-400">
+                          {order.total.toFixed(2)} <span className="text-xs font-sans font-bold">DH</span>
                         </td>
-                        <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex gap-2 justify-end items-center">
-                            {['pending', 'confirmed', 'shipped', 'delivered'].includes(sClean) && (
-                              <button
-                                onClick={() => handleNotifyWhatsApp(order, (sClean === 'confirmed' ? 'pending' : sClean) as any, 'Fr')}
-                                title="Envoyer notification WhatsApp FR"
-                                className={`p-1.5 rounded-lg border transition cursor-pointer ${
-                                  adminTheme === 'light'
-                                    ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200/40 shadow-2xs'
-                                    : 'bg-emerald-950/40 hover:bg-emerald-900/30 text-emerald-400 border-emerald-900/30'
-                                }`}
-                              >
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-3.5 h-3.5">
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                                </svg>
-                              </button>
-                            )}
-                            <button 
-                              onClick={() => setSelectedOrder(order)}
-                              className={`px-3 py-1.5 rounded-xl text-[9.5px] font-black uppercase tracking-wider transition border cursor-pointer ${
-                                adminTheme === 'light'
-                                  ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-2xs'
-                                  : 'bg-slate-950 hover:bg-slate-900 text-slate-300 border-slate-800'
-                              }`}
-                            >
-                              Gérer
-                            </button>
-                          </div>
+
+                        {/* Actions */}
+                        <td className="py-4 px-4 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={() => setSelectedOrder(order)}
+                            className="px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 cursor-pointer active:scale-95"
+                            style={{
+                              background: adminTheme === 'light' ? '#f1f5f9' : 'rgba(255,255,255,0.06)',
+                              border: `1px solid ${adminTheme === 'light' ? '#e2e8f0' : 'rgba(255,255,255,0.08)'}`,
+                              color: adminTheme === 'light' ? '#0f172a' : '#f8fafc',
+                            }}
+                          >
+                            Détails
+                          </button>
                         </td>
                       </tr>
                     );
                   })}
+
                   {filteredOrders.length === 0 && (
                     <tr>
-                      <td colSpan={9} className="p-12">
-                        <div className={`rich-empty-state max-w-md mx-auto ${
-                          adminTheme === 'light' ? 'rich-empty-state-light' : 'rich-empty-state-dark'
-                        }`}>
-                          <div className={`rich-empty-state-icon ${
-                            adminTheme === 'light' ? 'bg-slate-100 text-slate-400' : 'bg-slate-900 text-slate-500'
-                          }`}>
-                            <ShoppingBag className="w-5 h-5" />
-                          </div>
-                          <h4 className="text-xs uppercase font-black tracking-wider mb-1">Aucune commande trouvée</h4>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed mb-4">
-                            Ajustez vos filtres de recherche ou attendez les commandes de vos clients pour commencer à les traiter.
-                          </p>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setOrderSearchQuery('');
-                              setOrderStatusFilter('ALL');
-                            }}
-                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[10px] uppercase tracking-wider rounded-xl transition active:scale-95 border-0 outline-none cursor-pointer shadow-md shadow-emerald-600/10"
-                          >
-                            Réinitialiser les filtres
-                          </button>
-                        </div>
+                      <td colSpan={8} className="py-12 text-center text-xs italic opacity-70">
+                        Aucune commande ne correspond à ces critères
                       </td>
                     </tr>
                   )}
@@ -1246,6 +2491,63 @@ export default function OrdersTab() {
               </table>
             </div>
           </div>
+
+          {/* Floating Bulk Actions Bar */}
+          {selectedOrderIds.length > 0 && (
+            <div
+              className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 px-5 py-3 rounded-2xl backdrop-blur-xl shadow-2xl animate-slide-up"
+              style={{
+                background: adminTheme === 'light' ? 'rgba(15,23,42,0.92)' : 'rgba(15,23,42,0.95)',
+                color: '#ffffff',
+                border: '1px solid rgba(16,185,129,0.3)',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+              }}
+            >
+              <span className="text-xs font-bold text-emerald-400 font-mono">
+                {selectedOrderIds.length} sélectionnée(s)
+              </span>
+
+              <div className="h-4 w-px bg-slate-700" />
+
+              <button
+                onClick={() => handleBulkUpdate('Confirmed')}
+                className="px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 transition cursor-pointer"
+              >
+                Confirmer
+              </button>
+
+              <button
+                onClick={() => handleBulkUpdate('Shipped')}
+                className="px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition cursor-pointer"
+              >
+                Expédier
+              </button>
+
+              <button
+                onClick={() => handleBulkUpdate('Delivered')}
+                className="px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 transition cursor-pointer"
+              >
+                Livrer
+              </button>
+
+              <button
+                onClick={() => {
+                  const toExp = orders.filter(o => selectedOrderIds.includes(o.order_id));
+                  handleExportOrdersToCsv(toExp);
+                }}
+                className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-200 bg-slate-800 hover:bg-slate-700 transition cursor-pointer"
+              >
+                Exporter CSV
+              </button>
+
+              <button
+                onClick={() => setSelectedOrderIds([])}
+                className="px-2 py-1 rounded-lg text-xs text-rose-400 hover:text-rose-300 font-bold transition cursor-pointer"
+              >
+                Annuler
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -2134,405 +3436,7 @@ export default function OrdersTab() {
         </div>
       )}
 
-      {/* -------------------- DETAILS MODAL: SINGLE ORDER -------------------- */}
-      {selectedOrder && (() => {
-        const st = selectedOrder.status.toLowerCase();
-        const isDark = adminTheme === 'dark';
-        const statusMeta: Record<string, { label: string; color: string; ring: string; dot: string }> = {
-          pending:   { label: 'En attente',  color: isDark ? 'text-amber-400'   : 'text-amber-600',   ring: isDark ? 'border-amber-500/30'   : 'border-amber-400/50',   dot: 'bg-amber-400' },
-          confirmed: { label: 'Confirmée',   color: isDark ? 'text-sky-400'     : 'text-sky-600',     ring: isDark ? 'border-sky-500/30'     : 'border-sky-400/50',     dot: 'bg-sky-400' },
-          shipped:   { label: 'Expédiée',    color: isDark ? 'text-indigo-400'  : 'text-indigo-600',  ring: isDark ? 'border-indigo-500/30'  : 'border-indigo-400/50',  dot: 'bg-indigo-400' },
-          delivered: { label: 'Livrée',      color: isDark ? 'text-emerald-400' : 'text-emerald-600', ring: isDark ? 'border-emerald-500/30' : 'border-emerald-400/50', dot: 'bg-emerald-400' },
-          cancelled: { label: 'Annulée',     color: isDark ? 'text-rose-400'    : 'text-rose-600',    ring: isDark ? 'border-rose-500/30'    : 'border-rose-400/50',    dot: 'bg-rose-400' },
-          returned:  { label: 'Retournée',   color: isDark ? 'text-orange-400'  : 'text-orange-600',  ring: isDark ? 'border-orange-500/30'  : 'border-orange-400/50',  dot: 'bg-orange-400' },
-        };
-        const sm = statusMeta[st] ?? statusMeta.pending;
-        const steps = st === 'cancelled'
-          ? [{ k:'pending',done:true,red:false,orange:false },{ k:'cancelled',done:true,red:true,orange:false }]
-          : st === 'returned'
-          ? [{ k:'pending',done:true,red:false,orange:false },{ k:'confirmed',done:true,red:false,orange:false },{ k:'shipped',done:true,red:false,orange:false },{ k:'returned',done:true,red:false,orange:true }]
-          : [
-              { k:'pending',   done:['pending','confirmed','shipped','delivered'].includes(st), red:false, orange:false },
-              { k:'confirmed', done:['confirmed','shipped','delivered'].includes(st), red:false, orange:false },
-              { k:'shipped',   done:['shipped','delivered'].includes(st), red:false, orange:false },
-              { k:'delivered', done:st==='delivered', red:false, orange:false },
-            ];
-        const stepLabels: Record<string,string> = { pending:'Enregistrée', confirmed:'Confirmée', shipped:'Expédiée', delivered:'Livrée', cancelled:'Annulée', returned:'Retournée' };
-        const doneCount = steps.filter(s=>s.done).length;
-        const progress = steps.length <= 1 ? 100 : ((doneCount - 1) / (steps.length - 1)) * 100;
-        const shippingFee = Math.max(0, selectedOrder.total - selectedOrder.subtotal + selectedOrder.discount_amount);
-        const orderDate = new Date(selectedOrder.created_at || selectedOrder.date || Date.now());
 
-        return (
-          <div
-            className="fixed inset-0 z-45 select-none flex justify-end"
-            style={{ background: isDark ? 'rgba(0,0,0,0.72)' : 'rgba(10,18,38,0.45)', backdropFilter:'blur(10px)', WebkitBackdropFilter:'blur(10px)' } as React.CSSProperties}
-            onClick={() => setSelectedOrder(null)}
-          >
-            <div
-              className="relative w-full max-w-[480px] h-screen flex flex-col overflow-hidden animate-in slide-in-from-right duration-300"
-              style={{
-                background: isDark
-                  ? 'linear-gradient(160deg,hsl(224,28%,9%) 0%,hsl(228,24%,7%) 100%)'
-                  : 'linear-gradient(160deg,#ffffff 0%,#f7f8fc 100%)',
-                borderLeft: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.07)',
-                boxShadow: isDark
-                  ? '-24px 0 80px rgba(0,0,0,0.6)'
-                  : '-24px 0 80px rgba(0,0,0,0.14)',
-              } as React.CSSProperties}
-              onClick={(e) => e.stopPropagation()}
-            >
-
-              {/* HERO HEADER */}
-              <div
-                className="relative shrink-0 px-7 pt-7 pb-6 overflow-hidden"
-                style={{
-                  background: isDark
-                    ? 'linear-gradient(135deg,rgba(16,185,129,0.08) 0%,rgba(99,102,241,0.06) 50%,transparent 100%)'
-                    : 'linear-gradient(135deg,rgba(16,185,129,0.06) 0%,rgba(99,102,241,0.04) 50%,transparent 100%)',
-                  borderBottom: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.06)',
-                } as React.CSSProperties}
-              >
-                <div className="pointer-events-none absolute -top-20 -right-20 w-56 h-56 rounded-full opacity-[0.07]"
-                  style={{ background: 'radial-gradient(circle,#10b981,transparent 70%)' } as React.CSSProperties} />
-
-                <div className="flex items-start justify-between mb-5">
-                  <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${sm.color} ${sm.ring}`}
-                    style={{ background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.7)' } as React.CSSProperties}>
-                    <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${sm.dot}`} />
-                    {sm.label}
-                  </div>
-                  <button
-                    onClick={() => setSelectedOrder(null)}
-                    className="p-2 rounded-full cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95"
-                    style={{
-                      background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
-                      border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)',
-                    } as React.CSSProperties}
-                  >
-                    <X className={`w-4 h-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
-                  </button>
-                </div>
-
-                <div className="mb-1">
-                  <p className={`text-[10px] font-mono font-bold uppercase tracking-[0.18em] mb-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Commande</p>
-                  <h2 className={`text-3xl font-black tracking-tighter font-mono leading-none ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                    {selectedOrder.order_id}
-                  </h2>
-                </div>
-
-                <div className="flex items-end justify-between mt-3">
-                  <p className={`text-[10.5px] font-mono ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                    {orderDate.toLocaleDateString('fr-FR',{ weekday:'short', day:'numeric', month:'long', year:'numeric' })}
-                    {' · '}{orderDate.toLocaleTimeString('fr-FR',{ hour:'2-digit', minute:'2-digit' })}
-                  </p>
-                  <div className="text-right">
-                    <p className={`text-[9px] font-black uppercase tracking-widest mb-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Total</p>
-                    <p className="text-2xl font-black tracking-tight" style={{ color: isDark ? '#34d399' : '#059669' } as React.CSSProperties}>
-                      {selectedOrder.total.toFixed(2)}<span className={`text-sm ml-1 font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>DH</span>
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* SCROLLABLE BODY */}
-              <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth:'thin' } as React.CSSProperties}>
-
-                {/* PROGRESS TRACK */}
-                <div className="px-7 pt-6 pb-5">
-                  <div className="relative">
-                    <div className="absolute top-[14px] left-3.5 right-3.5 h-px" style={{ background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)' } as React.CSSProperties}>
-                      <div className="h-full transition-all duration-700"
-                        style={{ width:`${Math.max(0,progress)}%`, background:'linear-gradient(90deg,#10b981,#6366f1)' } as React.CSSProperties} />
-                    </div>
-                    <div className="relative flex justify-between">
-                      {steps.map((step, i) => {
-                        const nodeColor = step.red ? '#f43f5e' : step.orange ? '#f59e0b' : step.done ? '#10b981' : (isDark ? '#1e293b' : '#e2e8f0');
-                        const textColor = step.red ? (isDark?'#fb7185':'#e11d48') : step.orange ? (isDark?'#fbbf24':'#d97706') : step.done ? (isDark?'#34d399':'#059669') : (isDark?'#475569':'#94a3b8');
-                        return (
-                          <div key={step.k} className="flex flex-col items-center" style={{ width:`${100/steps.length}%` }}>
-                            <div className="w-7 h-7 rounded-full border-2 flex items-center justify-center text-[9px] font-black transition-all duration-500 z-10 relative"
-                              style={{
-                                background: step.done ? nodeColor : (isDark?'hsl(224,28%,12%)':'#fff'),
-                                borderColor: step.done ? nodeColor : (isDark?'rgba(255,255,255,0.1)':'rgba(0,0,0,0.1)'),
-                                color: step.done ? '#fff' : (isDark?'#475569':'#94a3b8'),
-                                boxShadow: step.done ? `0 0 16px ${nodeColor}40` : 'none',
-                              } as React.CSSProperties}>
-                              {step.done ? (step.red ? '✕' : step.orange ? '↩' : '✓') : i+1}
-                            </div>
-                            <span className="text-[8.5px] font-bold mt-1.5 text-center leading-tight" style={{ color:textColor } as React.CSSProperties}>
-                              {stepLabels[step.k]}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="px-7 space-y-px">
-
-                  {/* CLIENT */}
-                  <div className="pb-5 mb-1" style={{ borderBottom: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)' } as React.CSSProperties}>
-                    <p className={`text-[9px] font-black uppercase tracking-[0.2em] mb-3 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>Client</p>
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-black shrink-0"
-                          style={{ background: isDark ? 'rgba(16,185,129,0.12)' : 'rgba(16,185,129,0.1)', color: isDark ? '#34d399' : '#059669' } as React.CSSProperties}>
-                          {selectedOrder.customer_name?.charAt(0)?.toUpperCase() || '?'}
-                        </div>
-                        <div>
-                          <p className={`font-black text-sm leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>{selectedOrder.customer_name}</p>
-                          <p className={`text-[10.5px] font-mono mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{selectedOrder.phone_number}</p>
-                        </div>
-                      </div>
-                      <a href={`https://wa.me/${selectedOrder.phone_number?.replace(/\s/g,'')}`} target="_blank" rel="noreferrer"
-                        className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9.5px] font-black cursor-pointer transition-all duration-200 hover:scale-105 active:scale-95 no-underline"
-                        style={{ background:'linear-gradient(135deg,#25d366,#128c7e)', color:'#fff', boxShadow:'0 4px 12px rgba(37,211,102,0.3)' } as React.CSSProperties}>
-                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.479 4.999 1.48 5.444 0 9.875-4.43 9.878-9.875.002-5.446-4.421-9.875-9.866-9.877-5.444 0-9.874 4.43-9.877 9.875-.001 1.853.52 3.677 1.508 5.27l-.999 3.648 3.357-.521z"/></svg>
-                        WhatsApp
-                      </a>
-                    </div>
-                    <div className="flex items-start gap-2 mt-3 pl-1">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isDark?'text-slate-600':'text-slate-400'}`}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/>
-                      </svg>
-                      <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                        {selectedOrder.address}
-                        {selectedOrder.city && <><span className="mx-1 opacity-40">·</span><strong className={`font-extrabold ${isDark?'text-slate-200':'text-slate-700'}`}>{selectedOrder.city}</strong></>}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* NOTE */}
-                  {selectedOrder.notes && (
-                    <div className="py-4" style={{ borderBottom: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)' } as React.CSSProperties}>
-                      <p className={`text-[9px] font-black uppercase tracking-[0.2em] mb-2 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>Note client</p>
-                      <div className="flex items-start gap-2.5 p-3 rounded-2xl"
-                        style={{ background: isDark ? 'rgba(245,158,11,0.07)' : 'rgba(245,158,11,0.06)', border: isDark ? '1px solid rgba(245,158,11,0.15)' : '1px solid rgba(245,158,11,0.2)' } as React.CSSProperties}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" className="w-3.5 h-3.5 shrink-0 mt-0.5">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                        </svg>
-                        <p className={`text-[11px] font-semibold italic leading-relaxed ${isDark ? 'text-amber-200/80' : 'text-amber-800'}`}>&#34;{selectedOrder.notes}&#34;</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* AI DIAGNOSTIC */}
-                  {selectedOrder.skin_diagnostic && (
-                    <div className="py-4" style={{ borderBottom: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)' } as React.CSSProperties}>
-                      <p className={`text-[9px] font-black uppercase tracking-[0.2em] mb-3 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>Diagnostic IA · Routine Peau</p>
-                      <div className="grid grid-cols-3 gap-2">
-                        {[
-                          { label:'Type Peau',  val:selectedOrder.skin_diagnostic.skinType,    accent:'#8b5cf6' },
-                          { label:'Problème',   val:selectedOrder.skin_diagnostic.concern,     accent:'#6366f1' },
-                          { label:'Exposition', val:selectedOrder.skin_diagnostic.sunExposure, accent:'#3b82f6' },
-                        ].map(d => (
-                          <div key={d.label} className="p-2.5 rounded-2xl text-center"
-                            style={{ background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.05)' } as React.CSSProperties}>
-                            <p className="text-[7.5px] font-bold uppercase tracking-widest mb-1" style={{ color: isDark ? '#475569' : '#94a3b8' } as React.CSSProperties}>{d.label}</p>
-                            <p className="text-[10.5px] font-extrabold uppercase leading-tight" style={{ color: d.accent } as React.CSSProperties}>{d.val || '—'}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* ARTICLES */}
-                  <div className="py-4" style={{ borderBottom: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)' } as React.CSSProperties}>
-                    <p className={`text-[9px] font-black uppercase tracking-[0.2em] mb-3 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>Articles commandés</p>
-                    <div className="space-y-2.5 max-h-[180px] overflow-y-auto pr-1">
-                      {selectedOrder.items?.map((item, i) => (
-                        <div key={i} className="flex items-center gap-3">
-                          <div className="w-7 h-7 rounded-xl flex items-center justify-center text-[10px] font-black shrink-0"
-                            style={{ background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', color: isDark ? '#94a3b8' : '#64748b' } as React.CSSProperties}>
-                            {item.quantity}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className={`text-[11.5px] font-bold truncate leading-tight ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{item.title}</p>
-                            <p className={`text-[10px] font-mono ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{item.price} DH / u</p>
-                          </div>
-                          <p className={`text-[11.5px] font-black font-mono shrink-0 ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
-                            {(item.price * item.quantity).toFixed(0)} DH
-                          </p>
-                        </div>
-                      ))}
-                      {selectedOrder.gift_item && (
-                        <div className="flex items-center gap-3 p-2 rounded-xl"
-                          style={{ background: isDark ? 'rgba(16,185,129,0.07)' : 'rgba(16,185,129,0.06)', border: isDark ? '1px solid rgba(16,185,129,0.15)' : '1px solid rgba(16,185,129,0.2)' } as React.CSSProperties}>
-                          <div className="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 text-base">🎁</div>
-                          <p className={`text-[10.5px] font-bold italic flex-1 ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>{selectedOrder.gift_item}</p>
-                          <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
-                            style={{ background: isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.12)', color: isDark ? '#34d399' : '#059669' } as React.CSSProperties}>OFFERT</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* totals */}
-                    <div className="mt-4 space-y-1.5">
-                      <div className="flex justify-between text-[10.5px] font-mono">
-                        <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>Sous-Total</span>
-                        <span className={isDark ? 'text-slate-300' : 'text-slate-600'}>{selectedOrder.subtotal.toFixed(2)} DH</span>
-                      </div>
-                      {selectedOrder.discount_amount > 0 && (
-                        <div className="flex justify-between text-[10.5px] font-mono font-semibold text-rose-400">
-                          <span>Réduction ({selectedOrder.applied_coupon || 'Quiz'})</span>
-                          <span>-{selectedOrder.discount_amount.toFixed(2)} DH</span>
-                        </div>
-                      )}
-                      <div className="flex justify-between text-[10.5px] font-mono">
-                        <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>Livraison</span>
-                        <span className={isDark ? 'text-slate-300' : 'text-slate-600'}>{shippingFee.toFixed(2)} DH</span>
-                      </div>
-                      <div className="flex justify-between items-baseline pt-2" style={{ borderTop: isDark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.07)' } as React.CSSProperties}>
-                        <span className={`text-xs font-black uppercase tracking-wider ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Total</span>
-                        <span className="text-xl font-black font-mono" style={{ color: isDark ? '#34d399' : '#059669' } as React.CSSProperties}>
-                          {selectedOrder.total.toFixed(2)} <span className="text-sm">DH</span>
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* LOGISTIQUE */}
-                  {selectedOrder.tracking_number ? (
-                    <div className="py-4" style={{ borderBottom: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)' } as React.CSSProperties}>
-                      <p className={`text-[9px] font-black uppercase tracking-[0.2em] mb-3 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>Logistique</p>
-                      <div className="p-4 rounded-2xl space-y-3"
-                        style={{ background: isDark ? 'rgba(99,102,241,0.07)' : 'rgba(99,102,241,0.05)', border: isDark ? '1px solid rgba(99,102,241,0.2)' : '1px solid rgba(99,102,241,0.15)' } as React.CSSProperties}>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className={`text-[9px] uppercase tracking-wider font-bold ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Transporteur</p>
-                            <p className={`text-sm font-black uppercase mt-0.5 ${isDark ? 'text-indigo-300' : 'text-indigo-700'}`}>{selectedOrder.courier}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className={`text-[9px] uppercase tracking-wider font-bold ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Code Suivi</p>
-                            <p className={`text-xs font-extrabold font-mono mt-0.5 ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{selectedOrder.tracking_number}</p>
-                          </div>
-                        </div>
-                        <div className="flex gap-2 pt-1">
-                          <a href={selectedOrder.tracking_link} target="_blank" rel="noreferrer"
-                            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-black cursor-pointer transition-all duration-200 hover:scale-[1.02] no-underline"
-                            style={{ background: isDark ? 'rgba(99,102,241,0.15)' : 'rgba(99,102,241,0.1)', color: isDark ? '#a5b4fc' : '#4f46e5', border: isDark ? '1px solid rgba(99,102,241,0.25)' : '1px solid rgba(99,102,241,0.2)' } as React.CSSProperties}>
-                            <ExternalLink className="w-3 h-3" /> Suivre
-                          </a>
-                          <button
-                            onClick={() => {
-                              setActiveLabelData({ orderId:selectedOrder.order_id, courier:selectedOrder.courier?.toUpperCase()||'', trackingNumber:selectedOrder.tracking_number||'', codAmount:selectedOrder.total, customerName:selectedOrder.customer_name, phone:selectedOrder.phone_number, city:selectedOrder.city, address:selectedOrder.address, shippingDate:new Date().toLocaleDateString('fr-FR') });
-                              setIsPrintLabelOpen(true);
-                            }}
-                            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-black cursor-pointer transition-all duration-200 hover:scale-[1.02]"
-                            style={{ background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', color: isDark ? '#94a3b8' : '#64748b', border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.07)' } as React.CSSProperties}>
-                            <Printer className="w-3 h-3" /> Étiquette A6
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : selectedOrder.status.toLowerCase() === 'confirmed' && (
-                    <div className="py-4" style={{ borderBottom: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)' } as React.CSSProperties}>
-                      <button onClick={() => handleOpenShippingPanel(selectedOrder)}
-                        className="w-full py-3.5 rounded-2xl text-sm font-black flex items-center justify-center gap-2 cursor-pointer transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
-                        style={{ background:'linear-gradient(135deg,#10b981,#0891b2)', color:'#fff', boxShadow:'0 8px 24px rgba(16,185,129,0.3)' } as React.CSSProperties}>
-                        <Truck className="w-4 h-4" /> Enregistrer l&apos;expédition
-                      </button>
-                    </div>
-                  )}
-
-                  {/* STATUT + WHATSAPP */}
-                  <div className="py-5 space-y-5">
-                    <div>
-                      <p className={`text-[9px] font-black uppercase tracking-[0.2em] mb-2.5 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>Modifier le statut</p>
-                      <div className="relative">
-                        <select
-                          value={selectedOrder.status}
-                          onChange={(e) => {
-                            const newStatus = e.target.value;
-                            setSelectedOrder(prev => prev ? { ...prev, status: newStatus } : null);
-                            handleUpdateOrderStatus(selectedOrder.order_id, newStatus);
-                          }}
-                          className="w-full appearance-none pl-4 pr-10 py-3 rounded-2xl text-[11px] font-bold cursor-pointer outline-none transition-all duration-200"
-                          style={{
-                            background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
-                            border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)',
-                            color: isDark ? '#e2e8f0' : '#1e293b',
-                          } as React.CSSProperties}
-                        >
-                          <option value="Pending">🕐 Pending — En attente confirmation</option>
-                          <option value="Confirmed">✅ Confirmed — Confirmé par téléphone</option>
-                          <option value="Shipped">🚚 Shipped — Expédié / En transit</option>
-                          <option value="Delivered">📦 Delivered — Livré &amp; Encaissé</option>
-                          <option value="Cancelled">❌ Cancelled — Annulé</option>
-                        </select>
-                        <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={`w-4 h-4 ${isDark?'text-slate-500':'text-slate-400'}`}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <p className={`text-[9px] font-black uppercase tracking-[0.2em] mb-3 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>Notifier via WhatsApp</p>
-                      <div className="grid grid-cols-3 gap-2">
-                        {([
-                          { label:'Confirm.', status:'pending'   as 'pending'|'shipped'|'delivered', grad:'linear-gradient(135deg,#10b981,#059669)', shadow:'rgba(16,185,129,0.3)' },
-                          { label:'Expéd.',   status:'shipped'   as 'pending'|'shipped'|'delivered', grad:'linear-gradient(135deg,#6366f1,#4f46e5)', shadow:'rgba(99,102,241,0.3)' },
-                          { label:'Livraison',status:'delivered' as 'pending'|'shipped'|'delivered', grad:'linear-gradient(135deg,#0891b2,#0e7490)', shadow:'rgba(8,145,178,0.3)' },
-                        ]).map(n => (
-                          <div key={n.label} className="rounded-2xl overflow-hidden"
-                            style={{ background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.05)' } as React.CSSProperties}>
-                            <p className={`text-center text-[8px] font-black uppercase tracking-wider pt-2 pb-1.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{n.label}</p>
-                            <div className="flex gap-1 p-1.5 pt-0">
-                              {(['Fr','Ar'] as const).map(lang => (
-                                <button key={lang}
-                                  type="button"
-                                  onClick={() => handleNotifyWhatsApp(selectedOrder, n.status, lang)}
-                                  className="flex-1 py-1.5 rounded-xl text-[9px] font-black text-white cursor-pointer transition-all duration-200 hover:scale-105 active:scale-95"
-                                  style={{ background:n.grad, boxShadow:`0 4px 10px ${n.shadow}` } as React.CSSProperties}>
-                                  {lang.toUpperCase()}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      {selectedOrder.notified_at && (
-                        <p className={`text-[9px] font-mono text-center mt-2.5 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
-                          Dernière notification : {new Date(selectedOrder.notified_at).toLocaleString('fr-FR')}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="h-6" />
-                </div>
-              </div>
-
-              {/* STICKY FOOTER */}
-              <div className="shrink-0 px-7 py-5 flex items-center justify-between"
-                style={{
-                  background: isDark
-                    ? 'linear-gradient(0deg,hsl(224,28%,8%) 0%,rgba(0,0,0,0) 100%)'
-                    : 'linear-gradient(0deg,#f8f9fc 0%,rgba(248,249,252,0) 100%)',
-                  borderTop: isDark ? '1px solid rgba(255,255,255,0.04)' : '1px solid rgba(0,0,0,0.04)',
-                } as React.CSSProperties}>
-                <button
-                  onClick={() => handleDeleteOrder(selectedOrder.order_id)}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-[10.5px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                  style={{ background: isDark ? 'rgba(244,63,94,0.08)' : 'rgba(244,63,94,0.07)', color: isDark ? '#fb7185' : '#e11d48', border: isDark ? '1px solid rgba(244,63,94,0.15)' : '1px solid rgba(244,63,94,0.15)' } as React.CSSProperties}>
-                  <Trash2 className="w-3.5 h-3.5" /> Supprimer
-                </button>
-                <button
-                  onClick={() => setSelectedOrder(null)}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-[10.5px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                  style={{ background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', color: isDark ? '#94a3b8' : '#64748b', border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.07)' } as React.CSSProperties}>
-                  Fermer
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-      })()}
 
 
 
@@ -2725,7 +3629,7 @@ export default function OrdersTab() {
 
       {/* -------------------- PRINT VIEW OVERLAY: A6 SHIPPING LABEL -------------------- */}
       {isPrintLabelOpen && activeLabelData && (
-        <div className="fixed inset-0 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4 z-50 select-none print:bg-white print:p-0 print:inset-auto print:absolute">
+        <div className="fixed inset-0 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4 z-[9999] select-none print:bg-white print:p-0 print:inset-auto print:absolute">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 space-y-6 shadow-2xl print:bg-white print:border-0 print:p-0 print:shadow-none print-label-container">
             
             {/* Header: Courier info */}
@@ -2805,6 +3709,317 @@ export default function OrdersTab() {
           </div>
         </div>
       )}
+
+      {/* -------------------- PRINT VIEW OVERLAY: A4 FACTURE & BON DE LIVRAISON -------------------- */}
+      {isPrintInvoiceOpen && selectedOrder && (() => {
+        const invoiceOrder = selectedOrder as Order;
+        return (
+          <div className="fixed inset-0 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4 sm:p-8 z-[9999] overflow-y-auto print:bg-white print:p-0 print:inset-auto print:absolute print:overflow-visible">
+            <div className="bg-white border border-slate-200 text-slate-900 rounded-3xl max-w-3xl w-full p-8 space-y-6 shadow-2xl print:bg-white print:border-0 print:p-0 print:shadow-none print:max-w-none print:w-full print-label-container">
+              
+              {/* Invoice Top Header */}
+              <div className="flex justify-between items-start border-b border-slate-200 pb-6 print:border-slate-300">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-600 flex items-center justify-center font-black text-white text-xs">
+                      PO
+                    </div>
+                    <h2 className="font-black text-lg text-slate-950 uppercase tracking-tight">
+                      {settings?.storeName || 'PARA OFFICINAL S.A'}
+                    </h2>
+                  </div>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Parapharmacie & K-Beauty Officiel au Maroc
+                  </p>
+                  <p className="text-[11px] text-slate-400 font-mono">
+                    ICE: 003198741000085 · RC: 458920 · Casakids & Beauty SARL
+                  </p>
+                </div>
+
+                <div className="text-right space-y-1">
+                  <span className="inline-block px-3 py-1 bg-slate-900 text-white font-mono text-xs font-black rounded-lg uppercase tracking-wider">
+                    BON DE LIVRAISON & FACTURE
+                  </span>
+                  <p className="text-xs font-mono font-bold text-slate-700 pt-1">
+                    N° Commande: #{invoiceOrder.order_id}
+                  </p>
+                  <p className="text-[11px] text-slate-500 font-mono">
+                    Date: {new Date().toLocaleDateString('fr-FR')}
+                  </p>
+                </div>
+              </div>
+
+              {/* Addresses Grid (Sender & Receiver) */}
+              <div className="grid grid-cols-2 gap-6 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs leading-relaxed print:bg-slate-50 print:border-slate-300">
+                {/* Emetteur */}
+                <div className="space-y-1">
+                  <span className="text-[9px] uppercase font-black tracking-wider text-slate-400 block">
+                    EXPÉDITEUR / BOUTIQUE
+                  </span>
+                  <strong className="text-sm font-black text-slate-900 block">{settings?.storeName || 'Para Officinal S.A'}</strong>
+                  <p className="text-slate-600 font-medium">Boulevard d'Anfa, Maarif</p>
+                  <p className="text-slate-600 font-medium">Casablanca, Maroc</p>
+                  <p className="text-slate-600 font-mono font-bold">Tél: +212 522-202020</p>
+                </div>
+
+                {/* Destinataire */}
+                <div className="space-y-1 border-l border-slate-200 pl-6 print:border-slate-300">
+                  <span className="text-[9px] uppercase font-black tracking-wider text-slate-400 block">
+                    CLIENT DESTINATAIRE
+                  </span>
+                  <strong className="text-sm font-black text-slate-950 block">{invoiceOrder.customer_name}</strong>
+                  <p className="text-slate-700 font-medium">{invoiceOrder.address}</p>
+                  <p className="text-slate-900 font-black uppercase">{invoiceOrder.city}, Maroc</p>
+                  <p className="text-slate-900 font-mono font-extrabold">{invoiceOrder.phone_number}</p>
+                </div>
+              </div>
+
+              {/* Line Items Table */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
+                  DÉTAIL DES ARTICLES COMMANDÉS
+                </h4>
+
+                <div className="border border-slate-200 rounded-2xl overflow-hidden print:border-slate-300">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-100 border-b border-slate-200 font-mono uppercase text-[10px] text-slate-600 font-black print:bg-slate-100">
+                      <tr>
+                        <th className="py-2.5 px-4">Article / Référence</th>
+                        <th className="py-2.5 px-3 text-center">Quantité</th>
+                        <th className="py-2.5 px-3 text-right">Prix Unitaire</th>
+                        <th className="py-2.5 px-4 text-right">Total HT/TTC</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 font-medium text-slate-800">
+                      {invoiceOrder.items?.map((item: any, idx: number) => (
+                        <tr key={idx} className="hover:bg-slate-50">
+                          <td className="py-3 px-4">
+                            <span className="font-extrabold text-slate-950 block">{item.title}</span>
+                          </td>
+                          <td className="py-3 px-3 text-center font-mono font-black text-slate-950">
+                            {item.quantity}
+                          </td>
+                          <td className="py-3 px-3 text-right font-mono">
+                            {item.price.toFixed(2)} DH
+                          </td>
+                          <td className="py-3 px-4 text-right font-mono font-black text-slate-950">
+                            {(item.price * item.quantity).toFixed(2)} DH
+                          </td>
+                        </tr>
+                      ))}
+
+                      {invoiceOrder.gift_item && (
+                        <tr className="bg-emerald-50/50 text-emerald-800 italic">
+                          <td className="py-2.5 px-4 font-bold flex items-center gap-1.5">
+                            <span>🎁</span> {invoiceOrder.gift_item} (Cadeau Offert)
+                          </td>
+                          <td className="py-2.5 px-3 text-center font-mono font-bold">1</td>
+                          <td className="py-2.5 px-3 text-right font-mono">0.00 DH</td>
+                          <td className="py-2.5 px-4 text-right font-mono font-black">OFFERT</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Financial Summary & Transport Block */}
+              <div className="grid grid-cols-2 gap-6 pt-2">
+                {/* Shipping & Payment Method */}
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-2 print:bg-slate-50">
+                  <span className="text-[9px] uppercase font-black tracking-wider text-slate-400 block">
+                    INFORMATIONS DE LIVRAISON & COD
+                  </span>
+                  <div className="flex justify-between items-center py-0.5">
+                    <span className="text-slate-500 font-medium">Mode de Paiement:</span>
+                    <strong className="font-extrabold text-emerald-700">Cash à la Livraison (COD)</strong>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5">
+                    <span className="text-slate-500 font-medium">Transporteur:</span>
+                    <strong className="font-mono font-extrabold text-slate-900">{invoiceOrder.courier?.toUpperCase() || 'YALIDINE EXPRESS'}</strong>
+                  </div>
+                  {invoiceOrder.tracking_number && (
+                    <div className="flex justify-between items-center py-0.5">
+                      <span className="text-slate-500 font-medium">Code Suivi:</span>
+                      <strong className="font-mono font-bold text-indigo-600">{invoiceOrder.tracking_number}</strong>
+                    </div>
+                  )}
+                </div>
+
+                {/* Totals Breakdown */}
+                <div className="p-4 rounded-2xl bg-slate-900 text-white space-y-2.5 text-xs font-mono print:bg-slate-950">
+                  <div className="flex justify-between text-slate-300">
+                    <span>Sous-Total Articles:</span>
+                    <span>{invoiceOrder.subtotal.toFixed(2)} DH</span>
+                  </div>
+                  {invoiceOrder.discount_amount > 0 && (
+                    <div className="flex justify-between text-rose-400">
+                      <span>Remise ({invoiceOrder.applied_coupon}):</span>
+                      <span>-{invoiceOrder.discount_amount.toFixed(2)} DH</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-slate-300">
+                    <span>Frais de livraison:</span>
+                    <span>{(invoiceOrder.total - invoiceOrder.subtotal + invoiceOrder.discount_amount).toFixed(2)} DH</span>
+                  </div>
+                  <div className="flex justify-between items-baseline pt-2 border-t border-slate-700 text-sm font-black">
+                    <span className="font-sans uppercase text-xs">Total TTC à Encaisser:</span>
+                    <span className="text-base text-emerald-400">{invoiceOrder.total.toFixed(2)} DH</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Signature & Legal Notice */}
+              <div className="grid grid-cols-2 gap-6 pt-4 border-t border-slate-200 text-[10px] text-slate-500">
+                <div className="space-y-8">
+                  <span className="uppercase font-bold block text-slate-700">Cachet & Signature Expéditeur:</span>
+                  <div className="h-12 border-b border-dashed border-slate-300" />
+                </div>
+                <div className="space-y-8">
+                  <span className="uppercase font-bold block text-slate-700">Signature Client / Réception:</span>
+                  <div className="h-12 border-b border-dashed border-slate-300" />
+                </div>
+              </div>
+
+              {/* Print Action Buttons */}
+              <div className="flex gap-2 justify-end pt-2 border-t border-slate-200 print:hidden">
+                <button 
+                  type="button" 
+                  onClick={() => setIsPrintInvoiceOpen(false)}
+                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs uppercase cursor-pointer transition"
+                >
+                  Fermer
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => window.print()}
+                  className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-500 hover:to-teal-500 transition flex items-center gap-2 shadow-lg cursor-pointer active:scale-95 text-white font-bold"
+                >
+                  <Printer className="w-4 h-4 text-white" /> Imprimer le Bon de Livraison (A4)
+                </button>
+              </div>
+
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* -------------------- ADD GIFT / SAMPLE MODAL -------------------- */}
+      {isAddGiftModalOpen && selectedOrder && (() => {
+        const giftOrder = selectedOrder as Order;
+        const isDark = adminTheme === 'dark';
+        return (
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-[9999]">
+            <div className={`border p-6 rounded-3xl max-w-md w-full space-y-5 shadow-2xl animate-scale-up ${
+              isDark ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
+            }`}>
+              <div className="flex justify-between items-center pb-3 border-b border-slate-200 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center">
+                    <Gift className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-sm uppercase tracking-tight">Ajouter un Échantillon Gratuit</h3>
+                    <p className="text-[11px] opacity-70">Cadeau offert avec la commande #{giftOrder.order_id}</p>
+                  </div>
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => setIsAddGiftModalOpen(false)}
+                  className="text-slate-400 hover:text-slate-200 p-1 rounded-lg transition cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Popular K-Beauty Presets */}
+              <div className="space-y-2">
+                <span className="text-[10px] font-black uppercase tracking-wider opacity-60">Échantillons K-Beauty Populaires :</span>
+                <div className="grid grid-cols-1 gap-2">
+                  {[
+                    "Anua Heartleaf Mousse Nettoyante Offert",
+                    "Beauty of Joseon Crème Solaire 10ml",
+                    "La Roche-Posay Cicaplast Baume B5",
+                    "Mixsoon Bean Essence Échantillon",
+                    "Sachet Échantillons K-Beauty Surprise (x3)"
+                  ].map(preset => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => {
+                        const updatedOrder = { ...giftOrder, gift_item: preset };
+                        setSelectedOrder(updatedOrder);
+                        setOrders(prev => prev.map(o => o.order_id === giftOrder.order_id ? updatedOrder : o));
+                        showToast(`Échantillon gratuit ajouté : ${preset}`, 'success');
+                        setIsAddGiftModalOpen(false);
+                      }}
+                      className="p-3 rounded-xl text-left text-xs font-bold border transition hover:border-amber-500/50 hover:bg-amber-500/5 flex items-center justify-between group cursor-pointer"
+                      style={{
+                        borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+                        background: isDark ? 'rgba(255,255,255,0.02)' : '#f8fafc'
+                      }}
+                    >
+                      <span>🎁 {preset}</span>
+                      <span className="text-[9.5px] uppercase font-black px-2 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition">
+                        Choisir
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Custom Input Option */}
+              <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                <span className="text-[10px] font-black uppercase tracking-wider opacity-60">Ou Saisir un Cadeau Personnalisé :</span>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Ex: Masque hydratant Laneige 20ml"
+                    value={customGiftInput}
+                    onChange={(e) => setCustomGiftInput(e.target.value)}
+                    className="flex-1 px-3 py-2 rounded-xl text-xs border outline-none bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!customGiftInput.trim()) return;
+                      const giftName = customGiftInput.trim();
+                      const updatedOrder = { ...giftOrder, gift_item: giftName };
+                      setSelectedOrder(updatedOrder);
+                      setOrders(prev => prev.map(o => o.order_id === giftOrder.order_id ? updatedOrder : o));
+                      showToast(`Échantillon gratuit ajouté : ${giftName}`, 'success');
+                      setIsAddGiftModalOpen(false);
+                      setCustomGiftInput('');
+                    }}
+                    className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-white font-bold text-xs rounded-xl transition cursor-pointer"
+                  >
+                    Ajouter
+                  </button>
+                </div>
+              </div>
+
+              {/* Remove Gift Button */}
+              {giftOrder.gift_item && (
+                <div className="pt-2 border-t border-slate-200 dark:border-slate-800 text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updatedOrder = { ...giftOrder, gift_item: null };
+                      setSelectedOrder(updatedOrder);
+                      setOrders(prev => prev.map(o => o.order_id === giftOrder.order_id ? updatedOrder : o));
+                      showToast("Échantillon gratuit retiré", "info");
+                      setIsAddGiftModalOpen(false);
+                    }}
+                    className="text-xs text-rose-500 hover:underline font-bold cursor-pointer"
+                  >
+                    Retirer l'échantillon actuellement offert
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Floating Bulk Action Bar for Orders */}
       {selectedOrderIds.length > 0 && (

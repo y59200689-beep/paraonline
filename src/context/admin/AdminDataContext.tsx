@@ -19,6 +19,7 @@ export interface OrderItem {
   title: string;
   quantity: number;
   price: number;
+  image?: string;
 }
 
 export interface Order {
@@ -48,6 +49,9 @@ export interface Order {
   courier_fee?: number;
   reconciliation_notes?: string;
   payment_status?: string;
+  has_account?: boolean;
+  user_id?: string;
+  email?: string;
 }
 
 export interface Review {

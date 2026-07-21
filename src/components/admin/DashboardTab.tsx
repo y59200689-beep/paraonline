@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
-import ReactDOM from 'react-dom';
+import React, { useState, useMemo } from 'react';
 import { useAdmin, AbandonedCart } from '@/context/AdminContext';
 import { useSettings } from '@/context/SettingsContext';
 import {
@@ -14,50 +13,25 @@ import {
   MessageSquare,
   Check,
   X,
-  Clock
+  Clock,
+  Layers,
+  ArrowUpRight,
+  Sparkles,
+  AlertCircle,
+  ExternalLink,
+  PackageCheck,
+  Users,
+  Calendar,
+  Filter,
+  CheckCircle2,
+  Package,
 } from 'lucide-react';
 import { StatusBadge } from '@/components/admin/ui';
 
-// ── Local bento card header ────────────────────────────────────────────────────
-function BentoCardHeader({ eyebrow, title, icon: Icon, action, theme }: {
-  eyebrow: string;
-  title: string;
-  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
-  action?: React.ReactNode;
-  theme: 'light' | 'dark';
-}) {
-  return (
-    <div className={`flex ${action ? 'justify-between' : 'items-center'} items-center gap-3 mb-6`}>
-      <div className="flex items-center gap-3">
-        <div className={`p-2 rounded-xl border ${
-          theme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-slate-900 border-slate-800 text-slate-400'
-        }`}>
-          <Icon className="w-4 h-4" strokeWidth={1.5} />
-        </div>
-        <div>
-          <span
-            className="block leading-none"
-            style={{ fontSize: 'var(--admin-text-2xs)', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--admin-text-faint)' }}
-          >
-            {eyebrow}
-          </span>
-          <h3
-            className="leading-none mt-1.5 font-semibold tracking-tight"
-            style={{ fontSize: 'var(--admin-text-sm)', color: 'var(--admin-text-primary)' }}
-          >
-            {title}
-          </h3>
-        </div>
-      </div>
-      {action}
-    </div>
-  );
-}
-
 interface DashboardTabProps {
-  setActiveTab: (tab: 'dashboard' | 'analytics' | 'orders' | 'catalog' | 'crm' | 'reviews' | 'settings' | 'loyalty') => void;
+  setActiveTab: (tab: 'dashboard' | 'analytics' | 'orders' | 'catalog' | 'crm' | 'reviews' | 'settings' | 'loyalty' | 'branding' | 'advice' | 'snippets' | 'cron' | 'audit-logs' | 'coupons' | 'gallery') => void;
   setCatalogStockFilter: (filter: boolean) => void;
-  setActiveSettingsSubTab: (sub: 'general' | 'banners' | 'coupons' | 'shipping' | 'loyalty' | 'faq' | 'logs' | 'notifications' | 'operators') => void;
+  setActiveSettingsSubTab: (sub: 'general' | 'banners' | 'coupons' | 'shipping' | 'loyalty' | 'faq' | 'logs' | 'notifications' | 'operators' | 'payment' | 'security' | 'gifts' | 'delivery' | 'homepage') => void;
   analyticsRange: 'today' | '7d' | '30d' | 'month' | 'all' | 'custom';
   setAnalyticsRange: (range: 'today' | '7d' | '30d' | 'month' | 'all' | 'custom') => void;
   customDateFrom: string;
@@ -66,23 +40,36 @@ interface DashboardTabProps {
   setCustomDateTo: (date: string) => void;
 }
 
-// Sparkline/Microbars rendering component with premium SVG wave curve
+// ─── Executive KPI Card Component ──────────────────────────────────────────────
+
 interface KpiCardProps {
   label: string;
   raw: number;
   suffix: string;
-  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number; style?: React.CSSProperties }>;
   color: string;
-  bg: string;
-  theme?: 'light' | 'dark';
-  isWide?: boolean;
-  isMobileWide?: boolean;
+  accentGradient: string;
+  isDark: boolean;
   sparklineData?: number[];
+  badgeText?: string;
+  badgePositive?: boolean;
 }
 
-function KpiCard({ label, raw, suffix, icon: Icon, color, bg, theme, isWide, isMobileWide, sparklineData }: KpiCardProps) {
-  // Count-up kinetic effect
-  const [value, setValue] = React.useState(0);
+function KpiCard({
+  label,
+  raw,
+  suffix,
+  icon: Icon,
+  color,
+  accentGradient,
+  isDark,
+  sparklineData,
+  badgeText,
+  badgePositive = true,
+}: KpiCardProps) {
+  // Kinetic counter
+  const [value, setValue] = useState(0);
+
   React.useEffect(() => {
     let start = 0;
     const end = Math.round(raw);
@@ -90,11 +77,10 @@ function KpiCard({ label, raw, suffix, icon: Icon, color, bg, theme, isWide, isM
       setValue(end);
       return;
     }
-    
-    const duration = 900;
-    const stepTime = 15;
-    const increment = Math.ceil(end / (duration / stepTime));
-    
+    const duration = 800;
+    const stepTime = 16;
+    const increment = Math.max(1, Math.ceil(end / (duration / stepTime)));
+
     const timer = setInterval(() => {
       start += increment;
       if (start >= end) {
@@ -103,72 +89,46 @@ function KpiCard({ label, raw, suffix, icon: Icon, color, bg, theme, isWide, isM
       }
       setValue(start);
     }, stepTime);
-    
+
     return () => clearInterval(timer);
   }, [raw]);
 
-  let iconColors = {
-    text: 'text-emerald-500',
-    bg: 'bg-emerald-500/10 border-emerald-500/20'
-  };
-  if (color.includes('blue')) {
-    iconColors = { text: 'text-blue-500', bg: 'bg-blue-500/10 border-blue-500/20' };
-  } else if (color.includes('violet')) {
-    iconColors = { text: 'text-violet-500', bg: 'bg-violet-500/10 border-violet-500/20' };
-  } else if (color.includes('rose')) {
-    iconColors = { text: 'text-rose-500', bg: 'bg-rose-500/10 border-rose-500/20' };
-  }
-
-  const renderMicroTrend = () => {
+  // Micro SVG sparkline
+  const renderSparkline = () => {
     if (!sparklineData || sparklineData.length < 2) return null;
-    const points = sparklineData.slice(-7); // Last 7 data points
+    const points = sparklineData.slice(-7);
     const max = Math.max(...points, 1);
     const min = Math.min(...points, 0);
-    const range = max - min;
-    
-    const width = 76;
-    const height = 30;
-    const padding = 2;
+    const range = max - min || 1;
+
+    const width = 80;
+    const height = 28;
+    const pad = 2;
+
     const pts = points.map((val, idx) => {
-      const x = padding + (idx / (points.length - 1)) * (width - padding * 2);
-      const y = padding + (height - padding * 2) - ((val - min) / (range || 1)) * (height - padding * 2);
+      const x = pad + (idx / (points.length - 1)) * (width - pad * 2);
+      const y = pad + (height - pad * 2) - ((val - min) / range) * (height - pad * 2);
       return `${x},${y}`;
     });
-    
-    const lineD = `M ${pts.join(' L ')}`;
-    const areaD = `${lineD} L ${width - padding},${height} L ${padding},${height} Z`;
-    
-    let strokeColor = '#10b981';
-    let gradStart = '#10b981';
-    if (color.includes('blue')) {
-      strokeColor = '#3b82f6';
-      gradStart = '#3b82f6';
-    } else if (color.includes('violet')) {
-      strokeColor = '#8b5cf6';
-      gradStart = '#8b5cf6';
-    } else if (color.includes('rose')) {
-      strokeColor = '#f43f5e';
-      gradStart = '#f43f5e';
-    }
 
-    const gradId = `sparklineGrad-${label.replace(/\s+/g, '')}`;
+    const lineD = `M ${pts.join(' L ')}`;
+    const areaD = `${lineD} L ${width - pad},${height} L ${pad},${height} Z`;
+    const gradId = `sparkGrad-${label.replace(/\s+/g, '')}`;
 
     return (
-      <div className="w-20 h-8 shrink-0 transition-opacity duration-300 group-hover:opacity-100 opacity-70">
+      <div className="w-20 h-7 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
         <svg width={width} height={height} className="overflow-visible">
           <defs>
             <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={gradStart} stopOpacity="0.25" />
-              <stop offset="100%" stopColor={gradStart} stopOpacity="0.00" />
+              <stop offset="0%" stopColor={color} stopOpacity="0.3" />
+              <stop offset="100%" stopColor={color} stopOpacity="0.0" />
             </linearGradient>
           </defs>
           <path d={areaD} fill={`url(#${gradId})`} />
-          <path d={lineD} fill="none" stroke={strokeColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d={lineD} fill="none" stroke={color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
           {pts.length > 0 && (() => {
             const lastPt = pts[pts.length - 1].split(',');
-            return (
-              <circle cx={lastPt[0]} cy={lastPt[1]} r="2" fill={strokeColor} className="animate-pulse" />
-            );
+            return <circle cx={lastPt[0]} cy={lastPt[1]} r="2" fill={color} className="animate-pulse" />;
           })()}
         </svg>
       </div>
@@ -176,48 +136,79 @@ function KpiCard({ label, raw, suffix, icon: Icon, color, bg, theme, isWide, isM
   };
 
   return (
-    <div className={`rounded-[32px] p-1 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-2xl ${
-      theme === 'light' 
-        ? 'bg-slate-200/50 border border-slate-200/60 shadow-[0_4px_12px_-2px_rgba(15,30,54,0.02)] hover:border-slate-300' 
-        : 'bg-white/5 border border-white/10 hover:border-white/15'
-    } ${
-      isWide ? 'col-span-2 lg:col-span-2' : isMobileWide ? 'col-span-2 lg:col-span-1' : ''
-    }`}>
-      <div className={`rounded-[calc(32px-4px)] p-6 flex flex-col justify-between h-36 transition-all duration-300 ${
-        theme === 'light'
-          ? 'bg-white text-slate-800 shadow-[inset_0_1px_1px_rgba(255,255,255,0.9)]'
-          : 'bg-slate-950/80 backdrop-blur-md text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
-      }`}>
-        <div className="flex items-center justify-between w-full">
-          <span
-            className="block leading-none"
-            style={{ fontSize: 'var(--admin-text-2xs)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--admin-text-muted)' }}
-          >
-            {label}
-          </span>
-          <div className={`p-2 rounded-xl border ${iconColors.bg} ${iconColors.text} transition duration-300`}>
-            <Icon className="w-4 h-4" strokeWidth={1.5} />
-          </div>
+    <div
+      className="group relative flex flex-col justify-between p-5 rounded-2xl transition-all duration-300 overflow-hidden"
+      style={{
+        background: isDark
+          ? 'hsl(224,25%,9%)'
+          : '#ffffff',
+        border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.07)',
+        boxShadow: isDark
+          ? '0 4px 20px rgba(0,0,0,0.35)'
+          : '0 2px 10px rgba(15,30,54,0.05)',
+      }}
+    >
+      {/* Background micro glow */}
+      <div
+        className="absolute -right-8 -top-8 w-28 h-28 rounded-full opacity-10 blur-2xl transition-opacity group-hover:opacity-25"
+        style={{ background: accentGradient }}
+      />
+
+      {/* Header: Label + Icon */}
+      <div className="flex items-center justify-between gap-2 relative z-10">
+        <span
+          className="text-[10px] font-extrabold uppercase tracking-widest block truncate"
+          style={{ color: isDark ? '#64748b' : '#94a3b8' }}
+        >
+          {label}
+        </span>
+        <div
+          className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110"
+          style={{
+            background: `${color}18`,
+            border: `1px solid ${color}30`,
+          }}
+        >
+          <Icon className="w-4 h-4" style={{ color }} strokeWidth={2} />
         </div>
-        
-        <div className="flex items-end justify-between w-full mt-2">
+      </div>
+
+      {/* Body: Kinetic number + Sparkline */}
+      <div className="flex items-end justify-between gap-2 mt-4 relative z-10">
+        <div>
           <h3
-            className="font-bold tracking-tight leading-none"
-            style={{ fontSize: 'var(--admin-text-2xl)', fontVariantNumeric: 'tabular-nums', color: 'var(--admin-text-primary)' }}
+            className="text-2xl font-black font-mono tracking-tight leading-none"
+            style={{ color: isDark ? '#f1f5f9' : '#0f172a' }}
           >
-            {Math.round(value).toLocaleString('fr-FR')}
+            {value.toLocaleString('fr-FR')}
             {suffix && (
-              <span className="font-semibold ml-1.5 opacity-60" style={{ fontSize: 'var(--admin-text-xs)' }}>
+              <span className="text-[11px] font-bold ml-1 font-sans opacity-60">
                 {suffix.trim()}
               </span>
             )}
           </h3>
-          {renderMicroTrend()}
+          {badgeText && (
+            <div className="flex items-center gap-1 mt-1.5">
+              <span
+                className="text-[9px] font-bold px-1.5 py-0.5 rounded-md inline-flex items-center gap-0.5 font-mono"
+                style={{
+                  background: badgePositive ? 'rgba(16,185,129,0.12)' : 'rgba(244,63,94,0.12)',
+                  color: badgePositive ? '#10b981' : '#f43f5e',
+                  border: badgePositive ? '1px solid rgba(16,185,129,0.2)' : '1px solid rgba(244,63,94,0.2)',
+                }}
+              >
+                {badgePositive ? '↑' : '↓'} {badgeText}
+              </span>
+            </div>
+          )}
         </div>
+        {renderSparkline()}
       </div>
     </div>
   );
 }
+
+// ─── Main Dashboard Tab Component ────────────────────────────────────────────
 
 export const DashboardTab: React.FC<DashboardTabProps> = ({
   setActiveTab,
@@ -228,27 +219,32 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   customDateFrom,
   setCustomDateFrom,
   customDateTo,
-  setCustomDateTo
+  setCustomDateTo,
 }) => {
   const {
     orders,
     getDashboardStats,
-    topProductsByRevenue,
-    cartRecoveryStats,
     cartRecoveryStatus,
     abandonedCarts,
     auditLogs,
     adminTheme,
     handleUpdateCartRecovery,
-    products
+    products,
   } = useAdmin();
   const { settings } = useSettings();
 
-  const dashboardStats = React.useMemo(() => {
+  const isDark = adminTheme === 'dark';
+
+  const [chartHoverIdx, setChartHoverIdx] = useState<number | null>(null);
+  const [selectedAbandonedCart, setSelectedAbandonedCart] = useState<AbandonedCart | null>(null);
+
+  // Compute stats for selected range
+  const dashboardStats = useMemo(() => {
     return getDashboardStats(analyticsRange, customDateFrom, customDateTo);
   }, [getDashboardStats, analyticsRange, customDateFrom, customDateTo]);
 
-  const topProductsByRevenueRanged = React.useMemo(() => {
+  // Compute top products for selected range
+  const topProductsRanged = useMemo(() => {
     const now = new Date();
     let startDate: Date | null = null;
     let endDate: Date | null = null;
@@ -270,43 +266,67 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
     } else if (analyticsRange === 'custom' && customDateFrom) {
       startDate = new Date(customDateFrom);
       startDate.setHours(0, 0, 0, 0);
-      if (customDateTo) {
-        endDate = new Date(customDateTo);
-        endDate.setHours(23, 59, 59, 999);
-      } else {
-        endDate = now;
-      }
+      endDate = customDateTo ? new Date(customDateTo) : now;
+      if (customDateTo) endDate.setHours(23, 59, 59, 999);
     } else {
       startDate = new Date(0);
       endDate = now;
     }
 
-    const inRange = (dateStr: string | null | undefined, start: Date, end: Date) => {
-      if (!dateStr) return false;
-      const d = new Date(dateStr);
-      return d >= start && d <= end;
+    const inRange = (dStr: string | null | undefined) => {
+      if (!dStr) return false;
+      const d = new Date(dStr);
+      return d >= (startDate || new Date(0)) && d <= (endDate || now);
     };
 
-    const rangedOrders = (orders || []).filter(o => 
-      inRange(o.created_at || o.date, startDate || new Date(0), endDate || now)
+    const rangedOrders = (orders || []).filter(o =>
+      inRange(o.created_at || o.date)
     );
 
-    const revenueMap: Record<number, { title: string; revenue: number; qty: number; image: string }> = {};
-    
-    rangedOrders.filter(o => o.status !== 'Cancelled').forEach(o => {
-      o.items.forEach(item => {
-        if (!revenueMap[item.id]) {
-          revenueMap[item.id] = { title: item.title, revenue: 0, qty: 0, image: '' };
-        }
-        revenueMap[item.id].revenue += item.price * item.quantity;
-        revenueMap[item.id].qty += item.quantity;
-      });
-    });
+    const revenueMap: Record<string, { title: string; revenue: number; qty: number }> = {};
 
-    return Object.entries(revenueMap)
-      .sort((a, b) => b[1].revenue - a[1].revenue)
+    rangedOrders
+      .filter(o => o.status !== 'Cancelled')
+      .forEach(o => {
+        o.items?.forEach(item => {
+          const key = item.title || `Product-${item.id}`;
+          if (!revenueMap[key]) {
+            revenueMap[key] = { title: item.title, revenue: 0, qty: 0 };
+          }
+          revenueMap[key].revenue += (item.price || 0) * (item.quantity || 1);
+          revenueMap[key].qty += item.quantity || 1;
+        });
+      });
+
+    return Object.values(revenueMap)
+      .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 5);
   }, [orders, analyticsRange, customDateFrom, customDateTo]);
+
+  // WhatsApp recovery link generator
+  const buildCartRecoveryLink = (cart: AbandonedCart, lang: 'Fr' | 'Ar' = 'Fr') => {
+    const templates = settings?.notificationTemplates;
+    if (!templates) return '#';
+    const key = lang === 'Ar' ? 'recoveryAr' : 'recoveryFr';
+    let msg = (templates[key] || '') as string;
+
+    const itemsStr = cart.items?.map((i: any) => i.title || i.product?.title || 'Produit').join(', ') || 'vos produits';
+    const discountCode = (settings?.coupons?.[0]?.code) || 'BEAUTY10';
+
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const recoverParams = cart.items?.map((i: any) => `${i.id || i.product?.id || ''}:${i.quantity || 1}`).filter(Boolean).join(',') || '';
+    const recoveryUrl = recoverParams ? `${origin}/checkout?recover=${encodeURIComponent(recoverParams)}` : '';
+
+    msg = msg
+      .replace(/{customer_name}/g, cart.name || 'Cher(e) client(e)')
+      .replace(/{cart_items}/g, itemsStr)
+      .replace(/{cart_total}/g, String(cart.total || 0))
+      .replace(/{discount_code}/g, discountCode)
+      .replace(/{recovery_link}/g, recoveryUrl);
+
+    const phone = (cart.phone || '').replace(/\D/g, '');
+    return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+  };
 
   const getTodayLabel = () => {
     const today = new Date();
@@ -318,912 +338,787 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
     }
     return `Aujourd'hui (${formattedDate})`;
   };
-  const [chartHoverIdx, setChartHoverIdx] = useState<number | null>(null);
-  const [selectedAbandonedCart, setSelectedAbandonedCart] = useState<AbandonedCart | null>(null);
 
-  const buildCartRecoveryLink = (cart: AbandonedCart, lang: 'Fr' | 'Ar' = 'Fr') => {
-    const templates = settings?.notificationTemplates;
-    if (!templates) return '#';
-    const key = lang === 'Ar' ? 'recoveryAr' : 'recoveryFr';
-    let msg = (templates[key] || '') as string;
-    
-    const itemsStr = cart.items?.map((i: any) => i.title || i.product?.title || 'Produit').join(', ') || 'vos produits';
-    const discountCode = (settings?.coupons?.[0]?.code) || 'BEAUTY10';
-    
-    const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    const recoverParams = cart.items?.map((i: any) => `${i.id || i.product?.id || ''}:${i.quantity || 1}`).filter(Boolean).join(',') || '';
-    const recoveryUrl = recoverParams ? `${origin}/checkout?recover=${encodeURIComponent(recoverParams)}` : '';
-    
-    msg = msg
-      .replace(/{customer_name}/g, cart.name || 'Cher(e) client(e)')
-      .replace(/{cart_items}/g, itemsStr)
-      .replace(/{cart_total}/g, String(cart.total || 0))
-      .replace(/{discount_code}/g, discountCode)
-      .replace(/{recovery_link}/g, recoveryUrl);
-      
-    const phone = (cart.phone || '').replace(/\D/g, '');
-    return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
-  };
+  // Color & Surface styles
+  const cardBg = isDark ? 'hsl(224,25%,9%)' : '#ffffff';
+  const borderStyle = `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)'}`;
+  const textPrimary = isDark ? 'hsl(214,35%,95%)' : 'hsl(222,47%,10%)';
+  const textMuted = isDark ? 'hsl(215,22%,46%)' : 'hsl(215,18%,46%)';
+
+  // Recent 6 orders
+  const recentOrders = useMemo(() => {
+    return [...orders].sort((a, b) => new Date(b.created_at || b.date || 0).getTime() - new Date(a.created_at || a.date || 0).getTime()).slice(0, 6);
+  }, [orders]);
 
   return (
-    <div className="space-y-8 admin-tab-enter relative min-h-screen pb-12">
-      {/* Premium Background Mesh Orbs */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden -z-10">
-        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-500/10 dark:bg-emerald-500/5 blur-[120px] animate-pulse" />
-        <div className="absolute top-[20%] left-[-15%] w-[45%] h-[45%] rounded-full bg-teal-500/10 dark:bg-teal-500/5 blur-[120px]" />
-        <div className="absolute bottom-[10%] right-[10%] w-[35%] h-[35%] rounded-full bg-indigo-500/5 dark:bg-indigo-500/3 blur-[100px]" />
-      </div>
+    <div className="space-y-6 admin-tab-enter pb-10">
 
+      {/* ── Top Summary & Filter Banner ────────────────────────────────────────── */}
+      <div
+        className="flex items-center justify-between gap-4 flex-wrap p-4 rounded-2xl"
+        style={{
+          background: isDark
+            ? 'linear-gradient(135deg, rgba(16,185,129,0.07) 0%, rgba(99,102,241,0.05) 100%)'
+            : 'linear-gradient(135deg, rgba(16,185,129,0.06) 0%, rgba(99,102,241,0.04) 100%)',
+          border: `1px solid ${isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.2)'}`,
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+            style={{
+              background: 'linear-gradient(135deg, #10b981 0%, #6366f1 100%)',
+              boxShadow: '0 4px 14px rgba(16,185,129,0.35)',
+            }}
+          >
+            <Sparkles className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <p className="text-[13px] font-black" style={{ color: textPrimary }}>
+              Vue d'ensemble des opérations
+            </p>
+            <p className="text-[10.5px] font-medium" style={{ color: textMuted }}>
+              Suivi en temps réel des ventes, commandes et paniers abandonnés
+            </p>
+          </div>
+        </div>
 
-      {/* Date range selector + Custom Date Range */}
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className={`flex items-center gap-1 border rounded-2xl p-1 flex-wrap shadow-sm transition-colors duration-200 ${
-            adminTheme === 'light'
-              ? 'bg-slate-100/80 border-slate-200/60'
-              : 'bg-slate-950 border-slate-900'
-          }`}>
-            {(['today', '7d', '30d', 'month', 'all', 'custom'] as const).map(range => (
+        {/* Date range filter pills */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {(['today', '7d', '30d', 'month', 'all', 'custom'] as const).map(range => {
+            const isActive = analyticsRange === range;
+            return (
               <button
                 key={range}
                 onClick={() => setAnalyticsRange(range)}
-                className={`px-3.5 py-1.5 rounded-xl font-semibold uppercase tracking-widest transition-all duration-200 border-0 cursor-pointer ${
-                  analyticsRange === range
-                    ? (adminTheme === 'light'
-                        ? 'bg-white text-slate-800 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08)] font-bold'
-                        : 'bg-slate-800 text-emerald-400 shadow-sm border border-slate-700 font-bold')
-                    : (adminTheme === 'light'
-                        ? 'text-slate-500 hover:text-slate-800 hover:bg-white/40 bg-transparent'
-                        : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30 bg-transparent')
-                }`}
-                style={{ fontSize: 'var(--admin-text-2xs)' }}
+                className="px-3 py-1.5 rounded-xl text-[11px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200"
+                style={{
+                  background: isActive
+                    ? 'rgba(16,185,129,0.15)'
+                    : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'),
+                  border: isActive
+                    ? '1px solid rgba(16,185,129,0.3)'
+                    : `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}`,
+                  color: isActive ? '#10b981' : (isDark ? '#64748b' : '#94a3b8'),
+                }}
               >
-                {range === 'today' ? getTodayLabel() : range === '7d' ? '7 Jours' : range === '30d' ? '30 Jours' : range === 'month' ? 'Ce Mois' : range === 'all' ? 'Tout' : 'Personnalisé'}
+                {range === 'today'
+                  ? getTodayLabel()
+                  : range === '7d'
+                  ? '7 Jours'
+                  : range === '30d'
+                  ? '30 Jours'
+                  : range === 'month'
+                  ? 'Ce Mois'
+                  : range === 'all'
+                  ? 'Tout'
+                  : 'Personnalisé'}
               </button>
-            ))}
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Custom Date Range Picker */}
+      {analyticsRange === 'custom' && (
+        <div
+          className="flex flex-wrap items-center gap-3 rounded-2xl px-4 py-3"
+          style={{
+            background: cardBg,
+            border: borderStyle,
+          }}
+        >
+          <span className="text-[10px] font-black uppercase tracking-wider text-emerald-500">
+            Plage personnalisée :
+          </span>
+          <div className="flex items-center gap-2">
+            <label className="text-[9px] font-bold uppercase tracking-wider" style={{ color: textMuted }}>Du</label>
+            <input
+              type="date"
+              value={customDateFrom}
+              max={customDateTo || new Date().toISOString().split('T')[0]}
+              onChange={e => setCustomDateFrom(e.target.value)}
+              className="px-3 py-1.5 rounded-xl text-[11px] font-mono outline-none cursor-pointer"
+              style={{
+                background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                border: borderStyle,
+                color: textPrimary,
+              }}
+            />
           </div>
-          
-          {analyticsRange === 'custom' && (
-            <div className={`flex flex-wrap items-center gap-3 rounded-2xl px-4 py-2 border transition-all duration-200 ${
-              adminTheme === 'light' ? 'bg-slate-50 border-slate-200/60 shadow-sm' : 'bg-slate-950 border-slate-900'
-            }`}>
-              <div className="flex items-center gap-2">
-                <label className="text-[9px] font-bold uppercase tracking-wider text-slate-500 shrink-0">Du</label>
-                <input
-                  type="date"
-                  value={customDateFrom}
-                  max={customDateTo || new Date().toISOString().split('T')[0]}
-                  onChange={e => setCustomDateFrom(e.target.value)}
-                  className={`border focus:border-emerald-500/50 rounded-xl px-3 py-1.5 text-[11px] font-mono outline-none transition cursor-pointer ${
-                    adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-800 focus:ring-1 focus:ring-emerald-500/35' : 'bg-slate-900 border-slate-800 text-slate-200'
-                  }`}
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <label className="text-[9px] font-bold uppercase tracking-wider text-slate-500 shrink-0">Au</label>
-                <input
-                  type="date"
-                  value={customDateTo}
-                  min={customDateFrom}
-                  max={new Date().toISOString().split('T')[0]}
-                  onChange={e => setCustomDateTo(e.target.value)}
-                  className={`border focus:border-emerald-500/50 rounded-xl px-3 py-1.5 text-[11px] font-mono outline-none transition cursor-pointer ${
-                    adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-800 focus:ring-1 focus:ring-emerald-500/35' : 'bg-slate-900 border-slate-800 text-slate-200'
-                  }`}
-                />
-              </div>
-              {customDateFrom && (
-                <button
-                  onClick={() => { setCustomDateFrom(''); setCustomDateTo(''); }}
-                  className={`text-[9px] font-black uppercase px-3 py-1.5 rounded-xl transition border cursor-pointer border-0 ${
-                    adminTheme === 'light' ? 'text-rose-600 hover:text-rose-700 border-rose-100 bg-rose-50' : 'text-rose-400 hover:text-rose-300 border-rose-900/40 bg-rose-950/20'
-                  }`}
-                >
-                  Réinitialiser
-                </button>
-              )}
-            </div>
+          <div className="flex items-center gap-2">
+            <label className="text-[9px] font-bold uppercase tracking-wider" style={{ color: textMuted }}>Au</label>
+            <input
+              type="date"
+              value={customDateTo}
+              min={customDateFrom}
+              max={new Date().toISOString().split('T')[0]}
+              onChange={e => setCustomDateTo(e.target.value)}
+              className="px-3 py-1.5 rounded-xl text-[11px] font-mono outline-none cursor-pointer"
+              style={{
+                background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                border: borderStyle,
+                color: textPrimary,
+              }}
+            />
+          </div>
+          {customDateFrom && (
+            <button
+              onClick={() => { setCustomDateFrom(''); setCustomDateTo(''); }}
+              className="text-[9px] font-black uppercase px-3 py-1.5 rounded-xl text-rose-500 cursor-pointer"
+              style={{
+                background: 'rgba(244,63,94,0.1)',
+                border: '1px solid rgba(244,63,94,0.2)',
+              }}
+            >
+              Réinitialiser
+            </button>
           )}
         </div>
+      )}
+
+      {/* ── 4 Executive KPI Cards Grid ────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <KpiCard
+          label="Chiffre d'Affaires"
+          raw={dashboardStats.totalSales}
+          suffix=" DH"
+          icon={DollarSign}
+          color="#10b981"
+          accentGradient="#10b981"
+          isDark={isDark}
+          sparklineData={dashboardStats.last7DaysSales.map((d: any) => d.amount)}
+          badgeText="Chiffre Brut"
+          badgePositive={true}
+        />
+        <KpiCard
+          label="Commandes"
+          raw={dashboardStats.ordersCount}
+          suffix=""
+          icon={ShoppingBag}
+          color="#3b82f6"
+          accentGradient="#3b82f6"
+          isDark={isDark}
+          sparklineData={dashboardStats.last7DaysSales.map((d: any) => d.count)}
+          badgeText="Total"
+          badgePositive={true}
+        />
+        <KpiCard
+          label="Panier Moyen"
+          raw={dashboardStats.avgOrderValue}
+          suffix=" DH"
+          icon={TrendingUp}
+          color="#8b5cf6"
+          accentGradient="#8b5cf6"
+          isDark={isDark}
+          sparklineData={dashboardStats.last7DaysSales.map((d: any) => d.count > 0 ? d.amount / d.count : 0)}
+          badgeText="Par commande"
+          badgePositive={true}
+        />
+        <KpiCard
+          label="Paniers Abandonnés"
+          raw={dashboardStats.abandonedCartsCount}
+          suffix=""
+          icon={ClipboardList}
+          color="#f43f5e"
+          accentGradient="#f43f5e"
+          isDark={isDark}
+          badgeText="À relancer"
+          badgePositive={false}
+        />
       </div>
 
+      {/* ── Main Section: Sales Trend SVG Chart & Status Breakdown ─────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-      {/* KPI Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-5 lg:gap-6">
-        {[
-          { 
-            label: "Chiffre d'Affaires", 
-            raw: dashboardStats.totalSales, 
-            suffix: ' DH', 
-            icon: DollarSign, 
-            color: 'text-emerald-400', 
-            bg: 'from-emerald-500/10 to-teal-500/10 border-emerald-900/40',
-            isWide: true,
-            sparklineData: dashboardStats.last7DaysSales.map((d: any) => d.amount)
-          },
-          { 
-            label: 'Commandes', 
-            raw: dashboardStats.ordersCount, 
-            suffix: '', 
-            icon: ShoppingBag, 
-            color: 'text-blue-400', 
-            bg: 'from-blue-500/10 to-indigo-500/10 border-blue-900/40',
-            isWide: false,
-            sparklineData: dashboardStats.last7DaysSales.map((d: any) => d.count)
-          },
-          { 
-            label: 'Panier Moyen', 
-            raw: dashboardStats.avgOrderValue, 
-            suffix: ' DH', 
-            icon: TrendingUp, 
-            color: 'text-violet-400', 
-            bg: 'from-violet-500/10 to-purple-500/10 border-violet-900/40',
-            isWide: false,
-            sparklineData: dashboardStats.last7DaysSales.map((d: any) => d.count > 0 ? d.amount / d.count : 0)
-          },
-          { 
-            label: 'Paniers Abandonnés', 
-            raw: dashboardStats.abandonedCartsCount, 
-            suffix: '', 
-            icon: ClipboardList, 
-            color: 'text-rose-400', 
-            bg: 'from-rose-500/10 to-pink-500/10 border-rose-900/40',
-            isWide: false,
-            isMobileWide: true
-          },
-        ].map((kpi, idx) => (
-          <KpiCard key={idx} {...kpi} theme={adminTheme} />
-        ))}
-      </div>
+        {/* Sales Trend SVG Area Chart (2 cols) */}
+        <div
+          className="lg:col-span-2 rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden transition-all duration-300"
+          style={{
+            background: cardBg,
+            border: borderStyle,
+            boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.35)' : '0 2px 10px rgba(15,30,54,0.05)',
+          }}
+        >
+          {/* Card Header */}
+          <div className="flex items-center justify-between gap-2 mb-4">
+            <div className="flex items-center gap-2.5">
+              <div
+                className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)' }}
+              >
+                <BarChart2 className="w-4 h-4 text-emerald-500" />
+              </div>
+              <div>
+                <h3 className="text-[13px] font-black leading-tight" style={{ color: textPrimary }}>
+                  Évolution des ventes
+                </h3>
+                <p className="text-[10px] font-medium" style={{ color: textMuted }}>
+                  Tendance sur les 7 derniers jours
+                </p>
+              </div>
+            </div>
 
-      {/* Bento Grid Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-
-        {/* Bento Cell 1: Sales SVG Line Chart */}
-        <div className={`p-1 rounded-[36px] lg:col-span-2 xl:col-span-3 xl:row-span-2 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-2xl ${
-          adminTheme === 'light'
-            ? 'bg-slate-200/50 border border-slate-200/60 shadow-[0_4px_12px_-2px_rgba(15,30,54,0.02)] hover:border-slate-300'
-            : 'bg-white/5 border border-white/10 hover:border-white/15'
-        }`}>
-          <div className={`rounded-[calc(36px-4px)] p-6 h-full flex flex-col justify-between ${
-            adminTheme === 'light' ? 'bg-white text-slate-800 shadow-[inset_0_1px_1px_rgba(255,255,255,0.9)]' : 'bg-slate-950/80 backdrop-blur-md text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
-          }`}>
-            <BentoCardHeader
-              eyebrow="Évolution Globale"
-              title="Évolution des ventes"
-              icon={BarChart2}
-              theme={adminTheme}
-              action={
-                <span
-                  className={`px-2.5 py-1 rounded-full font-bold border font-mono ${
-                    adminTheme === 'light' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-emerald-950/30 border-emerald-900/40 text-emerald-400'
-                  }`}
-                  style={{ fontSize: 'var(--admin-text-2xs)' }}
-                >
-                  {dashboardStats.totalSales.toFixed(0)} DH total
-                </span>
-              }
-            />
-
-            {(() => {
-              const data = dashboardStats.last7DaysSales;
-              const W = 600, H = 180, padL = 48, padR = 12, padT = 10, padB = 28;
-              const innerW = W - padL - padR;
-              const innerH = H - padT - padB;
-              const maxVal = Math.max(...data.map((d: any) => d.amount), 1);
-              const pts = data.map((d: any, i: number) => ({
-                x: padL + (i / Math.max(data.length - 1, 1)) * innerW,
-                y: padT + innerH - (d.amount / maxVal) * innerH,
-                ...d
-              }));
-              const linePath = pts.length < 2
-                ? ''
-                : pts.reduce((acc: string, pt: any, i: number) => {
-                    if (i === 0) return `M ${pt.x},${pt.y}`;
-                    const prev = pts[i - 1];
-                    const cx1 = prev.x + (pt.x - prev.x) / 2;
-                    const cy1 = prev.y;
-                    const cx2 = prev.x + (pt.x - prev.x) / 2;
-                    const cy2 = pt.y;
-                    return `${acc} C ${cx1},${cy1} ${cx2},${cy2} ${pt.x},${pt.y}`;
-                  }, '');
-              const areaPath = linePath ? `${linePath} L ${pts[pts.length-1].x},${padT+innerH} L ${pts[0].x},${padT+innerH} Z` : '';
-              const gridVals = [0, 0.25, 0.5, 0.75, 1].map(f => ({ y: padT + innerH - f * innerH, label: Math.round(f * maxVal).toLocaleString('fr-FR') }));
-              const showEvery = data.length > 14 ? 4 : data.length > 7 ? 2 : 1;
-              
-              return (
-                <div className="relative w-full h-48 md:h-64 mt-2" onMouseLeave={() => setChartHoverIdx(null)}>
-                  <style>{`@keyframes chartDraw{from{stroke-dashoffset:2000}to{stroke-dashoffset:0}}.chart-line{stroke-dasharray:2000;animation:chartDraw 1.2s cubic-bezier(.4,0,.2,1) forwards}.chart-area{animation:fadeIn .8s ease forwards}@keyframes fadeIn{from{opacity:0}to{opacity:1}}`}</style>
-                  <svg
-                    viewBox={`0 0 ${W} ${H}`}
-                    preserveAspectRatio="none"
-                    className="w-full h-full animate-fade-in"
-                  >
-                    <defs>
-                      <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#10b981" stopOpacity="0.25" />
-                        <stop offset="100%" stopColor="#10b981" stopOpacity="0.00" />
-                      </linearGradient>
-                      <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stopColor="#10b981" />
-                        <stop offset="50%" stopColor="#06b6d4" />
-                        <stop offset="100%" stopColor="#3b82f6" />
-                      </linearGradient>
-                    </defs>
-                    {gridVals.map((g, i) => (
-                      <g key={i}>
-                        <line x1={padL} y1={g.y} x2={W - padR} y2={g.y} stroke={adminTheme === 'light' ? "#f1f5f9" : "#1e293b"} strokeWidth="1" strokeDasharray="3,6" opacity={adminTheme === 'light' ? "1" : "0.5"} />
-                        <text x={padL - 8} y={g.y + 3} textAnchor="end" fontSize="8" fill={adminTheme === 'light' ? "#94a3b8" : "#475569"} fontFamily="monospace">{g.label}</text>
-                      </g>
-                    ))}
-                    {areaPath && <path d={areaPath} fill="url(#areaGrad)" className="chart-area" />}
-                    {linePath && <path d={linePath} fill="none" stroke="url(#lineGrad)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="chart-line" />}
-                    {pts.map((pt: any, i: number) => i % showEvery === 0 && (
-                      <text key={i} x={pt.x} y={H - 4} textAnchor="middle" fontSize="8" fill={adminTheme === 'light' ? "#94a3b8" : "#475569"} fontFamily="monospace">{pt.date}</text>
-                    ))}
-                    {pts.map((pt: any, i: number) => (
-                      <g key={i} onMouseEnter={() => setChartHoverIdx(i)} style={{ cursor: 'crosshair' }}>
-                        <rect x={i === 0 ? pt.x - 10 : (pts[i-1].x + pt.x) / 2} y={padT} width={i === pts.length-1 ? 20 : ((i === 0 ? pt.x - 10 : (pts[i-1].x + pt.x)/2) - pt.x) * -1 + (i < pts.length-1 ? (pt.x + pts[i+1].x)/2 - pt.x : 10)} height={innerH} fill="transparent" />
-                        {chartHoverIdx === i && (
-                          <>
-                            <line x1={pt.x} y1={padT} x2={pt.x} y2={padT + innerH} stroke="#10b981" strokeWidth="1.5" strokeDasharray="2,2" opacity="0.5" />
-                            <circle cx={pt.x} cy={pt.y} r="8" className="animate-ping" fill="none" stroke="#10b981" strokeWidth="1.5" style={{ transformOrigin: `${pt.x}px ${pt.y}px` }} />
-                            <circle cx={pt.x} cy={pt.y} r="4.5" fill={adminTheme === 'light' ? "#ffffff" : "#0f172a"} stroke="#10b981" strokeWidth="2.5" />
-                          </>
-                        )}
-                        {chartHoverIdx !== i && pt.amount > 0 && (
-                          <circle cx={pt.x} cy={pt.y} r="2.5" fill="#10b981" opacity="0.6" />
-                        )}
-                      </g>
-                    ))}
-                  </svg>
-                  {chartHoverIdx !== null && pts[chartHoverIdx] && (
-                    <div 
-                      className={`absolute z-30 pointer-events-none p-4 rounded-2xl border text-[10px] leading-snug transition-all duration-150 backdrop-blur-xl shadow-2xl flex flex-col gap-1.5 min-w-[160px] animate-fade-in ${
-                        adminTheme === 'light'
-                          ? 'bg-white/85 border-slate-200/50 text-slate-800 shadow-slate-200/40'
-                          : 'bg-slate-950/85 border-slate-800/60 text-slate-200 shadow-black/60'
-                      }`}
-                      style={{
-                        left: `${(pts[chartHoverIdx].x / W) * 100}%`,
-                        top: `${Math.max(10, (pts[chartHoverIdx].y / H) * 100 - 18)}%`,
-                        transform: 'translate(-50%, -100%)',
-                      }}
-                    >
-                      <span className={`font-bold ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>{pts[chartHoverIdx].date}</span>
-                      <span className="font-extrabold text-[12px] text-emerald-500 font-mono">
-                        {pts[chartHoverIdx].amount > 0 ? `${pts[chartHoverIdx].amount.toLocaleString('fr-FR')} DH` : '0 DH'}
-                      </span>
-                      <span className={`font-mono text-[9px] font-semibold opacity-70`}>
-                        {pts[chartHoverIdx].count || 0} commande(s)
-                      </span>
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
-          </div>
-        </div>
-
-        {/* Bento Cell 2: Tunnel des Commandes */}
-        <div className={`p-1 rounded-[36px] xl:row-span-2 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-2xl ${
-          adminTheme === 'light'
-            ? 'bg-slate-200/50 border border-slate-200/60 shadow-[0_4px_12px_-2px_rgba(15,30,54,0.02)] hover:border-slate-300'
-            : 'bg-white/5 border border-white/10 hover:border-white/15'
-        }`}>
-          <div className={`rounded-[calc(36px-4px)] p-6 h-full flex flex-col ${
-            adminTheme === 'light' ? 'bg-white text-slate-800 shadow-[inset_0_1px_1px_rgba(255,255,255,0.9)]' : 'bg-slate-950/80 backdrop-blur-md text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
-          }`}>
-            <BentoCardHeader eyebrow="Conversion" title="Tunnel des commandes" icon={ClipboardList} theme={adminTheme} />
-            
-            <div className="flex-1 flex flex-col justify-between py-1 min-h-0 gap-3">
-              {Object.entries(dashboardStats.statusFunnel).map(([status, count]) => {
-                const total = dashboardStats.ordersCount || 1;
-                const pct = Math.round(((count as number) / total) * 100);
-                const colors: Record<string, { bg: string; text: string; progress: string }> = { 
-                  Pending: { bg: 'bg-amber-500/10 border-amber-500/20', text: 'text-amber-500', progress: 'bg-amber-500' }, 
-                  Confirmed: { bg: 'bg-blue-500/10 border-blue-500/20', text: 'text-blue-500', progress: 'bg-blue-500' }, 
-                  Shipped: { bg: 'bg-indigo-500/10 border-indigo-500/20', text: 'text-indigo-500', progress: 'bg-indigo-500' }, 
-                  Delivered: { bg: 'bg-emerald-500/10 border-emerald-500/20', text: 'text-emerald-500', progress: 'bg-emerald-500' }, 
-                  Cancelled: { bg: 'bg-rose-500/10 border-rose-500/20', text: 'text-rose-500', progress: 'bg-rose-500' } 
-                };
-                const labelMap: Record<string, string> = { Pending: 'En attente', Confirmed: 'Confirmées', Shipped: 'Expédiées', Delivered: 'Livrées', Cancelled: 'Annulées' };
-                const c = colors[status] || { bg: 'bg-slate-500/10 border-slate-500/20', text: 'text-slate-500', progress: 'bg-slate-500' };
-                
-                return (
-                  <div key={status} className="space-y-1.5">
-                    <div className="flex justify-between items-center text-[10.5px]">
-                      <span className={`font-semibold ${adminTheme === 'light' ? 'text-slate-600 font-medium' : 'text-slate-400'}`}>{labelMap[status] || status}</span>
-                      <div className="flex items-center gap-2">
-                        <span className={`font-mono text-[9px] px-1.5 py-0.2 rounded border ${c.bg} ${c.text} font-bold`}>{pct}%</span>
-                        <span className="font-bold font-mono opacity-80">{count as number}</span>
-                      </div>
-                    </div>
-                    <div className={`h-1.5 rounded-full overflow-hidden border ${adminTheme === 'light' ? 'bg-slate-100 border-slate-200/40' : 'bg-slate-900 border-slate-900'}`}>
-                      <div className={`h-full ${c.progress} transition-all duration-500`} style={{ width: `${pct}%` }} />
-                    </div>
-                  </div>
-                );
-              })}
+            <div
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full font-mono text-[10.5px] font-bold"
+              style={{
+                background: 'rgba(16,185,129,0.1)',
+                border: '1px solid rgba(16,185,129,0.2)',
+                color: '#10b981',
+              }}
+            >
+              {dashboardStats.totalSales.toFixed(0)} DH
             </div>
           </div>
-        </div>
 
-        {/* Bento Cell 4: Journal d'Activité */}
-        <div className={`p-1 rounded-[36px] lg:col-span-2 xl:col-span-2 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-2xl ${
-          adminTheme === 'light'
-            ? 'bg-slate-200/50 border border-slate-200/60 shadow-[0_4px_12px_-2px_rgba(15,30,54,0.02)] hover:border-slate-300'
-            : 'bg-white/5 border border-white/10 hover:border-white/15'
-        }`}>
-          <div className={`rounded-[calc(36px-4px)] p-6 h-full flex flex-col justify-between ${
-            adminTheme === 'light' ? 'bg-white text-slate-800 shadow-[inset_0_1px_1px_rgba(255,255,255,0.9)]' : 'bg-slate-950/80 backdrop-blur-md text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
-          }`}>
-            <div>
-              <BentoCardHeader
-                eyebrow="Audits"
-                title="Journal d'activité"
-                icon={TrendingUp}
-                theme={adminTheme}
-                action={
-                  <button
-                    onClick={() => { setActiveTab('settings'); setActiveSettingsSubTab('logs'); }}
-                    className={`flex items-center gap-1 font-semibold border-0 bg-transparent cursor-pointer hover:underline ${
-                      adminTheme === 'light' ? 'text-emerald-600' : 'text-emerald-400'
-                    }`}
-                    style={{ fontSize: 'var(--admin-text-2xs)' }}
+          {/* SVG Chart */}
+          {(() => {
+            const chartData = dashboardStats.last7DaysSales;
+            const W = 600, H = 190, padL = 44, padR = 12, padT = 10, padB = 28;
+            const innerW = W - padL - padR;
+            const innerH = H - padT - padB;
+            const maxVal = Math.max(...chartData.map((d: any) => d.amount), 1);
+            const pts = chartData.map((d: any, i: number) => ({
+              x: padL + (i / Math.max(chartData.length - 1, 1)) * innerW,
+              y: padT + innerH - (d.amount / maxVal) * innerH,
+              ...d,
+            }));
+            const linePath = pts.length < 2
+              ? ''
+              : pts.reduce((acc: string, pt: any, i: number) => {
+                  if (i === 0) return `M ${pt.x},${pt.y}`;
+                  const prev = pts[i - 1];
+                  const cx1 = prev.x + (pt.x - prev.x) / 2;
+                  const cy1 = prev.y;
+                  const cx2 = prev.x + (pt.x - prev.x) / 2;
+                  const cy2 = pt.y;
+                  return `${acc} C ${cx1},${cy1} ${cx2},${cy2} ${pt.x},${pt.y}`;
+                }, '');
+            const areaPath = linePath ? `${linePath} L ${pts[pts.length - 1].x},${padT + innerH} L ${pts[0].x},${padT + innerH} Z` : '';
+            const gridVals = [0, 0.25, 0.5, 0.75, 1].map(f => ({ y: padT + innerH - f * innerH, label: Math.round(f * maxVal).toLocaleString('fr-FR') }));
+            const showEvery = chartData.length > 14 ? 4 : chartData.length > 7 ? 2 : 1;
+
+            return (
+              <div className="relative w-full h-52 mt-2" onMouseLeave={() => setChartHoverIdx(null)}>
+                <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="w-full h-full">
+                  <defs>
+                    <linearGradient id="dashboardAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#10b981" stopOpacity="0.28" />
+                      <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
+                    </linearGradient>
+                    <linearGradient id="dashboardLineGrad" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#10b981" />
+                      <stop offset="50%" stopColor="#06b6d4" />
+                      <stop offset="100%" stopColor="#3b82f6" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Horizontal grid lines */}
+                  {gridVals.map((g, i) => (
+                    <g key={i}>
+                      <line x1={padL} y1={g.y} x2={W - padR} y2={g.y} stroke={isDark ? '#1e293b' : '#f1f5f9'} strokeWidth="1" strokeDasharray="3,6" />
+                      <text x={padL - 6} y={g.y + 3} textAnchor="end" fontSize="8" fill={isDark ? '#475569' : '#94a3b8'} fontFamily="monospace">{g.label}</text>
+                    </g>
+                  ))}
+
+                  {areaPath && <path d={areaPath} fill="url(#dashboardAreaGrad)" />}
+                  {linePath && <path d={linePath} fill="none" stroke="url(#dashboardLineGrad)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />}
+
+                  {/* X axis labels */}
+                  {pts.map((pt: any, i: number) => i % showEvery === 0 && (
+                    <text key={i} x={pt.x} y={H - 4} textAnchor="middle" fontSize="8" fill={isDark ? '#475569' : '#94a3b8'} fontFamily="monospace">{pt.date}</text>
+                  ))}
+
+                  {/* Interactive points */}
+                  {pts.map((pt: any, i: number) => (
+                    <g key={i} onMouseEnter={() => setChartHoverIdx(i)} style={{ cursor: 'pointer' }}>
+                      <rect x={i === 0 ? pt.x - 10 : (pts[i - 1].x + pt.x) / 2} y={padT} width={i === pts.length - 1 ? 20 : ((i === 0 ? pt.x - 10 : (pts[i - 1].x + pt.x) / 2) - pt.x) * -1 + (i < pts.length - 1 ? (pt.x + pts[i + 1].x) / 2 - pt.x : 10)} height={innerH} fill="transparent" />
+                      {chartHoverIdx === i && (
+                        <>
+                          <line x1={pt.x} y1={padT} x2={pt.x} y2={padT + innerH} stroke="#10b981" strokeWidth="1.5" strokeDasharray="2,2" opacity="0.6" />
+                          <circle cx={pt.x} cy={pt.y} r="7" className="animate-ping" fill="none" stroke="#10b981" strokeWidth="1.5" style={{ transformOrigin: `${pt.x}px ${pt.y}px` }} />
+                          <circle cx={pt.x} cy={pt.y} r="4" fill={isDark ? '#0f172a' : '#ffffff'} stroke="#10b981" strokeWidth="2.5" />
+                        </>
+                      )}
+                    </g>
+                  ))}
+                </svg>
+
+                {/* Tooltip */}
+                {chartHoverIdx !== null && pts[chartHoverIdx] && (
+                  <div
+                    className="absolute z-30 pointer-events-none p-3 rounded-2xl border text-[10px] shadow-2xl flex flex-col gap-1 min-w-[150px] animate-fade-in"
+                    style={{
+                      left: `${(pts[chartHoverIdx].x / W) * 100}%`,
+                      top: `${Math.max(10, (pts[chartHoverIdx].y / H) * 100 - 18)}%`,
+                      transform: 'translate(-50%, -100%)',
+                      background: isDark ? 'hsl(224,28%,9%)' : '#ffffff',
+                      border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)',
+                    }}
                   >
-                    Tout voir <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
-                }
-              />
-              
-              {(() => {
-                const getActionBadge = (action: string) => {
-                  const act = (action || '').toLowerCase();
-                  if (act.includes('suppr') || act.includes('retir') || act.includes('annulation')) {
-                    return {
-                      badge: 'bg-rose-500/10 text-rose-500 border-rose-500/20',
-                      dot: 'bg-rose-500'
-                    };
-                  }
-                  if (act.includes('créa') || act.includes('ajout') || act.includes('enregistr')) {
-                    return {
-                      badge: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
-                      dot: 'bg-emerald-500'
-                    };
-                  }
-                  if (act.includes('connex') || act.includes('authentif')) {
-                    return {
-                      badge: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
-                      dot: 'bg-amber-500'
-                    };
-                  }
-                  return {
-                    badge: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-                    dot: 'bg-blue-500'
-                  };
-                };
-                
-                return (
-                  <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1">
-                    {auditLogs.slice(0, 6).map(log => {
-                      const badgeInfo = getActionBadge(log.action);
-                      return (
-                        <div
-                          key={log.id}
-                          className={`p-3 border rounded-2xl space-y-1.5 transition-all hover:bg-slate-500/[0.02] ${
-                            adminTheme === 'light' ? 'bg-slate-50/50 border-slate-100 hover:border-slate-200' : 'bg-slate-950 border-slate-900 hover:border-slate-800'
-                          }`}
-                        >
-                          <div className="flex justify-between items-center gap-2">
-                            <StatusBadge status={log.action} label={log.action} size="xs" dot={true} theme={adminTheme} />
-                            <span className="font-mono shrink-0" style={{ fontSize: 'var(--admin-text-2xs)', color: 'var(--admin-text-faint)' }}>
-                              {new Date(log.date).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                          </div>
-                          <p
-                            className="leading-relaxed font-medium"
-                            style={{ fontSize: 'var(--admin-text-xs)', color: 'var(--admin-text-secondary)' }}
-                          >
-                            {log.details}
-                          </p>
-                        </div>
-                      );
-                    })}
-                    {auditLogs.length === 0 && <p className="text-xs text-slate-500 italic text-center py-6">Aucune activité récente</p>}
+                    <span className="font-bold opacity-60" style={{ color: textMuted }}>{pts[chartHoverIdx].date}</span>
+                    <span className="font-extrabold text-[12px] text-emerald-500 font-mono">
+                      {pts[chartHoverIdx].amount > 0 ? `${pts[chartHoverIdx].amount.toLocaleString('fr-FR')} DH` : '0 DH'}
+                    </span>
+                    <span className="font-mono text-[9.5px] font-semibold" style={{ color: textMuted }}>
+                      {pts[chartHoverIdx].count || 0} commande(s)
+                    </span>
                   </div>
-                );
-              })()}
-            </div>
-          </div>
-        </div>
-
-        {/* Bento Cell 3: Top Produits (Ventes) */}
-        <div className={`p-1 rounded-[36px] lg:col-span-2 xl:col-span-2 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-2xl ${
-          adminTheme === 'light'
-            ? 'bg-slate-200/50 border border-slate-200/60 shadow-[0_4px_12px_-2px_rgba(15,30,54,0.02)] hover:border-slate-300'
-            : 'bg-white/5 border border-white/10 hover:border-white/15'
-        }`}>
-          <div className={`rounded-[calc(36px-4px)] p-6 h-full flex flex-col justify-between ${
-            adminTheme === 'light' ? 'bg-white text-slate-800 shadow-[inset_0_1px_1px_rgba(255,255,255,0.9)]' : 'bg-slate-950/80 backdrop-blur-md text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
-          }`}>
-            <div>
-              <BentoCardHeader eyebrow="Classement" title="Top produits (Ventes)" icon={ShoppingBag} theme={adminTheme} />
-
-              <div className="flex flex-col gap-3">
-                {/* Header row */}
-                <div
-                  className="flex items-center justify-between gap-3 pb-2 border-b px-1"
-                  style={{ borderColor: 'var(--admin-border)', fontSize: 'var(--admin-text-2xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--admin-text-faint)' }}
-                >
-                  <div className="flex-1 min-w-0">
-                    <span>Produit</span>
-                  </div>
-                  <div className="w-16 shrink-0 text-center hidden sm:block">
-                    <span>Quantité</span>
-                  </div>
-                  <div className="w-20 shrink-0 text-right">
-                    <span>Revenu</span>
-                  </div>
-                </div>
-
-                {topProductsByRevenueRanged.length === 0 ? (
-                  <p className="text-[11px] text-slate-500 italic text-center py-6">Aucune vente enregistrée</p>
-                ) : (
-                  (() => {
-                    const topProductsBySales = [...topProductsByRevenueRanged].sort((a, b) => b[1].qty - a[1].qty);
-                    const maxQty = topProductsBySales[0]?.[1].qty || 1;
-                    return topProductsBySales.slice(0, 4).map(([id, data]: any, idx: number) => {
-                      const pct = ((data.qty / maxQty) * 100).toFixed(0);
-                      const rankGradients = [
-                        'from-amber-400 to-yellow-500 text-white shadow-md shadow-amber-500/10',
-                        'from-slate-300 to-slate-400 text-white shadow-md shadow-slate-400/10',
-                        'from-amber-600 to-amber-700 text-white shadow-md shadow-amber-700/10',
-                      ];
-                      
-                      const productFromDb = products?.find((p: any) => p.id === Number(id));
-                      const brand = productFromDb?.vendor || 'Officine';
-                      const productImage = productFromDb?.image || 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop';
-                      
-                      return (
-                        <div 
-                          key={id} 
-                          className={`flex items-center justify-between gap-3 py-2 px-1 rounded-2xl transition-all duration-300 hover:bg-slate-500/[0.02] border border-transparent ${
-                            adminTheme === 'light' ? 'hover:border-slate-100' : 'hover:border-slate-900/60'
-                          }`}
-                        >
-                          {/* Rank + Image + Title */}
-                          <div className="flex-1 min-w-0 flex items-center gap-3">
-                            <div className="relative shrink-0">
-                              {idx < 3 ? (
-                                <span className={`absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black z-10 bg-gradient-to-tr ${rankGradients[idx]}`}>
-                                  {idx + 1}
-                                </span>
-                              ) : (
-                                <span className={`absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black z-10 ${
-                                  adminTheme === 'light' ? 'bg-slate-100 text-slate-500 border border-slate-200' : 'bg-slate-900 text-slate-400 border border-slate-800'
-                                }`}>
-                                  {idx + 1}
-                                </span>
-                              )}
-                              <img 
-                                src={productImage} 
-                                alt={data.title}
-                                className="w-10 h-10 object-cover rounded-xl border border-slate-200/50 dark:border-slate-800/50 shadow-[0_2px_4px_rgba(0,0,0,0.02)]"
-                              />
-                            </div>
-                            
-                            <div className="min-w-0">
-                              <span className={`text-[8.5px] font-extrabold tracking-wider uppercase block leading-none mb-1 ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>
-                                {brand}
-                              </span>
-                              <h4 className={`text-[11.5px] font-bold truncate ${adminTheme === 'light' ? 'text-slate-700' : 'text-slate-200'}`} title={data.title}>
-                                {data.title}
-                              </h4>
-                            </div>
-                          </div>
-
-                          {/* Quantity */}
-                          <div className={`w-16 shrink-0 hidden sm:flex items-center justify-center font-mono text-xs font-black ${adminTheme === 'light' ? 'text-slate-600' : 'text-slate-300'}`}>
-                            {data.qty}
-                          </div>
-
-                          {/* Revenue */}
-                          <div className="w-20 shrink-0 text-right flex flex-col justify-center">
-                            <span className="font-mono text-[11px] font-extrabold text-emerald-500">
-                              {data.revenue.toLocaleString('fr-FR')} DH
-                            </span>
-                            <span className="text-[8.5px] text-slate-400 dark:text-slate-500 block font-medium mt-0.5 sm:hidden">
-                              Qté: {data.qty}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    });
-                  })()
                 )}
               </div>
-            </div>
-          </div>
+            );
+          })()}
         </div>
 
-        {/* Bento Cell 5: Relance Paniers Abandonnés */}
-        <div className={`p-1 rounded-[36px] lg:col-span-2 xl:col-span-2 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-2xl ${
-          adminTheme === 'light'
-            ? 'bg-slate-200/50 border border-slate-200/60 shadow-[0_4px_12px_-2px_rgba(15,30,54,0.02)] hover:border-slate-300'
-            : 'bg-white/5 border border-white/10 hover:border-white/15'
-        }`}>
-          <div className={`rounded-[calc(36px-4px)] p-6 h-full flex flex-col justify-between ${
-            adminTheme === 'light' ? 'bg-white text-slate-800 shadow-[inset_0_1px_1px_rgba(255,255,255,0.9)]' : 'bg-slate-950/80 backdrop-blur-md text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
-          }`}>
+        {/* Order Status Breakdown (1 col) */}
+        <div
+          className="rounded-2xl p-5 flex flex-col justify-between transition-all duration-300"
+          style={{
+            background: cardBg,
+            border: borderStyle,
+            boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.35)' : '0 2px 10px rgba(15,30,54,0.05)',
+          }}
+        >
+          <div className="flex items-center gap-2.5 mb-4">
+            <div
+              className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)' }}
+            >
+              <ClipboardList className="w-4 h-4 text-indigo-500" />
+            </div>
             <div>
-              <BentoCardHeader
-                eyebrow="Relances"
-                title="Relance paniers abandonnés"
-                icon={ClipboardList}
-                theme={adminTheme}
-                action={
-                  <div className="flex gap-1.5">
-                    <StatusBadge status="cancelled" label={`${cartRecoveryStats.total} abandons`} dot={false} theme={adminTheme} size="xs" />
-                    <StatusBadge status="active" label={`${cartRecoveryStats.rate}% récup.`} dot={false} theme={adminTheme} size="xs" />
-                  </div>
-                }
-              />
-              
-              {/* Recovery KPIs Summary */}
-              <div className="grid grid-cols-3 gap-2.5 text-center mb-4">
-                {[
-                  { 
-                    label: 'Non contactés', 
-                    value: cartRecoveryStats.total - cartRecoveryStats.contacted - cartRecoveryStats.recovered, 
-                    color: adminTheme === 'light' ? 'text-slate-700' : 'text-slate-300',
-                    border: adminTheme === 'light' ? 'border-slate-200/80 shadow-[0_2px_4px_rgba(0,0,0,0.01)]' : 'border-slate-900',
-                    bg: adminTheme === 'light' ? 'bg-slate-50/60' : 'bg-slate-950/40'
-                  },
-                  { 
-                    label: 'Contactés', 
-                    value: cartRecoveryStats.contacted, 
-                    color: adminTheme === 'light' ? 'text-amber-707 text-amber-700' : 'text-amber-400',
-                    border: adminTheme === 'light' ? 'border-amber-200/50 shadow-[0_2px_4px_rgba(0,0,0,0.01)]' : 'border-amber-950/20 border-amber-950/20',
-                    bg: adminTheme === 'light' ? 'bg-amber-50/25' : 'bg-amber-950/10 bg-amber-950/10'
-                  },
-                  { 
-                    label: 'Récupérés', 
-                    value: cartRecoveryStats.recovered, 
-                    color: adminTheme === 'light' ? 'text-emerald-707 text-emerald-700' : 'text-emerald-400',
-                    border: adminTheme === 'light' ? 'border-emerald-200/50 shadow-[0_2px_4px_rgba(0,0,0,0.01)]' : 'border-emerald-950/20 border-emerald-950/20',
-                    bg: adminTheme === 'light' ? 'bg-emerald-50/25' : 'bg-emerald-950/10 bg-emerald-950/10'
-                  }
-                ].map((s, i) => (
-                  <div key={i} className={`rounded-[20px] py-2 px-1 border transition-all hover:scale-[1.02] ${s.bg} ${s.border}`}>
-                    <span className={`text-base font-extrabold font-mono block ${s.color}`}>{s.value}</span>
-                    <span className="text-[8px] text-slate-500 uppercase font-bold tracking-wider">{s.label}</span>
-                  </div>
-                ))}
-              </div>
-              
-              <div className="space-y-2.5 max-h-[180px] overflow-y-auto pr-1">
-                {abandonedCarts.map((cart, idx) => {
-                  const status = cartRecoveryStatus[cart.phone] || 'not_contacted';
-                  const statusLabels: Record<string, string> = {
-                    not_contacted: 'Non contacté',
-                    contacted: 'Relancé',
-                    recovered: 'Récupéré'
-                  };
-                  
-                  const statusBadgeStyle = {
-                    not_contacted: adminTheme === 'light' 
-                      ? 'bg-slate-100 border-slate-200 text-slate-600' 
-                      : 'bg-slate-900/50 border-slate-900 text-slate-400',
-                    contacted: adminTheme === 'light' 
-                      ? 'bg-amber-50 border-amber-100 text-amber-700' 
-                      : 'bg-amber-500/10 border-amber-500/20 text-amber-400',
-                    recovered: adminTheme === 'light' 
-                      ? 'bg-emerald-50 border-emerald-100 text-emerald-700' 
-                      : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-                  }[status];
-
-                  const dotColor = {
-                    not_contacted: 'bg-slate-400',
-                    contacted: 'bg-amber-500',
-                    recovered: 'bg-emerald-500'
-                  }[status];
-
-                   const buyerInitials = (cart.name || 'A').split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase();
-                  const detailsStr = cart.items?.map((item: any) => {
-                    const title = item.title || item.product?.title || 'Produit';
-                    const qty = item.quantity || 1;
-                    const price = item.price || item.product?.price;
-                    const priceStr = price ? ` (${price} DH)` : '';
-                    return `${qty}x ${title}${priceStr}`;
-                  }).join(', ') || 'Aucun produit';
-                  
-                   return (
-                    <div 
-                      key={idx} 
-                      onClick={() => setSelectedAbandonedCart(cart)}
-                      className={`p-3.5 rounded-2xl text-xs flex justify-between items-start gap-3 border cursor-pointer transition-all duration-200 ${
-                        adminTheme === 'light'
-                          ? 'bg-slate-50/40 border-slate-200/50 hover:bg-slate-50 hover:border-slate-300 hover:shadow-md hover:scale-[1.01]'
-                          : 'bg-slate-950 border-slate-900 hover:border-slate-800 hover:bg-slate-900/20 hover:scale-[1.01]'
-                      }`}
-                    >
-                      <div className="min-w-0 flex-1 space-y-2 animate-fade-in flex items-start gap-2.5">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5 ${
-                          adminTheme === 'light' ? 'bg-slate-100 text-slate-700 border border-slate-200/40' : 'bg-slate-900 text-slate-300 border border-slate-800/60'
-                        }`}>
-                          {buyerInitials}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-col gap-0.5">
-                            <div className="flex gap-1.5 items-center flex-wrap">
-                              <span className={`font-bold text-[11px] ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-200'}`}>{cart.name || 'Anonyme'}</span>
-                              <StatusBadge
-                                status={status === 'not_contacted' ? 'inactive' : status === 'recovered' ? 'active' : 'warning'}
-                                label={statusLabels[status]}
-                                size="xs"
-                                theme={adminTheme}
-                              />
-                            </div>
-                            <span className="text-[9.5px] text-slate-500 font-semibold select-none leading-none">
-                              Compte : <span className={cart.clientProfileName ? 'text-indigo-500 font-bold' : 'text-rose-500 italic font-bold'}>{cart.clientProfileName || 'unavailable'}</span>
-                            </span>
-                            {cart.date && (
-                              <span className="text-[9px] text-slate-400 font-mono leading-none flex items-center gap-1 mt-0.5">
-                                <Clock className="w-2.5 h-2.5 inline-block shrink-0" />
-                                {new Date(cart.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
-                                {' · '}
-                                {new Date(cart.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Beautiful professional UI for item pills */}
-                          <div className="flex flex-wrap gap-1 mt-2.5">
-                            {cart.items?.slice(0, 3).map((item: any, iIdx: number) => {
-                              const title = item.title || item.product?.title || 'Produit';
-                              const qty = item.quantity || 1;
-                              const price = item.price || item.product?.price;
-                              return (
-                                <span 
-                                  key={iIdx} 
-                                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9px] font-bold border ${
-                                    adminTheme === 'light' 
-                                      ? 'bg-slate-100/70 border-slate-200/50 text-slate-700' 
-                                      : 'bg-slate-900 border-slate-800 text-slate-300'
-                                  }`}
-                                >
-                                  <span className="text-emerald-500 font-extrabold">{qty}x</span>
-                                  <span className="truncate max-w-[120px]">{title}</span>
-                                  {price && <span className="opacity-60 font-mono">({price} DH)</span>}
-                                </span>
-                              );
-                            })}
-                            {cart.items && cart.items.length > 3 && (
-                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-lg text-[9px] font-black border uppercase tracking-wider ${
-                                adminTheme === 'light'
-                                  ? 'bg-indigo-50 border-indigo-100 text-indigo-600'
-                                  : 'bg-indigo-950/20 border-indigo-900/30 text-indigo-400'
-                              }`}>
-                                +{cart.items.length - 3} de plus
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="shrink-0 flex flex-col items-end gap-2" onClick={(e) => e.stopPropagation()}>
-                        <span className={`font-black text-[11.5px] font-mono leading-none ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-100'}`}>{cart.total} DH</span>
-                        <div className="flex gap-1.5">
-                          <a
-                            href={buildCartRecoveryLink(cart)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={() => handleUpdateCartRecovery(cart.phone, 'contacted')}
-                            className={`inline-flex items-center gap-1 px-2.5 py-1 text-[9px] font-black uppercase rounded-lg border transition-all duration-200 hover:scale-[1.04] active:scale-[0.96] ${
-                              adminTheme === 'light'
-                                ? 'text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-500 hover:text-white hover:border-emerald-500'
-                                : 'text-emerald-400 bg-emerald-950/30 border-emerald-900/40 hover:bg-emerald-500 hover:text-slate-950 hover:border-emerald-500'
-                            }`}
-                          >
-                            <MessageSquare className="w-3 h-3" /> WA
-                          </a>
-                          {status !== 'recovered' && (
-                            <button
-                              onClick={() => handleUpdateCartRecovery(cart.phone, 'recovered')}
-                              className={`inline-flex items-center gap-1 px-2.5 py-1 text-[9px] font-black uppercase rounded-lg border transition-all duration-200 cursor-pointer hover:scale-[1.04] active:scale-[0.96] ${
-                                adminTheme === 'light'
-                                  ? 'text-slate-700 bg-slate-100 border-slate-200 hover:bg-emerald-500 hover:text-white hover:border-emerald-500'
-                                  : 'text-slate-400 bg-slate-900 border-slate-800 hover:bg-emerald-500 hover:text-slate-950 hover:border-emerald-500'
-                              }`}
-                            >
-                              <Check className="w-3 h-3" /> OK
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-                {abandonedCarts.length === 0 && <p className="text-xs text-slate-500 italic text-center py-4">Aucun panier abandonné</p>}
-              </div>
+              <h3 className="text-[13px] font-black leading-tight" style={{ color: textPrimary }}>
+                Répartition des statuts
+              </h3>
+              <p className="text-[10px] font-medium" style={{ color: textMuted }}>
+                Aperçu du tunnel de commande
+              </p>
             </div>
           </div>
-        </div>
 
+          <div className="space-y-3 flex-1 flex flex-col justify-around py-1">
+            {Object.entries(dashboardStats.statusFunnel).map(([status, count]) => {
+              const total = dashboardStats.ordersCount || 1;
+              const pct = Math.round(((count as number) / total) * 100);
+
+              const statusConfigs: Record<string, { color: string; label: string }> = {
+                Pending: { color: '#f59e0b', label: 'En attente' },
+                Confirmed: { color: '#3b82f6', label: 'Confirmées' },
+                Shipped: { color: '#6366f1', label: 'Expédiées' },
+                Delivered: { color: '#10b981', label: 'Livrées' },
+                Cancelled: { color: '#f43f5e', label: 'Annulées' },
+              };
+              const cfg = statusConfigs[status] || { color: '#94a3b8', label: status };
+
+              return (
+                <div key={status} className="space-y-1">
+                  <div className="flex justify-between items-center text-[10.5px]">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full" style={{ background: cfg.color }} />
+                      <span className="font-semibold" style={{ color: textPrimary }}>{cfg.label}</span>
+                    </div>
+                    <div className="flex items-center gap-2 font-mono">
+                      <span
+                        className="text-[9px] px-1.5 py-0.2 rounded font-bold"
+                        style={{
+                          background: `${cfg.color}18`,
+                          color: cfg.color,
+                          border: `1px solid ${cfg.color}30`,
+                        }}
+                      >
+                        {pct}%
+                      </span>
+                      <span className="font-bold text-[11px]" style={{ color: textPrimary }}>
+                        {count as number}
+                      </span>
+                    </div>
+                  </div>
+                  <div
+                    className="h-1.5 rounded-full overflow-hidden"
+                    style={{ background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}
+                  >
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${pct}%`, background: cfg.color }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
-      {/* Abandoned Cart Detail Modal - Premium Redesign (Portal) */}
-      {selectedAbandonedCart && typeof window !== 'undefined' && ReactDOM.createPortal((() => {
-        const cart = selectedAbandonedCart;
-        const cartStatus = cartRecoveryStatus[cart.phone] || 'not_contacted';
-        const statusColors: Record<string, string> = {
-          not_contacted: 'bg-slate-100 text-slate-600 border-slate-200',
-          contacted: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
-          recovered: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
-        };
-        const statusLabelsM: Record<string, string> = { not_contacted: 'Non contacté', contacted: 'Relancé', recovered: 'Récupéré' };
-        const hasSalicylic = cart.items?.some((i: any) => (i.title || i.product?.title || '').toLowerCase().match(/salicyl|acne|bha/));
-        const hasRetinol = cart.items?.some((i: any) => (i.title || i.product?.title || '').toLowerCase().match(/retinol|retin/));
-        const hasVitC = cart.items?.some((i: any) => (i.title || i.product?.title || '').toLowerCase().match(/vitamine c|vit c|ascorb/));
-        const suggestion = hasSalicylic
-          ? "Soin BHA détecté — rappeler d'appliquer le soir avec SPF 50 en journée."
-          : hasRetinol
-          ? "Rétinol détecté — éviter de combiner avec un exfoliant AHA/BHA."
-          : hasVitC
-          ? "Vitamine C présente — parfaite pour relancer en insistant sur l'éclat du matin."
-          : null;
+      {/* ── Bottom Section: Recent Orders & Bestsellers ───────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        return (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/55 backdrop-blur-md"
-            onClick={() => setSelectedAbandonedCart(null)}
-          >
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className={`w-full max-w-[640px] rounded-[28px] shadow-2xl overflow-hidden flex flex-col border ${
-                adminTheme === 'light'
-                  ? 'bg-white border-slate-100/80 text-slate-800'
-                  : 'bg-[#0f1117] border-white/5 text-white'
-              }`}
-              style={{ maxHeight: '88vh' }}
-            >
-              {/* ── Header ── */}
-              <div className={`flex items-center justify-between px-6 py-4 border-b shrink-0 ${adminTheme === 'light' ? 'border-slate-100' : 'border-white/5'}`}>
-                <div className="flex items-center gap-3">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black ${adminTheme === 'light' ? 'bg-slate-100 text-slate-600' : 'bg-white/5 text-white/70'}`}>
-                    {(cart.name || 'A').charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-sm leading-tight">{cart.name || 'Anonyme'}</h3>
-                    <span className="text-[10px] text-slate-400 font-mono">{cart.phone}</span>
-                  </div>
-                  <span className={`ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border ${statusColors[cartStatus]}`}>
-                    {statusLabelsM[cartStatus]}
-                  </span>
-                </div>
-                <button
-                  onClick={() => setSelectedAbandonedCart(null)}
-                  className={`w-7 h-7 rounded-full flex items-center justify-center transition active:scale-90 cursor-pointer border-0 outline-none ${adminTheme === 'light' ? 'bg-slate-100 hover:bg-slate-200 text-slate-500' : 'bg-white/5 hover:bg-white/10 text-white/50'}`}
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
+        {/* Recent Orders Card */}
+        <div
+          className="lg:col-span-2 rounded-3xl p-6 flex flex-col justify-between transition-all duration-300 relative overflow-hidden"
+          style={{
+            background: cardBg,
+            border: borderStyle,
+            boxShadow: isDark ? '0 4px 24px rgba(0,0,0,0.35)' : '0 4px 20px rgba(15,30,54,0.04)',
+          }}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-sm transition-transform duration-300 hover:scale-105"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(99,102,241,0.12) 100%)',
+                  border: '1px solid rgba(59,130,246,0.25)',
+                }}
+              >
+                <ShoppingBag className="w-5 h-5 text-blue-500" strokeWidth={2} />
               </div>
-
-              {/* ── Two-column Body ── */}
-              <div className="flex flex-1 min-h-0 overflow-hidden">
-
-                {/* Left — Client Meta */}
-                <div className={`w-48 shrink-0 p-4 flex flex-col gap-3 border-r text-xs ${adminTheme === 'light' ? 'bg-slate-50/60 border-slate-100' : 'bg-white/[0.02] border-white/5'}`}>
-                  <div>
-                    <span className="text-[8.5px] font-black uppercase tracking-widest text-slate-400 block mb-1">Compte Client</span>
-                    <span className={`font-bold text-[11px] leading-snug ${cart.clientProfileName ? 'text-indigo-500' : 'text-rose-400 italic'}`}>
-                      {cart.clientProfileName || 'unavailable'}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[8.5px] font-black uppercase tracking-widest text-slate-400 block mb-1">Abandon le</span>
-                    <span className="font-semibold text-[10px] leading-snug">
-                      {cart.date ? new Date(cart.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[8.5px] font-black uppercase tracking-widest text-slate-400 block mb-1">Articles</span>
-                    <span className="font-bold text-[13px]">{cart.items?.length || 0}</span>
-                  </div>
-                  <div className="mt-auto pt-3 border-t border-slate-100/60 dark:border-white/5">
-                    <span className="text-[8.5px] font-black uppercase tracking-widest text-slate-400 block mb-1">Total Estimé</span>
-                    <span className="font-black text-base font-mono">{cart.total.toFixed(2)} <span className="text-[10px]">DH</span></span>
-                  </div>
-                  {suggestion && (
-                    <div className="mt-2 p-2.5 rounded-xl bg-indigo-500/8 border border-indigo-500/15 text-[9.5px] text-indigo-400 leading-relaxed font-medium">
-                      💡 {suggestion}
-                    </div>
-                  )}
-                </div>
-
-                {/* Right — Items list */}
-                <div className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-2">
-                  <span className="text-[8.5px] font-black uppercase tracking-widest text-slate-400 block mb-2">Articles sélectionnés</span>
-                  {cart.items?.map((item: any, iIdx: number) => {
-                    const title = item.title || item.product?.title || 'Produit';
-                    const qty = item.quantity || 1;
-                    const price = parseFloat(item.price || item.product?.price || '0');
-                    const img = item.product?.image || item.image;
-                    return (
-                      <div
-                        key={iIdx}
-                        className={`flex items-center gap-3 p-3 rounded-2xl border ${
-                          adminTheme === 'light'
-                            ? 'bg-slate-50/80 border-slate-100'
-                            : 'bg-white/[0.03] border-white/5'
-                        }`}
-                      >
-                        <div className={`w-10 h-10 rounded-xl shrink-0 flex items-center justify-center overflow-hidden border ${adminTheme === 'light' ? 'bg-white border-slate-100' : 'bg-white/5 border-white/5'}`}>
-                          {img
-                            ? <img src={img} alt={title} className="w-full h-full object-contain" />
-                            : <ShoppingBag className="w-4 h-4 text-slate-400" />
-                          }
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-[11.5px] leading-snug truncate">{title}</h4>
-                          <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
-                            <span className="text-emerald-500 font-black">{qty}×</span> {price.toFixed(2)} DH
-                          </p>
-                        </div>
-                        <span className="font-mono font-extrabold text-[12px] shrink-0">
-                          {(price * qty).toFixed(2)} <span className="text-[9px] text-slate-400">DH</span>
-                        </span>
-                      </div>
-                    );
-                  })}
-                  {(!cart.items || cart.items.length === 0) && (
-                    <p className="text-xs text-slate-400 italic text-center py-8">Aucun article dans ce panier</p>
-                  )}
-                </div>
-              </div>
-
-              {/* ── Footer ── */}
-              <div className={`px-5 py-3.5 flex items-center justify-between gap-2 border-t shrink-0 ${adminTheme === 'light' ? 'bg-slate-50/50 border-slate-100' : 'border-white/5'}`}>
-                <span className="text-[9px] text-slate-400 font-semibold">Cliquez sur Relancer pour ouvrir WhatsApp</span>
-                <div className="flex gap-2">
-                  <a
-                    href={buildCartRecoveryLink(cart, 'Fr')}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => { handleUpdateCartRecovery(cart.phone, 'contacted'); setSelectedAbandonedCart(null); }}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition active:scale-95 border-0 outline-none"
-                  >
-                    <MessageSquare className="w-3 h-3" /> FR
-                  </a>
-                  <a
-                    href={buildCartRecoveryLink(cart, 'Ar')}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => { handleUpdateCartRecovery(cart.phone, 'contacted'); setSelectedAbandonedCart(null); }}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition active:scale-95 border-0 outline-none"
-                  >
-                    <MessageSquare className="w-3 h-3" /> AR
-                  </a>
-                  {cartStatus !== 'recovered' && (
-                    <button
-                      onClick={() => { handleUpdateCartRecovery(cart.phone, 'recovered'); setSelectedAbandonedCart(null); }}
-                      className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-[10px] font-black uppercase tracking-wider rounded-xl transition active:scale-95 border-0 outline-none cursor-pointer ${
-                        adminTheme === 'light'
-                          ? 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                          : 'bg-white/5 hover:bg-white/10 text-white/70'
-                      }`}
-                    >
-                      <Check className="w-3 h-3" /> Récupéré
-                    </button>
-                  )}
-                </div>
+              <div>
+                <h3 className="text-sm font-black tracking-tight leading-tight" style={{ color: textPrimary }}>
+                  Dernières commandes
+                </h3>
+                <p className="text-[11px] font-medium" style={{ color: textMuted }}>
+                  Les 6 transactions les plus récentes
+                </p>
               </div>
             </div>
+
+            <button
+              onClick={() => setActiveTab('orders')}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-[11px] font-extrabold transition-all duration-200 cursor-pointer active:scale-95"
+              style={{
+                background: isDark ? 'rgba(16,185,129,0.12)' : 'rgba(16,185,129,0.08)',
+                border: '1px solid rgba(16,185,129,0.25)',
+                color: '#10b981',
+              }}
+            >
+              <span>Voir tout</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
           </div>
-        );
-      })()
-      , document.body)}
+
+          {/* Orders Feed List */}
+          <div className="space-y-2.5">
+            {/* Column Headers */}
+            <div
+              className="grid grid-cols-12 gap-3 px-3.5 py-2 text-[9.5px] font-black uppercase tracking-widest"
+              style={{ color: textMuted }}
+            >
+              <div className="col-span-5">Client</div>
+              <div className="col-span-3">Statut</div>
+              <div className="col-span-2 text-right">Montant</div>
+              <div className="col-span-2 text-right">Date</div>
+            </div>
+
+            {recentOrders.map((order, idx) => {
+              // Custom Status Pill Configs
+              const statusPills: Record<string, { bg: string; text: string; border: string; label: string; dot: string }> = {
+                Confirmed: {
+                  bg: isDark ? 'rgba(16,185,129,0.12)' : 'rgba(16,185,129,0.1)',
+                  text: '#10b981',
+                  border: 'rgba(16,185,129,0.25)',
+                  label: 'Confirmée',
+                  dot: '#10b981',
+                },
+                Pending: {
+                  bg: isDark ? 'rgba(245,158,11,0.12)' : 'rgba(245,158,11,0.1)',
+                  text: '#f59e0b',
+                  border: 'rgba(245,158,11,0.25)',
+                  label: 'En attente',
+                  dot: '#f59e0b',
+                },
+                Shipped: {
+                  bg: isDark ? 'rgba(99,102,241,0.12)' : 'rgba(99,102,241,0.1)',
+                  text: '#6366f1',
+                  border: 'rgba(99,102,241,0.25)',
+                  label: 'Expédiée',
+                  dot: '#6366f1',
+                },
+                Delivered: {
+                  bg: isDark ? 'rgba(16,185,129,0.12)' : 'rgba(16,185,129,0.1)',
+                  text: '#10b981',
+                  border: 'rgba(16,185,129,0.25)',
+                  label: 'Livrée',
+                  dot: '#10b981',
+                },
+                Cancelled: {
+                  bg: isDark ? 'rgba(244,63,94,0.12)' : 'rgba(244,63,94,0.1)',
+                  text: '#f43f5e',
+                  border: 'rgba(244,63,94,0.25)',
+                  label: 'Annulée',
+                  dot: '#f43f5e',
+                },
+              };
+
+              const pill = statusPills[order.status] || {
+                bg: 'rgba(148,163,184,0.12)',
+                text: '#94a3b8',
+                border: 'rgba(148,163,184,0.25)',
+                label: order.status,
+                dot: '#94a3b8',
+              };
+
+              // Gradient avatar palette
+              const avatarGradients = [
+                'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)',
+                'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)',
+                'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
+                'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
+                'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
+              ];
+              const avatarBg = avatarGradients[idx % avatarGradients.length];
+
+              return (
+                <div
+                  key={order.order_id || idx}
+                  onClick={() => setActiveTab('orders')}
+                  className="group grid grid-cols-12 gap-3 items-center px-3.5 py-3 rounded-2xl transition-all duration-200 cursor-pointer"
+                  style={{
+                    background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.015)',
+                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}`,
+                  }}
+                >
+                  {/* Customer Info */}
+                  <div className="col-span-5 flex items-center gap-3 min-w-0">
+                    <div
+                      className="w-8 h-8 rounded-xl flex items-center justify-center font-black text-white text-[10px] shrink-0 shadow-sm transition-transform duration-200 group-hover:scale-105"
+                      style={{ background: avatarBg }}
+                    >
+                      {order.customer_name ? order.customer_name.slice(0, 2).toUpperCase() : 'CL'}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-extrabold text-[12.5px] truncate transition-colors group-hover:text-emerald-500" style={{ color: textPrimary }}>
+                        {order.customer_name || 'Client Officinal'}
+                      </p>
+                      <p className="text-[10px] font-mono truncate opacity-70" style={{ color: textMuted }}>
+                        {order.city || 'Maroc'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Status Badge */}
+                  <div className="col-span-3">
+                    <span
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold"
+                      style={{
+                        background: pill.bg,
+                        color: pill.text,
+                        border: `1px solid ${pill.border}`,
+                      }}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: pill.dot }} />
+                      {pill.label}
+                    </span>
+                  </div>
+
+                  {/* Amount */}
+                  <div className="col-span-2 text-right">
+                    <span className="font-extrabold font-mono text-[12.5px] text-emerald-500">
+                      {(order.total || 0).toLocaleString('fr-FR')} <span className="text-[9.5px] font-sans font-bold">DH</span>
+                    </span>
+                  </div>
+
+                  {/* Date */}
+                  <div className="col-span-2 text-right">
+                    <span
+                      className="inline-block px-2 py-0.5 rounded-md text-[9.5px] font-mono font-bold"
+                      style={{
+                        background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+                        color: textMuted,
+                      }}
+                    >
+                      {new Date(order.created_at || order.date || Date.now()).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+
+            {recentOrders.length === 0 && (
+              <div className="py-12 text-center text-[11px] italic" style={{ color: textMuted }}>
+                Aucune commande enregistrée
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Top 5 Bestsellers (1 col) */}
+        <div
+          className="rounded-2xl p-5 flex flex-col justify-between transition-all duration-300"
+          style={{
+            background: cardBg,
+            border: borderStyle,
+            boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.35)' : '0 2px 10px rgba(15,30,54,0.05)',
+          }}
+        >
+          {/* Header */}
+          <div className="flex items-center gap-2.5 mb-4">
+            <div
+              className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)' }}
+            >
+              <Package className="w-4 h-4 text-amber-500" />
+            </div>
+            <div>
+              <h3 className="text-[13px] font-black leading-tight" style={{ color: textPrimary }}>
+                Top 5 Bestsellers
+              </h3>
+              <p className="text-[10px] font-medium" style={{ color: textMuted }}>
+                Produits générant le plus de CA
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-3.5 flex-1 flex flex-col justify-around">
+            {topProductsRanged.map((p, idx) => {
+              const maxRev = topProductsRanged[0]?.revenue || 1;
+              const pct = Math.min(100, Math.max(4, (p.revenue / maxRev) * 100));
+
+              return (
+                <div key={idx} className="space-y-1">
+                  <div className="flex items-center justify-between gap-2 text-[11px]">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span
+                        className="w-4 h-4 rounded-full flex items-center justify-center text-[8.5px] font-black shrink-0"
+                        style={{
+                          background: idx === 0
+                            ? 'rgba(245,158,11,0.2)'
+                            : idx === 1
+                            ? 'rgba(148,163,184,0.2)'
+                            : idx === 2
+                            ? 'rgba(217,119,6,0.2)'
+                            : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'),
+                          color: idx === 0 ? '#f59e0b' : idx === 1 ? '#94a3b8' : idx === 2 ? '#d97706' : textMuted,
+                        }}
+                      >
+                        {idx + 1}
+                      </span>
+                      <span className="font-bold truncate" style={{ color: textPrimary }}>
+                        {p.title}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 font-mono text-[10px] shrink-0">
+                      <span style={{ color: textMuted }}>{p.qty} v.</span>
+                      <span className="font-bold text-emerald-500">
+                        {p.revenue.toLocaleString('fr-FR')} DH
+                      </span>
+                    </div>
+                  </div>
+
+                  <div
+                    className="h-1.5 rounded-full overflow-hidden"
+                    style={{ background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}
+                  >
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{
+                        width: `${pct}%`,
+                        background: 'linear-gradient(90deg, #10b981 0%, #06b6d4 100%)',
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+
+            {topProductsRanged.length === 0 && (
+              <p className="text-[11px] text-center italic py-6" style={{ color: textMuted }}>
+                Aucune vente enregistrée sur cette période
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Abandoned Carts Recovery Card ────────────────────────────────────── */}
+      {abandonedCarts && abandonedCarts.length > 0 && (
+        <div
+          className="rounded-2xl p-5 transition-all duration-300 space-y-4"
+          style={{
+            background: cardBg,
+            border: borderStyle,
+            boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.35)' : '0 2px 10px rgba(15,30,54,0.05)',
+          }}
+        >
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-2.5">
+              <div
+                className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: 'rgba(244,63,94,0.12)', border: '1px solid rgba(244,63,94,0.25)' }}
+              >
+                <ClipboardList className="w-4 h-4 text-rose-500" />
+              </div>
+              <div>
+                <h3 className="text-[13px] font-black leading-tight" style={{ color: textPrimary }}>
+                  Relance des paniers abandonnés
+                </h3>
+                <p className="text-[10px] font-medium" style={{ color: textMuted }}>
+                  Relancez directement vos clients sur WhatsApp
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setActiveTab('orders')}
+              className="flex items-center gap-1 text-[11px] font-bold text-emerald-500 hover:text-emerald-400 transition cursor-pointer"
+            >
+              Gérer la relance <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {abandonedCarts.slice(0, 3).map((cart: AbandonedCart, idx: number) => {
+              const itemsCount = cart.items?.length || 0;
+              return (
+                <div
+                  key={cart.phone || idx}
+                  className="flex flex-col justify-between p-3.5 rounded-xl space-y-3 transition"
+                  style={{
+                    background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+                  }}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-[11.5px] font-bold" style={{ color: textPrimary }}>
+                        {cart.name || 'Client Inconnu'}
+                      </p>
+                      <p className="text-[9.5px] font-mono" style={{ color: textMuted }}>
+                        {cart.phone || 'Pas de numéro'}
+                      </p>
+                    </div>
+                    <span className="font-mono font-bold text-[11.5px] text-emerald-500">
+                      {(cart.total || 0).toLocaleString('fr-FR')} DH
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 pt-1">
+                    <span className="text-[9.5px] font-semibold" style={{ color: textMuted }}>
+                      {itemsCount} article{itemsCount > 1 ? 's' : ''} en attente
+                    </span>
+
+                    <a
+                      href={buildCartRecoveryLink(cart, 'Fr')}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 px-3 py-1 rounded-lg text-[10px] font-bold text-white transition active:scale-95"
+                      style={{
+                        background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
+                        boxShadow: '0 2px 8px rgba(37,211,102,0.3)',
+                      }}
+                    >
+                      <MessageSquare className="w-3 h-3" />
+                      Relancer WhatsApp
+                    </a>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
