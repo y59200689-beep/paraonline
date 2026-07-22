@@ -49,6 +49,8 @@ export interface Order {
   courier_fee?: number;
   reconciliation_notes?: string;
   payment_status?: string;
+  payment_method?: string;
+  transaction_id?: string;
   has_account?: boolean;
   user_id?: string;
   email?: string;
@@ -189,7 +191,10 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           settled_amount: o.settled_amount || 0,
           courier_fee: o.courier_fee || 0,
           reconciliation_notes: o.reconciliation_notes || '',
-          payment_status: o.payment_status || 'unpaid'
+          payment_status: o.payment_status || 'unpaid',
+          payment_method: o.payment_method || 'cod',
+          transaction_id: o.transaction_id || undefined,
+          notes: o.notes || undefined,
         }));
         setOrders(parsed);
       } else {

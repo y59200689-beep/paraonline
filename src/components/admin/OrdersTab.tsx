@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   ShoppingBag, 
   ShoppingCart, 
@@ -26,7 +27,9 @@ import {
   Copy,
   Plus,
   Minus,
-  Gift
+  Gift,
+  CreditCard,
+  Wallet
 } from 'lucide-react';
 import { useAdmin, Order, AbandonedCart } from '@/context/AdminContext';
 import { useSettings } from '@/context/SettingsContext';
@@ -69,9 +72,15 @@ export default function OrdersTab() {
   const [staffNoteInputs, setStaffNoteInputs] = useState<Record<string, string>>({});
   const [noteSavedFeedback, setNoteSavedFeedback] = useState<boolean>(false);
   const [isPrintInvoiceOpen, setIsPrintInvoiceOpen] = useState<boolean>(false);
+  const [isPrintPackingSlipOpen, setIsPrintPackingSlipOpen] = useState<boolean>(false);
   const [settledOrdersMap, setSettledOrdersMap] = useState<Record<string, boolean>>({});
   const [isAddGiftModalOpen, setIsAddGiftModalOpen] = useState<boolean>(false);
   const [customGiftInput, setCustomGiftInput] = useState<string>('');
+  const [mounted, setMounted] = useState<boolean>(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Sub-tabs: 'list' | 'abandoned' | 'shipping' | 'reconciliation'
   const { ordersSubTab, setOrdersSubTab } = useAdminUI();
@@ -158,6 +167,10 @@ export default function OrdersTab() {
     address: string;
     shippingDate: string;
   } | null>(null);
+
+  // Add-product-to-order panel state
+  const [isAddProductPanelOpen, setIsAddProductPanelOpen] = useState(false);
+  const [addProductSearch, setAddProductSearch] = useState('');
 
   // Filtered list memos
   const filteredOrders = useMemo(() => {
@@ -723,134 +736,158 @@ export default function OrdersTab() {
 
     return (
       <div className="space-y-6 admin-tab-enter pb-16">
-        {/* Top Header & Navigation Bar */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setSelectedOrder(null)}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 cursor-pointer active:scale-95 shadow-2xs"
-              style={{
-                background: isDark ? 'hsl(224,25%,9%)' : '#ffffff',
-                border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
-                color: isDark ? '#f1f5f9' : '#0f172a',
-              }}
-            >
-              <ArrowLeft className="w-4 h-4 text-emerald-500" />
-              <span>Retour aux commandes</span>
-            </button>
+        {/* Page Header */}
+        <div className="space-y-3">
+          {/* Breadcrumb */}
+          <button
+            onClick={() => setSelectedOrder(null)}
+            className="flex items-center gap-1.5 text-xs font-medium transition-colors cursor-pointer group"
+            style={{ color: textMuted }}
+          >
+            <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
+            <span className="group-hover:underline underline-offset-2">Commandes</span>
+          </button>
 
-            <div className="h-5 w-px bg-slate-300 dark:bg-slate-700 hidden sm:block" />
+          {/* Title Row */}
+          <div className="flex items-center justify-between gap-6">
+            {/* Left: Title + Badges */}
+            <div className="flex items-center gap-3 min-w-0 flex-wrap">
+              <h1 className="text-2xl font-black tracking-tight shrink-0" style={{ color: textPrimary }}>
+                {selectedOrder.order_id}
+              </h1>
 
-            <div>
+              {/* Status */}
+              <span
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold shrink-0"
+                style={{
+                  background: sm.bg,
+                  color: sm.color,
+                  border: `1px solid ${sm.border}`,
+                }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: sm.dot }} />
+                {sm.label}
+              </span>
+
+              {/* COD Badge */}
               {(() => {
                 const isCodSettled = selectedOrder.reconciled || selectedOrder.payment_status === 'paid' || !!settledOrdersMap[selectedOrder.order_id];
                 return (
-                  <div className="flex items-center gap-2.5 flex-wrap">
-                    <span className="font-mono text-xl font-black" style={{ color: textPrimary }}>
-                      Commande {selectedOrder.order_id}
-                    </span>
-                    <span
-                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold"
-                      style={{
-                        background: sm.bg,
-                        color: sm.color,
-                        border: `1px solid ${sm.border}`,
-                      }}
-                    >
-                      <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: sm.dot }} />
-                      {sm.label}
-                    </span>
-
-                    <span
-                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold cursor-pointer transition active:scale-95 select-none"
-                      onClick={() => {
-                        const newStatus = !isCodSettled;
-                        setSettledOrdersMap(prev => ({ ...prev, [selectedOrder.order_id]: newStatus }));
-                        showToast(newStatus ? `COD pour #${selectedOrder.order_id} marqué comme Encaissé (Virement reçu) !` : `COD pour #${selectedOrder.order_id} marqué comme Non Encaissé.`, newStatus ? 'success' : 'info');
-                      }}
-                      title="Cliquez pour basculer le statut d'encaissement bancaire COD"
-                      style={{
-                        background: isCodSettled ? (isDark ? 'rgba(16,185,129,0.15)' : '#d1fae5') : (isDark ? 'rgba(245,158,11,0.15)' : '#fef3c7'),
-                        color: isCodSettled ? (isDark ? '#6ee7b7' : '#047857') : (isDark ? '#fcd34d' : '#b45309'),
-                        border: `1px solid ${isCodSettled ? 'rgba(16,185,129,0.3)' : 'rgba(245,158,11,0.3)'}`,
-                      }}
-                    >
-                      <DollarSign className="w-3.5 h-3.5" />
-                      {isCodSettled ? '🟢 COD Encaissé (Virement reçu)' : '🟡 COD Non Encaissé (Chez le livreur)'}
-                    </span>
-                  </div>
+                  <button
+                    onClick={() => {
+                      const newStatus = !isCodSettled;
+                      setSettledOrdersMap(prev => ({ ...prev, [selectedOrder.order_id]: newStatus }));
+                      showToast(newStatus ? `COD pour #${selectedOrder.order_id} marqué comme Encaissé !` : `COD pour #${selectedOrder.order_id} marqué comme Non Encaissé.`, newStatus ? 'success' : 'info');
+                    }}
+                    title="Basculer le statut COD"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold transition active:scale-95 cursor-pointer shrink-0"
+                    style={{
+                      background: isCodSettled ? (isDark ? 'rgba(16,185,129,0.12)' : '#ecfdf5') : (isDark ? 'rgba(245,158,11,0.12)' : '#fffbeb'),
+                      color: isCodSettled ? (isDark ? '#6ee7b7' : '#065f46') : (isDark ? '#fcd34d' : '#92400e'),
+                      border: `1px solid ${isCodSettled ? (isDark ? 'rgba(52,211,153,0.25)' : 'rgba(16,185,129,0.25)') : (isDark ? 'rgba(251,191,36,0.25)' : 'rgba(245,158,11,0.25)')}`,
+                    }}
+                  >
+                    <DollarSign className="w-3 h-3" />
+                    {isCodSettled ? 'COD Encaissé' : 'COD Non Encaissé'}
+                  </button>
                 );
               })()}
-              <p className="text-[11px] font-mono opacity-70 mt-0.5" style={{ color: textMuted }}>
-                Passée le {orderDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} à {orderDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-              </p>
+
+              {/* Date */}
+              <span className="text-xs shrink-0" style={{ color: textMuted }}>
+                {orderDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })} · {orderDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+              </span>
             </div>
-          </div>
 
-          {/* Action Bar */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <a
-              href={`https://wa.me/${selectedOrder.phone_number.replace(/\D/g, '')}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white shadow-sm transition active:scale-95"
-              style={{ background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)', color: '#ffffff' }}
-            >
-              <MessageSquare className="w-4 h-4 text-white" />
-              <span className="text-white font-bold" style={{ color: '#ffffff' }}>WhatsApp Client</span>
-            </a>
+            {/* Right: Action Buttons */}
+            <div className="flex items-center gap-2 shrink-0">
 
-            <button
-              onClick={() => {
-                setActiveLabelData({
-                  orderId: selectedOrder.order_id,
-                  courier: selectedOrder.courier?.toUpperCase() || 'LIVREUR MAROC',
-                  trackingNumber: selectedOrder.tracking_number || '',
-                  codAmount: selectedOrder.total,
-                  customerName: selectedOrder.customer_name,
-                  phone: selectedOrder.phone_number,
-                  city: selectedOrder.city,
-                  address: selectedOrder.address,
-                  shippingDate: new Date().toLocaleDateString('fr-FR'),
-                });
-                setIsPrintLabelOpen(true);
-              }}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer"
-              style={{
-                background: isDark ? 'hsl(224,25%,9%)' : '#ffffff',
-                border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
-                color: textPrimary,
-              }}
-            >
-              <Printer className="w-4 h-4 text-indigo-500" />
-              <span>Étiquette A6</span>
-            </button>
+              {/* WhatsApp */}
+              <a
+                href={`https://wa.me/${selectedOrder.phone_number.replace(/\D/g, '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90 active:scale-95"
+                style={{ background: '#25D366' }}
+              >
+                <MessageSquare className="w-3.5 h-3.5" />
+                <span>WhatsApp</span>
+              </a>
 
-            <button
-              onClick={() => setIsPrintInvoiceOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer"
-              style={{
-                background: isDark ? 'hsl(224,25%,9%)' : '#ffffff',
-                border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
-                color: textPrimary,
-              }}
-            >
-              <FileText className="w-4 h-4 text-emerald-500" />
-              <span>Facture / Bon de Livraison</span>
-            </button>
+              {/* Étiquette A6 */}
+              <button
+                onClick={() => {
+                  setActiveLabelData({
+                    orderId: selectedOrder.order_id,
+                    courier: selectedOrder.courier?.toUpperCase() || 'LIVREUR MAROC',
+                    trackingNumber: selectedOrder.tracking_number || '',
+                    codAmount: selectedOrder.total,
+                    customerName: selectedOrder.customer_name,
+                    phone: selectedOrder.phone_number,
+                    city: selectedOrder.city,
+                    address: selectedOrder.address,
+                    shippingDate: new Date().toLocaleDateString('fr-FR'),
+                  });
+                  setIsPrintLabelOpen(true);
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition hover:opacity-80 active:scale-95 cursor-pointer"
+                style={{
+                  background: isDark ? 'hsl(224,25%,9%)' : '#ffffff',
+                  border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+                  color: textPrimary,
+                }}
+              >
+                <Printer className="w-3.5 h-3.5" style={{ color: isDark ? '#818cf8' : '#4f46e5' }} />
+                <span>Étiquette A6</span>
+              </button>
 
-            <button
-              onClick={() => {
-                if (confirm(`Supprimer définitivement la commande ${selectedOrder.order_id} ?`)) {
-                  handleDeleteOrder(selectedOrder.order_id);
-                  setSelectedOrder(null);
-                }
-              }}
-              className="p-2 rounded-xl text-rose-500 transition cursor-pointer hover:bg-rose-500/10"
-              title="Supprimer la commande"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+              {/* Bon de Livraison */}
+              <button
+                onClick={() => setIsPrintPackingSlipOpen(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition hover:opacity-80 active:scale-95 cursor-pointer"
+                style={{
+                  background: isDark ? 'hsl(224,25%,9%)' : '#ffffff',
+                  border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+                  color: textPrimary,
+                }}
+              >
+                <ClipboardList className="w-3.5 h-3.5" style={{ color: isDark ? '#fbbf24' : '#d97706' }} />
+                <span>Bon de Livraison</span>
+              </button>
+
+              {/* Facture */}
+              <button
+                onClick={() => setIsPrintInvoiceOpen(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition hover:opacity-80 active:scale-95 cursor-pointer"
+                style={{
+                  background: isDark ? 'hsl(224,25%,9%)' : '#ffffff',
+                  border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+                  color: textPrimary,
+                }}
+              >
+                <FileText className="w-3.5 h-3.5" style={{ color: isDark ? '#34d399' : '#059669' }} />
+                <span>Facture</span>
+              </button>
+
+              {/* Delete */}
+              <button
+                onClick={() => {
+                  if (confirm(`Supprimer définitivement la commande ${selectedOrder.order_id} ?`)) {
+                    handleDeleteOrder(selectedOrder.order_id);
+                    setSelectedOrder(null);
+                  }
+                }}
+                className="inline-flex items-center justify-center w-9 h-9 rounded-lg text-rose-500 transition hover:bg-rose-50 active:scale-95 cursor-pointer"
+                style={{
+                  border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+                  background: isDark ? 'hsl(224,25%,9%)' : '#ffffff',
+                }}
+                title="Supprimer la commande"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+
+            </div>
           </div>
         </div>
 
@@ -969,6 +1006,19 @@ export default function OrdersTab() {
                         <Gift className="w-3 h-3" />
                         <span>+ Échantillon Gratuit</span>
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => { setIsAddProductPanelOpen(true); setAddProductSearch(''); }}
+                        className="px-2.5 py-1 rounded-full text-[10.5px] font-extrabold flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs"
+                        style={{
+                          background: isDark ? 'rgba(99,102,241,0.15)' : '#e0e7ff',
+                          color: isDark ? '#a5b4fc' : '#4338ca',
+                          border: `1px solid ${isDark ? 'rgba(99,102,241,0.3)' : 'rgba(79,70,229,0.25)'}`,
+                        }}
+                      >
+                        <Plus className="w-3 h-3" />
+                        <span>Ajouter un article</span>
+                      </button>
                     </div>
                     <span className="text-[11px] font-mono font-bold text-emerald-500">
                       Total COD: {selectedOrder.total.toFixed(2)} DH
@@ -1024,6 +1074,56 @@ export default function OrdersTab() {
                                   </span>
                                 )}
                               </div>
+
+                              {/* SKU + Stock */}
+                              {(matchingProd?.sku || matchingProd?.stock !== undefined) && (() => {
+                                const stock = matchingProd?.stock;
+                                const sku = matchingProd?.sku;
+                                const isOutOfStock = stock !== undefined && stock <= 0;
+                                const isLowStock = stock !== undefined && stock > 0 && stock <= 3;
+                                const isGoodStock = stock !== undefined && stock > 3;
+                                const stockColor = isOutOfStock
+                                  ? (isDark ? '#fca5a5' : '#dc2626')
+                                  : isLowStock
+                                  ? (isDark ? '#fcd34d' : '#b45309')
+                                  : (isDark ? '#6ee7b7' : '#059669');
+                                const stockBg = isOutOfStock
+                                  ? (isDark ? 'rgba(239,68,68,0.12)' : '#fef2f2')
+                                  : isLowStock
+                                  ? (isDark ? 'rgba(245,158,11,0.12)' : '#fffbeb')
+                                  : (isDark ? 'rgba(16,185,129,0.12)' : '#ecfdf5');
+                                const stockBorder = isOutOfStock
+                                  ? (isDark ? 'rgba(239,68,68,0.25)' : '#fecaca')
+                                  : isLowStock
+                                  ? (isDark ? 'rgba(245,158,11,0.25)' : '#fde68a')
+                                  : (isDark ? 'rgba(16,185,129,0.25)' : '#bbf7d0');
+                                const stockLabel = isOutOfStock
+                                  ? 'Rupture'
+                                  : isLowStock
+                                  ? `Stock faible: ${stock}`
+                                  : `En stock: ${stock}`;
+
+                                return (
+                                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                    {sku && (
+                                      <span
+                                        className="font-mono text-[9.5px] tracking-wide"
+                                        style={{ color: textMuted }}
+                                      >
+                                        {sku}
+                                      </span>
+                                    )}
+                                    {stock !== undefined && (
+                                      <span
+                                        className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold"
+                                        style={{ background: stockBg, color: stockColor, border: `1px solid ${stockBorder}` }}
+                                      >
+                                        {stockLabel}
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              })()}
 
                               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                                 {/* Interactive Stepper Buttons */}
@@ -1126,6 +1226,137 @@ export default function OrdersTab() {
                     )}
                   </div>
 
+                  {/* Add Product Panel */}
+                  {isAddProductPanelOpen && (() => {
+                    const allCatalog = [...(products || []), ...PRODUCTS_DB];
+                    const uniqueCatalog = allCatalog.filter((p: any, idx, arr) =>
+                      arr.findIndex(x => (x.id && x.id === p.id) || (x.title && x.title === p.title)) === idx
+                    );
+                    const q = addProductSearch.toLowerCase().trim();
+                    const filtered = q
+                      ? uniqueCatalog.filter((p: any) =>
+                          (p.title || p.name || '').toLowerCase().includes(q) ||
+                          ((p.vendor || p.brand || '').toLowerCase().includes(q))
+                        )
+                      : uniqueCatalog.slice(0, 20);
+
+                    return (
+                      <div
+                        className="rounded-xl overflow-hidden"
+                        style={{
+                          border: `1px solid ${isDark ? 'rgba(99,102,241,0.3)' : 'rgba(79,70,229,0.2)'}`,
+                          background: isDark ? 'rgba(99,102,241,0.05)' : '#f5f3ff',
+                        }}
+                      >
+                        {/* Search Input */}
+                        <div className="flex items-center gap-2 px-3 py-2.5 border-b" style={{ borderColor: isDark ? 'rgba(99,102,241,0.2)' : 'rgba(79,70,229,0.15)' }}>
+                          <Search className="w-3.5 h-3.5 shrink-0" style={{ color: isDark ? '#a5b4fc' : '#6366f1' }} />
+                          <input
+                            autoFocus
+                            type="text"
+                            value={addProductSearch}
+                            onChange={e => setAddProductSearch(e.target.value)}
+                            placeholder="Rechercher un produit du catalogue…"
+                            className="flex-1 text-xs bg-transparent outline-none placeholder:opacity-50"
+                            style={{ color: textPrimary }}
+                          />
+                          <button
+                            onClick={() => setIsAddProductPanelOpen(false)}
+                            className="p-0.5 rounded transition hover:opacity-60 cursor-pointer"
+                            style={{ color: textMuted }}
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        {/* Results */}
+                        <div className="max-h-52 overflow-y-auto divide-y">
+                          {filtered.length === 0 ? (
+                            <p className="px-3 py-4 text-xs text-center" style={{ color: textMuted }}>
+                              Aucun produit trouvé pour «&nbsp;{addProductSearch}&nbsp;»
+                            </p>
+                          ) : filtered.map((prod: any, pi: number) => {
+                            const prodName = prod.title || prod.name || 'Produit';
+                            const prodPrice = Number(prod.price) || 0;
+                            const prodImg = prod.image || prod.images?.[0] || '';
+                            const prodBrand = prod.vendor || prod.brand;
+                            const alreadyInOrder = selectedOrder.items?.some(it =>
+                              it.id === prod.id || it.title?.toLowerCase() === prodName.toLowerCase()
+                            );
+                            return (
+                              <div
+                                key={prod.id || pi}
+                                className="flex items-center gap-2.5 px-3 py-2 text-xs"
+                                style={{ borderColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)' }}
+                              >
+                                {/* Thumbnail */}
+                                {prodImg ? (
+                                  <img src={prodImg} alt={prodName} className="w-8 h-8 rounded-lg object-cover shrink-0" />
+                                ) : (
+                                  <div className="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center text-[10px]" style={{ background: isDark ? 'rgba(255,255,255,0.06)' : '#e5e7eb' }}>
+                                    📦
+                                  </div>
+                                )}
+
+                                {/* Name + brand */}
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-semibold truncate" style={{ color: textPrimary }}>{prodName}</p>
+                                  {prodBrand && (
+                                    <p className="text-[10px]" style={{ color: textMuted }}>{prodBrand}</p>
+                                  )}
+                                </div>
+
+                                {/* Price */}
+                                <span className="font-bold font-mono shrink-0" style={{ color: isDark ? '#a5b4fc' : '#4f46e5' }}>
+                                  {prodPrice.toFixed(2)} DH
+                                </span>
+
+                                {/* Add button */}
+                                <button
+                                  onClick={() => {
+                                    const currentItems = [...(selectedOrder.items || [])];
+                                    const existingIdx = currentItems.findIndex(it =>
+                                      it.id === prod.id || it.title?.toLowerCase() === prodName.toLowerCase()
+                                    );
+                                    let updatedItems: any[];
+                                    if (existingIdx >= 0) {
+                                      updatedItems = currentItems.map((it, idx) =>
+                                        idx === existingIdx ? { ...it, quantity: it.quantity + 1 } : it
+                                      );
+                                    } else {
+                                      updatedItems = [...currentItems, {
+                                        id: prod.id || `custom-${Date.now()}`,
+                                        title: prodName,
+                                        price: prodPrice,
+                                        quantity: 1,
+                                        image: prodImg || undefined,
+                                      }];
+                                    }
+                                    const newSubtotal = updatedItems.reduce((acc, it) => acc + (it.price * it.quantity), 0);
+                                    const newTotal = Math.max(0, newSubtotal - (selectedOrder.discount_amount || 0));
+                                    const updatedOrder: Order = { ...selectedOrder, items: updatedItems, subtotal: newSubtotal, total: newTotal };
+                                    setSelectedOrder(updatedOrder);
+                                    setOrders(prev => prev.map(o => o.order_id === selectedOrder.order_id ? updatedOrder : o));
+                                    showToast(alreadyInOrder ? `+1 ${prodName}` : `${prodName} ajouté à la commande`, 'success');
+                                  }}
+                                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10.5px] font-bold transition active:scale-95 cursor-pointer shrink-0"
+                                  style={{
+                                    background: alreadyInOrder ? (isDark ? 'rgba(16,185,129,0.15)' : '#d1fae5') : (isDark ? 'rgba(99,102,241,0.2)' : '#e0e7ff'),
+                                    color: alreadyInOrder ? (isDark ? '#34d399' : '#065f46') : (isDark ? '#a5b4fc' : '#4338ca'),
+                                    border: `1px solid ${alreadyInOrder ? 'rgba(16,185,129,0.3)' : 'rgba(99,102,241,0.3)'}`,
+                                  }}
+                                >
+                                  <Plus className="w-3 h-3" />
+                                  {alreadyInOrder ? '+1' : 'Ajouter'}
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   {/* Totals */}
                   <div
                     className="pt-4 mt-2 space-y-2 border-t text-xs font-mono"
@@ -1137,9 +1368,26 @@ export default function OrdersTab() {
                     </div>
 
                     {selectedOrder.discount_amount > 0 && (
-                      <div className="flex justify-between text-rose-500 font-bold">
-                        <span>Code Réduction ({selectedOrder.applied_coupon || 'BEAUTY10'})</span>
-                        <span>-{selectedOrder.discount_amount.toFixed(2)} DH</span>
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <span style={{ color: textMuted }}>Remise</span>
+                          {selectedOrder.applied_coupon && (
+                            <span
+                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide"
+                              style={{
+                                background: isDark ? 'rgba(239,68,68,0.12)' : '#fef2f2',
+                                color: isDark ? '#fca5a5' : '#dc2626',
+                                border: `1px solid ${isDark ? 'rgba(239,68,68,0.25)' : '#fecaca'}`,
+                                letterSpacing: '0.05em',
+                              }}
+                            >
+                              🏷 {selectedOrder.applied_coupon}
+                            </span>
+                          )}
+                        </div>
+                        <span className="font-bold" style={{ color: isDark ? '#fca5a5' : '#dc2626' }}>
+                          -{selectedOrder.discount_amount.toFixed(2)} DH
+                        </span>
                       </div>
                     )}
 
@@ -1147,6 +1395,30 @@ export default function OrdersTab() {
                       <span>Frais de livraison</span>
                       <span className="font-bold" style={{ color: textPrimary }}>{shippingFee.toFixed(2)} DH</span>
                     </div>
+
+                    <div className="flex justify-between items-center" style={{ color: textMuted }}>
+                      <span>Mode de paiement</span>
+                      <span className="font-bold font-sans text-[11px] flex items-center gap-1.5" style={{ color: textPrimary }}>
+                        {selectedOrder.payment_method?.toLowerCase() === 'card' || selectedOrder.payment_method?.toLowerCase() === 'cmi' ? (
+                          <span className="inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-400 font-extrabold">
+                            <CreditCard className="w-3.5 h-3.5" /> Carte Bancaire (CMI)
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-extrabold">
+                            <Wallet className="w-3.5 h-3.5" /> Paiement à la livraison (COD)
+                          </span>
+                        )}
+                      </span>
+                    </div>
+
+                    {selectedOrder.transaction_id && (
+                      <div className="flex justify-between items-center text-[10.5px]" style={{ color: textMuted }}>
+                        <span>N° Transaction</span>
+                        <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
+                          {selectedOrder.transaction_id}
+                        </span>
+                      </div>
+                    )}
 
                     <div
                       className="flex justify-between items-baseline pt-3 text-sm font-black border-t"
@@ -1686,6 +1958,33 @@ export default function OrdersTab() {
                 </p>
               </div>
 
+              {/* Customer Checkout Note */}
+              {selectedOrder.notes && (
+                <div
+                  className="flex gap-2.5 p-3.5 rounded-xl text-xs"
+                  style={{
+                    background: isDark ? 'rgba(245,158,11,0.1)' : '#fffbeb',
+                    border: `1px solid ${isDark ? 'rgba(245,158,11,0.2)' : '#fde68a'}`,
+                  }}
+                >
+                  <MessageSquare
+                    className="w-3.5 h-3.5 mt-0.5 shrink-0"
+                    style={{ color: isDark ? '#fcd34d' : '#b45309' }}
+                  />
+                  <div className="space-y-0.5">
+                    <p
+                      className="text-[9.5px] uppercase font-black tracking-wider"
+                      style={{ color: isDark ? '#fcd34d' : '#b45309' }}
+                    >
+                      Note du client
+                    </p>
+                    <p className="leading-relaxed font-medium" style={{ color: isDark ? '#fef3c7' : '#92400e' }}>
+                      {selectedOrder.notes}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {(() => {
                 const courierName = (selectedOrder.courier || 'Yalidine Express').toUpperCase();
                 const trackingCode = selectedOrder.tracking_number || `YAL-${selectedOrder.order_id.replace(/\D/g, '') || '806990'}`;
@@ -1827,6 +2126,629 @@ export default function OrdersTab() {
                 </div>
               </div>
             )}
+
+            {/* -------------------- PRINT VIEW OVERLAY: A6 SHIPPING LABEL -------------------- */}
+            {mounted && isPrintLabelOpen && activeLabelData && createPortal(
+              <div 
+                onClick={(e) => { if (e.target === e.currentTarget) { setIsPrintLabelOpen(false); setActiveLabelData(null); } }}
+                className="fixed inset-0 bg-slate-950/45 backdrop-blur-sm flex items-center justify-center p-4 z-[9999] select-none print:bg-white print:p-0 print:inset-auto print:absolute"
+              >
+                <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 space-y-6 shadow-2xl my-auto max-h-[85vh] overflow-y-auto print:max-h-none print:bg-white print:border-0 print:p-0 print:shadow-none print-label-container">
+                  
+                  {/* Header: Courier info */}
+                  <div className="border border-slate-700 p-4 rounded-2xl bg-white text-slate-950 space-y-4 print:border-slate-950">
+                    <div className="flex justify-between items-center border-b border-slate-300 pb-2 print:border-slate-400">
+                      <span className="font-black text-sm tracking-tight">{settings?.storeName || 'PARA OFFICINAL S.A'}</span>
+                      <span className="bg-slate-950 text-white font-mono text-[9px] px-2 py-0.5 rounded font-black tracking-widest uppercase print:bg-black print:text-white">
+                        {activeLabelData.courier}
+                      </span>
+                    </div>
+
+                    {/* Barcode simulation */}
+                    <div className="space-y-1 text-center font-mono">
+                      <div className="flex justify-center gap-0.5 overflow-hidden py-1">
+                        {[...Array(32)].map((_, idx) => {
+                          const width = (idx % 3 === 0) ? 'w-1' : (idx % 5 === 0 ? 'w-2' : 'w-0.5');
+                          const color = (idx % 7 === 0) ? 'bg-transparent' : 'bg-slate-950';
+                          return <div key={idx} className={`h-12 ${width} ${color}`} />;
+                        })}
+                      </div>
+                      <span className="text-[10px] block font-bold text-slate-700 tracking-widest">{activeLabelData.trackingNumber}</span>
+                    </div>
+
+                    {/* Address details */}
+                    <div className="space-y-2 text-[10px] leading-relaxed border-t border-b border-slate-200 py-3 print:border-slate-300">
+                      <div>
+                        <span className="text-slate-500 block uppercase font-extrabold text-[8px]">Destinataire:</span>
+                        <strong className="text-xs font-black block">{activeLabelData.customerName}</strong>
+                        <span className="font-mono block font-bold">{activeLabelData.phone}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 block uppercase font-extrabold text-[8px]">Adresse de livraison:</span>
+                        <p className="font-medium text-slate-800">{activeLabelData.address}, <strong className="font-extrabold uppercase text-slate-950">{activeLabelData.city}</strong></p>
+                      </div>
+                    </div>
+
+                    {/* Footer: COD amount block */}
+                    <div className="flex justify-between items-center text-xs">
+                      <div>
+                        <span className="text-slate-500 uppercase font-extrabold text-[8px] block">Date d&apos;expédition:</span>
+                        <span className="font-mono font-bold text-slate-700">{activeLabelData.shippingDate}</span>
+                      </div>
+                      <div className="bg-slate-100 p-2 rounded-xl border border-slate-200 text-center shrink-0 min-w-[120px] print:border-slate-400">
+                        <span className="text-slate-500 uppercase font-extrabold text-[8px] block">Collecte Cash COD:</span>
+                        <strong className="text-sm font-black text-slate-950 font-mono">{activeLabelData.codAmount.toFixed(2)} DH</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Print trigger block */}
+                  <div className="flex gap-2 justify-end print:hidden">
+                    <button 
+                      type="button" 
+                      onClick={() => { setIsPrintLabelOpen(false); setActiveLabelData(null); }}
+                      className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs uppercase cursor-pointer"
+                    >
+                      Fermer
+                    </button>
+                    {activeLabelData.pdfLabelUrl && (
+                      <a 
+                        href={activeLabelData.pdfLabelUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-5 py-2.5 bg-indigo-600 text-white font-black text-xs uppercase tracking-wider rounded-xl hover:bg-indigo-500 transition flex items-center gap-1.5 shadow-lg"
+                      >
+                        <ExternalLink className="w-4 h-4" /> PDF Officiel
+                      </a>
+                    )}
+                    <button 
+                      type="button" 
+                      onClick={() => window.print()}
+                      className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 transition flex items-center gap-1.5 shadow-lg cursor-pointer"
+                    >
+                      <Printer className="w-4 h-4 text-slate-950" /> Imprimer l&apos;étiquette A6
+                    </button>
+                  </div>
+                </div>
+              </div>,
+              document.body
+            )}
+
+            {/* -------------------- PRINT VIEW OVERLAY: A4 BON DE PRÉPARATION & LIVRAISON (PACKING SLIP - NO PRICES) -------------------- */}
+            {mounted && isPrintPackingSlipOpen && selectedOrder && createPortal(
+              (() => {
+                const slipOrder = selectedOrder as Order;
+                const totalUnits = slipOrder.items?.reduce((sum, item) => sum + (item.quantity || 1), 0) || 0;
+                return (
+                  <div 
+                    onClick={(e) => { if (e.target === e.currentTarget) setIsPrintPackingSlipOpen(false); }}
+                    className="fixed inset-0 bg-slate-950/45 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8 z-[9999] overflow-y-auto print:bg-white print:p-0 print:inset-auto print:absolute print:overflow-visible"
+                  >
+                    <div className="bg-white border border-slate-200 text-slate-900 rounded-3xl max-w-3xl w-full p-6 sm:p-8 space-y-6 shadow-2xl my-auto max-h-[85vh] overflow-y-auto print:max-h-none print:bg-white print:border-0 print:p-0 print:shadow-none print:max-w-none print:w-full print-label-container">
+                    
+                    {/* Slip Top Header */}
+                    <div className="flex justify-between items-start border-b border-slate-200 pb-6 print:border-slate-300">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-xl bg-amber-500 flex items-center justify-center font-black text-white text-xs">
+                            PO
+                          </div>
+                          <h2 className="font-black text-lg text-slate-950 uppercase tracking-tight">
+                            {settings?.storeName || 'PARA OFFICINAL S.A'}
+                          </h2>
+                        </div>
+                        <p className="text-xs text-slate-500 font-medium">
+                          Centre de Préparation Logistique & Expédition
+                        </p>
+                        <p className="text-[11px] text-slate-400 font-mono">
+                          Document Logistique Entrepôt · Sans valeur de facturation
+                        </p>
+                      </div>
+
+                      <div className="text-right space-y-1">
+                        <span className="inline-block px-3 py-1 bg-amber-500 text-slate-950 font-mono text-xs font-black rounded-lg uppercase tracking-wider">
+                          BON DE PRÉPARATION & LIVRAISON
+                        </span>
+                        <p className="text-sm font-mono font-black text-slate-900 pt-1">
+                          N° Commande: #{slipOrder.order_id}
+                        </p>
+                        <p className="text-[11px] text-slate-500 font-mono">
+                          Date d'Impression: {new Date().toLocaleDateString('fr-FR')}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Addresses Grid (Sender & Receiver) */}
+                    <div className="grid grid-cols-2 gap-6 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs leading-relaxed print:bg-slate-50 print:border-slate-300">
+                      {/* Expéditeur */}
+                      <div className="space-y-1">
+                        <span className="text-[9px] uppercase font-black tracking-wider text-slate-400 block">
+                          ENTREPÔT EXPÉDITEUR
+                        </span>
+                        <strong className="text-sm font-black text-slate-900 block">{settings?.storeName || 'Para Officinal S.A'}</strong>
+                        <p className="text-slate-600 font-medium">Boulevard d'Anfa, Maarif</p>
+                        <p className="text-slate-600 font-medium">Casablanca, Maroc</p>
+                      </div>
+
+                      {/* Destinataire */}
+                      <div className="space-y-1 border-l border-slate-200 pl-6 print:border-slate-300">
+                        <span className="text-[9px] uppercase font-black tracking-wider text-slate-400 block">
+                          CLIENT DESTINATAIRE
+                        </span>
+                        <strong className="text-sm font-black text-slate-950 block">{slipOrder.customer_name}</strong>
+                        <p className="text-slate-700 font-medium">{slipOrder.address}</p>
+                        <p className="text-slate-900 font-black uppercase">{slipOrder.city}, Maroc</p>
+                        <p className="text-slate-900 font-mono font-extrabold">{slipOrder.phone_number}</p>
+                      </div>
+                    </div>
+
+                    {/* Customer Note Callout (if exists) */}
+                    {slipOrder.notes && (
+                      <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-1 print:bg-amber-50">
+                        <span className="text-[9px] uppercase font-black tracking-wider text-amber-700 block">
+                          💬 INSTRUCTIONS DE LIVRAISON CLIENT
+                        </span>
+                        <p className="font-semibold leading-relaxed">
+                          « {slipOrder.notes} »
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Line Items Packing Table (NO PRICES) */}
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
+                          ARTICLES À PRÉPARER & VÉRIFIER ({totalUnits} pièces)
+                        </h4>
+                        <span className="text-[11px] font-mono text-slate-500 font-bold">
+                          {slipOrder.items?.length || 0} référence(s)
+                        </span>
+                      </div>
+
+                      <div className="border border-slate-200 rounded-2xl overflow-hidden print:border-slate-300">
+                        <table className="w-full text-left text-xs">
+                          <thead className="bg-slate-100 border-b border-slate-200 font-mono uppercase text-[10px] text-slate-600 font-black print:bg-slate-100">
+                            <tr>
+                              <th className="py-2.5 px-3 text-center w-12">Pointage</th>
+                              <th className="py-2.5 px-4">Article / Désignation</th>
+                              <th className="py-2.5 px-4">Référence SKU</th>
+                              <th className="py-2.5 px-4 text-center font-black">Quantité</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-200 font-medium text-slate-800">
+                            {slipOrder.items?.map((item: any, idx: number) => {
+                              const allCatalog = [...(products || []), ...PRODUCTS_DB];
+                              const matchingProd = allCatalog.find(
+                                p => p.id === item.id ||
+                                (p.title && p.title.toLowerCase() === item.title.toLowerCase())
+                              );
+                              return (
+                                <tr key={idx} className="hover:bg-slate-50">
+                                  <td className="py-3 px-3 text-center">
+                                    <div className="w-4 h-4 rounded border-2 border-slate-400 mx-auto" />
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    <span className="font-extrabold text-slate-950 block text-sm">{item.title}</span>
+                                    {matchingProd?.vendor && (
+                                      <span className="text-[10px] text-slate-500 uppercase font-bold">{matchingProd.vendor}</span>
+                                    )}
+                                  </td>
+                                  <td className="py-3 px-4 font-mono text-slate-600 text-xs">
+                                    {matchingProd?.sku || `SKU-${slipOrder.order_id}-${idx + 1}`}
+                                  </td>
+                                  <td className="py-3 px-4 text-center font-mono font-black text-base text-slate-950">
+                                    x{item.quantity}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+
+                            {slipOrder.gift_item && (
+                              <tr className="bg-amber-50/60 text-amber-900 font-bold">
+                                <td className="py-2.5 px-3 text-center">
+                                  <div className="w-4 h-4 rounded border-2 border-amber-600 mx-auto" />
+                                </td>
+                                <td className="py-2.5 px-4 flex items-center gap-1.5">
+                                  <span>🎁</span> {slipOrder.gift_item} (Échantillon Offert)
+                                </td>
+                                <td className="py-2.5 px-4 font-mono text-xs">GIFT-FREE</td>
+                                <td className="py-2.5 px-4 text-center font-mono font-black text-base">x1</td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Delivery Info Footer Box */}
+                    <div className="grid grid-cols-2 gap-6 pt-2">
+                      <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-2 print:bg-slate-50">
+                        <span className="text-[9px] uppercase font-black tracking-wider text-slate-400 block">
+                          MODE DE LIVRAISON & PAIMENT
+                        </span>
+                        <div className="flex justify-between items-center py-0.5">
+                          <span className="text-slate-500 font-medium">Livreur Désigné:</span>
+                          <strong className="font-mono font-extrabold text-slate-900">{slipOrder.courier?.toUpperCase() || 'YALIDINE EXPRESS'}</strong>
+                        </div>
+                        <div className="flex justify-between items-center py-0.5">
+                          <span className="text-slate-500 font-medium">Mode de Règlement:</span>
+                          <strong className="font-extrabold text-slate-900">
+                            {slipOrder.payment_method?.toLowerCase() === 'card' || slipOrder.payment_method?.toLowerCase() === 'cmi'
+                              ? 'Carte Bancaire (Payé)'
+                              : 'Cash à la livraison (COD)'}
+                          </strong>
+                        </div>
+                        {slipOrder.payment_method?.toLowerCase() !== 'card' && slipOrder.payment_method?.toLowerCase() !== 'cmi' && (
+                          <div className="flex justify-between items-center py-0.5 pt-1 border-t border-slate-200">
+                            <span className="text-slate-700 font-black">Montant COD à percevoir:</span>
+                            <strong className="font-mono font-black text-emerald-600 text-sm">{slipOrder.total.toFixed(2)} DH</strong>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-3 print:bg-slate-50">
+                        <span className="text-[9px] uppercase font-black tracking-wider text-slate-400 block">
+                          SIGNATURES & CONTRÔLE LOGISTIQUE
+                        </span>
+                        <div className="grid grid-cols-2 gap-4 text-[10px]">
+                          <div className="space-y-4">
+                            <span className="text-slate-500 block">Préparé par:</span>
+                            <div className="border-b border-dashed border-slate-300 h-6" />
+                          </div>
+                          <div className="space-y-4">
+                            <span className="text-slate-500 block">Contrôlé par:</span>
+                            <div className="border-b border-dashed border-slate-300 h-6" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 justify-end pt-2 border-t border-slate-200 print:hidden">
+                      <button 
+                        type="button" 
+                        onClick={() => setIsPrintPackingSlipOpen(false)}
+                        className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs uppercase cursor-pointer transition"
+                      >
+                        Fermer
+                      </button>
+                      <button 
+                        type="button" 
+                        onClick={() => window.print()}
+                        className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition flex items-center gap-2 shadow-lg cursor-pointer active:scale-95 font-bold"
+                      >
+                        <Printer className="w-4 h-4 text-slate-950" /> Imprimer le Bon de Préparation (A4)
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })(),
+            document.body
+          )}
+
+          {/* -------------------- PRINT VIEW OVERLAY: A4 FACTURE & BON DE LIVRAISON -------------------- */}
+          {mounted && isPrintInvoiceOpen && selectedOrder && createPortal(
+            (() => {
+              const invoiceOrder = selectedOrder as Order;
+              return (
+                <div 
+                  onClick={(e) => { if (e.target === e.currentTarget) setIsPrintInvoiceOpen(false); }}
+                  className="fixed inset-0 bg-slate-950/45 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8 z-[9999] overflow-y-auto print:bg-white print:p-0 print:inset-auto print:absolute print:overflow-visible"
+                >
+                  <div className="bg-white border border-slate-200 text-slate-900 rounded-3xl max-w-3xl w-full p-6 sm:p-8 space-y-6 shadow-2xl my-auto max-h-[85vh] overflow-y-auto print:max-h-none print:bg-white print:border-0 print:p-0 print:shadow-none print:max-w-none print:w-full print-label-container">
+                    
+                    {/* Invoice Top Header */}
+                    <div className="flex justify-between items-start border-b border-slate-200 pb-6 print:border-slate-300">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-xl bg-emerald-600 flex items-center justify-center font-black text-white text-xs">
+                            PO
+                          </div>
+                          <h2 className="font-black text-lg text-slate-950 uppercase tracking-tight">
+                            {settings?.storeName || 'PARA OFFICINAL S.A'}
+                          </h2>
+                        </div>
+                        <p className="text-xs text-slate-500 font-medium">
+                          Parapharmacie & K-Beauty Officiel au Maroc
+                        </p>
+                        <p className="text-[11px] text-slate-400 font-mono">
+                          ICE: 003198741000085 · RC: 458920 · Casakids & Beauty SARL
+                        </p>
+                      </div>
+
+                      <div className="text-right space-y-1">
+                        <span className="inline-block px-3 py-1 bg-slate-900 text-white font-mono text-xs font-black rounded-lg uppercase tracking-wider">
+                          BON DE LIVRAISON & FACTURE
+                        </span>
+                        <p className="text-xs font-mono font-bold text-slate-700 pt-1">
+                          N° Commande: #{invoiceOrder.order_id}
+                        </p>
+                        <p className="text-[11px] text-slate-500 font-mono">
+                          Date: {new Date().toLocaleDateString('fr-FR')}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Addresses Grid (Sender & Receiver) */}
+                    <div className="grid grid-cols-2 gap-6 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs leading-relaxed print:bg-slate-50 print:border-slate-300">
+                      {/* Emetteur */}
+                      <div className="space-y-1">
+                        <span className="text-[9px] uppercase font-black tracking-wider text-slate-400 block">
+                          EXPÉDITEUR / BOUTIQUE
+                        </span>
+                        <strong className="text-sm font-black text-slate-900 block">{settings?.storeName || 'Para Officinal S.A'}</strong>
+                        <p className="text-slate-600 font-medium">Boulevard d'Anfa, Maarif</p>
+                        <p className="text-slate-600 font-medium">Casablanca, Maroc</p>
+                        <p className="text-slate-600 font-mono font-bold">Tél: +212 522-202020</p>
+                      </div>
+
+                      {/* Destinataire */}
+                      <div className="space-y-1 border-l border-slate-200 pl-6 print:border-slate-300">
+                        <span className="text-[9px] uppercase font-black tracking-wider text-slate-400 block">
+                          CLIENT DESTINATAIRE
+                        </span>
+                        <strong className="text-sm font-black text-slate-950 block">{invoiceOrder.customer_name}</strong>
+                        <p className="text-slate-700 font-medium">{invoiceOrder.address}</p>
+                        <p className="text-slate-900 font-black uppercase">{invoiceOrder.city}, Maroc</p>
+                        <p className="text-slate-900 font-mono font-extrabold">{invoiceOrder.phone_number}</p>
+                      </div>
+                    </div>
+
+                    {/* Line Items Table */}
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
+                        DÉTAIL DES ARTICLES COMMANDÉS
+                      </h4>
+
+                      <div className="border border-slate-200 rounded-2xl overflow-hidden print:border-slate-300">
+                        <table className="w-full text-left text-xs">
+                          <thead className="bg-slate-100 border-b border-slate-200 font-mono uppercase text-[10px] text-slate-600 font-black print:bg-slate-100">
+                            <tr>
+                              <th className="py-2.5 px-4">Article / Référence</th>
+                              <th className="py-2.5 px-3 text-center">Quantité</th>
+                              <th className="py-2.5 px-3 text-right">Prix Unitaire</th>
+                              <th className="py-2.5 px-4 text-right">Total HT/TTC</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-200 font-medium text-slate-800">
+                            {invoiceOrder.items?.map((item: any, idx: number) => (
+                              <tr key={idx} className="hover:bg-slate-50">
+                                <td className="py-3 px-4">
+                                  <span className="font-extrabold text-slate-950 block">{item.title}</span>
+                                </td>
+                                <td className="py-3 px-3 text-center font-mono font-black text-slate-950">
+                                  {item.quantity}
+                                </td>
+                                <td className="py-3 px-3 text-right font-mono">
+                                  {item.price.toFixed(2)} DH
+                                </td>
+                                <td className="py-3 px-4 text-right font-mono font-black text-slate-950">
+                                  {(item.price * item.quantity).toFixed(2)} DH
+                                </td>
+                              </tr>
+                            ))}
+
+                            {invoiceOrder.gift_item && (
+                              <tr className="bg-emerald-50/50 text-emerald-800 italic">
+                                <td className="py-2.5 px-4 font-bold flex items-center gap-1.5">
+                                  <span>🎁</span> {invoiceOrder.gift_item} (Cadeau Offert)
+                                </td>
+                                <td className="py-2.5 px-3 text-center font-mono font-bold">1</td>
+                                <td className="py-2.5 px-3 text-right font-mono">0.00 DH</td>
+                                <td className="py-2.5 px-4 text-right font-mono font-black">OFFERT</td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Financial Summary & Transport Block */}
+                    <div className="grid grid-cols-2 gap-6 pt-2">
+                      {/* Shipping & Payment Method */}
+                      <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-2 print:bg-slate-50">
+                        <span className="text-[9px] uppercase font-black tracking-wider text-slate-400 block">
+                          INFORMATIONS DE LIVRAISON & COD
+                        </span>
+                        <div className="flex justify-between items-center py-0.5">
+                          <span className="text-slate-500 font-medium">Mode de Paiement:</span>
+                          <strong className="font-extrabold text-emerald-700">Cash à la Livraison (COD)</strong>
+                        </div>
+                        <div className="flex justify-between items-center py-0.5">
+                          <span className="text-slate-500 font-medium">Transporteur:</span>
+                          <strong className="font-mono font-extrabold text-slate-900">{invoiceOrder.courier?.toUpperCase() || 'YALIDINE EXPRESS'}</strong>
+                        </div>
+                        {invoiceOrder.tracking_number && (
+                          <div className="flex justify-between items-center py-0.5">
+                            <span className="text-slate-500 font-medium">Code Suivi:</span>
+                            <strong className="font-mono font-bold text-indigo-600">{invoiceOrder.tracking_number}</strong>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Totals Breakdown */}
+                      <div className="p-4 rounded-2xl bg-slate-900 text-white space-y-2.5 text-xs font-mono print:bg-slate-950">
+                        <div className="flex justify-between text-slate-300">
+                          <span>Sous-Total Articles:</span>
+                          <span>{invoiceOrder.subtotal.toFixed(2)} DH</span>
+                        </div>
+                        {invoiceOrder.discount_amount > 0 && (
+                          <div className="flex justify-between text-rose-400">
+                            <span>Remise ({invoiceOrder.applied_coupon}):</span>
+                            <span>-{invoiceOrder.discount_amount.toFixed(2)} DH</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between text-slate-300">
+                          <span>Frais de livraison:</span>
+                          <span>{(invoiceOrder.total - invoiceOrder.subtotal + invoiceOrder.discount_amount).toFixed(2)} DH</span>
+                        </div>
+                        <div className="flex justify-between items-baseline pt-2 border-t border-slate-700 text-sm font-black">
+                          <span className="font-sans uppercase text-xs">Total TTC à Encaisser:</span>
+                          <span className="text-base text-emerald-400">{invoiceOrder.total.toFixed(2)} DH</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Signature & Legal Notice */}
+                    <div className="grid grid-cols-2 gap-6 pt-4 border-t border-slate-200 text-[10px] text-slate-500">
+                      <div className="space-y-8">
+                        <span className="uppercase font-bold block text-slate-700">Cachet & Signature Expéditeur:</span>
+                        <div className="h-12 border-b border-dashed border-slate-300" />
+                      </div>
+                      <div className="space-y-8">
+                        <span className="uppercase font-bold block text-slate-700">Signature Client / Réception:</span>
+                        <div className="h-12 border-b border-dashed border-slate-300" />
+                      </div>
+                    </div>
+
+                    {/* Print Action Buttons */}
+                    <div className="flex gap-2 justify-end pt-2 border-t border-slate-200 print:hidden">
+                      <button 
+                        type="button" 
+                        onClick={() => setIsPrintInvoiceOpen(false)}
+                        className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs uppercase cursor-pointer transition"
+                      >
+                        Fermer
+                      </button>
+                      <button 
+                        type="button" 
+                        onClick={() => window.print()}
+                        className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-500 hover:to-teal-500 transition flex items-center gap-2 shadow-lg cursor-pointer active:scale-95 text-white font-bold"
+                      >
+                        <Printer className="w-4 h-4 text-white" /> Imprimer le Bon de Livraison (A4)
+                      </button>
+                    </div>
+
+                  </div>
+                </div>
+              );
+            })(),
+            document.body
+          )}
+
+          {/* -------------------- ADD GIFT / SAMPLE MODAL -------------------- */}
+          {mounted && isAddGiftModalOpen && selectedOrder && createPortal(
+            (() => {
+              const giftOrder = selectedOrder as Order;
+              const isDark = adminTheme === 'dark';
+              return (
+                <div 
+                  onClick={(e) => { if (e.target === e.currentTarget) setIsAddGiftModalOpen(false); }}
+                  className="fixed inset-0 bg-slate-950/45 backdrop-blur-sm flex items-center justify-center p-4 z-[9999] overflow-y-auto"
+                >
+                  <div className={`border p-6 rounded-3xl max-w-md w-full space-y-5 shadow-2xl my-auto max-h-[85vh] overflow-y-auto animate-scale-up ${
+                    isDark ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
+                  }`}>
+                    <div className="flex justify-between items-center pb-3 border-b border-slate-200 dark:border-slate-800">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center">
+                          <Gift className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h3 className="font-extrabold text-sm uppercase tracking-tight">Ajouter un Échantillon Gratuit</h3>
+                          <p className="text-[11px] opacity-70">Cadeau offert avec la commande #{giftOrder.order_id}</p>
+                        </div>
+                      </div>
+                      <button 
+                        type="button"
+                        onClick={() => setIsAddGiftModalOpen(false)}
+                        className="text-slate-400 hover:text-slate-200 p-1 rounded-lg transition cursor-pointer"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* Popular K-Beauty Presets */}
+                    <div className="space-y-2">
+                      <span className="text-[10px] font-black uppercase tracking-wider opacity-60">Échantillons K-Beauty Populaires :</span>
+                      <div className="grid grid-cols-1 gap-2">
+                        {[
+                          "Anua Heartleaf Mousse Nettoyante Offert",
+                          "Beauty of Joseon Crème Solaire 10ml",
+                          "La Roche-Posay Cicaplast Baume B5",
+                          "Mixsoon Bean Essence Échantillon",
+                          "Sachet Échantillons K-Beauty Surprise (x3)"
+                        ].map(preset => (
+                          <button
+                            key={preset}
+                            type="button"
+                            onClick={() => {
+                              const updatedOrder = { ...giftOrder, gift_item: preset };
+                              setSelectedOrder(updatedOrder);
+                              setOrders(prev => prev.map(o => o.order_id === giftOrder.order_id ? updatedOrder : o));
+                              showToast(`Échantillon gratuit ajouté : ${preset}`, 'success');
+                              setIsAddGiftModalOpen(false);
+                            }}
+                            className="p-3 rounded-xl text-left text-xs font-bold border transition hover:border-amber-500/50 hover:bg-amber-500/5 flex items-center justify-between group cursor-pointer"
+                            style={{
+                              borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+                              background: isDark ? 'rgba(255,255,255,0.02)' : '#f8fafc'
+                            }}
+                          >
+                            <span>🎁 {preset}</span>
+                            <span className="text-[9.5px] uppercase font-black px-2 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition">
+                              Choisir
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Custom Input Option */}
+                    <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                      <span className="text-[10px] font-black uppercase tracking-wider opacity-60">Ou Saisir un Cadeau Personnalisé :</span>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Ex: Masque hydratant Laneige 20ml"
+                          value={customGiftInput}
+                          onChange={(e) => setCustomGiftInput(e.target.value)}
+                          className="flex-1 px-3 py-2 rounded-xl text-xs border outline-none bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!customGiftInput.trim()) return;
+                            const giftName = customGiftInput.trim();
+                            const updatedOrder = { ...giftOrder, gift_item: giftName };
+                            setSelectedOrder(updatedOrder);
+                            setOrders(prev => prev.map(o => o.order_id === giftOrder.order_id ? updatedOrder : o));
+                            showToast(`Échantillon gratuit ajouté : ${giftName}`, 'success');
+                            setIsAddGiftModalOpen(false);
+                            setCustomGiftInput('');
+                          }}
+                          className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-white font-bold text-xs rounded-xl transition cursor-pointer"
+                        >
+                          Ajouter
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Remove Gift Button */}
+                    {giftOrder.gift_item && (
+                      <div className="pt-2 border-t border-slate-200 dark:border-slate-800 text-center">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updatedOrder = { ...giftOrder, gift_item: null };
+                            setSelectedOrder(updatedOrder);
+                            setOrders(prev => prev.map(o => o.order_id === giftOrder.order_id ? updatedOrder : o));
+                            showToast("Échantillon gratuit retiré", "info");
+                            setIsAddGiftModalOpen(false);
+                          }}
+                          className="text-xs text-rose-500 hover:underline font-bold cursor-pointer"
+                        >
+                          Retirer l'échantillon actuellement offert
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })(),
+            document.body
+          )}
 
           </div>
         </div>
@@ -3626,400 +4548,6 @@ export default function OrdersTab() {
           </form>
         </div>
       )}
-
-      {/* -------------------- PRINT VIEW OVERLAY: A6 SHIPPING LABEL -------------------- */}
-      {isPrintLabelOpen && activeLabelData && (
-        <div className="fixed inset-0 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4 z-[9999] select-none print:bg-white print:p-0 print:inset-auto print:absolute">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 space-y-6 shadow-2xl print:bg-white print:border-0 print:p-0 print:shadow-none print-label-container">
-            
-            {/* Header: Courier info */}
-            <div className="border border-slate-700 p-4 rounded-2xl bg-white text-slate-950 space-y-4 print:border-slate-950">
-              <div className="flex justify-between items-center border-b border-slate-300 pb-2 print:border-slate-400">
-                <span className="font-black text-sm tracking-tight">{settings?.storeName || 'PARA OFFICINAL S.A'}</span>
-                <span className="bg-slate-950 text-white font-mono text-[9px] px-2 py-0.5 rounded font-black tracking-widest uppercase print:bg-black print:text-white">
-                  {activeLabelData.courier}
-                </span>
-              </div>
-
-              {/* Barcode simulation */}
-              <div className="space-y-1 text-center font-mono">
-                <div className="flex justify-center gap-0.5 overflow-hidden py-1">
-                  {[...Array(32)].map((_, idx) => {
-                    const width = (idx % 3 === 0) ? 'w-1' : (idx % 5 === 0 ? 'w-2' : 'w-0.5');
-                    const color = (idx % 7 === 0) ? 'bg-transparent' : 'bg-slate-950';
-                    return <div key={idx} className={`h-12 ${width} ${color}`} />;
-                  })}
-                </div>
-                <span className="text-[10px] block font-bold text-slate-700 tracking-widest">{activeLabelData.trackingNumber}</span>
-              </div>
-
-              {/* Address details */}
-              <div className="space-y-2 text-[10px] leading-relaxed border-t border-b border-slate-200 py-3 print:border-slate-300">
-                <div>
-                  <span className="text-slate-500 block uppercase font-extrabold text-[8px]">Destinataire:</span>
-                  <strong className="text-xs font-black block">{activeLabelData.customerName}</strong>
-                  <span className="font-mono block font-bold">{activeLabelData.phone}</span>
-                </div>
-                <div>
-                  <span className="text-slate-500 block uppercase font-extrabold text-[8px]">Adresse de livraison:</span>
-                  <p className="font-medium text-slate-800">{activeLabelData.address}, <strong className="font-extrabold uppercase text-slate-950">{activeLabelData.city}</strong></p>
-                </div>
-              </div>
-
-              {/* Footer: COD amount block */}
-              <div className="flex justify-between items-center text-xs">
-                <div>
-                  <span className="text-slate-500 uppercase font-extrabold text-[8px] block">Date d&apos;expédition:</span>
-                  <span className="font-mono font-bold text-slate-700">{activeLabelData.shippingDate}</span>
-                </div>
-                <div className="bg-slate-100 p-2 rounded-xl border border-slate-200 text-center shrink-0 min-w-[120px] print:border-slate-400">
-                  <span className="text-slate-500 uppercase font-extrabold text-[8px] block">Collecte Cash COD:</span>
-                  <strong className="text-sm font-black text-slate-950 font-mono">{activeLabelData.codAmount.toFixed(2)} DH</strong>
-                </div>
-              </div>
-            </div>
-
-            {/* Print trigger block */}
-            <div className="flex gap-2 justify-end print:hidden">
-              <button 
-                type="button" 
-                onClick={() => { setIsPrintLabelOpen(false); setActiveLabelData(null); }}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs uppercase cursor-pointer"
-              >
-                Fermer
-              </button>
-              {activeLabelData.pdfLabelUrl && (
-                <a 
-                  href={activeLabelData.pdfLabelUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-5 py-2.5 bg-indigo-600 text-white font-black text-xs uppercase tracking-wider rounded-xl hover:bg-indigo-500 transition flex items-center gap-1.5 shadow-lg"
-                >
-                  <ExternalLink className="w-4 h-4" /> PDF Officiel
-                </a>
-              )}
-              <button 
-                type="button" 
-                onClick={() => window.print()}
-                className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 transition flex items-center gap-1.5 shadow-lg cursor-pointer"
-              >
-                <Printer className="w-4 h-4 text-slate-950" /> Imprimer l&apos;étiquette A6
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* -------------------- PRINT VIEW OVERLAY: A4 FACTURE & BON DE LIVRAISON -------------------- */}
-      {isPrintInvoiceOpen && selectedOrder && (() => {
-        const invoiceOrder = selectedOrder as Order;
-        return (
-          <div className="fixed inset-0 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4 sm:p-8 z-[9999] overflow-y-auto print:bg-white print:p-0 print:inset-auto print:absolute print:overflow-visible">
-            <div className="bg-white border border-slate-200 text-slate-900 rounded-3xl max-w-3xl w-full p-8 space-y-6 shadow-2xl print:bg-white print:border-0 print:p-0 print:shadow-none print:max-w-none print:w-full print-label-container">
-              
-              {/* Invoice Top Header */}
-              <div className="flex justify-between items-start border-b border-slate-200 pb-6 print:border-slate-300">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-emerald-600 flex items-center justify-center font-black text-white text-xs">
-                      PO
-                    </div>
-                    <h2 className="font-black text-lg text-slate-950 uppercase tracking-tight">
-                      {settings?.storeName || 'PARA OFFICINAL S.A'}
-                    </h2>
-                  </div>
-                  <p className="text-xs text-slate-500 font-medium">
-                    Parapharmacie & K-Beauty Officiel au Maroc
-                  </p>
-                  <p className="text-[11px] text-slate-400 font-mono">
-                    ICE: 003198741000085 · RC: 458920 · Casakids & Beauty SARL
-                  </p>
-                </div>
-
-                <div className="text-right space-y-1">
-                  <span className="inline-block px-3 py-1 bg-slate-900 text-white font-mono text-xs font-black rounded-lg uppercase tracking-wider">
-                    BON DE LIVRAISON & FACTURE
-                  </span>
-                  <p className="text-xs font-mono font-bold text-slate-700 pt-1">
-                    N° Commande: #{invoiceOrder.order_id}
-                  </p>
-                  <p className="text-[11px] text-slate-500 font-mono">
-                    Date: {new Date().toLocaleDateString('fr-FR')}
-                  </p>
-                </div>
-              </div>
-
-              {/* Addresses Grid (Sender & Receiver) */}
-              <div className="grid grid-cols-2 gap-6 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs leading-relaxed print:bg-slate-50 print:border-slate-300">
-                {/* Emetteur */}
-                <div className="space-y-1">
-                  <span className="text-[9px] uppercase font-black tracking-wider text-slate-400 block">
-                    EXPÉDITEUR / BOUTIQUE
-                  </span>
-                  <strong className="text-sm font-black text-slate-900 block">{settings?.storeName || 'Para Officinal S.A'}</strong>
-                  <p className="text-slate-600 font-medium">Boulevard d'Anfa, Maarif</p>
-                  <p className="text-slate-600 font-medium">Casablanca, Maroc</p>
-                  <p className="text-slate-600 font-mono font-bold">Tél: +212 522-202020</p>
-                </div>
-
-                {/* Destinataire */}
-                <div className="space-y-1 border-l border-slate-200 pl-6 print:border-slate-300">
-                  <span className="text-[9px] uppercase font-black tracking-wider text-slate-400 block">
-                    CLIENT DESTINATAIRE
-                  </span>
-                  <strong className="text-sm font-black text-slate-950 block">{invoiceOrder.customer_name}</strong>
-                  <p className="text-slate-700 font-medium">{invoiceOrder.address}</p>
-                  <p className="text-slate-900 font-black uppercase">{invoiceOrder.city}, Maroc</p>
-                  <p className="text-slate-900 font-mono font-extrabold">{invoiceOrder.phone_number}</p>
-                </div>
-              </div>
-
-              {/* Line Items Table */}
-              <div className="space-y-3">
-                <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">
-                  DÉTAIL DES ARTICLES COMMANDÉS
-                </h4>
-
-                <div className="border border-slate-200 rounded-2xl overflow-hidden print:border-slate-300">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-100 border-b border-slate-200 font-mono uppercase text-[10px] text-slate-600 font-black print:bg-slate-100">
-                      <tr>
-                        <th className="py-2.5 px-4">Article / Référence</th>
-                        <th className="py-2.5 px-3 text-center">Quantité</th>
-                        <th className="py-2.5 px-3 text-right">Prix Unitaire</th>
-                        <th className="py-2.5 px-4 text-right">Total HT/TTC</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200 font-medium text-slate-800">
-                      {invoiceOrder.items?.map((item: any, idx: number) => (
-                        <tr key={idx} className="hover:bg-slate-50">
-                          <td className="py-3 px-4">
-                            <span className="font-extrabold text-slate-950 block">{item.title}</span>
-                          </td>
-                          <td className="py-3 px-3 text-center font-mono font-black text-slate-950">
-                            {item.quantity}
-                          </td>
-                          <td className="py-3 px-3 text-right font-mono">
-                            {item.price.toFixed(2)} DH
-                          </td>
-                          <td className="py-3 px-4 text-right font-mono font-black text-slate-950">
-                            {(item.price * item.quantity).toFixed(2)} DH
-                          </td>
-                        </tr>
-                      ))}
-
-                      {invoiceOrder.gift_item && (
-                        <tr className="bg-emerald-50/50 text-emerald-800 italic">
-                          <td className="py-2.5 px-4 font-bold flex items-center gap-1.5">
-                            <span>🎁</span> {invoiceOrder.gift_item} (Cadeau Offert)
-                          </td>
-                          <td className="py-2.5 px-3 text-center font-mono font-bold">1</td>
-                          <td className="py-2.5 px-3 text-right font-mono">0.00 DH</td>
-                          <td className="py-2.5 px-4 text-right font-mono font-black">OFFERT</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Financial Summary & Transport Block */}
-              <div className="grid grid-cols-2 gap-6 pt-2">
-                {/* Shipping & Payment Method */}
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-2 print:bg-slate-50">
-                  <span className="text-[9px] uppercase font-black tracking-wider text-slate-400 block">
-                    INFORMATIONS DE LIVRAISON & COD
-                  </span>
-                  <div className="flex justify-between items-center py-0.5">
-                    <span className="text-slate-500 font-medium">Mode de Paiement:</span>
-                    <strong className="font-extrabold text-emerald-700">Cash à la Livraison (COD)</strong>
-                  </div>
-                  <div className="flex justify-between items-center py-0.5">
-                    <span className="text-slate-500 font-medium">Transporteur:</span>
-                    <strong className="font-mono font-extrabold text-slate-900">{invoiceOrder.courier?.toUpperCase() || 'YALIDINE EXPRESS'}</strong>
-                  </div>
-                  {invoiceOrder.tracking_number && (
-                    <div className="flex justify-between items-center py-0.5">
-                      <span className="text-slate-500 font-medium">Code Suivi:</span>
-                      <strong className="font-mono font-bold text-indigo-600">{invoiceOrder.tracking_number}</strong>
-                    </div>
-                  )}
-                </div>
-
-                {/* Totals Breakdown */}
-                <div className="p-4 rounded-2xl bg-slate-900 text-white space-y-2.5 text-xs font-mono print:bg-slate-950">
-                  <div className="flex justify-between text-slate-300">
-                    <span>Sous-Total Articles:</span>
-                    <span>{invoiceOrder.subtotal.toFixed(2)} DH</span>
-                  </div>
-                  {invoiceOrder.discount_amount > 0 && (
-                    <div className="flex justify-between text-rose-400">
-                      <span>Remise ({invoiceOrder.applied_coupon}):</span>
-                      <span>-{invoiceOrder.discount_amount.toFixed(2)} DH</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-slate-300">
-                    <span>Frais de livraison:</span>
-                    <span>{(invoiceOrder.total - invoiceOrder.subtotal + invoiceOrder.discount_amount).toFixed(2)} DH</span>
-                  </div>
-                  <div className="flex justify-between items-baseline pt-2 border-t border-slate-700 text-sm font-black">
-                    <span className="font-sans uppercase text-xs">Total TTC à Encaisser:</span>
-                    <span className="text-base text-emerald-400">{invoiceOrder.total.toFixed(2)} DH</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Signature & Legal Notice */}
-              <div className="grid grid-cols-2 gap-6 pt-4 border-t border-slate-200 text-[10px] text-slate-500">
-                <div className="space-y-8">
-                  <span className="uppercase font-bold block text-slate-700">Cachet & Signature Expéditeur:</span>
-                  <div className="h-12 border-b border-dashed border-slate-300" />
-                </div>
-                <div className="space-y-8">
-                  <span className="uppercase font-bold block text-slate-700">Signature Client / Réception:</span>
-                  <div className="h-12 border-b border-dashed border-slate-300" />
-                </div>
-              </div>
-
-              {/* Print Action Buttons */}
-              <div className="flex gap-2 justify-end pt-2 border-t border-slate-200 print:hidden">
-                <button 
-                  type="button" 
-                  onClick={() => setIsPrintInvoiceOpen(false)}
-                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs uppercase cursor-pointer transition"
-                >
-                  Fermer
-                </button>
-                <button 
-                  type="button" 
-                  onClick={() => window.print()}
-                  className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-500 hover:to-teal-500 transition flex items-center gap-2 shadow-lg cursor-pointer active:scale-95 text-white font-bold"
-                >
-                  <Printer className="w-4 h-4 text-white" /> Imprimer le Bon de Livraison (A4)
-                </button>
-              </div>
-
-            </div>
-          </div>
-        );
-      })()}
-
-      {/* -------------------- ADD GIFT / SAMPLE MODAL -------------------- */}
-      {isAddGiftModalOpen && selectedOrder && (() => {
-        const giftOrder = selectedOrder as Order;
-        const isDark = adminTheme === 'dark';
-        return (
-          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-[9999]">
-            <div className={`border p-6 rounded-3xl max-w-md w-full space-y-5 shadow-2xl animate-scale-up ${
-              isDark ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
-            }`}>
-              <div className="flex justify-between items-center pb-3 border-b border-slate-200 dark:border-slate-800">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center">
-                    <Gift className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-sm uppercase tracking-tight">Ajouter un Échantillon Gratuit</h3>
-                    <p className="text-[11px] opacity-70">Cadeau offert avec la commande #{giftOrder.order_id}</p>
-                  </div>
-                </div>
-                <button 
-                  type="button"
-                  onClick={() => setIsAddGiftModalOpen(false)}
-                  className="text-slate-400 hover:text-slate-200 p-1 rounded-lg transition cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Popular K-Beauty Presets */}
-              <div className="space-y-2">
-                <span className="text-[10px] font-black uppercase tracking-wider opacity-60">Échantillons K-Beauty Populaires :</span>
-                <div className="grid grid-cols-1 gap-2">
-                  {[
-                    "Anua Heartleaf Mousse Nettoyante Offert",
-                    "Beauty of Joseon Crème Solaire 10ml",
-                    "La Roche-Posay Cicaplast Baume B5",
-                    "Mixsoon Bean Essence Échantillon",
-                    "Sachet Échantillons K-Beauty Surprise (x3)"
-                  ].map(preset => (
-                    <button
-                      key={preset}
-                      type="button"
-                      onClick={() => {
-                        const updatedOrder = { ...giftOrder, gift_item: preset };
-                        setSelectedOrder(updatedOrder);
-                        setOrders(prev => prev.map(o => o.order_id === giftOrder.order_id ? updatedOrder : o));
-                        showToast(`Échantillon gratuit ajouté : ${preset}`, 'success');
-                        setIsAddGiftModalOpen(false);
-                      }}
-                      className="p-3 rounded-xl text-left text-xs font-bold border transition hover:border-amber-500/50 hover:bg-amber-500/5 flex items-center justify-between group cursor-pointer"
-                      style={{
-                        borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
-                        background: isDark ? 'rgba(255,255,255,0.02)' : '#f8fafc'
-                      }}
-                    >
-                      <span>🎁 {preset}</span>
-                      <span className="text-[9.5px] uppercase font-black px-2 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition">
-                        Choisir
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Custom Input Option */}
-              <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
-                <span className="text-[10px] font-black uppercase tracking-wider opacity-60">Ou Saisir un Cadeau Personnalisé :</span>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Ex: Masque hydratant Laneige 20ml"
-                    value={customGiftInput}
-                    onChange={(e) => setCustomGiftInput(e.target.value)}
-                    className="flex-1 px-3 py-2 rounded-xl text-xs border outline-none bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!customGiftInput.trim()) return;
-                      const giftName = customGiftInput.trim();
-                      const updatedOrder = { ...giftOrder, gift_item: giftName };
-                      setSelectedOrder(updatedOrder);
-                      setOrders(prev => prev.map(o => o.order_id === giftOrder.order_id ? updatedOrder : o));
-                      showToast(`Échantillon gratuit ajouté : ${giftName}`, 'success');
-                      setIsAddGiftModalOpen(false);
-                      setCustomGiftInput('');
-                    }}
-                    className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-white font-bold text-xs rounded-xl transition cursor-pointer"
-                  >
-                    Ajouter
-                  </button>
-                </div>
-              </div>
-
-              {/* Remove Gift Button */}
-              {giftOrder.gift_item && (
-                <div className="pt-2 border-t border-slate-200 dark:border-slate-800 text-center">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const updatedOrder = { ...giftOrder, gift_item: null };
-                      setSelectedOrder(updatedOrder);
-                      setOrders(prev => prev.map(o => o.order_id === giftOrder.order_id ? updatedOrder : o));
-                      showToast("Échantillon gratuit retiré", "info");
-                      setIsAddGiftModalOpen(false);
-                    }}
-                    className="text-xs text-rose-500 hover:underline font-bold cursor-pointer"
-                  >
-                    Retirer l'échantillon actuellement offert
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      })()}
 
       {/* Floating Bulk Action Bar for Orders */}
       {selectedOrderIds.length > 0 && (
