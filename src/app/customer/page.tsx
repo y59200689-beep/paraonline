@@ -14,6 +14,7 @@ import {
 import { Product } from '@/lib/data';
 import Link from 'next/link';
 import { useUi } from '@/context/UiContext';
+import { CustomerAuthPortal } from '@/components/CustomerAuthPortal';
 
 interface OrderItem {
   id: number;
@@ -594,65 +595,65 @@ export default function CustomerDashboard() {
           </p>
         </div>
 
-        {/* ── Rebranded Welcome Banner Card ── */}
-        <div className="bg-white border border-slate-200/50 rounded-3xl p-6 shadow-premium relative overflow-hidden backdrop-blur-md">
-          {/* Subtle glow background */}
-          <div className="absolute -right-24 -top-24 w-48 h-48 rounded-full bg-accent/5 blur-3xl pointer-events-none" />
-          
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-5 relative z-10">
-            {isLoadingAuth ? (
-              <div className="flex items-center gap-3 text-xs text-slate-500 font-semibold py-2">
-                <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                <span>{language === 'FR' ? 'Connexion en cours…' : 'جاري التحميل…'}</span>
-              </div>
-            ) : clientUser ? (
-              <>
-                <div className="flex items-center gap-4 min-w-0" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent text-white flex items-center justify-center text-sm font-black shrink-0 select-none shadow-md">
-                    {(clientUser.name || clientUser.email).charAt(0).toUpperCase()}
-                  </div>
-                  <div className="min-w-0" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-                    <p className="text-sm font-black text-slate-800 leading-tight">{clientUser.name || clientUser.email}</p>
-                    <div className="flex items-center gap-2 mt-1.5" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                      <span className="relative flex h-2 w-2 shrink-0">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                      </span>
-                      <p className="text-[10px] font-extrabold text-emerald-600 uppercase tracking-wider leading-none">
-                        {language === 'FR' ? 'Compte Synchronisé Cloud' : 'حساب متزامن بالكامل'}
-                      </p>
+        {/* ── Welcome Account / Login Banner ── */}
+        {!clientUser && !isLoadingAuth ? (
+          <CustomerAuthPortal
+            authView={authView}
+            setAuthView={setAuthView}
+            authEmail={authEmail}
+            setAuthEmail={setAuthEmail}
+            authPassword={authPassword}
+            setAuthPassword={setAuthPassword}
+            authName={authName}
+            setAuthName={setAuthName}
+            authPhone={authPhone}
+            setAuthPhone={setAuthPhone}
+            authError={authError}
+            authLoading={authLoading}
+            handleLogin={handleLogin}
+            handleSignup={handleSignup}
+          />
+        ) : (
+          <div className="bg-white border border-slate-200/50 rounded-3xl p-6 shadow-premium relative overflow-hidden backdrop-blur-md">
+            {/* Subtle glow background */}
+            <div className="absolute -right-24 -top-24 w-48 h-48 rounded-full bg-accent/5 blur-3xl pointer-events-none" />
+            
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-5 relative z-10">
+              {isLoadingAuth ? (
+                <div className="flex items-center gap-3 text-xs text-slate-500 font-semibold py-2">
+                  <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                  <span>{language === 'FR' ? 'Connexion en cours…' : 'جاري التحميل…'}</span>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-4 min-w-0" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent text-white flex items-center justify-center text-sm font-black shrink-0 select-none shadow-md">
+                      {(clientUser?.name || clientUser?.email || 'C').charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0" style={{ textAlign: isRTL ? 'right' : 'left' }}>
+                      <p className="text-sm font-black text-slate-800 leading-tight">{clientUser?.name || clientUser?.email}</p>
+                      <div className="flex items-center gap-2 mt-1.5" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                        <span className="relative flex h-2 w-2 shrink-0">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <p className="text-[10px] font-extrabold text-emerald-600 uppercase tracking-wider leading-none">
+                          {language === 'FR' ? 'Compte Synchronisé Cloud' : 'حساب متزامن بالكامل'}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <button
-                  onClick={logoutClient}
-                  className="text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-rose-500 py-2.5 px-4 rounded-xl hover:bg-rose-50/50 transition-all duration-300 cursor-pointer shrink-0 border border-slate-100 hover:border-rose-100 bg-transparent"
-                >
-                  {language === 'FR' ? 'Déconnexion' : 'خروج'}
-                </button>
-              </>
-            ) : (
-              <>
-                <div className="min-w-0" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-                  <p className="text-sm font-black text-slate-800 leading-tight">
-                    {language === 'FR' ? 'Sauvegardez vos données et cagnotte' : 'سجلي الدخول لحفظ بياناتكِ ونقاطكِ'}
-                  </p>
-                  <p className="text-xs text-slate-400 mt-1.5 leading-snug">
-                    {language === 'FR' 
-                      ? 'Rejoignez le Club Para pour synchroniser votre journal de routine et vos coupons.' 
-                      : 'انضمي إلينا لحفظ تقدم مفكرة البشرة واسترداد جوائزكِ القيمة.'}
-                  </p>
-                </div>
-                <button
-                  onClick={() => { setShowAuthPanel(true); setAuthView('login'); setAuthError(null); }}
-                  className="px-6 py-3 bg-slate-900 hover:bg-accent text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition duration-300 active:scale-[0.97] cursor-pointer border-0 shrink-0 shadow-md"
-                >
-                  {language === 'FR' ? 'Se connecter' : 'تسجيل الدخول'}
-                </button>
-              </>
-            )}
+                  <button
+                    onClick={logoutClient}
+                    className="text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-rose-500 py-2.5 px-4 rounded-xl hover:bg-rose-50/50 transition-all duration-300 cursor-pointer shrink-0 border border-slate-100 hover:border-rose-100 bg-transparent"
+                  >
+                    {language === 'FR' ? 'Déconnexion' : 'خروج'}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* ── Rebranded Luxury Auth Modal ── */}
         {isAuthModalVisible && (
@@ -660,150 +661,33 @@ export default function CustomerDashboard() {
             className={authBackdropCls}
             onClick={(e) => { if (e.target === e.currentTarget) setShowAuthPanel(false); }}
           >
-            <div className={authModalCls}>
-              {/* Decorative design elements */}
-              <div className="absolute -left-12 -top-12 w-28 h-28 rounded-full bg-gold/10 blur-2xl pointer-events-none" />
-              <div className="absolute -right-12 -bottom-12 w-28 h-28 rounded-full bg-accent/5 blur-2xl pointer-events-none" />
-
-              {/* Close Button */}
+            <div className="w-full max-w-4xl p-2 relative">
               <button
                 onClick={() => setShowAuthPanel(false)}
-                className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center justify-center transition duration-200 border-0 cursor-pointer"
+                className="absolute -top-12 right-0 w-10 h-10 rounded-full bg-slate-900 border border-slate-800 text-white flex items-center justify-center hover:bg-slate-800 transition cursor-pointer z-50"
                 aria-label="Close"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5 text-white" />
               </button>
-
-              {/* Header */}
-              <div className="text-center space-y-2 select-none pt-2">
-                <span className="text-[9px] font-black uppercase tracking-[0.25em] text-gold block">PARA OFFICINAL</span>
-                <h2 className="text-2xl font-black font-heading text-slate-850 dark:text-white leading-tight">
-                  {authView === 'login'
-                    ? (language === 'FR' ? 'Connexion' : 'تسجيل الدخول')
-                    : (language === 'FR' ? 'Créer un Compte' : 'إنشاء حساب جديد')}
-                </h2>
-                <p className="text-[11px] text-slate-400 font-semibold leading-normal max-w-[280px] mx-auto">
-                  {language === 'FR'
-                    ? 'Synchronisez vos points fidélité, routines et diagnostics de peau.'
-                    : 'حفظ نقاطكِ، مفكرتكِ ومتابعة طلبياتكِ بأمان.'}
-                </p>
-              </div>
-
-              {/* Sliding Tab Switcher */}
-              <div className="bg-slate-100/80 dark:bg-slate-950 p-1 rounded-2xl flex gap-1 select-none border border-slate-250/20 relative">
-                {(['login', 'signup'] as const).map((v) => (
-                  <button
-                    key={v}
-                    onClick={() => { setAuthView(v); setAuthError(null); }}
-                    className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer border-0 ${
-                      authView === v 
-                        ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' 
-                        : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 bg-transparent'
-                    }`}
-                  >
-                    {v === 'login'
-                      ? (language === 'FR' ? 'Se Connecter' : 'دخول')
-                      : (language === 'FR' ? "S'inscrire" : 'إنشاء حساب')}
-                  </button>
-                ))}
-              </div>
-
-              {/* Error Banner */}
-              {authError && (
-                <div className="bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/50 rounded-2xl px-4.5 py-3.5 text-xs font-semibold text-rose-600 dark:text-rose-400 text-left">
-                  {authError}
-                </div>
-              )}
-
-              {/* Form Views */}
-              {authView === 'login' ? (
-                <form onSubmit={handleLogin} className="space-y-4 text-left">
-                  <div className="space-y-3">
-                    <input
-                      type="email"
-                      placeholder={language === 'FR' ? 'Adresse Email' : 'البريد الإلكتروني'}
-                      value={authEmail}
-                      onChange={e => setAuthEmail(e.target.value)}
-                      required
-                      className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-850 rounded-2xl text-xs text-slate-855 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-gold/25 focus:border-gold focus:bg-white transition duration-200"
-                    />
-                    <input
-                      type="password"
-                      placeholder={language === 'FR' ? 'Mot de passe' : 'كلمة المرور'}
-                      value={authPassword}
-                      onChange={e => setAuthPassword(e.target.value)}
-                      required
-                      minLength={6}
-                      className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-850 rounded-2xl text-xs text-slate-855 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-gold/25 focus:border-gold focus:bg-white transition duration-200"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={authLoading}
-                    className="w-full py-3.5 bg-slate-900 hover:bg-accent text-white text-[10.5px] font-black uppercase tracking-widest rounded-2xl transition duration-300 active:scale-[0.97] cursor-pointer border-0 shadow-md disabled:opacity-60 flex items-center justify-center gap-2"
-                  >
-                    {authLoading ? (
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <span>{language === 'FR' ? 'Se Connecter' : 'دخول'}</span>
-                    )}
-                  </button>
-                </form>
-              ) : (
-                <form onSubmit={handleSignup} className="space-y-4 text-left">
-                  <div className="space-y-3">
-                    <input
-                      type="text"
-                      placeholder={language === 'FR' ? 'Nom Complet' : 'الاسم الكامل'}
-                      value={authName}
-                      onChange={e => setAuthName(e.target.value)}
-                      required
-                      className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-850 rounded-2xl text-xs text-slate-855 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-gold/25 focus:border-gold focus:bg-white transition duration-200"
-                    />
-                    <input
-                      type="tel"
-                      placeholder={language === 'FR' ? 'Téléphone (ex: 0661234567)' : 'رقم الهاتف'}
-                      value={authPhone}
-                      onChange={e => setAuthPhone(e.target.value)}
-                      className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-850 rounded-2xl text-xs text-slate-855 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-gold/25 focus:border-gold focus:bg-white transition duration-200"
-                    />
-                    <input
-                      type="email"
-                      placeholder={language === 'FR' ? 'Adresse Email' : 'البريد الإلكتروني'}
-                      value={authEmail}
-                      onChange={e => setAuthEmail(e.target.value)}
-                      required
-                      className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-855 rounded-2xl text-xs text-slate-855 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-gold/25 focus:border-gold focus:bg-white transition duration-200"
-                    />
-                    <input
-                      type="password"
-                      placeholder={language === 'FR' ? 'Mot de passe (6 car. min.)' : 'كلمة المرور (6 أحرف على الأقل)'}
-                      value={authPassword}
-                      onChange={e => setAuthPassword(e.target.value)}
-                      required
-                      minLength={6}
-                      className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-850 rounded-2xl text-xs text-slate-855 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-gold/25 focus:border-gold focus:bg-white transition duration-200"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={authLoading}
-                    className="w-full py-3.5 bg-slate-900 hover:bg-accent text-white text-[10.5px] font-black uppercase tracking-widest rounded-2xl transition duration-300 active:scale-[0.97] cursor-pointer border-0 shadow-md disabled:opacity-60 flex items-center justify-center gap-2"
-                  >
-                    {authLoading ? (
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <span>{language === 'FR' ? 'Créer mon compte' : 'إنشاء الحساب'}</span>
-                    )}
-                  </button>
-                </form>
-              )}
-
-              <p className="text-[10px] text-center text-slate-400 font-semibold leading-relaxed pt-2">
-                {language === 'FR'
-                  ? "Données cliniques protégées. En créant un compte, vous acceptez nos conditions d'utilisation."
-                  : 'بياناتكِ محمية بالكامل. بإنشاء حساب، توافقين على شروط الاستخدام.'}
-              </p>
+              
+              <CustomerAuthPortal
+                authView={authView}
+                setAuthView={setAuthView}
+                authEmail={authEmail}
+                setAuthEmail={setAuthEmail}
+                authPassword={authPassword}
+                setAuthPassword={setAuthPassword}
+                authName={authName}
+                setAuthName={setAuthName}
+                authPhone={authPhone}
+                setAuthPhone={setAuthPhone}
+                authError={authError}
+                authLoading={authLoading}
+                handleLogin={handleLogin}
+                handleSignup={handleSignup}
+                onClose={() => setShowAuthPanel(false)}
+                isModal={true}
+              />
             </div>
           </div>
         )}
