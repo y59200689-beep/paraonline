@@ -891,17 +891,28 @@ export default function SuiviCommandeClient() {
                     </div>
 
                     <div className="space-y-4">
-                      <div className="flex items-center gap-4 bg-slate-900 p-4 rounded-2xl border border-slate-800">
-                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center text-slate-950 font-black text-xl shrink-0 shadow-lg shadow-emerald-500/20">
-                          <User className="w-7 h-7 text-slate-950" />
-                        </div>
+                      {order.driver ? (
+                        <div className="flex items-center gap-4 bg-slate-900 p-4 rounded-2xl border border-slate-800">
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center text-slate-950 font-black text-xl shrink-0 shadow-lg shadow-emerald-500/20">
+                            <User className="w-7 h-7 text-slate-950" />
+                          </div>
 
-                        <div className="space-y-1">
-                          <span className="text-xs font-bold text-white">{order.customer_name}</span>
-                          <p className="text-xs text-slate-400">{order.phone_number}</p>
-                          <p className="text-[11px] font-mono text-emerald-400">{order.city}, Maroc</p>
+                          <div className="space-y-1">
+                            <span className="text-xs font-bold text-white">{order.driver.name}</span>
+                            <p className="text-xs text-slate-400">{order.driver.phone}</p>
+                            {order.driver.vehicle && <p className="text-[11px] font-mono text-emerald-400">{order.driver.vehicle}</p>}
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 text-center space-y-1">
+                          <span className="text-xs font-bold text-slate-300 block">
+                            {isRTL ? 'معلومات السائق' : 'Informations du Livreur'}
+                          </span>
+                          <p className="text-[11px] text-slate-500">
+                            {isRTL ? 'جاري تعيين السائق المكلف من طرف شركة الشحن' : 'Attribution du livreur en cours par la société de transport.'}
+                          </p>
+                        </div>
+                      )}
 
                       <div className="space-y-2">
                         <a
