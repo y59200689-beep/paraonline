@@ -4,30 +4,35 @@ import React from 'react';
 import { useUi } from '@/context/UiContext';
 import { useTranslation } from '@/context/LanguageContext';
 
-// Dynamic Components Imports
+import dynamic from 'next/dynamic';
+
+// Above-the-fold Core Components (Statically Imported for LCP & Immediate Hydration)
 import { Hero } from '@/components/Hero';
 import { CategoryTrack } from '@/components/CategoryTrack';
 import { ProductGrid } from '@/components/ProductGrid';
-import { BrandPartners } from '@/components/BrandPartners';
-import { DiagnosticBanner } from '@/components/DiagnosticBanner';
-import { SummerSalePromo } from '@/components/SummerSalePromo';
-import { SkinConcernsSelector } from '@/components/SkinConcernsSelector';
-import { HorizontalPromoBanner } from '@/components/HorizontalPromoBanner';
-import { MoroccoTrustBar } from '@/components/MoroccoTrustBar';
-import { CustomerReviews } from '@/components/CustomerReviews';
-import { TriplePromoBanners } from '@/components/TriplePromoBanners';
-import { TopRatedAsymmetricGrid } from '@/components/TopRatedAsymmetricGrid';
-import { BestSellersDualGrid } from '@/components/BestSellersDualGrid';
-import { SkincareRoutineSteps } from '@/components/SkincareRoutineSteps';
-import { RoutineVisualizer } from '@/components/RoutineVisualizer';
-import { IngredientDictionary } from '@/components/IngredientDictionary';
-import { InteractiveFaqWrapper } from '@/components/InteractiveFaqWrapper';
-import { FeaturedIngredientSection } from '@/components/FeaturedIngredientSection';
-import { LaRochePosaySSection } from '@/components/LaRochePosaySSection';
-import { DermoCorner } from '@/components/DermoCorner';
-import { ActiveIngredients } from '@/components/ActiveIngredients';
-import { OfficialDistributorBadge } from '@/components/OfficialDistributorBadge';
+
 import { HomepageSectionItem } from '@/context/SettingsContext';
+
+// Below-the-fold Components (Dynamically Imported to defer non-critical JS)
+const BrandPartners = dynamic(() => import('@/components/BrandPartners').then((m) => m.BrandPartners));
+const DiagnosticBanner = dynamic(() => import('@/components/DiagnosticBanner').then((m) => m.DiagnosticBanner));
+const SummerSalePromo = dynamic(() => import('@/components/SummerSalePromo').then((m) => m.SummerSalePromo));
+const SkinConcernsSelector = dynamic(() => import('@/components/SkinConcernsSelector').then((m) => m.SkinConcernsSelector));
+const HorizontalPromoBanner = dynamic(() => import('@/components/HorizontalPromoBanner').then((m) => m.HorizontalPromoBanner));
+const MoroccoTrustBar = dynamic(() => import('@/components/MoroccoTrustBar').then((m) => m.MoroccoTrustBar));
+const CustomerReviews = dynamic(() => import('@/components/CustomerReviews').then((m) => m.CustomerReviews));
+const TriplePromoBanners = dynamic(() => import('@/components/TriplePromoBanners').then((m) => m.TriplePromoBanners));
+const TopRatedAsymmetricGrid = dynamic(() => import('@/components/TopRatedAsymmetricGrid').then((m) => m.TopRatedAsymmetricGrid));
+const BestSellersDualGrid = dynamic(() => import('@/components/BestSellersDualGrid').then((m) => m.BestSellersDualGrid));
+const SkincareRoutineSteps = dynamic(() => import('@/components/SkincareRoutineSteps').then((m) => m.SkincareRoutineSteps));
+const RoutineVisualizer = dynamic(() => import('@/components/RoutineVisualizer').then((m) => m.RoutineVisualizer));
+const IngredientDictionary = dynamic(() => import('@/components/IngredientDictionary').then((m) => m.IngredientDictionary));
+const InteractiveFaqWrapper = dynamic(() => import('@/components/InteractiveFaqWrapper').then((m) => m.InteractiveFaqWrapper));
+const FeaturedIngredientSection = dynamic(() => import('@/components/FeaturedIngredientSection').then((m) => m.FeaturedIngredientSection));
+const LaRochePosaySSection = dynamic(() => import('@/components/LaRochePosaySSection').then((m) => m.LaRochePosaySSection));
+const DermoCorner = dynamic(() => import('@/components/DermoCorner').then((m) => m.DermoCorner));
+const ActiveIngredients = dynamic(() => import('@/components/ActiveIngredients').then((m) => m.ActiveIngredients));
+const OfficialDistributorBadge = dynamic(() => import('@/components/OfficialDistributorBadge').then((m) => m.OfficialDistributorBadge));
 
 interface DynamicSectionRendererProps {
   sections: HomepageSectionItem[];

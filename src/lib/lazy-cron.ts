@@ -6,6 +6,11 @@ export function triggerLazyCron() {
   const now = Date.now();
   const lastCheck = globalForCron.lastCronCheck || 0;
 
+  // Don't trigger during static page generation / build phase
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    return;
+  }
+
   // Only trigger cron scheduler check at most once every 5 minutes
   if (now - lastCheck < 5 * 60 * 1000) {
     return;
@@ -41,8 +46,9 @@ export function triggerLazyCron() {
       } else {
         console.warn(`[Lazy Cron] Scheduler failed: ${data.error}`);
       }
-    } catch (err: any) {
-      console.error('[Lazy Cron] Error triggering scheduler:', err.message || err);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('[Lazy Cron] Error triggering scheduler:', message);
     }
   });
 }
