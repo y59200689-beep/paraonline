@@ -692,44 +692,7 @@ export default function CustomerDashboard() {
           </div>
         )}
 
-        {/* Premium Segmented Tab Bar Navigation */}
-        <div 
-          ref={tabsRef} 
-          className="t-tabs w-full border border-slate-200/50 rounded-[22px] shadow-sm p-1.5 select-none backdrop-blur-md bg-white/80"
-          style={{ 
-            display: 'flex', 
-            position: 'relative',
-            padding: '6px',
-            '--tabs-bar-bg': 'transparent',
-            '--tabs-pill-bg': '#101f3d',
-            '--tabs-text-muted': '#64748b',
-            '--tabs-text-active': '#ffffff',
-            '--tabs-dur': '250ms',
-            '--tabs-ease': 'var(--ease-out-premium)'
-          } as React.CSSProperties}
-        >
-          <div className="t-tabs-pill bg-slate-900 rounded-xl" style={{ ...pillStyle, height: 'auto', top: '6px', bottom: '6px' }} />
-          {([
-            { id: 'suivi', labelFr: '📦 Suivi Colis', labelAr: '📦 تتبع الطلب' },
-            { id: 'club', labelFr: '👑 Club Para VIP', labelAr: '👑 نادي الجمال' },
-            { id: 'journal', labelFr: '📓 Agenda & Soins', labelAr: '📓 المفكرة اليومية' }
-          ] as const).map((tab) => {
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                aria-selected={isActive}
-                onClick={() => { setActiveTab(tab.id); setSuccessNotice(null); }}
-                className={`t-tab flex-1 py-3 px-2 rounded-xl text-[10px] font-black uppercase tracking-wider text-center cursor-pointer transition-colors duration-300 z-10 border-0 bg-transparent ${
-                  isActive ? 'text-white font-black' : 'text-slate-400 hover:text-slate-700'
-                }`}
-                style={{ height: 'auto' }}
-              >
-                {language === 'FR' ? tab.labelFr : tab.labelAr}
-              </button>
-            );
-          })}
-        </div>
+
 
         {/* Global Notifications Panel */}
         <div className="!mt-0">
