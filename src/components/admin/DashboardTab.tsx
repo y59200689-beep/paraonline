@@ -25,6 +25,15 @@ import {
   Filter,
   CheckCircle2,
   Package,
+  Pin,
+  Eye,
+  EyeOff,
+  MoveLeft,
+  MoveRight,
+  Settings2,
+  RotateCcw,
+  Truck,
+  AlertTriangle,
 } from 'lucide-react';
 import { StatusBadge } from '@/components/admin/ui';
 
@@ -43,6 +52,7 @@ interface DashboardTabProps {
 // ─── Executive KPI Card Component ──────────────────────────────────────────────
 
 interface KpiCardProps {
+  id: string;
   label: string;
   raw: number;
   suffix: string;
@@ -53,9 +63,18 @@ interface KpiCardProps {
   sparklineData?: number[];
   badgeText?: string;
   badgePositive?: boolean;
+  isCustomizeMode?: boolean;
+  isPinned?: boolean;
+  onTogglePin?: () => void;
+  onToggleHide?: () => void;
+  onMoveLeft?: () => void;
+  onMoveRight?: () => void;
+  isFirst?: boolean;
+  isLast?: boolean;
 }
 
 function KpiCard({
+  id,
   label,
   raw,
   suffix,
@@ -66,6 +85,14 @@ function KpiCard({
   sparklineData,
   badgeText,
   badgePositive = true,
+  isCustomizeMode,
+  isPinned,
+  onTogglePin,
+  onToggleHide,
+  onMoveLeft,
+  onMoveRight,
+  isFirst,
+  isLast,
 }: KpiCardProps) {
   // Kinetic counter
   const [value, setValue] = useState(0);
@@ -137,7 +164,9 @@ function KpiCard({
 
   return (
     <div
-      className="group relative flex flex-col justify-between p-5 rounded-2xl transition-all duration-300 overflow-hidden"
+      className={`group relative flex flex-col justify-between p-5 rounded-2xl transition-all duration-300 overflow-hidden ${
+        isCustomizeMode ? 'ring-2 ring-emerald-500/50 animate-pulse' : ''
+      }`}
       style={{
         background: isDark
           ? 'hsl(224,25%,9%)'
@@ -154,23 +183,66 @@ function KpiCard({
         style={{ background: accentGradient }}
       />
 
+      {/* Customize overlay controls */}
+      {isCustomizeMode && (
+        <div className="absolute top-2 right-2 z-30 flex items-center gap-1 p-1 rounded-xl bg-slate-950/80 backdrop-blur-md border border-slate-700 text-white">
+          {!isFirst && (
+            <button
+              onClick={onMoveLeft}
+              className="p-1 rounded hover:bg-slate-800 text-slate-300 cursor-pointer"
+              title="Déplacer à gauche"
+            >
+              <MoveLeft className="w-3.5 h-3.5" />
+            </button>
+          )}
+          {!isLast && (
+            <button
+              onClick={onMoveRight}
+              className="p-1 rounded hover:bg-slate-800 text-slate-300 cursor-pointer"
+              title="Déplacer à droite"
+            >
+              <MoveRight className="w-3.5 h-3.5" />
+            </button>
+          )}
+          <button
+            onClick={onTogglePin}
+            className={`p-1 rounded cursor-pointer ${isPinned ? 'bg-amber-500 text-slate-950 font-bold' : 'hover:bg-slate-800 text-slate-300'}`}
+            title={isPinned ? 'Dépingler' : 'Épingler'}
+          >
+            <Pin className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={onToggleHide}
+            className="p-1 rounded hover:bg-rose-500/30 text-rose-400 cursor-pointer"
+            title="Masquer le widget"
+          >
+            <EyeOff className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       {/* Header: Label + Icon */}
       <div className="flex items-center justify-between gap-2 relative z-10">
-        <span
-          className="text-[10px] font-extrabold uppercase tracking-widest block truncate"
-          style={{ color: isDark ? '#64748b' : '#94a3b8' }}
-        >
-          {label}
-        </span>
-        <div
-          className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110"
-          style={{
-            background: `${color}18`,
-            border: `1px solid ${color}30`,
-          }}
-        >
-          <Icon className="w-4 h-4" style={{ color }} strokeWidth={2} />
+        <div className="flex items-center gap-1.5 min-w-0">
+          {isPinned && <Pin className="w-3 h-3 text-amber-500 shrink-0" />}
+          <span
+            className="text-[10px] font-extrabold uppercase tracking-widest block truncate"
+            style={{ color: isDark ? '#64748b' : '#94a3b8' }}
+          >
+            {label}
+          </span>
         </div>
+        {!isCustomizeMode && (
+          <div
+            className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110"
+            style={{
+              background: `${color}18`,
+              border: `1px solid ${color}30`,
+            }}
+          >
+            <Icon className="w-4 h-4" style={{ color }} strokeWidth={2} />
+          </div>
+        )}
       </div>
 
       {/* Body: Kinetic number + Sparkline */}
@@ -237,6 +309,62 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
   const [chartHoverIdx, setChartHoverIdx] = useState<number | null>(null);
   const [selectedAbandonedCart, setSelectedAbandonedCart] = useState<AbandonedCart | null>(null);
+
+  // Widget Layout Configuration
+  const DEFAULT_WIDGETS = [
+    { id: 'sales', visible: true, pinned: true },
+    { id: 'orders', visible: true, pinned: true },
+    { id: 'aov', visible: true, pinned: false },
+    { id: 'abandoned', visible: true, pinned: false },
+    { id: 'cod_pending', visible: true, pinned: false },
+    { id: 'low_stock', visible: true, pinned: false },
+  ];
+
+  const [widgetConfig, setWidgetConfig] = useState(DEFAULT_WIDGETS);
+  const [isCustomizeMode, setIsCustomizeMode] = useState(false);
+
+  React.useEffect(() => {
+    const saved = localStorage.getItem('admin_kpi_widgets_config');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setWidgetConfig(parsed);
+        }
+      } catch (e) {
+        // Fallback
+      }
+    }
+  }, []);
+
+  const saveWidgetConfig = (newConfig: typeof DEFAULT_WIDGETS) => {
+    setWidgetConfig(newConfig);
+    localStorage.setItem('admin_kpi_widgets_config', JSON.stringify(newConfig));
+  };
+
+  const handleMoveWidget = (index: number, direction: -1 | 1) => {
+    const newIdx = index + direction;
+    if (newIdx < 0 || newIdx >= widgetConfig.length) return;
+    const next = [...widgetConfig];
+    const temp = next[index];
+    next[index] = next[newIdx];
+    next[newIdx] = temp;
+    saveWidgetConfig(next);
+  };
+
+  const handleTogglePin = (id: string) => {
+    const next = widgetConfig.map(w => w.id === id ? { ...w, pinned: !w.pinned } : w);
+    saveWidgetConfig(next);
+  };
+
+  const handleToggleHide = (id: string) => {
+    const next = widgetConfig.map(w => w.id === id ? { ...w, visible: !w.visible } : w);
+    saveWidgetConfig(next);
+  };
+
+  const handleResetWidgets = () => {
+    saveWidgetConfig(DEFAULT_WIDGETS);
+  };
 
   // Compute stats for selected range
   const dashboardStats = useMemo(() => {
@@ -477,55 +605,170 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
         </div>
       )}
 
-      {/* ── 4 Executive KPI Cards Grid ────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard
-          label="Chiffre d'Affaires"
-          raw={dashboardStats.totalSales}
-          suffix=" DH"
-          icon={DollarSign}
-          color="#10b981"
-          accentGradient="#10b981"
-          isDark={isDark}
-          sparklineData={dashboardStats.last7DaysSales.map((d: any) => d.amount)}
-          badgeText="Chiffre Brut"
-          badgePositive={true}
-        />
-        <KpiCard
-          label="Commandes"
-          raw={dashboardStats.ordersCount}
-          suffix=""
-          icon={ShoppingBag}
-          color="#3b82f6"
-          accentGradient="#3b82f6"
-          isDark={isDark}
-          sparklineData={dashboardStats.last7DaysSales.map((d: any) => d.count)}
-          badgeText="Total"
-          badgePositive={true}
-        />
-        <KpiCard
-          label="Panier Moyen"
-          raw={dashboardStats.avgOrderValue}
-          suffix=" DH"
-          icon={TrendingUp}
-          color="#8b5cf6"
-          accentGradient="#8b5cf6"
-          isDark={isDark}
-          sparklineData={dashboardStats.last7DaysSales.map((d: any) => d.count > 0 ? d.amount / d.count : 0)}
-          badgeText="Par commande"
-          badgePositive={true}
-        />
-        <KpiCard
-          label="Paniers Abandonnés"
-          raw={dashboardStats.abandonedCartsCount}
-          suffix=""
-          icon={ClipboardList}
-          color="#f43f5e"
-          accentGradient="#f43f5e"
-          isDark={isDark}
-          badgeText="À relancer"
-          badgePositive={false}
-        />
+      {/* ── Executive KPI Cards Grid Header Controls ────────────────────────── */}
+      <div className="flex items-center justify-between gap-2 px-1">
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">
+            Indicateurs Clés (KPIs)
+          </span>
+          {widgetConfig.some(w => w.pinned) && (
+            <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-500/10 text-amber-500 border border-amber-500/20 flex items-center gap-1">
+              <Pin className="w-2.5 h-2.5" /> Widgets Épinglés
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsCustomizeMode(!isCustomizeMode)}
+            className={`px-3 py-1.5 rounded-xl text-[10.5px] font-bold transition flex items-center gap-1.5 cursor-pointer ${
+              isCustomizeMode
+                ? 'bg-emerald-500 text-slate-950 shadow-md font-extrabold'
+                : 'bg-slate-200/60 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700'
+            }`}
+          >
+            <Settings2 className="w-3.5 h-3.5" />
+            <span>{isCustomizeMode ? 'Terminer la Personnalisation' : 'Personnaliser KPIs'}</span>
+          </button>
+          {isCustomizeMode && (
+            <button
+              type="button"
+              onClick={handleResetWidgets}
+              className="px-2.5 py-1.5 rounded-xl text-[10.5px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-rose-400 transition flex items-center gap-1 cursor-pointer"
+              title="Réinitialiser la disposition"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>Réinitialiser</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Hidden Widgets Drawer when in Customize Mode */}
+      {isCustomizeMode && widgetConfig.some(w => !w.visible) && (
+        <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-slate-300 text-xs space-y-2">
+          <span className="text-[10px] font-extrabold uppercase text-amber-400 block">Widgets Masqués (Cliquez pour réafficher) :</span>
+          <div className="flex items-center gap-2 flex-wrap">
+            {widgetConfig.filter(w => !w.visible).map(w => (
+              <button
+                key={w.id}
+                onClick={() => handleToggleHide(w.id)}
+                className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 text-slate-200 text-[10.5px] font-bold flex items-center gap-1 hover:border-emerald-500 transition cursor-pointer"
+              >
+                <Eye className="w-3 h-3 text-emerald-400" />
+                <span>{w.id === 'sales' ? "Chiffre d'Affaires" : w.id === 'orders' ? 'Commandes' : w.id === 'aov' ? 'Panier Moyen' : w.id === 'abandoned' ? 'Paniers Abandonnés' : w.id === 'cod_pending' ? 'COD Non Encaissé' : 'Stock Faible'}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Dynamic KPI Cards Grid ────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {(() => {
+          const pendingCodAmount = orders
+            .filter(o => o.courier && !o.reconciled && o.status !== 'Cancelled')
+            .reduce((sum, o) => sum + (o.total || 0), 0);
+
+          const lowStockCount = products.filter(p => (p.stock || 0) <= 5).length;
+
+          const WIDGET_DEFS: Record<string, any> = {
+            sales: {
+              label: "Chiffre d'Affaires",
+              raw: dashboardStats.totalSales,
+              suffix: " DH",
+              icon: DollarSign,
+              color: "#10b981",
+              accentGradient: "#10b981",
+              sparklineData: dashboardStats.last7DaysSales.map((d: any) => d.amount),
+              badgeText: "Chiffre Brut",
+              badgePositive: true,
+            },
+            orders: {
+              label: "Commandes Total",
+              raw: dashboardStats.ordersCount,
+              suffix: "",
+              icon: ShoppingBag,
+              color: "#3b82f6",
+              accentGradient: "#3b82f6",
+              sparklineData: dashboardStats.last7DaysSales.map((d: any) => d.count),
+              badgeText: "Total",
+              badgePositive: true,
+            },
+            aov: {
+              label: "Panier Moyen",
+              raw: dashboardStats.avgOrderValue,
+              suffix: " DH",
+              icon: TrendingUp,
+              color: "#8b5cf6",
+              accentGradient: "#8b5cf6",
+              sparklineData: dashboardStats.last7DaysSales.map((d: any) => d.count > 0 ? d.amount / d.count : 0),
+              badgeText: "Par commande",
+              badgePositive: true,
+            },
+            abandoned: {
+              label: "Paniers Abandonnés",
+              raw: dashboardStats.abandonedCartsCount,
+              suffix: "",
+              icon: ClipboardList,
+              color: "#f43f5e",
+              accentGradient: "#f43f5e",
+              badgeText: "À relancer",
+              badgePositive: false,
+            },
+            cod_pending: {
+              label: "COD Non Encaissé",
+              raw: pendingCodAmount,
+              suffix: " DH",
+              icon: Truck,
+              color: "#f59e0b",
+              accentGradient: "#f59e0b",
+              badgeText: "En cours livraison",
+              badgePositive: true,
+            },
+            low_stock: {
+              label: "Stock Faible (Alertes)",
+              raw: lowStockCount,
+              suffix: " art.",
+              icon: AlertTriangle,
+              color: "#ef4444",
+              accentGradient: "#ef4444",
+              badgeText: "Réapprovisionner",
+              badgePositive: false,
+            },
+          };
+
+          const activeWidgets = widgetConfig.filter(w => w.visible);
+
+          return activeWidgets.map((w, index) => {
+            const def = WIDGET_DEFS[w.id];
+            if (!def) return null;
+            return (
+              <KpiCard
+                key={w.id}
+                id={w.id}
+                label={def.label}
+                raw={def.raw}
+                suffix={def.suffix}
+                icon={def.icon}
+                color={def.color}
+                accentGradient={def.accentGradient}
+                isDark={isDark}
+                sparklineData={def.sparklineData}
+                badgeText={def.badgeText}
+                badgePositive={def.badgePositive}
+                isCustomizeMode={isCustomizeMode}
+                isPinned={w.pinned}
+                onTogglePin={() => handleTogglePin(w.id)}
+                onToggleHide={() => handleToggleHide(w.id)}
+                onMoveLeft={() => handleMoveWidget(index, -1)}
+                onMoveRight={() => handleMoveWidget(index, 1)}
+                isFirst={index === 0}
+                isLast={index === activeWidgets.length - 1}
+              />
+            );
+          });
+        })()}
       </div>
 
       {/* ── Main Section: Sales Trend SVG Chart & Status Breakdown ─────────────── */}

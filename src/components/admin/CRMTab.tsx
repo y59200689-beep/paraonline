@@ -15,13 +15,21 @@ import {
   Settings,
   Check,
   Target,
-  Activity
+  Activity,
+  ArrowLeft,
+  Package,
+  Truck,
+  ShoppingBag,
+  Ticket,
+  Gift,
+  BarChart3
 } from 'lucide-react';
 import { useAdmin, Order, DiagnosticData } from '@/context/AdminContext';
 import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 import { useAdminUI } from '@/app/admin/AdminUIContext';
 import { StatusBadge, EmptyState } from '@/components/admin/ui';
+import { PRODUCTS_DB } from '@/lib/data';
 import RFMTab from './RFMTab';
 import AutomationsTab from './AutomationsTab';
 
@@ -33,6 +41,7 @@ export default function CRMTab() {
     diagnosticsStats,
     adminTheme,
     handleAdjustPoints,
+    handleUpdateOrderStatus,
     products
   } = useAdmin();
 
@@ -61,6 +70,177 @@ export default function CRMTab() {
   const [crmSearchQuery, setCrmSearchQuery] = useState('');
   const [crmTierFilter, setCrmTierFilter] = useState('ALL');
   const [crmSkinTypeFilter, setCrmSkinTypeFilter] = useState('ALL');
+  const [citySearchQuery, setCitySearchQuery] = useState('');
+  const [crmAccountFilter, setCrmAccountFilter] = useState('ALL');
+  const [crmTagFilter, setCrmTagFilter] = useState('ALL');
+  const [customerTags, setCustomerTags] = useState<Record<string, string[]>>({});
+  const [customerNotes, setCustomerNotes] = useState<Record<string, { id: string; text: string; date: string; author: string }[]>>({});
+  const [newNoteText, setNewNoteText] = useState('');
+  const [customerSamples, setCustomerSamples] = useState<Record<string, {
+    id: string;
+    sampleName: string;
+    category: string;
+    dateSent: string;
+  }[]>>({});
+  const [newSampleName, setNewSampleName] = useState('');
+  const [newSampleCategory, setNewSampleCategory] = useState('Sérum / Essence');
+  // WhatsApp Campaign Builder State
+  const [campaignSegment, setCampaignSegment] = useState<'OVERDUE_RESTOCK' | 'GOLD_VIP' | 'DERMO_ACNE' | 'BY_CITY' | 'ALL_CLIENTS'>('OVERDUE_RESTOCK');
+  const [campaignCity, setCampaignCity] = useState<string>('Casablanca');
+  const [campaignDiscountPct, setCampaignDiscountPct] = useState<number>(15);
+    const [pointsLogs, setPointsLogs] = useState<Record<string, {
+    id: string;
+    points: number;
+    reason: string;
+    date: string;
+    author: string;
+  }[]>>({});
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const savedPointsLogs = localStorage.getItem('admin_points_logs');
+        if (savedPointsLogs) setPointsLogs(JSON.parse(savedPointsLogs));
+      } catch (e) {
+        console.error('Error loading points logs:', e);
+      }
+    }
+  }, []);
+
+  const handleAddPointsAdjustment = (phone: string, pts: number, reason: string) => {
+    if (!pts || isNaN(pts)) return;
+    const current = pointsLogs[phone] || [];
+    const newLog = {
+      id: 'pts_' + Date.now(),
+      points: pts,
+      reason: reason || (pts > 0 ? 'Bonus Admin' : 'Ajustement Admin'),
+      date: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      author: 'Admin'
+    };
+    const updated = { ...pointsLogs, [phone]: [newLog, ...current] };
+    setPointsLogs(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('admin_points_logs', JSON.stringify(updated));
+    }
+
+    if (selectedCustomer) {
+      setSelectedCustomer({
+        ...selectedCustomer,
+        points: Math.max(0, (selectedCustomer.points || 0) + pts),
+        pointsOverrideReason: reason
+      });
+    }
+    setLoyaltyPointsAdjustment(0);
+    setLoyaltyAdjustmentReason('');
+  };
+  const [campaignTemplateText, setCampaignTemplateText] = useState<string>(
+    'Bonjour {firstname}, il est temps de renouveler votre soin préféré ({favorite_product}) ! Profitez de -{discount_pct}% avec votre code promo personnel : {custom_code}. ✨'
+  );
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const savedSamples = localStorage.getItem('admin_customer_samples');
+        if (savedSamples) setCustomerSamples(JSON.parse(savedSamples));
+      } catch (e) {
+        console.error('Error loading customer samples:', e);
+      }
+    }
+  }, []);
+
+  const handleAddSample = (phone: string, sampleName: string, category: string) => {
+    if (!sampleName.trim()) return;
+    const current = customerSamples[phone] || [];
+    const newEntry = {
+      id: 'sample_' + Date.now(),
+      sampleName: sampleName.trim(),
+      category: category || 'K-Beauty Sample',
+      dateSent: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+    };
+    const updated = { ...customerSamples, [phone]: [newEntry, ...current] };
+    setCustomerSamples(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('admin_customer_samples', JSON.stringify(updated));
+    }
+    setNewSampleName('');
+  };
+
+  const handleDeleteSample = (phone: string, sampleId: string) => {
+    const current = customerSamples[phone] || [];
+    const updated = { ...customerSamples, [phone]: current.filter(s => s.id !== sampleId) };
+    setCustomerSamples(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('admin_customer_samples', JSON.stringify(updated));
+    }
+  };
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const savedTags = localStorage.getItem('admin_customer_tags');
+        if (savedTags) setCustomerTags(JSON.parse(savedTags));
+        const savedNotes = localStorage.getItem('admin_customer_notes');
+        if (savedNotes) setCustomerNotes(JSON.parse(savedNotes));
+      } catch (e) {
+        console.error('Error loading CRM tags/notes:', e);
+      }
+    }
+  }, []);
+
+  const handleAddTag = (phone: string, tag: string) => {
+    if (!tag.trim()) return;
+    const current = customerTags[phone] || [];
+    if (current.includes(tag.trim())) return;
+    const updated = { ...customerTags, [phone]: [...current, tag.trim()] };
+    setCustomerTags(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('admin_customer_tags', JSON.stringify(updated));
+    }
+  };
+
+  const handleRemoveTag = (phone: string, tagToRemove: string) => {
+    const current = customerTags[phone] || [];
+    const updated = { ...customerTags, [phone]: current.filter(t => t !== tagToRemove) };
+    setCustomerTags(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('admin_customer_tags', JSON.stringify(updated));
+    }
+  };
+
+  const handleAddNote = (phone: string, text: string) => {
+    if (!text.trim()) return;
+    const current = customerNotes[phone] || [];
+    const newNote = {
+      id: 'note_' + Date.now(),
+      text: text.trim(),
+      date: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }),
+      author: 'Admin'
+    };
+    const updated = { ...customerNotes, [phone]: [newNote, ...current] };
+    setCustomerNotes(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('admin_customer_notes', JSON.stringify(updated));
+    }
+    setNewNoteText('');
+  };
+
+  const handleDeleteNote = (phone: string, noteId: string) => {
+    const current = customerNotes[phone] || [];
+    const updated = { ...customerNotes, [phone]: current.filter(n => n.id !== noteId) };
+    setCustomerNotes(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('admin_customer_notes', JSON.stringify(updated));
+    }
+  };
+
+  const getTagBadgeStyle = (tag: string, theme: string) => {
+    if (tag.includes('VIP')) return theme === 'light' ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-amber-950/40 text-amber-400 border-amber-800/60';
+    if (tag.includes('Sensible') || tag.includes('Allergique')) return theme === 'light' ? 'bg-rose-100 text-rose-800 border-rose-300' : 'bg-rose-950/40 text-rose-400 border-rose-800/60';
+    if (tag.includes('Solaire')) return theme === 'light' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' : 'bg-yellow-950/40 text-yellow-400 border-yellow-800/60';
+    if (tag.includes('Livreur') || tag.includes('Amana')) return theme === 'light' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-emerald-950/40 text-emerald-400 border-emerald-800/60';
+    if (tag.includes('Réassort')) return theme === 'light' ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-blue-950/40 text-blue-400 border-blue-800/60';
+    return theme === 'light' ? 'bg-indigo-100 text-indigo-800 border-indigo-300' : 'bg-indigo-950/40 text-indigo-400 border-indigo-800/60';
+  };
 
   // Filters for Diagnostics
   const [diagSkinTypeFilter, setDiagSkinTypeFilter] = useState('ALL');
@@ -72,6 +252,12 @@ export default function CRMTab() {
   const [selectedDiagnostic, setSelectedDiagnostic] = useState<any | null>(null);
 
   // Selected customer modal state
+  const [selectedOrderDetail, setSelectedOrderDetail] = useState<Order | null>(null);
+  const [isPromoModalOpen, setIsPromoModalOpen] = useState<boolean>(false);
+  const [promoDiscountPct, setPromoDiscountPct] = useState<number>(15);
+  const [promoExpiryDays, setPromoExpiryDays] = useState<number>(7);
+  const [promoCustomCode, setPromoCustomCode] = useState<string>('');
+  const [isGeneratingPromo, setIsGeneratingPromo] = useState<boolean>(false);
   const [selectedCustomer, setSelectedCustomer] = useState<{
     phone: string;
     name: string;
@@ -113,8 +299,10 @@ export default function CRMTab() {
   // Filtered CRM Customers
   const filteredCrmCustomers = useMemo(() => {
     return crmCustomers.filter((c: any) => {
+      const custCity = c.orders?.find((o: any) => o.city)?.city || '';
       const matchesSearch = (c.name || '').toLowerCase().includes(crmSearchQuery.toLowerCase()) ||
-                            (c.phone || '').includes(crmSearchQuery);
+                            (c.phone || '').includes(crmSearchQuery) ||
+                            (custCity || '').toLowerCase().includes(crmSearchQuery.toLowerCase());
       if (!matchesSearch) return false;
 
       if (crmTierFilter !== 'ALL') {
@@ -130,9 +318,15 @@ export default function CRMTab() {
         if (!diag || diag.skinType !== crmSkinTypeFilter) return false;
       }
 
+      if (crmAccountFilter !== 'ALL') {
+        const hasAcc = c.has_account || c.orders?.some((o: any) => o.has_account || o.user_id || o.email);
+        if (crmAccountFilter === 'WITH_ACCOUNT' && !hasAcc) return false;
+        if (crmAccountFilter === 'GUEST' && hasAcc) return false;
+      }
+
       return true;
     });
-  }, [crmCustomers, crmSearchQuery, crmTierFilter, crmSkinTypeFilter, diagnosticsList]);
+  }, [crmCustomers, crmSearchQuery, crmTierFilter, crmSkinTypeFilter, crmAccountFilter, diagnosticsList]);
 
   // CSV Helpers
   const escapeCsv = (val: any) => {
@@ -288,289 +482,666 @@ export default function CRMTab() {
   };
 
   return (
-    <div className="space-y-6 admin-tab-enter">
-      
-      {/* Sub-tab navigation switcher: CRM & Clients */}
-      <div className={`flex flex-wrap items-center gap-1 border rounded-xl p-1 w-fit transition-all duration-200 ${
-        adminTheme === 'light' 
-          ? 'bg-slate-100/85 border-slate-200/60 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]' 
-          : 'bg-slate-900/60 border-slate-900'
-      }`}>
-        <button
-          onClick={() => setCrmSubTab('clients')}
-          className={`px-4 py-2 rounded-lg font-semibold uppercase tracking-widest transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
-            crmSubTab === 'clients' 
-              ? (adminTheme === 'light' 
-                  ? 'bg-white text-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] border border-slate-200/50 font-bold' 
-                  : 'bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm font-bold') 
-              : (adminTheme === 'light' 
-                  ? 'text-slate-500 hover:text-slate-800 hover:bg-white/40' 
-                  : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30')
-          }`}
-          style={{ fontSize: 'var(--admin-text-xs)' }}
-        >
-          <Users className="w-3.5 h-3.5" /> Clients
-        </button>
-        <button
-          onClick={() => setCrmSubTab('diagnostics')}
-          className={`px-4 py-2 rounded-lg font-semibold uppercase tracking-widest transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
-            crmSubTab === 'diagnostics' 
-              ? (adminTheme === 'light' 
-                  ? 'bg-white text-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] border border-slate-200/50 font-bold' 
-                  : 'bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm font-bold') 
-              : (adminTheme === 'light' 
-                  ? 'text-slate-500 hover:text-slate-800 hover:bg-white/40' 
-                  : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30')
-          }`}
-          style={{ fontSize: 'var(--admin-text-xs)' }}
-        >
-          <Sliders className="w-3.5 h-3.5" /> Diagnostics Peau
-          <span className={`ml-1 px-1.5 py-0.5 rounded-full transition-colors font-bold ${
-            adminTheme === 'light' 
-              ? (crmSubTab === 'diagnostics' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100/85' : 'bg-slate-200/60 text-slate-500 border border-slate-300/30')
-              : 'bg-slate-700 text-slate-300'
-          }`} style={{ fontSize: 'var(--admin-text-2xs)' }}>{diagnosticsList.length}</span>
-        </button>
-        <button
-          onClick={() => setCrmSubTab('rules')}
-          className={`px-4 py-2 rounded-lg font-semibold uppercase tracking-widest transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
-            crmSubTab === 'rules' 
-              ? (adminTheme === 'light' 
-                  ? 'bg-white text-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] border border-slate-200/50 font-bold' 
-                  : 'bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm font-bold') 
-              : (adminTheme === 'light' 
-                  ? 'text-slate-500 hover:text-slate-800 hover:bg-white/40' 
-                  : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30')
-          }`}
-          style={{ fontSize: 'var(--admin-text-xs)' }}
-        >
-          <Settings className="w-3.5 h-3.5" /> Règles Diagnostic
-          <span className={`ml-1 px-1.5 py-0.5 rounded-full transition-colors font-bold ${
-            adminTheme === 'light' 
-              ? (crmSubTab === 'rules' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100/85' : 'bg-slate-200/60 text-slate-500 border border-slate-300/30')
-              : 'bg-slate-700 text-slate-300'
-          }`} style={{ fontSize: 'var(--admin-text-2xs)' }}>{settings.diagnosticRules?.length || 0}</span>
-        </button>
-        <button
-          onClick={() => setCrmSubTab('leads')}
-          className={`px-4 py-2 rounded-lg font-semibold uppercase tracking-widest transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
-            crmSubTab === 'leads' 
-              ? (adminTheme === 'light' 
-                  ? 'bg-white text-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] border border-slate-200/50 font-bold' 
-                  : 'bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm font-bold') 
-              : (adminTheme === 'light' 
-                  ? 'text-slate-500 hover:text-slate-800 hover:bg-white/40' 
-                  : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30')
-          }`}
-          style={{ fontSize: 'var(--admin-text-xs)' }}
-        >
-          <ClipboardList className="w-3.5 h-3.5" /> Newsletter Leads
-          <span className={`ml-1 px-1.5 py-0.5 rounded-full transition-colors font-bold ${
-            adminTheme === 'light' 
-              ? (crmSubTab === 'leads' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100/85' : 'bg-slate-200/60 text-slate-500 border border-slate-300/30')
-              : 'bg-slate-700 text-slate-300'
-          }`} style={{ fontSize: 'var(--admin-text-2xs)' }}>{leadsList.length}</span>
-        </button>
-        <button
-          onClick={() => setCrmSubTab('rfm')}
-          className={`px-4 py-2 rounded-lg font-semibold uppercase tracking-widest transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
-            crmSubTab === 'rfm' 
-              ? (adminTheme === 'light' 
-                  ? 'bg-white text-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] border border-slate-200/50 font-bold' 
-                  : 'bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm font-bold') 
-              : (adminTheme === 'light' 
-                  ? 'text-slate-500 hover:text-slate-800 hover:bg-white/40' 
-                  : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30')
-          }`}
-          style={{ fontSize: 'var(--admin-text-xs)' }}
-        >
-          <Target className="w-3.5 h-3.5" /> Segmentation RFM
-          <span className={`ml-1 px-1.5 py-0.5 rounded-full transition-colors font-bold ${
-            adminTheme === 'light' 
-              ? (crmSubTab === 'rfm' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100/85' : 'bg-slate-200/60 text-slate-500 border border-slate-300/30')
-              : 'bg-slate-700 text-slate-300'
-          }`} style={{ fontSize: 'var(--admin-text-2xs)' }}>{crmCustomers.length}</span>
-        </button>
-        <button
-          onClick={() => setCrmSubTab('reminders')}
-          className={`px-4 py-2 rounded-lg font-semibold uppercase tracking-widest transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
-            crmSubTab === 'reminders' 
-              ? (adminTheme === 'light' 
-                  ? 'bg-white text-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] border border-slate-200/50 font-bold' 
-                  : 'bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm font-bold') 
-              : (adminTheme === 'light' 
-                  ? 'text-slate-500 hover:text-slate-800 hover:bg-white/40' 
-                  : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30')
-          }`}
-          style={{ fontSize: 'var(--admin-text-xs)' }}
-        >
-          <Bell className="w-3.5 h-3.5" /> Relances Réassort
-        </button>
-        <button
-          onClick={() => setCrmSubTab('automations')}
-          className={`px-4 py-2 rounded-lg font-semibold uppercase tracking-widest transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
-            crmSubTab === 'automations' 
-              ? (adminTheme === 'light' 
-                  ? 'bg-white text-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] border border-slate-200/50 font-bold' 
-                  : 'bg-slate-800 text-emerald-400 border border-slate-700 shadow-sm font-bold') 
-              : (adminTheme === 'light' 
-                  ? 'text-slate-500 hover:text-slate-800 hover:bg-white/40' 
-                  : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30')
-          }`}
-          style={{ fontSize: 'var(--admin-text-xs)' }}
-        >
-          <Activity className="w-3.5 h-3.5" /> Automatisation
-        </button>
+    <div className="space-y-6">
+      {/* ── Premium Sliding Pill Sub-Tab Nav ───────────────────────── */}
+      <div className={`flex flex-wrap items-center gap-1 p-1.5 rounded-2xl transition-all duration-300 w-fit max-w-full ${
+        adminTheme === 'light'
+          ? 'bg-slate-200/50 border border-slate-300/60 shadow-[0_2px_8px_rgba(15,23,42,0.04)]'
+          : 'bg-slate-900/80 border border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.5)]'
+      }`}
+      role="tablist"
+      >
+        {([
+          { id: 'clients',     label: 'Clients',      icon: Users,         count: crmCustomers.length },
+          { id: 'analytics',   label: 'Analytics',    icon: BarChart3,     count: null },
+          { id: 'diagnostics', label: 'Diagnostics',  icon: Sliders,       count: diagnosticsList.length },
+          { id: 'rules',       label: 'Règles',       icon: Settings,      count: settings.diagnosticRules?.length || 0 },
+          { id: 'leads',       label: 'Leads',        icon: ClipboardList, count: leadsList.length },
+          { id: 'rfm',         label: 'RFM',          icon: Target,        count: crmCustomers.length },
+          { id: 'reminders',   label: 'Relances',     icon: Bell,          count: null },
+          { id: 'automations', label: 'Automation',   icon: Activity,      count: null },
+        ] as { id: string; label: string; icon: React.ComponentType<{ className?: string }>; count: number | null }[]).map((tab) => {
+          const TabIcon = tab.icon;
+          const isActive = crmSubTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              role="tab"
+              aria-selected={isActive}
+              onClick={() => setCrmSubTab(tab.id as any)}
+              className={`px-3.5 py-2 rounded-xl font-bold tracking-tight transition-all duration-200 flex items-center gap-1.5 cursor-pointer active:scale-[0.97] text-[11px] whitespace-nowrap ${
+                isActive
+                  ? (adminTheme === 'light'
+                      ? 'bg-white text-slate-900 shadow-[0_2px_8px_rgba(15,23,42,0.08)] border border-slate-200/90 font-black'
+                      : 'bg-emerald-500 text-slate-950 shadow-[0_4px_16px_rgba(16,185,129,0.3)] font-black')
+                  : (adminTheme === 'light'
+                      ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 font-semibold'
+                      : 'text-slate-400 hover:text-slate-100 hover:bg-white/[0.06] font-semibold')
+              }`}
+            >
+              <TabIcon className={`w-3.5 h-3.5 ${isActive ? (adminTheme === 'light' ? 'text-emerald-600' : 'text-slate-950') : 'opacity-65'}`} />
+              {tab.label}
+              {tab.count !== null && (
+                <span className={`px-1.5 py-0.5 rounded-full font-mono font-extrabold text-[9px] ${
+                  isActive
+                    ? (adminTheme === 'light' ? 'bg-slate-100 text-slate-800' : 'bg-slate-950/20 text-slate-950')
+                    : (adminTheme === 'light' ? 'bg-slate-300/50 text-slate-600' : 'bg-white/10 text-slate-400')
+                }`}>{tab.count}</span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {crmSubTab === 'rfm' && (
         <RFMTab />
       )}
 
-      {/* ---- SUB-TAB 1: CLIENTS & FIDELITE ---- */}
-      {crmSubTab === 'clients' && (
-        <div className="space-y-6 admin-tab-enter">
-          {/* Search CRM and points summary */}
-          <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-2xl border transition-all duration-200 ${
-            adminTheme === 'light'
-              ? 'bg-white border-slate-200/80 shadow-sm'
-              : 'bg-slate-900/30 border-slate-900'
-          }`}>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto flex-1">
-              <div className="relative flex-1 max-w-sm">
-                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--admin-text-faint)' }} />
-                <input
-                  type="text"
-                  placeholder="Rechercher par nom client, téléphone..."
-                  value={crmSearchQuery}
-                  onChange={(e) => setCrmSearchQuery(e.target.value)}
-                  className="admin-input admin-focus-ring w-full pl-10"
-                />
+      {/* ── SUB-TAB: ANALYTICS & GÉOLOCALISATION CLIENTS ──────────── */}
+      {crmSubTab === 'analytics' && (() => {
+        const cityMap: Record<string, {
+          cityName: string;
+          totalRevenue: number;
+          totalOrders: number;
+          clientsCount: number;
+          clients: any[];
+          orders: Order[];
+          tiers: Record<string, number>;
+        }> = {};
+
+        (crmCustomers || []).forEach((c: any) => {
+          const custOrders = c.orders || [];
+          const custCity = custOrders.find((o: any) => o.city)?.city?.trim() || 'Casablanca';
+
+          if (!cityMap[custCity]) {
+            cityMap[custCity] = {
+              cityName: custCity,
+              totalRevenue: 0,
+              totalOrders: 0,
+              clientsCount: 0,
+              clients: [],
+              orders: [],
+              tiers: { Bronze: 0, Silver: 0, Gold: 0, Platinum: 0 }
+            };
+          }
+
+          cityMap[custCity].clientsCount += 1;
+          cityMap[custCity].clients.push(c);
+          cityMap[custCity].totalRevenue += (c.totalSpend || 0);
+
+          let t = 'Bronze';
+          if (c.totalSpend >= 1500) t = 'Platinum';
+          else if (c.totalSpend >= 700) t = 'Gold';
+          else if (c.totalSpend >= 300) t = 'Silver';
+          cityMap[custCity].tiers[t] = (cityMap[custCity].tiers[t] || 0) + 1;
+
+          custOrders.forEach((o: any) => {
+            cityMap[custCity].orders.push(o);
+            cityMap[custCity].totalOrders += 1;
+          });
+        });
+
+        const grandTotalRevenue = Object.values(cityMap).reduce((sum, c) => sum + c.totalRevenue, 0) || 1;
+        const grandTotalOrders = Object.values(cityMap).reduce((sum, c) => sum + c.totalOrders, 0) || 1;
+
+        const cityList = Object.values(cityMap).map(c => ({
+          ...c,
+          aov: c.totalOrders > 0 ? c.totalRevenue / c.totalOrders : 0,
+          avgSpendPerClient: c.clientsCount > 0 ? c.totalRevenue / c.clientsCount : 0,
+          marketShareRev: Math.round((c.totalRevenue / grandTotalRevenue) * 100),
+          marketShareOrd: Math.round((c.totalOrders / grandTotalOrders) * 100),
+          dominantTier: (c.tiers.Platinum > 0) ? 'Platinum' : (c.tiers.Gold > 0) ? 'Gold' : 'Silver'
+        })).sort((a, b) => b.totalRevenue - a.totalRevenue);
+
+        const topRevCity = cityList[0] || { cityName: 'Casablanca', totalRevenue: 0, marketShareRev: 0 };
+        const topVolCity = [...cityList].sort((a, b) => b.totalOrders - a.totalOrders)[0] || { cityName: 'Rabat', totalOrders: 0 };
+        const topAovCity = [...cityList].sort((a, b) => b.aov - a.aov)[0] || { cityName: 'Marrakech', aov: 0 };
+
+        return (
+          <div className="space-y-6 admin-tab-enter">
+            {/* Hero Analytics Header */}
+            <div className={`relative overflow-hidden rounded-3xl border p-6 md:p-8 ${
+              adminTheme === 'light'
+                ? 'bg-gradient-to-br from-white via-slate-50 to-indigo-50/30 border-slate-200/80 shadow-[0_8px_32px_-8px_rgba(15,30,54,0.06)]'
+                : 'bg-gradient-to-br from-slate-900 via-slate-900/60 to-indigo-950/30 border-white/[0.06] shadow-xl'
+            }`}>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-500">
+                      📊 Geolocation & Customer Analytics
+                    </span>
+                    <span className={`text-[9px] font-mono ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>
+                      {cityList.length} villes représentées
+                    </span>
+                  </div>
+                  <h1 className={`text-2xl md:text-4xl font-black tracking-tight ${adminTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                    Cartographie & Performance par Ville
+                  </h1>
+                  <p className={`text-xs font-mono max-w-xl ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                    Analyse détaillée de la rentabilité, du volume de commandes et du panier moyen (AOV) à travers les villes du Maroc.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => {
+                      const headers = ['Rang', 'Ville', 'Clients', 'Commandes', 'CA (DH)', 'Panier Moyen (DH)', 'Part de Marche (%)'];
+                      const rows = cityList.map((c, i) => [
+                        i + 1,
+                        c.cityName,
+                        c.clientsCount,
+                        c.totalOrders,
+                        c.totalRevenue.toFixed(0),
+                        c.aov.toFixed(0),
+                        c.marketShareRev
+                      ]);
+                      const csvStr = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+                      const blob = new Blob([csvStr], { type: 'text/csv;charset=utf-8;' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `CRM_Analytics_Villes_${new Date().toISOString().slice(0, 10)}.csv`;
+                      a.click();
+                    }}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black border transition cursor-pointer ${
+                      adminTheme === 'light'
+                        ? 'bg-white border-slate-200 text-slate-800 hover:bg-slate-50 shadow-sm'
+                        : 'bg-slate-900 border-slate-800 text-slate-200 hover:bg-slate-800'
+                    }`}
+                  >
+                    <FileText className="w-4 h-4 text-emerald-500" /> Exporter Rapport CSV
+                  </button>
+                </div>
               </div>
-
-              <select
-                value={crmTierFilter}
-                onChange={(e) => setCrmTierFilter(e.target.value)}
-                className="admin-input"
-              >
-                <option value="ALL">Tous les paliers</option>
-                <option value="Platinum">Palier Platinum</option>
-                <option value="Gold">Palier Gold</option>
-                <option value="Silver">Palier Silver</option>
-                <option value="Bronze">Palier Bronze</option>
-              </select>
-
-              <select
-                value={crmSkinTypeFilter}
-                onChange={(e) => setCrmSkinTypeFilter(e.target.value)}
-                className="admin-input"
-              >
-                <option value="ALL">Tous les types de peau</option>
-                <option value="Sèche / Dry">Peau Sèche</option>
-                <option value="Grasse / Oily">Peau Grasse</option>
-                <option value="Mixte / Combination">Peau Mixte</option>
-                <option value="Sensible / Sensitive">Peau Sensible</option>
-                <option value="Normale / Normal">Peau Normale</option>
-              </select>
-
-              <button
-                onClick={() => handleExportCustomersToCsv(filteredCrmCustomers)}
-                className="admin-btn admin-btn-secondary flex items-center gap-1.5 shrink-0"
-              >
-                <FileText className="w-4 h-4" style={{ color: 'var(--admin-text-muted)' }} /> Exporter en CSV
-              </button>
             </div>
 
-            <div className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-[10px] font-mono border transition ${
-              adminTheme === 'light'
-                ? 'bg-slate-50 border-slate-200/80 text-slate-600'
-                : 'bg-slate-900 border border-slate-800 text-slate-400'
+            {/* 4 Geographic Insight Metric Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {/* Top Revenue City */}
+              <div className={`p-5 rounded-2xl border transition hover:scale-[1.01] ${
+                adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/50 border-white/[0.06]'
+              }`}>
+                <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400 block mb-1.5">🏆 Ville #1 en CA</span>
+                <span className="text-xl font-black font-mono block text-emerald-600 dark:text-emerald-400 leading-tight">
+                  📍 {topRevCity.cityName}
+                </span>
+                <span className="text-[10px] font-mono text-slate-400 block mt-1">
+                  {topRevCity.totalRevenue.toFixed(0)} DH ({topRevCity.marketShareRev}% du CA)
+                </span>
+              </div>
+
+              {/* Top Orders Volume City */}
+              <div className={`p-5 rounded-2xl border transition hover:scale-[1.01] ${
+                adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/50 border-white/[0.06]'
+              }`}>
+                <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400 block mb-1.5">📦 Top Volume Commandes</span>
+                <span className="text-xl font-black font-mono block text-blue-600 dark:text-blue-400 leading-tight">
+                  📍 {topVolCity.cityName}
+                </span>
+                <span className="text-[10px] font-mono text-slate-400 block mt-1">
+                  {(() => {
+                    const deliveredCount = (topVolCity.orders || []).filter((o: any) => (o.status || '').toLowerCase() === 'delivered').length;
+                    return deliveredCount > 0
+                      ? `${topVolCity.totalOrders} commande${topVolCity.totalOrders > 1 ? 's' : ''} (${deliveredCount} livrée${deliveredCount > 1 ? 's' : ''})`
+                      : `${topVolCity.totalOrders} commande${topVolCity.totalOrders > 1 ? 's' : ''} au total`;
+                  })()}
+                </span>
+              </div>
+
+              {/* Highest AOV City */}
+              <div className={`p-5 rounded-2xl border transition hover:scale-[1.01] ${
+                adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/50 border-white/[0.06]'
+              }`}>
+                <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400 block mb-1.5">💎 Panier Moyen Max (AOV)</span>
+                <span className="text-xl font-black font-mono block text-violet-600 dark:text-violet-400 leading-tight">
+                  📍 {topAovCity.cityName}
+                </span>
+                <span className="text-[10px] font-mono text-slate-400 block mt-1">
+                  {topAovCity.aov.toFixed(0)} DH / commande
+                </span>
+              </div>
+
+              {/* Total Cities Covered */}
+              <div className={`p-5 rounded-2xl border transition hover:scale-[1.01] ${
+                adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/50 border-white/[0.06]'
+              }`}>
+                <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400 block mb-1.5">🗺️ Couverture Territoriale</span>
+                <span className={`text-xl font-black font-mono block leading-tight ${adminTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                  {cityList.length} Villes
+                </span>
+                <span className="text-[9px] font-mono text-slate-400 block mt-1">
+                  {crmCustomers.length} clients répartis
+                </span>
+              </div>
+            </div>
+
+            {/* ── Table: Classement des Villes & Part de Marché ── */}
+            <div className={`rounded-3xl border overflow-hidden ${
+              adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/50 border-white/[0.06]'
             }`}>
-              <Users className={`w-3.5 h-3.5 ${adminTheme === 'light' ? 'text-emerald-600' : 'text-emerald-400'}`} />
-              <span>Base CRM: {crmCustomers.length} clients uniques</span>
+              <div className={`p-5 border-b flex justify-between items-center flex-wrap gap-3 ${
+                adminTheme === 'light' ? 'bg-slate-50/60 border-slate-100' : 'bg-slate-900/80 border-white/5'
+              }`}>
+                <div>
+                  <h3 className={`text-sm font-black uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-100'}`}>
+                    Classement des Villes les Plus Rentables
+                  </h3>
+                  <p className={`text-[10px] font-mono ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>
+                    Trié par Chiffre d&apos;Affaires cumulé (DH)
+                  </p>
+                </div>
+
+                {/* Search by City */}
+                <div className="relative min-w-[180px]">
+                  <Search className={`w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'}`} />
+                  <input
+                    type="text"
+                    placeholder="Filtrer une ville..."
+                    value={citySearchQuery}
+                    onChange={e => setCitySearchQuery(e.target.value)}
+                    className={`w-full text-xs rounded-xl pl-9 pr-3 py-2 border outline-none transition ${
+                      adminTheme === 'light'
+                        ? 'bg-white border-slate-200 text-slate-800 focus:border-indigo-500 shadow-2xs'
+                        : 'bg-slate-950 border-slate-800 text-slate-100 focus:border-indigo-500'
+                    }`}
+                  />
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className={`text-[10px] font-black uppercase tracking-wider border-b ${
+                      adminTheme === 'light' ? 'bg-slate-100/70 border-slate-200/60 text-slate-500' : 'bg-slate-950/60 border-white/5 text-slate-400'
+                    }`}>
+                      <th className="py-3.5 px-4 w-12 text-center">#</th>
+                      <th className="py-3.5 px-4">Ville</th>
+                      <th className="py-3.5 px-4 text-center">Clients</th>
+                      <th className="py-3.5 px-4 text-center">Commandes</th>
+                      <th className="py-3.5 px-4 text-right">CA Cumulé (DH)</th>
+                      <th className="py-3.5 px-4 text-right">Panier Moyen (AOV)</th>
+                      <th className="py-3.5 px-4 min-w-[160px]">Part de Marché</th>
+                      <th className="py-3.5 px-4 text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
+                    {cityList
+                      .filter(c => c.cityName.toLowerCase().includes(citySearchQuery.toLowerCase()))
+                      .map((c, idx) => {
+                        const rankGrad = idx === 0 ? 'text-yellow-500 font-black' : idx === 1 ? 'text-slate-400 font-black' : idx === 2 ? 'text-amber-600 font-black' : 'text-slate-400';
+                        return (
+                          <tr key={c.cityName} className={`transition-colors ${
+                            adminTheme === 'light' ? 'hover:bg-slate-50/80' : 'hover:bg-slate-800/40'
+                          }`}>
+                            <td className={`py-4 px-4 text-center font-mono text-sm ${rankGrad}`}>
+                              {idx + 1}
+                            </td>
+
+                            <td className="py-4 px-4 font-black font-sans">
+                              <span className="flex items-center gap-1.5">
+                                📍 {c.cityName}
+                              </span>
+                            </td>
+
+                            <td className="py-4 px-4 text-center font-mono font-bold">
+                              <span className={`px-2.5 py-1 rounded-full text-[11px] ${
+                                adminTheme === 'light' ? 'bg-slate-100 text-slate-700' : 'bg-slate-800 text-slate-300'
+                              }`}>
+                                {c.clientsCount} clients
+                              </span>
+                            </td>
+
+                            <td className="py-4 px-4 text-center font-mono font-bold">
+                              {c.totalOrders} cmds
+                            </td>
+
+                            <td className="py-4 px-4 text-right font-mono font-black text-emerald-600 dark:text-emerald-400 text-sm">
+                              {c.totalRevenue.toFixed(0)} DH
+                            </td>
+
+                            <td className="py-4 px-4 text-right font-mono font-bold">
+                              {c.aov.toFixed(0)} DH
+                            </td>
+
+                            <td className="py-4 px-4">
+                              <div className="space-y-1">
+                                <div className="flex justify-between text-[10px] font-mono">
+                                  <span className="font-bold">{c.marketShareRev}% du CA</span>
+                                </div>
+                                <div className={`h-2 rounded-full overflow-hidden ${adminTheme === 'light' ? 'bg-slate-100' : 'bg-slate-800'}`}>
+                                  <div
+                                    className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400"
+                                    style={{ width: `${Math.max(5, c.marketShareRev)}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </td>
+
+                            <td className="py-4 px-4 text-center">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setCrmSearchQuery(c.cityName);
+                                  setCrmSubTab('clients');
+                                }}
+                                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_14px_rgba(16,185,129,0.35)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.5)] transition-all duration-200 cursor-pointer active:scale-95 whitespace-nowrap"
+                              >
+                                Voir Clients →
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── SUB-TAB 1: CLIENTS & FIDÉLITÉ — PREMIUM REDESIGN ──────────── */}
+      {crmSubTab === 'clients' && (
+        <div className="space-y-5 admin-tab-enter">
+
+          {/* ── KPI Command Center ── */}
+          {(() => {
+            const isFiltered = crmSearchQuery.trim() !== '' || crmTierFilter !== 'ALL' || crmSkinTypeFilter !== 'ALL' || crmAccountFilter !== 'ALL';
+            const targetList = filteredCrmCustomers;
+
+            const totalCA = targetList.reduce((s: number, c: any) => s + (c.totalSpend || 0), 0);
+            const avgPts = targetList.length > 0 ? Math.round(targetList.reduce((s: number, c: any) => s + Math.round((c.totalSpend || 0) * pointsPerDh), 0) / targetList.length) : 0;
+            const platCount = targetList.filter((c: any) => c.totalSpend >= 1500).length;
+            const goldCount = targetList.filter((c: any) => c.totalSpend >= 700 && c.totalSpend < 1500).length;
+            const silverCount = targetList.filter((c: any) => c.totalSpend >= 300 && c.totalSpend < 700).length;
+
+            const withAccCount = targetList.filter((c: any) => c.has_account || c.orders?.some((o: any) => o.has_account || o.user_id || o.email)).length;
+            const guestCount = targetList.length - withAccCount;
+
+            const domTier = platCount >= goldCount && platCount >= silverCount && platCount > 0 ? 'Platinum' : goldCount >= silverCount && goldCount > 0 ? 'Gold' : silverCount > 0 ? 'Silver' : 'Bronze';
+
+            const kpis = [
+              { label: isFiltered ? `Clients (${crmSearchQuery.length > 15 ? crmSearchQuery.slice(0, 12) + '...' : crmSearchQuery || 'Filtrés'})` : 'Total Clients', value: targetList.length.toString(), sub: `${withAccCount} comptes · ${guestCount} invités`, color: 'text-blue-400', lightColor: 'text-blue-600', bg: 'from-blue-500/10 to-indigo-500/10 border-blue-900/40', lightBg: 'bg-blue-50', icon: Users },
+              { label: 'CA Cumulé', value: `${totalCA >= 1000 ? (totalCA / 1000).toFixed(1) + 'k' : totalCA.toFixed(0)} DH`, sub: `Moy. ${targetList.length > 0 ? (totalCA / targetList.length).toFixed(0) : 0} DH/client`, color: 'text-emerald-400', lightColor: 'text-emerald-600', bg: 'from-emerald-500/10 to-teal-500/10 border-emerald-900/40', lightBg: 'bg-emerald-50', icon: FileText },
+              { label: 'Fidélité Moy.', value: `${avgPts} pts`, sub: `${pointsPerDh} pt / DH dépensé`, color: 'text-violet-400', lightColor: 'text-violet-600', bg: 'from-violet-500/10 to-purple-500/10 border-violet-900/40', lightBg: 'bg-violet-50', icon: ClipboardList },
+              { label: 'Palier Dominant', value: domTier, sub: `${platCount} Plat · ${goldCount} Gold`, color: 'text-amber-400', lightColor: 'text-amber-600', bg: 'from-amber-500/10 to-yellow-500/10 border-amber-900/40', lightBg: 'bg-amber-50', icon: Target },
+            ];
+            return (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {kpis.map((k, i) => {
+                  const Icon = k.icon;
+                  return (
+                    <div key={i} className={`group relative overflow-hidden rounded-2xl border p-4 flex items-center gap-3.5 transition-all duration-300 hover:scale-[1.015] ${
+                      adminTheme === 'light'
+                        ? 'bg-white border-slate-200/80 shadow-[0_4px_20px_-4px_rgba(15,30,54,0.06)] hover:shadow-[0_8px_28px_-4px_rgba(15,30,54,0.1)]'
+                        : `bg-gradient-to-br ${k.bg} shadow-xl hover:shadow-2xl`
+                    }`}>
+                      <div className={`p-2.5 rounded-xl shrink-0 transition ${
+                        adminTheme === 'light'
+                          ? `${k.lightBg} ${k.lightColor} border border-transparent`
+                          : `bg-slate-950/60 border border-slate-800/80 ${k.color}`
+                      }`}><Icon className="w-4 h-4" /></div>
+                      <div className="min-w-0">
+                        <span className={`text-[9px] font-semibold uppercase tracking-wider block ${ adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>{k.label}</span>
+                        <span className={`text-lg font-extrabold font-mono block leading-tight ${ adminTheme === 'light' ? 'text-slate-900' : k.color}`}>{k.value}</span>
+                        <span className={`text-[9px] font-mono block ${ adminTheme === 'light' ? 'text-slate-400' : 'text-slate-600'}`}>{k.sub}</span>
+                      </div>
+                      <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none ${
+                        adminTheme === 'light' ? 'bg-gradient-to-br from-white/60 to-transparent' : 'bg-gradient-to-br from-white/[0.03] to-transparent'
+                      }`} />
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
+          {/* ── Tier Filter Chips + Search Row ── */}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Search */}
+            <div className={`relative flex-1 min-w-[200px] max-w-xs`}>
+              <Search className={`w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 ${ adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'}`} />
+              <input
+                type="text"
+                placeholder="Nom, téléphone..."
+                value={crmSearchQuery}
+                onChange={e => setCrmSearchQuery(e.target.value)}
+                className={`w-full text-xs rounded-xl pl-9 pr-4 py-2.5 border outline-none transition ${
+                  adminTheme === 'light'
+                    ? 'bg-white border-slate-200 text-slate-800 focus:border-emerald-500/50 shadow-sm'
+                    : 'bg-slate-900/60 border-slate-800 text-slate-100 focus:border-emerald-500/40'
+                }`}
+              />
+            </div>
+
+            {/* Tier chips */}
+            <div className={`flex items-center gap-1 p-1 rounded-xl ${ adminTheme === 'light' ? 'bg-slate-100 border border-slate-200' : 'bg-slate-900/60 border border-slate-800'}`}>
+              {[['ALL', 'Tous'], ['Platinum', '💎 Platinum'], ['Gold', '🥇 Gold'], ['Silver', '🥈 Silver'], ['Bronze', '🥉 Bronze']].map(([val, lbl]) => (
+                <button
+                  key={val}
+                  onClick={() => setCrmTierFilter(val)}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                    crmTierFilter === val
+                      ? (adminTheme === 'light' ? 'bg-white text-slate-900 shadow-sm border border-slate-200' : 'bg-emerald-500 text-slate-950 shadow-[0_2px_8px_rgba(16,185,129,0.3)]')
+                      : (adminTheme === 'light' ? 'text-slate-500 hover:text-slate-800' : 'text-slate-500 hover:text-slate-300')
+                  }`}
+                >{lbl}</button>
+              ))}
+            </div>
+
+            {/* Skin type chips */}
+            <div className={`flex items-center gap-1 p-1 rounded-xl ${ adminTheme === 'light' ? 'bg-slate-100 border border-slate-200' : 'bg-slate-900/60 border border-slate-800'}`}>
+              {[['ALL','Toutes'], ['Sèche / Dry','Sèche'], ['Grasse / Oily','Grasse'], ['Mixte / Combination','Mixte'], ['Sensible / Sensitive','Sensible']].map(([val, lbl]) => (
+                <button
+                  key={val}
+                  onClick={() => setCrmSkinTypeFilter(val)}
+                  className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                    crmSkinTypeFilter === val
+                      ? (adminTheme === 'light' ? 'bg-white text-slate-900 shadow-sm border border-slate-200' : 'bg-slate-700 text-emerald-400 shadow-sm')
+                      : (adminTheme === 'light' ? 'text-slate-500 hover:text-slate-800' : 'text-slate-500 hover:text-slate-300')
+                  }`}
+                >{lbl}</button>
+              ))}
+            </div>
+
+            {/* Account Status Chips */}
+            <div className={`flex items-center gap-1 p-1 rounded-xl ${ adminTheme === 'light' ? 'bg-slate-100 border border-slate-200' : 'bg-slate-900/60 border border-slate-800'}`}>
+              {[['ALL','Tous comptes'], ['WITH_ACCOUNT','👤 Avec Compte'], ['GUEST','🛍️ Invités']].map(([val, lbl]) => (
+                <button
+                  key={val}
+                  onClick={() => setCrmAccountFilter(val)}
+                  className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                    crmAccountFilter === val
+                      ? (adminTheme === 'light' ? 'bg-white text-slate-900 shadow-sm border border-slate-200' : 'bg-emerald-500 text-slate-950 shadow-sm')
+                      : (adminTheme === 'light' ? 'text-slate-500 hover:text-slate-800' : 'text-slate-500 hover:text-slate-300')
+                  }`}
+                >{lbl}</button>
+              ))}
+            </div>
+
+            {/* Tag Filter Chips */}
+            <div className={`flex items-center gap-1 p-1 rounded-xl ${ adminTheme === 'light' ? 'bg-slate-100 border border-slate-200' : 'bg-slate-900/60 border border-slate-800'}`}>
+              {[['ALL','Tous Tags'], ['VIP-KBeauty','🏷️ VIP-KBeauty'], ['Sensible-Allergique','🏷️ Sensible'], ['Acheteuse-Solaire','🏷️ Solaire'], ['Livreur-Préféré-Amana','🏷️ Amana']].map(([val, lbl]) => (
+                <button
+                  key={val}
+                  onClick={() => setCrmTagFilter(val)}
+                  className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                    crmTagFilter === val
+                      ? (adminTheme === 'light' ? 'bg-white text-slate-900 shadow-sm border border-slate-200' : 'bg-amber-500 text-slate-950 shadow-sm')
+                      : (adminTheme === 'light' ? 'text-slate-500 hover:text-slate-800' : 'text-slate-500 hover:text-slate-300')
+                  }`}
+                >{lbl}</button>
+              ))}
+            </div>
+
+            <div className="ml-auto flex items-center gap-2">
+              <span className={`text-[10px] font-mono ${ adminTheme === 'light' ? 'text-slate-400' : 'text-slate-600'}`}>{filteredCrmCustomers.length} clients</span>
+              <button
+                onClick={() => handleExportCustomersToCsv(filteredCrmCustomers)}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-bold border transition cursor-pointer ${
+                  adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-sm' : 'bg-slate-900/50 border-slate-800 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5" /> Exporter CSV
+              </button>
             </div>
           </div>
 
-          {/* Customers table */}
-          <div className={`border rounded-2xl overflow-hidden transition-all duration-200 ${
-            adminTheme === 'light'
-              ? 'bg-white border-slate-200 shadow-[0_4px_12px_-2px_rgba(15,30,54,0.03)]'
-              : 'bg-slate-900/30 border-slate-900 shadow-xl'
-          }`}>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left">
-                <thead>
-                  <tr style={{ borderBottom: '1px solid var(--admin-border)', background: 'var(--admin-surface-2)' }}>
-                    {['Client', 'Téléphone', 'Commandes (Total)', 'Dépenses Cumulées', 'Palier Fidélité', 'Solde de Points', ''].map((h, i) => (
-                      <th key={i} className={`p-4 font-bold uppercase tracking-widest ${i === 6 ? 'text-right' : ''}`} style={{ fontSize: 'var(--admin-text-2xs)', color: 'var(--admin-text-faint)' }}>
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className={`divide-y text-xs ${
-                  adminTheme === 'light' ? 'divide-slate-100 text-slate-700' : 'divide-slate-900 text-slate-300'
-                }`}>
-                  {filteredCrmCustomers.map((cust: any, idx: number) => {
-                    let tier: 'Bronze' | 'Silver' | 'Gold' | 'Platinum' = 'Bronze';
-                    if (cust.totalSpend >= 1500) tier = 'Platinum';
-                    else if (cust.totalSpend >= 700) tier = 'Gold';
-                    else if (cust.totalSpend >= 300) tier = 'Silver';
+          {/* ── Premium Client Cards ── */}
+          <div className="space-y-2.5">
+            {filteredCrmCustomers.length === 0 && (
+              <div className={`p-12 text-center rounded-2xl border ${ adminTheme === 'light' ? 'bg-white border-slate-200' : 'bg-slate-900/30 border-slate-900'}`}>
+                <Users className={`w-8 h-8 mx-auto mb-2 ${ adminTheme === 'light' ? 'text-slate-300' : 'text-slate-700'}`} />
+                <p className={`text-sm font-semibold ${ adminTheme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>Aucun profil client trouvé.</p>
+              </div>
+            )}
+            {filteredCrmCustomers.map((cust: any, idx: number) => {
+              let tier: 'Bronze' | 'Silver' | 'Gold' | 'Platinum' = 'Bronze';
+              if (cust.totalSpend >= 1500) tier = 'Platinum';
+              else if (cust.totalSpend >= 700) tier = 'Gold';
+              else if (cust.totalSpend >= 300) tier = 'Silver';
 
-                    const tierColors: Record<string, string> = {
-                      Bronze: adminTheme === 'light' ? 'text-amber-800 bg-amber-50 border-amber-100' : 'text-amber-500 bg-amber-950/20 border-amber-900/30',
-                      Silver: adminTheme === 'light' ? 'text-slate-600 bg-slate-100 border-slate-200' : 'text-slate-300 bg-slate-900/40 border-slate-800',
-                      Gold: adminTheme === 'light' ? 'text-yellow-700 bg-yellow-50 border-yellow-200' : 'text-yellow-400 bg-yellow-950/20 border-yellow-900/30',
-                      Platinum: adminTheme === 'light' ? 'text-violet-700 bg-violet-50 border-violet-100' : 'text-violet-400 bg-violet-950/20 border-violet-900/30'
-                    };
+              const estimatedPoints = Math.round(cust.totalSpend * pointsPerDh);
+              const tierGradients: Record<string, { ring: string; badge: string; badgeText: string; glow: string; emoji: string }> = {
+                Bronze:   { ring: 'from-amber-700 to-amber-500',    badge: adminTheme === 'light' ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-amber-950/30 border-amber-800/40 text-amber-400',   badgeText: 'Bronze',   glow: 'shadow-amber-500/10',   emoji: '🥉' },
+                Silver:   { ring: 'from-slate-400 to-slate-300',    badge: adminTheme === 'light' ? 'bg-slate-100 border-slate-300 text-slate-600' : 'bg-slate-800/40 border-slate-700 text-slate-300',       badgeText: 'Silver',   glow: 'shadow-slate-400/10',   emoji: '🥈' },
+                Gold:     { ring: 'from-yellow-500 to-amber-300',   badge: adminTheme === 'light' ? 'bg-yellow-50 border-yellow-200 text-yellow-700' : 'bg-yellow-950/30 border-yellow-800/40 text-yellow-400', badgeText: 'Gold',     glow: 'shadow-yellow-500/15',  emoji: '🥇' },
+                Platinum: { ring: 'from-violet-500 to-indigo-400',  badge: adminTheme === 'light' ? 'bg-violet-50 border-violet-200 text-violet-700' : 'bg-violet-950/30 border-violet-800/40 text-violet-400', badgeText: 'Platinum', glow: 'shadow-violet-500/20',  emoji: '💎' },
+              };
+              const tg = tierGradients[tier];
+              const initials = (cust.name || '?').split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
+              const spendPct = Math.min(100, Math.round((cust.totalSpend / 1500) * 100));
+              const waPhone = (cust.phone || '').replace(/[^0-9]/g, '');
 
-                    const estimatedPoints = Math.round(cust.totalSpend * pointsPerDh);
+              return (
+                <div
+                  key={idx}
+                  className={`group relative flex items-center gap-4 p-4 rounded-2xl border transition-all duration-300 cursor-pointer hover:scale-[1.005] ${
+                    adminTheme === 'light'
+                      ? `bg-white border-slate-200/80 shadow-[0_2px_12px_-2px_rgba(15,30,54,0.04)] hover:shadow-[0_6px_20px_-4px_rgba(15,30,54,0.08)] hover:border-slate-300/80`
+                      : `bg-slate-900/40 border-slate-900 hover:border-slate-700/80 shadow-lg hover:shadow-xl hover:shadow-${tg.glow}`
+                  }`}
+                  onClick={() => handleOpenCrmCustomer(cust.phone, cust.name, cust.orders, cust.totalSpend)}
+                >
+                  {/* Avatar with tier ring */}
+                  <div className="relative shrink-0">
+                    <div className={`w-11 h-11 rounded-full p-[2px] bg-gradient-to-br ${tg.ring} shadow-md`}>
+                      <div className={`w-full h-full rounded-full flex items-center justify-center text-sm font-black ${
+                        adminTheme === 'light' ? 'bg-white text-slate-800' : 'bg-slate-950 text-slate-100'
+                      }`}>
+                        {initials}
+                      </div>
+                    </div>
+                    {/* Tier emoji mini badge */}
+                    <span className="absolute -bottom-0.5 -right-0.5 text-[10px] leading-none">{tg.emoji}</span>
+                  </div>
 
+                  {/* Client info */}
+                  {(() => {
+                    const hasAcc = cust.has_account || cust.orders?.some((o: any) => o.has_account || o.user_id || o.email);
+                    const custEmail = cust.email || cust.orders?.find((o: any) => o.email)?.email;
                     return (
-                      <tr 
-                        key={idx} 
-                        className={`transition-colors admin-row-enter ${
-                          adminTheme === 'light' ? 'hover:bg-slate-50/50' : 'hover:bg-slate-900/10'
-                        }`}
-                      >
-                        <td className="p-4">
-                          <span className={`font-extrabold block ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-200'}`}>{cust.name}</span>
-                        </td>
-                        <td className="p-4 font-mono">{cust.phone}</td>
-                        <td className="p-4 font-bold">{cust.orders.length} commande(s)</td>
-                        <td className="p-4 font-extrabold font-mono">{cust.totalSpend.toFixed(2)} DH</td>
-                        <td className="p-4">
-                          <StatusBadge
-                            status={tier === 'Bronze' ? 'inactive' : tier === 'Silver' ? 'info' : tier === 'Gold' ? 'warning' : 'active'}
-                            label={tier}
-                            theme={adminTheme}
-                            size="xs"
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`font-black text-sm ${ adminTheme === 'light' ? 'text-slate-900' : 'text-slate-100'}`}>{cust.name || 'Anonyme'}</span>
+                          <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${tg.badge}`}>{tg.badgeText}</span>
+                          {hasAcc ? (
+                            <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/30 dark:border-emerald-900/40 dark:text-emerald-400">
+                              👤 Compte Membre
+                            </span>
+                          ) : (
+                            <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border bg-slate-100 border-slate-200 text-slate-500 dark:bg-slate-800/40 dark:border-slate-700 dark:text-slate-400">
+                              🛍️ Invité
+                            </span>
+                          )}
+                          {(() => {
+                            const orders = cust.orders || [];
+                            const total = orders.length;
+                            const delivered = orders.filter((o: any) => (o.status || '').toLowerCase() === 'delivered').length;
+                            const refused = orders.filter((o: any) => ['cancelled', 'returned', 'refused'].includes((o.status || '').toLowerCase())).length;
+
+                            if (refused > 0) {
+                              return (
+                                <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border bg-red-50 border-red-200 text-red-700 dark:bg-red-950/30 dark:border-red-900/40 dark:text-red-400">
+                                  🚨 {refused} Refus Colis
+                                </span>
+                              );
+                            }
+                            if (delivered > 0) {
+                              return (
+                                <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/30 dark:border-emerald-900/40 dark:text-emerald-400">
+                                  🛡️ COD 100% ({delivered}/{total})
+                                </span>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                        {(() => {
+                          const custCity = cust.orders?.find((o: any) => o.city)?.city || null;
+                          return (
+                            <span className={`text-[10px] font-mono block mt-0.5 ${ adminTheme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                              {cust.phone} {custCity ? `· 📍 ${custCity}` : ''} {custEmail ? `· ${custEmail}` : ''} · {cust.orders.length} commande{cust.orders.length > 1 ? 's' : ''}
+                            </span>
+                          );
+                        })()}
+                        {/* Spend progress bar */}
+                        <div className={`mt-2 h-1 rounded-full overflow-hidden ${ adminTheme === 'light' ? 'bg-slate-100' : 'bg-slate-800/60'}`}>
+                          <div
+                            className={`h-full rounded-full bg-gradient-to-r ${tg.ring} transition-all duration-700`}
+                            style={{ width: `${spendPct}%` }}
                           />
-                        </td>
-                        <td className={`p-4 font-extrabold font-mono ${adminTheme === 'light' ? 'text-emerald-600' : 'text-emerald-400'}`}>{estimatedPoints} pts</td>
-                        <td className="p-4 text-right">
-                          <button
-                            onClick={() => handleOpenCrmCustomer(cust.phone, cust.name, cust.orders, cust.totalSpend)}
-                            className={`px-2.5 py-1 text-[10px] font-bold uppercase transition rounded-lg border cursor-pointer ${
-                              adminTheme === 'light'
-                                ? 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200/80 shadow-sm'
-                                : 'bg-slate-900 text-slate-300 hover:text-slate-200 border border-slate-800 hover:border-slate-700'
-                            }`}
-                          >
-                            Gérer
-                          </button>
-                        </td>
-                      </tr>
+                        </div>
+
+                        {/* Customer Tags */}
+                        {((customerTags[cust.phone] || []) as string[]).length > 0 && (
+                          <div className="flex flex-wrap items-center gap-1 mt-2">
+                            {((customerTags[cust.phone] || []) as string[]).map(t => (
+                              <span key={t} className={`text-[8.5px] font-mono font-bold px-2 py-0.5 rounded-full border ${getTagBadgeStyle(t, adminTheme)}`}>
+                                🏷️ {t}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     );
-                  })}
-                  {filteredCrmCustomers.length === 0 && (
-                    <tr>
-                      <td colSpan={7} className="p-8 text-center text-slate-500 italic">Aucun profil client trouvé.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  })()}
+
+                  {/* Stats */}
+                  <div className="hidden sm:flex flex-col items-end gap-1 shrink-0">
+                    <span className={`text-base font-black font-mono ${ adminTheme === 'light' ? 'text-slate-900' : 'text-slate-100'}`}>{cust.totalSpend.toFixed(0)} DH</span>
+                    <span className={`text-[10px] font-mono ${ adminTheme === 'light' ? 'text-emerald-600' : 'text-emerald-400'}`}>{estimatedPoints} pts</span>
+                  </div>
+
+                  {/* Actions (show on hover) */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    {waPhone && (
+                      <a
+                        href={`https://wa.me/${waPhone}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20 text-xs font-bold"
+                        title="WhatsApp"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                      </a>
+                    )}
+                    <button
+                      onClick={e => { e.stopPropagation(); handleOpenCrmCustomer(cust.phone, cust.name, cust.orders, cust.totalSpend); }}
+                      className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-all duration-200 cursor-pointer ${
+                        adminTheme === 'light'
+                          ? 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-700 shadow-sm'
+                          : 'bg-slate-800/60 border-slate-700 text-slate-400 hover:bg-emerald-950/30 hover:border-emerald-800/40 hover:text-emerald-400'
+                      }`}
+                    >
+                      Gérer →
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -1451,170 +2022,1442 @@ export default function CRMTab() {
         </div>
       )}
 
-      {/* -------------------- DRAWER MODAL: CRM CUSTOMER PROFILE -------------------- */}
-      {selectedCustomer && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-40 select-none animate-in fade-in-50 duration-200">
-          <div className={`border rounded-3xl max-w-xl w-full p-6 space-y-6 relative shadow-2xl max-h-[90vh] overflow-y-auto transition-all duration-200 ${
-            adminTheme === 'light'
-              ? 'bg-white border-slate-200 text-slate-800'
-              : 'bg-slate-900 border-slate-800 text-slate-200'
-          }`}>
-            
-            {/* Header customer card */}
-            <div className={`flex justify-between items-start border-b pb-3 ${
-              adminTheme === 'light' ? 'border-slate-100' : 'border-slate-800'
+      {/* ── Full-Page Customer Profile (Shopify-style) ─────────────────── */}
+      {selectedCustomer && (() => {
+        const spend = selectedCustomer.totalSpend;
+        let tier = 'Bronze';
+        if (spend >= 1500) tier = 'Platinum';
+        else if (spend >= 700) tier = 'Gold';
+        else if (spend >= 300) tier = 'Silver';
+
+        const tierMeta: Record<string, { ring: string; badge: string; emoji: string; accent: string }> = {
+          Bronze:   { ring: 'from-amber-600  to-amber-400',   badge: adminTheme === 'light' ? 'bg-amber-50  border-amber-200  text-amber-700'  : 'bg-amber-950/30  border-amber-800/40  text-amber-400',  emoji: '🥉', accent: adminTheme === 'light' ? 'text-amber-600'  : 'text-amber-400'  },
+          Silver:   { ring: 'from-slate-400  to-slate-300',   badge: adminTheme === 'light' ? 'bg-slate-100 border-slate-300  text-slate-600'  : 'bg-slate-800/40  border-slate-700     text-slate-300',  emoji: '🥈', accent: adminTheme === 'light' ? 'text-slate-500'  : 'text-slate-300'  },
+          Gold:     { ring: 'from-yellow-500 to-amber-300',   badge: adminTheme === 'light' ? 'bg-yellow-50 border-yellow-200 text-yellow-700' : 'bg-yellow-950/30 border-yellow-800/40 text-yellow-400', emoji: '🥇', accent: adminTheme === 'light' ? 'text-yellow-600' : 'text-yellow-400' },
+          Platinum: { ring: 'from-violet-500 to-indigo-400',  badge: adminTheme === 'light' ? 'bg-violet-50 border-violet-200 text-violet-700' : 'bg-violet-950/30 border-violet-800/40 text-violet-400', emoji: '💎', accent: adminTheme === 'light' ? 'text-violet-600' : 'text-violet-400' },
+        };
+        const tm = tierMeta[tier];
+        const initials = (selectedCustomer.name || '?').split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
+        const maxPts = 5000;
+        const ptsPct = Math.min(100, Math.round((selectedCustomer.points / maxPts) * 100));
+        const spendPct = Math.min(100, Math.round((spend / 1500) * 100));
+        const circumference = 2 * Math.PI * 44;
+        const dashOffset = circumference - (ptsPct / 100) * circumference;
+        const avgOrderValue = selectedCustomer.orders.length > 0 ? (spend / selectedCustomer.orders.length).toFixed(0) : '0';
+        const lastOrderDate = selectedCustomer.orders.length > 0
+          ? new Date(selectedCustomer.orders[0].created_at || selectedCustomer.orders[0].date || Date.now()).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+          : '—';
+        const waPhone = (selectedCustomer.phone || '').replace(/[^0-9]/g, '');
+        const waMsg = encodeURIComponent(`Bonjour ${selectedCustomer.name}, nous vous remercions pour votre fidélité ! 💚`);
+        const waSvg = <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>;
+
+        return (
+          <div
+            className={`fixed inset-0 z-[200] overflow-y-auto ${adminTheme === 'light' ? 'bg-slate-50' : 'bg-[#090f1a]'}`}
+          >
+            {/* Sticky Top Bar */}
+            <div className={`sticky top-0 z-10 flex items-center justify-between px-6 py-3.5 border-b ${
+              adminTheme === 'light'
+                ? 'bg-white/95 border-slate-200/80 shadow-[0_2px_16px_-4px_rgba(15,30,54,0.08)] backdrop-blur-xl'
+                : 'bg-slate-950/95 border-white/[0.06] shadow-[0_4px_24px_rgba(0,0,0,0.5)] backdrop-blur-xl'
             }`}>
-              <div>
-                <span className="text-[9px] font-mono text-emerald-400 uppercase font-black block tracking-wider bg-emerald-950/40 border border-emerald-900/30 rounded px-1.5 py-0.5 w-fit mb-1.5">Fiche Client CRM</span>
-                <h3 className={`text-base font-extrabold flex items-center gap-1.5 font-sans ${
-                  adminTheme === 'light' ? 'text-slate-800' : 'text-slate-100'
-                }`}>
-                  {selectedCustomer.name} 
-                </h3>
-                <span className="text-[10px] text-slate-400 font-mono block mt-0.5">{selectedCustomer.phone}</span>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setSelectedCustomer(null)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold border transition cursor-pointer hover:scale-[0.98] active:scale-[0.96] ${
+                    adminTheme === 'light'
+                      ? 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-sm'
+                      : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'
+                  }`}
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  Retour Clients
+                </button>
+                <span className={`hidden sm:flex items-center gap-1.5 text-xs font-mono ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-600'}`}>
+                  <span className={adminTheme === 'light' ? 'text-slate-300' : 'text-slate-700'}>/</span>
+                  Clients
+                  <span className={adminTheme === 'light' ? 'text-slate-300' : 'text-slate-700'}>/</span>
+                  <span className={adminTheme === 'light' ? 'text-slate-700 font-bold' : 'text-slate-300 font-bold'}>{selectedCustomer.name}</span>
+                </span>
               </div>
-              <button 
-                onClick={() => setSelectedCustomer(null)} 
-                className={`transition-colors ${
-                  adminTheme === 'light' ? 'text-slate-400 hover:text-slate-600' : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const cleanName = (selectedCustomer.name || 'CLIENT').replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 10);
+                    setPromoCustomCode(`SPECIAL-${cleanName}-${promoDiscountPct}`);
+                    setIsPromoModalOpen(true);
+                  }}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-md transition cursor-pointer active:scale-[0.97]"
+                >
+                  <Ticket className="w-3.5 h-3.5" />
+                  Code Promo
+                </button>
+                {waPhone && (
+                  <a
+                    href={`https://wa.me/${waPhone}?text=${waMsg}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_12px_rgba(16,185,129,0.3)] transition cursor-pointer active:scale-[0.97]"
+                  >
+                    {waSvg}
+                    WhatsApp
+                  </a>
+                )}
+              </div>
             </div>
 
-            {/* Loyalty points overrides panel */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              
-              {/* Left Column: Loyalty metrics & overrides adjustment */}
-              <div className="space-y-4">
-                <div className={`p-4 rounded-2xl border space-y-2 ${
-                  adminTheme === 'light' ? 'bg-slate-50 border-slate-200/80' : 'bg-slate-950 border-slate-900'
-                }`}>
-                  <h4 className={`text-[10px] font-bold uppercase tracking-widest block border-b pb-1.5 ${
-                    adminTheme === 'light' ? 'text-slate-700 border-slate-200/60' : 'text-slate-400 border-slate-900/60'
-                  }`}>Beauty Wallet Balance</h4>
-                  <div className="flex justify-between items-baseline font-mono text-xs">
-                    <span className={adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'}>Points cumulés:</span>
-                    <strong className={`text-lg font-extrabold ${
-                      adminTheme === 'light' ? 'text-emerald-700' : 'text-emerald-400'
-                    }`}>{selectedCustomer.points} pts</strong>
+            {/* Page Content */}
+            <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 space-y-7">
+
+              {/* Hero Header */}
+              <div className={`relative overflow-hidden rounded-3xl border p-7 md:p-10 ${
+                adminTheme === 'light'
+                  ? 'bg-white border-slate-200/80 shadow-[0_8px_32px_-8px_rgba(15,30,54,0.08)]'
+                  : 'bg-slate-900/60 border-white/[0.06] shadow-[0_16px_48px_rgba(0,0,0,0.4)]'
+              }`}>
+                <div className={`absolute -top-24 -right-24 w-72 h-72 rounded-full blur-3xl pointer-events-none ${
+                  tier === 'Platinum' ? 'bg-violet-500/8' : tier === 'Gold' ? 'bg-yellow-500/8' : 'bg-amber-500/8'
+                }`} />
+                <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-7">
+                  {/* Loyalty ring */}
+                  <div className="relative shrink-0">
+                    <svg width="108" height="108" viewBox="0 0 108 108">
+                      <circle cx="54" cy="54" r="44" stroke={adminTheme === 'light' ? '#f1f5f9' : '#1e293b'} strokeWidth="7" fill="none" />
+                      <circle
+                        cx="54" cy="54" r="44"
+                        stroke="url(#cpRing)"
+                        strokeWidth="7"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={dashOffset}
+                        transform="rotate(-90 54 54)"
+                        style={{ transition: 'stroke-dashoffset 1.2s cubic-bezier(0.32,0.72,0,1)' }}
+                      />
+                      <defs>
+                        <linearGradient id="cpRing" x1="0%" y1="0%" x2="100%" y2="0%">
+                          {tier === 'Platinum' ? <><stop offset="0%" stopColor="#8b5cf6"/><stop offset="100%" stopColor="#6366f1"/></> :
+                           tier === 'Gold'     ? <><stop offset="0%" stopColor="#eab308"/><stop offset="100%" stopColor="#f59e0b"/></> :
+                           tier === 'Silver'   ? <><stop offset="0%" stopColor="#94a3b8"/><stop offset="100%" stopColor="#cbd5e1"/></> :
+                                                 <><stop offset="0%" stopColor="#b45309"/><stop offset="100%" stopColor="#d97706"/></>}
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className={`text-2xl font-black ${adminTheme === 'light' ? 'text-slate-800' : 'text-white'}`}>{initials}</span>
+                    </div>
+                    <div className={`absolute -bottom-3 left-1/2 -translate-x-1/2 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full whitespace-nowrap ${
+                      adminTheme === 'light' ? 'bg-slate-900 text-white' : 'bg-white/90 text-slate-900'
+                    }`}>{ptsPct}%</div>
                   </div>
-                  {selectedCustomer.pointsOverrideReason && (
-                    <div className={`pt-1 text-[10px] italic ${
-                      adminTheme === 'light' ? 'text-indigo-600' : 'text-indigo-400'
-                    }`}>
-                      Dernier motif d&apos;ajustement : &ldquo;{selectedCustomer.pointsOverrideReason}&rdquo;
+
+                  {/* Name + meta */}
+                  <div className="flex-1 min-w-0">
+                  {(() => {
+                    const hasAcc = selectedCustomer.orders?.some((o: any) => o.has_account || o.user_id || o.email);
+                    const custEmail = selectedCustomer.orders?.find((o: any) => o.email)?.email;
+                    return (
+                      <div className="flex items-center gap-2 flex-wrap mb-3">
+                        <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border ${tm.badge}`}>{tm.emoji} {tier}</span>
+                        {hasAcc ? (
+                          <span className="text-[9px] font-mono uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-950/30 dark:border-emerald-900/40 dark:text-emerald-400 flex items-center gap-1 font-bold">
+                            👤 Compte Client Officiel {custEmail ? `(${custEmail})` : ''}
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-mono uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 dark:bg-amber-950/30 dark:border-amber-900/40 dark:text-amber-400 flex items-center gap-1 font-bold">
+                            🛍️ Profil Invité (Sans Compte)
+                          </span>
+                        )}
+                        {(() => {
+                          const custOrders = selectedCustomer.orders || [];
+                          const totalOrd = custOrders.length;
+                          const delivOrd = custOrders.filter((o: any) => (o.status || '').toLowerCase() === 'delivered').length;
+                          const refOrd = custOrders.filter((o: any) => ['cancelled', 'returned', 'refused'].includes((o.status || '').toLowerCase())).length;
+                          const confOrd = custOrders.filter((o: any) => ['confirmed', 'shipped', 'delivered'].includes((o.status || '').toLowerCase())).length;
+                          const confRate = totalOrd > 0 ? Math.round((confOrd / totalOrd) * 100) : 100;
+                          const delivRate = (delivOrd + refOrd) > 0 ? Math.round((delivOrd / (delivOrd + refOrd)) * 100) : 0;
+
+                          return (
+                            <span className="text-[9px] font-mono uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-700 dark:bg-slate-800/80 dark:border-slate-700 dark:text-slate-200 flex items-center gap-1 font-bold">
+                              📦 Historique Livraisons: {delivOrd}/{totalOrd} Livrés {refOrd > 0 ? `· ${refOrd} Refusé(s)` : ''}
+                            </span>
+                          );
+                        })()}
+                      </div>
+                    );
+                  })()}
+                    <h1 className={`text-3xl md:text-5xl font-black tracking-tight leading-none ${adminTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                      {selectedCustomer.name}
+                    </h1>
+                    {(() => {
+                      const custCity = selectedCustomer.orders?.find((o: any) => o.city)?.city || null;
+                      return (
+                        <div className="flex items-center gap-2.5 mt-3 flex-wrap">
+                          <span className={`text-sm font-mono font-bold ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                            {selectedCustomer.phone}
+                          </span>
+                          {custCity && (
+                            <span className={`inline-flex items-center gap-1 text-xs font-bold font-mono px-2.5 py-0.5 rounded-full border ${
+                              adminTheme === 'light'
+                                ? 'bg-slate-100 border-slate-200 text-slate-700 shadow-2xs'
+                                : 'bg-slate-800/80 border-slate-700 text-slate-200'
+                            }`}>
+                              📍 {custCity}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Points display */}
+                  <div className="hidden lg:flex flex-col items-end shrink-0">
+                    <span className={`text-[9px] font-bold uppercase tracking-widest mb-1 ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-600'}`}>Beauty Points</span>
+                    <span className={`text-6xl font-black font-mono leading-none ${adminTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>{selectedCustomer.points}</span>
+                    <span className={`text-xs font-bold mt-1 ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-600'}`}>sur 5 000 pts max</span>
+                    <div className={`w-36 h-1.5 rounded-full overflow-hidden mt-2 ${adminTheme === 'light' ? 'bg-slate-100' : 'bg-slate-800'}`}>
+                      <div className={`h-full rounded-full bg-gradient-to-r ${tm.ring}`} style={{ width: `${ptsPct}%` }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Produits Préférés (Most Purchased Products Gallery) ── */}
+              {(() => {
+                const custOrders = selectedCustomer.orders || [];
+                if (custOrders.length === 0) return null;
+
+                const productMap: Record<string, {
+                  id: number | string;
+                  title: string;
+                  image: string;
+                  price: number;
+                  totalUnits: number;
+                  ordersCount: number;
+                }> = {};
+
+                const allCatalog = [...(products || []), ...PRODUCTS_DB];
+
+                custOrders.forEach(ord => {
+                  (ord.items || []).forEach(item => {
+                    const key = (item.title || '').trim().toLowerCase() || String(item.id);
+                    const matchingProd = allCatalog.find(
+                      p => p.id === item.id ||
+                      (p.title && item.title && p.title.toLowerCase() === item.title.toLowerCase()) ||
+                      (p.name && item.title && p.name.toLowerCase() === item.title.toLowerCase()) ||
+                      (p.title && item.title && item.title.toLowerCase().includes(p.title.toLowerCase()))
+                    );
+                    const itemImg = item.image || matchingProd?.image || (matchingProd as any)?.images?.[0] || 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop';
+                    const itemPrice = item.price || matchingProd?.price || 0;
+                    const qty = item.quantity || 1;
+
+                    if (!productMap[key]) {
+                      productMap[key] = {
+                        id: item.id || matchingProd?.id || key,
+                        title: item.title || matchingProd?.title || matchingProd?.name || 'Produit',
+                        image: itemImg,
+                        price: itemPrice,
+                        totalUnits: 0,
+                        ordersCount: 0
+                      };
+                    }
+                    productMap[key].totalUnits += qty;
+                    productMap[key].ordersCount += 1;
+                  });
+                });
+
+                const topPurchasedProducts = Object.values(productMap).sort((a, b) => b.totalUnits - a.totalUnits);
+
+                if (topPurchasedProducts.length === 0) return null;
+
+                const cPhone = (selectedCustomer.phone || '').replace(/[^0-9]/g, '');
+
+                return (
+                  <div className={`rounded-3xl border p-6 md:p-7 space-y-5 ${
+                    adminTheme === 'light'
+                      ? 'bg-white border-slate-200/80 shadow-[0_8px_32px_-8px_rgba(15,30,54,0.06)]'
+                      : 'bg-slate-900/60 border-white/[0.06] shadow-xl'
+                  }`}>
+                    {/* Header */}
+                    <div className="flex items-center justify-between flex-wrap gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500">
+                          <ShoppingBag className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className={`text-base font-black tracking-tight ${adminTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                            Produits les plus achetés ({topPurchasedProducts.length})
+                          </h3>
+                          <span className={`text-[10px] font-mono block ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>
+                            Historique des soins favoris et fréquence d&apos;achat du client
+                          </span>
+                        </div>
+                      </div>
+
+                      <span className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-full ${
+                        adminTheme === 'light' ? 'bg-amber-50 border border-amber-200 text-amber-700' : 'bg-amber-950/30 border border-amber-900/30 text-amber-400'
+                      }`}>
+                        {topPurchasedProducts.reduce((sum, p) => sum + p.totalUnits, 0)} articles cumulés
+                      </span>
+                    </div>
+
+                    {/* Grid of Top Purchased Products */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                      {topPurchasedProducts.slice(0, 6).map((prod, idx) => {
+                        const restockMsg = encodeURIComponent(`Bonjour ${selectedCustomer.name}, souhaitez-vous réapprovisionner votre soin habituel "${prod.title}" (${prod.price.toFixed(0)} DH) ? Vous pouvez commander en 1 clic ici : https://paraofficinal.ma`);
+                        return (
+                          <div key={idx} className={`group relative rounded-2xl border p-4 flex items-center gap-4 transition-all duration-200 hover:scale-[1.01] ${
+                            adminTheme === 'light'
+                              ? 'bg-slate-50/60 border-slate-200/80 hover:bg-white hover:border-amber-300 hover:shadow-md'
+                              : 'bg-slate-950/50 border-slate-800 hover:border-amber-500/30'
+                          }`}>
+                            {/* Product Thumbnail with Frequency Badge */}
+                            <div className="relative shrink-0">
+                              <img
+                                src={prod.image}
+                                alt={prod.title}
+                                className="w-14 h-14 rounded-2xl object-cover border border-slate-200/70 dark:border-slate-800"
+                              />
+                              <span className="absolute -top-1.5 -right-1.5 text-[9.5px] font-mono font-black bg-amber-500 text-slate-950 px-1.5 py-0.5 rounded-full shadow-md">
+                                ×{prod.totalUnits}
+                              </span>
+                            </div>
+
+                            {/* Title & Stats */}
+                            <div className="flex-1 min-w-0">
+                              <h4 className={`text-xs font-black truncate leading-snug ${adminTheme === 'light' ? 'text-slate-900' : 'text-slate-100'}`}>
+                                {prod.title}
+                              </h4>
+                              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                <span className={`text-[11px] font-mono font-black ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-200'}`}>
+                                  {prod.price.toFixed(0)} DH
+                                </span>
+                                <span className="text-[9px] font-mono text-slate-400">
+                                  · {prod.ordersCount} commande{prod.ordersCount > 1 ? 's' : ''}
+                                </span>
+                              </div>
+
+                              {/* 1-Click WhatsApp Restock CTA */}
+                              {cPhone && (
+                                <a
+                                  href={`https://wa.me/${cPhone}?text=${restockMsg}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-[9.5px] font-extrabold text-emerald-600 hover:text-emerald-500 dark:text-emerald-400 mt-2 hover:underline cursor-pointer"
+                                >
+                                  💬 Relance Réassort WhatsApp →
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* ── Intelligence Fréquence d'Achat & Prédiction LTV ── */}
+              {(() => {
+                const custOrders = selectedCustomer.orders || [];
+                if (custOrders.length === 0) return null;
+
+                const sortedOrders = [...custOrders].sort((a, b) => {
+                  const tA = new Date(a.created_at || a.date || Date.now()).getTime();
+                  const tB = new Date(b.created_at || b.date || Date.now()).getTime();
+                  return tA - tB;
+                });
+
+                const firstOrderDate = new Date(sortedOrders[0].created_at || sortedOrders[0].date || Date.now());
+                const latestOrderDate = new Date(sortedOrders[sortedOrders.length - 1].created_at || sortedOrders[sortedOrders.length - 1].date || Date.now());
+                const nowTime = Date.now();
+
+                const daysSinceLastOrder = Math.max(0, Math.floor((nowTime - latestOrderDate.getTime()) / (1000 * 60 * 60 * 24)));
+
+                let avgIntervalDays = 45;
+                if (sortedOrders.length >= 2) {
+                  const diffs: number[] = [];
+                  for (let i = 1; i < sortedOrders.length; i++) {
+                    const prevT = new Date(sortedOrders[i - 1].created_at || sortedOrders[i - 1].date || Date.now()).getTime();
+                    const currT = new Date(sortedOrders[i].created_at || sortedOrders[i].date || Date.now()).getTime();
+                    const dDays = Math.max(1, Math.floor((currT - prevT) / (1000 * 60 * 60 * 24)));
+                    diffs.push(dDays);
+                  }
+                  avgIntervalDays = Math.round(diffs.reduce((a, b) => a + b, 0) / diffs.length);
+                }
+
+                const daysUntilNextOrder = avgIntervalDays - daysSinceLastOrder;
+                const nextOrderEstDate = new Date(latestOrderDate.getTime() + avgIntervalDays * 24 * 60 * 60 * 1000).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+
+                let statusBadge = {
+                  label: `Réassort probable dans ${daysUntilNextOrder} jours`,
+                  subText: `Prochain réassort estimé le ${nextOrderEstDate}`,
+                  bg: adminTheme === 'light' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-emerald-950/30 border-emerald-900/40 text-emerald-400',
+                  dot: 'bg-emerald-500',
+                  riskLevel: 'Faible (Client Actif)',
+                  riskBadge: adminTheme === 'light' ? 'bg-emerald-100 text-emerald-800' : 'bg-emerald-900/50 text-emerald-300',
+                  isOverdue: false,
+                  isUrgent: false
+                };
+
+                if (daysUntilNextOrder <= 0 && Math.abs(daysUntilNextOrder) <= 15) {
+                  const overdueDays = Math.abs(daysUntilNextOrder);
+                  statusBadge = {
+                    label: `⚠️ Réassort en retard (${overdueDays} jours de décalage)`,
+                    subText: `Dépassement du cycle moyen de ${avgIntervalDays} jours`,
+                    bg: adminTheme === 'light' ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-amber-950/30 border-amber-900/40 text-amber-400',
+                    dot: 'bg-amber-500',
+                    riskLevel: 'Modéré (Relance recommandée)',
+                    riskBadge: adminTheme === 'light' ? 'bg-amber-100 text-amber-800' : 'bg-amber-900/50 text-amber-300',
+                    isOverdue: true,
+                    isUrgent: false
+                  };
+                } else if (daysUntilNextOrder <= 0 && Math.abs(daysUntilNextOrder) > 15) {
+                  const overdueDays = Math.abs(daysUntilNextOrder);
+                  statusBadge = {
+                    label: `🚨 Risque d'Inactivité (${daysSinceLastOrder} jours sans commande)`,
+                    subText: `Inactif depuis +${overdueDays} jours par rapport au rythme habituel`,
+                    bg: adminTheme === 'light' ? 'bg-rose-50 border-rose-200 text-rose-800' : 'bg-rose-950/30 border-rose-900/40 text-rose-400',
+                    dot: 'bg-rose-500',
+                    riskLevel: 'Élevé (Offre de rétention nécessaire)',
+                    riskBadge: adminTheme === 'light' ? 'bg-rose-100 text-rose-800' : 'bg-rose-900/50 text-rose-300',
+                    isOverdue: true,
+                    isUrgent: true
+                  };
+                }
+
+                const daysSinceFirstOrder = Math.max(1, Math.floor((nowTime - firstOrderDate.getTime()) / (1000 * 60 * 60 * 24)));
+                const dailySpendRate = spend / daysSinceFirstOrder;
+                const predictedAnnualSpend = (dailySpendRate * 365).toFixed(0);
+                const predicted3YearLTV = (dailySpendRate * 365 * 3).toFixed(0);
+
+                const cPhone = (selectedCustomer.phone || '').replace(/[^0-9]/g, '');
+
+                return (
+                  <div className={`rounded-3xl border p-6 md:p-7 space-y-6 ${
+                    adminTheme === 'light'
+                      ? 'bg-white border-slate-200/80 shadow-[0_8px_32px_-8px_rgba(15,30,54,0.06)]'
+                      : 'bg-slate-900/60 border-white/[0.06] shadow-xl'
+                  }`}>
+                    {/* Header */}
+                    <div className="flex items-center justify-between flex-wrap gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-2.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-500">
+                          <Activity className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className={`text-base font-black tracking-tight ${adminTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                            Intelligence Fréquence & Prédiction LTV
+                          </h3>
+                          <span className={`text-[10px] font-mono block ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>
+                            Analyse algorithmique du comportement d&apos;achat client
+                          </span>
+                        </div>
+                      </div>
+
+                      <span className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border ${statusBadge.riskBadge}`}>
+                        Risque: {statusBadge.riskLevel}
+                      </span>
+                    </div>
+
+                    {/* Main Alert Status Banner */}
+                    <div className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${statusBadge.bg}`}>
+                      <div className="flex items-center gap-3">
+                        <span className={`w-3 h-3 rounded-full shrink-0 ${statusBadge.dot} animate-pulse`} />
+                        <div>
+                          <h4 className="text-xs font-black uppercase tracking-wider">{statusBadge.label}</h4>
+                          <p className="text-[11px] font-mono mt-0.5 opacity-80">{statusBadge.subText}</p>
+                        </div>
+                      </div>
+
+                      {statusBadge.isOverdue && cPhone && (
+                        <a
+                          href={`https://wa.me/${cPhone}?text=${encodeURIComponent(`Bonjour ${selectedCustomer.name}, votre rituel de soin Para Officinal touche probablement à sa fin ! Profitez de -10% sur votre réassort aujourd'hui avec le code REASSORT10 : https://paraofficinal.ma`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md transition active:scale-95 cursor-pointer shrink-0"
+                        >
+                          💬 Envoyer Relance WhatsApp (-10%)
+                        </a>
+                      )}
+                    </div>
+
+                    {/* 4 Metric Cards */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+                      {/* Intervalle Moyen */}
+                      <div className={`p-4 rounded-2xl border ${adminTheme === 'light' ? 'bg-slate-50/70 border-slate-200/80' : 'bg-slate-950/50 border-slate-800'}`}>
+                        <span className="text-[9px] font-extrabold uppercase tracking-widest block text-slate-400 mb-1">Cycle d&apos;Achat Moyen</span>
+                        <span className={`text-lg font-black font-mono block ${adminTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                          Tous les {avgIntervalDays} jours
+                        </span>
+                        <span className="text-[9px] font-mono text-slate-400 block mt-0.5">Basé sur {custOrders.length} commande{custOrders.length > 1 ? 's' : ''}</span>
+                      </div>
+
+                      {/* Temps Écoulé */}
+                      <div className={`p-4 rounded-2xl border ${adminTheme === 'light' ? 'bg-slate-50/70 border-slate-200/80' : 'bg-slate-950/50 border-slate-800'}`}>
+                        <span className="text-[9px] font-extrabold uppercase tracking-widest block text-slate-400 mb-1">Dernière Commande</span>
+                        <span className={`text-lg font-black font-mono block ${adminTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                          Il y a {daysSinceLastOrder} jours
+                        </span>
+                        <span className="text-[9px] font-mono text-slate-400 block mt-0.5">Date: {new Date(latestOrderDate).toLocaleDateString('fr-FR')}</span>
+                      </div>
+
+                      {/* LTV Annuelle Estimée */}
+                      <div className={`p-4 rounded-2xl border ${adminTheme === 'light' ? 'bg-slate-50/70 border-slate-200/80' : 'bg-slate-950/50 border-slate-800'}`}>
+                        <span className="text-[9px] font-extrabold uppercase tracking-widest block text-slate-400 mb-1">CA Annuel Prédictif</span>
+                        <span className="text-lg font-black font-mono text-emerald-600 dark:text-emerald-400 block">
+                          ~{predictedAnnualSpend} DH / an
+                        </span>
+                        <span className="text-[9px] font-mono text-slate-400 block mt-0.5">Basé sur la récurrence actuelle</span>
+                      </div>
+
+                      {/* LTV 3 Ans (Valeur Totale) */}
+                      <div className={`p-4 rounded-2xl border ${adminTheme === 'light' ? 'bg-slate-50/70 border-slate-200/80' : 'bg-slate-950/50 border-slate-800'}`}>
+                        <span className="text-[9px] font-extrabold uppercase tracking-widest block text-slate-400 mb-1">Valeur LTV 3 Ans</span>
+                        <span className="text-lg font-black font-mono text-violet-600 dark:text-violet-400 block">
+                          ~{predicted3YearLTV} DH
+                        </span>
+                        <span className="text-[9px] font-mono text-slate-400 block mt-0.5">Potentiel total estimé</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* ── CARD: K-BEAUTY SAMPLES & FREE GIFT LOG ── */}
+              {(() => {
+                const samplesList = (customerSamples[selectedCustomer.phone] || []) as {
+                  id: string;
+                  sampleName: string;
+                  category: string;
+                  dateSent: string;
+                }[];
+
+                return (
+                  <div className={`p-6 rounded-3xl border ${
+                    adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/60 border-white/[0.06]'
+                  }`}>
+                    <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 rounded-2xl bg-pink-500/10 text-pink-500 border border-pink-500/20">
+                          <Gift className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className={`text-base font-black uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                            🎁 Historique des Échantillons K-Beauty Offerts
+                          </h3>
+                          <p className={`text-xs font-mono ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                            Suivi des échantillons et cadeaux distribués pour éviter les doublons et stimuler les ventes
+                          </p>
+                        </div>
+                      </div>
+
+                      <span className="text-xs font-mono font-black uppercase tracking-wider px-3 py-1 rounded-full bg-pink-500/10 text-pink-500 border border-pink-500/30">
+                        {samplesList.length} échantillon{samplesList.length > 1 ? 's' : ''} offert{samplesList.length > 1 ? 's' : ''}
+                      </span>
+                    </div>
+
+                    <div className="space-y-2 mb-5">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                        + Logger un Échantillon Rapide (K-Beauty Best-Sellers):
+                      </span>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {[
+                          'Anua Heartleaf Serum 10ml',
+                          'Beauty of Joseon Sun Relief 10ml',
+                          'COSRX Snail Mucin 20ml',
+                          'Skin1004 Centella Ampoule 10ml',
+                          'Round Lab Birch Juice 10ml',
+                          'Mixsoon Bean Essence 5ml'
+                        ].map(preset => (
+                          <button
+                            key={preset}
+                            type="button"
+                            onClick={() => handleAddSample(selectedCustomer.phone, preset, 'Sérum / Solaire')}
+                            className={`px-2.5 py-1 rounded-full text-[9.5px] font-mono font-bold border transition cursor-pointer active:scale-95 ${
+                              adminTheme === 'light'
+                                ? 'bg-pink-50 border-pink-200 text-pink-700 hover:bg-pink-100'
+                                : 'bg-pink-950/40 border-pink-900/40 text-pink-300 hover:bg-pink-900/50'
+                            }`}
+                          >
+                            + {preset}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 mb-5 flex-wrap sm:flex-nowrap">
+                      <input
+                        type="text"
+                        placeholder="Entrer le nom du produit offert (ex: Garnier Vitamin C Serum 5ml...)"
+                        value={newSampleName}
+                        onChange={e => setNewSampleName(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') handleAddSample(selectedCustomer.phone, newSampleName, newSampleCategory);
+                        }}
+                        className={`flex-1 text-xs rounded-xl px-3.5 py-2.5 border outline-none transition min-w-[200px] ${
+                          adminTheme === 'light'
+                            ? 'bg-white border-slate-200 text-slate-800 focus:border-pink-500 shadow-2xs'
+                            : 'bg-slate-950 border-slate-800 text-slate-100 focus:border-pink-500'
+                        }`}
+                      />
+                      <select
+                        value={newSampleCategory}
+                        onChange={e => setNewSampleCategory(e.target.value)}
+                        className={`text-xs rounded-xl px-3 py-2.5 border outline-none font-mono ${
+                          adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-800 text-slate-200'
+                        }`}
+                      >
+                        <option value="Sérum / Essence">Sérum / Essence</option>
+                        <option value="Protection Solaire">Protection Solaire</option>
+                        <option value="Nettoyant / Huile">Nettoyant / Huile</option>
+                        <option value="Hydratant / Crème">Hydratant / Crème</option>
+                        <option value="Masque / Tonique">Masque / Tonique</option>
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => handleAddSample(selectedCustomer.phone, newSampleName, newSampleCategory)}
+                        className="px-4 py-2.5 rounded-xl text-xs font-black bg-pink-500 hover:bg-pink-400 text-white shadow-md transition cursor-pointer active:scale-95 whitespace-nowrap"
+                      >
+                        + Logger Échantillon
+                      </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                        Journal des Échantillons Déjà Envoyés
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                        {samplesList.map(item => (
+                          <div key={item.id} className={`p-3.5 rounded-2xl border flex items-center justify-between gap-3 transition ${
+                            adminTheme === 'light' ? 'bg-pink-50/40 border-pink-200/60' : 'bg-pink-950/20 border-pink-900/30'
+                          }`}>
+                            <div className="space-y-0.5 min-w-0">
+                              <span className="text-[9px] font-bold uppercase font-mono text-pink-600 dark:text-pink-400 block">
+                                🌸 {item.category}
+                              </span>
+                              <h5 className={`text-xs font-black truncate ${adminTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                                {item.sampleName}
+                              </h5>
+                              <span className="text-[9px] font-mono text-slate-400 block">
+                                Envoyé le {item.dateSent}
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteSample(selectedCustomer.phone, item.id)}
+                              className="text-slate-400 hover:text-red-500 text-xs transition cursor-pointer p-1 shrink-0"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      {samplesList.length === 0 && (
+                        <span className="text-xs font-mono text-slate-400 italic block pt-1">
+                          Aucun échantillon encore enregistré pour ce client. Offrez-lui son premier échantillon K-Beauty !
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* ── CARD: MOROCCAN COD DELIVERY HEALTH & RELIABILITY ── */}
+              {(() => {
+                const custOrders = selectedCustomer.orders || [];
+                const totalOrd = custOrders.length;
+                const delivOrd = custOrders.filter((o: any) => (o.status || '').toLowerCase() === 'delivered').length;
+                const refOrd = custOrders.filter((o: any) => ['cancelled', 'returned', 'refused'].includes((o.status || '').toLowerCase())).length;
+                const confOrd = custOrders.filter((o: any) => ['confirmed', 'shipped', 'delivered'].includes((o.status || '').toLowerCase())).length;
+                const pendingOrd = custOrders.filter((o: any) => (o.status || '').toLowerCase() === 'pending').length;
+
+                const confRate = totalOrd > 0 ? Math.round((confOrd / totalOrd) * 100) : 100;
+                const delivRate = (delivOrd + refOrd) > 0 ? Math.round((delivOrd / (delivOrd + refOrd)) * 100) : 0;
+
+                const isHighRisk = refOrd > 0;
+                const isModerateRisk = !isHighRisk && pendingOrd >= 2 && delivOrd === 0;
+
+                return (
+                  <div className={`p-6 rounded-3xl border ${
+                    adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/60 border-white/[0.06]'
+                  }`}>
+                    <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2.5 rounded-2xl border ${
+                          isHighRisk
+                            ? 'bg-red-500/10 text-red-500 border-red-500/20'
+                            : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                        }`}>
+                          <Truck className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className={`text-base font-black uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                            🛡️ Statut & Historique des Expéditions COD
+                          </h3>
+                          <p className={`text-xs font-mono ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                            Analyse du taux d&apos;acceptation et de confirmation des colis expédiés en Cash on Delivery
+                          </p>
+                        </div>
+                      </div>
+
+                      <span className={`text-xs font-mono font-black uppercase tracking-wider px-3 py-1 rounded-full border ${
+                        isHighRisk
+                          ? 'bg-red-500/10 text-red-500 border-red-500/30'
+                          : isModerateRisk
+                          ? 'bg-amber-500/10 text-amber-500 border-amber-500/30'
+                          : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
+                      }`}>
+                        {refOrd > 0 ? '⚠️ Historique: Refus Colis' : '📦 Historique Livraisons'}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+                      <div className={`p-4 rounded-2xl border ${adminTheme === 'light' ? 'bg-slate-50/70 border-slate-200/80' : 'bg-slate-950/50 border-slate-800'}`}>
+                        <span className="text-[9px] font-extrabold uppercase tracking-widest block text-slate-400 mb-1">Taux de Livraison Réussie</span>
+                        <span className={`text-2xl font-black font-mono block ${isHighRisk ? 'text-red-500' : delivOrd > 0 ? 'text-emerald-500' : 'text-slate-400'}`}>
+                          {delivRate}%
+                        </span>
+                        <span className="text-[10px] font-mono text-slate-400 block mt-1">
+                          {delivOrd} livrée{delivOrd > 1 ? 's' : ''} · {refOrd} refusée{refOrd > 1 ? 's' : ''} / annulée{refOrd > 1 ? 's' : ''}
+                        </span>
+                      </div>
+
+                      <div className={`p-4 rounded-2xl border ${adminTheme === 'light' ? 'bg-slate-50/70 border-slate-200/80' : 'bg-slate-950/50 border-slate-800'}`}>
+                        <span className="text-[9px] font-extrabold uppercase tracking-widest block text-slate-400 mb-1">Confirmation Téléphone</span>
+                        <span className="text-2xl font-black font-mono text-blue-500 block">
+                          {confRate}%
+                        </span>
+                        <span className="text-[10px] font-mono text-slate-400 block mt-1">
+                          {confOrd} confirmée{confOrd > 1 ? 's' : ''} sur {totalOrd} commande{totalOrd > 1 ? 's' : ''}
+                        </span>
+                      </div>
+
+                      <div className={`p-4 rounded-2xl border ${adminTheme === 'light' ? 'bg-slate-50/70 border-slate-200/80' : 'bg-slate-950/50 border-slate-800'}`}>
+                        <span className="text-[9px] font-extrabold uppercase tracking-widest block text-slate-400 mb-1">Historique Expéditions</span>
+                        <span className={`text-2xl font-black font-mono block ${adminTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                          {totalOrd} Colis
+                        </span>
+                        <span className="text-[10px] font-mono text-slate-400 block mt-1">
+                          {pendingOrd} en cours de préparation
+                        </span>
+                      </div>
+                    </div>
+
+                    {isHighRisk ? (
+                      <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 flex items-center justify-between gap-4 flex-wrap">
+                        <div className="space-y-1">
+                          <span className="text-xs font-black uppercase tracking-wider block">
+                            🚨 Attention: Ce client a au moins {refOrd} commande(s) annulée(s) ou refusée(s)
+                          </span>
+                          <p className="text-[11px] font-mono">
+                            Recommandation: Demandez un acompte de livraison par virement/WhatsApp avant d&apos;expédier le colis.
+                          </p>
+                        </div>
+                        {waPhone && (
+                          <a
+                            href={`https://wa.me/${waPhone}?text=${encodeURIComponent(`Bonjour ${selectedCustomer.name}, nous préparons votre commande. Merci de confirmer votre disponibilité pour la livraison Cash on Delivery.`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3.5 py-2 rounded-xl text-xs font-black bg-red-500 hover:bg-red-400 text-white shadow-md transition cursor-pointer active:scale-95 whitespace-nowrap"
+                          >
+                            💬 Demander Confirmation WhatsApp
+                          </a>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 flex items-center justify-between gap-4 flex-wrap">
+                        <div className="space-y-1">
+                          <span className="text-xs font-black uppercase tracking-wider block">
+                            📦 Historique des Livraisons
+                          </span>
+                          <p className="text-[11px] font-mono">
+                            Aucun refus de colis enregistré dans l&apos;historique des commandes.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* ── CARD: ETIQUETTES & NOTES PRIVÉES ADMIN ── */}
+              <div className={`p-6 rounded-3xl border ${
+                adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/60 border-white/[0.06]'
+              }`}>
+                <div className="flex items-center justify-between gap-3 mb-5">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                      <Ticket className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className={`text-base font-black uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                        🏷️ Étiquettes & Notes Privées Admin
+                      </h3>
+                      <p className={`text-xs font-mono ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                        Journal opérationnel et tags réservés à l&apos;équipe d&apos;administration
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Active Tags */}
+                <div className="space-y-2 mb-6">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Étiquettes Clients</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {((customerTags[selectedCustomer.phone] || []) as string[]).map(t => (
+                      <span key={t} className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold border ${getTagBadgeStyle(t, adminTheme)}`}>
+                        🏷️ {t}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveTag(selectedCustomer.phone, t)}
+                          className="hover:text-red-500 ml-0.5 transition cursor-pointer font-extrabold"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                    {(customerTags[selectedCustomer.phone] || []).length === 0 && (
+                      <span className="text-xs font-mono text-slate-400 italic">Aucune étiquette assignée</span>
+                    )}
+                  </div>
+
+                  {/* Quick Add Tag Presets */}
+                  <div className="pt-2 flex flex-wrap items-center gap-1.5">
+                    <span className="text-[9px] font-mono text-slate-400 font-bold uppercase mr-1">+ Ajouter rapide:</span>
+                    {['VIP-KBeauty', 'Sensible-Allergique', 'Acheteuse-Solaire', 'Livreur-Préféré-Amana', 'Réassort-Fréquent', 'Client-Fidèle'].map(preset => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => handleAddTag(selectedCustomer.phone, preset)}
+                        className={`px-2.5 py-1 rounded-full text-[9.5px] font-mono font-bold border transition cursor-pointer active:scale-95 ${
+                          adminTheme === 'light'
+                            ? 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
+                            : 'bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700'
+                        }`}
+                      >
+                        + {preset}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Private Notes Ledger */}
+                <div className="space-y-3">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Notes Privées (Journal Opérationnel)</span>
+                  
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Ajouter une note privée (ex: Préfère livraison matin à Casablanca, offrir échantillon Solaire...)"
+                      value={newNoteText}
+                      onChange={e => setNewNoteText(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') handleAddNote(selectedCustomer.phone, newNoteText);
+                      }}
+                      className={`flex-1 text-xs rounded-xl px-3.5 py-2.5 border outline-none transition ${
+                        adminTheme === 'light'
+                          ? 'bg-white border-slate-200 text-slate-800 focus:border-amber-500 shadow-2xs'
+                          : 'bg-slate-950 border-slate-800 text-slate-100 focus:border-amber-500'
+                      }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleAddNote(selectedCustomer.phone, newNoteText)}
+                      className="px-4 py-2.5 rounded-xl text-xs font-black bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md transition cursor-pointer active:scale-95 whitespace-nowrap"
+                    >
+                      + Note Privée
+                    </button>
+                  </div>
+
+                  {/* Notes List */}
+                  <div className="space-y-2 pt-2">
+                    {((customerNotes[selectedCustomer.phone] || []) as { id: string; text: string; date: string; author: string }[]).map(note => (
+                      <div key={note.id} className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 transition ${
+                        adminTheme === 'light' ? 'bg-amber-50/40 border-amber-200/60' : 'bg-amber-950/20 border-amber-900/30'
+                      }`}>
+                        <div className="space-y-1 min-w-0">
+                          <p className={`text-xs font-medium ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-200'}`}>
+                            📝 {note.text}
+                          </p>
+                          <span className="text-[9px] font-mono text-slate-400 block">
+                            Par {note.author} · {note.date}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteNote(selectedCustomer.phone, note.id)}
+                          className="text-slate-400 hover:text-red-500 text-xs transition cursor-pointer p-1"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                    {(customerNotes[selectedCustomer.phone] || []).length === 0 && (
+                      <span className="text-xs font-mono text-slate-400 italic block">Aucune note privée enregistrée pour ce client</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Profil Dermo-Cosmétique & Routine Sur Mesure ── */}
+              {(() => {
+                const cPhone = (selectedCustomer.phone || '').replace(/[^0-9]/g, '');
+                const foundDiag = (diagnosticsList || []).find((d: any) => {
+                  const dP = (d.phone || d.phone_number || '').replace(/[^0-9]/g, '');
+                  return (dP && dP === cPhone) ||
+                         (d.customerName && d.customerName.toLowerCase().trim() === selectedCustomer.name.toLowerCase().trim());
+                }) || selectedCustomer.orders?.find((o: any) => o.skin_diagnostic)?.skin_diagnostic;
+
+                const skinTypeLabels: Record<string, { label: string; bg: string; text: string; icon: string }> = {
+                  oily:      { label: 'Peau Grasse', bg: 'bg-teal-50 border-teal-200 dark:bg-teal-950/30 dark:border-teal-900/30', text: 'text-teal-700 dark:text-teal-400', icon: '💧' },
+                  dry:       { label: 'Peau Sèche', bg: 'bg-sky-50 border-sky-200 dark:bg-sky-950/30 dark:border-sky-900/30', text: 'text-sky-700 dark:text-sky-400', icon: '🌾' },
+                  mixed:     { label: 'Peau Mixte', bg: 'bg-violet-50 border-violet-200 dark:bg-violet-950/30 dark:border-violet-900/30', text: 'text-violet-700 dark:text-violet-400', icon: '⚖️' },
+                  sensitive: { label: 'Peau Sensible', bg: 'bg-rose-50 border-rose-200 dark:bg-rose-950/30 dark:border-rose-900/30', text: 'text-rose-700 dark:text-rose-400', icon: '🌸' },
+                  normal:    { label: 'Peau Normale', bg: 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-900/30', text: 'text-emerald-700 dark:text-emerald-400', icon: '✨' },
+                };
+
+                const concernLabels: Record<string, string> = {
+                  acne: 'Acné & Imperfections',
+                  spots: 'Taches Brunes / Hyperpigmentation',
+                  wrinkles: 'Rides & Relâchement (Anti-âge)',
+                  dryness: 'Sécheresse & Déshydratation',
+                  redness: 'Rougeurs & Irritations',
+                };
+
+                const sunLabels: Record<string, string> = {
+                  intense: 'Intense ☀️',
+                  moderate: 'Modérée 🌤️',
+                  low: 'Faible ☁️',
+                };
+
+                const rawSkin = (foundDiag?.skinType || (foundDiag as any)?.skin_type || '').toLowerCase();
+                const rawConcern = (foundDiag?.concern || (foundDiag as any)?.primaryConcern || '').toLowerCase();
+                const rawSun = (foundDiag?.sunExposure || (foundDiag as any)?.sun_exposure || '').toLowerCase();
+
+                const stMeta = skinTypeLabels[rawSkin] || { label: foundDiag?.skinType || 'Non spécifié', bg: 'bg-slate-100 border-slate-200 dark:bg-slate-800 dark:border-slate-700', text: 'text-slate-700 dark:text-slate-300', icon: '🧴' };
+                const concernMeta = concernLabels[rawConcern] || foundDiag?.concern || 'Non spécifiée';
+                const sunMeta = sunLabels[rawSun] || foundDiag?.sunExposure || 'Modérée';
+
+                const matchingRules = (settings?.diagnosticRules || []).filter((r: any) => {
+                  const mSkin = r.skinType === 'any' || r.skinType === rawSkin;
+                  const mConcern = r.concern === 'any' || r.concern === rawConcern;
+                  const mSun = r.sunExposure === 'any' || r.sunExposure === rawSun;
+                  return mSkin && mConcern && mSun;
+                });
+
+                const recommendedPids = Array.from(new Set(matchingRules.flatMap((r: any) => r.productIds || [])));
+                const allCatalog = [...(products || []), ...PRODUCTS_DB];
+                const routineProducts = recommendedPids.map(pid => allCatalog.find(p => p.id === pid)).filter(Boolean);
+
+                const diagDate = foundDiag?.date ? new Date(foundDiag.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : null;
+
+                return (
+                  <div className={`rounded-3xl border p-6 md:p-7 space-y-6 ${
+                    adminTheme === 'light'
+                      ? 'bg-gradient-to-br from-white via-slate-50/50 to-emerald-50/20 border-slate-200/80 shadow-[0_8px_32px_-8px_rgba(15,30,54,0.06)]'
+                      : 'bg-gradient-to-br from-slate-900/80 via-slate-900/40 to-emerald-950/20 border-white/[0.06] shadow-xl'
+                  }`}>
+                    {/* Header */}
+                    <div className="flex items-center justify-between flex-wrap gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500">
+                          <Sliders className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className={`text-base font-black tracking-tight ${adminTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                            Profil Dermo-Cosmétique
+                          </h3>
+                          <span className={`text-[10px] font-mono block ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>
+                            {foundDiag ? `Diagnostic réalisé ${diagDate ? `le ${diagDate}` : 'en ligne'}` : 'Évaluation personnalisée de la peau'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {foundDiag ? (
+                        <span className="text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/30 dark:border-emerald-900/40 dark:text-emerald-400">
+                          ✓ Diagnostic Complété
+                        </span>
+                      ) : (
+                        <a
+                          href={`https://wa.me/${cPhone}?text=${encodeURIComponent(`Bonjour ${selectedCustomer.name}, effectuez gratuitement votre diagnostic peau personnalisé ici : https://paraofficinal.ma/skin-diagnostic`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_12px_rgba(16,185,129,0.25)] transition active:scale-95 cursor-pointer"
+                        >
+                          💬 Envoyer test diagnostic via WhatsApp
+                        </a>
+                      )}
+                    </div>
+
+                    {foundDiag ? (
+                      <div className="space-y-6">
+                        {/* Diagnostic Snapshot Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                          {/* Skin Type */}
+                          <div className={`p-4 rounded-2xl border ${stMeta.bg}`}>
+                            <span className="text-[9px] font-extrabold uppercase tracking-widest block text-slate-400 mb-1">Type de Peau</span>
+                            <span className={`text-sm font-black flex items-center gap-1.5 ${stMeta.text}`}>
+                              <span>{stMeta.icon}</span> {stMeta.label}
+                            </span>
+                          </div>
+
+                          {/* Concern */}
+                          <div className={`p-4 rounded-2xl border ${adminTheme === 'light' ? 'bg-white border-slate-200/80' : 'bg-slate-950/50 border-slate-800'}`}>
+                            <span className="text-[9px] font-extrabold uppercase tracking-widest block text-slate-400 mb-1">Préoccupation Majeure</span>
+                            <span className={`text-sm font-black block truncate ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-100'}`}>
+                              🎯 {concernMeta}
+                            </span>
+                          </div>
+
+                          {/* UV Exposure */}
+                          <div className={`p-4 rounded-2xl border ${adminTheme === 'light' ? 'bg-white border-slate-200/80' : 'bg-slate-950/50 border-slate-800'}`}>
+                            <span className="text-[9px] font-extrabold uppercase tracking-widest block text-slate-400 mb-1">Exposition UV</span>
+                            <span className={`text-sm font-black block ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-100'}`}>
+                              {sunMeta}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Routine Sur Mesure Recommandée */}
+                        {routineProducts.length > 0 && (
+                          <div className="space-y-3 pt-2">
+                            <div className="flex items-center justify-between">
+                              <h4 className={`text-xs font-black uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>
+                                ✨ Rituel Sur Mesure Recommandé ({routineProducts.length} soins)
+                              </h4>
+                              {cPhone && (
+                                <a
+                                  href={`https://wa.me/${cPhone}?text=${encodeURIComponent(`Bonjour ${selectedCustomer.name}, voici votre rituel de soin sur mesure Para Officinal recommandé par nos experts : ${routineProducts.map((p: any) => p.title || p.name).join(', ')}.`)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-[10px] font-bold text-emerald-600 hover:text-emerald-500 dark:text-emerald-400 underline cursor-pointer"
+                                >
+                                  Envoyer le rituel sur WhatsApp →
+                                </a>
+                              )}
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                              {routineProducts.slice(0, 6).map((prod: any, idx: number) => (
+                                <div key={idx} className={`p-3 rounded-2xl border flex items-center gap-3 transition hover:scale-[1.01] ${
+                                  adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-xs' : 'bg-slate-950/60 border-slate-800'
+                                }`}>
+                                  <img src={prod.image} alt={prod.title || prod.name} className="w-11 h-11 rounded-xl object-cover border border-slate-200/60 shrink-0" />
+                                  <div className="min-w-0 flex-1">
+                                    <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block font-mono">
+                                      Soin #{idx + 1}
+                                    </span>
+                                    <h5 className={`text-xs font-black truncate ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-100'}`}>
+                                      {prod.title || prod.name}
+                                    </h5>
+                                    <span className="text-[10px] font-mono text-slate-400 block font-bold">
+                                      {(prod.price || 0).toFixed(0)} DH
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className={`p-6 rounded-2xl border text-center space-y-3 ${
+                        adminTheme === 'light' ? 'bg-slate-50/80 border-slate-200' : 'bg-slate-950/40 border-slate-800'
+                      }`}>
+                        <p className={`text-xs font-semibold ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                          Aucun bilan dermo-cosmétique n&apos;est enregistré pour ce client. Offrez-lui une consultation sur mesure !
+                        </p>
+                        {cPhone && (
+                          <a
+                            href={`https://wa.me/${cPhone}?text=${encodeURIComponent(`Bonjour ${selectedCustomer.name}, effectuez gratuitement votre diagnostic peau personnalisé sur Para Officinal pour recevoir votre routine sur mesure : https://paraofficinal.ma/skin-diagnostic`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_12px_rgba(16,185,129,0.25)] transition active:scale-95 cursor-pointer"
+                          >
+                            💬 Envoyer le lien de diagnostic gratuit via WhatsApp
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* 4 KPI Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { label: 'Commandes', value: selectedCustomer.orders.length.toString(), sub: `Dernière: ${lastOrderDate}` },
+                  { label: 'CA Cumulé', value: `${spend.toFixed(0)} DH`, sub: `Moy. ${avgOrderValue} DH / cmd` },
+                  { label: 'Points Fidélité', value: `${selectedCustomer.points} pts`, sub: `${ptsPct}% vers 5 000 pts` },
+                  { label: 'Palier actuel', value: `${tm.emoji} ${tier}`, sub: spend >= 1500 ? 'Niveau max ✓' : `${(1500 - spend).toFixed(0)} DH → Platinum` },
+                ].map((s, i) => (
+                  <div key={i} className={`rounded-2xl border p-5 transition-all duration-300 hover:scale-[1.015] ${
+                    adminTheme === 'light'
+                      ? 'bg-white border-slate-200/80 shadow-sm hover:shadow-md'
+                      : 'bg-slate-900/50 border-white/[0.06] hover:border-white/[0.12]'
+                  }`}>
+                    <span className={`text-[9px] font-bold uppercase tracking-widest block mb-2 ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-600'}`}>{s.label}</span>
+                    <span className={`text-xl font-black font-mono block leading-tight ${adminTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>{s.value}</span>
+                    <span className={`text-[10px] font-mono block mt-1.5 ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-600'}`}>{s.sub}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Two-column body */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                {/* ── CARD: TIMELINE D'ACTIVITÉ CHRONOLOGIQUE ── */}
+                <div className={`p-6 rounded-3xl border mb-6 ${
+                  adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/60 border-white/[0.06]'
+                }`}>
+                  <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 rounded-2xl bg-indigo-500/10 text-indigo-500 border border-indigo-500/20">
+                        <Activity className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className={`text-base font-black uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                          📜 Timeline d&apos;Activité Chronologique
+                        </h3>
+                        <p className={`text-xs font-mono ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                          Historique complet des actions client (commandes, diagnostics, échantillons, points et notes)
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Timeline Feed */}
+                  {(() => {
+                    const cPhone = (selectedCustomer.phone || '').replace(/[^0-9]/g, '');
+                    const events: {
+                      id: string;
+                      type: string;
+                      title: string;
+                      desc: string;
+                      dateStr: string;
+                      icon: string;
+                      badgeBg: string;
+                    }[] = [];
+
+                    // Orders
+                    (selectedCustomer.orders || []).forEach((o: any) => {
+                      const oDate = new Date(o.created_at || o.date || Date.now());
+                      events.push({
+                        id: 'ord_' + (o.id || Math.random()),
+                        type: 'ORDER',
+                        title: `Commande #${o.id || o.order_number || '1001'}`,
+                        desc: `${(o.total || o.total_price || 0).toFixed(0)} DH · ${o.items?.length || 1} article(s) · Statut: ${o.status || 'Livrée'}`,
+                        dateStr: oDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }),
+                        icon: '🛍️',
+                        badgeBg: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                      });
+                    });
+
+                    // Diagnostics
+                    const diag = (diagnosticsList || []).find((d: any) => {
+                      const dP = (d.phone || d.phone_number || '').replace(/[^0-9]/g, '');
+                      return dP && dP === cPhone;
+                    });
+                    if (diag) {
+                      events.push({
+                        id: 'diag_' + ((diag as any).id || '1'),
+                        type: 'DIAGNOSTIC',
+                        title: 'Bilan Dermo-Cosmétique Effectué',
+                        desc: `Type de peau: ${diag.skinType || 'Normal'} · Préoccupation: ${diag.concern || 'Hydratation'}`,
+                        dateStr: new Date((diag as any).created_at || Date.now()).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }),
+                        icon: '🧴',
+                        badgeBg: 'bg-violet-500/10 text-violet-500 border-violet-500/20'
+                      });
+                    }
+
+                    // Samples
+                    const samples = (customerSamples[selectedCustomer.phone] || []) as any[];
+                    samples.forEach(s => {
+                      events.push({
+                        id: s.id,
+                        type: 'SAMPLE',
+                        title: `Échantillon Offert: ${s.sampleName}`,
+                        desc: `Catégorie: ${s.category}`,
+                        dateStr: s.dateSent,
+                        icon: '🎁',
+                        badgeBg: 'bg-pink-500/10 text-pink-500 border-pink-500/20'
+                      });
+                    });
+
+                    // Notes
+                    const notes = (customerNotes[selectedCustomer.phone] || []) as any[];
+                    notes.forEach(n => {
+                      events.push({
+                        id: n.id,
+                        type: 'NOTE',
+                        title: 'Note Privée Admin',
+                        desc: `"${n.text}" · Par ${n.author}`,
+                        dateStr: n.date,
+                        icon: '📝',
+                        badgeBg: 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                      });
+                    });
+
+                    // Points Logs
+                    const pLogs = (pointsLogs[selectedCustomer.phone] || []) as any[];
+                    pLogs.forEach(p => {
+                      events.push({
+                        id: p.id,
+                        type: 'POINTS',
+                        title: `Ajustement Points: ${p.points > 0 ? '+' : ''}${p.points} pts`,
+                        desc: `Motif: "${p.reason}" · Par ${p.author}`,
+                        dateStr: p.date,
+                        icon: p.points > 0 ? '🏆' : '⚠️',
+                        badgeBg: p.points > 0 ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'
+                      });
+                    });
+
+                    return (
+                      <div className="relative pl-6 space-y-4 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200 dark:before:bg-slate-800">
+                        {events.map((ev) => (
+                          <div key={ev.id} className="relative flex items-start gap-3.5 group">
+                            {/* Dot icon */}
+                            <div className="absolute -left-6 top-0.5 w-5 h-5 rounded-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-[10px] shadow-xs shrink-0">
+                              {ev.icon}
+                            </div>
+                            
+                            <div className={`flex-1 p-3.5 rounded-2xl border transition ${
+                              adminTheme === 'light' ? 'bg-slate-50/60 border-slate-200/80 hover:bg-white' : 'bg-slate-950/40 border-slate-800 hover:bg-slate-900/60'
+                            }`}>
+                              <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
+                                <span className={`text-xs font-black ${adminTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                                  {ev.title}
+                                </span>
+                                <span className="text-[9.5px] font-mono text-slate-400">
+                                  {ev.dateStr}
+                                </span>
+                              </div>
+                              <p className={`text-[11px] font-mono ${adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'}`}>
+                                {ev.desc}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+
+                        {events.length === 0 && (
+                          <p className="text-xs font-mono text-slate-400 italic">Aucune activité enregistrée pour l&apos;instant.</p>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* Order History */}
+                <div className="lg:col-span-2 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className={`text-sm font-black uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>Historique des Commandes</h2>
+                    <span className={`text-[10px] font-mono px-2.5 py-1 rounded-full border ${
+                      adminTheme === 'light' ? 'bg-slate-100 text-slate-500 border-slate-200' : 'bg-slate-800 text-slate-400 border-slate-700'
+                    }`}>{selectedCustomer.orders.length} commandes</span>
+                  </div>
+                  {selectedCustomer.orders.length === 0 ? (
+                    <div className={`rounded-2xl border p-12 text-center ${adminTheme === 'light' ? 'bg-white border-slate-200' : 'bg-slate-900/40 border-white/[0.06]'}`}>
+                      <p className={`text-sm italic ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-600'}`}>Aucune commande enregistrée.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {selectedCustomer.orders.map((ord, idx) => {
+                        const smDot = ord.status === 'delivered' ? 'bg-emerald-500 shadow-emerald-500/50' : ord.status === 'shipped' ? 'bg-blue-500 shadow-blue-500/50' : ord.status === 'cancelled' ? 'bg-rose-500 shadow-rose-500/50' : 'bg-amber-500 shadow-amber-500/50';
+                        const smBadge = ord.status === 'delivered'
+                          ? (adminTheme === 'light' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-emerald-950/30 border-emerald-900/30 text-emerald-400')
+                          : ord.status === 'shipped'
+                          ? (adminTheme === 'light' ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-blue-950/30 border-blue-900/30 text-blue-400')
+                          : ord.status === 'cancelled'
+                          ? (adminTheme === 'light' ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-rose-950/30 border-rose-900/30 text-rose-400')
+                          : (adminTheme === 'light' ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-amber-950/30 border-amber-900/30 text-amber-400');
+                        const ordDate = new Date(ord.created_at || ord.date || Date.now()).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+                        return (
+                          <div key={idx}
+                            onClick={() => setSelectedOrderDetail(ord)}
+                            className={`group rounded-2xl border p-5 flex items-center gap-5 transition-all duration-200 cursor-pointer hover:scale-[1.008] active:scale-[0.99] ${
+                            adminTheme === 'light'
+                              ? 'bg-white border-slate-200/80 shadow-sm hover:shadow-md hover:border-emerald-300'
+                              : 'bg-slate-900/40 border-white/[0.06] hover:border-emerald-500/40'
+                          }`}>
+                            <div className={`w-3 h-3 rounded-full shrink-0 ${smDot} shadow-lg`} />
+                            <div className="flex-1 min-w-0">
+                              <span className={`font-black font-mono text-sm block ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-100'}`}>{ord.order_id}</span>
+                              <span className={`text-[10px] font-mono block mt-0.5 ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-600'}`}>{ordDate}</span>
+                            </div>
+                            <span className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border ${smBadge}`}>{ord.status}</span>
+                            <div className="text-right shrink-0 flex items-center gap-3">
+                              <div>
+                                <span className={`text-xl font-black font-mono block ${adminTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>{(ord.total || 0).toFixed(0)}</span>
+                                <span className={`text-[10px] font-bold ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-600'}`}>DH</span>
+                              </div>
+                              <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-xl border transition ${
+                                adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-600 group-hover:bg-emerald-50 group-hover:border-emerald-200 group-hover:text-emerald-700' : 'bg-slate-800 border-slate-700 text-slate-400 group-hover:bg-emerald-950/40 group-hover:border-emerald-800 group-hover:text-emerald-400'
+                              }`}>Détails →</span>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
 
-                {/* Adjust Points Balance Form */}
-                <form 
-                  onSubmit={handleAdjustPointsSubmit} 
-                  className={`p-4 rounded-2xl border space-y-3 ${
-                    adminTheme === 'light' ? 'bg-slate-50 border-slate-200/80' : 'bg-slate-950 border-slate-900'
-                  }`}
-                >
-                  <h4 className={`text-[10px] font-bold uppercase tracking-widest block border-b pb-1 ${
-                    adminTheme === 'light' ? 'text-slate-700 border-slate-200/60' : 'text-slate-400 border-slate-900/60'
-                  }`}>Ajuster le solde de points</h4>
-                  
-                  <div className="space-y-1.5 text-xs">
-                    <label className={`text-[9px] font-bold uppercase tracking-wider ${
-                      adminTheme === 'light' ? 'text-slate-600' : 'text-slate-500'
-                    }`}>Ajouter / Soustraire des points (ex: +100 ou -50)</label>
-                    <input 
-                      type="number" 
-                      placeholder="Ex: +150"
-                      value={loyaltyPointsAdjustment || ''} 
-                      onChange={(e) => setLoyaltyPointsAdjustment(Number(e.target.value))}
-                      className={`w-full font-mono text-center font-bold border rounded-xl px-3 py-2 transition outline-none ${
-                        adminTheme === 'light'
-                          ? 'bg-white border-slate-200 text-slate-800 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 shadow-sm'
-                          : 'bg-slate-900 border-slate-800 focus:border-emerald-500/50 text-slate-200'
-                      }`} 
-                      required 
-                    />
+                {/* Right column */}
+                <div className="space-y-5">
+
+                  {/* Beauty Wallet */}
+                  <div className={`rounded-2xl border overflow-hidden ${adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/50 border-white/[0.06]'}`}>
+                    <div className={`h-1.5 w-full bg-gradient-to-r ${tm.ring}`} />
+                    <div className="p-6 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className={`text-[10px] font-black uppercase tracking-widest ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>💎 Beauty Wallet</h3>
+                        <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${adminTheme === 'light' ? 'bg-emerald-50 border border-emerald-200 text-emerald-700' : 'bg-emerald-950/30 border border-emerald-900/30 text-emerald-400'}`}>Live</span>
+                      </div>
+                      <div>
+                        <span className={`text-4xl font-black font-mono leading-none block ${adminTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>{selectedCustomer.points}</span>
+                        <span className={`text-xs font-mono mt-1 block ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-600'}`}>points de fidélité</span>
+                      </div>
+                      <div>
+                        <div className="flex justify-between mb-1.5">
+                          <span className={`text-[9px] font-bold uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-600'}`}>Vers Platinum</span>
+                          <span className={`text-[9px] font-mono font-bold ${adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'}`}>{spendPct}%</span>
+                        </div>
+                        <div className={`h-2 rounded-full overflow-hidden ${adminTheme === 'light' ? 'bg-slate-100' : 'bg-slate-800'}`}>
+                          <div className={`h-full rounded-full bg-gradient-to-r ${tm.ring}`} style={{ width: `${spendPct}%` }} />
+                        </div>
+                        <span className={`text-[9px] font-mono mt-1 block ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-600'}`}>
+                          {spend >= 1500 ? 'Platinum atteint ✓' : `${(1500 - spend).toFixed(0)} DH restants`}
+                        </span>
+                      </div>
+                      {selectedCustomer.pointsOverrideReason && (
+                        <p className={`text-[10px] italic ${adminTheme === 'light' ? 'text-indigo-500' : 'text-indigo-400'}`}>&ldquo;{selectedCustomer.pointsOverrideReason}&rdquo;</p>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="space-y-1.5 text-xs">
-                    <label className={`text-[9px] font-bold uppercase tracking-wider ${
-                      adminTheme === 'light' ? 'text-slate-600' : 'text-slate-500'
-                    }`}>Raison de la modification</label>
-                    <input 
-                      type="text" 
-                      placeholder="Ex: Correction de points manquants"
-                      value={loyaltyAdjustmentReason} 
-                      onChange={(e) => setLoyaltyAdjustmentReason(e.target.value)}
-                      className={`w-full border rounded-xl px-3 py-2 transition outline-none ${
-                        adminTheme === 'light'
-                          ? 'bg-white border-slate-200 text-slate-800 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 shadow-sm'
-                          : 'bg-slate-900 border-slate-800 focus:border-emerald-500/50 text-slate-200'
-                      }`} 
-                      required 
-                    />
+                  {/* Points Adjustment */}
+                  <div className={`rounded-2xl border p-5 space-y-4 ${adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/50 border-white/[0.06]'}`}>
+                    <h3 className={`text-[10px] font-black uppercase tracking-widest ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>Ajustement de points</h3>
+                    <form onSubmit={(e) => {
+                      e.preventDefault();
+                      handleAddPointsAdjustment(selectedCustomer.phone, loyaltyPointsAdjustment, loyaltyAdjustmentReason);
+                    }} className="space-y-3">
+                      <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                        <span className="text-[9px] font-mono text-slate-400 uppercase font-bold mr-1">+ Presets:</span>
+                        {[
+                          { label: '+100 pts Anniversaire', val: 100, reason: 'Bonus Anniversaire' },
+                          { label: '+150 pts Fidélité', val: 150, reason: 'Bonus Fidélité VIP' },
+                          { label: '+200 pts Parrainage', val: 200, reason: 'Bonus Parrainage' },
+                          { label: '-50 pts Correctif', val: -50, reason: 'Correction Solde' }
+                        ].map(p => (
+                          <button
+                            key={p.label}
+                            type="button"
+                            onClick={() => {
+                              setLoyaltyPointsAdjustment(p.val);
+                              setLoyaltyAdjustmentReason(p.reason);
+                            }}
+                            className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold border transition cursor-pointer active:scale-95 ${
+                              adminTheme === 'light' ? 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100' : 'bg-amber-950/40 border-amber-900/40 text-amber-400 hover:bg-amber-900/50'
+                            }`}
+                          >
+                            {p.label}
+                          </button>
+                        ))}
+                      </div>
+                      <div>
+                        <label className={`text-[9px] font-bold uppercase tracking-wider block mb-1.5 ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-600'}`}>Montant (+ ajouter / − retirer)</label>
+                        <input
+                          type="number"
+                          placeholder="Ex: +150 ou -50"
+                          value={loyaltyPointsAdjustment || ''}
+                          onChange={e => setLoyaltyPointsAdjustment(Number(e.target.value))}
+                          className={`w-full text-sm font-mono text-center font-bold border rounded-xl px-4 py-3 outline-none transition ${
+                            adminTheme === 'light'
+                              ? 'bg-slate-50 border-slate-200 text-slate-800 focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/10'
+                              : 'bg-slate-950/80 border-slate-700 text-slate-100 focus:border-emerald-500/50'
+                          }`}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className={`text-[9px] font-bold uppercase tracking-wider block mb-1.5 ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-600'}`}>Motif</label>
+                        <input
+                          type="text"
+                          placeholder="Ex: Correction, promotion spéciale..."
+                          value={loyaltyAdjustmentReason}
+                          onChange={e => setLoyaltyAdjustmentReason(e.target.value)}
+                          className={`w-full text-xs border rounded-xl px-4 py-3 outline-none transition ${
+                            adminTheme === 'light'
+                              ? 'bg-slate-50 border-slate-200 text-slate-800 focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/10'
+                              : 'bg-slate-950/80 border-slate-700 text-slate-100 focus:border-emerald-500/50'
+                          }`}
+                          required
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={isAdjustingPoints}
+                        className="w-full py-3 rounded-xl text-xs font-black uppercase tracking-wider bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition cursor-pointer active:scale-[0.98] disabled:opacity-60"
+                      >
+                        {isAdjustingPoints ? '⏳ Traitement...' : "✓ Valider l'Ajustement"}
+                      </button>
+                    </form>
                   </div>
 
-                  <button 
-                    type="submit" 
-                    disabled={isAdjustingPoints}
-                    className="w-full py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black rounded-xl text-xs uppercase tracking-wider shadow-md shadow-emerald-500/10 hover:shadow-lg hover:shadow-emerald-500/20 transition-all duration-200 cursor-pointer"
-                  >
-                    {isAdjustingPoints ? 'Ajustement...' : 'Valider l\'Ajustement'}
-                  </button>
-                </form>
-              </div>
-
-              {/* Right Column: Customer Orders history */}
-              <div className="space-y-3">
-                <h4 className={`text-[10px] font-bold uppercase tracking-widest block border-b pb-1 ${
-                  adminTheme === 'light' ? 'text-slate-700 border-slate-200/60' : 'text-slate-400 border-slate-900/60'
-                }`}>Historique des Commandes</h4>
-                
-                <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
-                  {(selectedCustomer.orders || []).map((ord, idx) => (
-                    <div 
-                      key={idx} 
-                      className={`p-3 border rounded-xl text-xs flex justify-between items-center gap-4 hover:scale-[1.005] transition duration-200 ${
-                        adminTheme === 'light'
-                          ? 'bg-slate-50/50 border-slate-200/60 text-slate-800 hover:bg-slate-100/50 hover:border-slate-300'
-                          : 'bg-slate-950 border-slate-900 text-slate-200 hover:border-slate-800'
+                  {/* Quick Actions */}
+                  <div className={`rounded-2xl border p-5 space-y-3 ${adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/50 border-white/[0.06]'}`}>
+                    <h3 className={`text-[10px] font-black uppercase tracking-widest ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>Actions rapides</h3>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const cleanName = (selectedCustomer.name || 'CLIENT').replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 10);
+                        setPromoCustomCode(`SPECIAL-${cleanName}-${promoDiscountPct}`);
+                        setIsPromoModalOpen(true);
+                      }}
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-[0_4px_16px_rgba(245,158,11,0.3)] transition cursor-pointer active:scale-[0.97]"
+                    >
+                      <Ticket className="w-4 h-4" />
+                      ⚡ Offrir Code Promo Exclusif
+                    </button>
+                    {waPhone && (
+                      <a
+                        href={`https://wa.me/${waPhone}?text=${waMsg}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_12px_rgba(16,185,129,0.25)] transition cursor-pointer active:scale-[0.97]"
+                      >
+                        {waSvg}
+                        Envoyer un message WhatsApp
+                      </a>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => navigator.clipboard.writeText(selectedCustomer.phone || '')}
+                      className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold border transition cursor-pointer ${
+                        adminTheme === 'light' ? 'border-slate-200 text-slate-600 hover:bg-slate-50' : 'border-slate-800 text-slate-400 hover:bg-slate-800/50'
                       }`}
                     >
-                      <div className="space-y-0.5">
-                        <span className={`font-mono font-bold block ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-300'}`}>{ord.order_id}</span>
-                        <span className="text-[9px] text-slate-500 font-mono block">{new Date(ord.created_at || ord.date || Date.now()).toLocaleDateString()}</span>
-                      </div>
-                      <div className="text-right">
-                        <span className={`font-bold block font-mono ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-200'}`}>{ord.total?.toFixed(0) || 0} DH</span>
-                        <span className={`text-[9px] uppercase font-black tracking-wider ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>{ord.status}</span>
-                      </div>
-                    </div>
-                  ))}
+                      📋 Copier le numéro
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCustomer(null)}
+                      className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold border transition cursor-pointer ${
+                        adminTheme === 'light' ? 'border-slate-200 text-slate-500 hover:bg-slate-50' : 'border-slate-800 text-slate-500 hover:bg-slate-800/50'
+                      }`}
+                    >
+                      ← Retour à la liste
+                    </button>
+                  </div>
                 </div>
               </div>
-
-            </div>
-
-            {/* Bottom Actions */}
-            <div className={`pt-4 border-t flex justify-end ${
-              adminTheme === 'light' ? 'border-slate-100' : 'border-slate-800'
-            }`}>
-              <button 
-                onClick={() => setSelectedCustomer(null)} 
-                className={`px-4 py-2 border font-bold rounded-xl text-xs uppercase transition-all ${
-                  adminTheme === 'light'
-                    ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-sm'
-                    : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300'
-                }`}
-              >
-                Fermer
-              </button>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
+
 
       {/* -------------------- MODAL DIALOG: DIAGNOSTIC RULE CREATION / EDIT -------------------- */}
       {isRuleModalOpen && (
@@ -1951,9 +3794,264 @@ export default function CRMTab() {
         </div>
       )}
 
-      {/* ---- SUB-TAB 6: REFILL REMINDERS ---- */}
-      {crmSubTab === 'reminders' && (
-        <div className="space-y-6 admin-tab-enter">
+      {/* ---- SUB-TAB 6: REFILL REMINDERS & WHATSAPP CAMPAIGNS ---- */}
+      {crmSubTab === 'reminders' && (() => {
+        const campaignTargetClients = (crmCustomers || []).filter((c: any) => {
+          const custOrders = c.orders || [];
+          const custCity = custOrders.find((o: any) => o.city)?.city?.trim() || '';
+
+          if (campaignSegment === 'OVERDUE_RESTOCK') {
+            const latest = custOrders[0]?.created_at || custOrders[0]?.date;
+            if (!latest) return false;
+            const days = (Date.now() - new Date(latest).getTime()) / (1000 * 60 * 60 * 24);
+            return days >= 30;
+          }
+          if (campaignSegment === 'GOLD_VIP') {
+            return c.totalSpend >= 700;
+          }
+          if (campaignSegment === 'DERMO_ACNE') {
+            const diag = (diagnosticsList || []).find((d: any) => d.phone && d.phone.trim() === c.phone?.trim());
+            return diag && (diag.concern === 'Acné' || diag.concern === 'Imperfections' || diag.skinType === 'Gras');
+          }
+          if (campaignSegment === 'BY_CITY') {
+            return custCity.toLowerCase().includes(campaignCity.toLowerCase());
+          }
+          return true;
+        });
+
+        return (
+          <div className="space-y-7 admin-tab-enter">
+            {/* ── CARD: SIMULATEUR DE CAMPAGNE WHATSAPP CIBLÉE ── */}
+            <div className={`p-6 md:p-8 rounded-3xl border ${
+              adminTheme === 'light'
+                ? 'bg-gradient-to-br from-white via-slate-50 to-emerald-50/30 border-slate-200/80 shadow-[0_8px_32px_-8px_rgba(15,30,54,0.06)]'
+                : 'bg-gradient-to-br from-slate-900 via-slate-900/60 to-emerald-950/30 border-white/[0.06] shadow-xl'
+            }`}>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500">
+                      📢 WhatsApp Campaign Broadcast
+                    </span>
+                    <span className="text-[9px] font-mono text-slate-400">
+                      Targeting Engine
+                    </span>
+                  </div>
+                  <h2 className={`text-2xl md:text-3xl font-black tracking-tight ${adminTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                    Simulateur de Campagne WhatsApp Ciblée
+                  </h2>
+                  <p className={`text-xs font-mono max-w-2xl ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                    Sélectionnez un segment client, personnalisez les jetons dynamiques et lancez votre campagne WhatsApp en 1 clic.
+                  </p>
+                </div>
+
+                <div className="px-4 py-2 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 shrink-0">
+                  <span className="text-xl font-black font-mono block leading-none">
+                    🎯 {campaignTargetClients.length} Clients
+                  </span>
+                  <span className="text-[9px] font-mono text-slate-400 block mt-1">Audience ciblée</span>
+                </div>
+              </div>
+
+              {/* Segment & Controls Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                {/* Control 1: Segment Selector */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                    1. Segment Client Cible
+                  </label>
+                  <select
+                    value={campaignSegment}
+                    onChange={(e) => setCampaignSegment(e.target.value as any)}
+                    className={`w-full text-xs font-mono font-bold px-3.5 py-2.5 rounded-xl border outline-none cursor-pointer transition ${
+                      adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-800 text-slate-200'
+                    }`}
+                  >
+                    <option value="OVERDUE_RESTOCK">🚨 Clients en Retard de Réassort (+30j)</option>
+                    <option value="GOLD_VIP">🥇 Membres VIP (Gold & Platinum)</option>
+                    <option value="DERMO_ACNE">🧴 Peaux à Tendance Acnéique</option>
+                    <option value="BY_CITY">📍 Filtrer par Ville de Livraison</option>
+                    <option value="ALL_CLIENTS">👥 Tous les Clients de la Base</option>
+                  </select>
+                </div>
+
+                {/* Control 2: City filter (if BY_CITY selected) or Discount Pct */}
+                {campaignSegment === 'BY_CITY' ? (
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                      Nom de la Ville
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="ex: Casablanca, Rabat..."
+                      value={campaignCity}
+                      onChange={e => setCampaignCity(e.target.value)}
+                      className={`w-full text-xs font-mono rounded-xl px-3.5 py-2.5 border outline-none transition ${
+                        adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-800 text-slate-100'
+                      }`}
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                      2. Remise Promo Offerte ({campaignDiscountPct}%)
+                    </label>
+                    <div className="flex items-center gap-2">
+                      {[10, 15, 20, 25].map(pct => (
+                        <button
+                          key={pct}
+                          type="button"
+                          onClick={() => setCampaignDiscountPct(pct)}
+                          className={`px-3 py-2 rounded-xl text-xs font-mono font-black border transition cursor-pointer ${
+                            campaignDiscountPct === pct
+                              ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-sm'
+                              : adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-700' : 'bg-slate-950 border-slate-800 text-slate-300'
+                          }`}
+                        >
+                          -{pct}%
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Control 3: Quick Preset Templates */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                    3. Modèle de Message Préréglé
+                  </label>
+                  <div className="flex gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setCampaignTemplateText('Bonjour {firstname}, il est temps de renouveler votre soin préféré ({favorite_product}) ! Profitez de -{discount_pct}% avec votre code promo personnel : {custom_code}. ✨')}
+                      className="px-2.5 py-2 rounded-xl text-[10px] font-mono font-bold border bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20 transition cursor-pointer"
+                    >
+                      Réassort
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCampaignTemplateText('Bonjour {firstname}, en tant que membre VIP à {city}, nous vous offrons {discount_pct}% sur tout le catalogue K-Beauty ! Code promo : {custom_code}. 💎')}
+                      className="px-2.5 py-2 rounded-xl text-[10px] font-mono font-bold border bg-amber-500/10 text-amber-600 border-amber-500/20 hover:bg-amber-500/20 transition cursor-pointer"
+                    >
+                      Offre VIP
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCampaignTemplateText('Bonjour {firstname}, besoin d\'un conseil dermo-cosmétique ? Bénéficiez de -{discount_pct}% avec le code {custom_code} sur Para Officinal ! 🌸')}
+                      className="px-2.5 py-2 rounded-xl text-[10px] font-mono font-bold border bg-violet-500/10 text-violet-600 border-violet-500/20 hover:bg-violet-500/20 transition cursor-pointer"
+                    >
+                      Conseil
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Message Template Textarea */}
+              <div className="space-y-2 mb-6">
+                <div className="flex justify-between items-center">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                    Éditeur de Message (Jetons: <span className="text-emerald-500">{'{firstname}'}</span>, <span className="text-emerald-500">{'{city}'}</span>, <span className="text-emerald-500">{'{favorite_product}'}</span>, <span className="text-emerald-500">{'{custom_code}'}</span>, <span className="text-emerald-500">{'{discount_pct}'}</span>)
+                  </label>
+                </div>
+                <textarea
+                  rows={2}
+                  value={campaignTemplateText}
+                  onChange={e => setCampaignTemplateText(e.target.value)}
+                  className={`w-full text-xs font-mono p-3 rounded-2xl border outline-none transition ${
+                    adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-800 focus:border-emerald-500' : 'bg-slate-950 border-slate-800 text-slate-100 focus:border-emerald-500'
+                  }`}
+                />
+              </div>
+
+              {/* Batch Dispatch Audience List Table */}
+              <div className={`rounded-2xl border overflow-hidden ${
+                adminTheme === 'light' ? 'bg-white border-slate-200/80' : 'bg-slate-950/60 border-slate-800'
+              }`}>
+                <div className="p-4 border-b flex justify-between items-center">
+                  <h4 className={`text-xs font-black uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-800' : 'text-white'}`}>
+                    Liste d&apos;Envoi WhatsApp Personnalisée ({campaignTargetClients.length} destinataires)
+                  </h4>
+                </div>
+
+                <div className="overflow-x-auto max-h-[320px] overflow-y-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className={`text-[9.5px] font-black uppercase tracking-wider border-b ${
+                        adminTheme === 'light' ? 'bg-slate-100/70 text-slate-500 border-slate-200' : 'bg-slate-900/80 text-slate-400 border-slate-800'
+                      }`}>
+                        <th className="py-2.5 px-4">Client</th>
+                        <th className="py-2.5 px-4">Ville</th>
+                        <th className="py-2.5 px-4">Produit Préféré</th>
+                        <th className="py-2.5 px-4">Code Généré</th>
+                        <th className="py-2.5 px-4 text-center">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
+                      {campaignTargetClients.map((c: any) => {
+                        const custCity = c.orders?.find((o: any) => o.city)?.city || 'Maroc';
+                        const firstOrderProd = c.orders?.[0]?.items?.[0]?.title || c.orders?.[0]?.items?.[0]?.name || 'Soin K-Beauty';
+                        const cleanName = (c.name || 'CLIENT').replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 8);
+                        const code = `SPECIAL-${cleanName}-${campaignDiscountPct}`;
+                        const firstName = (c.name || '').split(' ')[0] || 'Client';
+
+                        const waMessage = campaignTemplateText
+                          .replace(/\{firstname\}/g, firstName)
+                          .replace(/\{fullname\}/g, c.name)
+                          .replace(/\{city\}/g, custCity)
+                          .replace(/\{favorite_product\}/g, firstOrderProd)
+                          .replace(/\{custom_code\}/g, code)
+                          .replace(/\{discount_pct\}/g, campaignDiscountPct.toString());
+
+                        const waPhone = (c.phone || '').replace(/[^0-9]/g, '');
+
+                        return (
+                          <tr key={c.phone} className={`transition ${adminTheme === 'light' ? 'hover:bg-slate-50' : 'hover:bg-slate-900/40'}`}>
+                            <td className="py-3 px-4">
+                              <span className="font-bold block">{c.name}</span>
+                              <span className="text-[10px] font-mono text-slate-400">{c.phone}</span>
+                            </td>
+                            <td className="py-3 px-4 font-mono font-bold text-xs">
+                              📍 {custCity}
+                            </td>
+                            <td className="py-3 px-4 truncate max-w-[180px] font-mono text-xs">
+                              {firstOrderProd}
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="text-[10px] font-mono font-black px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                                {code}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              {waPhone ? (
+                                <a
+                                  href={`https://wa.me/${waPhone}?text=${encodeURIComponent(waMessage)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-sm transition active:scale-95 whitespace-nowrap"
+                                >
+                                  Envoyer WhatsApp →
+                                </a>
+                              ) : (
+                                <span className="text-[10px] font-mono text-slate-400 italic">Pas de tel</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {campaignTargetClients.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="py-8 text-center text-xs font-mono text-slate-400 italic">
+                            Aucun client ne correspond actuellement à ce segment.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            {/* ---- EXISTING REFILL REMINDERS SECTION ---- */}
           {/* Header Description */}
           <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-3xl border transition-all duration-200 ${
             adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/30 border-slate-900 shadow-md'
@@ -2045,11 +4143,504 @@ export default function CRMTab() {
             )}
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {crmSubTab === 'automations' && (
         <AutomationsTab />
       )}
+
+
+      {/* ── Order Detail Modal Overlay (Shopify-Style) ─────────────────── */}
+      {selectedOrderDetail && (() => {
+        const ord = selectedOrderDetail;
+        const isDark = adminTheme === 'dark';
+        const st = (ord.status || 'pending').toLowerCase();
+
+        const statusMeta: Record<string, { label: string; bg: string; text: string; dot: string; border: string }> = {
+          pending:   { label: 'En attente',  bg: adminTheme === 'light' ? 'bg-amber-50'   : 'bg-amber-950/30',   text: adminTheme === 'light' ? 'text-amber-700'   : 'text-amber-400',   dot: 'bg-amber-500',   border: adminTheme === 'light' ? 'border-amber-200'   : 'border-amber-900/30' },
+          confirmed: { label: 'Confirmée',   bg: adminTheme === 'light' ? 'bg-blue-50'    : 'bg-blue-950/30',    text: adminTheme === 'light' ? 'text-blue-700'    : 'text-blue-400',    dot: 'bg-blue-500',    border: adminTheme === 'light' ? 'border-blue-200'    : 'border-blue-900/30' },
+          shipped:   { label: 'Expédiée',    bg: adminTheme === 'light' ? 'bg-indigo-50'  : 'bg-indigo-950/30',  text: adminTheme === 'light' ? 'text-indigo-700'  : 'text-indigo-400',  dot: 'bg-indigo-500',  border: adminTheme === 'light' ? 'border-indigo-200'  : 'border-indigo-900/30' },
+          delivered: { label: 'Livrée',      bg: adminTheme === 'light' ? 'bg-emerald-50' : 'bg-emerald-950/30', text: adminTheme === 'light' ? 'text-emerald-700' : 'text-emerald-400', dot: 'bg-emerald-500', border: adminTheme === 'light' ? 'border-emerald-200' : 'border-emerald-900/30' },
+          cancelled: { label: 'Annulée',     bg: adminTheme === 'light' ? 'bg-rose-50'    : 'bg-rose-950/30',    text: adminTheme === 'light' ? 'text-rose-700'    : 'text-rose-400',    dot: 'bg-rose-500',    border: adminTheme === 'light' ? 'border-rose-200'    : 'border-rose-900/30' },
+          returned:  { label: 'Retournée',   bg: adminTheme === 'light' ? 'bg-orange-50'  : 'bg-orange-950/30',  text: adminTheme === 'light' ? 'text-orange-700'  : 'text-orange-400',  dot: 'bg-orange-500',  border: adminTheme === 'light' ? 'border-orange-200'  : 'border-orange-900/30' },
+        };
+        const sm = statusMeta[st] || statusMeta.pending;
+
+        const steps = [
+          { id: 'pending',   label: 'Enregistrée', done: ['pending','confirmed','shipped','delivered'].includes(st) },
+          { id: 'confirmed', label: 'Confirmée',   done: ['confirmed','shipped','delivered'].includes(st) },
+          { id: 'shipped',   label: 'Expédiée',    done: ['shipped','delivered'].includes(st) },
+          { id: 'delivered', label: 'Livrée',      done: st === 'delivered' },
+        ];
+
+        const orderDateStr = new Date(ord.created_at || ord.date || Date.now()).toLocaleDateString('fr-FR', {
+          day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+
+        const waPhone = (ord.phone_number || selectedCustomer?.phone || '').replace(/[^0-9]/g, '');
+        const waMsg = encodeURIComponent(`Bonjour ${ord.customer_name || selectedCustomer?.name || ''}, concernant votre commande ${ord.order_id} (${(ord.total || 0).toFixed(0)} DH) : `);
+        const calculatedShipping = Math.max(0, (ord.total || 0) - (ord.subtotal || 0) + (ord.discount_amount || 0));
+
+        return (
+          <div
+            className="fixed inset-0 z-[300] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 md:p-6 overflow-y-auto animate-in fade-in-50 duration-200"
+            onClick={() => setSelectedOrderDetail(null)}
+          >
+            <div
+              className={`w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-3xl border shadow-2xl transition-all duration-300 ${
+                adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-800' : 'bg-[#0b1322] border-white/10 text-slate-100'
+              }`}
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Sticky Header */}
+              <div className={`sticky top-0 z-20 flex items-center justify-between px-6 py-4 border-b backdrop-blur-xl ${
+                adminTheme === 'light' ? 'bg-white/95 border-slate-100' : 'bg-[#0b1322]/95 border-white/10'
+              }`}>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedOrderDetail(null)}
+                    className={`p-2 rounded-xl border transition cursor-pointer hover:scale-105 active:scale-95 ${
+                      adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100' : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'
+                    }`}
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                  </button>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h2 className={`text-xl font-black font-mono tracking-tight ${adminTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                        {ord.order_id}
+                      </h2>
+                      <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${sm.bg} ${sm.text} ${sm.border}`}>
+                        ● {sm.label}
+                      </span>
+                    </div>
+                    <p className={`text-[10px] font-mono mt-0.5 ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>
+                      Passée le {orderDateStr}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {waPhone && (
+                    <a
+                      href={`https://wa.me/${waPhone}?text=${waMsg}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_12px_rgba(16,185,129,0.3)] transition active:scale-95 cursor-pointer"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                      Contacter client
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedOrderDetail(null)}
+                    className={`p-2 rounded-xl transition cursor-pointer ${
+                      adminTheme === 'light' ? 'hover:bg-slate-100 text-slate-400 hover:text-slate-700' : 'hover:bg-slate-800 text-slate-500 hover:text-slate-200'
+                    }`}
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-6">
+
+                {/* Stepper Progress Bar */}
+                <div className={`p-5 rounded-2xl border ${
+                  adminTheme === 'light' ? 'bg-slate-50/70 border-slate-200/80' : 'bg-slate-900/50 border-white/5'
+                }`}>
+                  <div className="flex items-center justify-between relative">
+                    <div className={`absolute top-3.5 left-6 right-6 h-0.5 -z-0 ${adminTheme === 'light' ? 'bg-slate-200' : 'bg-slate-800'}`} />
+                    
+                    {steps.map((stStep, idx) => (
+                      <div key={stStep.id} className="relative z-10 flex flex-col items-center text-center">
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black transition-all ${
+                          stStep.done
+                            ? 'bg-emerald-500 text-slate-950 shadow-[0_0_12px_rgba(16,185,129,0.4)]'
+                            : (adminTheme === 'light' ? 'bg-white border-2 border-slate-300 text-slate-400' : 'bg-slate-900 border-2 border-slate-700 text-slate-600')
+                        }`}>
+                          {stStep.done ? '✓' : idx + 1}
+                        </div>
+                        <span className={`text-[10px] font-bold uppercase tracking-wider mt-1.5 ${
+                          stStep.done
+                            ? (adminTheme === 'light' ? 'text-slate-800' : 'text-slate-200')
+                            : (adminTheme === 'light' ? 'text-slate-400' : 'text-slate-600')
+                        }`}>{stStep.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Main 2-Column Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                  {/* Left Column (2/3): Items & Shipping info */}
+                  <div className="lg:col-span-2 space-y-5">
+
+                    {/* Items Card */}
+                    <div className={`rounded-2xl border overflow-hidden ${
+                      adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/40 border-white/5'
+                    }`}>
+                      <div className={`px-5 py-3.5 border-b flex justify-between items-center ${
+                        adminTheme === 'light' ? 'border-slate-100 bg-slate-50/50' : 'border-white/5 bg-slate-900/60'
+                      }`}>
+                        <h3 className={`text-xs font-black uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-200'}`}>
+                          Articles Commandés ({(ord.items || []).reduce((acc, it) => acc + (it.quantity || 1), 0)})
+                        </h3>
+                        <span className={`text-[10px] font-mono ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>
+                          {(ord.items || []).length} référence{(ord.items || []).length > 1 ? 's' : ''}
+                        </span>
+                      </div>
+
+                      <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                        {(ord.items || []).length === 0 ? (
+                          <div className="p-6 text-center text-xs text-slate-400 italic">Détails des articles indisponibles.</div>
+                        ) : (
+                          (ord.items || []).map((item, i) => {
+                            const allCatalog = [...(products || []), ...PRODUCTS_DB];
+                            const matchingProd = allCatalog.find(
+                              p => p.id === item.id ||
+                              (p.title && item.title && p.title.toLowerCase() === item.title.toLowerCase()) ||
+                              (p.name && item.title && p.name.toLowerCase() === item.title.toLowerCase()) ||
+                              (p.title && item.title && item.title.toLowerCase().includes(p.title.toLowerCase())) ||
+                              (p.name && item.title && item.title.toLowerCase().includes(p.name.toLowerCase()))
+                            );
+                            const defaultFallback = 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop';
+                            const itemImg = item.image || matchingProd?.image || (matchingProd as any)?.images?.[0] || defaultFallback;
+
+                            return (
+                              <div key={i} className="p-4 flex items-center gap-4">
+                                <div className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-slate-200/80 dark:border-white/10 bg-slate-100 dark:bg-slate-800 shadow-xs group">
+                                  <img
+                                    src={itemImg}
+                                    alt={item.title}
+                                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                  />
+                                </div>
+
+                              <div className="flex-1 min-w-0">
+                                <h4 className={`text-xs font-black truncate ${adminTheme === 'light' ? 'text-slate-900' : 'text-slate-100'}`}>
+                                  {item.title}
+                                </h4>
+                                <span className={`text-[10px] font-mono block mt-0.5 ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>
+                                  Prix unitaire: {(item.price || 0).toFixed(0)} DH
+                                </span>
+                              </div>
+
+                              <div className="text-right shrink-0">
+                                <span className={`text-xs font-mono font-bold block ${adminTheme === 'light' ? 'text-slate-600' : 'text-slate-300'}`}>
+                                  x{item.quantity || 1}
+                                </span>
+                                <span className={`text-sm font-mono font-black ${adminTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                                  {((item.price || 0) * (item.quantity || 1)).toFixed(0)} DH
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+
+                        {(ord.gift_item || ord.applied_coupon) && (
+                          <div className={`p-4 space-y-2 ${adminTheme === 'light' ? 'bg-slate-50/50' : 'bg-slate-900/30'}`}>
+                            {ord.gift_item && (
+                              <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                                <span>🎁 Cadeau Inclus:</span>
+                                <span className="font-mono text-[11px] underline">{ord.gift_item}</span>
+                              </div>
+                            )}
+                            {ord.applied_coupon && (
+                              <div className="flex items-center gap-2 text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                                <span>🏷️ Code Promo Appliqué:</span>
+                                <span className="font-mono text-[11px] uppercase bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">{ord.applied_coupon}</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Shipping & Delivery Details Card */}
+                    <div className={`rounded-2xl border p-5 space-y-3 ${
+                      adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/40 border-white/5'
+                    }`}>
+                      <h3 className={`text-xs font-black uppercase tracking-wider flex items-center gap-2 ${
+                        adminTheme === 'light' ? 'text-slate-800' : 'text-slate-200'
+                      }`}>
+                        <Truck className="w-4 h-4 text-emerald-500" /> Informations de Livraison & Transport
+                      </h3>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                        <div>
+                          <span className={`text-[10px] font-bold uppercase tracking-wider block ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>Destinataire</span>
+                          <p className="font-black mt-0.5">{ord.customer_name || selectedCustomer?.name}</p>
+                          <p className="font-mono text-slate-500">{ord.phone_number || selectedCustomer?.phone}</p>
+                        </div>
+                        <div>
+                          <span className={`text-[10px] font-bold uppercase tracking-wider block ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>Adresse de livraison</span>
+                          <p className="font-bold mt-0.5">{ord.city || 'Maroc'}</p>
+                          <p className="text-slate-500 leading-tight mt-0.5">{ord.address || 'Non spécifiée'}</p>
+                        </div>
+                        {ord.courier && (
+                          <div>
+                            <span className={`text-[10px] font-bold uppercase tracking-wider block ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>Livreur / Transporteur</span>
+                            <span className="font-black font-mono text-emerald-600 dark:text-emerald-400 uppercase">{ord.courier}</span>
+                          </div>
+                        )}
+                        {ord.tracking_number && (
+                          <div>
+                            <span className={`text-[10px] font-bold uppercase tracking-wider block ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>N° de Suivi</span>
+                            <span className="font-mono font-bold">{ord.tracking_number}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Right Column (1/3): Financial Summary & Actions */}
+                  <div className="space-y-5">
+
+                    {/* Financial breakdown */}
+                    <div className={`rounded-2xl border p-5 space-y-3.5 ${
+                      adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/40 border-white/5'
+                    }`}>
+                      <h3 className={`text-xs font-black uppercase tracking-wider border-b pb-2 ${
+                        adminTheme === 'light' ? 'text-slate-800 border-slate-100' : 'text-slate-200 border-white/5'
+                      }`}>
+                        Récapitulatif Financier
+                      </h3>
+
+                      <div className="space-y-2 text-xs font-mono">
+                        <div className="flex justify-between">
+                          <span className={adminTheme === 'light' ? 'text-slate-500' : 'text-slate-400'}>Sous-total articles :</span>
+                          <span className="font-bold">{(ord.subtotal || 0).toFixed(2)} DH</span>
+                        </div>
+
+                        {ord.discount_amount > 0 && (
+                          <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+                            <span>Remise appliquée :</span>
+                            <span className="font-bold">-{(ord.discount_amount || 0).toFixed(2)} DH</span>
+                          </div>
+                        )}
+
+                        <div className="flex justify-between">
+                          <span className={adminTheme === 'light' ? 'text-slate-500' : 'text-slate-400'}>Frais de livraison :</span>
+                          <span className="font-bold">{calculatedShipping.toFixed(2)} DH</span>
+                        </div>
+
+                        <div className={`pt-3 border-t flex justify-between items-baseline ${
+                          adminTheme === 'light' ? 'border-slate-100' : 'border-white/5'
+                        }`}>
+                          <span className="font-bold uppercase text-[10px] tracking-wider text-slate-500">Total COD :</span>
+                          <span className="text-xl font-black text-emerald-600 dark:text-emerald-400">{(ord.total || 0).toFixed(0)} DH</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Order Status quick updater */}
+                    <div className={`rounded-2xl border p-5 space-y-3 ${
+                      adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/40 border-white/5'
+                    }`}>
+                      <h3 className={`text-xs font-black uppercase tracking-wider ${
+                        adminTheme === 'light' ? 'text-slate-800' : 'text-slate-200'
+                      }`}>
+                        Statut de Commande
+                      </h3>
+                      <select
+                        value={ord.status}
+                        onChange={async (e) => {
+                          const newSt = e.target.value;
+                          if (handleUpdateOrderStatus) {
+                            await handleUpdateOrderStatus(ord.order_id, newSt);
+                            setSelectedOrderDetail(prev => prev ? { ...prev, status: newSt } : null);
+                            showToast(`Statut de ${ord.order_id} mis à jour en ${newSt}`, 'success');
+                          }
+                        }}
+                        className={`w-full text-xs font-bold rounded-xl px-3.5 py-2.5 border outline-none cursor-pointer transition ${
+                          adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800 focus:bg-white' : 'bg-slate-950 border-slate-800 text-slate-100'
+                        }`}
+                      >
+                        <option value="pending">En attente (Pending)</option>
+                        <option value="confirmed">Confirmée (Confirmed)</option>
+                        <option value="shipped">Expédiée (Shipped)</option>
+                        <option value="delivered">Livrée (Delivered)</option>
+                        <option value="cancelled">Annulée (Cancelled)</option>
+                        <option value="returned">Retournée (Returned)</option>
+                      </select>
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+        );
+      })()}
+
+
+      {/* ── Modal: Générateur de Code Promo WhatsApp Instantané ───────── */}
+      {isPromoModalOpen && selectedCustomer && (() => {
+        const cPhone = (selectedCustomer.phone || '').replace(/[^0-9]/g, '');
+        const promoMessage = `Bonjour ${selectedCustomer.name} 🎁 ! Pour vous remercier de votre fidélité sur Para Officinal, voici votre code promo exclusif de -${promoDiscountPct}% : *${promoCustomCode}*. Valable pendant ${promoExpiryDays} jours sur tout le site : https://paraofficinal.ma`;
+
+        return (
+          <div
+            className="fixed inset-0 z-[350] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in-50 duration-200"
+            onClick={() => setIsPromoModalOpen(false)}
+          >
+            <div
+              className={`w-full max-w-lg rounded-3xl border p-6 space-y-6 shadow-2xl transition-all ${
+                adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-800' : 'bg-slate-900 border-white/10 text-slate-100'
+              }`}
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between border-b pb-4 border-slate-200/70 dark:border-slate-800">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500">
+                    <Ticket className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black tracking-tight">Générateur de Code Promo Exclusif</h3>
+                    <p className="text-[10px] text-slate-400 font-mono">Créez & envoyez instantanément un bon de réduction par WhatsApp</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsPromoModalOpen(false)}
+                  className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Discount selector */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Pourcentage de réduction</label>
+                <div className="flex items-center gap-2">
+                  {[10, 15, 20, 25, 30].map(pct => (
+                    <button
+                      key={pct}
+                      type="button"
+                      onClick={() => {
+                        setPromoDiscountPct(pct);
+                        const cleanName = (selectedCustomer.name || 'CLIENT').replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 10);
+                        setPromoCustomCode(`SPECIAL-${cleanName}-${pct}`);
+                      }}
+                      className={`flex-1 py-2 rounded-xl text-xs font-black border transition cursor-pointer ${
+                        promoDiscountPct === pct
+                          ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md font-extrabold'
+                          : (adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100' : 'bg-slate-950 border-slate-800 text-slate-300 hover:bg-slate-800')
+                      }`}
+                    >
+                      -{pct}%
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Code Input */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Code Promo Généré</label>
+                <input
+                  type="text"
+                  value={promoCustomCode}
+                  onChange={e => setPromoCustomCode(e.target.value.toUpperCase())}
+                  className={`w-full text-base font-black font-mono text-center tracking-wider border rounded-xl px-4 py-3 outline-none transition ${
+                    adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-900 focus:border-amber-500' : 'bg-slate-950 border-slate-700 text-amber-400 focus:border-amber-500'
+                  }`}
+                  required
+                />
+              </div>
+
+              {/* Expiry Selector */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Durée de validité</label>
+                <div className="flex items-center gap-2">
+                  {[3, 7, 14, 30].map(days => (
+                    <button
+                      key={days}
+                      type="button"
+                      onClick={() => setPromoExpiryDays(days)}
+                      className={`flex-1 py-2 rounded-xl text-xs font-bold border transition cursor-pointer ${
+                        promoExpiryDays === days
+                          ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-md font-extrabold'
+                          : (adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-700' : 'bg-slate-950 border-slate-800 text-slate-300')
+                      }`}
+                    >
+                      {days} Jours
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* WhatsApp Message Preview */}
+              <div className={`p-4 rounded-2xl border space-y-1.5 ${
+                adminTheme === 'light' ? 'bg-emerald-50/50 border-emerald-200/80' : 'bg-emerald-950/20 border-emerald-900/40'
+              }`}>
+                <span className="text-[9px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block">💬 Aperçu du message WhatsApp</span>
+                <p className="text-xs font-mono text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+                  {promoMessage}
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsPromoModalOpen(false)}
+                  className={`flex-1 py-3 rounded-xl text-xs font-bold border transition ${
+                    adminTheme === 'light' ? 'border-slate-200 text-slate-600 hover:bg-slate-50' : 'border-slate-800 text-slate-400 hover:bg-slate-800'
+                  }`}
+                >
+                  Annuler
+                </button>
+                <button
+                  type="button"
+                  disabled={isGeneratingPromo}
+                  onClick={async () => {
+                    setIsGeneratingPromo(true);
+                    try {
+                      const newCoupon = {
+                        code: promoCustomCode.trim().toUpperCase(),
+                        discountPercent: Number(promoDiscountPct),
+                        freeShipping: false,
+                        discountType: 'percent' as const,
+                        expiryDate: new Date(Date.now() + promoExpiryDays * 24 * 60 * 60 * 1000).toISOString(),
+                        isActive: true
+                      };
+                      const updatedCoupons = [newCoupon, ...(settings.coupons || []).filter((c: any) => c.code !== newCoupon.code)];
+                      const success = await saveSettings({ ...settings, coupons: updatedCoupons });
+
+                      if (success) {
+                        showToast(`Code promo ${newCoupon.code} activé avec succès !`, 'success');
+                        setIsPromoModalOpen(false);
+                        if (cPhone) {
+                          window.open(`https://wa.me/${cPhone}?text=${promoMessage}`, '_blank');
+                        }
+                      } else {
+                        showToast('Erreur lors de la création du code promo.', 'error');
+                      }
+                    } catch (err) {
+                      showToast('Erreur lors de la sauvegarde.', 'error');
+                    } finally {
+                      setIsGeneratingPromo(false);
+                    }
+                  }}
+                  className="flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-wider bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition cursor-pointer active:scale-[0.98] disabled:opacity-50"
+                >
+                  {isGeneratingPromo ? 'Enregistrement...' : '🚀 Créer & Envoyer'}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
     </div>
   );

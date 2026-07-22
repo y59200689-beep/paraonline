@@ -228,18 +228,22 @@
 
 /* Admin page background — subtle warm-cool tint */
 .admin-page-bg {
-  background-color: hsl(220 20% 96%);
+  background-color: #f1f5f9;
   background-image:
-    radial-gradient(ellipse at 10% 0%,  hsla(152 55% 50% / 0.05) 0%, transparent 50%),
-    radial-gradient(ellipse at 90% 95%, hsla(224 70% 55% / 0.04) 0%, transparent 50%);
+    radial-gradient(at 0% 0%, hsla(160 84% 39% / 0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, hsla(217 91% 60% / 0.06) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, hsla(250 84% 67% / 0.05) 0px, transparent 50%);
+  background-attachment: fixed;
 }
 
-/* Admin page background — deep dark with ambient glows */
+/* Admin page background — deep obsidian dark with rich glowing ambient mesh orbs */
 .admin-page-bg-dark {
-  background-color: hsl(224 28% 7%);
+  background-color: #060913;
   background-image:
-    radial-gradient(ellipse at 12% 0%,  hsla(152 55% 40% / 0.07) 0%, transparent 42%),
-    radial-gradient(ellipse at 88% 100%, hsla(228 55% 50% / 0.05) 0%, transparent 42%);
+    radial-gradient(at 10% 0%, hsla(160 84% 39% / 0.12) 0px, transparent 45%),
+    radial-gradient(at 90% 100%, hsla(224 76% 48% / 0.10) 0px, transparent 45%),
+    radial-gradient(at 50% 50%, hsla(280 65% 55% / 0.04) 0px, transparent 60%);
+  background-attachment: fixed;
 }
 
 /* Admin sidebar — premium dark gradient panel */
@@ -296,6 +300,48 @@
 }
 .admin-accent-ring-light {
   box-shadow: 0 0 0 1px rgba(16,185,129,0.25), 0 0 12px rgba(16,185,129,0.06);
+}
+
+/* Double-Bezel (Doppelrand) Architecture */
+.admin-double-bezel-outer-light {
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  padding: 6px;
+  border-radius: var(--admin-radius-2xl);
+  box-shadow: var(--admin-shadow-sm);
+}
+.admin-double-bezel-outer-dark {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 6px;
+  border-radius: var(--admin-radius-2xl);
+  box-shadow: var(--admin-shadow-md);
+}
+.admin-double-bezel-inner-light {
+  background: #ffffff;
+  border-radius: calc(var(--admin-radius-2xl) - 6px);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.9), 0 2px 8px rgba(15, 30, 54, 0.04);
+}
+.admin-double-bezel-inner-dark {
+  background: hsl(224 25% 9%);
+  border-radius: calc(var(--admin-radius-2xl) - 6px);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.12), inset 0 -1px 1px rgba(0, 0, 0, 0.4);
+}
+
+/* Premium island container */
+.admin-island-container-light {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+.admin-island-container-dark {
+  background: rgba(14, 18, 30, 0.75);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 /* Premium header toolbar */

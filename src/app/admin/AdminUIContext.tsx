@@ -17,8 +17,8 @@ export interface AdminUIContextProps {
   // Sub-tabs syncing
   ordersSubTab: 'list' | 'abandoned' | 'shipping' | 'reconciliation';
   setOrdersSubTab: React.Dispatch<React.SetStateAction<'list' | 'abandoned' | 'shipping' | 'reconciliation'>>;
-  crmSubTab: 'clients' | 'diagnostics' | 'leads' | 'rules' | 'rfm' | 'reminders' | 'automations';
-  setCrmSubTab: React.Dispatch<React.SetStateAction<'clients' | 'diagnostics' | 'leads' | 'rules' | 'rfm' | 'reminders' | 'automations'>>;
+  crmSubTab: 'clients' | 'analytics' | 'diagnostics' | 'leads' | 'rules' | 'rfm' | 'reminders' | 'automations';
+  setCrmSubTab: React.Dispatch<React.SetStateAction<'clients' | 'analytics' | 'diagnostics' | 'leads' | 'rules' | 'rfm' | 'reminders' | 'automations'>>;
   loyaltySubTab: 'members' | 'product_points' | 'bulk_points' | 'logs';
   setLoyaltySubTab: React.Dispatch<React.SetStateAction<'members' | 'product_points' | 'bulk_points' | 'logs'>>;
   activeSettingsSubTab: 'general' | 'banners' | 'coupons' | 'shipping' | 'loyalty' | 'faq' | 'logs' | 'notifications' | 'operators' | 'payment' | 'security' | 'gifts' | 'delivery' | 'homepage';
@@ -85,7 +85,7 @@ export const AdminUIProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const [ordersSubTab, setOrdersSubTab] = useState<'list' | 'abandoned' | 'shipping' | 'reconciliation'>('list');
-  const [crmSubTab, setCrmSubTab] = useState<'clients' | 'diagnostics' | 'leads' | 'rules' | 'rfm' | 'reminders' | 'automations'>('clients');
+  const [crmSubTab, setCrmSubTab] = useState<'clients' | 'analytics' | 'diagnostics' | 'leads' | 'rules' | 'rfm' | 'reminders' | 'automations'>('clients');
   const [loyaltySubTab, setLoyaltySubTab] = useState<'members' | 'product_points' | 'bulk_points' | 'logs'>('members');
   const [activeSettingsSubTab, setActiveSettingsSubTab] = useState<any>('general');
 

@@ -10,7 +10,7 @@ export interface AdminThemeContextProps {
 const AdminThemeContext = createContext<AdminThemeContextProps | undefined>(undefined);
 
 export const AdminThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [adminTheme, setAdminTheme] = useState<'light' | 'dark'>('light');
+  const [adminTheme, setAdminTheme] = useState<'light' | 'dark'>('dark');
 
   // Load theme on mount
   useEffect(() => {

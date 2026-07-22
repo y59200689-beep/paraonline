@@ -61,27 +61,36 @@ export const AdminSpotlight: React.FC<AdminSpotlightProps> = ({
     products,
     crmCustomers,
     adminTheme,
-    toggleAdminTheme
+    toggleAdminTheme,
+    handleUpdateOrderStatus,
+    logAdminAction
   } = useAdmin();
   const { settings } = useSettings();
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
-  // Clear query on close
+  // Clear query & reset index on open/close
   useEffect(() => {
     if (!isSearchOpen) {
       setSearchQuery('');
+      setSelectedIndex(0);
     }
   }, [isSearchOpen]);
+
+  // Copy helper
+  const handleCopy = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+  };
 
   if (!isSearchOpen) return null;
 
   return (
     <div 
-      className="fixed inset-0 bg-slate-950/60 backdrop-blur-md flex items-start justify-center pt-[15vh] p-4 z-50 select-none"
+      className="fixed inset-0 bg-slate-950/70 backdrop-blur-md flex items-start justify-center pt-[10vh] p-4 z-[9999] select-none"
       onClick={() => setIsSearchOpen(false)}
     >
       <div 
-        className={`w-full max-w-xl border rounded-3xl overflow-hidden shadow-2xl flex flex-col ${
+        className={`w-full max-w-2xl border rounded-3xl overflow-hidden shadow-2xl flex flex-col ${
           adminTheme === 'light'
             ? 'bg-white/95 border-slate-200/80 text-slate-800'
             : 'bg-slate-900/95 border-slate-800 text-slate-100'
@@ -90,29 +99,29 @@ export const AdminSpotlight: React.FC<AdminSpotlightProps> = ({
       >
         {/* Search Input Box */}
         <div className={`flex items-center gap-3 px-4 py-3.5 border-b ${adminTheme === 'light' ? 'border-slate-100' : 'border-slate-800'}`}>
-          <Search className={`w-4 h-4 shrink-0 ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-400'}`} />
+          <Search className={`w-4 h-4 shrink-0 ${adminTheme === 'light' ? 'text-emerald-600' : 'text-emerald-400'}`} />
           <input 
             type="text"
             autoFocus
-            placeholder="Rechercher des commandes, produits, clients ou commandes..."
+            placeholder="Rechercher des commandes (#PO-), clients, produits ou actions..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full text-xs font-semibold bg-transparent outline-none border-none placeholder-slate-500 text-inherit"
+            className="w-full text-xs font-bold bg-transparent outline-none border-none placeholder-slate-400 text-inherit"
           />
           <span className={`text-[9px] font-mono font-bold border rounded px-1.5 py-0.5 shrink-0 ${
             adminTheme === 'light'
-              ? 'bg-slate-50 border-slate-200 text-slate-400'
-              : 'bg-slate-950 border-slate-800 text-slate-500'
+              ? 'bg-slate-100 border-slate-200 text-slate-500'
+              : 'bg-slate-950 border-slate-800 text-slate-400'
           }`}>
             ESC
           </span>
         </div>
 
         {/* Results body */}
-        <div className="max-h-[350px] overflow-y-auto p-3 space-y-4">
-          {/* Category 1: Navigation / Core actions */}
+        <div className="max-h-[420px] overflow-y-auto p-3 space-y-4">
+          {/* Category 1: System Commands */}
           <div className="space-y-1">
-            <span className="text-[9px] font-black uppercase tracking-wider text-slate-500 px-2.5 block mb-1.5">Commandes Système</span>
+            <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 px-2.5 block mb-1.5">Raccourcis & Actions Rapides</span>
             {[
               { label: "Basculer le Thème (Clair/Sombre)", icon: Sun, aliases: ["theme", "light", "dark", "clair", "sombre", "mode"], action: () => { toggleAdminTheme(); setIsSearchOpen(false); } },
               { label: "Aller au Tableau de bord", icon: BarChart2, aliases: ["home", "accueil", "stats", "graphique", "analytics"], action: () => { setActiveTab('dashboard'); setIsSearchOpen(false); } },
@@ -120,19 +129,6 @@ export const AdminSpotlight: React.FC<AdminSpotlightProps> = ({
               { label: "Expéditions & Reconciliation COD", icon: Truck, aliases: ["shipping", "livraison", "cod", "yalidine", "cathedis", "reconciliation", "suivi"], action: () => { setActiveTab('orders'); setOrdersSubTab('shipping'); setIsSearchOpen(false); } },
               { label: "Voir le Catalogue Produits", icon: Package, aliases: ["products", "stock", "article", "nouveau produit", "produits"], action: () => { setActiveTab('catalog'); setIsSearchOpen(false); } },
               { label: "Gérer la Fidélité & CRM (Clients)", icon: ClipboardList, aliases: ["customers", "clients", "points", "beauty wallet", "fidélité"], action: () => { setActiveTab('crm'); setCrmSubTab('clients'); setIsSearchOpen(false); } },
-              { label: "Skin Diagnostics Hub", icon: Sliders, aliases: ["skin", "diagnostic", "peau", "dermocosmetic", "visage"], action: () => { setActiveTab('crm'); setCrmSubTab('diagnostics'); setIsSearchOpen(false); } },
-              { label: "Leads & Prospects (Newsletter)", icon: ClipboardList, aliases: ["leads", "newsletter", "emails", "prospects", "contacts"], action: () => { setActiveTab('crm'); setCrmSubTab('leads'); setIsSearchOpen(false); } },
-              { label: "Fidélité: Membres & Tiers", icon: Award, aliases: ["loyalty members", "membres fidélité", "tiers clients", "points fidélité"], action: () => { setActiveTab('loyalty'); setLoyaltySubTab('members'); setIsSearchOpen(false); } },
-              { label: "Fidélité: Points Produits", icon: Layers, aliases: ["product points", "points par produit", "configurer points"], action: () => { setActiveTab('loyalty'); setLoyaltySubTab('product_points'); setIsSearchOpen(false); } },
-              { label: "Fidélité: Modification Groupée", icon: Gift, aliases: ["bulk points", "modification groupée points", "points en masse"], action: () => { setActiveTab('loyalty'); setLoyaltySubTab('bulk_points'); setIsSearchOpen(false); } },
-              { label: "Fidélité: Logs & Historique", icon: FileText, aliases: ["loyalty logs", "historique fidélité", "audit points", "ajustements points"], action: () => { setActiveTab('loyalty'); setLoyaltySubTab('logs'); setIsSearchOpen(false); } },
-              { label: "Modérer les Avis Clients", icon: MessageSquare, aliases: ["reviews", "commentaires", "étoiles", "avis"], action: () => { setActiveTab('reviews'); setIsSearchOpen(false); } },
-              { label: "Ouvrir les Paramètres Boutique", icon: Tag, aliases: ["settings", "general", "configuration"], action: () => { setActiveTab('settings'); setActiveSettingsSubTab('general'); setIsSearchOpen(false); } },
-              { label: "Consulter les Journaux d'Audit", icon: Shield, aliases: ["logs", "audit", "historique", "connexions", "actions", "sécurité", "journaux"], action: () => { setActiveTab('audit-logs'); setIsSearchOpen(false); } },
-              { label: "WhatsApp & Notifications", icon: Bell, aliases: ["whatsapp", "notifications", "messages", "alertes", "modèles"], action: () => { setActiveTab('settings'); setActiveSettingsSubTab('notifications'); setIsSearchOpen(false); } },
-              { label: "Bannières & Diaporama", icon: Sliders, aliases: ["banners", "bannières", "carrousel", "slideshow", "images", "pub"], action: () => { setActiveTab('settings'); setActiveSettingsSubTab('banners'); setIsSearchOpen(false); } },
-              { label: "Règles Fidélité Beauty Wallet", icon: Users, aliases: ["loyalty", "fidélité", "points", "règles", "beauty wallet"], action: () => { setActiveTab('settings'); setActiveSettingsSubTab('loyalty'); setIsSearchOpen(false); } },
-              { label: "Gestion de la FAQ", icon: HelpCircle, aliases: ["faq", "questions", "réponses", "aide"], action: () => { setActiveTab('settings'); setActiveSettingsSubTab('faq'); setIsSearchOpen(false); } },
               { label: "Créer un Code Promo", icon: Save, aliases: ["coupon", "réduction", "rabais", "code promo", "coupons", "promotions"], action: () => { setActiveTab('coupons'); setIsAddingCoupon(true); setIsSearchOpen(false); } },
               { label: "Créer un Nouveau Produit", icon: Upload, aliases: ["add product", "nouveau produit", "ajouter"], action: () => { setIsNewProductModalOpen(true); setIsSearchOpen(false); } }
             ].filter(cmd => 
@@ -144,20 +140,23 @@ export const AdminSpotlight: React.FC<AdminSpotlightProps> = ({
                 <button
                   key={idx}
                   onClick={cmd.action}
-                  className={`w-full text-left px-2.5 py-2 rounded-xl text-xs font-bold transition duration-150 ease-out-premium flex items-center gap-3 cursor-pointer border-0 active:scale-[0.98] ${
+                  className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition duration-150 ease-out-premium flex items-center justify-between cursor-pointer border-0 active:scale-[0.98] ${
                     adminTheme === 'light'
-                      ? 'hover:bg-slate-50 text-slate-700 hover:text-slate-900 bg-transparent'
-                      : 'hover:bg-slate-800/60 text-slate-300 hover:text-slate-100 bg-transparent'
+                      ? 'hover:bg-slate-100 text-slate-700 hover:text-slate-900 bg-transparent'
+                      : 'hover:bg-slate-800/80 text-slate-300 hover:text-slate-100 bg-transparent'
                   }`}
                 >
-                  <Icon className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                  <span>{cmd.label}</span>
+                  <div className="flex items-center gap-3">
+                    <Icon className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <span>{cmd.label}</span>
+                  </div>
+                  <span className="text-[9px] font-mono opacity-50 uppercase">Exécuter</span>
                 </button>
               );
             })}
           </div>
 
-          {/* Category 2: Orders matching */}
+          {/* Category 2: Orders matching with direct status actions */}
           {searchQuery.length >= 2 && (
             <>
               {/* Matching Orders */}
@@ -170,30 +169,82 @@ export const AdminSpotlight: React.FC<AdminSpotlightProps> = ({
 
                 if (filteredOrders.length === 0) return null;
                 return (
-                  <div className="space-y-1">
-                    <span className="text-[9px] font-black uppercase tracking-wider text-slate-500 px-2.5 block mb-1.5">Commandes Correspondantes</span>
+                  <div className="space-y-1.5">
+                    <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 px-2.5 block mb-1.5">Commandes avec Actions Directes</span>
                     {filteredOrders.map((o) => (
-                      <button
+                      <div
                         key={o.order_id}
-                        onClick={() => {
-                          setSelectedOrder(o);
-                          setIsSearchOpen(false);
-                        }}
-                        className={`w-full text-left px-2.5 py-2 rounded-xl text-xs transition duration-150 ease-out-premium flex items-center justify-between cursor-pointer border-0 active:scale-[0.98] ${
+                        className={`p-3 rounded-2xl border transition flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${
                           adminTheme === 'light'
-                            ? 'hover:bg-slate-50 text-slate-700 bg-transparent'
-                            : 'hover:bg-slate-800/60 text-slate-300 bg-transparent'
+                            ? 'bg-slate-50/80 border-slate-200/80 hover:bg-slate-100/80'
+                            : 'bg-slate-800/40 border-slate-700/60 hover:bg-slate-800/70'
                         }`}
                       >
-                        <div className="flex items-center gap-3">
-                          <ShoppingCart className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                        <div 
+                          onClick={() => {
+                            setSelectedOrder(o);
+                            setIsSearchOpen(false);
+                          }}
+                          className="flex items-center gap-3 cursor-pointer min-w-0 flex-1"
+                        >
+                          <ShoppingCart className="w-4 h-4 text-blue-500 shrink-0" />
                           <div className="min-w-0">
-                            <span className="font-bold block font-mono">{o.order_id}</span>
-                            <span className="text-[10px] text-slate-400 block truncate">{o.customer_name} ({o.phone_number})</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-extrabold font-mono text-xs">{o.order_id}</span>
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                                {o.status}
+                              </span>
+                            </div>
+                            <span className="text-[10.5px] text-slate-400 block truncate">{o.customer_name} ({o.phone_number})</span>
                           </div>
                         </div>
-                        <span className="text-[10px] font-extrabold font-mono text-emerald-500 shrink-0">{o.total.toFixed(0)} DH</span>
-                      </button>
+
+                        {/* Inline Order Actions */}
+                        <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleUpdateOrderStatus(o.order_id, 'Confirmed');
+                              logAdminAction('Statut Modifié via Spotlight', `Commande ${o.order_id} passée à Confirmed`);
+                            }}
+                            className="px-2 py-1 rounded-lg text-[9.5px] font-bold bg-blue-500/15 text-blue-400 hover:bg-blue-500/25 border border-blue-500/30 transition cursor-pointer"
+                            title="Marquer comme Confirmée"
+                          >
+                            Confirmée
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleUpdateOrderStatus(o.order_id, 'Shipped');
+                              logAdminAction('Statut Modifié via Spotlight', `Commande ${o.order_id} passée à Shipped`);
+                            }}
+                            className="px-2 py-1 rounded-lg text-[9.5px] font-bold bg-purple-500/15 text-purple-400 hover:bg-purple-500/25 border border-purple-500/30 transition cursor-pointer"
+                            title="Marquer comme Expédiée"
+                          >
+                            Expédiée
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleUpdateOrderStatus(o.order_id, 'Delivered');
+                              logAdminAction('Statut Modifié via Spotlight', `Commande ${o.order_id} passée à Delivered`);
+                            }}
+                            className="px-2 py-1 rounded-lg text-[9.5px] font-bold bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/30 transition cursor-pointer"
+                            title="Marquer comme Livrée"
+                          >
+                            Livrée
+                          </button>
+                          <a
+                            href={`https://wa.me/${o.phone_number.replace(/\D/g, '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2 py-1 rounded-lg text-[9.5px] font-bold text-white transition bg-emerald-600 hover:bg-emerald-500 cursor-pointer"
+                            title="Contacter sur WhatsApp"
+                          >
+                            WhatsApp
+                          </a>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 );
@@ -209,7 +260,7 @@ export const AdminSpotlight: React.FC<AdminSpotlightProps> = ({
                 if (filteredProducts.length === 0) return null;
                 return (
                   <div className="space-y-1">
-                    <span className="text-[9px] font-black uppercase tracking-wider text-slate-500 px-2.5 block mb-1.5">Produits Correspondants</span>
+                    <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 px-2.5 block mb-1.5">Produits Catalogue</span>
                     {filteredProducts.map((p) => (
                       <button
                         key={p.id}
@@ -233,10 +284,10 @@ export const AdminSpotlight: React.FC<AdminSpotlightProps> = ({
                           setIsNewProductModalOpen(true);
                           setIsSearchOpen(false);
                         }}
-                        className={`w-full text-left px-2.5 py-2 rounded-xl text-xs transition duration-150 ease-out-premium flex items-center justify-between cursor-pointer border-0 active:scale-[0.98] ${
+                        className={`w-full text-left px-3 py-2 rounded-xl text-xs transition duration-150 flex items-center justify-between cursor-pointer border-0 active:scale-[0.98] ${
                           adminTheme === 'light'
-                            ? 'hover:bg-slate-50 text-slate-700 bg-transparent'
-                            : 'hover:bg-slate-800/60 text-slate-300 bg-transparent'
+                            ? 'hover:bg-slate-100 text-slate-700 bg-transparent'
+                            : 'hover:bg-slate-800/70 text-slate-300 bg-transparent'
                         }`}
                       >
                         <div className="flex items-center gap-3 min-w-0">
@@ -263,31 +314,47 @@ export const AdminSpotlight: React.FC<AdminSpotlightProps> = ({
                 if (filteredClients.length === 0) return null;
                 return (
                   <div className="space-y-1">
-                    <span className="text-[9px] font-black uppercase tracking-wider text-slate-500 px-2.5 block mb-1.5">Clients CRM Correspondants</span>
+                    <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 px-2.5 block mb-1.5">Clients CRM</span>
                     {filteredClients.map((c: any, i: number) => (
-                      <button
+                      <div
                         key={i}
-                        onClick={() => {
-                          handleOpenCrmCustomer(c.phone, c.name, c.orders, c.totalSpend);
-                          setIsSearchOpen(false);
-                        }}
-                        className={`w-full text-left px-2.5 py-2 rounded-xl text-xs transition duration-150 ease-out-premium flex items-center justify-between cursor-pointer border-0 active:scale-[0.98] ${
+                        className={`p-3 rounded-xl border flex items-center justify-between gap-3 ${
                           adminTheme === 'light'
-                            ? 'hover:bg-slate-50 text-slate-700 bg-transparent'
-                            : 'hover:bg-slate-800/60 text-slate-300 bg-transparent'
+                            ? 'bg-slate-50 border-slate-200/80 hover:bg-slate-100'
+                            : 'bg-slate-800/40 border-slate-700/60 hover:bg-slate-800/70'
                         }`}
                       >
-                        <div className="flex items-center gap-3">
-                          <ClipboardList className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                        <div 
+                          onClick={() => {
+                            handleOpenCrmCustomer(c.phone, c.name, c.orders, c.totalSpend);
+                            setIsSearchOpen(false);
+                          }}
+                          className="flex items-center gap-3 cursor-pointer min-w-0 flex-1"
+                        >
+                          <Users className="w-4 h-4 text-rose-500 shrink-0" />
                           <div className="min-w-0">
-                            <span className="font-bold block truncate">{c.name || 'Client Anonyme'}</span>
+                            <span className="font-extrabold block truncate text-xs">{c.name || 'Client Anonyme'}</span>
                             <span className="text-[10px] text-slate-400 block truncate">{c.phone} • {c.orders.length} commande(s)</span>
                           </div>
                         </div>
-                        <span className="text-[10px] font-extrabold font-mono text-amber-500 shrink-0">
-                          {Math.round(c.totalSpend * (settings.loyaltyPointsPerDh || 1))} pts
-                        </span>
-                      </button>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <a
+                            href={`https://wa.me/${c.phone.replace(/\D/g, '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2 py-1 rounded-lg text-[9.5px] font-bold text-white transition bg-emerald-600 hover:bg-emerald-500 cursor-pointer"
+                          >
+                            WhatsApp
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(c.phone, 'Téléphone')}
+                            className="px-2 py-1 rounded-lg text-[9.5px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 transition cursor-pointer"
+                          >
+                            Copier Tél
+                          </button>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 );
@@ -300,8 +367,8 @@ export const AdminSpotlight: React.FC<AdminSpotlightProps> = ({
         <div className={`px-4 py-2 text-[9px] font-semibold text-slate-400 border-t flex justify-between items-center ${
           adminTheme === 'light' ? 'bg-slate-50 border-slate-100' : 'bg-slate-950/50 border-slate-800'
         }`}>
-          <span>Astuce: Recherchez par mots-clés. Appuyez sur Esc pour quitter.</span>
-          <span className="flex items-center gap-1"><Command className="w-2.5 h-2.5" /> + K pour fermer</span>
+          <span>Astuce: Recherchez un n° de commande (#PO-), client ou action rapide.</span>
+          <span className="flex items-center gap-1 font-mono"><Command className="w-2.5 h-2.5" /> + K</span>
         </div>
       </div>
     </div>

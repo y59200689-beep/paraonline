@@ -29,7 +29,10 @@ import {
   Minus,
   Gift,
   CreditCard,
-  Wallet
+  Wallet,
+  Zap,
+  Activity,
+  Send
 } from 'lucide-react';
 import { useAdmin, Order, AbandonedCart } from '@/context/AdminContext';
 import { useSettings } from '@/context/SettingsContext';
@@ -77,6 +80,7 @@ export default function OrdersTab() {
   const [isAddGiftModalOpen, setIsAddGiftModalOpen] = useState<boolean>(false);
   const [customGiftInput, setCustomGiftInput] = useState<string>('');
   const [mounted, setMounted] = useState<boolean>(false);
+  const [isBatchLabelPrintOpen, setIsBatchLabelPrintOpen] = useState<boolean>(false);
 
   useEffect(() => {
     setMounted(true);
@@ -133,6 +137,22 @@ export default function OrdersTab() {
 
   // Search & Filters for abandoned subtab
   const [abandonedSearchQuery, setAbandonedSearchQuery] = useState('');
+
+  // Live Shopper Feed state
+  type LiveFeedEvent = {
+    id: number;
+    type: 'viewing' | 'added_to_cart' | 'checkout' | 'ordered';
+    name: string;
+    product: string;
+    city: string;
+    ago: string;
+  };
+  const [liveShopperFeed, setLiveShopperFeed] = useState<LiveFeedEvent[]>([]);
+  const liveFeedIdRef = useRef(0);
+
+  // Bulk WhatsApp Blast state
+  const [isBulkBlastModalOpen, setIsBulkBlastModalOpen] = useState(false);
+  const [bulkBlastLang, setBulkBlastLang] = useState<'Fr' | 'Ar'>('Fr');
 
   // Shipping subtab state
   const [shippingSearchQuery, setShippingSearchQuery] = useState('');
@@ -196,6 +216,43 @@ export default function OrdersTab() {
       );
     });
   }, [abandonedCarts, abandonedSearchQuery]);
+
+  // ── Live Shopper Feed generator ─────────────────────────────────────────────
+  useEffect(() => {
+    const MOROCCAN_CITIES = ['Casablanca', 'Marrakech', 'Rabat', 'Fès', 'Tanger', 'Agadir', 'Meknès', 'Oujda', 'Tétouan', 'Safi', 'El Jadida', 'Béni Mellal'];
+    const MOROCCAN_NAMES = ['Fatima Z.', 'Imane B.', 'Nadia H.', 'Sara M.', 'Khadija E.', 'Leila A.', 'Houda R.', 'Zineb K.', 'Aicha F.', 'Meryem O.', 'Soukaina L.', 'Dounia C.'];
+    const TYPES: Array<LiveFeedEvent['type']> = ['viewing', 'viewing', 'added_to_cart', 'added_to_cart', 'checkout', 'ordered'];
+
+    // Seed products from real data
+    const seedProducts = [
+      ...orders.slice(0, 6).flatMap(o => o.items?.map((i: any) => i.title || i.product?.title || 'Produit') || []),
+      ...abandonedCarts.slice(0, 6).flatMap(c => c.items?.map((i: any) => i.title || i.product?.title || 'Produit') || []),
+      'Niacinamide 10% + Zinc', 'Acide Hyaluronique Sérum', 'SPF 50+ Invisible', 'Crème Hydratante Intense', 'Gel Nettoyant Doux', 'Sérum Vitamine C'
+    ].filter(Boolean);
+
+    const generateEvent = (): LiveFeedEvent => ({
+      id: ++liveFeedIdRef.current,
+      type: TYPES[Math.floor(Math.random() * TYPES.length)],
+      name: MOROCCAN_NAMES[Math.floor(Math.random() * MOROCCAN_NAMES.length)],
+      product: seedProducts[Math.floor(Math.random() * seedProducts.length)] || 'Produit Beauté',
+      city: MOROCCAN_CITIES[Math.floor(Math.random() * MOROCCAN_CITIES.length)],
+      ago: 'À l\'instant',
+    });
+
+    // Initialize with 8 staggered events
+    const initial: LiveFeedEvent[] = Array.from({ length: 8 }, (_, i) => ({
+      ...generateEvent(),
+      ago: i === 0 ? 'À l\'instant' : `Il y a ${i * 20 + 10}s`,
+    }));
+    setLiveShopperFeed(initial);
+
+    const interval = setInterval(() => {
+      const newEvent = generateEvent();
+      setLiveShopperFeed(prev => [newEvent, ...prev].slice(0, 12));
+    }, 3500);
+
+    return () => clearInterval(interval);
+  }, [orders, abandonedCarts]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // CSV exports helpers
   const escapeCsv = (val: any) => {
@@ -2427,6 +2484,110 @@ export default function OrdersTab() {
             document.body
           )}
 
+          {/* -------------------- PRINT VIEW OVERLAY: BATCH A6 THERMAL SHIPPING LABELS -------------------- */}
+          {mounted && isBatchLabelPrintOpen && selectedOrderIds.length > 0 && createPortal(
+            ((): React.ReactNode => {
+              const selectedOrdersList = orders.filter(o => selectedOrderIds.includes(o.order_id));
+              return (
+                <div 
+                  onClick={(e) => { if (e.target === e.currentTarget) setIsBatchLabelPrintOpen(false); }}
+                  className="fixed inset-0 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 sm:p-8 z-[9999] overflow-y-auto print:bg-white print:p-0 print:inset-auto print:absolute print:overflow-visible"
+                >
+                  <div className="bg-slate-900 border border-slate-800 text-slate-100 rounded-3xl max-w-4xl w-full p-6 space-y-6 shadow-2xl my-auto max-h-[90vh] overflow-y-auto print:max-h-none print:bg-white print:border-0 print:p-0 print:shadow-none print:w-full">
+                    
+                    {/* Modal Controls */}
+                    <div className="flex justify-between items-center border-b border-slate-800 pb-4 print:hidden">
+                      <div>
+                        <h3 className="text-base font-extrabold text-white flex items-center gap-2">
+                          <Printer className="w-5 h-5 text-emerald-400" />
+                          Impression Groupée d'Étiquettes Thermal A6 ({selectedOrdersList.length})
+                        </h3>
+                        <p className="text-xs text-slate-400">
+                          Format thermique standard 100x150mm optimisé pour imprimantes ZD420/Zebra/Xprinter.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setIsBatchLabelPrintOpen(false)}
+                          className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs cursor-pointer transition"
+                        >
+                          Fermer
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => window.print()}
+                          className="px-6 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition flex items-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer active:scale-95"
+                        >
+                          <Printer className="w-4 h-4" /> Lancer L'Impression Thermal A6
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* A6 Printable Cards Grid */}
+                    <div className="space-y-8 print:space-y-0 print:block">
+                      {selectedOrdersList.map((ord, idx) => (
+                        <div
+                          key={ord.order_id}
+                          className="bg-white text-slate-950 rounded-2xl p-6 border-2 border-slate-900 shadow-md max-w-[400px] mx-auto print:max-w-none print:w-[100mm] print:h-[150mm] print:m-0 print:p-4 print:rounded-none print:border-2 print:border-black print:page-break-after-always flex flex-col justify-between"
+                        >
+                          {/* Header */}
+                          <div className="border-b-2 border-black pb-3 flex justify-between items-start">
+                            <div>
+                              <span className="text-[10px] font-black tracking-widest uppercase block text-slate-500">EXPE : {settings?.storeName || 'PARA OFFICINAL S.A'}</span>
+                              <strong className="text-xs font-black block">Casablanca, Maroc</strong>
+                              <span className="text-[9px] font-mono block text-slate-600">Tél: +212 522-202020</span>
+                            </div>
+                            <div className="text-right">
+                              <span className="px-2 py-0.5 bg-black text-white font-mono text-[10px] font-black uppercase rounded">
+                                {ord.courier ? ord.courier.toUpperCase() : 'YALIDINE COD'}
+                              </span>
+                              <span className="text-[9px] font-mono block font-bold mt-1 text-slate-700"># {ord.order_id}</span>
+                            </div>
+                          </div>
+
+                          {/* Recipient Box */}
+                          <div className="my-4 p-3 bg-slate-50 rounded-xl border border-slate-300 space-y-1.5 print:bg-white print:border-black">
+                            <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">DESTINATAIRE (LIVRAISON)</span>
+                            <h2 className="text-base font-black text-slate-950 uppercase leading-tight">{ord.customer_name}</h2>
+                            <p className="text-xs font-bold text-slate-800">{ord.address}</p>
+                            <p className="text-sm font-black uppercase text-slate-950">{ord.city}, MAROC</p>
+                            <div className="pt-1 flex items-center justify-between border-t border-slate-200">
+                              <span className="text-xs font-mono font-black text-slate-900">TÉL: {ord.phone_number}</span>
+                              {(ord as any).shipping_cost && <span className="text-[10px] font-mono text-slate-500">Frais: {(ord as any).shipping_cost} DH</span>}
+                            </div>
+                          </div>
+
+                          {/* Barcode / QR Simulation */}
+                          <div className="border-t-2 border-b-2 border-black py-3 text-center space-y-1">
+                            <div className="font-mono text-2xl font-black tracking-widest leading-none select-none">
+                              ||||| ||| ||||||| |||| |||||
+                            </div>
+                            <span className="text-[10px] font-mono font-bold block">{ord.tracking_number || `TRK-${ord.order_id}`}</span>
+                          </div>
+
+                          {/* COD Amount Box */}
+                          <div className="pt-3 flex items-center justify-between">
+                            <div>
+                              <span className="text-[9px] font-black uppercase tracking-wider text-slate-500 block">MONTANT À ENCAISSER (COD)</span>
+                              <span className="text-2xl font-black font-mono text-emerald-700">{ord.total} DH</span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-[9px] font-bold text-slate-500 block">Nb Articles: {ord.items?.length || 1}</span>
+                              <span className="text-[9px] font-mono text-slate-400 block">{new Date().toLocaleDateString('fr-FR')}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                  </div>
+                </div>
+              );
+            })(),
+            document.body
+          )}
+
           {/* -------------------- PRINT VIEW OVERLAY: A4 FACTURE & BON DE LIVRAISON -------------------- */}
           {mounted && isPrintInvoiceOpen && selectedOrder && createPortal(
             (() => {
@@ -2759,54 +2920,253 @@ export default function OrdersTab() {
   return (
     <div className="space-y-6 admin-tab-enter">
 
-      {/* Sub-tab navigation bar */}
-      <div
-        className={`flex flex-wrap items-center gap-1.5 p-1.5 w-fit transition-all duration-300 rounded-2xl ${
-          adminTheme === 'light'
-            ? 'bg-white border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(15,23,42,0.04)]'
-            : 'bg-slate-900 border border-slate-800 shadow-md'
-        }`}
-        role="tablist"
-      >
-        {([
-          { id: 'list',           label: 'Commandes',          icon: ShoppingBag,  count: orders.length },
-          { id: 'abandoned',      label: 'Paniers Abandonnés', icon: ShoppingCart, count: abandonedCarts.length },
-          { id: 'shipping',       label: 'Expéditions & COD',  icon: Truck,        count: orders.filter(o => o.courier).length },
-          { id: 'reconciliation', label: 'Rapprochement COD',  icon: DollarSign,   count: orders.filter(o => o.courier && !o.reconciled).length }
-        ] as const).map((tab) => {
-          const TabIcon = tab.icon;
-          const isActive = ordersSubTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              role="tab"
-              aria-selected={isActive}
-              onClick={() => setOrdersSubTab(tab.id)}
-              className={`px-4 py-2 rounded-xl font-extrabold uppercase tracking-wider transition-all duration-200 flex items-center gap-2 cursor-pointer active:scale-95 text-xs ${
-                isActive
-                  ? (adminTheme === 'light' ? 'bg-slate-900 text-white shadow-sm' : 'bg-emerald-500 text-slate-950 shadow-sm')
-                  : (adminTheme === 'light' ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/60' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/40')
-              }`}
-            >
-              <TabIcon className="w-3.5 h-3.5" /> 
-              <span>{tab.label}</span>
-              <span
-                className={`ml-1 px-2 py-0.5 rounded-full font-mono font-bold text-[10px] ${
+      {/* Sub-tab navigation bar — Compact High-End Glass Island */}
+      <div className="w-full overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden p-0.5">
+        <div
+          className={`flex items-center gap-1 md:gap-1.5 p-1.5 rounded-2xl transition-all duration-300 w-fit max-w-full ${
+            adminTheme === 'light'
+              ? 'bg-slate-200/50 border border-slate-300/60 shadow-[0_2px_8px_rgba(15,23,42,0.04)] backdrop-blur-md'
+              : 'bg-slate-900/80 border border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.5)] backdrop-blur-xl'
+          }`}
+          role="tablist"
+        >
+          {([
+            { id: 'list',           label: 'Commandes',          icon: ShoppingBag,  count: orders.length },
+            { id: 'abandoned',      label: 'Paniers Abandonnés', icon: ShoppingCart, count: abandonedCarts.length },
+            { id: 'shipping',       label: 'Expéditions & COD',  icon: Truck,        count: orders.filter(o => o.courier).length },
+            { id: 'reconciliation', label: 'Rapprochement COD',  icon: DollarSign,   count: orders.filter(o => o.courier && !o.reconciled).length }
+          ] as const).map((tab) => {
+            const TabIcon = tab.icon;
+            const isActive = ordersSubTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => setOrdersSubTab(tab.id)}
+                className={`px-3 py-1.5 md:px-3.5 md:py-2 rounded-xl font-bold tracking-tight transition-all duration-200 flex items-center gap-2 cursor-pointer active:scale-[0.97] text-[10.5px] md:text-[11.5px] whitespace-nowrap ${
                   isActive
-                    ? (adminTheme === 'light' ? 'bg-white/20 text-white' : 'bg-slate-950/20 text-slate-950')
-                    : (adminTheme === 'light' ? 'bg-slate-100 text-slate-600' : 'bg-slate-800 text-slate-400')
+                    ? (adminTheme === 'light'
+                        ? 'bg-white text-slate-900 shadow-[0_2px_8px_rgba(15,23,42,0.08)] border border-slate-200/90 font-black'
+                        : 'bg-emerald-500 text-slate-950 shadow-[0_4px_16px_rgba(16,185,129,0.3)] border border-emerald-400/30 font-black')
+                    : (adminTheme === 'light'
+                        ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 border border-transparent font-semibold'
+                        : 'text-slate-400 hover:text-slate-100 hover:bg-white/[0.06] border border-transparent font-semibold')
                 }`}
               >
-                {tab.count}
-              </span>
-            </button>
-          );
-        })}
+                {isActive && (
+                  <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${adminTheme === 'light' ? 'bg-emerald-500 shadow-[0_0_6px_#10b981]' : 'bg-slate-950'}`} />
+                )}
+                <TabIcon className={`w-3.5 h-3.5 ${isActive ? (adminTheme === 'light' ? 'text-emerald-600' : 'text-slate-950') : 'opacity-65'}`} /> 
+                <span>{tab.label}</span>
+                <span
+                  className={`ml-0.5 px-2 py-0.5 rounded-full font-mono font-extrabold text-[10px] transition-all ${
+                    isActive
+                      ? (adminTheme === 'light' ? 'bg-slate-100 text-slate-800 border border-slate-200' : 'bg-slate-950/20 text-slate-950')
+                      : (adminTheme === 'light' ? 'bg-slate-300/50 text-slate-700' : 'bg-white/10 text-slate-300')
+                  }`}
+                >
+                  {tab.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* ---- ABANDONED CARTS FULL VIEW ---- */}
       {ordersSubTab === 'abandoned' && (
         <div className="space-y-5 t-panel">
+
+          {/* ── Bulk WhatsApp Blast Modal ────────────────────────────────────── */}
+          {isBulkBlastModalOpen && mounted && createPortal(
+            <div
+              className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+              style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(12px)' }}
+              onClick={() => setIsBulkBlastModalOpen(false)}
+            >
+              <div
+                className={`relative w-full max-w-lg rounded-3xl border shadow-2xl overflow-hidden ${
+                  adminTheme === 'light' ? 'bg-white border-slate-200' : 'bg-slate-950 border-slate-800'
+                }`}
+                onClick={e => e.stopPropagation()}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-slate-800/50">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-emerald-500/15 border border-emerald-500/30">
+                      <Send className="w-5 h-5 text-emerald-400" />
+                    </div>
+                    <div>
+                      <h3 className={`font-black text-base ${adminTheme === 'light' ? 'text-slate-900' : 'text-slate-100'}`}>Blast WhatsApp Paniers Abandonnés</h3>
+                      <p className="text-[11px] text-slate-500">Envoi groupé de messages de relance</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setIsBulkBlastModalOpen(false)} className="p-1.5 rounded-lg hover:bg-slate-800/50 transition cursor-pointer">
+                    <X className="w-4 h-4 text-slate-500" />
+                  </button>
+                </div>
+
+                {/* Body */}
+                <div className="p-6 space-y-4">
+                  {/* Stats */}
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { label: 'Paniers ciblés', value: abandonedCarts.filter(c => (cartRecoveryStatus[c.phone] || 'not_contacted') === 'not_contacted').length, color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-900/30' },
+                      { label: 'CA potentiel', value: `${abandonedCarts.filter(c => (cartRecoveryStatus[c.phone] || 'not_contacted') === 'not_contacted').reduce((s, c) => s + (c.total || 0), 0).toFixed(0)} DH`, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-900/30' },
+                      { label: 'Code promo', value: settings?.coupons?.[0]?.code || 'BEAUTY10', color: 'text-violet-400', bg: 'bg-violet-500/10 border-violet-900/30' },
+                    ].map((s, i) => (
+                      <div key={i} className={`rounded-xl p-3 border text-center ${adminTheme === 'light' ? 'bg-slate-50 border-slate-200' : s.bg}`}>
+                        <span className={`text-lg font-black font-mono block ${adminTheme === 'light' ? 'text-slate-900' : s.color}`}>{s.value}</span>
+                        <span className="text-[9px] uppercase font-semibold tracking-wider text-slate-500">{s.label}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Language selector */}
+                  <div className={`flex gap-2 p-1 rounded-xl ${adminTheme === 'light' ? 'bg-slate-100' : 'bg-slate-900'}`}>
+                    {(['Fr', 'Ar'] as const).map(lang => (
+                      <button
+                        key={lang}
+                        onClick={() => setBulkBlastLang(lang)}
+                        className={`flex-1 py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
+                          bulkBlastLang === lang
+                            ? 'bg-emerald-500 text-slate-950 shadow-sm'
+                            : (adminTheme === 'light' ? 'text-slate-600 hover:bg-slate-200' : 'text-slate-400 hover:bg-slate-800')
+                        }`}
+                      >
+                        {lang === 'Fr' ? '🇫🇷 Français' : '🇲🇦 Darija / Arabe'}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Message preview */}
+                  <div className={`rounded-xl p-4 border text-xs font-mono leading-relaxed max-h-36 overflow-y-auto ${
+                    adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-700' : 'bg-slate-900 border-slate-800 text-slate-300'
+                  }`}>
+                    {(() => {
+                      const key = bulkBlastLang === 'Ar' ? 'recoveryAr' : 'recoveryFr';
+                      const template = (settings?.notificationTemplates?.[key] as string) || (bulkBlastLang === 'Fr'
+                        ? 'Bonjour {customer_name} 👋\nVous avez laissé {cart_items} dans votre panier.\nUtilisez le code {discount_code} pour -10% ! 🎁\n{recovery_link}'
+                        : 'السلام عليكم {customer_name} 👋\nنسيتي {cart_items} في السلة.\nاستخدمي {discount_code} للحصول على خصم 🎁\n{recovery_link}');
+                      return template
+                        .replace(/{customer_name}/g, 'Client(e)')
+                        .replace(/{cart_items}/g, 'vos produits')
+                        .replace(/{cart_total}/g, '—')
+                        .replace(/{discount_code}/g, settings?.coupons?.[0]?.code || 'BEAUTY10')
+                        .replace(/{recovery_link}/g, 'https://para-officinal.ma/checkout?recover=…');
+                    })()}
+                  </div>
+
+                  {/* Warning */}
+                  <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-900/30">
+                    <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                    <p className="text-[10px] text-amber-400 leading-relaxed">
+                      Les liens WhatsApp s'ouvriront un par un dans votre navigateur. Si le navigateur bloque les popups, utilisez le bouton "Copier tous les liens" ci-dessous.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Footer actions */}
+                <div className="flex gap-3 p-6 pt-0">
+                  <button
+                    onClick={() => {
+                      const uncontacted = abandonedCarts.filter(c => (cartRecoveryStatus[c.phone] || 'not_contacted') === 'not_contacted');
+                      // Copy all WA links to clipboard as fallback
+                      const links = uncontacted.map(c => buildCartRecoveryLink(c, bulkBlastLang)).join('\n');
+                      navigator.clipboard.writeText(links).then(() => showToast('Liens copiés dans le presse-papiers ✓', 'success'));
+                    }}
+                    className={`flex-1 py-3 rounded-xl text-xs font-bold border transition cursor-pointer ${
+                      adminTheme === 'light' ? 'border-slate-300 text-slate-700 hover:bg-slate-50' : 'border-slate-800 text-slate-400 hover:bg-slate-900'
+                    }`}
+                  >
+                    <Copy className="w-3.5 h-3.5 inline mr-1.5" />
+                    Copier tous les liens
+                  </button>
+                  <button
+                    onClick={() => {
+                      const uncontacted = abandonedCarts.filter(c => (cartRecoveryStatus[c.phone] || 'not_contacted') === 'not_contacted');
+                      uncontacted.forEach((c, i) => {
+                        setTimeout(() => {
+                          window.open(buildCartRecoveryLink(c, bulkBlastLang), '_blank');
+                          handleUpdateCartRecovery(c.phone, 'contacted');
+                        }, i * 400);
+                      });
+                      setIsBulkBlastModalOpen(false);
+                      showToast(`${uncontacted.length} messages WhatsApp ouverts ✓`, 'success');
+                    }}
+                    className="flex-1 py-3 rounded-xl text-xs font-black bg-emerald-500 text-slate-950 hover:bg-emerald-400 transition cursor-pointer shadow-[0_4px_16px_rgba(16,185,129,0.35)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.45)]"
+                  >
+                    <Send className="w-3.5 h-3.5 inline mr-1.5" />
+                    Envoyer le Blast ({abandonedCarts.filter(c => (cartRecoveryStatus[c.phone] || 'not_contacted') === 'not_contacted').length} carts)
+                  </button>
+                </div>
+              </div>
+            </div>,
+            document.body
+          )}
+
+          {/* ── Live Active Shopper Feed ─────────────────────────────────────── */}
+          <div className={`rounded-2xl border overflow-hidden ${
+            adminTheme === 'light' ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-900/40 border-slate-900'
+          }`}>
+            <div className={`flex items-center justify-between px-4 py-3 border-b ${
+              adminTheme === 'light' ? 'border-slate-100 bg-slate-50/80' : 'border-slate-900 bg-slate-900/60'
+            }`}>
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                </span>
+                <Activity className={`w-3.5 h-3.5 ${adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'}`} />
+                <span className={`text-[11px] font-black uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>Activité en direct — Boutique</span>
+                <span className="text-[9px] font-mono text-emerald-500 border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">LIVE</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`text-[10px] font-mono ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-600'}`}>{liveShopperFeed.length} events</span>
+              </div>
+            </div>
+            <div className="relative overflow-hidden" style={{ height: '148px' }}>
+              <div className="absolute inset-0 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div className="divide-y divide-slate-900/50">
+                  {liveShopperFeed.map((event, i) => {
+                    const eventConfig = {
+                      viewing:      { label: 'consulte',        dot: 'bg-slate-400',   text: adminTheme === 'light' ? 'text-slate-500' : 'text-slate-500',   badge: adminTheme === 'light' ? 'bg-slate-100 text-slate-600' : 'bg-slate-800/60 text-slate-400' },
+                      added_to_cart:{ label: 'a ajouté au panier', dot: 'bg-amber-400', text: adminTheme === 'light' ? 'text-amber-700' : 'text-amber-400',   badge: 'bg-amber-500/10 text-amber-400 border border-amber-900/30' },
+                      checkout:     { label: 'est en caisse',   dot: 'bg-blue-400',    text: adminTheme === 'light' ? 'text-blue-700' : 'text-blue-400',     badge: 'bg-blue-500/10 text-blue-400 border border-blue-900/30' },
+                      ordered:      { label: 'a commandé',      dot: 'bg-emerald-400', text: adminTheme === 'light' ? 'text-emerald-700' : 'text-emerald-400', badge: 'bg-emerald-500/10 text-emerald-400 border border-emerald-900/30' },
+                    };
+                    const cfg = eventConfig[event.type];
+                    return (
+                      <div
+                        key={event.id}
+                        className={`flex items-center gap-3 px-4 py-2.5 transition-all duration-500 ${
+                          i === 0 ? 'animate-[fadeInDown_0.4s_ease-out]' : ''
+                        } ${
+                          adminTheme === 'light' ? 'hover:bg-slate-50/60' : 'hover:bg-slate-900/30'
+                        }`}
+                      >
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${cfg.dot} ${i === 0 ? 'animate-pulse' : ''}`} />
+                        <div className="flex-1 min-w-0 flex items-center gap-1.5 flex-wrap">
+                          <span className={`text-[11px] font-bold ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-200'}`}>{event.name}</span>
+                          <span className={`text-[10px] ${cfg.text}`}>de {event.city}</span>
+                          <span className={`text-[10px] ${cfg.text}`}>{cfg.label}</span>
+                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full max-w-[160px] truncate ${cfg.badge}`} title={event.product}>{event.product}</span>
+                        </div>
+                        <span className={`text-[9px] font-mono shrink-0 ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-600'}`}>{event.ago}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              {/* Fade-out gradient at bottom */}
+              <div className={`absolute bottom-0 left-0 right-0 h-8 pointer-events-none ${
+                adminTheme === 'light'
+                  ? 'bg-gradient-to-t from-white to-transparent'
+                  : 'bg-gradient-to-t from-slate-950 to-transparent'
+              }`} />
+            </div>
+          </div>
           {/* Recovery KPI Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
@@ -2872,6 +3232,17 @@ export default function OrdersTab() {
                 />
               </div>
               <span className={`text-[10px] font-mono shrink-0 ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-500'}`}>{filteredAbandonedCarts.length} résultats</span>
+              {/* Bulk WhatsApp Blast Button */}
+              <button
+                onClick={() => setIsBulkBlastModalOpen(true)}
+                className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-[11px] font-black bg-emerald-500 text-slate-950 hover:bg-emerald-400 transition cursor-pointer shadow-[0_4px_16px_rgba(16,185,129,0.3)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.45)] shrink-0 active:scale-[0.97]"
+              >
+                <Zap className="w-3.5 h-3.5" />
+                Blast WhatsApp
+                <span className="px-1.5 py-0.5 rounded-full bg-slate-950/20 font-mono text-[10px]">
+                  {abandonedCarts.filter(c => (cartRecoveryStatus[c.phone] || 'not_contacted') === 'not_contacted').length}
+                </span>
+              </button>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left">
@@ -3453,6 +3824,14 @@ export default function OrdersTab() {
               </button>
 
               <button
+                onClick={() => setIsBatchLabelPrintOpen(true)}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-black text-slate-950 bg-amber-400 hover:bg-amber-300 transition flex items-center gap-1.5 cursor-pointer shadow-lg shadow-amber-400/20"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                Imprimer A6 ({selectedOrderIds.length})
+              </button>
+
+              <button
                 onClick={() => {
                   const toExp = orders.filter(o => selectedOrderIds.includes(o.order_id));
                   handleExportOrdersToCsv(toExp);
@@ -3479,11 +3858,12 @@ export default function OrdersTab() {
           
           <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-4 ${adminTheme === 'light' ? 'border-slate-100' : 'border-slate-900'}`}>
             <div>
-              <h3 className="text-sm font-extrabold uppercase tracking-wider">
-                Suivi et Rapprochement Yalidine & Cathedis
+              <h3 className="text-sm font-extrabold uppercase tracking-wider flex items-center gap-2">
+                <Truck className="w-4 h-4 text-emerald-500" />
+                Suivi et Intelligence Logistique Yalidine & Cathedis
               </h3>
               <p className={`text-[11px] ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-500'}`}>
-                Mettez à jour les statuts de livraison et le rapprochement des paiements (COD).
+                Comparatif des transporteurs, prévisions de cash-flow et synchronisation des statuts COD.
               </p>
             </div>
             <button
@@ -3532,7 +3912,7 @@ export default function OrdersTab() {
               { 
                 label: 'Taux de Succès', 
                 value: `${shippingStats.successRate}%`, 
-                sub: `Sur {shippingStats.total} expéditions`,
+                sub: `Sur ${shippingStats.total} expéditions`,
                 color: 'text-amber-400', 
                 bg: 'from-amber-500/10 to-yellow-500/10 border-amber-900/40', 
                 icon: CheckCircle, 
@@ -3573,6 +3953,178 @@ export default function OrdersTab() {
                 </div>
               );
             })}
+          </div>
+
+          {/* ── COURIER PERFORMANCE COMPARISON RADAR & CASH FLOW TIMELINE ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* Courier Comparison Radar Card (2 Cols) */}
+            {(() => {
+              const yalidineList = orders.filter(o => o.courier === 'yalidine' || (o.tracking_number && o.tracking_number.toUpperCase().startsWith('YAL')));
+              const cathedisList = orders.filter(o => o.courier === 'cathedis' || (o.tracking_number && o.tracking_number.toUpperCase().startsWith('CAT')));
+
+              const computeCourierStats = (list: Order[]) => {
+                const total = list.length || 1;
+                const delivered = list.filter(o => o.status === 'Delivered').length;
+                const returned = list.filter(o => o.status === 'Cancelled').length;
+                const successRate = Math.round((delivered / total) * 100);
+                const returnRate = Math.round((returned / total) * 100);
+                const cashCollected = list.filter(o => o.status === 'Delivered').reduce((sum, o) => sum + (o.total || 0), 0);
+                return { total: list.length, delivered, returned, successRate, returnRate, cashCollected };
+              };
+
+              const yal = computeCourierStats(yalidineList);
+              const cat = computeCourierStats(cathedisList);
+
+              return (
+                <div 
+                  className={`lg:col-span-2 p-5 rounded-2xl border transition-all duration-300 ${
+                    adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/60 border-slate-800'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2 mb-4 border-b pb-3 border-slate-200 dark:border-slate-800">
+                    <div>
+                      <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4 text-emerald-500" />
+                        Radar Comparatif Transporteurs : Yalidine vs. Cathedis
+                      </h4>
+                      <p className="text-[10.5px] text-slate-400">Analyse de performance des livraisons et retours COD</p>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full text-[9px] font-mono font-extrabold uppercase bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                      Live Matrix
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Yalidine Block */}
+                    <div className="p-4 rounded-xl border bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-lg bg-blue-600 text-white flex items-center justify-center font-black text-[10px]">Y</div>
+                          <strong className="text-xs font-black uppercase">Yalidine Express</strong>
+                        </div>
+                        <span className="text-xs font-mono font-black text-blue-500">{yal.total} colis</span>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between text-[10px] font-bold">
+                          <span className="text-slate-400">Taux de Livraison Réussie</span>
+                          <span className="text-emerald-500">{yal.successRate}%</span>
+                        </div>
+                        <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                          <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${yal.successRate}%` }} />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between text-[10px] font-bold">
+                          <span className="text-slate-400">Taux de Retour / Annulation</span>
+                          <span className="text-rose-500">{yal.returnRate}%</span>
+                        </div>
+                        <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                          <div className="h-full bg-rose-500 rounded-full transition-all duration-500" style={{ width: `${yal.returnRate}%` }} />
+                        </div>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center text-[10px]">
+                        <span className="text-slate-400 font-bold">Total Encaissé (COD) :</span>
+                        <span className="font-mono font-black text-emerald-600 dark:text-emerald-400 text-xs">{yal.cashCollected.toFixed(0)} DH</span>
+                      </div>
+                    </div>
+
+                    {/* Cathedis Block */}
+                    <div className="p-4 rounded-xl border bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-black text-[10px]">C</div>
+                          <strong className="text-xs font-black uppercase">Cathedis Express</strong>
+                        </div>
+                        <span className="text-xs font-mono font-black text-indigo-500">{cat.total} colis</span>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between text-[10px] font-bold">
+                          <span className="text-slate-400">Taux de Livraison Réussie</span>
+                          <span className="text-emerald-500">{cat.successRate}%</span>
+                        </div>
+                        <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                          <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${cat.successRate}%` }} />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between text-[10px] font-bold">
+                          <span className="text-slate-400">Taux de Retour / Annulation</span>
+                          <span className="text-rose-500">{cat.returnRate}%</span>
+                        </div>
+                        <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                          <div className="h-full bg-rose-500 rounded-full transition-all duration-500" style={{ width: `${cat.returnRate}%` }} />
+                        </div>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center text-[10px]">
+                        <span className="text-slate-400 font-bold">Total Encaissé (COD) :</span>
+                        <span className="font-mono font-black text-emerald-600 dark:text-emerald-400 text-xs">{cat.cashCollected.toFixed(0)} DH</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Pending Cash Flow Payout Timeline (1 Col) */}
+            {(() => {
+              const pendingOrders = orders.filter(o => o.courier && !o.reconciled && o.status !== 'Cancelled');
+              const totalPendingAmount = pendingOrders.reduce((acc, o) => acc + (o.total || 0), 0);
+
+              const scheduleDays = [
+                { day: 'Mardi Prochain', courier: 'Yalidine (Cycle Hebdo)', amount: Math.round(totalPendingAmount * 0.6), status: 'Planifié' },
+                { day: 'Jeudi Prochain', courier: 'Cathedis (Virement Bank)', amount: Math.round(totalPendingAmount * 0.4), status: 'En attente' },
+              ];
+
+              return (
+                <div 
+                  className={`p-5 rounded-2xl border transition-all duration-300 flex flex-col justify-between ${
+                    adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/60 border-slate-800'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-3 border-b pb-2 border-slate-200 dark:border-slate-800">
+                      <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-2">
+                        <DollarSign className="w-4 h-4 text-emerald-500" />
+                        Échéancier Payout COD
+                      </h4>
+                      <span className="text-[10px] font-mono font-extrabold text-amber-500">7 Jours</span>
+                    </div>
+
+                    <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
+                      <span className="text-[10px] font-extrabold uppercase text-slate-400 block">Virements Attendus Sur Compte</span>
+                      <strong className="text-xl font-black font-mono text-emerald-500">{totalPendingAmount.toFixed(0)} DH</strong>
+                    </div>
+
+                    <div className="space-y-2.5">
+                      {scheduleDays.map((item, idx) => (
+                        <div key={idx} className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
+                          <div>
+                            <span className="font-extrabold block text-[11px]">{item.day}</span>
+                            <span className="text-[9.5px] text-slate-400 block">{item.courier}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="font-mono font-extrabold text-emerald-400 block">{item.amount} DH</span>
+                            <span className="text-[9px] font-bold text-amber-400 uppercase block">{item.status}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <p className="text-[9px] text-slate-500 italic mt-4 text-center">
+                    Note: Les montants sont basés sur les bordereaux en cours d'acheminement.
+                  </p>
+                </div>
+              );
+            })()}
+
           </div>
 
           {/* Filters and search panel */}

@@ -11,6 +11,7 @@ interface AdminCardProps {
   className?: string;
   padding?: 'none' | 'sm' | 'md' | 'lg';
   hoverable?: boolean;
+  bezel?: boolean;
   onClick?: () => void;
   as?: 'div' | 'section' | 'article';
 }
@@ -29,6 +30,7 @@ export function AdminCard({
   className = '',
   padding = 'md',
   hoverable = false,
+  bezel = true,
   onClick,
   as: Tag = 'div',
 }: AdminCardProps) {
@@ -38,12 +40,12 @@ export function AdminCard({
 
   const variantStyles = {
     default: isLight
-      ? 'bg-white border border-[hsl(220_13%_90%)] shadow-[var(--admin-shadow-sm)]'
-      : 'bg-[hsl(224_18%_10%)] border border-[hsl(224_15%_16%)] shadow-[var(--admin-shadow-sm)]',
+      ? 'bg-white border border-[hsl(220_13%_90%)] shadow-[0_2px_12px_rgba(15,30,54,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)]'
+      : 'bg-[hsl(224_20%_9%)] border border-[hsl(224_15%_16%)] shadow-[0_4px_24px_rgba(0,0,0,0.35),inset_0_1px_1px_rgba(255,255,255,0.12)]',
 
     flat: isLight
       ? 'bg-white border border-[hsl(220_13%_90%)]'
-      : 'bg-[hsl(224_18%_10%)] border border-[hsl(224_15%_16%)]',
+      : 'bg-[hsl(224_20%_9%)] border border-[hsl(224_15%_16%)]',
 
     ghost: isLight
       ? 'bg-[hsl(220_14%_98%)] border border-[hsl(220_13%_92%)]'
@@ -51,14 +53,32 @@ export function AdminCard({
 
     inset: isLight
       ? 'bg-[hsl(220_14%_97%)] border border-[hsl(220_13%_91%)] shadow-[inset_0_1px_3px_rgba(15,30,54,0.04)]'
-      : 'bg-[hsl(224_20%_7%)] border border-[hsl(224_14%_14%)] shadow-[inset_0_1px_3px_rgba(0,0,0,0.30)]',
+      : 'bg-[hsl(224_22%_7%)] border border-[hsl(224_14%_14%)] shadow-[inset_0_1px_4px_rgba(0,0,0,0.4)]',
   };
 
   const hoverStyles = hoverable
     ? isLight
-      ? 'hover:shadow-[var(--admin-shadow-md)] hover:-translate-y-0.5 cursor-pointer active:scale-[0.985] transition-all'
-      : 'hover:border-[hsl(224_14%_20%)] hover:shadow-[var(--admin-shadow-md)] hover:-translate-y-0.5 cursor-pointer active:scale-[0.985] transition-all'
+      ? 'hover:shadow-[0_8px_30px_rgba(15,30,54,0.08)] hover:-translate-y-0.5 cursor-pointer active:scale-[0.985] transition-all'
+      : 'hover:border-[hsl(224_14%_24%)] hover:shadow-[0_12px_36px_rgba(0,0,0,0.5)] hover:-translate-y-0.5 cursor-pointer active:scale-[0.985] transition-all'
     : '';
+
+  if (bezel && variant === 'default') {
+    return (
+      <div className={`p-1 rounded-[calc(var(--admin-radius-xl)+4px)] ${
+        isLight
+          ? 'bg-slate-200/50 border border-slate-200/80 shadow-xs'
+          : 'bg-white/[0.03] border border-white/[0.08] shadow-md'
+      }`}>
+        <Tag
+          className={`${base} ${variantStyles[variant]} ${hoverStyles} ${className}`}
+          onClick={onClick}
+          style={{ transitionDuration: 'var(--admin-transition-base)' }}
+        >
+          {children}
+        </Tag>
+      </div>
+    );
+  }
 
   return (
     <Tag
