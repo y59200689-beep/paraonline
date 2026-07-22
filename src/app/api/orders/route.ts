@@ -27,7 +27,44 @@ export async function GET(request: Request) {
 
     if (error) throw error;
 
-    return NextResponse.json({ success: true, orders: data || [] });
+    const orders = data || [];
+    for (const order of orders) {
+      if (order.items && Array.isArray(order.items)) {
+        for (const item of order.items) {
+          if (!item.image && !item.image_url) {
+            if (item.id) {
+              try {
+                const { data: prod } = await supabase
+                  .from('products')
+                  .select('image')
+                  .eq('id', item.id)
+                  .single();
+                if (prod?.image) {
+                  item.image = prod.image;
+                }
+              } catch (_) {}
+            }
+            if (!item.image && item.title) {
+              try {
+                const firstWord = item.title.trim().split(' ')[0];
+                if (firstWord && firstWord.length >= 3) {
+                  const { data: prods } = await supabase
+                    .from('products')
+                    .select('image')
+                    .ilike('title', `%${firstWord}%`)
+                    .limit(1);
+                  if (prods && prods[0]?.image) {
+                    item.image = prods[0].image;
+                  }
+                }
+              } catch (_) {}
+            }
+          }
+        }
+      }
+    }
+
+    return NextResponse.json({ success: true, orders });
   } catch (error: any) {
     console.error('Order tracking error:', error);
     return NextResponse.json({ success: false, error: error.message || 'Erreur serveur' }, { status: 500 });

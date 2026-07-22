@@ -12,6 +12,7 @@ import {
   Calendar, CheckCircle2, X, Navigation, Shield, Activity, Compass, Box
 } from 'lucide-react';
 import { ShopShell } from '@/components/ShopShell';
+import { PRODUCTS_DB } from '@/lib/data';
 
 interface OrderItem {
   id?: number;
@@ -20,6 +21,56 @@ interface OrderItem {
   price: number;
   image?: string;
   sku?: string;
+}
+
+function resolveProductImage(item: OrderItem): string {
+  if (item.image && typeof item.image === 'string' && item.image.trim().length > 0) {
+    return item.image;
+  }
+
+  const idNum = item.id ? Number(item.id) : null;
+  if (idNum) {
+    const found = PRODUCTS_DB.find((p) => p.id === idNum);
+    if (found && found.image) return found.image;
+  }
+
+  if (item.sku) {
+    const found = PRODUCTS_DB.find((p) => p.sku === item.sku);
+    if (found && found.image) return found.image;
+  }
+
+  if (item.title) {
+    const titleLower = item.title.toLowerCase();
+    const found = PRODUCTS_DB.find(
+      (p) => p.title.toLowerCase().includes(titleLower) || titleLower.includes(p.title.toLowerCase())
+    );
+    if (found && found.image) return found.image;
+  }
+
+  const t = (item.title || '').toLowerCase();
+  if (t.includes('nuk') || t.includes('sucette') || t.includes('biberon') || t.includes('bebe') || t.includes('bébé')) {
+    return '/images/categories/bebe_transparent_v3.png';
+  }
+  if (t.includes('solaire') || t.includes('spf') || t.includes('sun') || t.includes('anthelios')) {
+    return '/images/anthelios_hero_packshot.png';
+  }
+  if (t.includes('cicaplast') || t.includes('réparatrice') || t.includes('creme') || t.includes('crème')) {
+    return '/images/cicaplast_hero_packshot.png';
+  }
+  if (t.includes('effaclar') || t.includes('nettoyant') || t.includes('gel')) {
+    return '/images/effaclar_hero_packshot.png';
+  }
+  if (t.includes('serum') || t.includes('sérum') || t.includes('dropper')) {
+    return '/images/hero_serum_dropper.png';
+  }
+  if (t.includes('shampoo') || t.includes('cheveux') || t.includes('dercos')) {
+    return '/images/dercos_shampoo_bundle.png';
+  }
+  if (t.includes('vichy')) {
+    return '/images/vichy_sunscreen_bundle.png';
+  }
+
+  return '/images/categories/visage.png';
 }
 
 interface AuditLog {
@@ -940,33 +991,39 @@ export default function SuiviCommandeClient() {
                     </div>
 
                     <div className="divide-y divide-slate-800/60">
-                      {order.items && order.items.map((item, idx) => (
-                        <div key={idx} className="py-4 first:pt-0 last:pb-0 flex items-center justify-between gap-4">
-                          <div className="flex items-center gap-4">
-                            <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden relative shrink-0 flex items-center justify-center">
-                              {item.image ? (
-                                <Image src={item.image} alt={item.title} fill className="object-cover" />
-                              ) : (
-                                <PackageCheck className="w-7 h-7 text-slate-600" />
-                              )}
+                      {order.items && order.items.map((item, idx) => {
+                        const imgUrl = resolveProductImage(item);
+                        return (
+                          <div key={idx} className="py-4 first:pt-0 last:pb-0 flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                              <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden relative shrink-0 flex items-center justify-center p-1 shadow-inner">
+                                <img
+                                  src={imgUrl}
+                                  alt={item.title}
+                                  className="w-full h-full object-contain rounded-xl"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = '/images/categories/visage.png';
+                                  }}
+                                />
+                              </div>
+
+                              <div className="space-y-1">
+                                <h4 className="text-xs sm:text-sm font-bold text-slate-200 leading-snug">{item.title}</h4>
+                                {item.sku && <p className="text-[11px] font-mono text-slate-500">REF: {item.sku}</p>}
+                                <p className="text-xs text-slate-400">
+                                  {isRTL ? 'الكمية:' : 'Quantité:'} <span className="font-bold text-emerald-400">{item.quantity}</span> × {item.price} MAD
+                                </p>
+                              </div>
                             </div>
 
-                            <div className="space-y-1">
-                              <h4 className="text-xs sm:text-sm font-bold text-slate-200 leading-snug">{item.title}</h4>
-                              {item.sku && <p className="text-[11px] font-mono text-slate-500">REF: {item.sku}</p>}
-                              <p className="text-xs text-slate-400">
-                                {isRTL ? 'الكمية:' : 'Quantité:'} <span className="font-bold text-emerald-400">{item.quantity}</span> × {item.price} MAD
-                              </p>
+                            <div className="text-right">
+                              <span className="text-base font-black text-slate-100 font-mono">
+                                {(item.quantity * item.price).toFixed(2)} MAD
+                              </span>
                             </div>
                           </div>
-
-                          <div className="text-right">
-                            <span className="text-base font-black text-slate-100 font-mono">
-                              {item.quantity * item.price} MAD
-                            </span>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
 
                     {order.gift_item && (
