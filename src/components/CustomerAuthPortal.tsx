@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { 
-  Sparkles, ShieldCheck, Lock, Mail, User, Phone, ArrowRight,
+  Sparkles, ShieldCheck, Lock, Mail, User, Phone, ArrowRight, ArrowLeft,
   Eye, EyeOff, CheckCircle2, PackageCheck, Award, HeartHandshake, KeyRound
 } from 'lucide-react';
 import { useTranslation } from '@/context/LanguageContext';
@@ -45,7 +45,7 @@ export const CustomerAuthPortal: React.FC<CustomerAuthPortalProps> = ({
   onClose,
   isModal = false,
 }) => {
-  const { language } = useTranslation();
+  const { language, toggleLanguage } = useTranslation();
   const isRTL = language === 'AR';
   const [showPassword, setShowPassword] = useState(false);
   const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
@@ -62,7 +62,46 @@ export const CustomerAuthPortal: React.FC<CustomerAuthPortalProps> = ({
   };
 
   return (
-    <div className={`w-full max-w-5xl mx-auto ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className={`w-full max-w-6xl mx-auto space-y-6 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+      
+      {/* ── Top Bar Header (Only when rendered full-page) ── */}
+      {!isModal && (
+        <div className="flex items-center justify-between gap-4 pb-2 px-2 select-none">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-2.5 group">
+              <div className="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-emerald-400 group-hover:border-emerald-500/40 transition-colors shadow-lg">
+                <Sparkles className="w-5 h-5 text-emerald-400" />
+              </div>
+              <div>
+                <span className="text-sm font-black tracking-tight text-white font-heading block">
+                  PARA OFFICINAL
+                </span>
+                <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest block -mt-1">
+                  PORTAIL CONCIERGE
+                </span>
+              </div>
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleLanguage}
+              className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs font-mono text-slate-300 transition cursor-pointer"
+            >
+              {language === 'FR' ? '🇲🇦 العربية' : '🇫🇷 Français'}
+            </button>
+
+            <Link
+              href="/"
+              className="py-2 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold transition flex items-center gap-2"
+            >
+              <ArrowLeft className={`w-3.5 h-3.5 ${isRTL ? 'rotate-180' : ''}`} />
+              <span>{isRTL ? 'العودة للمتجر' : 'Retour au magasin'}</span>
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Outer Doppelrand Hardware Shell */}
       <div className="bg-slate-900/90 p-2 sm:p-3 rounded-[2.5rem] border border-slate-800/90 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)] backdrop-blur-2xl relative overflow-hidden">
         

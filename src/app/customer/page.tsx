@@ -15,6 +15,7 @@ import { Product } from '@/lib/data';
 import Link from 'next/link';
 import { useUi } from '@/context/UiContext';
 import { CustomerAuthPortal } from '@/components/CustomerAuthPortal';
+import { ShopShell } from '@/components/ShopShell';
 
 interface OrderItem {
   id: number;
@@ -558,30 +559,21 @@ export default function CustomerDashboard() {
   ].join(' ');
 
   return (
-    <div 
-      className="min-h-screen bg-gradient-to-br from-[#FAF9F6] via-[#FCFBF9] to-[#FAF9F6] text-[#111827] py-16 px-4 md:px-6 transition-colors page-entry-animate relative"
-      style={{ direction: isRTL ? 'rtl' : 'ltr' }}
-    >
-      {/* Editorial film grain noise overlay */}
-      <div className="pointer-events-none fixed inset-0 z-45 opacity-[0.018] bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:16px_16px] mix-blend-overlay" />
+    <ShopShell hideHeader={!clientUser}>
+      <div 
+        className={`min-h-screen bg-slate-950 text-slate-100 selection:bg-emerald-500 selection:text-slate-950 relative overflow-hidden transition-colors page-entry-animate ${
+          !clientUser ? 'flex flex-col items-center justify-center p-4 sm:p-6 lg:p-10' : 'py-12 px-4 sm:px-6 lg:px-8'
+        }`}
+        style={{ direction: isRTL ? 'rtl' : 'ltr' }}
+      >
+        {/* Radial ambient background blurs */}
+        <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.02] bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:24px_24px]" />
+        <div className="pointer-events-none absolute -top-40 left-1/3 w-[600px] h-[600px] rounded-full bg-emerald-500/10 blur-[120px]" />
+        <div className="pointer-events-none absolute -bottom-40 right-1/3 w-[600px] h-[600px] rounded-full bg-cyan-500/10 blur-[120px]" />
 
-      <div className="max-w-[760px] mx-auto space-y-12">
-        
-        {/* Navigation back */}
-        <Link 
-          href="/" 
-          className={`group inline-flex items-center gap-2.5 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-all duration-300 ${
-            isRTL ? 'flex-row-reverse' : ''
-          }`}
-        >
-          <ArrowLeft className={`w-3.5 h-3.5 transition-transform duration-300 ${isRTL ? 'rotate-180 group-hover:translate-x-0.5' : 'group-hover:-translate-x-0.5'}`} strokeWidth={2.5} />
-          <span className="anim-underline after:bottom-[-4px]">{language === 'FR' ? 'Retour au magasin' : 'العودة للمتجر'}</span>
-        </Link>
-
-
-
-        {/* ── Welcome Account / Login Banner ── */}
-        {!clientUser && !isLoadingAuth ? (
+        <div className={`w-full relative z-10 ${!clientUser ? 'max-w-6xl' : 'max-w-5xl mx-auto space-y-8'}`}>
+          {/* ── Welcome Account / Login Banner ── */}
+          {!clientUser && !isLoadingAuth ? (
           <CustomerAuthPortal
             authView={authView}
             setAuthView={setAuthView}
@@ -1594,5 +1586,6 @@ export default function CustomerDashboard() {
 
       </div>
     </div>
+    </ShopShell>
   );
 }
