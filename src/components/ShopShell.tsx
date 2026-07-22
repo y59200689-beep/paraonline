@@ -297,7 +297,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children }) => {
               <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500">Portails</span>
               <ul className="flex flex-col gap-3">
                 <li>
-                  <Link href="/customer" className="text-[13px] text-emerald-400 hover:text-white transition-colors duration-300 anim-underline">
+                  <Link href="/suivi-commande" className="text-[13px] text-emerald-400 hover:text-white transition-colors duration-300 anim-underline">
                     Suivi Commande
                   </Link>
                 </li>
