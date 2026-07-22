@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { ChevronDown, Sparkles } from 'lucide-react';
 import type { CurrencyCode } from '@/context/CurrencyContext';
 import { CURRENCIES } from '@/context/CurrencyContext';
@@ -81,9 +82,9 @@ export const TopBar: React.FC<TopBarProps> = ({
           {language === 'FR' ? 'Mon Compte' : 'حسابي'}
         </a>
         <span className="text-slate-200">|</span>
-        <a href="/customer" className="hover:text-primary transition-colors duration-200 cursor-pointer">
+        <Link href="/suivi-commande" className="hover:text-primary transition-colors duration-200 cursor-pointer">
           {language === 'FR' ? 'Suivi de commande' : 'تتبع الطلب'}
-        </a>
+        </Link>
         <span className="text-slate-200">|</span>
         <a href="#footer" className="hover:text-primary transition-colors duration-200 cursor-pointer">
           {language === 'FR' ? 'Contactez-nous' : 'اتصل بنا'}
