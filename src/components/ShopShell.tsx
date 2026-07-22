@@ -255,7 +255,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
         </div>
 
         <div className="relative max-w-7xl mx-auto px-6 pt-20 pb-10">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-16 stagger-children reveal-on-scroll">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
             {/* Brand column */}
             <div className="md:col-span-4 flex flex-col gap-5">
               <Image src={getOptimizedImageUrl("/images/logo.png")} alt="Para Officinal S.A"
