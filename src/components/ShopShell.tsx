@@ -33,9 +33,11 @@ const CompareModal = dynamic(() => import('./CompareModal').then(m => m.CompareM
 
 interface ShopShellProps {
   children: React.ReactNode;
+  hideHeader?: boolean;
+  hideFooter?: boolean;
 }
 
-export const ShopShell: React.FC<ShopShellProps> = ({ children }) => {
+export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hideFooter }) => {
   const { t, language } = useTranslation();
   const { products } = useProducts();
   const { settings } = useSettings();
@@ -233,7 +235,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children }) => {
       <div className="editorial-noise" />
 
       {/* Header */}
-      <Header />
+      {!hideHeader && <Header />}
 
       {/* Main page content */}
       <div className="flex-grow">

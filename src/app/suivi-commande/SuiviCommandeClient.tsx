@@ -289,7 +289,7 @@ export default function SuiviCommandeClient() {
   ];
 
   return (
-    <ShopShell>
+    <ShopShell hideHeader={true}>
       <div className={`min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-emerald-500 selection:text-slate-950 ${isRTL ? 'rtl' : 'ltr'}`}>
         
         {/* Toast Notification Floating Banner */}
