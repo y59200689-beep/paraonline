@@ -719,27 +719,7 @@ export default function CustomerDashboard() {
         {/* ──────── TAB 1: SUIVI DE COMMANDE ──────── */}
         {activeTab === 'suivi' && (
           <div className="space-y-6 animate-fade-in">
-            {/* Search Bar Block */}
-            <div className="bg-white border border-slate-200/50 rounded-3xl p-6 shadow-premium relative">
-              <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    type="text"
-                    placeholder={language === 'FR' ? 'Saisissez votre n° téléphone ou nom...' : 'مثال: 0661234567 أو اسمكِ...'}
-                    value={searchContact}
-                    onChange={(e) => setSearchContact(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent focus:bg-white transition duration-200"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="px-8 py-3.5 bg-slate-900 hover:bg-accent text-white text-[10.5px] font-black uppercase tracking-widest rounded-2xl transition-all duration-300 active:scale-[0.97] flex items-center justify-center gap-1.5 cursor-pointer border-0 outline-none shadow-sm"
-                >
-                  {isSearching ? '...' : (language === 'FR' ? 'Rechercher' : 'بحث')}
-                </button>
-              </form>
-            </div>
+
 
             {/* Results Deck */}
             <div className="space-y-6">
