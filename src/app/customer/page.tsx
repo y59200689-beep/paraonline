@@ -578,22 +578,7 @@ export default function CustomerDashboard() {
           <span className="anim-underline after:bottom-[-4px]">{language === 'FR' ? 'Retour au magasin' : 'العودة للمتجر'}</span>
         </Link>
 
-        {/* Rebranded Luxury Header */}
-        <div className="text-center space-y-4 select-none">
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-accent/5 to-gold/10 border border-gold/25 rounded-full text-[9px] font-black tracking-[0.25em] text-gold uppercase shadow-sm">
-            <Sparkles className="w-3 h-3 text-gold" />
-            {language === 'FR' ? 'PORTAIL CONCIERGE BEAUTÉ' : 'البوابة الخاصة للجمال'}
-          </span>
-          <h1 className="text-3xl sm:text-5xl font-black font-heading tracking-tight text-slate-900 leading-tight uppercase">
-            {language === 'FR' ? 'Mon Espace Para Officinal' : 'حسابي الخاص للجمال'}
-          </h1>
-          <p className="text-xs text-slate-500 max-w-lg mx-auto leading-relaxed font-semibold">
-            {language === 'FR'
-              ? 'Suivez vos colis, gérez votre cagnotte fidélité et planifiez vos rituels de soin au quotidien avec notre clinique beauté.'
-              : 'تتبعي طلبياتكِ، تفقدي رصيد نقاطكِ، وخططي لروتين العناية اليومي ببشرتكِ معنا.'
-            }
-          </p>
-        </div>
+
 
         {/* ── Welcome Account / Login Banner ── */}
         {!clientUser && !isLoadingAuth ? (
