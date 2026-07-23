@@ -10,7 +10,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Product } from '@/lib/data';
 import { useProducts } from '@/context/ProductsContext';
 import Link from 'next/link';
-import { ShoppingBag, Home as HomeIcon, Store, Sparkles, Mail, Send, ShieldCheck, Truck, MessageSquare, Lock, CheckCircle2, Award, Package, Crown, FlaskConical, Building2, Banknote, CreditCard } from 'lucide-react';
+import { ShoppingBag, Home as HomeIcon, Store, Sparkles, Mail, Send, ShieldCheck, Truck, MessageSquare, Lock, CheckCircle2, Award, Package, Crown, FlaskConical, Building2, Coins, CreditCard } from 'lucide-react';
 import Image from 'next/image';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 
@@ -559,7 +559,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
               {/* Payment Methods Badges */}
               <div className="flex items-center gap-3 text-[10px] font-mono text-slate-400 flex-wrap justify-center">
                 <span className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-slate-300 font-bold inline-flex items-center gap-1.5">
-                  <Banknote className="w-3.5 h-3.5 text-emerald-400" /> Cash sur Livraison (COD)
+                  <Coins className="w-3.5 h-3.5 text-emerald-400" /> Cash sur Livraison (COD)
                 </span>
                 <span className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-slate-300 font-bold inline-flex items-center gap-1.5">
                   <CreditCard className="w-3.5 h-3.5 text-teal-400" /> Carte Bancaire CMI
