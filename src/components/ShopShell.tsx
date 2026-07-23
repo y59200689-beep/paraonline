@@ -243,7 +243,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
       </div>
 
       {/* Footer */}
-      <footer className="relative overflow-hidden text-white" style={{ background: 'linear-gradient(135deg, #080f1e 0%, #0f1f3d 40%, #111a3a 100%)' }}>
+      <footer id="footer" className="relative overflow-hidden text-white" style={{ background: 'linear-gradient(135deg, #080f1e 0%, #0f1f3d 40%, #111a3a 100%)' }}>
         {/* Subtle background grid + orbs */}
         <div className="absolute inset-0 pointer-events-none select-none" aria-hidden="true">
           <div className="absolute -top-20 left-1/4 w-[520px] h-[520px] rounded-full"

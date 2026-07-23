@@ -86,7 +86,19 @@ export const TopBar: React.FC<TopBarProps> = ({
           {language === 'FR' ? 'Suivi de commande' : 'تتبع الطلب'}
         </Link>
         <span className="text-slate-200">|</span>
-        <a href="#footer" className="hover:text-primary transition-colors duration-200 cursor-pointer">
+        <a
+          href="#footer"
+          onClick={(e) => {
+            e.preventDefault();
+            const footerEl = document.getElementById('footer');
+            if (footerEl) {
+              footerEl.scrollIntoView({ behavior: 'smooth' });
+            } else {
+              window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            }
+          }}
+          className="hover:text-primary transition-colors duration-200 cursor-pointer"
+        >
           {language === 'FR' ? 'Contactez-nous' : 'اتصل بنا'}
         </a>
       </div>
