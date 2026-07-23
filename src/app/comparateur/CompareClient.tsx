@@ -14,27 +14,18 @@ import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import {
   Scale,
   Sparkles,
-  ShieldCheck,
   Search,
   Trash2,
   Plus,
   CheckCircle2,
-  XCircle,
   ShoppingBag,
   ArrowRight,
   Star,
-  Zap,
   Award,
-  Clock,
-  Droplet,
-  Flame,
-  HelpCircle,
   Layers,
-  ChevronRight,
   RotateCcw
 } from 'lucide-react';
 
-// Ingredient → clinical benefit mapping
 const INGREDIENT_BENEFITS_MAP: { pattern: RegExp; name: string; benefit: { FR: string; AR: string } }[] = [
   { pattern: /hyaluronic acid|hyaluronate/i, name: 'Acide Hyaluronique', benefit: { FR: 'Hydratation profonde & repulpage', AR: 'ترطيب عميق وتفعيل البشرة' } },
   { pattern: /glycolic acid/i, name: 'Acide Glycolique', benefit: { FR: 'Taches sombres & exfoliation', AR: 'البقع الداكنة والتقشير' } },
@@ -65,7 +56,6 @@ export default function CompareClient() {
 
   const isRTL = language === 'AR';
 
-  // Local state for slot searching
   const [searchSlot1, setSearchSlot1] = useState('');
   const [searchSlot2, setSearchSlot2] = useState('');
   const [isSelecting1, setIsSelecting1] = useState(false);
@@ -74,7 +64,6 @@ export default function CompareClient() {
   const product1 = compareProducts[0] || null;
   const product2 = compareProducts[1] || null;
 
-  // Extract active ingredients helper
   const getActives = (p: Product | null) => {
     if (!p || !p.ingredients) return [];
     return INGREDIENT_BENEFITS_MAP.filter((item) => item.pattern.test(p.ingredients));
@@ -83,7 +72,6 @@ export default function CompareClient() {
   const actives1 = getActives(product1);
   const actives2 = getActives(product2);
 
-  // Extract volume in ml helper
   const getVolume = (p: Product | null) => {
     if (!p) return 50;
     const match = (p.title + ' ' + (p.description || '')).match(/(\d+)\s*ml/i);
@@ -96,13 +84,12 @@ export default function CompareClient() {
   const pricePerMl1 = product1 ? (product1.price / vol1).toFixed(2) : '0';
   const pricePerMl2 = product2 ? (product2.price / vol2).toFixed(2) : '0';
 
-  // Filter products for slot modal/dropdown search
   const filteredProducts1 = useMemo(() => {
     if (!searchSlot1.trim()) return products.slice(0, 8);
     const q = searchSlot1.toLowerCase();
     return products.filter((p) =>
       p.id !== product2?.id &&
-      (p.title.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q) || p.category.toLowerCase().includes(q))
+      (p.title.toLowerCase().includes(q) || (p.vendor && p.vendor.toLowerCase().includes(q)) || p.category.toLowerCase().includes(q))
     ).slice(0, 10);
   }, [products, searchSlot1, product2]);
 
@@ -111,7 +98,7 @@ export default function CompareClient() {
     const q = searchSlot2.toLowerCase();
     return products.filter((p) =>
       p.id !== product1?.id &&
-      (p.title.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q) || p.category.toLowerCase().includes(q))
+      (p.title.toLowerCase().includes(q) || (p.vendor && p.vendor.toLowerCase().includes(q)) || p.category.toLowerCase().includes(q))
     ).slice(0, 10);
   }, [products, searchSlot2, product1]);
 
@@ -121,10 +108,9 @@ export default function CompareClient() {
         className="min-h-screen bg-[#FAF9F6] text-slate-900 selection:bg-emerald-500 selection:text-white relative overflow-hidden font-sans pb-24"
         style={{ direction: isRTL ? 'rtl' : 'ltr' }}
       >
-        {/* Subtle Top Ambient Glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-b from-emerald-500/5 via-teal-500/5 to-transparent blur-3xl pointer-events-none" />
 
-        {/* ── 1. Hero Header Section ── */}
+        {/* Hero Header Section */}
         <div className="relative max-w-6xl mx-auto px-4 pt-10 pb-8 text-center">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 text-[11px] font-mono font-bold tracking-widest uppercase mb-4">
             <Scale className="w-3.5 h-3.5 text-emerald-600" />
@@ -145,7 +131,6 @@ export default function CompareClient() {
               : 'Évaluez scientifiquement deux soins parapharmaceutiques côte à côte : actifs dermatologiques, tolérance cutanée, rapport qualité/prix et avis clinique.'}
           </p>
 
-          {/* Quick Actions Header Bar */}
           {compareProducts.length > 0 && (
             <div className="mt-6 flex items-center justify-center gap-3">
               <button
@@ -159,18 +144,17 @@ export default function CompareClient() {
           )}
         </div>
 
-        {/* ── 2. Interactive Product Selection Dual Slots ── */}
+        {/* Dual Slots */}
         <div className="max-w-6xl mx-auto px-4 mb-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
 
-            {/* Central VS Badge */}
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 hidden md:flex items-center justify-center pointer-events-none">
               <div className="w-12 h-12 rounded-2xl bg-slate-900 text-white font-black text-xs tracking-wider flex items-center justify-center shadow-xl border-4 border-[#FAF9F6] relative">
                 <span className="text-amber-400">VS</span>
               </div>
             </div>
 
-            {/* ── SLOT 1 ── */}
+            {/* SLOT 1 */}
             <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-md hover:shadow-lg transition relative overflow-hidden flex flex-col justify-between">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
                 <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
@@ -191,7 +175,7 @@ export default function CompareClient() {
                 <div className="space-y-4 text-center md:text-left">
                   <div className="relative w-36 h-36 mx-auto bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 p-2 group">
                     <Image
-                      src={getOptimizedImageUrl(product1.image, 300)}
+                      src={getOptimizedImageUrl(product1.image)}
                       alt={product1.title}
                       fill
                       className="object-contain p-2 group-hover:scale-105 transition-transform duration-300"
@@ -199,7 +183,7 @@ export default function CompareClient() {
                   </div>
                   <div>
                     <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest block font-mono">
-                      {product1.brand}
+                      {product1.vendor}
                     </span>
                     <h3 className="text-base font-black text-slate-900 leading-snug line-clamp-2 mt-0.5 font-heading">
                       {product1.title}
@@ -243,7 +227,6 @@ export default function CompareClient() {
                 </div>
               )}
 
-              {/* Slot 1 Search Drawer/Dropdown */}
               {isSelecting1 && (
                 <div className="mt-4 pt-4 border-t border-slate-100 space-y-3 animate-fade-in">
                   <div className="relative">
@@ -261,23 +244,19 @@ export default function CompareClient() {
                       <button
                         key={p.id}
                         onClick={() => {
-                          if (!product1) {
-                            addToCompare(p);
-                          } else {
-                            removeFromCompare(product1.id);
-                            addToCompare(p);
-                          }
+                          if (product1) removeFromCompare(product1.id);
+                          addToCompare(p);
                           setIsSelecting1(false);
                           setSearchSlot1('');
                         }}
                         className="w-full text-left p-2.5 rounded-xl hover:bg-emerald-50/70 border border-transparent hover:border-emerald-200 transition flex items-center gap-3 cursor-pointer group"
                       >
                         <div className="w-10 h-10 relative bg-white rounded-lg border border-slate-100 shrink-0 p-1">
-                          <Image src={getOptimizedImageUrl(p.image, 100)} alt={p.title} fill className="object-contain" />
+                          <Image src={getOptimizedImageUrl(p.image)} alt={p.title} fill className="object-contain" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-bold text-slate-800 truncate group-hover:text-emerald-700">{p.title}</p>
-                          <p className="text-[10px] text-slate-400 font-mono">{p.brand} • {convertPrice(p.price)}</p>
+                          <p className="text-[10px] text-slate-400 font-mono">{p.vendor} • {convertPrice(p.price)}</p>
                         </div>
                       </button>
                     ))}
@@ -286,7 +265,7 @@ export default function CompareClient() {
               )}
             </div>
 
-            {/* ── SLOT 2 ── */}
+            {/* SLOT 2 */}
             <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-md hover:shadow-lg transition relative overflow-hidden flex flex-col justify-between">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
                 <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
@@ -307,7 +286,7 @@ export default function CompareClient() {
                 <div className="space-y-4 text-center md:text-left">
                   <div className="relative w-36 h-36 mx-auto bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 p-2 group">
                     <Image
-                      src={getOptimizedImageUrl(product2.image, 300)}
+                      src={getOptimizedImageUrl(product2.image)}
                       alt={product2.title}
                       fill
                       className="object-contain p-2 group-hover:scale-105 transition-transform duration-300"
@@ -315,7 +294,7 @@ export default function CompareClient() {
                   </div>
                   <div>
                     <span className="text-[10px] font-bold text-teal-600 uppercase tracking-widest block font-mono">
-                      {product2.brand}
+                      {product2.vendor}
                     </span>
                     <h3 className="text-base font-black text-slate-900 leading-snug line-clamp-2 mt-0.5 font-heading">
                       {product2.title}
@@ -359,7 +338,6 @@ export default function CompareClient() {
                 </div>
               )}
 
-              {/* Slot 2 Search Drawer/Dropdown */}
               {isSelecting2 && (
                 <div className="mt-4 pt-4 border-t border-slate-100 space-y-3 animate-fade-in">
                   <div className="relative">
@@ -377,23 +355,19 @@ export default function CompareClient() {
                       <button
                         key={p.id}
                         onClick={() => {
-                          if (!product2) {
-                            addToCompare(p);
-                          } else {
-                            removeFromCompare(product2.id);
-                            addToCompare(p);
-                          }
+                          if (product2) removeFromCompare(product2.id);
+                          addToCompare(p);
                           setIsSelecting2(false);
                           setSearchSlot2('');
                         }}
                         className="w-full text-left p-2.5 rounded-xl hover:bg-teal-50/70 border border-transparent hover:border-teal-200 transition flex items-center gap-3 cursor-pointer group"
                       >
                         <div className="w-10 h-10 relative bg-white rounded-lg border border-slate-100 shrink-0 p-1">
-                          <Image src={getOptimizedImageUrl(p.image, 100)} alt={p.title} fill className="object-contain" />
+                          <Image src={getOptimizedImageUrl(p.image)} alt={p.title} fill className="object-contain" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-bold text-slate-800 truncate group-hover:text-teal-700">{p.title}</p>
-                          <p className="text-[10px] text-slate-400 font-mono">{p.brand} • {convertPrice(p.price)}</p>
+                          <p className="text-[10px] text-slate-400 font-mono">{p.vendor} • {convertPrice(p.price)}</p>
                         </div>
                       </button>
                     ))}
@@ -405,11 +379,10 @@ export default function CompareClient() {
           </div>
         </div>
 
-        {/* ── 3. Full Comparison Matrix (Visible when both products selected) ── */}
+        {/* Matrix Section */}
         {product1 && product2 ? (
           <div className="max-w-6xl mx-auto px-4 space-y-8 animate-fade-in">
 
-            {/* ── Section A: Pharmacist Verdict Card ── */}
             <div className="bg-gradient-to-br from-slate-900 via-slate-850 to-slate-900 rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden">
               <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
               <div className="flex items-center gap-3 mb-6 border-b border-slate-800 pb-4">
@@ -429,7 +402,7 @@ export default function CompareClient() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
                   <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-emerald-400">
-                    {product1.brand} — {product1.title}
+                    {product1.vendor} — {product1.title}
                   </span>
                   <p className="text-xs text-slate-300 leading-relaxed">
                     {actives1.length > 0
@@ -444,7 +417,7 @@ export default function CompareClient() {
 
                 <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
                   <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-teal-400">
-                    {product2.brand} — {product2.title}
+                    {product2.vendor} — {product2.title}
                   </span>
                   <p className="text-xs text-slate-300 leading-relaxed">
                     {actives2.length > 0
@@ -459,7 +432,6 @@ export default function CompareClient() {
               </div>
             </div>
 
-            {/* ── Section B: In-Depth Metrics Table ── */}
             <div className="bg-white rounded-3xl border border-slate-200/90 shadow-md overflow-hidden">
               <div className="p-5 bg-slate-50 border-b border-slate-200/80 flex items-center justify-between">
                 <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 font-mono flex items-center gap-2">
@@ -471,7 +443,6 @@ export default function CompareClient() {
 
               <div className="divide-y divide-slate-100 text-xs">
 
-                {/* Metric 1: Prix & Contenance */}
                 <div className="grid grid-cols-3 p-4 hover:bg-slate-50/50 transition items-center">
                   <div className="font-bold text-slate-500 uppercase tracking-wider text-[11px] font-mono">
                     {isRTL ? 'السعر وحجم العبوة' : 'Prix & Contenance'}
@@ -486,7 +457,6 @@ export default function CompareClient() {
                   </div>
                 </div>
 
-                {/* Metric 2: Actifs Dermatologiques */}
                 <div className="grid grid-cols-3 p-4 hover:bg-slate-50/50 transition items-start">
                   <div className="font-bold text-slate-500 uppercase tracking-wider text-[11px] font-mono pt-1">
                     {isRTL ? 'المكونات الفعالة' : 'Actifs Clefs'}
@@ -515,7 +485,6 @@ export default function CompareClient() {
                   </div>
                 </div>
 
-                {/* Metric 3: Évaluation Clients */}
                 <div className="grid grid-cols-3 p-4 hover:bg-slate-50/50 transition items-center">
                   <div className="font-bold text-slate-500 uppercase tracking-wider text-[11px] font-mono">
                     {isRTL ? 'تقييم العميلات' : 'Évaluation Client'}
@@ -538,7 +507,6 @@ export default function CompareClient() {
                   </div>
                 </div>
 
-                {/* Metric 4: Tolérance & Peaux Sensibles */}
                 <div className="grid grid-cols-3 p-4 hover:bg-slate-50/50 transition items-center">
                   <div className="font-bold text-slate-500 uppercase tracking-wider text-[11px] font-mono">
                     {isRTL ? 'ملاءمة البشرة الحساسة' : 'Peaux Sensibles'}
@@ -553,7 +521,6 @@ export default function CompareClient() {
                   </div>
                 </div>
 
-                {/* Metric 5: Stock & Disponibilité */}
                 <div className="grid grid-cols-3 p-4 hover:bg-slate-50/50 transition items-center">
                   <div className="font-bold text-slate-500 uppercase tracking-wider text-[11px] font-mono">
                     {isRTL ? 'التوفر للشحن' : 'Disponibilité'}
@@ -571,7 +538,6 @@ export default function CompareClient() {
               </div>
             </div>
 
-            {/* ── Section C: Add Both Duo Banner ── */}
             <div className="p-6 rounded-3xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="space-y-1 text-center md:text-left">
                 <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-emerald-200">
@@ -602,7 +568,6 @@ export default function CompareClient() {
 
           </div>
         ) : (
-          /* Empty state prompt */
           <div className="max-w-xl mx-auto text-center py-8 px-4">
             <p className="text-xs text-slate-400 font-medium">
               {isRTL

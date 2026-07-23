@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCompare } from '@/context/CompareContext';
@@ -15,13 +15,8 @@ import {
   Scale,
   Trash2,
   Plus,
-  CheckCircle2,
   ShoppingBag,
   ArrowRight,
-  Star,
-  Award,
-  Layers,
-  Search,
   Maximize2,
   RotateCcw
 } from 'lucide-react';
@@ -95,13 +90,13 @@ export const CompareModal: React.FC = () => {
   const filtered1 = products.filter(
     (p) =>
       p.id !== product2?.id &&
-      (p.title.toLowerCase().includes(search1.toLowerCase()) || p.brand.toLowerCase().includes(search1.toLowerCase()))
+      (p.title.toLowerCase().includes(search1.toLowerCase()) || (p.vendor && p.vendor.toLowerCase().includes(search1.toLowerCase())))
   ).slice(0, 6);
 
   const filtered2 = products.filter(
     (p) =>
       p.id !== product1?.id &&
-      (p.title.toLowerCase().includes(search2.toLowerCase()) || p.brand.toLowerCase().includes(search2.toLowerCase()))
+      (p.title.toLowerCase().includes(search2.toLowerCase()) || (p.vendor && p.vendor.toLowerCase().includes(search2.toLowerCase())))
   ).slice(0, 6);
 
   return (
@@ -179,10 +174,10 @@ export const CompareModal: React.FC = () => {
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="w-16 h-16 relative bg-slate-50 rounded-xl overflow-hidden shrink-0 border border-slate-100 p-1">
-                      <Image src={getOptimizedImageUrl(product1.image, 150)} alt={product1.title} fill className="object-contain" />
+                      <Image src={getOptimizedImageUrl(product1.image)} alt={product1.title} fill className="object-contain" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <span className="text-[9px] font-bold text-emerald-600 font-mono uppercase">{product1.brand}</span>
+                      <span className="text-[9px] font-bold text-emerald-600 font-mono uppercase">{product1.vendor}</span>
                       <h4 className="text-xs font-black text-slate-800 line-clamp-2 leading-tight">{product1.title}</h4>
                       <p className="text-xs font-bold text-slate-900 mt-1">{convertPrice(product1.price)}</p>
                     </div>
@@ -228,7 +223,7 @@ export const CompareModal: React.FC = () => {
                         }}
                         className="w-full text-left p-1.5 text-xs font-medium hover:bg-emerald-50 rounded truncate"
                       >
-                        {p.title} ({p.brand})
+                        {p.title} ({p.vendor})
                       </button>
                     ))}
                   </div>
@@ -245,10 +240,10 @@ export const CompareModal: React.FC = () => {
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="w-16 h-16 relative bg-slate-50 rounded-xl overflow-hidden shrink-0 border border-slate-100 p-1">
-                      <Image src={getOptimizedImageUrl(product2.image, 150)} alt={product2.title} fill className="object-contain" />
+                      <Image src={getOptimizedImageUrl(product2.image)} alt={product2.title} fill className="object-contain" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <span className="text-[9px] font-bold text-teal-600 font-mono uppercase">{product2.brand}</span>
+                      <span className="text-[9px] font-bold text-teal-600 font-mono uppercase">{product2.vendor}</span>
                       <h4 className="text-xs font-black text-slate-800 line-clamp-2 leading-tight">{product2.title}</h4>
                       <p className="text-xs font-bold text-slate-900 mt-1">{convertPrice(product2.price)}</p>
                     </div>
@@ -294,7 +289,7 @@ export const CompareModal: React.FC = () => {
                         }}
                         className="w-full text-left p-1.5 text-xs font-medium hover:bg-teal-50 rounded truncate"
                       >
-                        {p.title} ({p.brand})
+                        {p.title} ({p.vendor})
                       </button>
                     ))}
                   </div>
@@ -309,8 +304,8 @@ export const CompareModal: React.FC = () => {
             <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden text-xs divide-y divide-slate-100">
               <div className="grid grid-cols-3 p-3 bg-slate-50 font-mono font-bold text-[10px] uppercase text-slate-500">
                 <span>Critère Clinique</span>
-                <span>{product1.brand}</span>
-                <span>{product2.brand}</span>
+                <span>{product1.vendor}</span>
+                <span>{product2.vendor}</span>
               </div>
               <div className="grid grid-cols-3 p-3 items-center">
                 <span className="font-bold text-slate-500">Prix au ml</span>
