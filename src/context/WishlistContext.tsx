@@ -4,7 +4,6 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { Product } from '@/lib/data';
 import { LoyaltyContext } from './LoyaltyContext';
 import { LanguageContext } from './LanguageContext';
-import { useRouter } from 'next/navigation';
 import { Heart, Sparkles, X, ArrowRight } from 'lucide-react';
 
 interface WishlistContextProps {
@@ -32,7 +31,6 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const clientUser = loyaltyContext?.clientUser ?? null;
   const langContext = useContext(LanguageContext);
   const language = langContext?.language ?? 'FR';
-  const router = useRouter();
 
   // Hydrate from localStorage on mount
   useEffect(() => {
@@ -196,7 +194,9 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               <button
                 onClick={() => {
                   setIsAuthPromptOpen(false);
-                  router.push('/customer');
+                  if (typeof window !== 'undefined') {
+                    window.location.href = '/customer';
+                  }
                 }}
                 className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xs uppercase tracking-widest transition-all duration-300 shadow-lg active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer border-0"
               >

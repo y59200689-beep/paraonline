@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useContext } from 'react';
-import { useRouter } from 'next/navigation';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCart } from '@/context/CartContext';
 import { useTranslation } from '@/context/LanguageContext';
@@ -34,7 +33,6 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
   onClose,
   onSelectProduct,
 }) => {
-  const router = useRouter();
   const { language } = useTranslation();
   const loyaltyContext = useContext(LoyaltyContext);
   const clientUser = loyaltyContext?.clientUser ?? null;
@@ -47,9 +45,11 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
   useEffect(() => {
     if (isOpen && !clientUser) {
       onClose();
-      router.push('/customer');
+      if (typeof window !== 'undefined') {
+        window.location.href = '/customer';
+      }
     }
-  }, [isOpen, clientUser, onClose, router]);
+  }, [isOpen, clientUser, onClose]);
 
   const handleAddToCart = (product: Product) => {
     addToCart(product, 1);
