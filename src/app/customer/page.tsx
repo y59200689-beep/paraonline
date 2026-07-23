@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from '@/context/LanguageContext';
 import { useLoyalty, LoyaltyTier } from '@/context/LoyaltyContext';
 import { useSettings } from '@/context/SettingsContext';
@@ -9,9 +9,13 @@ import {
   Search, ShoppingBag, ArrowLeft, ArrowRight, Clock, MapPin, 
   Award, Coins, Ticket, Check, Copy, Calendar, Plus, 
   Smile, Meh, Frown, Sparkles, BookOpen, Camera, X,
-  Image as ImageIcon, Heart, Trash2, Sun, Moon
+  Image as ImageIcon, Heart, Trash2, Sun, Moon, ShieldCheck,
+  User, Settings, FileText, Printer, Truck, MessageCircle,
+  ExternalLink, Activity, RefreshCw, ChevronRight, Zap, Gift,
+  Percent, Compass, Droplet, Star, CheckCircle2, AlertCircle,
+  Box, CreditCard, ChevronDown, SlidersHorizontal, Edit3, Save, Layers
 } from 'lucide-react';
-import { Product } from '@/lib/data';
+import { Product, PRODUCTS_DB } from '@/lib/data';
 import Link from 'next/link';
 import { useUi } from '@/context/UiContext';
 import { useWishlist } from '@/context/WishlistContext';
@@ -24,27 +28,7 @@ interface OrderItem {
   title: string;
   quantity: number;
   price: number;
-}
-
-interface LocalOrderItem {
-  product: Product;
-  quantity: number;
-}
-
-interface LocalOrder {
-  order_id: string;
-  name: string;
-  phone: string;
-  address: string;
-  city: string;
-  items: LocalOrderItem[];
-  subtotal: number;
-  discountAmount?: number;
-  appliedCoupon: string | null;
-  giftItem: string | null;
-  total: number;
-  status?: string;
-  date?: string;
+  image?: string;
 }
 
 interface Order {
@@ -61,6 +45,9 @@ interface Order {
   gift_item: string | null;
   total: number;
   status: string;
+  carrier?: string;
+  tracking_number?: string;
+  estimated_delivery?: string;
   date?: string;
   created_at?: string;
 }
@@ -72,6 +59,114 @@ interface DiaryLog {
   note: string;
   image?: string;
 }
+
+interface UserAddress {
+  id: string;
+  label: string;
+  fullName: string;
+  phone: string;
+  city: string;
+  address: string;
+  isDefault: boolean;
+}
+
+const SAMPLE_ORDERS_PRESETS: Order[] = [
+  {
+    order_id: 'PO-2026-8942',
+    customer_name: 'Fatima-Zohra Alami',
+    phone_number: '0661234567',
+    address: 'Boulevard Anfa, Résidence Les Fleurs',
+    city: 'Casablanca',
+    subtotal: 780,
+    discount_amount: 78,
+    applied_coupon: 'BEAUTY10',
+    gift_item: 'Masque Hydra-Glow Offert (50ml)',
+    total: 702,
+    status: 'In Transit',
+    carrier: 'Yalidine Express',
+    tracking_number: 'YL-CAS-994821',
+    estimated_delivery: "Aujourd'hui avant 19:00",
+    date: '2026-07-22T14:30:00Z',
+    created_at: '2026-07-22T14:30:00Z',
+    items: [
+      { id: 1, title: 'Sérum Concentré Niacinamide 10% Pure Pureté', quantity: 1, price: 340, image: '/images/hero_serum_dropper.png' },
+      { id: 2, title: 'Crème Hydratante Réparatrice Cicaplast B5+', quantity: 2, price: 220, image: '/images/cicaplast_hero_packshot.png' }
+    ]
+  },
+  {
+    order_id: 'PO-2026-4102',
+    customer_name: 'Fatima-Zohra Alami',
+    phone_number: '0661234567',
+    address: 'Avenue Mohammed V, Agdal',
+    city: 'Rabat',
+    subtotal: 540,
+    discount_amount: 0,
+    applied_coupon: null,
+    gift_item: null,
+    total: 540,
+    status: 'Delivered',
+    carrier: 'Cathedis Logistics',
+    tracking_number: 'CT-RBT-881240',
+    estimated_delivery: 'Livré le 20 Juillet',
+    date: '2026-07-20T09:15:00Z',
+    created_at: '2026-07-20T09:15:00Z',
+    items: [
+      { id: 3, title: 'Gel Nettoyant Purifiant Effaclar Duo+ M', quantity: 1, price: 290, image: '/images/effaclar_hero_packshot.png' },
+      { id: 4, title: 'Fluide Solaire Anti-Taches SPF50+ Ultra-Léger', quantity: 1, price: 250, image: '/images/anthelios_hero_packshot.png' }
+    ]
+  }
+];
+
+const MOCK_DIAGNOSTIC_RESULT = {
+  date: '18 Juillet 2026',
+  score: 88,
+  skinTypeFr: 'Boutons & Taches / Peaux Mixtes à Tendances Acnéiques',
+  skinTypeAr: 'مختلطة مع تصبغات وحبوب خفيفة',
+  metrics: {
+    hydration: 85,
+    elasticity: 90,
+    sebumControl: 74,
+    skinBarrier: 92
+  },
+  concerns: ['Taches d\'hyper-pigmentation', 'Brillance Zone T', 'Déshydratation ponctuelle'],
+  routineAm: [
+    { title: 'Gel Nettoyant Doux Purifiant', brand: 'La Roche-Posay', image: '/images/effaclar_hero_packshot.png', price: 210 },
+    { title: 'Sérum Éclat Vitamine C Pure', brand: 'Vichy', image: '/images/hero_serum_dropper.png', price: 340 },
+    { title: 'Fluide Solaire Invisible SPF50+', brand: 'La Roche-Posay', image: '/images/anthelios_hero_packshot.png', price: 250 }
+  ],
+  routinePm: [
+    { title: 'Huile Démaquillante Solide', brand: 'CeraVe', image: '/images/categories/visage.png', price: 190 },
+    { title: 'Sérum Concentré Niacinamide 10%', brand: 'La Roche-Posay', image: '/images/hero_serum_dropper.png', price: 320 },
+    { title: 'Baume Réparateur Intense Cicaplast B5+', brand: 'La Roche-Posay', image: '/images/cicaplast_hero_packshot.png', price: 220 }
+  ]
+};
+
+const AVAILABLE_COUPONS = [
+  {
+    code: 'BEAUTY10',
+    discountFr: '-10% de Réduction Immédiate',
+    discountAr: 'خصم 10% فوري',
+    minSpend: 'Dès 300 MAD',
+    expires: 'Valable encore 14 jours',
+    categoryFr: 'Sur tout le catalogue'
+  },
+  {
+    code: 'FREESHIP',
+    discountFr: 'Livraison Express Gratuite',
+    discountAr: 'توصيل مجاني لكافة المدن',
+    minSpend: 'Dès 250 MAD',
+    expires: 'Offert pour membre VIP',
+    categoryFr: 'Partout au Maroc'
+  },
+  {
+    code: 'VIP15',
+    discountFr: '-15% sur la gamme Anti-Âge & Sérums',
+    discountAr: 'خصم 15% على مستحضرات الشباب',
+    minSpend: 'Dès 500 MAD',
+    expires: 'Offre exclusive membre Gold',
+    categoryFr: 'Sérums & Anti-Âge'
+  }
+];
 
 export default function CustomerDashboard() {
   const { language } = useTranslation();
@@ -117,61 +212,32 @@ export default function CustomerDashboard() {
     fetchDiaryLogs,
     fetchPlannerDates,
   } = useLoyalty();
-  const { showToast } = useUi();
+  const { showToast, setDiagnosticOpen } = useUi();
 
   const { wishlist, removeFromWishlist } = useWishlist();
   const { addToCart } = useCart();
 
-  // Tab State
-  const [activeTab, setActiveTab] = useState<'suivi' | 'club' | 'journal' | 'favoris'>('suivi');
+  // Tab State: 7 Flagship Tabs
+  type TabType = 'overview' | 'commandes' | 'diagnostic' | 'cagnotte' | 'favoris' | 'journal' | 'profil';
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      const tabParam = params.get('tab');
-      if (tabParam === 'favoris') {
-        setActiveTab('favoris');
-      }
+      const tabParam = params.get('tab')?.toLowerCase();
+      if (tabParam === 'favoris') setActiveTab('favoris');
+      else if (tabParam === 'commandes' || tabParam === 'suivi') setActiveTab('commandes');
+      else if (tabParam === 'diagnostic') setActiveTab('diagnostic');
+      else if (tabParam === 'cagnotte' || tabParam === 'club') setActiveTab('cagnotte');
+      else if (tabParam === 'journal') setActiveTab('journal');
+      else if (tabParam === 'profil') setActiveTab('profil');
+      else if (tabParam === 'overview' || tabParam === 'vue') setActiveTab('overview');
     }
   }, []);
 
-  // Tab Bar Sliding Pill logic
+  // Sliding tab indicator pill style
   const [pillStyle, setPillStyle] = useState<{ transform: string; width: string }>({ transform: 'translateX(0)', width: '0px' });
-  const tabsRef = React.useRef<HTMLDivElement>(null);
-
-  // Auth form states
-  const [showAuthPanel, setShowAuthPanel] = useState(false);
-  const [authView, setAuthView] = useState<'login' | 'signup'>('login');
-  const [authEmail, setAuthEmail] = useState('');
-  const [authPassword, setAuthPassword] = useState('');
-  const [authName, setAuthName] = useState('');
-  const [authPhone, setAuthPhone] = useState('');
-  const [authError, setAuthError] = useState<string | null>(null);
-  const [authLoading, setAuthLoading] = useState(false);
-
-  // Auth Modal transition states
-  const [isAuthModalVisible, setIsAuthModalVisible] = useState(false);
-  const [authModalState, setAuthModalState] = useState<'closed' | 'opening' | 'open' | 'closing'>('closed');
-  const closeMs = 160; // must match --modal-close-dur
-
-  // Auth modal lifecycle
-  useEffect(() => {
-    if (showAuthPanel) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsAuthModalVisible(true);
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => setAuthModalState('open'));
-      });
-    } else if (authModalState === 'open') {
-      setAuthModalState('closing');
-      const t = setTimeout(() => {
-        setAuthModalState('closed');
-        setIsAuthModalVisible(false);
-      }, closeMs);
-      return () => clearTimeout(t);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showAuthPanel]);
+  const tabsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (tabsRef.current) {
@@ -185,1609 +251,1512 @@ export default function CustomerDashboard() {
     }
   }, [activeTab, language]);
 
-  // Tracking states
-  const [searchContact, setSearchContact] = useState('');
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
+  // Auth form states
+  const [showAuthPanel, setShowAuthPanel] = useState(false);
+  const [authView, setAuthView] = useState<'login' | 'signup'>('login');
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authName, setAuthName] = useState('');
+  const [authPhone, setAuthPhone] = useState('');
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authLoading, setAuthLoading] = useState(false);
 
-  // Skincare Diary & Planner States
-  const [diaryNote, setDiaryNote] = useState('');
-  const [diaryEmoji, setDiaryEmoji] = useState('🙂');
-  const [diaryLogs, setDiaryLogs] = useState<DiaryLog[]>([]);
-  const [diaryImage, setDiaryImage] = useState<string | null>(null);
-  const [compareLogA, setCompareLogA] = useState<DiaryLog | null>(null);
-  const [compareLogB, setCompareLogB] = useState<DiaryLog | null>(null);
-  const [isComparing, setIsComparing] = useState(false);
-  const [sliderPosition, setSliderPosition] = useState(50);
-  const [copiedCode, setCopiedCode] = useState<string | null>(null);
-  
-  // Checklist State for Today
-  const [amChecks, setAmChecks] = useState({ cleanse: false, treat: false, hydrate: false, protect: false });
-  const [pmChecks, setPmChecks] = useState({ cleanse: false, treat: false, hydrate: false });
-  const [amDoneDates, setAmDoneDates] = useState<string[]>([]);
-  const [pmDoneDates, setPmDoneDates] = useState<string[]>([]);
-  const [successNotice, setSuccessNotice] = useState<string | null>(null);
-
-  // Success Notice height transition lifecycle states
-  const [activeNotice, setActiveNotice] = useState<string | null>(null);
-  const [showNotice, setShowNotice] = useState(false);
-
-  useEffect(() => {
-    if (successNotice) {
-      setActiveNotice(successNotice);
-      setShowNotice(true);
-    } else {
-      setShowNotice(false);
-      const timer = setTimeout(() => {
-        setActiveNotice(null);
-      }, 300); // matches transition-all duration-300
-      return () => clearTimeout(timer);
-    }
-  }, [successNotice]);
-
-  // Rewards definition
-  const rewards = [
-    {
-      id: 'reward-1',
-      cost: 200,
-      code: 'FREESHIP',
-      nameFr: 'Livraison Gratuite',
-      nameAr: 'توصيل مجاني',
-      descFr: 'Annule les frais de livraison sur votre prochaine commande.',
-      descAr: 'يلغي مصاريف الشحن لطلبكِ القادم بدون حد أدنى.'
-    },
-    {
-      id: 'reward-2',
-      cost: 300,
-      code: 'BEAUTY10',
-      nameFr: 'Bon de Réduction −10%',
-      nameAr: 'خصم −10% إضافي',
-      descFr: 'Bénéficiez de 10% de réduction immédiate à la caisse.',
-      descAr: 'احصلي على خصم 10% فوري عند الدفع عند تأكيد الطلب.'
-    },
-    {
-      id: 'reward-3',
-      cost: 500,
-      code: 'CLINICAL15',
-      nameFr: 'Bon de Réduction −15%',
-      nameAr: 'خصم −15% إضافي',
-      descFr: 'Bénéficiez de 15% de réduction immédiate à la caisse.',
-      descAr: 'احصلي على خصم 15% فوري عند الدفع عند تأكيد الطلب.'
-    }
-  ];
-
-  // Load Diary & Planner — from Supabase if logged in, localStorage otherwise
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const logs = await fetchDiaryLogs();
-        setDiaryLogs(logs);
-        const { amDates, pmDates } = await fetchPlannerDates();
-        setAmDoneDates(amDates);
-        setPmDoneDates(pmDates);
-      } catch (e) {
-        console.error('Error loading diary/planner data:', e);
-      }
-    };
-    loadData();
-  // Re-load whenever auth user changes (login / logout)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clientUser]);
-
-  const getTodayDateString = () => {
-    return new Date().toISOString().split('T')[0];
-  };
-
-  const todayStr = getTodayDateString();
-  const isAmTodayCompleted = amDoneDates.includes(todayStr);
-  const isPmTodayCompleted = pmDoneDates.includes(todayStr);
-
-  // Auth handlers
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setAuthError(null);
     setAuthLoading(true);
-    const result = await loginClient(authEmail, authPassword);
+    setAuthError(null);
+    const res = await loginClient(authEmail, authPassword);
     setAuthLoading(false);
-    if (result.success) {
-      setShowAuthPanel(false);
-      setAuthEmail('');
-      setAuthPassword('');
-    } else {
-      setAuthError(result.error || (language === 'FR' ? 'Erreur de connexion.' : 'خطأ في تسجيل الدخول.'));
-    }
+    if (!res.success) setAuthError(res.error || 'Erreur de connexion.');
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setAuthError(null);
     setAuthLoading(true);
-    const result = await signUpClient(authEmail, authPassword, authName, authPhone);
+    setAuthError(null);
+    const res = await signUpClient(authEmail, authPassword, authName, authPhone);
     setAuthLoading(false);
-    if (result.success) {
-      setShowAuthPanel(false);
-      setAuthEmail('');
-      setAuthPassword('');
-      setAuthName('');
-      setAuthPhone('');
-    } else {
-      setAuthError(result.error || (language === 'FR' ? 'Erreur lors de la création du compte.' : 'خطأ أثناء إنشاء الحساب.'));
-    }
+    if (!res.success) setAuthError(res.error || 'Erreur de création de compte.');
   };
 
-  // Submit Order Tracking Search
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchContact.trim()) return;
+  // Orders State & Search
+  const [orders, setOrders] = useState<Order[]>(SAMPLE_ORDERS_PRESETS);
+  const [orderSearchQuery, setOrderSearchQuery] = useState('');
+  const [orderFilterStatus, setOrderFilterStatus] = useState<'all' | 'in_transit' | 'delivered'>('all');
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
-    setIsSearching(true);
-    setHasSearched(true);
-    let matchedOrders: Order[] = [];
-
-    // 1. Try secure server-side lookup
-    try {
-      const res = await fetch(`/api/orders?search=${encodeURIComponent(searchContact.trim())}`);
-      const data = await res.json();
-      if (data.success && data.orders) {
-        matchedOrders = data.orders;
-      }
-    } catch (err) {
-      console.error('Server lookup failed, falling back to local:', err);
-    }
-
-    // 2. Local Fallback lookup
-    if (matchedOrders.length === 0) {
-      try {
-        const localOrders = JSON.parse(localStorage.getItem('ordersBM') || '[]') as LocalOrder[];
-        matchedOrders = localOrders.filter(
-          (o) =>
-            o.phone?.includes(searchContact) ||
-            o.name?.toLowerCase().includes(searchContact.toLowerCase()) ||
-            o.order_id?.includes(searchContact)
-        ).map(o => ({
-          order_id: o.order_id,
-          customer_name: o.name,
-          phone_number: o.phone,
-          address: o.address,
-          city: o.city,
-          items: o.items.map((item) => ({
-            id: item.product.id,
-            title: item.product.title,
-            quantity: item.quantity,
-            price: item.product.price
-          })),
-          subtotal: o.subtotal,
-          discount_amount: o.discountAmount || 0,
-          applied_coupon: o.appliedCoupon,
-          gift_item: o.giftItem,
-          total: o.total,
-          status: o.status || 'Pending',
-          date: o.date
-        }));
-      } catch (err) {
-        console.error('Local fallback failed:', err);
-      }
-    }
-
-    setOrders(matchedOrders);
-    setIsSearching(false);
-  };
-
-  // Redeem coupon flow
-  const handleRedeem = (reward: typeof rewards[0]) => {
-    setSuccessNotice(null);
-    if (points < reward.cost) {
-      showToast(
-        language === 'FR' 
-          ? `Points insuffisants. Il vous manque ${reward.cost - points} points.` 
-          : `نقاط غير كافية. يتبقى لكِ ${reward.cost - points} نقطة.`,
-        'warning'
-      );
-      return;
-    }
-
-    const success = redeemReward(
-      reward.cost, 
-      reward.code, 
-      `Coupon ${reward.nameFr}`, 
-      `كوبون ${reward.nameAr}`
-    );
-
-    if (success) {
-      setSuccessNotice(
-        language === 'FR' 
-          ? `Succès ! Code ${reward.code} débloqué. Copiez-le ci-dessous.` 
-          : `تم بنجاح! تم فتح الرمز ${reward.code}. انسخيه بالأسفل.`
-      );
-    }
-  };
-
-  const handleCopy = (code: string) => {
+  const copyCouponToClipboard = (code: string) => {
     navigator.clipboard.writeText(code);
     setCopiedCode(code);
-    setTimeout(() => setCopiedCode(null), 2000);
+    showToast(isRTL ? `تم نسخ الكود: ${code}` : `Code promo ${code} copié !`);
+    setTimeout(() => setCopiedCode(null), 2500);
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      // Use window.Image instead of react element
-      const img = new window.Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 600;
-        const scale = img.width > MAX_WIDTH ? MAX_WIDTH / img.width : 1;
-        canvas.width = img.width * scale;
-        canvas.height = img.height * scale;
-
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          const base64 = canvas.toDataURL('image/jpeg', 0.7);
-          setDiaryImage(base64);
-        }
-      };
-      img.src = event.target?.result as string;
-    };
-    reader.readAsDataURL(file);
+  // Reorder 1-click helper
+  const handleReorder = (order: Order) => {
+    order.items.forEach((item) => {
+      const foundInDb = PRODUCTS_DB.find((p) => p.title.toLowerCase().includes(item.title.toLowerCase()) || p.id === item.id);
+      if (foundInDb) {
+        addToCart(foundInDb, item.quantity);
+      } else {
+        // Fallback dummy product
+        addToCart({
+          id: item.id || Math.floor(Math.random() * 100000),
+          title: item.title,
+          name: item.title,
+          price: item.price,
+          image: item.image || '/images/categories/visage.png',
+          category: 'Visage',
+          description: item.title
+        } as Product, item.quantity);
+      }
+    });
+    showToast(isRTL ? 'تمت إضافة جميع منتجات الطلبية إلى السلة!' : 'Tous les soins de la commande ont été ajoutés à votre panier !');
   };
 
-  const handleSelectForCompare = (log: DiaryLog) => {
-    if (!log.image) return;
-    if (compareLogA?.id === log.id) {
-      setCompareLogA(null);
-    } else if (compareLogB?.id === log.id) {
-      setCompareLogB(null);
-    } else if (!compareLogA) {
-      setCompareLogA(log);
-    } else if (!compareLogB) {
-      // Set second photo and start comparison
-      setCompareLogB(log);
-      setIsComparing(true);
-    } else {
-      setCompareLogA(log);
-      setCompareLogB(null);
+  // Add Entire Prescribed Routine to Cart
+  const handleAddFullRoutineToCart = () => {
+    [...MOCK_DIAGNOSTIC_RESULT.routineAm, ...MOCK_DIAGNOSTIC_RESULT.routinePm].forEach((item) => {
+      const match = PRODUCTS_DB.find((p) => p.title.toLowerCase().includes(item.title.toLowerCase()));
+      if (match) {
+        addToCart(match, 1);
+      } else {
+        addToCart({
+          id: Math.floor(Math.random() * 100000),
+          title: item.title,
+          name: item.title,
+          price: item.price,
+          image: item.image,
+          category: 'Visage',
+          description: item.title
+        } as Product, 1);
+      }
+    });
+    showToast(isRTL ? 'تمت إضافة الروتين العلاجي الكامل إلى السلة!' : 'La routine clinique complète a été ajoutée à votre panier !');
+  };
+
+  // Filtered Orders calculation
+  const filteredOrders = useMemo(() => {
+    return orders.filter((o) => {
+      const matchesSearch = !orderSearchQuery || 
+        o.order_id.toLowerCase().includes(orderSearchQuery.toLowerCase()) ||
+        o.items.some((i) => i.title.toLowerCase().includes(orderSearchQuery.toLowerCase()));
+      
+      const matchesStatus = 
+        orderFilterStatus === 'all' ? true :
+        orderFilterStatus === 'in_transit' ? (o.status.toLowerCase().includes('transit') || o.status.toLowerCase().includes('shipped') || o.status.toLowerCase().includes('expédié')) :
+        (o.status.toLowerCase().includes('deliver') || o.status.toLowerCase().includes('livré'));
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [orders, orderSearchQuery, orderFilterStatus]);
+
+  // Skincare Diary & Habit Tracker States
+  const [amChecks, setAmChecks] = useState({ cleanse: false, treat: false, hydrate: false, protect: false });
+  const [pmChecks, setPmChecks] = useState({ cleanse: false, treat: false, hydrate: false });
+  const [amDoneDates, setAmDoneDates] = useState<string[]>([]);
+  const [pmDoneDates, setPmDoneDates] = useState<string[]>([]);
+  const [diaryNote, setDiaryNote] = useState('');
+  const [diaryEmoji, setDiaryEmoji] = useState('🙂');
+  const [diaryLogs, setDiaryLogs] = useState<DiaryLog[]>([]);
+  const [diaryImage, setDiaryImage] = useState<string | null>(null);
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const isAmTodayCompleted = amDoneDates.includes(todayStr);
+  const isPmTodayCompleted = pmDoneDates.includes(todayStr);
+
+  const handleToggleAmStep = (key: keyof typeof amChecks) => {
+    setAmChecks((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const handleTogglePmStep = (key: keyof typeof pmChecks) => {
+    setPmChecks((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const handleConfirmAmRoutine = () => {
+    if (!isAmTodayCompleted) {
+      const updated = [...amDoneDates, todayStr];
+      setAmDoneDates(updated);
+      earnPoints(5, 'Rituel du Matin accompli', 'إكمال روتين الصباح');
+      showToast(isRTL ? 'تهانينا! تمت إضافة +5 نقاط إلى محفظتكِ.' : 'Félicitations ! +5 Points ajoutés à votre cagnotte.');
     }
   };
 
-  // Submit skincare diary log entry
-  const handleSubmitDiary = (e: React.FormEvent) => {
+  const handleConfirmPmRoutine = () => {
+    if (!isPmTodayCompleted) {
+      const updated = [...pmDoneDates, todayStr];
+      setPmDoneDates(updated);
+      earnPoints(5, 'Rituel du Soir accompli', 'إكمال روتين المساء');
+      showToast(isRTL ? 'تهانينا! تمت إضافة +5 نقاط إلى محفظتكِ.' : 'Félicitations ! +5 Points ajoutés à votre cagnotte.');
+    }
+  };
+
+  const handleSaveDiaryLog = (e: React.FormEvent) => {
     e.preventDefault();
     if (!diaryNote.trim() && !diaryImage) return;
-
     const newLog: DiaryLog = {
-      id: Math.random().toString(36).substring(2, 9),
-      date: new Date().toISOString(),
+      id: 'log_' + Date.now(),
+      date: new Date().toLocaleDateString(language === 'AR' ? 'ar-MA' : 'fr-FR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
       emoji: diaryEmoji,
-      note: diaryNote.trim(),
-      ...(diaryImage ? { image: diaryImage } : {})
+      note: diaryNote,
+      image: diaryImage || undefined
     };
-
-    const updatedLogs = [newLog, ...diaryLogs];
-    setDiaryLogs(updatedLogs);
-    syncDiaryLogs(updatedLogs);
-    
-    // Reward points for checking in on skincare diary (+5 points)
-    earnPoints(5, "Entrée dans le journal de peau", "تسجيل في مفكرة البشرة اليومية");
-
+    const updated = [newLog, ...diaryLogs];
+    setDiaryLogs(updated);
     setDiaryNote('');
     setDiaryImage(null);
-    setSuccessNotice(
-      language === 'FR'
-        ? "Journal de peau enregistré (+5 Points) !"
-        : "تم تسجيل مفكرة البشرة (+5 نقاط)!"
-    );
-    setTimeout(() => setSuccessNotice(null), 4000);
+    showToast(isRTL ? 'تم حفظ ملاحظة البشرة بنجاح' : 'Mise à jour enregistrée dans votre journal.');
   };
 
-  // Complete AM Checklist & earn points
-  const handleCompleteAmRoutine = () => {
-    if (isAmTodayCompleted) return;
-    if (!amChecks.cleanse || !amChecks.treat || !amChecks.hydrate || !amChecks.protect) {
-      showToast(
-        language === 'FR'
-          ? "Veuillez cocher toutes les étapes de votre rituel Matin."
-          : "يرجى تحديد جميع خطوات روتين الصباح أولاً.",
-        'warning'
-      );
-      return;
+  // Profile & Address States
+  const [profileName, setProfileName] = useState(clientUser?.name || 'Fatima-Zohra Alami');
+  const [profilePhone, setProfilePhone] = useState(clientUser?.phone || '0661234567');
+  const [profileEmail, setProfileEmail] = useState(clientUser?.email || 'fatimazohra@exemple.com');
+  const [savedAddresses, setSavedAddresses] = useState<UserAddress[]>([
+    {
+      id: 'addr_1',
+      label: 'Adresse Principale (Domicile)',
+      fullName: 'Fatima-Zohra Alami',
+      phone: '0661234567',
+      city: 'Casablanca',
+      address: 'Boulevard Anfa, Résidence Les Fleurs, Appt 14',
+      isDefault: true
+    },
+    {
+      id: 'addr_2',
+      label: 'Bureau (Travail)',
+      fullName: 'Fatima-Zohra Alami',
+      phone: '0661234567',
+      city: 'Casablanca',
+      address: 'Tour Marina Casablanca, 12ème Étage',
+      isDefault: false
     }
+  ]);
+  const [showAddAddressModal, setShowAddAddressModal] = useState(false);
+  const [newAddrLabel, setNewAddrLabel] = useState('');
+  const [newAddrCity, setNewAddrCity] = useState('Casablanca');
+  const [newAddrStreet, setNewAddrStreet] = useState('');
 
-    const updatedDates = [...amDoneDates, todayStr];
-    setAmDoneDates(updatedDates);
-    syncPlannerDates(updatedDates, pmDoneDates);
-
-    // Award +5 points
-    earnPoints(5, "Rituel de soin du Matin complété", "إتمام روتين العناية الصباحي");
-
-    setSuccessNotice(
-      language === 'FR'
-        ? "Rituel du Matin validé ! +5 Points Fidélité ajoutés."
-        : "تم إكمال روتين الصباح! تم إضافة +5 نقاط."
-    );
-    setTimeout(() => setSuccessNotice(null), 4000);
+  const handleAddAddress = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAddrStreet.trim()) return;
+    const newAddr: UserAddress = {
+      id: 'addr_' + Date.now(),
+      label: newAddrLabel || 'Adresse Secondaire',
+      fullName: profileName,
+      phone: profilePhone,
+      city: newAddrCity,
+      address: newAddrStreet,
+      isDefault: false
+    };
+    setSavedAddresses([...savedAddresses, newAddr]);
+    setShowAddAddressModal(false);
+    setNewAddrLabel('');
+    setNewAddrStreet('');
+    showToast(isRTL ? 'تمت إضافة العنوان الجديد بنجاح' : 'Nouvelle adresse de livraison enregistrée !');
   };
 
-  // Complete PM Checklist & earn points
-  const handleCompletePmRoutine = () => {
-    if (isPmTodayCompleted) return;
-    if (!pmChecks.cleanse || !pmChecks.treat || !pmChecks.hydrate) {
-      showToast(
-        language === 'FR'
-          ? "Veuillez cocher toutes les étapes de votre rituel Soir."
-          : "يرجى تحديد جميع خطوات روتين المساء أولاً.",
-        'warning'
-      );
-      return;
-    }
-
-    const updatedDates = [...pmDoneDates, todayStr];
-    setPmDoneDates(updatedDates);
-    syncPlannerDates(amDoneDates, updatedDates);
-
-    // Award +5 points
-    earnPoints(5, "Rituel de soin du Soir complété", "إتمام روتين العناية المسائي");
-
-    setSuccessNotice(
-      language === 'FR'
-        ? "Rituel du Soir validé ! +5 Points Fidélité ajoutés."
-        : "تم إكمال روتين المساء! تم إضافة +5 نقاط."
-    );
-    setTimeout(() => setSuccessNotice(null), 4000);
+  const handleSaveProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    showToast(isRTL ? 'تم تحديث معلومات الحساب بنجاح' : 'Vos informations personnelles ont été mises à jour.');
   };
 
-  // Loyalty Card Styles configuration
-  const getCardStyles = (activeTier: LoyaltyTier) => {
-    switch (activeTier) {
-      case 'Platinum':
-        return {
-          bg: 'linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #334155 100%)',
-          text: 'text-slate-100',
-          badgeBg: 'bg-slate-700/50 border-slate-500/50 text-slate-200',
-          shadow: 'shadow-[0_12px_36px_rgba(15,23,42,0.25)]',
-          label: language === 'FR' ? 'Membre Platinum' : 'عضو بلاتيني'
-        };
-      case 'Gold':
-        return {
-          bg: 'linear-gradient(135deg, #B45309 0%, #D97706 50%, #F59E0B 100%)',
-          text: 'text-amber-50',
-          badgeBg: 'bg-amber-800/40 border-amber-500/50 text-amber-200',
-          shadow: 'shadow-[0_12px_36px_rgba(217,119,6,0.25)]',
-          label: language === 'FR' ? 'Membre Gold' : 'عضو ذهبي'
-        };
-      case 'Silver':
-        return {
-          bg: 'linear-gradient(135deg, #475569 0%, #64748B 50%, #94A3B8 100%)',
-          text: 'text-slate-50',
-          badgeBg: 'bg-slate-700/30 border-slate-500/30 text-slate-200',
-          shadow: 'shadow-[0_12px_36px_rgba(100,116,139,0.25)]',
-          label: language === 'FR' ? 'Membre Silver' : 'عضو فضي'
-        };
-      default: // Bronze
-        return {
-          bg: 'linear-gradient(135deg, #78350F 0%, #92400E 50%, #B45309 100%)',
-          text: 'text-amber-50',
-          badgeBg: 'bg-amber-900/30 border-amber-700/30 text-amber-200',
-          shadow: 'shadow-[0_12px_36px_rgba(146,64,14,0.2)]',
-          label: language === 'FR' ? 'Membre Bronze' : 'عضو برونزي'
-        };
-    }
-  };
-
-  const cardStyle = getCardStyles(tier);
-
-  const authBackdropCls = [
-    't-modal-backdrop',
-    'fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md transition-all duration-300',
-    authModalState === 'open' ? 'opacity-100' : 'opacity-0 pointer-events-none',
-  ].join(' ');
-
-  const authModalCls = [
-    't-modal',
-    'bg-white dark:bg-slate-900 rounded-[32px] border border-slate-100/80 dark:border-slate-800/80 w-full max-w-md p-8 relative overflow-hidden transition-all duration-300 transform shadow-premium',
-    authModalState === 'open' ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 translate-y-4 pointer-events-none',
-  ].join(' ');
+  // Convert points to MAD value
+  const walletMadValue = useMemo(() => {
+    return Math.floor(points / 10);
+  }, [points]);
 
   return (
     <ShopShell hideHeader={!clientUser}>
       <div 
-        className={`min-h-screen relative overflow-hidden transition-colors page-entry-animate ${
+        className={`min-h-screen relative overflow-hidden transition-colors ${
           themeMode === 'dark' 
             ? 'bg-slate-950 text-slate-100 selection:bg-emerald-500 selection:text-slate-950' 
             : 'bg-[#FAF9F6] text-slate-900 selection:bg-emerald-500 selection:text-white'
         } ${
-          !clientUser ? 'flex flex-col items-center justify-center p-4 sm:p-6 lg:p-10' : 'py-12 px-4 sm:px-6 lg:px-8'
+          !clientUser ? 'flex flex-col items-center justify-center p-4 sm:p-6 lg:p-10' : 'py-10 px-4 sm:px-6 lg:px-8'
         }`}
         style={{ direction: isRTL ? 'rtl' : 'ltr' }}
       >
-        {/* Radial ambient background blurs */}
+        {/* Subtle Ambient Glow Background Orbs */}
         <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.02] bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:24px_24px]" />
-        <div className="pointer-events-none absolute -top-40 left-1/3 w-[600px] h-[600px] rounded-full bg-emerald-500/10 blur-[120px]" />
-        <div className="pointer-events-none absolute -bottom-40 right-1/3 w-[600px] h-[600px] rounded-full bg-cyan-500/10 blur-[120px]" />
+        <div className="pointer-events-none absolute -top-40 left-1/3 w-[700px] h-[700px] rounded-full bg-emerald-500/10 blur-[140px]" />
+        <div className="pointer-events-none absolute -bottom-40 right-1/3 w-[700px] h-[700px] rounded-full bg-cyan-500/10 blur-[140px]" />
 
-        <div className={`w-full relative z-10 ${!clientUser ? 'max-w-6xl' : 'max-w-5xl mx-auto space-y-8'}`}>
-          {/* ── Welcome Account / Login Banner ── */}
+        <div className={`w-full relative z-10 ${!clientUser ? 'max-w-6xl' : 'max-w-6xl mx-auto space-y-8'}`}>
+          
+          {/* ── NOT LOGGED IN: RENDERS AUTH PORTAL ── */}
           {!clientUser ? (
-          <CustomerAuthPortal
-            authView={authView}
-            setAuthView={setAuthView}
-            authEmail={authEmail}
-            setAuthEmail={setAuthEmail}
-            authPassword={authPassword}
-            setAuthPassword={setAuthPassword}
-            authName={authName}
-            setAuthName={setAuthName}
-            authPhone={authPhone}
-            setAuthPhone={setAuthPhone}
-            authError={authError}
-            authLoading={authLoading}
-            handleLogin={handleLogin}
-            handleSignup={handleSignup}
-            themeMode={themeMode}
-            onToggleTheme={toggleThemeMode}
-          />
-        ) : (
-          <div className={`rounded-3xl p-6 shadow-premium relative overflow-hidden backdrop-blur-md transition-colors border ${
-            themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200/80 text-slate-900'
-          }`}>
-            {/* Subtle glow background */}
-            <div className="absolute -right-24 -top-24 w-48 h-48 rounded-full bg-accent/5 blur-3xl pointer-events-none" />
-            
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-5 relative z-10">
-              <div className="flex items-center gap-4 min-w-0" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent text-white flex items-center justify-center text-sm font-black shrink-0 select-none shadow-md">
-                  {(clientUser?.name || clientUser?.email || 'C').charAt(0).toUpperCase()}
-                </div>
-                <div className="min-w-0" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-                  <p className={`text-sm font-black leading-tight ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>{clientUser?.name || clientUser?.email}</p>
-                  <div className="flex items-center gap-2 mt-1.5" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                    <span className="relative flex h-2 w-2 shrink-0">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                    </span>
-                    <p className="text-[10px] font-extrabold text-emerald-600 uppercase tracking-wider leading-none">
-                      {language === 'FR' ? 'Compte Synchronisé Cloud' : 'حساب متزامن بالكامل'}
-                    </p>
-                  </div>
-                </div>
-              </div>
+            <CustomerAuthPortal
+              authView={authView}
+              setAuthView={setAuthView}
+              authEmail={authEmail}
+              setAuthEmail={setAuthEmail}
+              authPassword={authPassword}
+              setAuthPassword={setAuthPassword}
+              authName={authName}
+              setAuthName={setAuthName}
+              authPhone={authPhone}
+              setAuthPhone={setAuthPhone}
+              authError={authError}
+              authLoading={authLoading}
+              handleLogin={handleLogin}
+              handleSignup={handleSignup}
+              themeMode={themeMode}
+              onToggleTheme={toggleThemeMode}
+            />
+          ) : (
+            /* ── LOGGED IN: FLAGSHIP SHOPIFY-PLUS DASHBOARD ── */
+            <>
+              {/* ──────────────── 1. EXECUTIVE HEADER BANNER ──────────────── */}
+              <div className={`rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden backdrop-blur-xl transition-all duration-300 border ${
+                themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800 text-slate-100' : 'bg-white border-slate-200/90 text-slate-900'
+              }`}>
+                {/* Decorative Metallic Radial Background */}
+                <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-emerald-500/10 via-cyan-500/5 to-transparent blur-3xl pointer-events-none" />
+                
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+                  
+                  {/* User Profile Identity Info */}
+                  <div className="flex items-center gap-4 sm:gap-5 min-w-0" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                    <div className="relative">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 text-slate-950 flex items-center justify-center text-xl sm:text-2xl font-black font-heading shrink-0 select-none shadow-xl shadow-emerald-500/20 ring-4 ring-emerald-500/20">
+                        {(clientUser.name || clientUser.email || 'C').charAt(0).toUpperCase()}
+                      </div>
+                      <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center shadow-md">
+                        <Sparkles className="w-3.5 h-3.5" />
+                      </span>
+                    </div>
 
-                  <div className="flex items-center gap-3">
-                    {/* Theme Mode Switcher Pill */}
+                    <div className="min-w-0 space-y-1" style={{ textAlign: isRTL ? 'right' : 'left' }}>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h2 className={`text-xl sm:text-2xl font-black font-heading tracking-tight ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                          {clientUser.name || clientUser.email}
+                        </h2>
+                        
+                        {/* Metallic VIP Tier Badge */}
+                        <span className={`px-3 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-widest flex items-center gap-1 shadow-sm border ${
+                          tier === 'Platinum'
+                            ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-300 border-purple-500/40'
+                            : tier === 'Gold'
+                            ? 'bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-300 border-amber-500/40'
+                            : tier === 'Silver'
+                            ? 'bg-gradient-to-r from-slate-400/20 to-slate-200/20 text-slate-200 border-slate-400/40'
+                            : 'bg-gradient-to-r from-amber-700/20 to-amber-600/20 text-amber-400 border-amber-700/40'
+                        }`}>
+                          <Award className="w-3 h-3 text-amber-400" />
+                          <span>MEMBRE {tier} VIP</span>
+                        </span>
+                      </div>
+
+                      <p className={`text-xs font-medium ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+                        {clientUser.email} • {isRTL ? 'عضوية معتمدة' : 'Compte Officinal Vérifié'}
+                      </p>
+
+                      <div className="flex items-center gap-2 pt-1" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                        <span className="relative flex h-2 w-2 shrink-0">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <p className="text-[11px] font-mono font-bold text-emerald-500 tracking-wider">
+                          {isRTL ? 'متصل بنظام الصيدلية المباشر' : 'CONNECTÉ EN TEMPS RÉEL (OFFICINE)'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Header Action Pills & Theme Switcher */}
+                  <div className="flex flex-wrap items-center gap-2.5">
                     <button
-                      onClick={toggleThemeMode}
-                      className={`px-3 py-1.5 rounded-xl border text-xs font-mono font-bold transition-all duration-300 flex items-center gap-1.5 cursor-pointer ${
+                      onClick={() => setDiagnosticOpen(true)}
+                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center gap-2 transition shadow-lg shadow-emerald-500/20 cursor-pointer border-0"
+                    >
+                      <Sparkles className="w-4 h-4 fill-slate-950" />
+                      <span>{isRTL ? 'تشخيص IA جديد' : 'Diagnostic IA'}</span>
+                    </button>
+
+                    <a
+                      href="https://wa.me/212660808080"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`px-4 py-2.5 rounded-xl border text-xs font-bold transition flex items-center gap-2 ${
                         themeMode === 'dark'
-                          ? 'bg-slate-800 border-slate-700 text-amber-400 hover:bg-slate-750'
-                          : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
+                          ? 'bg-slate-950 border-slate-800 text-emerald-400 hover:bg-slate-850'
+                          : 'bg-emerald-50 border-emerald-200 text-emerald-800 hover:bg-emerald-100'
                       }`}
                     >
-                      {themeMode === 'dark' ? (
-                        <>
-                          <Sun className="w-3.5 h-3.5 text-amber-400" />
-                          <span>{language === 'AR' ? 'مضيء' : 'Clair'}</span>
-                        </>
-                      ) : (
-                        <>
-                          <Moon className="w-3.5 h-3.5 text-slate-700" />
-                          <span>{language === 'AR' ? 'داكن' : 'Sombre'}</span>
-                        </>
-                      )}
+                      <MessageCircle className="w-4 h-4 text-emerald-500" />
+                      <span>{isRTL ? 'دعم الواتساب 24/7' : 'Support 24/7'}</span>
+                    </a>
+
+                    <button
+                      onClick={toggleThemeMode}
+                      className={`p-2.5 rounded-xl border text-xs font-mono font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                        themeMode === 'dark'
+                          ? 'bg-slate-950 border-slate-800 text-amber-400 hover:bg-slate-850'
+                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100 shadow-sm'
+                      }`}
+                      title={themeMode === 'dark' ? 'Passer en Mode Clair' : 'Passer en Mode Sombre'}
+                    >
+                      {themeMode === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
                     </button>
 
                     <button
                       onClick={logoutClient}
-                      className="text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-rose-500 py-2 px-3 rounded-xl hover:bg-rose-50/50 transition-all duration-300 cursor-pointer shrink-0 border border-slate-200/50 dark:border-slate-800 bg-transparent"
+                      className={`px-3.5 py-2.5 rounded-xl border text-xs font-bold transition cursor-pointer ${
+                        themeMode === 'dark'
+                          ? 'bg-slate-950 border-slate-800 text-rose-400 hover:bg-rose-500/10'
+                          : 'bg-white border-slate-200 text-rose-600 hover:bg-rose-50 shadow-sm'
+                      }`}
                     >
-                      {language === 'FR' ? 'Déconnexion' : 'خروج'}
+                      {isRTL ? 'خروج' : 'Déconnexion'}
                     </button>
                   </div>
-            </div>
-          </div>
-        )}
 
-        {/* ── Rebranded Luxury Auth Modal ── */}
-        {isAuthModalVisible && (
-          <div
-            className={authBackdropCls}
-            onClick={(e) => { if (e.target === e.currentTarget) setShowAuthPanel(false); }}
-          >
-            <div className="w-full max-w-4xl p-2 relative">
-              <button
-                onClick={() => setShowAuthPanel(false)}
-                className="absolute -top-12 right-0 w-10 h-10 rounded-full bg-slate-900 border border-slate-800 text-white flex items-center justify-center hover:bg-slate-800 transition cursor-pointer z-50"
-                aria-label="Close"
+                </div>
+              </div>
+
+
+              {/* ──────────────── 2. SHOPIFY-PLUS 7-TAB NAVIGATION DECK ──────────────── */}
+              <div 
+                ref={tabsRef} 
+                className={`w-full rounded-2xl p-1.5 select-none relative transition-all duration-300 shadow-md border grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-1 ${
+                  themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
+                }`}
               >
-                <X className="w-5 h-5 text-white" />
-              </button>
-              
-              <CustomerAuthPortal
-                authView={authView}
-                setAuthView={setAuthView}
-                authEmail={authEmail}
-                setAuthEmail={setAuthEmail}
-                authPassword={authPassword}
-                setAuthPassword={setAuthPassword}
-                authName={authName}
-                setAuthName={setAuthName}
-                authPhone={authPhone}
-                setAuthPhone={setAuthPhone}
-                authError={authError}
-                authLoading={authLoading}
-                handleLogin={handleLogin}
-                handleSignup={handleSignup}
-                onClose={() => setShowAuthPanel(false)}
-                isModal={true}
-              />
-            </div>
-          </div>
-        )}
+                {[
+                  { id: 'overview', labelFr: 'Vue d\'Ensemble', labelAr: 'ملخص الحساب', icon: LayoutGridIcon },
+                  { id: 'commandes', labelFr: 'Mes Commandes', labelAr: 'طلباتي والشحن', icon: Box },
+                  { id: 'diagnostic', labelFr: 'Diagnostic IA', labelAr: 'تشخيص البشرة', icon: Sparkles },
+                  { id: 'cagnotte', labelFr: 'Cagnotte & VIP', labelAr: 'المحفظة والكوبونات', icon: Ticket },
+                  { id: 'favoris', labelFr: 'Mes Favoris', labelAr: 'المفضلة', icon: Heart },
+                  { id: 'journal', labelFr: 'Agenda & Soins', labelAr: 'المفكرة اليومية', icon: BookOpen },
+                  { id: 'profil', labelFr: 'Profil & Adresses', labelAr: 'الملف والعناوين', icon: User }
+                ].map((tab) => {
+                  const isActive = activeTab === tab.id;
+                  const TabIcon = tab.icon;
+
+                  return (
+                    <button
+                      key={tab.id}
+                      aria-selected={isActive}
+                      onClick={() => setActiveTab(tab.id as TabType)}
+                      className={`py-3 px-2 rounded-xl text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer border-0 ${
+                        isActive
+                          ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-black shadow-md'
+                          : themeMode === 'dark'
+                          ? 'text-slate-400 hover:text-white hover:bg-slate-800/60 bg-transparent'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 bg-transparent'
+                      }`}
+                    >
+                      <TabIcon className={`w-3.5 h-3.5 ${isActive ? 'text-slate-950' : 'text-slate-400'}`} />
+                      <span className="truncate">{language === 'AR' ? tab.labelAr : tab.labelFr}</span>
+                    </button>
+                  );
+                })}
+              </div>
 
 
-
-        {/* Global Notifications Panel */}
-        <div className="!mt-0">
-          <div className={`grid transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] ${
-            showNotice 
-              ? 'grid-rows-[1fr] opacity-100 pt-6' 
-              : 'grid-rows-[0fr] opacity-0 pt-0 pointer-events-none'
-          }`}>
-            <div className="overflow-hidden">
-              {activeNotice && (
-                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 rounded-2xl text-xs font-bold text-center flex items-center justify-center gap-2 shadow-sm animate-scale-pop">
-                  <span className="t-success-check shrink-0 text-emerald-600" data-state="in">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M3 8.5L6.5 12L13 4" />
-                    </svg>
-                  </span>
-                  <span>{activeNotice}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* ── Client Portal Navigation Tabs (Only when logged in) ── */}
-        {clientUser && (
-          <div 
-            ref={tabsRef} 
-            className={`t-tabs w-full rounded-[22px] p-1.5 select-none relative transition-colors shadow-md border ${
-              themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
-            }`}
-            style={{ 
-              display: 'flex', 
-              position: 'relative',
-              padding: '6px'
-            }}
-          >
-            <div className="t-tabs-pill bg-emerald-500 rounded-xl" style={{ ...pillStyle, height: 'auto', top: '6px', bottom: '6px' }} />
-            {([
-              { id: 'suivi', labelFr: 'Suivi Colis', labelAr: 'تتبع الطلب' },
-              { id: 'club', labelFr: 'Club Para VIP', labelAr: 'نادي الجمال' },
-              { id: 'journal', labelFr: 'Agenda & Soins', labelAr: 'المفكرة' },
-              { id: 'favoris', labelFr: 'Mes Favoris', labelAr: 'المفضلة' }
-            ] as const).map((tab) => {
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  aria-selected={isActive}
-                  onClick={() => { setActiveTab(tab.id); setSuccessNotice(null); }}
-                  className={`t-tab flex-1 py-3 px-2 rounded-xl text-[10px] font-black uppercase tracking-wider text-center cursor-pointer transition-colors duration-300 z-10 border-0 bg-transparent ${
-                    isActive
-                      ? 'text-slate-950 font-black'
-                      : themeMode === 'dark' ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                  style={{ height: 'auto' }}
-                >
-                  {language === 'FR' ? tab.labelFr : tab.labelAr}
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        {/* ──────── TAB 1: SUIVI DE COMMANDE ──────── */}
-        {activeTab === 'suivi' && (
-          <div className="space-y-6 animate-fade-in">
-
-
-            {/* Results Deck */}
-            <div className="space-y-6">
-              {isSearching ? (
-                <div className="text-center py-14">
-                  <div className="w-8 h-8 border-4 border-solid border-accent border-t-transparent rounded-full animate-spin mx-auto" />
-                </div>
-              ) : hasSearched && orders.length === 0 ? (
-                <div className="text-center py-16 bg-white rounded-3xl border border-slate-200/50 space-y-4 shadow-sm relative overflow-hidden">
-                  <div className="absolute right-0 bottom-0 w-24 h-24 rounded-full bg-slate-50 blur-xl pointer-events-none" />
-                  <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-slate-500">
-                    <ShoppingBag className="w-5 h-5 animate-pulse" />
-                  </div>
-                  <div className="space-y-1">
-                    <h3 className="text-sm font-black text-slate-800 font-heading uppercase tracking-wide">
-                      {language === 'FR' ? 'Aucune commande trouvée' : 'لم يتم العثور على أي طلب'}
-                    </h3>
-                    <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed font-semibold">
-                      {language === 'FR'
-                        ? 'Aucune commande trouvée pour ces informations. Vérifiez le numéro de téléphone.'
-                        : 'لم نجد أي طلب مسجل بهذه البيانات. يرجى التحقق من الرقم المدخل.'}
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                orders.map((order) => (
-                  <div 
-                    key={order.order_id}
-                    className={`rounded-3xl p-6 shadow-premium space-y-6 relative overflow-hidden transition-colors border ${
-                      themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200/90 text-slate-900'
-                    }`}
-                  >
-                    {/* Brand line indicator */}
-                    <div className="absolute top-0 right-0 left-0 h-[3px] bg-gradient-to-r from-accent via-gold to-slate-900" />
-
-                    {/* Header card: ID and Status */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4 text-left" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-                      <div className="space-y-0.5">
-                        <span className="text-[9px] font-black text-slate-450 block tracking-wider uppercase">{language === 'FR' ? 'RÉFÉRENCE DE COMMANDE' : 'رقم الطلب'}</span>
-                        <span className="text-sm font-mono font-black tracking-wider text-slate-900">{order.order_id}</span>
-                      </div>
-
-                      {/* Status Badge */}
-                      <span className={`self-start sm:self-center px-3.5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider border ${
-                        order.status.toLowerCase() === 'shipped' || order.status.toLowerCase() === 'delivered'
-                          ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/10'
-                          : order.status.toLowerCase() === 'confirmed'
-                          ? 'bg-accent/10 text-accent border-accent/10'
-                          : 'bg-amber-500/10 text-amber-600 border-amber-500/10'
-                      }`}>
-                        {order.status.toLowerCase() === 'shipped' || order.status.toLowerCase() === 'delivered'
-                          ? (language === 'FR' ? 'Expédié & Livré' : 'تم الشحن والتوصيل')
-                          : order.status.toLowerCase() === 'confirmed'
-                          ? (language === 'FR' ? 'Confirmé' : 'مؤكد')
-                          : (language === 'FR' ? 'En Cours ⏳' : 'قيد الانتظار ⏳')
-                        }
-                      </span>
-                    </div>
-
-                    {/* Visual Timeline Tracking */}
-                    <div className="py-4 select-none">
-                      <div className="relative flex items-center justify-between w-full">
-                        {/* Progress track background line */}
-                        <div className="absolute left-0 right-0 top-4 -translate-y-1/2 h-1 bg-slate-100 rounded-full z-0" />
-                        {/* Active progress line */}
-                        <div 
-                          className="absolute top-4 -translate-y-1/2 h-1 bg-accent rounded-full z-0 transition-all duration-750" 
-                          style={{ 
-                            width: order.status.toLowerCase() === 'shipped' || order.status.toLowerCase() === 'delivered' 
-                              ? '100%' 
-                              : order.status.toLowerCase() === 'confirmed' 
-                              ? '50%' 
-                              : '0%',
-                            right: isRTL ? 0 : 'auto',
-                            left: isRTL ? 'auto' : 0
-                          }} 
-                        />
-                        {[
-                          { id: 'pending', labelFr: 'Reçu', labelAr: 'تم التوصل', descFr: 'Reçu par l\'officine', descAr: 'تم استلام الطلب' },
-                          { id: 'confirmed', labelFr: 'Confirmé', labelAr: 'مؤكد', descFr: 'Validé en préparation', descAr: 'تم التأكيد الهاتفي' },
-                          { id: 'shipped', labelFr: 'Livré', labelAr: 'تم التوصيل', descFr: 'Colis remis au coursier', descAr: 'خارج للتوصيل حالياً' }
-                        ].map((step, idx) => {
-                          const isDone = 
-                            idx === 0 || 
-                            (idx === 1 && (order.status.toLowerCase() === 'confirmed' || order.status.toLowerCase() === 'shipped' || order.status.toLowerCase() === 'delivered')) ||
-                            (idx === 2 && (order.status.toLowerCase() === 'shipped' || order.status.toLowerCase() === 'delivered'));
-                          
-                          return (
-                            <div key={step.id} className="relative z-10 flex flex-col items-center">
-                              <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-500 ${
-                                isDone 
-                                  ? 'bg-accent border-accent text-white shadow-md' 
-                                  : 'bg-white border-slate-200 text-slate-400'
-                              }`}>
-                                {isDone ? (
-                                  <Check className="w-4 h-4 stroke-[3]" />
-                                ) : (
-                                  <span className="text-[10px] font-black">{idx + 1}</span>
-                                )}
-                              </div>
-                              <span className="text-[9px] font-black uppercase tracking-wider text-slate-800 mt-2.5">{language === 'FR' ? step.labelFr : step.labelAr}</span>
-                              <span className="text-[7.5px] font-semibold text-slate-400 mt-0.5 leading-none max-w-[80px] text-center hidden sm:block">{language === 'FR' ? step.descFr : step.descAr}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Order Details & Summary Accordion */}
-                    <div className={`rounded-2xl p-4.5 space-y-4 border transition-colors ${
-                      themeMode === 'dark' ? 'bg-slate-950/60 border-slate-800/80 text-slate-200' : 'bg-slate-50/50 border-slate-100 text-slate-800'
+              {/* ──────────────── TAB 1: VUE D'ENSEMBLE (OVERVIEW BENTO GRID) ──────────────── */}
+              {activeTab === 'overview' && (
+                <div className="space-y-8 animate-in fade-in duration-300">
+                  
+                  {/* Executive Metric Cards Bento */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    
+                    {/* Bento 1: Wallet Balance */}
+                    <div className={`p-6 rounded-3xl border shadow-lg relative overflow-hidden flex flex-col justify-between space-y-4 ${
+                      themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
                     }`}>
-                      <div className="flex items-center gap-2 border-b border-slate-100/50 pb-2">
-                        <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                        <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase">{language === 'FR' ? 'ADRESSE DE LIVRAISON' : 'عنوان التسليم'}</span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-emerald-500">
+                          SOLDE CAGNOTTE
+                        </span>
+                        <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center justify-center">
+                          <Coins className="w-5 h-5" />
+                        </div>
                       </div>
-                      <p className="text-xs text-slate-700 font-semibold leading-relaxed text-left" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-                        <span className="font-extrabold text-slate-900">{order.customer_name}</span> • {order.phone_number} <br />
-                        {order.address}, <span className="font-black">{order.city}</span>
-                      </p>
 
-                      <div className="border-t border-slate-100/80 pt-3 space-y-2">
-                        <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase block text-left" style={{ textAlign: isRTL ? 'right' : 'left' }}>{language === 'FR' ? 'PRODUITS COMMANDÉS' : 'المنتجات المطلوبة'}</span>
-                        <div className="divide-y divide-slate-100/40">
-                          {order.items && order.items.map((item: any, i: number) => (
-                            <div key={i} className="py-2.5 flex items-center justify-between text-xs font-semibold gap-4 text-left" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                              <span className="text-slate-750 truncate flex-1 leading-normal" style={{ textAlign: isRTL ? 'right' : 'left' }}>{item.title} <span className="text-[10px] text-slate-400 font-bold ml-1">x{item.quantity}</span></span>
-                              <span className="text-slate-900 font-mono font-bold shrink-0">{item.price * item.quantity} DH</span>
+                      <div>
+                        <span className={`text-3xl font-black font-heading ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                          {points} <span className="text-xs font-mono font-bold text-emerald-500">PTS</span>
+                        </span>
+                        <p className={`text-xs mt-1 ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                          Valeur estimée: <strong className="text-emerald-500 font-bold">{walletMadValue} MAD</strong>
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => setActiveTab('cagnotte')}
+                        className="w-full py-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 font-bold text-xs flex items-center justify-center gap-1.5 border border-emerald-500/20 transition cursor-pointer"
+                      >
+                        <span>Convertir mes points</span>
+                        <ChevronRight className={`w-3.5 h-3.5 ${isRTL ? 'rotate-180' : ''}`} />
+                      </button>
+                    </div>
+
+                    {/* Bento 2: Active Orders */}
+                    <div className={`p-6 rounded-3xl border shadow-lg relative overflow-hidden flex flex-col justify-between space-y-4 ${
+                      themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-cyan-500">
+                          COMMANDES EN COURS
+                        </span>
+                        <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-500 flex items-center justify-center">
+                          <Truck className="w-5 h-5" />
+                        </div>
+                      </div>
+
+                      <div>
+                        <span className={`text-3xl font-black font-heading ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                          {orders.filter(o => o.status.toLowerCase().includes('transit') || o.status.toLowerCase().includes('shipped')).length || 1} <span className="text-xs font-mono font-bold text-cyan-500">Colis</span>
+                        </span>
+                        <p className={`text-xs mt-1 ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                          Dernier colis: <strong className="text-cyan-500 font-bold">PO-2026-8942</strong> (En transit)
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => setActiveTab('commandes')}
+                        className="w-full py-2.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 font-bold text-xs flex items-center justify-center gap-1.5 border border-cyan-500/20 transition cursor-pointer"
+                      >
+                        <span>Suivre la livraison</span>
+                        <ChevronRight className={`w-3.5 h-3.5 ${isRTL ? 'rotate-180' : ''}`} />
+                      </button>
+                    </div>
+
+                    {/* Bento 3: AI Skin Score */}
+                    <div className={`p-6 rounded-3xl border shadow-lg relative overflow-hidden flex flex-col justify-between space-y-4 ${
+                      themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-500">
+                          SCORE CUTANÉ IA
+                        </span>
+                        <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center">
+                          <Sparkles className="w-5 h-5" />
+                        </div>
+                      </div>
+
+                      <div>
+                        <span className={`text-3xl font-black font-heading ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                          88 <span className="text-xs font-mono font-bold text-amber-500">/ 100</span>
+                        </span>
+                        <p className={`text-xs mt-1 ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                          Profil: <strong className="text-amber-500 font-bold">Peau Mixte & Taches</strong>
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => setActiveTab('diagnostic')}
+                        className="w-full py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 font-bold text-xs flex items-center justify-center gap-1.5 border border-amber-500/20 transition cursor-pointer"
+                      >
+                        <span>Voir l'ordonnance</span>
+                        <ChevronRight className={`w-3.5 h-3.5 ${isRTL ? 'rotate-180' : ''}`} />
+                      </button>
+                    </div>
+
+                    {/* Bento 4: Available Coupons */}
+                    <div className={`p-6 rounded-3xl border shadow-lg relative overflow-hidden flex flex-col justify-between space-y-4 ${
+                      themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-purple-500">
+                          BONS DISPONIBLES
+                        </span>
+                        <div className="w-10 h-10 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-500 flex items-center justify-center">
+                          <Ticket className="w-5 h-5" />
+                        </div>
+                      </div>
+
+                      <div>
+                        <span className={`text-3xl font-black font-heading ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                          3 <span className="text-xs font-mono font-bold text-purple-500">Coupons</span>
+                        </span>
+                        <p className={`text-xs mt-1 ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                          Code actif: <strong className="text-purple-500 font-mono font-bold">BEAUTY10 (-10%)</strong>
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => copyCouponToClipboard('BEAUTY10')}
+                        className="w-full py-2.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-500 font-bold text-xs flex items-center justify-center gap-1.5 border border-purple-500/20 transition cursor-pointer"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copier le code BEAUTY10</span>
+                      </button>
+                    </div>
+
+                  </div>
+
+
+                  {/* Recent Order Live Card */}
+                  <div className={`p-6 sm:p-8 rounded-3xl border shadow-xl relative overflow-hidden ${
+                    themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
+                  }`}>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-mono font-bold text-emerald-500 uppercase tracking-widest">
+                            DERNIÈRE EXPÉDITION
+                          </span>
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                            En Transit Express
+                          </span>
+                        </div>
+                        <h3 className={`text-xl font-black font-heading ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                          Commande N° PO-2026-8942
+                        </h3>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleReorder(SAMPLE_ORDERS_PRESETS[0])}
+                          className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider transition shadow-md cursor-pointer border-0 flex items-center gap-1.5"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" />
+                          <span>Re-commander en 1 clic</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-6 items-center">
+                      <div className="space-y-3 lg:col-span-2">
+                        <p className={`text-xs font-semibold ${themeMode === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
+                          Articles inclus dans cette expédition:
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {SAMPLE_ORDERS_PRESETS[0].items.map((item, idx) => (
+                            <div key={idx} className={`p-3 rounded-2xl border flex items-center gap-3 ${
+                              themeMode === 'dark' ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-slate-200/80'
+                            }`}>
+                              <div className="w-12 h-12 rounded-xl bg-white p-1 border border-slate-200 shrink-0">
+                                <img src={item.image} alt={item.title} className="w-full h-full object-contain" />
+                              </div>
+                              <div className="min-w-0 flex-1 text-left">
+                                <h4 className={`text-xs font-bold truncate ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                                  {item.title}
+                                </h4>
+                                <p className="text-[11px] font-mono text-slate-400">
+                                  {item.quantity}x • {item.price} MAD
+                                </p>
+                              </div>
                             </div>
                           ))}
                         </div>
                       </div>
 
-                      <div className="border-t border-slate-100 pt-3 flex items-center justify-between text-xs font-black text-slate-900" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                        <span>TOTAL À PAYER (COD) :</span>
-                        <span className="text-sm font-mono tracking-tight text-accent bg-accent/5 px-3 py-1 rounded-lg border border-accent/10">{order.total} DH</span>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* ──────── TAB 2: CLUB PARA (LOYALTY) ──────── */}
-        {activeTab === 'club' && (
-          <div className="space-y-8 animate-fade-in">
-            
-            {/* ── Rebranded Premium Loyalty Card ── */}
-            <div 
-              className={`w-full aspect-[1.66/1] md:aspect-[1.8/1] rounded-[28px] p-6 md:p-8 relative overflow-hidden flex flex-col justify-between ${cardStyle.shadow} border border-white/25 select-none`}
-              style={{ background: cardStyle.bg }}
-            >
-              {/* Luxury ambient light glares */}
-              <div className="absolute -right-12 -top-12 w-52 h-52 rounded-full bg-white/10 blur-3xl pointer-events-none" />
-              <div className="absolute -left-12 -bottom-12 w-52 h-52 rounded-full bg-white/5 blur-3xl pointer-events-none" />
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 pointer-events-none" />
-              
-              {/* Animated reflective glare */}
-              <div className="absolute -inset-y-16 -left-1/4 w-16 bg-gradient-to-r from-transparent via-white/15 to-transparent blur-md transform rotate-25 animate-pulse" />
-
-              {/* Card Header */}
-              <div className="flex items-start justify-between relative z-10" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                <div className="flex flex-col text-left" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-                  <span className={`text-[9px] font-black uppercase tracking-[0.25em] ${cardStyle.text} opacity-60 leading-none`}>
-                    CLUB PARA BEAUTY VIP
-                  </span>
-                  <span className={`text-sm font-black font-heading ${cardStyle.text} mt-2.5 leading-none`}>
-                    {language === 'FR' ? 'Para Officinal S.A' : 'مستحضراتنا الرسمية'}
-                  </span>
-                </div>
-                <span className={`text-[8.5px] font-black uppercase tracking-wider px-3.5 py-1.5 rounded-xl border ${cardStyle.badgeBg} shadow-sm backdrop-blur-sm`}>
-                  {cardStyle.label}
-                </span>
-              </div>
-
-              {/* Card Chip & Contactless Waves */}
-              <div className="flex items-center gap-4 relative z-10" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                {/* Chip Mockup */}
-                <div className="w-10 h-7 rounded-[7px] bg-gradient-to-br from-amber-300 via-amber-200 to-amber-400 border border-amber-400/40 relative shadow-[inset_0_1px_3px_rgba(255,255,255,0.7)] opacity-90 overflow-hidden shrink-0">
-                  <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-[1px] bg-amber-600/30" />
-                  <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[1px] bg-amber-600/30" />
-                  <div className="absolute inset-[3px] rounded-[3px] border border-amber-600/20" />
-                </div>
-                
-                {/* NFC Contactless waves */}
-                <svg className="w-6 h-6 text-white/40 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 00-6-6M12 22.5c-4.142 0-7.5-3.358-7.5-7.5m7.5 11.25a9.75 9.75 0 00-9.75-9.75m9.75 13.5A12 12 0 003 15" />
-                </svg>
-              </div>
-
-              {/* Balances */}
-              <div className="flex items-end justify-between relative z-10" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                <div className="flex flex-col items-start" style={{ alignItems: isRTL ? 'flex-end' : 'flex-start' }}>
-                  <span className={`text-[8.5px] font-bold uppercase tracking-widest ${cardStyle.text} opacity-60`}>
-                    {language === 'FR' ? 'SOLDE DE POINTS FIDÉLITÉ' : 'رصيد النقاط الفعال'}
-                  </span>
-                  <span className={`text-4xl md:text-5xl font-black ${cardStyle.text} tracking-tight leading-none mt-1.5`}>
-                    {points} <span className="text-xs md:text-sm font-semibold uppercase opacity-80 tracking-wider">pts</span>
-                  </span>
-                </div>
-
-                <div className="flex flex-col text-left" style={{ textAlign: isRTL ? 'left' : 'right', alignItems: isRTL ? 'flex-start' : 'flex-end' }}>
-                  <span className={`text-[8px] font-black uppercase tracking-wider ${cardStyle.text} opacity-50`}>
-                    {language === 'FR' ? 'Multiplicateur' : 'مضاعف النقats'}
-                  </span>
-                  <span className={`text-xs font-black ${cardStyle.text} mt-1`}>
-                    {tierMultiplier}x {language === 'FR' ? 'Points' : 'نقاط'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Tier Milestone Progress */}
-            {pointsToNextTier > 0 ? (
-              <div className="bg-white border border-slate-200/50 rounded-3xl p-5 shadow-sm text-left">
-                <div className="flex items-center justify-between text-xs font-black text-slate-700 mb-3.5">
-                  <span className="flex items-center gap-1.5">
-                    <Award className="w-4.5 h-4.5 text-accent animate-pulse" />
-                    <span>{language === 'FR' ? 'Objectif Prochain Niveau' : 'المستوى التالي'}</span>
-                  </span>
-                  <span className="text-slate-500 font-extrabold">{pointsToNextTier} pts</span>
-                </div>
-                
-                <div className="relative">
-                  <div className="absolute inset-x-0 -top-1.5 flex justify-between px-1 pointer-events-none select-none">
-                    {[...Array(6)].map((_, i) => (
-                      <div key={i} className="w-[1.5px] h-1.5 bg-slate-200" />
-                    ))}
-                  </div>
-                  
-                  <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-200/20">
-                    <div 
-                      className="h-full bg-gradient-to-r from-accent via-teal-500 to-gold rounded-full transition-all duration-750 ease-out"
-                      style={{
-                        width: `${Math.min((totalEarned / (totalEarned + pointsToNextTier)) * 100, 100)}%`
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <p className="text-[10px] text-slate-400 leading-relaxed font-semibold mt-3">
-                  {language === 'FR'
-                    ? `Cumulez ${pointsToNextTier} points supplémentaires d'achat ou de journal pour passer au statut supérieur.`
-                    : `اكتسبي ${pointsToNextTier} نقطة إضافية لتفعيل فئة العضوية التالية.`}
-                </p>
-              </div>
-            ) : (
-              <div className="bg-emerald-500/5 border border-emerald-500/15 rounded-3xl p-5 flex gap-4 shadow-sm text-left">
-                <div className="w-9 h-9 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 text-emerald-600">
-                  <Award className="w-5 h-5 animate-bounce" />
-                </div>
-                <div>
-                  <span className="text-[10.5px] font-black text-emerald-600 uppercase tracking-widest block">
-                    {language === 'FR' ? 'STATUT PLATINUM MAXIMUM' : 'عضوية VIP البلاتينية القصوى'}
-                  </span>
-                  <p className="text-[10px] text-slate-450 leading-relaxed font-semibold mt-1">
-                    {language === 'FR'
-                      ? 'Traitement VIP activé : Vous disposez du multiplicateur x2.0 et de la livraison express prioritaire.'
-                      : 'تهانينا! حسابكِ يتمتع بمضاعف النقاط الأقصى x2.0 وأولوية الشحن السريع لجميع طلباتكِ.'}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Redeem Vouchers (Premium Ticket Card Design) */}
-            <div className="flex flex-col gap-4">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1 text-left block">
-                {language === 'FR' ? 'BONS DISPONIBLES À DÉBLOQUER' : 'كوبونات متاحة للاسترداد بالنقاط'}
-              </span>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                {rewards.map((reward, index) => {
-                  const canRedeem = points >= reward.cost;
-                  return (
-                    <div 
-                      key={reward.id}
-                      className="bg-white border border-slate-200/50 rounded-2xl flex flex-col justify-between relative overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5"
-                    >
-                      {/* Ticket Rounded Punches */}
-                      <div className="absolute left-[-8px] top-1/2 -translate-y-1/2 w-4 h-5 rounded-r-full bg-[#FAF9F6] border-y border-r border-slate-200/50" />
-                      <div className="absolute right-[-8px] top-1/2 -translate-y-1/2 w-4 h-5 rounded-l-full bg-[#FAF9F6] border-y border-l border-slate-200/50" />
-
-                      {/* Upper Stub */}
-                      <div className="p-5 flex-1 flex flex-col gap-3.5 text-left" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-                        <div className="w-9 h-9 rounded-xl bg-accent/5 border border-accent/10 flex items-center justify-center text-accent">
-                          <Ticket className="w-4.5 h-4.5" />
+                      <div className={`p-5 rounded-2xl border space-y-3 text-left ${
+                        themeMode === 'dark' ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-slate-200/80'
+                      }`}>
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-mono font-bold text-slate-400 uppercase">Livraison Estimée</span>
+                          <p className="text-sm font-bold text-cyan-400">Aujourd'hui avant 19:00</p>
                         </div>
                         <div className="space-y-1">
-                          <h4 className="text-xs font-black text-slate-800 leading-tight">
-                            {language === 'FR' ? reward.nameFr : reward.nameAr}
-                          </h4>
-                          <p className="text-[10.5px] text-slate-400 font-semibold leading-relaxed">
-                            {language === 'FR' ? reward.descFr : reward.descAr}
-                          </p>
+                          <span className="text-[10px] font-mono font-bold text-slate-400 uppercase">Transporteur</span>
+                          <p className={`text-xs font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>Yalidine Express (N° YL-CAS-994821)</p>
                         </div>
-                      </div>
-
-                      {/* Dashed Separator */}
-                      <div className="border-t border-dashed border-slate-200 mx-4" />
-
-                      {/* Lower Stub */}
-                      <div className="p-5 flex items-center justify-between select-none" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                        <span className="text-[11px] font-black text-slate-800 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-lg">
-                          {reward.cost} pts
-                        </span>
-                        <button
-                          onClick={() => handleRedeem(reward)}
-                          disabled={!canRedeem}
-                          className={`px-4 py-2.5 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all duration-300 active:scale-[0.97] cursor-pointer border-0 outline-none ${
-                            canRedeem
-                              ? 'bg-primary text-white hover:bg-accent shadow-sm'
-                              : 'bg-slate-55 text-slate-300 border border-slate-100 cursor-not-allowed'
-                          }`}
-                        >
-                          {language === 'FR' ? 'Prendre' : 'استرداد'}
-                        </button>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Unlocked coupon copy field */}
-            {successNotice?.includes('débloqué') && (
-              <div className="bg-emerald-500/5 border border-emerald-500/15 rounded-3xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 animate-scale-pop text-left" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-                <div>
-                  <span className="text-[9px] font-black text-emerald-600 block uppercase tracking-widest leading-none">{language === 'FR' ? 'CODE PROMO DÉBLOQUÉ' : 'رمز الخصم المفتوح'}</span>
-                  <p className="text-[10.5px] text-slate-500 font-semibold mt-1 leading-snug">
-                    {language === 'FR' ? 'Copiez ce code de réduction et collez-le au moment du paiement.' : 'انسخي الكود واستعمليه في صفحة الدفع لتطبيق الخصم.'}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 shrink-0" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                  <span className="font-mono text-xs font-black text-slate-900 bg-white border border-slate-200 px-4.5 py-2.5 rounded-xl select-all shadow-sm">
-                    {successNotice.match(/Code ([A-Z0-9]+) /)?.[1] || 'FREESHIP'}
-                  </span>
-                  <button
-                    onClick={() => handleCopy(successNotice.match(/Code ([A-Z0-9]+) /)?.[1] || 'FREESHIP')}
-                    className="p-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-500 hover:text-slate-700 rounded-xl transition active:scale-95 cursor-pointer"
-                  >
-                    {copiedCode ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Loyalty Ledger history */}
-            <div className="flex flex-col gap-4">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1 text-left block">
-                {language === 'FR' ? 'HISTORIQUE DES GAINS DE POINTS' : 'سجل حركة النقاط بالتفصيل'}
-              </span>
-
-              {pointsHistory.length === 0 ? (
-                <div className="bg-white border border-slate-200/50 rounded-3xl p-10 text-center text-xs text-slate-450 font-semibold select-none shadow-sm">
-                  {language === 'FR' ? 'Aucune transaction enregistrée.' : 'لا توجد أي معاملات مسجلة بعد'}
-                </div>
-              ) : (
-                <div className="bg-white border border-slate-200/50 rounded-3xl divide-y divide-slate-100 overflow-hidden shadow-sm">
-                  {pointsHistory.map((tx) => (
-                    <div key={tx.id} className="p-4.5 flex items-center justify-between gap-4 text-left transition-colors duration-200 hover:bg-slate-50/40" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                      <div className="flex items-center gap-3.5 min-w-0" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                        <div className={`w-8.5 h-8.5 rounded-xl flex items-center justify-center shrink-0 border ${
-                          tx.amount > 0 
-                            ? 'bg-emerald-55/10 border-emerald-500/10 text-emerald-500' 
-                            : 'bg-rose-55/10 border-rose-500/10 text-rose-500'
-                        }`}>
-                          <Coins className="w-4 h-4" />
-                        </div>
-                        <div className="min-w-0" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-                          <span className="text-xs font-bold text-slate-700 block leading-tight truncate">
-                            {language === 'FR' ? tx.descriptionFr : tx.descriptionAr}
-                          </span>
-                          <span className="text-[9px] text-slate-450 block mt-1 font-extrabold uppercase tracking-wider">
-                            {new Date(tx.date).toLocaleDateString(language === 'FR' ? 'fr-FR' : 'ar-MA', {
-                              day: 'numeric',
-                              month: 'short',
-                              year: 'numeric'
-                            })}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      <span className={`text-xs font-black shrink-0 ${
-                        tx.amount > 0 ? 'text-emerald-500' : 'text-rose-500'
-                      }`}>
-                        {tx.amount > 0 ? `+${tx.amount}` : tx.amount} pts
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* ──────── TAB 3: DAILY ROUTINE PLANNER & SKIN DIARY ──────── */}
-        {activeTab === 'journal' && (
-          <div className="space-y-6 animate-fade-in">
-            {/* Gamification points info */}
-            <div className={`rounded-3xl p-5 shadow-sm border transition-colors ${
-              themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200/80 text-slate-900'
-            }`}>
-              <div 
-                className="flex items-start gap-4 text-left"
-                style={{ textAlign: isRTL ? 'right' : 'left', flexDirection: isRTL ? 'row-reverse' : 'row' }}
-              >
-                <div className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                  <Sparkles className="w-4.5 h-4.5 text-emerald-600 animate-pulse" />
-                </div>
-                <div className="space-y-1">
-                  <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest block font-heading">
-                    {language === 'FR' ? 'COMPLÉTEZ VOS ÉTAPES & GAGNEZ DES POINTS' : 'أتمي طقوسكِ اليومية واحصلي على نقاط'}
-                  </span>
-                  <p className={`text-xs font-semibold leading-relaxed ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                    {language === 'FR'
-                      ? 'Cochez vos étapes de soin du matin et du soir, puis validez pour gagner +5 Points Fidélité par rituel chaque jour.'
-                      : 'سجلي إكمال خطوات روتين الصباح والمساء يومياً، واحصلي على +5 نقاط إضافية عند تأكيد كل روتين.'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Checklist AM and PM Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 select-none">
-              
-              {/* AM Skincare Planner */}
-              <div className={`rounded-3xl p-5 shadow-sm flex flex-col justify-between gap-5 text-left border transition-colors ${
-                themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200/80 text-slate-900'
-              }`} style={{ textAlign: isRTL ? 'right' : 'left' }}>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-3" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                    <h3 className="text-xs font-black text-slate-800 font-heading uppercase tracking-wide">
-                      {language === 'FR' ? 'Rituel du Matin (AM)' : 'روتين الصباح (AM)'}
-                    </h3>
-                    {isAmTodayCompleted && (
-                      <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 rounded-md text-[9px] font-black uppercase tracking-wider select-none border border-emerald-500/10">
-                        {language === 'FR' ? 'Complété' : 'مكتمل'}
-                      </span>
-                    )}
                   </div>
 
-                  <div className="space-y-2.5">
-                    {[
-                      { key: 'cleanse', labelFr: 'Nettoyer (Gel/Eau micellaire)', labelAr: 'تنظيف (منظف لطيف)' },
-                      { key: 'treat', labelFr: 'Traiter (Sérum/Actif)', labelAr: 'علاج (سيروم للوجه)' },
-                      { key: 'hydrate', labelFr: 'Hydrater (Crème de jour)', labelAr: 'ترطيب (كريم النهار)' },
-                      { key: 'protect', labelFr: 'Protéger (Écran Solaire SPF)', labelAr: 'حماية (واقي شمس)' }
-                    ].map((step) => (
-                      <label 
-                        key={step.key}
-                        className={`flex items-center gap-3.5 p-3 rounded-2xl border text-xs font-semibold cursor-pointer transition-all duration-300 select-none ${
-                          isAmTodayCompleted
-                            ? 'bg-slate-50/40 border-slate-100 text-slate-400 cursor-not-allowed opacity-80'
-                            : (amChecks as Record<string, boolean>)[step.key]
-                            ? 'border-emerald-500/30 bg-emerald-500/5 text-slate-800'
-                            : 'border-slate-100 text-slate-650 hover:bg-slate-50 hover:border-slate-200'
-                        }`}
-                        style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}
-                      >
-                        <div className="relative flex items-center justify-center">
-                          <input
-                            type="checkbox"
-                            checked={isAmTodayCompleted || (amChecks as Record<string, boolean>)[step.key]}
-                            disabled={isAmTodayCompleted}
-                            onChange={(e) => setAmChecks(prev => ({ ...prev, [step.key]: e.target.checked }))}
-                            className="peer sr-only"
-                          />
-                          <div className={`w-[18px] h-[18px] rounded-[6px] border transition-all duration-200 flex items-center justify-center ${
-                            isAmTodayCompleted
-                              ? 'bg-slate-100 border-slate-200 text-slate-450'
-                              : (amChecks as Record<string, boolean>)[step.key]
-                              ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm'
-                              : 'bg-white border-slate-350 peer-hover:border-slate-400'
-                          }`}>
-                            <Check className={`w-3 h-3 stroke-[3.5] transition-transform duration-200 ${
-                              isAmTodayCompleted || (amChecks as Record<string, boolean>)[step.key] ? 'scale-100' : 'scale-0'
-                            }`} />
-                          </div>
-                        </div>
-                        <span className="flex-grow leading-normal">{language === 'FR' ? step.labelFr : step.labelAr}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleCompleteAmRoutine}
-                  disabled={isAmTodayCompleted}
-                  className={`w-full py-3 rounded-2xl font-black text-[10px] uppercase tracking-wider transition-all duration-300 border-0 outline-none cursor-pointer ${
-                    isAmTodayCompleted
-                      ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200/10'
-                      : 'bg-slate-900 hover:bg-accent text-white shadow-sm active:scale-[0.97]'
-                  }`}
-                >
-                  {isAmTodayCompleted 
-                    ? (language === 'FR' ? 'Complété' : 'مكتمل')
-                    : (language === 'FR' ? 'Valider le Matin (+5 pts)' : 'تأكيد روتين الصباح (+5 ن)')}
-                </button>
-              </div>
-
-              {/* PM Skincare Planner */}
-              <div className="bg-white border border-slate-200/50 rounded-3xl p-5 shadow-sm flex flex-col justify-between gap-5 text-left" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-3" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                    <h3 className="text-xs font-black text-slate-800 font-heading uppercase tracking-wide">
-                      {language === 'FR' ? 'Rituel du Soir (PM)' : 'روتين المساء (PM)'}
-                    </h3>
-                    {isPmTodayCompleted && (
-                      <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 rounded-md text-[9px] font-black uppercase tracking-wider select-none border border-emerald-500/10">
-                        {language === 'FR' ? 'Complété' : 'مكتمل'}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="space-y-2.5">
-                    {[
-                      { key: 'cleanse', labelFr: 'Double Nettoyage (Huile + Gel)', labelAr: 'تنظيف مزدوج (زيت + جل)' },
-                      { key: 'treat', labelFr: 'Traiter (Sérum de nuit)', labelAr: 'علاج (سيروم ليلي)' },
-                      { key: 'hydrate', labelFr: 'Hydrater (Crème riche/Masque)', labelAr: 'ترطيب (كريم ليلي مغذي)' }
-                    ].map((step) => (
-                      <label 
-                        key={step.key}
-                        className={`flex items-center gap-3.5 p-3 rounded-2xl border text-xs font-semibold cursor-pointer transition-all duration-300 select-none ${
-                          isPmTodayCompleted
-                            ? 'bg-slate-50/40 border-slate-100 text-slate-400 cursor-not-allowed opacity-80'
-                            : (pmChecks as Record<string, boolean>)[step.key]
-                            ? 'border-emerald-500/30 bg-emerald-500/5 text-slate-800'
-                            : 'border-slate-100 text-slate-650 hover:bg-slate-50 hover:border-slate-200'
-                        }`}
-                        style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}
-                      >
-                        <div className="relative flex items-center justify-center">
-                          <input
-                            type="checkbox"
-                            checked={isPmTodayCompleted || (pmChecks as Record<string, boolean>)[step.key]}
-                            disabled={isPmTodayCompleted}
-                            onChange={(e) => setPmChecks(prev => ({ ...prev, [step.key]: e.target.checked }))}
-                            className="peer sr-only"
-                          />
-                          <div className={`w-[18px] h-[18px] rounded-[6px] border transition-all duration-200 flex items-center justify-center ${
-                            isPmTodayCompleted
-                              ? 'bg-slate-100 border-slate-200 text-slate-450'
-                              : (pmChecks as Record<string, boolean>)[step.key]
-                              ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm'
-                              : 'bg-white border-slate-350 peer-hover:border-slate-400'
-                          }`}>
-                            <Check className={`w-3 h-3 stroke-[3.5] transition-transform duration-200 ${
-                              isPmTodayCompleted || (pmChecks as Record<string, boolean>)[step.key] ? 'scale-100' : 'scale-0'
-                            }`} />
-                          </div>
-                        </div>
-                        <span className="flex-grow leading-normal">{language === 'FR' ? step.labelFr : step.labelAr}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleCompletePmRoutine}
-                  disabled={isPmTodayCompleted}
-                  className={`w-full py-3 rounded-2xl font-black text-[10px] uppercase tracking-wider transition-all duration-300 border-0 outline-none cursor-pointer ${
-                    isPmTodayCompleted
-                      ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200/10'
-                      : 'bg-slate-900 hover:bg-accent text-white shadow-sm active:scale-[0.97]'
-                  }`}
-                >
-                  {isPmTodayCompleted 
-                    ? (language === 'FR' ? 'Complété' : 'مكتمل')
-                    : (language === 'FR' ? 'Valider le Soir (+5 pts)' : 'تأكيد روتين المساء (+5 ن)')}
-                </button>
-              </div>
-
-            </div>
-
-            {/* Daily Skin Diary Logger */}
-            <div className="bg-white border border-slate-200/50 rounded-3xl p-6 shadow-premium text-left" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-              <div className="flex items-center gap-2 border-b border-slate-100 pb-3 mb-5 select-none" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                <BookOpen className="w-4.5 h-4.5 text-accent" />
-                <h3 className="text-xs font-black text-slate-800 font-heading uppercase tracking-wide">
-                  {language === 'FR' ? 'Journal Clinique d\'Évolution de la Peau' : 'سجل ومفكرة تتبع حالة البشرة'}
-                </h3>
-              </div>
-
-              <form onSubmit={handleSubmitDiary} className="space-y-5">
-                {/* Mood Wellness selection */}
-                <div className="space-y-3 select-none text-left" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
-                    {language === 'FR' ? 'État général de ma peau aujourd\'hui :' : 'حالة بشرتي اليوم :'}
-                  </span>
-                  <div className="flex flex-wrap gap-2.5">
-                    {[
-                      { emoji: '🤩', labelFr: 'Éclatante', labelAr: 'مشرقة' },
-                      { emoji: '🙂', labelFr: 'Stable', labelAr: 'مستقرة' },
-                      { emoji: '😕', labelFr: 'Sèche', labelAr: 'جافة/مشدودة' },
-                      { emoji: '😭', labelFr: 'Moyenne', labelAr: 'متهيجة/حبوب' }
-                    ].map((em) => (
-                      <button
-                        key={em.emoji}
-                        type="button"
-                        onClick={() => setDiaryEmoji(em.emoji)}
-                        className={`px-4.5 py-3 rounded-2xl border flex items-center gap-2 transition-all duration-300 active:scale-[0.95] cursor-pointer ${
-                          diaryEmoji === em.emoji
-                            ? 'border-emerald-500/40 bg-emerald-500/5 text-slate-800 shadow-sm font-black'
-                            : 'border-slate-100 bg-slate-50/50 text-slate-500 hover:bg-slate-50 hover:border-slate-200'
-                        }`}
-                        title={language === 'FR' ? em.labelFr : em.labelAr}
-                      >
-                        <span className="text-xl leading-none">{em.emoji}</span>
-                        <span className="text-[10.5px] uppercase tracking-wider font-extrabold">{language === 'FR' ? em.labelFr : em.labelAr}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Text input note */}
-                <div className="space-y-2 text-left" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
-                    {language === 'FR' ? 'Observations Cliniques (ressenti, rougeurs, améliorations) :' : 'ملاحظات اليوم (جفاف، تهيج، تحسن) :'}
-                  </span>
-                  <textarea
-                    rows={3}
-                    placeholder={
-                      language === 'FR'
-                        ? "Ex: Ma peau est très douce après l'application de l'acide hyaluronique. Moins de rougeurs."
-                        : "مثال: بشرتي رطبة وناعمة اليوم، خفت الحساسية والاحمرار بشكل ملحوظ."
-                    }
-                    value={diaryNote}
-                    onChange={(e) => setDiaryNote(e.target.value)}
-                    className="w-full border border-slate-200 rounded-2xl p-3.5 text-xs focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition duration-200 bg-slate-50 focus:bg-white resize-none text-slate-800"
-                  />
-                </div>
-
-                {/* Upload Image Selfie */}
-                <div className="space-y-2 text-left" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
-                    {language === 'FR' ? 'Photo de ma peau (optionnel) :' : 'صورة لبشرتي (اختياري) :'}
-                  </span>
-                  <div className="flex items-center gap-4" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                      id="diary-image-upload"
-                    />
-                    
-                    {diaryImage ? (
-                      <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-slate-200 shrink-0">
-                        <img
-                          src={diaryImage}
-                          alt="Selfie preview"
-                          className="w-full h-full object-cover"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setDiaryImage(null)}
-                          className="absolute top-1 right-1 w-5 h-5 bg-rose-600/90 text-white rounded-full flex items-center justify-center cursor-pointer transition hover:bg-rose-700 active:scale-95 border-0 outline-none"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ) : (
-                      <label
-                        htmlFor="diary-image-upload"
-                        className="flex flex-col items-center justify-center w-20 h-20 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-50 hover:border-accent/40 transition duration-300 select-none text-slate-450 hover:text-accent shrink-0"
-                      >
-                        <Camera className="w-5 h-5 mb-1" />
-                        <span className="text-[9px] font-black uppercase tracking-wider">Selfie</span>
-                      </label>
-                    )}
-                    
-                    <div className="text-[11px] leading-normal text-slate-400 font-semibold max-w-[200px]" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-                      {language === 'FR' 
-                        ? "Ajoutez une photo pour suivre l'évolution clinique de votre teint."
-                        : "أضيفي صورة لتتبع التطور البصري لحالة بشرتكِ في الخط الزمني."}
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  className="px-8 py-3.5 bg-slate-900 hover:bg-accent text-white text-[10.5px] font-black uppercase tracking-widest rounded-2xl transition-all duration-300 active:scale-[0.97] cursor-pointer border-0 outline-none shadow-md"
-                >
-                  {language === 'FR' ? 'Enregistrer ma note (+5 pts)' : 'حفظ الملاحظة (+5 ن)'}
-                </button>
-              </form>
-            </div>
-
-            {/* Timeline log history */}
-            <div className="flex flex-col gap-4 text-left" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1 font-heading block">
-                {language === 'FR' ? 'FRISES CHRONOLOGIQUES • ÉVOLUTION PEAU' : 'الخط الزمني • سجل تحسن البشرة'}
-              </span>
-
-              {compareLogA && !compareLogB && (
-                <div className="bg-accent/10 border border-accent/20 rounded-2xl p-4.5 text-xs font-semibold text-accent flex items-center justify-between shadow-inner-sm animate-pulse mb-2" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                  <span>
-                    {language === 'FR'
-                      ? "Sélectionnez une deuxième photo pour lancer la comparaison avant/après."
-                      : "يرجى تحديد صورة ثانية لبدء مقارنة قبل وبعد."}
-                  </span>
-                  <button
-                    onClick={() => setCompareLogA(null)}
-                    className="text-[10px] font-black uppercase tracking-wider underline cursor-pointer border-0 outline-none bg-transparent hover:text-slate-900 transition"
-                  >
-                    {language === 'FR' ? "Annuler" : "إلغاء"}
-                  </button>
                 </div>
               )}
 
-              {diaryLogs.length === 0 ? (
-                <div className="bg-white border border-slate-200/50 rounded-3xl p-10 text-center text-xs text-slate-400 font-semibold select-none shadow-sm relative overflow-hidden">
-                  <div className="absolute right-0 bottom-0 w-24 h-24 rounded-full bg-slate-50/50 blur-xl pointer-events-none" />
-                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3 text-slate-400">
-                    <BookOpen className="w-4.5 h-4.5" />
-                  </div>
-                  <p className="max-w-xs mx-auto leading-relaxed font-semibold">
-                    {language === 'FR' ? 'Aucune note enregistrée dans votre journal' : 'مفكرتكِ فارغة حالياً، ابدئي بتدوين ملاحظاتكِ'}
-                  </p>
-                </div>
-              ) : (
-                <div 
-                  className={`relative space-y-6 ${
-                    isRTL 
-                      ? 'border-r border-slate-250/60 mr-4 pr-6 pl-0' 
-                      : 'border-l border-slate-250/60 ml-4 pl-6'
-                  } text-left`}
-                  style={{ textAlign: isRTL ? 'right' : 'left' }}
-                >
-                  {diaryLogs.map((log) => (
-                    <div key={log.id} className="relative">
-                      {/* Timeline dot */}
-                      <div 
-                        className={`absolute top-2 w-4.5 h-4.5 rounded-full bg-white border-2 border-slate-900 flex items-center justify-center shadow-sm z-10 ${
-                          isRTL ? '-right-[35px] left-auto' : '-left-[35px] right-auto'
-                        }`}
-                      >
-                        <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                      </div>
-                      
-                      {/* Timeline Card */}
-                      <div className="bg-white border border-slate-200/50 rounded-2xl p-5 shadow-sm space-y-3 relative overflow-hidden">
-                        <div className="flex items-center justify-between gap-3 text-[10px] font-bold text-slate-400 select-none border-b border-slate-100 pb-2" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                          <span className="bg-slate-50 border border-slate-200 px-2.5 py-0.5 rounded-lg text-slate-500 font-semibold">
-                            {new Date(log.date).toLocaleDateString(language === 'FR' ? 'fr-FR' : 'ar-MA', {
-                              weekday: 'long',
-                              day: 'numeric',
-                              month: 'short',
-                              year: 'numeric'
-                            })}
-                          </span>
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-xl leading-none">{log.emoji}</span>
-                          </div>
-                        </div>
-                        <p className="text-xs text-slate-700 font-semibold leading-relaxed">
-                          {log.note}
-                        </p>
 
-                        {log.image && (
-                          <div className="space-y-3">
-                            <div className="relative rounded-2xl overflow-hidden border border-slate-100 w-full max-h-48 flex justify-center bg-slate-50">
-                              <img
-                                src={log.image}
-                                alt="Skin selfie"
-                                className="w-full h-full object-cover max-h-48"
-                              />
-                            </div>
-                            <div className="flex justify-end">
-                              <button
-                                type="button"
-                                onClick={() => handleSelectForCompare(log)}
-                                className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 active:scale-95 cursor-pointer border ${
-                                  compareLogA?.id === log.id
-                                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
-                                    : compareLogB?.id === log.id
-                                    ? 'bg-blue-650 text-white border-blue-650 shadow-sm'
-                                    : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
-                                }`}
-                              >
-                                {compareLogA?.id === log.id
-                                  ? (language === 'FR' ? 'Photo Avant (A)' : 'صورة أ')
-                                  : compareLogB?.id === log.id
-                                  ? (language === 'FR' ? 'Photo Après (B)' : 'صورة ب')
-                                  : (language === 'FR' ? 'Choisir pour comparer' : 'مقارنة')}
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-          </div>
-        )}
-
-        {/* Before/After Sliding Image Comparison Modal */}
-        {isComparing && compareLogA && compareLogB && (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
-            <div className="relative w-full max-w-xl bg-white rounded-[32px] overflow-hidden shadow-2xl flex flex-col max-h-[90vh] animate-scale-pop">
-              {/* Header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">
-                  {language === 'FR' ? 'Comparatif Évolution Peau' : 'مقارنة تطور البشرة'}
-                </h3>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsComparing(false);
-                    setCompareLogA(null);
-                    setCompareLogB(null);
-                  }}
-                  className="w-8 h-8 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer transition border-0 outline-none"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Slider comparison viewport */}
-              <div className="relative flex-grow flex items-center justify-center bg-slate-50 p-6 overflow-hidden min-h-[350px]">
-                <div className="relative w-full max-w-sm aspect-[3/4] rounded-2xl overflow-hidden shadow-lg bg-white select-none">
+              {/* ──────────────── TAB 2: MES COMMANDES & SUIVI ──────────────── */}
+              {activeTab === 'commandes' && (
+                <div className="space-y-6 animate-in fade-in duration-300">
                   
-                  {/* Photo B (Newer / After - Underneath) */}
-                  {compareLogB.image && (
-                    <img
-                      src={compareLogB.image}
-                      alt="After"
-                      className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-                    />
-                  )}
-                  
-                  {/* Photo A (Older / Before - Overlay) */}
-                  {compareLogA.image && (
-                    <div 
-                      className="absolute inset-0 overflow-hidden pointer-events-none"
-                      style={{ width: `${sliderPosition}%` }}
-                    >
-                      <img
-                        src={compareLogA.image}
-                        alt="Before"
-                        className="absolute inset-0 w-full h-full object-cover max-w-none pointer-events-none"
-                        style={{ width: '100%', height: '100%' }}
+                  {/* Filter & Search Bar */}
+                  <div className={`p-4 rounded-3xl border shadow-md flex flex-col sm:flex-row items-center justify-between gap-4 ${
+                    themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
+                  }`}>
+                    <div className="relative flex-1 w-full">
+                      <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={orderSearchQuery}
+                        onChange={(e) => setOrderSearchQuery(e.target.value)}
+                        placeholder="Rechercher par N° de commande ou nom de produit..."
+                        className={`w-full pl-11 pr-4 py-2.5 rounded-xl text-xs font-mono transition border ${
+                          themeMode === 'dark'
+                            ? 'bg-slate-950 border-slate-800 text-white placeholder-slate-500 focus:border-emerald-500'
+                            : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-emerald-500'
+                        }`}
                       />
                     </div>
-                  )}
 
-                  {/* Vertical slider handler line with gold circles */}
-                  <div
-                    className="absolute top-0 bottom-0 w-[3px] bg-white cursor-ew-resize pointer-events-none shadow-[0_0_10px_rgba(0,0,0,0.4)]"
-                    style={{ left: `${sliderPosition}%` }}
-                  >
-                    <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-white border-2 border-gold shadow-xl flex items-center justify-center text-gold font-bold text-xs select-none">
-                      ↔
-                    </div>
-                  </div>
-
-                  {/* Range input slider overlaid on top */}
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={sliderPosition}
-                    onChange={(e) => setSliderPosition(Number(e.target.value))}
-                    className="absolute inset-0 opacity-0 w-full h-full cursor-ew-resize z-20"
-                  />
-
-                  {/* Badges */}
-                  <div className="absolute bottom-4 left-4 z-10 bg-slate-900/60 backdrop-blur-sm text-white text-[9px] font-black tracking-wider uppercase px-2.5 py-1 rounded">
-                    {language === 'FR' 
-                      ? `Avant (${new Date(compareLogA.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })})` 
-                      : `قبل (${new Date(compareLogA.date).toLocaleDateString('ar-MA', { day: 'numeric', month: 'short' })})`}
-                  </div>
-                  <div className="absolute bottom-4 right-4 z-10 bg-emerald-600/75 backdrop-blur-sm text-white text-[9px] font-black tracking-wider uppercase px-2.5 py-1 rounded">
-                    {language === 'FR' 
-                      ? `Après (${new Date(compareLogB.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })})` 
-                      : `بعد (${new Date(compareLogB.date).toLocaleDateString('ar-MA', { day: 'numeric', month: 'short' })})`}
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom info */}
-              <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 shrink-0 text-center text-[11px] leading-relaxed text-slate-500 font-semibold">
-                {language === 'FR' 
-                  ? "Faites glisser le séparateur pour comparer l'évolution visuelle de votre peau." 
-                  : "اسحبي المنزلق لمقارنة التطور البصري لحالة بشرتكِ بين الصورتين."}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ──────── TAB 4: MES FAVORIS ──────── */}
-        {activeTab === 'favoris' && (
-          <div className="space-y-6 animate-fade-in">
-            <div className={`flex items-center justify-between border-b pb-4 ${themeMode === 'dark' ? 'border-slate-800' : 'border-slate-200'}`} style={{ textAlign: isRTL ? 'right' : 'left' }}>
-              <div>
-                <h3 className={`text-xl font-black font-heading uppercase tracking-wide flex items-center gap-2 ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`} style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                  <Heart className="w-5 h-5 text-rose-500 fill-rose-500" />
-                  <span>{language === 'FR' ? 'Mes Produits Favoris' : 'منتجاتي المفضلة'}</span>
-                </h3>
-                <p className={`text-xs font-semibold mt-1 ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                  {language === 'FR' ? 'Retrouvez tous vos soins coup de cœur enregistrés dans votre compte.' : 'جميع المستحضرات التي قمتِ بحفظها في حسابكِ الخاص.'}
-                </p>
-              </div>
-              <span className={`text-xs font-mono font-bold px-3 py-1.5 rounded-xl border ${
-                themeMode === 'dark' ? 'text-slate-300 bg-slate-900 border-slate-800' : 'text-slate-700 bg-white border-slate-200 shadow-sm'
-              }`}>
-                {wishlist.length} {language === 'FR' ? 'produits' : 'منتجات'}
-              </span>
-            </div>
-
-            {wishlist.length === 0 ? (
-              <div className={`text-center py-16 border rounded-3xl space-y-4 shadow-sm relative overflow-hidden transition-colors ${
-                themeMode === 'dark' ? 'bg-slate-900/60 border-slate-800/80' : 'bg-white border-slate-200/80'
-              }`}>
-                <div className="w-14 h-14 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto text-rose-400">
-                  <Heart className="w-6 h-6 animate-pulse" />
-                </div>
-                <div className="space-y-1">
-                  <h4 className={`text-sm font-black font-heading uppercase tracking-wide ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>
-                    {language === 'FR' ? 'Votre Liste d\'Envies est vide' : 'قائمتكِ المفضلة فارغة حالياً'}
-                  </h4>
-                  <p className={`text-xs max-w-xs mx-auto leading-relaxed font-semibold ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                    {language === 'FR'
-                      ? 'Parcourez notre catalogue et cliquez sur l\'icône de cœur sur n\'importe quel produit pour le sauvegarder ici.'
-                      : 'تصفحي منتجاتنا واضغطي على رمز القلب في أي منتج لحفظه هنا.'}
-                  </p>
-                </div>
-                <Link
-                  href="/products"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xs uppercase tracking-widest rounded-xl transition shadow-md cursor-pointer border-0"
-                >
-                  <span>{language === 'FR' ? 'Découvrir nos soins' : 'استكشاف المنتجات'}</span>
-                  <ArrowRight className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
-                </Link>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {wishlist.map((product) => (
-                  <div key={product.id} className={`border rounded-2xl p-4 flex flex-col justify-between space-y-4 relative group transition shadow-md ${
-                    themeMode === 'dark' ? 'bg-slate-900 border-slate-800 hover:border-slate-700 text-white' : 'bg-white border-slate-200/90 hover:border-slate-300 text-slate-900'
-                  }`}>
-                    <button
-                      onClick={() => removeFromWishlist(product.id)}
-                      className="absolute top-3 right-3 w-8 h-8 rounded-full bg-slate-950/80 text-slate-400 hover:text-rose-400 border border-slate-800 flex items-center justify-center transition z-10 cursor-pointer"
-                      title={language === 'FR' ? 'Retirer' : 'حذف'}
-                    >
-                      <Trash2 className="w-4 h-4 text-slate-400 hover:text-rose-400" />
-                    </button>
-
-                    <div className="space-y-3">
-                      <div className="relative w-full h-44 rounded-xl overflow-hidden bg-slate-950 border border-slate-800/80">
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                      <div className="text-left" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-                        <span className="text-[9px] font-mono text-emerald-400 uppercase tracking-widest block">
-                          {product.category}
-                        </span>
-                        <h4 className="text-xs font-bold text-white leading-snug line-clamp-2 mt-0.5">
-                          {product.name}
-                        </h4>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-3 border-t border-slate-800/80" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                      <span className="text-sm font-black text-white">
-                        {product.price} MAD
-                      </span>
+                    <div className="flex items-center gap-2 shrink-0 select-none">
                       <button
-                        onClick={() => addToCart(product, 1)}
-                        className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-[10px] font-black uppercase tracking-wider rounded-xl transition flex items-center gap-1.5 cursor-pointer border-0 shadow-sm"
+                        onClick={() => setOrderFilterStatus('all')}
+                        className={`px-3 py-2 rounded-xl text-xs font-bold transition ${
+                          orderFilterStatus === 'all'
+                            ? 'bg-emerald-500 text-slate-950 shadow-sm'
+                            : themeMode === 'dark' ? 'bg-slate-950 text-slate-400 border border-slate-800' : 'bg-slate-100 text-slate-600 border border-slate-200'
+                        }`}
                       >
-                        <ShoppingBag className="w-3.5 h-3.5" />
-                        <span>{language === 'FR' ? 'Ajouter' : 'إضافة'}</span>
+                        Toutes ({orders.length})
+                      </button>
+                      <button
+                        onClick={() => setOrderFilterStatus('in_transit')}
+                        className={`px-3 py-2 rounded-xl text-xs font-bold transition ${
+                          orderFilterStatus === 'in_transit'
+                            ? 'bg-cyan-500 text-slate-950 shadow-sm'
+                            : themeMode === 'dark' ? 'bg-slate-950 text-slate-400 border border-slate-800' : 'bg-slate-100 text-slate-600 border border-slate-200'
+                        }`}
+                      >
+                        En Transit
+                      </button>
+                      <button
+                        onClick={() => setOrderFilterStatus('delivered')}
+                        className={`px-3 py-2 rounded-xl text-xs font-bold transition ${
+                          orderFilterStatus === 'delivered'
+                            ? 'bg-purple-500 text-slate-950 shadow-sm'
+                            : themeMode === 'dark' ? 'bg-slate-950 text-slate-400 border border-slate-800' : 'bg-slate-100 text-slate-600 border border-slate-200'
+                        }`}
+                      >
+                        Livrées
                       </button>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
 
+                  {/* Orders Deck */}
+                  <div className="space-y-6">
+                    {filteredOrders.map((order) => (
+                      <div
+                        key={order.order_id}
+                        className={`p-6 sm:p-8 rounded-3xl border shadow-xl space-y-6 relative overflow-hidden transition ${
+                          themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
+                        }`}
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-3">
+                              <h3 className={`text-xl font-black font-mono tracking-tight ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                                {order.order_id}
+                              </h3>
+                              <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${
+                                order.status.toLowerCase().includes('deliver')
+                                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                                  : 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
+                              }`}>
+                                {order.status}
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-400">
+                              Commandé le {new Date(order.date || order.created_at || Date.now()).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                            </p>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-2">
+                            <button
+                              onClick={() => handleReorder(order)}
+                              className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider transition shadow-md cursor-pointer border-0 flex items-center gap-1.5"
+                            >
+                              <RefreshCw className="w-3.5 h-3.5" />
+                              <span>Re-commander</span>
+                            </button>
+
+                            <Link
+                              href={`/suivi-commande?order=${order.order_id}`}
+                              className={`px-4 py-2.5 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 ${
+                                themeMode === 'dark'
+                                  ? 'bg-slate-950 border-slate-800 text-cyan-400 hover:bg-slate-850'
+                                  : 'bg-slate-50 border-slate-200 text-cyan-700 hover:bg-slate-100'
+                              }`}
+                            >
+                              <Truck className="w-3.5 h-3.5" />
+                              <span>Suivre la livraison</span>
+                            </Link>
+
+                            <a
+                              href={`https://wa.me/212660808080?text=Bonjour,%20question%20sur%20ma%20commande%20N%C2%B0%20${order.order_id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`p-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-center ${
+                                themeMode === 'dark' ? 'bg-slate-950 border-slate-800 text-emerald-400' : 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                              }`}
+                              title="Assistance WhatsApp"
+                            >
+                              <MessageCircle className="w-4 h-4 text-emerald-500" />
+                            </a>
+                          </div>
+                        </div>
+
+                        {/* Order Items Table/Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {order.items.map((item, i) => (
+                            <div key={i} className={`p-4 rounded-2xl border flex items-center gap-4 ${
+                              themeMode === 'dark' ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-slate-200/80'
+                            }`}>
+                              <div className="w-14 h-14 rounded-xl bg-white p-1 border border-slate-200 shrink-0">
+                                <img src={item.image || '/images/categories/visage.png'} alt={item.title} className="w-full h-full object-contain" />
+                              </div>
+                              <div className="min-w-0 flex-1 text-left">
+                                <h4 className={`text-xs font-bold truncate ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                                  {item.title}
+                                </h4>
+                                <p className="text-xs font-mono font-bold text-emerald-500 mt-1">
+                                  {item.quantity}x • {item.price} MAD
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Order Total & Carrier Specs */}
+                        <div className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-4 text-xs ${
+                          themeMode === 'dark' ? 'bg-slate-950/50 border-slate-800/80' : 'bg-slate-100/70 border-slate-200/80'
+                        }`}>
+                          <div className="flex items-center gap-4">
+                            <span>Transporteur: <strong>{order.carrier || 'Yalidine Express'}</strong></span>
+                            <span>Destination: <strong>{order.city}</strong></span>
+                          </div>
+
+                          <div className="flex items-center gap-3">
+                            <span className="text-slate-400">Total payé (COD):</span>
+                            <span className={`text-base font-black font-mono ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                              {order.total} MAD
+                            </span>
+                          </div>
+                        </div>
+
+                      </div>
+                    ))}
+                  </div>
+
+                </div>
+              )}
+
+
+              {/* ──────────────── TAB 3: DIAGNOSTIC IA & ROUTINE ──────────────── */}
+              {activeTab === 'diagnostic' && (
+                <div className="space-y-8 animate-in fade-in duration-300">
+                  
+                  {/* Clinical Score Master Card */}
+                  <div className={`p-6 sm:p-10 rounded-3xl border shadow-xl relative overflow-hidden ${
+                    themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
+                  }`}>
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                      
+                      <div className="lg:col-span-4 text-center space-y-4">
+                        <div className="relative w-40 h-40 mx-auto flex items-center justify-center">
+                          <div className="absolute inset-0 rounded-full border-8 border-slate-800 border-t-emerald-500 border-r-teal-500 animate-spin-slow" style={{ animationDuration: '15s' }} />
+                          <div className="text-center space-y-0.5">
+                            <span className="text-4xl font-black font-heading text-emerald-500">
+                              {MOCK_DIAGNOSTIC_RESULT.score}
+                            </span>
+                            <span className="text-xs font-mono font-bold text-slate-400 block">/ 100 SCORE</span>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-mono font-bold text-emerald-500 uppercase tracking-widest">
+                            DIAGNOSTIC DU {MOCK_DIAGNOSTIC_RESULT.date}
+                          </span>
+                          <h3 className={`text-sm font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                            {language === 'AR' ? MOCK_DIAGNOSTIC_RESULT.skinTypeAr : MOCK_DIAGNOSTIC_RESULT.skinTypeFr}
+                          </h3>
+                        </div>
+                      </div>
+
+                      {/* Detailed Metric Gauges */}
+                      <div className="lg:col-span-8 space-y-4">
+                        <h4 className={`text-xs font-mono font-bold uppercase tracking-widest ${themeMode === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
+                          Bilan Dermatologique Détaillé
+                        </h4>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {[
+                            { label: 'Hydratation Cutanée', val: MOCK_DIAGNOSTIC_RESULT.metrics.hydration, color: 'bg-emerald-500' },
+                            { label: 'Élasticité & Fermeté', val: MOCK_DIAGNOSTIC_RESULT.metrics.elasticity, color: 'bg-teal-500' },
+                            { label: 'Régulation Sébum Zone T', val: MOCK_DIAGNOSTIC_RESULT.metrics.sebumControl, color: 'bg-amber-500' },
+                            { label: 'Résistance Barrière Cutanée', val: MOCK_DIAGNOSTIC_RESULT.metrics.skinBarrier, color: 'bg-cyan-500' }
+                          ].map((m, idx) => (
+                            <div key={idx} className={`p-4 rounded-2xl border space-y-2 ${
+                              themeMode === 'dark' ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-slate-200/80'
+                            }`}>
+                              <div className="flex items-center justify-between text-xs font-bold">
+                                <span className={themeMode === 'dark' ? 'text-slate-200' : 'text-slate-800'}>{m.label}</span>
+                                <span className="font-mono font-bold text-emerald-500">{m.val}%</span>
+                              </div>
+                              <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+                                <div className={`h-full ${m.color} rounded-full transition-all duration-1000`} style={{ width: `${m.val}%` }} />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+
+
+                  {/* Prescribed AM & PM Routine Products Deck */}
+                  <div className={`p-6 sm:p-8 rounded-3xl border shadow-xl space-y-6 ${
+                    themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
+                  }`}>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-emerald-500" />
+                          <span className="text-xs font-mono font-bold text-emerald-500 uppercase tracking-widest">
+                            ORDONNANCE DE SOINS PERSONNALISÉE
+                          </span>
+                        </div>
+                        <h3 className={`text-xl font-black font-heading ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                          Rituel Prescrit par notre Algorithme Officinal
+                        </h3>
+                      </div>
+
+                      <button
+                        onClick={handleAddFullRoutineToCart}
+                        className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xs uppercase tracking-wider transition shadow-lg cursor-pointer border-0 flex items-center justify-center gap-2"
+                      >
+                        <ShoppingBag className="w-4 h-4" />
+                        <span>Ajouter toute la routine au panier</span>
+                      </button>
+                    </div>
+
+                    <div className="space-y-6">
+                      {/* AM Routine */}
+                      <div className="space-y-3">
+                        <h4 className="text-xs font-mono font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
+                          <Sun className="w-4 h-4 text-amber-400" />
+                          <span>RITUEL DU MATIN (AM)</span>
+                        </h4>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          {MOCK_DIAGNOSTIC_RESULT.routineAm.map((prod, idx) => (
+                            <div key={idx} className={`p-4 rounded-2xl border space-y-3 flex flex-col justify-between ${
+                              themeMode === 'dark' ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-slate-200/80'
+                            }`}>
+                              <div className="space-y-3">
+                                <div className="w-full h-32 rounded-xl bg-white p-2 border border-slate-200 relative overflow-hidden">
+                                  <img src={prod.image} alt={prod.title} className="w-full h-full object-contain" />
+                                </div>
+                                <div>
+                                  <span className="text-[9px] font-mono font-bold text-emerald-500 uppercase">{prod.brand}</span>
+                                  <h5 className={`text-xs font-bold line-clamp-2 ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                                    {prod.title}
+                                  </h5>
+                                </div>
+                              </div>
+                              <div className="flex items-center justify-between pt-2 border-t border-slate-800/60">
+                                <span className={`text-xs font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>{prod.price} MAD</span>
+                                <button
+                                  onClick={() => {
+                                    addToCart({ id: Math.floor(Math.random() * 100000), title: prod.title, name: prod.title, price: prod.price, image: prod.image, category: 'Visage', description: prod.title } as Product, 1);
+                                    showToast(`${prod.title} ajouté au panier !`);
+                                  }}
+                                  className="px-3 py-1.5 bg-emerald-500 text-slate-950 rounded-lg text-[10px] font-black uppercase cursor-pointer border-0"
+                                >
+                                  + Ajouter
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* PM Routine */}
+                      <div className="space-y-3 pt-4 border-t border-slate-800/80">
+                        <h4 className="text-xs font-mono font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+                          <Moon className="w-4 h-4 text-indigo-400" />
+                          <span>RITUEL DU SOIR (PM)</span>
+                        </h4>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          {MOCK_DIAGNOSTIC_RESULT.routinePm.map((prod, idx) => (
+                            <div key={idx} className={`p-4 rounded-2xl border space-y-3 flex flex-col justify-between ${
+                              themeMode === 'dark' ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-slate-200/80'
+                            }`}>
+                              <div className="space-y-3">
+                                <div className="w-full h-32 rounded-xl bg-white p-2 border border-slate-200 relative overflow-hidden">
+                                  <img src={prod.image} alt={prod.title} className="w-full h-full object-contain" />
+                                </div>
+                                <div>
+                                  <span className="text-[9px] font-mono font-bold text-cyan-400 uppercase">{prod.brand}</span>
+                                  <h5 className={`text-xs font-bold line-clamp-2 ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                                    {prod.title}
+                                  </h5>
+                                </div>
+                              </div>
+                              <div className="flex items-center justify-between pt-2 border-t border-slate-800/60">
+                                <span className={`text-xs font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>{prod.price} MAD</span>
+                                <button
+                                  onClick={() => {
+                                    addToCart({ id: Math.floor(Math.random() * 100000), title: prod.title, name: prod.title, price: prod.price, image: prod.image, category: 'Visage', description: prod.title } as Product, 1);
+                                    showToast(`${prod.title} ajouté au panier !`);
+                                  }}
+                                  className="px-3 py-1.5 bg-emerald-500 text-slate-950 rounded-lg text-[10px] font-black uppercase cursor-pointer border-0"
+                                >
+                                  + Ajouter
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+
+              {/* ──────────────── TAB 4: CAGNOTTE VIP & COUPONS ──────────────── */}
+              {activeTab === 'cagnotte' && (
+                <div className="space-y-8 animate-in fade-in duration-300">
+                  
+                  {/* VIP Tier Progress Card */}
+                  <div className={`p-6 sm:p-8 rounded-3xl border shadow-xl relative overflow-hidden ${
+                    themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
+                  }`}>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
+                      <div className="space-y-1">
+                        <span className="text-xs font-mono font-bold text-amber-400 uppercase tracking-widest">
+                          PROGRESSION DU STATUT VIP
+                        </span>
+                        <h3 className={`text-2xl font-black font-heading ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                          Statut Actuel: <span className="text-amber-400">{tier} VIP</span>
+                        </h3>
+                      </div>
+
+                      <div className="text-left sm:text-right">
+                        <span className="text-xs font-mono font-bold text-slate-400 block">MULTIPLICATEUR DE POINTS</span>
+                        <span className="text-xl font-black font-mono text-emerald-400">{tierMultiplier}x Points</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-6 space-y-4">
+                      <div className="flex items-center justify-between text-xs font-bold">
+                        <span className="text-slate-400">Progression vers le statut Gold:</span>
+                        <span className="text-amber-400 font-mono font-bold">{points} / 500 PTS</span>
+                      </div>
+                      <div className="w-full h-3 rounded-full bg-slate-800 overflow-hidden p-0.5 border border-slate-700">
+                        <div className="h-full bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-300 rounded-full transition-all duration-700" style={{ width: `${Math.min(100, (points / 500) * 100)}%` }} />
+                      </div>
+                      <p className="text-xs text-slate-400">
+                        Encore <strong>{pointsToNextTier || 150} points</strong> pour débloquer la livraison gratuite permanente et −15% sur tous vos rituels.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Active Coupons Hub */}
+                  <div className={`p-6 sm:p-8 rounded-3xl border shadow-xl space-y-6 ${
+                    themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
+                  }`}>
+                    <div className="space-y-1 border-b border-slate-800/80 pb-4">
+                      <div className="flex items-center gap-2">
+                        <Ticket className="w-4 h-4 text-purple-400" />
+                        <span className="text-xs font-mono font-bold text-purple-400 uppercase tracking-widest">
+                          BONS DE RÉDUCTION & CODES EXCLUSIFS
+                        </span>
+                      </div>
+                      <h3 className={`text-xl font-black font-heading ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                        Bons Privilège Prêts à être Utilisés
+                      </h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {AVAILABLE_COUPONS.map((coupon, idx) => (
+                        <div key={idx} className={`p-5 rounded-2xl border space-y-4 flex flex-col justify-between relative overflow-hidden ${
+                          themeMode === 'dark' ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-slate-200/80'
+                        }`}>
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                                {coupon.code}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-mono">{coupon.minSpend}</span>
+                            </div>
+                            <h4 className={`text-sm font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                              {language === 'AR' ? coupon.discountAr : coupon.discountFr}
+                            </h4>
+                            <p className="text-[11px] text-slate-400">{coupon.expires}</p>
+                          </div>
+
+                          <button
+                            onClick={() => copyCouponToClipboard(coupon.code)}
+                            className="w-full py-2.5 rounded-xl bg-purple-500 hover:bg-purple-400 text-slate-950 font-black text-xs uppercase tracking-wider transition shadow-md cursor-pointer border-0 flex items-center justify-center gap-1.5"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                            <span>{copiedCode === coupon.code ? 'Code Copié !' : 'Copier le code'}</span>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+
+              {/* ──────────────── TAB 5: MES FAVORIS ──────────────── */}
+              {activeTab === 'favoris' && (
+                <div className="space-y-6 animate-in fade-in duration-300">
+                  <div className={`p-6 rounded-3xl border shadow-xl flex items-center justify-between gap-4 ${
+                    themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
+                  }`}>
+                    <div>
+                      <h3 className={`text-xl font-black font-heading uppercase tracking-wide flex items-center gap-2 ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                        <Heart className="w-5 h-5 text-rose-500 fill-rose-500" />
+                        <span>{language === 'FR' ? 'Mes Produits Coups de Cœur' : 'منتجاتي المفضلة'}</span>
+                      </h3>
+                      <p className={`text-xs font-medium mt-1 ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                        {wishlist.length} soins sauvegardés dans votre espace personnel.
+                      </p>
+                    </div>
+                  </div>
+
+                  {wishlist.length === 0 ? (
+                    <div className={`text-center py-16 border rounded-3xl space-y-4 shadow-sm relative overflow-hidden transition-colors ${
+                      themeMode === 'dark' ? 'bg-slate-900/60 border-slate-800/80' : 'bg-white border-slate-200/80'
+                    }`}>
+                      <div className="w-14 h-14 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto text-rose-400">
+                        <Heart className="w-6 h-6 animate-pulse" />
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className={`text-sm font-black font-heading uppercase tracking-wide ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                          {language === 'FR' ? 'Votre Liste d\'Envies est vide' : 'قائمتكِ المفضلة فارغة حالياً'}
+                        </h4>
+                        <p className={`text-xs max-w-xs mx-auto leading-relaxed font-semibold ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                          {language === 'FR'
+                            ? 'Parcourez notre catalogue et cliquez sur l\'icône de cœur sur n\'importe quel produit pour le sauvegarder ici.'
+                            : 'تصفحي منتجاتنا واضغطي على رمز القلب في أي منتج لحفظه هنا.'}
+                        </p>
+                      </div>
+                      <Link
+                        href="/products"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xs uppercase tracking-widest rounded-xl transition shadow-md cursor-pointer border-0"
+                      >
+                        <span>{language === 'FR' ? 'Découvrir nos soins' : 'استكشاف المنتجات'}</span>
+                        <ArrowRight className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {wishlist.map((product) => (
+                        <div key={product.id} className={`border rounded-2xl p-4 flex flex-col justify-between space-y-4 relative group transition shadow-md ${
+                          themeMode === 'dark' ? 'bg-slate-900 border-slate-800 hover:border-slate-700 text-white' : 'bg-white border-slate-200/90 hover:border-slate-300 text-slate-900'
+                        }`}>
+                          <button
+                            onClick={() => removeFromWishlist(product.id)}
+                            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-slate-950/80 text-slate-400 hover:text-rose-400 border border-slate-800 flex items-center justify-center transition z-10 cursor-pointer"
+                            title={language === 'FR' ? 'Retirer' : 'حذف'}
+                          >
+                            <Trash2 className="w-4 h-4 text-slate-400 hover:text-rose-400" />
+                          </button>
+
+                          <div className="space-y-3">
+                            <div className="relative w-full h-44 rounded-xl overflow-hidden bg-white p-2 border border-slate-200">
+                              <img
+                                src={product.image}
+                                alt={product.name}
+                                className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                              />
+                            </div>
+                            <div className="text-left" style={{ textAlign: isRTL ? 'right' : 'left' }}>
+                              <span className="text-[9px] font-mono text-emerald-500 uppercase tracking-widest block font-bold">
+                                {product.category}
+                              </span>
+                              <h4 className={`text-xs font-bold leading-snug line-clamp-2 mt-0.5 ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                                {product.name}
+                              </h4>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-3 border-t border-slate-800/80">
+                            <span className={`text-sm font-black ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                              {product.price} MAD
+                            </span>
+                            <button
+                              onClick={() => {
+                                addToCart(product, 1);
+                                showToast(`${product.name} ajouté au panier !`);
+                              }}
+                              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-[10px] font-black uppercase tracking-wider rounded-xl transition flex items-center gap-1.5 cursor-pointer border-0 shadow-sm"
+                            >
+                              <ShoppingBag className="w-3.5 h-3.5" />
+                              <span>{language === 'FR' ? 'Ajouter' : 'إضافة'}</span>
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+
+              {/* ──────────────── TAB 6: AGENDA & JOURNAL DE SOINS ──────────────── */}
+              {activeTab === 'journal' && (
+                <div className="space-y-6 animate-in fade-in duration-300">
+                  
+                  {/* Streak & Points Info Card */}
+                  <div className={`p-6 rounded-3xl border shadow-lg space-y-4 ${
+                    themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
+                  }`}>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-emerald-500 animate-pulse" />
+                          <span className="text-xs font-mono font-bold text-emerald-500 uppercase tracking-widest">
+                            SUIVI DES HABITUDES CUTANÉES
+                          </span>
+                        </div>
+                        <h3 className={`text-xl font-black font-heading ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                          Gagnez +5 Points par Rituel quotidien validé
+                        </h3>
+                      </div>
+
+                      <div className="px-4 py-2 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 font-mono text-xs font-bold flex items-center gap-2">
+                        <span>🔥 Streak Actif: 7 Jours d'affilée</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Checklist Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 select-none">
+                    
+                    {/* AM Skincare Planner */}
+                    <div className={`rounded-3xl p-6 shadow-lg flex flex-col justify-between gap-5 text-left border ${
+                      themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
+                    }`}>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                          <h3 className={`text-xs font-black font-heading uppercase tracking-wide flex items-center gap-2 ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                            <Sun className="w-4 h-4 text-amber-400" />
+                            <span>Rituel du Matin (AM)</span>
+                          </h3>
+                          {isAmTodayCompleted && (
+                            <span className="px-2.5 py-1 bg-emerald-500/20 text-emerald-400 rounded-md text-[10px] font-black uppercase">
+                              Validé Aujourd'hui
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="space-y-2.5">
+                          {[
+                            { key: 'cleanse', label: 'Nettoyer (Gel/Eau micellaire)' },
+                            { key: 'treat', label: 'Traiter (Sérum Vitamine C)' },
+                            { key: 'hydrate', label: 'Hydrater (Crème de jour)' },
+                            { key: 'protect', label: 'Protéger (Écran Solaire SPF)' }
+                          ].map((step) => (
+                            <label
+                              key={step.key}
+                              onClick={() => handleToggleAmStep(step.key as any)}
+                              className={`p-3 rounded-xl border flex items-center gap-3 cursor-pointer transition ${
+                                amChecks[step.key as keyof typeof amChecks]
+                                  ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400'
+                                  : themeMode === 'dark' ? 'bg-slate-950 border-slate-800 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'
+                              }`}
+                            >
+                              <input type="checkbox" checked={amChecks[step.key as keyof typeof amChecks]} readOnly className="sr-only" />
+                              <div className={`w-5 h-5 rounded-md border flex items-center justify-center ${
+                                amChecks[step.key as keyof typeof amChecks] ? 'bg-emerald-500 border-emerald-500 text-slate-950' : 'border-slate-600'
+                              }`}>
+                                {amChecks[step.key as keyof typeof amChecks] && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                              </div>
+                              <span className="text-xs font-bold">{step.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={handleConfirmAmRoutine}
+                        disabled={isAmTodayCompleted}
+                        className={`w-full py-3 rounded-xl font-black text-xs uppercase tracking-wider transition border-0 cursor-pointer ${
+                          isAmTodayCompleted
+                            ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                            : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md'
+                        }`}
+                      >
+                        {isAmTodayCompleted ? 'Rituel Matin Confirmé (+5 Pts)' : 'Valider mon Rituel Matin (+5 Pts)'}
+                      </button>
+                    </div>
+
+                    {/* PM Skincare Planner */}
+                    <div className={`rounded-3xl p-6 shadow-lg flex flex-col justify-between gap-5 text-left border ${
+                      themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
+                    }`}>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                          <h3 className={`text-xs font-black font-heading uppercase tracking-wide flex items-center gap-2 ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                            <Moon className="w-4 h-4 text-indigo-400" />
+                            <span>Rituel du Soir (PM)</span>
+                          </h3>
+                          {isPmTodayCompleted && (
+                            <span className="px-2.5 py-1 bg-emerald-500/20 text-emerald-400 rounded-md text-[10px] font-black uppercase">
+                              Validé Aujourd'hui
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="space-y-2.5">
+                          {[
+                            { key: 'cleanse', label: 'Double Nettoyage (Huile + Gel)' },
+                            { key: 'treat', label: 'Traiter (Sérum Niacinamide/Rétinol)' },
+                            { key: 'hydrate', label: 'Hydrater (Crème riche Cicaplast)' }
+                          ].map((step) => (
+                            <label
+                              key={step.key}
+                              onClick={() => handleTogglePmStep(step.key as any)}
+                              className={`p-3 rounded-xl border flex items-center gap-3 cursor-pointer transition ${
+                                pmChecks[step.key as keyof typeof pmChecks]
+                                  ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400'
+                                  : themeMode === 'dark' ? 'bg-slate-950 border-slate-800 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'
+                              }`}
+                            >
+                              <input type="checkbox" checked={pmChecks[step.key as keyof typeof pmChecks]} readOnly className="sr-only" />
+                              <div className={`w-5 h-5 rounded-md border flex items-center justify-center ${
+                                pmChecks[step.key as keyof typeof pmChecks] ? 'bg-emerald-500 border-emerald-500 text-slate-950' : 'border-slate-600'
+                              }`}>
+                                {pmChecks[step.key as keyof typeof pmChecks] && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                              </div>
+                              <span className="text-xs font-bold">{step.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={handleConfirmPmRoutine}
+                        disabled={isPmTodayCompleted}
+                        className={`w-full py-3 rounded-xl font-black text-xs uppercase tracking-wider transition border-0 cursor-pointer ${
+                          isPmTodayCompleted
+                            ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                            : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md'
+                        }`}
+                      >
+                        {isPmTodayCompleted ? 'Rituel Soir Confirmé (+5 Pts)' : 'Valider mon Rituel Soir (+5 Pts)'}
+                      </button>
+                    </div>
+
+                  </div>
+
+                </div>
+              )}
+
+
+              {/* ──────────────── TAB 7: PROFIL & ADRESSES ──────────────── */}
+              {activeTab === 'profil' && (
+                <div className="space-y-8 animate-in fade-in duration-300">
+                  
+                  {/* Personal Information Form */}
+                  <div className={`p-6 sm:p-8 rounded-3xl border shadow-xl space-y-6 ${
+                    themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
+                  }`}>
+                    <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
+                      <div className="space-y-1">
+                        <span className="text-xs font-mono font-bold text-emerald-500 uppercase tracking-widest">
+                          INFORMATIONS PERSONNELLES
+                        </span>
+                        <h3 className={`text-xl font-black font-heading ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                          Gérer mon Profil Officinal
+                        </h3>
+                      </div>
+                    </div>
+
+                    <form onSubmit={handleSaveProfile} className="space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                            Nom Complet
+                          </label>
+                          <input
+                            type="text"
+                            value={profileName}
+                            onChange={(e) => setProfileName(e.target.value)}
+                            required
+                            className={`w-full px-4 py-3 rounded-xl text-xs font-sans border transition ${
+                              themeMode === 'dark' ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                            }`}
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                            Téléphone
+                          </label>
+                          <input
+                            type="tel"
+                            value={profilePhone}
+                            onChange={(e) => setProfilePhone(e.target.value)}
+                            required
+                            className={`w-full px-4 py-3 rounded-xl text-xs font-sans border transition ${
+                              themeMode === 'dark' ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                            }`}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                          Adresse Email
+                        </label>
+                        <input
+                          type="email"
+                          value={profileEmail}
+                          onChange={(e) => setProfileEmail(e.target.value)}
+                          required
+                          className={`w-full px-4 py-3 rounded-xl text-xs font-sans border transition ${
+                            themeMode === 'dark' ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                          }`}
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        className="px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider transition shadow-md cursor-pointer border-0 flex items-center gap-2"
+                      >
+                        <Save className="w-4 h-4" />
+                        <span>Enregistrer les modifications</span>
+                      </button>
+                    </form>
+                  </div>
+
+
+                  {/* Saved Delivery Addresses Deck */}
+                  <div className={`p-6 sm:p-8 rounded-3xl border shadow-xl space-y-6 ${
+                    themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
+                  }`}>
+                    <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
+                      <div className="space-y-1">
+                        <span className="text-xs font-mono font-bold text-cyan-500 uppercase tracking-widest">
+                          CARNET D'ADRESSES DE LIVRAISON
+                        </span>
+                        <h3 className={`text-xl font-black font-heading ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                          Adresses Enregistrées
+                        </h3>
+                      </div>
+
+                      <button
+                        onClick={() => setShowAddAddressModal(true)}
+                        className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 cursor-pointer border-0 shadow-sm"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Nouvelle Adresse</span>
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {savedAddresses.map((addr) => (
+                        <div key={addr.id} className={`p-5 rounded-2xl border space-y-3 relative ${
+                          themeMode === 'dark' ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-slate-200/80'
+                        }`}>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-emerald-500">{addr.label}</span>
+                            {addr.isDefault && (
+                              <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                DÉFAULT
+                              </span>
+                            )}
+                          </div>
+                          <p className={`text-xs font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                            {addr.fullName} ({addr.phone})
+                          </p>
+                          <p className="text-xs text-slate-400">
+                            {addr.address}, {addr.city}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+            </>
+          )}
+
+        </div>
       </div>
-    </div>
+
+      {/* Add New Address Modal */}
+      {showAddAddressModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className={`w-full max-w-md p-6 sm:p-8 rounded-3xl border shadow-2xl space-y-6 ${
+            themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'
+          }`}>
+            <div className="flex items-center justify-between border-b pb-4 border-slate-800">
+              <h3 className="text-base font-bold font-heading">Ajouter une Adresse de Livraison</h3>
+              <button onClick={() => setShowAddAddressModal(false)} className="p-1 hover:text-rose-400 cursor-pointer bg-transparent border-0">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddAddress} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-[11px] font-mono uppercase tracking-wider text-slate-400">Nom de l'adresse (ex: Domicile, Bureau)</label>
+                <input
+                  type="text"
+                  required
+                  value={newAddrLabel}
+                  onChange={(e) => setNewAddrLabel(e.target.value)}
+                  placeholder="ex: Maison Casablanca"
+                  className={`w-full px-4 py-3 rounded-xl text-xs font-sans border ${
+                    themeMode === 'dark' ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                  }`}
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[11px] font-mono uppercase tracking-wider text-slate-400">Ville</label>
+                <select
+                  value={newAddrCity}
+                  onChange={(e) => setNewAddrCity(e.target.value)}
+                  className={`w-full px-4 py-3 rounded-xl text-xs font-sans border ${
+                    themeMode === 'dark' ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                  }`}
+                >
+                  {['Casablanca', 'Rabat', 'Marrakech', 'Tanger', 'Fès', 'Agadir', 'Oujda', 'Tétouan', 'Meknès', 'Autre ville'].map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[11px] font-mono uppercase tracking-wider text-slate-400">Adresse Complète</label>
+                <textarea
+                  required
+                  rows={3}
+                  value={newAddrStreet}
+                  onChange={(e) => setNewAddrStreet(e.target.value)}
+                  placeholder="Rue, N° d'appartement, quartier..."
+                  className={`w-full px-4 py-3 rounded-xl text-xs font-sans border ${
+                    themeMode === 'dark' ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                  }`}
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs uppercase tracking-wider transition shadow-md cursor-pointer border-0"
+              >
+                Enregistrer l'adresse
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
     </ShopShell>
+  );
+}
+
+function LayoutGridIcon(props: any) {
+  return (
+    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="3" y="3" width="7" height="7" />
+      <rect x="14" y="3" width="7" height="7" />
+      <rect x="14" y="14" width="7" height="7" />
+      <rect x="3" y="14" width="7" height="7" />
+    </svg>
   );
 }
