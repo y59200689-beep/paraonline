@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { useLoyalty, LoyaltyTier } from '@/context/LoyaltyContext';
 import { useTranslation } from '@/context/LanguageContext';
 import { X, Award, Coins, ArrowRight, Check, ShieldCheck, Clock, Ticket, Copy } from 'lucide-react';
@@ -21,8 +22,10 @@ interface RewardItem {
 }
 
 export const BeautyWalletDrawer: React.FC<BeautyWalletDrawerProps> = ({ isOpen, onClose }) => {
+  const router = useRouter();
   const { language } = useTranslation();
   const {
+    clientUser,
     points,
     totalEarned,
     tier,
@@ -31,6 +34,13 @@ export const BeautyWalletDrawer: React.FC<BeautyWalletDrawerProps> = ({ isOpen, 
     tierMultiplier,
     pointsToNextTier
   } = useLoyalty();
+
+  useEffect(() => {
+    if (isOpen && !clientUser) {
+      onClose();
+      router.push('/customer');
+    }
+  }, [isOpen, clientUser, onClose, router]);
 
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);

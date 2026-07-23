@@ -309,7 +309,7 @@ export const Header: React.FC = () => {
               ratesLoading={ratesLoading}
               convertPrice={convertPrice}
               onCartOpen={() => setIsCartOpen(true)}
-              onWalletOpen={() => setIsWalletOpen(true)}
+              onWalletOpen={() => router.push('/customer')}
               onWishlistOpen={() => setWishlistOpen(true)}
               onCompareOpen={() => setIsOpenModal(true)}
             />
