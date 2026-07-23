@@ -393,7 +393,7 @@ export const CustomerAuthPortal: React.FC<CustomerAuthPortalProps> = ({
                       value={authName}
                       onChange={(e) => setAuthName(e.target.value)}
                       required
-                      placeholder={isRTL ? 'فاطمة الزهراء' : 'Sara Mansouri'}
+                      placeholder={isRTL ? 'الاسم الكامل' : 'Nom Complet'}
                       className="w-full pl-11 pr-4 py-3.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all font-sans"
                     />
                   </div>
