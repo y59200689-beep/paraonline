@@ -80,7 +80,7 @@ export default async function Home() {
     { id: 'summerSale-1', type: 'summerSale', nameFr: "Offres d'Été (Summer Sale)", visible: hp.showSummerSale ?? true },
     { id: 'dermoCorner-1', type: 'dermoCorner', nameFr: 'Dermo Corner (Acné vs Taches)', visible: hp.showDermoCorner ?? true },
     { id: 'skinConcerns-1', type: 'skinConcerns', nameFr: 'Bento de Préoccupations Cutanées', visible: hp.showSkinConcerns ?? true },
-    { id: 'horizontalPromo-1', type: 'horizontalPromo', nameFr: 'Bannière Promotionnelle Horizontale', visible: hp.showHorizontalPromo ?? true },
+    { id: 'horizontalPromo-1', type: 'horizontalPromo', nameFr: 'Bannière Promotionnelle Horizontale', visible: false },
     { id: 'customerReviews-1', type: 'customerReviews', nameFr: 'Témoignages & Avis Clients', visible: hp.showCustomerReviews ?? true },
     { id: 'triplePromo-1', type: 'triplePromo', nameFr: 'Bannières Triple Promotionnelles', visible: hp.showTriplePromo ?? true },
     { id: 'topRated-1', type: 'topRated', nameFr: 'Produits les Mieux Notés', visible: hp.showTopRated ?? true, settings: { titleFr: hp.topRatedTitleFr, titleAr: hp.topRatedTitleAr, productIds: hp.topRatedProductIds || [] } },
@@ -96,8 +96,8 @@ export default async function Home() {
   ];
 
   const rawSectionsList = hp.sectionOrder 
-    ? hp.sectionOrder.filter((s: any) => s.type !== 'flashSale' && s.type !== 'curationClinique')
-    : defaultSections;
+    ? hp.sectionOrder.filter((s: any) => s.type !== 'flashSale' && s.type !== 'curationClinique' && s.type !== 'horizontalPromo')
+    : defaultSections.filter(s => s.type !== 'horizontalPromo');
   let sectionsList = [...rawSectionsList];
   
   // 1. Ensure 'skincareRoutineSteps-1' is in the list
