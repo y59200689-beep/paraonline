@@ -361,47 +361,6 @@ export function AboutClient() {
             </div>
           </section>
 
-
-          {/* ──────────────── 5. CTA BANNER ──────────────── */}
-          <section className="text-center bg-gradient-to-br from-slate-900 via-slate-950 to-emerald-950 text-white border border-slate-800 rounded-3xl p-8 sm:p-14 relative overflow-hidden space-y-6 shadow-2xl">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.15)_0%,transparent_70%)] pointer-events-none" />
-
-            <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-mono font-bold tracking-wider uppercase border border-emerald-500/30">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>{language === 'AR' ? 'بدء تجربة العناية الشخصية' : 'EXPÉRIENCE DERMO-PERSONNALISÉE'}</span>
-            </span>
-
-            <h2 className="text-2xl sm:text-4xl font-black text-white font-heading tracking-tight max-w-2xl mx-auto leading-tight">
-              {language === 'AR'
-                ? 'هل أنتِ جاهزة لاكتشاف الروتين المثالي لبشرتكِ؟'
-                : 'Prête à Révéler la Santé Éclatante de Votre Peau ?'}
-            </h2>
-
-            <p className="text-xs sm:text-sm text-slate-300 max-w-xl mx-auto leading-relaxed">
-              {language === 'AR'
-                ? 'ابدئي التشخيص المجاني الآن أو تصفحي قائمة منتجاتنا المعتمدة من أكبر المختبرات العالمية.'
-                : 'Bénéficiez immédiatement de notre Dermo-Diagnostic par IA ou découvrez nos rituels cliniques en boutique.'}
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-              <button
-                onClick={() => setDiagnosticOpen(true)}
-                className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xs uppercase tracking-widest transition-all duration-300 shadow-xl active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer border-0"
-              >
-                <Sparkles className="w-4 h-4 fill-slate-950" />
-                <span>{language === 'AR' ? 'تشخيص البشرة المجاني' : 'Démarrer le Dermo-Diagnostic IA'}</span>
-              </button>
-
-              <Link
-                href="/products"
-                className="w-full sm:w-auto px-8 py-4 rounded-xl bg-slate-900 border border-slate-700 hover:border-slate-500 text-white font-bold text-xs uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>{language === 'AR' ? 'تصفح جميع المنتجات' : 'Explorer la Boutique'}</span>
-                <ArrowRight className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
-              </Link>
-            </div>
-          </section>
-
         </div>
       </div>
     </ShopShell>
