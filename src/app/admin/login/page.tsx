@@ -65,26 +65,32 @@ function AdminLoginFormInner() {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace(fromPath);
+      window.location.href = fromPath;
     }
-  }, [isAuthenticated, router, fromPath]);
+  }, [isAuthenticated, fromPath]);
 
   const handleLoginFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await submitLogin(usernameInput, passwordInput);
+    const ok = await submitLogin(usernameInput, passwordInput);
+    if (ok) {
+      window.location.href = fromPath;
+    }
   };
 
   const handleMfaSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await handleVerifyMfa(mfaCodeInput);
+    const ok = await handleVerifyMfa(mfaCodeInput);
+    if (ok) {
+      window.location.href = fromPath;
+    }
   };
 
   // If already authenticated, show simple loading indicator (redirecting...)
   if (isAuthenticated) {
     return (
-      <main className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-6">
+      <main className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-6 font-mono text-xs font-bold tracking-wider uppercase">
         <div className="w-4 h-4 border-2 border-slate-600 border-t-emerald-500 rounded-full animate-spin mr-2" />
-        Redirection...
+        Redirection vers le Console...
       </main>
     );
   }

@@ -69,8 +69,11 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Check session cookie on mount
   useEffect(() => {
     const verifySession = async () => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
       try {
-        const res = await fetch('/api/admin/auth/me');
+        const res = await fetch('/api/admin/auth/me', { signal: controller.signal });
+        clearTimeout(timeoutId);
         const data = await res.json();
         if (data.success && data.user) {
           setCurrentUser(data.user);
@@ -84,10 +87,12 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           sessionStorage.removeItem('admin_user');
         }
       } catch (e) {
-        setIsAuthenticated(false);
-        setCurrentUser(null);
-        sessionStorage.removeItem('admin_authenticated');
-        sessionStorage.removeItem('admin_user');
+        clearTimeout(timeoutId);
+        // Only reset if no cached user exists
+        if (!sessionStorage.getItem('admin_user')) {
+          setIsAuthenticated(false);
+          setCurrentUser(null);
+        }
       }
     };
     verifySession();

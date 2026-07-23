@@ -341,39 +341,30 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const loadAllData = async () => {
     setIsDataLoading(true);
     try {
-      await Promise.all([
-        loadOrders(),
+      // 1. Fetch primary orders data first for sub-100ms UI display
+      await loadOrders();
+    } catch (e) {
+      console.error("Error loading orders:", e);
+    } finally {
+      setIsDataLoading(false);
+    }
+
+    // 2. Asynchronously load all secondary modules in background without blocking dashboard render
+    setTimeout(() => {
+      Promise.allSettled([
         loadAuditLogs(),
         loadAbandonedCarts(),
         loadDiagnostics(),
         loadLeads(),
         loadLoyaltyOverrides(),
         loadOperatorsList(),
-        loadAdviceArticles()
-      ]);
-      setIsDataLoading(false);
-
-      if (process.env.NODE_ENV === 'test') {
-        await loadProducts();
-        await loadReviews();
-      } else {
-        setTimeout(async () => {
-          try {
-            await loadProducts();
-          } catch (e) {
-            console.error("Error loading products in background:", e);
-          }
-          try {
-            await loadReviews();
-          } catch (e) {
-            console.error("Error loading reviews in background:", e);
-          }
-        }, 300);
-      }
-    } catch (e) {
-      console.error("Error loading admin data:", e);
-      setIsDataLoading(false);
-    }
+        loadAdviceArticles(),
+        loadProducts(),
+        loadReviews()
+      ]).catch((e) => {
+        console.error("Background data fetch error:", e);
+      });
+    }, 50);
   };
 
   useEffect(() => {
