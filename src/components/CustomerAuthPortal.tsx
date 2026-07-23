@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { 
   Sparkles, ShieldCheck, Lock, Mail, User, Phone, ArrowRight, ArrowLeft,
-  Eye, EyeOff, CheckCircle2, PackageCheck, Award, HeartHandshake, KeyRound
+  Eye, EyeOff, CheckCircle2, PackageCheck, Award, HeartHandshake, KeyRound, Zap
 } from 'lucide-react';
 import { useTranslation } from '@/context/LanguageContext';
 
@@ -496,7 +496,10 @@ export const CustomerAuthPortal: React.FC<CustomerAuthPortalProps> = ({
                 }}
                 className="text-[11px] font-mono text-slate-500 hover:text-emerald-400 transition-colors bg-transparent border-0 cursor-pointer underline"
               >
-                {isRTL ? '⚡ ملء تلقائي لتجربة الحساب (Demo)' : '⚡ Remplissage rapide pour tester le compte (Demo)'}
+                <span className="inline-flex items-center gap-1">
+                  <Zap className="w-3.5 h-3.5 text-amber-500" />
+                  <span>{isRTL ? 'ملء تلقائي لتجربة الحساب (Demo)' : 'Remplissage rapide pour tester le compte (Demo)'}</span>
+                </span>
               </button>
             </div>
 

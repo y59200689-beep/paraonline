@@ -6,7 +6,7 @@ import { Product, INGREDIENTS_GLOSSARY } from '@/lib/data';
 import { useCart } from '@/context/CartContext';
 import { useTranslation } from '@/context/LanguageContext';
 import { useCurrency } from '@/context/CurrencyContext';
-import { X, Star, ShoppingBag, Plus, Minus, Info, ShieldCheck, Sparkles, Coins } from 'lucide-react';
+import { X, Star, ShoppingBag, Plus, Minus, Info, ShieldCheck, Sparkles, Coins, Lock } from 'lucide-react';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { useSettings } from '@/context/SettingsContext';
 import Image from 'next/image';
@@ -474,10 +474,13 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen,
                         {language === 'FR' ? 'Laisser un avis' : 'أضف تقييماً'}
                       </h4>
                       {!hasAccount ? (
-                        <div className="p-3 bg-amber-50/50 border border-amber-200 text-amber-800 rounded-lg text-[10.5px] leading-relaxed font-bold">
-                          {language === 'FR' 
-                            ? "🔒 Vous devez avoir un compte client (avoir déjà effectué une commande ou un diagnostic de peau) pour pouvoir publier un avis." 
-                            : "🔒 يجب أن يكون لديكِ حساب عميل (بإجراء طلب أو تشخيص للبشرة مسبقاً) لتتمكني من إضافة تقييم."}
+                        <div className="p-3 bg-amber-50/50 border border-amber-200 text-amber-800 rounded-lg text-[10.5px] leading-relaxed font-bold flex items-start gap-1.5">
+                          <Lock className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                          <span>
+                            {language === 'FR' 
+                              ? "Vous devez avoir un compte client (avoir déjà effectué une commande ou un diagnostic de peau) pour pouvoir publier un avis." 
+                              : "يجب أن يكون لديكِ حساب عميل (بإجراء طلب أو تشخيص للبشرة مسبقاً) لتتمكني من إضافة تقييم."}
+                          </span>
                         </div>
                       ) : reviewSuccessMessage ? (
                         <div className="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-[10.5px] font-extrabold animate-fade-in">

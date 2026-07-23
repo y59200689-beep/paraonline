@@ -721,10 +721,10 @@ export default function CustomerDashboard() {
           >
             <div className="t-tabs-pill bg-emerald-500 rounded-xl" style={{ ...pillStyle, height: 'auto', top: '6px', bottom: '6px' }} />
             {([
-              { id: 'suivi', labelFr: '📦 Suivi Colis', labelAr: '📦 تتبع الطلب' },
-              { id: 'club', labelFr: '👑 Club Para VIP', labelAr: '👑 نادي الجمال' },
-              { id: 'journal', labelFr: '📓 Agenda & Soins', labelAr: '📓 المفكرة' },
-              { id: 'favoris', labelFr: '❤️ Mes Favoris', labelAr: '❤️ المفضلة' }
+              { id: 'suivi', labelFr: 'Suivi Colis', labelAr: 'تتبع الطلب' },
+              { id: 'club', labelFr: 'Club Para VIP', labelAr: 'نادي الجمال' },
+              { id: 'journal', labelFr: 'Agenda & Soins', labelAr: 'المفكرة' },
+              { id: 'favoris', labelFr: 'Mes Favoris', labelAr: 'المفضلة' }
             ] as const).map((tab) => {
               const isActive = activeTab === tab.id;
               return (
@@ -1174,7 +1174,7 @@ export default function CustomerDashboard() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-3" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
                     <h3 className="text-xs font-black text-slate-800 font-heading uppercase tracking-wide">
-                      {language === 'FR' ? '☀️ Rituel du Matin (AM)' : '☀️ روتين الصباح (AM)'}
+                      {language === 'FR' ? 'Rituel du Matin (AM)' : 'روتين الصباح (AM)'}
                     </h3>
                     {isAmTodayCompleted && (
                       <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 rounded-md text-[9px] font-black uppercase tracking-wider select-none border border-emerald-500/10">
@@ -1185,10 +1185,10 @@ export default function CustomerDashboard() {
 
                   <div className="space-y-2.5">
                     {[
-                      { key: 'cleanse', labelFr: 'Nettoyer 🧼 (Gel/Eau micellaire)', labelAr: 'تنظيف 🧼 (منظف لطيف)' },
-                      { key: 'treat', labelFr: 'Traiter 🧪 (Sérum/Actif)', labelAr: 'علاج 🧪 (سيروم للوجه)' },
-                      { key: 'hydrate', labelFr: 'Hydrater 🧴 (Crème de jour)', labelAr: 'ترطيب 🧴 (كريم النهار)' },
-                      { key: 'protect', labelFr: 'Protéger ☀️ (Écran Solaire SPF)', labelAr: 'حماية ☀️ (واقي شمس)' }
+                      { key: 'cleanse', labelFr: 'Nettoyer (Gel/Eau micellaire)', labelAr: 'تنظيف (منظف لطيف)' },
+                      { key: 'treat', labelFr: 'Traiter (Sérum/Actif)', labelAr: 'علاج (سيروم للوجه)' },
+                      { key: 'hydrate', labelFr: 'Hydrater (Crème de jour)', labelAr: 'ترطيب (كريم النهار)' },
+                      { key: 'protect', labelFr: 'Protéger (Écran Solaire SPF)', labelAr: 'حماية (واقي شمس)' }
                     ].map((step) => (
                       <label 
                         key={step.key}
@@ -1247,7 +1247,7 @@ export default function CustomerDashboard() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-3" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
                     <h3 className="text-xs font-black text-slate-800 font-heading uppercase tracking-wide">
-                      {language === 'FR' ? '🌙 Rituel du Soir (PM)' : '🌙 روتين المساء (PM)'}
+                      {language === 'FR' ? 'Rituel du Soir (PM)' : 'روتين المساء (PM)'}
                     </h3>
                     {isPmTodayCompleted && (
                       <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 rounded-md text-[9px] font-black uppercase tracking-wider select-none border border-emerald-500/10">
@@ -1258,9 +1258,9 @@ export default function CustomerDashboard() {
 
                   <div className="space-y-2.5">
                     {[
-                      { key: 'cleanse', labelFr: 'Double Nettoyage 🧼 (Huile + Gel)', labelAr: 'تنظيف مزدوج 🧼 (زيت + جل)' },
-                      { key: 'treat', labelFr: 'Traiter 🧪 (Sérum de nuit)', labelAr: 'علاج 🧪 (سيروم ليلي)' },
-                      { key: 'hydrate', labelFr: 'Hydrater 🧴 (Crème riche/Masque)', labelAr: 'ترطيب 🧴 (كريم ليلي مغذي)' }
+                      { key: 'cleanse', labelFr: 'Double Nettoyage (Huile + Gel)', labelAr: 'تنظيف مزدوج (زيت + جل)' },
+                      { key: 'treat', labelFr: 'Traiter (Sérum de nuit)', labelAr: 'علاج (سيروم ليلي)' },
+                      { key: 'hydrate', labelFr: 'Hydrater (Crème riche/Masque)', labelAr: 'ترطيب (كريم ليلي مغذي)' }
                     ].map((step) => (
                       <label 
                         key={step.key}

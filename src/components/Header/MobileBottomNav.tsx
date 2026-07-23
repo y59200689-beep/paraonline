@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ShoppingBag, Store, Coins } from 'lucide-react';
+import { ShoppingBag, Store, Coins, Sparkles } from 'lucide-react';
 
 interface MobileBottomNavProps {
   language: string;
@@ -40,7 +40,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         aria-label={language === 'FR' ? 'Faire le Diagnostic Dermo-IA' : 'تشخيص البشرة'}
         className="flex flex-col items-center gap-1 text-[10px] font-bold text-accent"
       >
-        <span className="w-4.5 h-4.5">✨</span>
+        <Sparkles className="w-4.5 h-4.5 text-accent" />
         <span>{t('diagnostic_nav')}</span>
       </button>
 

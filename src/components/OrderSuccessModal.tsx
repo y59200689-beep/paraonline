@@ -70,7 +70,7 @@ export const OrderSuccessModal: React.FC = () => {
         {/* Titles */}
         <div className="text-center space-y-2 mb-6">
           <h3 className="text-xl md:text-2xl font-black tracking-tight text-slate-800 dark:text-white leading-tight">
-            {isRTL ? '🎉 تم تأكيد طلبكِ بنجاح!' : '🎉 Commande Confirmée !'}
+            {isRTL ? 'تم تأكيد طلبكِ بنجاح!' : 'Commande Confirmée !'}
           </h3>
           <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium px-2">
             {isRTL 

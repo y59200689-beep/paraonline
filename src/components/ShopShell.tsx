@@ -10,7 +10,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Product } from '@/lib/data';
 import { useProducts } from '@/context/ProductsContext';
 import Link from 'next/link';
-import { ShoppingBag, Home as HomeIcon, Store, Sparkles, Mail, Send, ShieldCheck, Truck, MessageSquare, Lock, CheckCircle2, Award } from 'lucide-react';
+import { ShoppingBag, Home as HomeIcon, Store, Sparkles, Mail, Send, ShieldCheck, Truck, MessageSquare, Lock, CheckCircle2, Award, Package, Crown, FlaskConical, Building2, Banknote, CreditCard } from 'lucide-react';
 import Image from 'next/image';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 
@@ -462,28 +462,33 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
                 </h4>
                 <ul className="space-y-2.5 text-xs text-slate-400">
                   <li>
-                    <Link href="/suivi-commande" className="hover:text-white transition-colors duration-200 block font-semibold text-slate-200">
-                      📦 {language === 'AR' ? 'تتبع طلبكِ المباشر' : 'Suivi de Commande'}
+                    <Link href="/suivi-commande" className="hover:text-white transition-colors duration-200 flex items-center gap-2 font-semibold text-slate-200">
+                      <Package className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <span>{language === 'AR' ? 'تتبع طلبكِ المباشر' : 'Suivi de Commande'}</span>
                     </Link>
                   </li>
                   <li>
-                    <Link href="/customer" className="hover:text-white transition-colors duration-200 block">
-                      👑 {language === 'AR' ? 'حسابي ونادي المكافآت' : 'Espace VIP & Wallet'}
+                    <Link href="/customer" className="hover:text-white transition-colors duration-200 flex items-center gap-2">
+                      <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                      <span>{language === 'AR' ? 'حسابي ونادي المكافآت' : 'Espace VIP & Wallet'}</span>
                     </Link>
                   </li>
                   <li>
-                    <button onClick={() => setDiagnosticOpen(true)} className="hover:text-white transition-colors duration-200 text-left cursor-pointer bg-transparent border-0 p-0 text-slate-400 block">
-                      ✨ {language === 'AR' ? 'تشخيص البشرة الذكي' : 'Dermo-Diagnostic IA'}
+                    <button onClick={() => setDiagnosticOpen(true)} className="hover:text-white transition-colors duration-200 text-left cursor-pointer bg-transparent border-0 p-0 text-slate-400 flex items-center gap-2">
+                      <Sparkles className="w-3.5 h-3.5 text-teal-400 shrink-0" />
+                      <span>{language === 'AR' ? 'تشخيص البشرة الذكي' : 'Dermo-Diagnostic IA'}</span>
                     </button>
                   </li>
                   <li>
-                    <button onClick={() => setRoutineBuilderOpen(true)} className="hover:text-white transition-colors duration-200 text-left cursor-pointer bg-transparent border-0 p-0 text-slate-400 block">
-                      🧴 {language === 'AR' ? 'تركيب الروتين المخصص' : 'Routine Sur-Mesure'}
+                    <button onClick={() => setRoutineBuilderOpen(true)} className="hover:text-white transition-colors duration-200 text-left cursor-pointer bg-transparent border-0 p-0 text-slate-400 flex items-center gap-2">
+                      <FlaskConical className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                      <span>{language === 'AR' ? 'تركيب الروتين المخصص' : 'Routine Sur-Mesure'}</span>
                     </button>
                   </li>
                   <li>
-                    <Link href="/a-propos" className="hover:text-white transition-colors duration-200 block">
-                      🏢 {language === 'AR' ? 'من نحن وعن الصيدلية' : 'À propos de nous'}
+                    <Link href="/a-propos" className="hover:text-white transition-colors duration-200 flex items-center gap-2">
+                      <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span>{language === 'AR' ? 'من نحن وعن الصيدلية' : 'À propos de nous'}</span>
                     </Link>
                   </li>
                 </ul>
@@ -553,9 +558,15 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
 
               {/* Payment Methods Badges */}
               <div className="flex items-center gap-3 text-[10px] font-mono text-slate-400 flex-wrap justify-center">
-                <span className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-slate-300 font-bold">💵 Cash sur Livraison (COD)</span>
-                <span className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-slate-300 font-bold">💳 Carte Bancaire CMI</span>
-                <span className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-slate-300 font-bold">🔒 Chiffrement SSL 256-bit</span>
+                <span className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-slate-300 font-bold inline-flex items-center gap-1.5">
+                  <Banknote className="w-3.5 h-3.5 text-emerald-400" /> Cash sur Livraison (COD)
+                </span>
+                <span className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-slate-300 font-bold inline-flex items-center gap-1.5">
+                  <CreditCard className="w-3.5 h-3.5 text-teal-400" /> Carte Bancaire CMI
+                </span>
+                <span className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-slate-300 font-bold inline-flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" /> Chiffrement SSL 256-bit
+                </span>
               </div>
             </div>
 

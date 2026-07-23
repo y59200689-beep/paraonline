@@ -62,32 +62,32 @@ export const RoutineBuilderDrawer: React.FC<RoutineBuilderDrawerProps> = ({ isOp
   const steps: StepConfig[] = [
     {
       key: 'cleanse',
-      labelFr: '1. Nettoyer 🧼',
-      labelAr: '1. تنظيف 🧼',
+      labelFr: '1. Nettoyer',
+      labelAr: '1. تنظيف',
       descFr: 'Élimine impuretés, maquillage et excès de sébum.',
       descAr: 'يزيل الشوائب، المكياج والدهون الزائدة.',
       icon: '🧼'
     },
     {
       key: 'treat',
-      labelFr: '2. Traiter 🧪',
-      labelAr: '2. علاج 🧪',
+      labelFr: '2. Traiter',
+      labelAr: '2. علاج',
       descFr: 'Cible l’acné, les rides, le teint terne ou les taches.',
       descAr: 'يعالج حب الشباب، التجاعيد أو البقع الداكنة.',
       icon: '🧪'
     },
     {
       key: 'hydrate',
-      labelFr: '3. Hydrater 🧴',
-      labelAr: '3. ترطيب 🧴',
+      labelFr: '3. Hydrater',
+      labelAr: '3. ترطيب',
       descFr: 'Nourrit et renforce la barrière cutanée.',
       descAr: 'يغذي ويقوي حاجز رطوبة البشرة.',
       icon: '🧴'
     },
     {
       key: 'protect',
-      labelFr: '4. Protéger ☀️',
-      labelAr: '4. حماية ☀️',
+      labelFr: '4. Protéger',
+      labelAr: '4. حماية',
       descFr: 'Très haute protection UV quotidienne indispensable.',
       descAr: 'حماية عالية جداً من الأشعة فوق البنفسجية.',
       icon: '☀️'

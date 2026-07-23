@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Tag } from 'lucide-react';
+import { Tag, X } from 'lucide-react';
 
 interface AppliedCoupon {
   code: string;
@@ -72,9 +72,9 @@ export const CouponSection: React.FC<CouponSectionProps> = ({
           <button
             onClick={onRemove}
             aria-label={language === 'FR' ? 'Retirer le coupon' : 'إزالة الكوبون'}
-            className="text-slate-400 hover:text-rose-500 font-extrabold transition-colors duration-250 cursor-pointer"
+            className="text-slate-400 hover:text-rose-500 font-extrabold transition-colors duration-250 cursor-pointer flex items-center justify-center p-1"
           >
-            ✕
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
       )}

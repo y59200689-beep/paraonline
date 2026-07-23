@@ -309,8 +309,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     onClose();
     showToast(
       language === 'FR'
-        ? '🎉 Paiement réussi ! Votre commande a été enregistrée avec succès.'
-        : '🎉 تم الدفع بنجاح! تم تسجيل طلبك بنجاح.',
+        ? 'Paiement réussi ! Votre commande a été enregistrée avec succès.'
+        : 'تم الدفع بنجاح! تم تسجيل طلبك بنجاح.',
       'success',
     );
   };
@@ -428,8 +428,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     {/* Text content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 mb-1">
-                        <span className="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-600">
-                          {language === 'FR' ? '🎁 Cadeau offert' : '🎁 هدية مجانية'}
+                        <span className="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-600 inline-flex items-center gap-1">
+                          <Gift className="w-3 h-3 text-emerald-600" />
+                          <span>{language === 'FR' ? 'Cadeau offert' : 'هدية مجانية'}</span>
                         </span>
                       </div>
                       <p className="text-[12px] font-bold text-slate-800 leading-tight line-clamp-2">
