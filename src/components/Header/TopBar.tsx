@@ -66,9 +66,9 @@ export const TopBar: React.FC<TopBarProps> = ({
     >
       {/* Left: Shop Links */}
       <div className="flex items-center gap-6 lg:gap-8 text-[11.5px] font-medium text-slate-500 tracking-wide">
-        <a href="#about" className="hover:text-primary transition-colors duration-200 cursor-pointer">
+        <Link href="/a-propos" className="hover:text-primary transition-colors duration-200 cursor-pointer">
           {language === 'FR' ? 'À propos de nous' : 'من نحن'}
-        </a>
+        </Link>
         <span className="text-slate-200">|</span>
         <button
           onClick={onOpenRoutineBuilder}
