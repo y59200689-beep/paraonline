@@ -119,11 +119,24 @@ export const LoyaltyProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // ──────────── Supabase Auth Listener ────────────
   useEffect(() => {
+    // Hydrate cached user instantly for 0ms initial load
+    try {
+      const savedUserStr = localStorage.getItem('customer_client_user');
+      if (savedUserStr) {
+        setClientUser(JSON.parse(savedUserStr));
+      }
+    } catch (e) {}
+
     if (!isSupabaseConfigured()) {
       setIsLoadingAuth(false);
       loadFromLocalStorage();
       return;
     }
+
+    // Safety timeout: Guarantee auth loading ends within 300ms max
+    const authTimeout = setTimeout(() => {
+      setIsLoadingAuth(false);
+    }, 300);
 
     // Listen to auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: AuthChangeEvent, session: Session | null) => {
@@ -132,9 +145,11 @@ export const LoyaltyProvider: React.FC<{ children: React.ReactNode }> = ({ child
         await fetchAndApplyProfile(session.user);
       } else {
         setClientUser(null);
+        try { localStorage.removeItem('customer_client_user'); } catch {}
         loadFromLocalStorage();
       }
       setIsLoadingAuth(false);
+      clearTimeout(authTimeout);
     });
 
     // Check current session on mount
@@ -142,12 +157,21 @@ export const LoyaltyProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const session = res.data?.session;
       if (!session) {
         supabaseUser.current = null;
+        setClientUser(null);
+        try { localStorage.removeItem('customer_client_user'); } catch {}
         loadFromLocalStorage();
         setIsLoadingAuth(false);
+        clearTimeout(authTimeout);
       }
+    }).catch(() => {
+      setIsLoadingAuth(false);
+      clearTimeout(authTimeout);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(authTimeout);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -232,12 +256,14 @@ export const LoyaltyProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
 
       if (data) {
-        setClientUser({
+        const u = {
           id: user.id,
           email: data.email ?? user.email ?? '',
           name: data.name ?? undefined,
           phone: data.phone ?? undefined,
-        });
+        };
+        setClientUser(u);
+        try { localStorage.setItem('customer_client_user', JSON.stringify(u)); } catch {}
         setPoints(data.points ?? 0);
         setTotalEarned(data.total_earned ?? 0);
         setPointsHistory(data.points_history ?? []);

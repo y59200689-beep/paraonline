@@ -611,7 +611,7 @@ export default function CustomerDashboard() {
 
         <div className={`w-full relative z-10 ${!clientUser ? 'max-w-6xl' : 'max-w-5xl mx-auto space-y-8'}`}>
           {/* ── Welcome Account / Login Banner ── */}
-          {!clientUser && !isLoadingAuth ? (
+          {!clientUser ? (
           <CustomerAuthPortal
             authView={authView}
             setAuthView={setAuthView}
@@ -638,30 +638,23 @@ export default function CustomerDashboard() {
             <div className="absolute -right-24 -top-24 w-48 h-48 rounded-full bg-accent/5 blur-3xl pointer-events-none" />
             
             <div className="flex flex-col sm:flex-row items-center justify-between gap-5 relative z-10">
-              {isLoadingAuth ? (
-                <div className="flex items-center gap-3 text-xs text-slate-500 font-semibold py-2">
-                  <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                  <span>{language === 'FR' ? 'Connexion en cours…' : 'جاري التحميل…'}</span>
+              <div className="flex items-center gap-4 min-w-0" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent text-white flex items-center justify-center text-sm font-black shrink-0 select-none shadow-md">
+                  {(clientUser?.name || clientUser?.email || 'C').charAt(0).toUpperCase()}
                 </div>
-              ) : (
-                <>
-                  <div className="flex items-center gap-4 min-w-0" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent text-white flex items-center justify-center text-sm font-black shrink-0 select-none shadow-md">
-                      {(clientUser?.name || clientUser?.email || 'C').charAt(0).toUpperCase()}
-                    </div>
-                    <div className="min-w-0" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-                      <p className={`text-sm font-black leading-tight ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>{clientUser?.name || clientUser?.email}</p>
-                      <div className="flex items-center gap-2 mt-1.5" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                        <span className="relative flex h-2 w-2 shrink-0">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                        </span>
-                        <p className="text-[10px] font-extrabold text-emerald-600 uppercase tracking-wider leading-none">
-                          {language === 'FR' ? 'Compte Synchronisé Cloud' : 'حساب متزامن بالكامل'}
-                        </p>
-                      </div>
-                    </div>
+                <div className="min-w-0" style={{ textAlign: isRTL ? 'right' : 'left' }}>
+                  <p className={`text-sm font-black leading-tight ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>{clientUser?.name || clientUser?.email}</p>
+                  <div className="flex items-center gap-2 mt-1.5" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                    <span className="relative flex h-2 w-2 shrink-0">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <p className="text-[10px] font-extrabold text-emerald-600 uppercase tracking-wider leading-none">
+                      {language === 'FR' ? 'Compte Synchronisé Cloud' : 'حساب متزامن بالكامل'}
+                    </p>
                   </div>
+                </div>
+              </div>
 
                   <div className="flex items-center gap-3">
                     {/* Theme Mode Switcher Pill */}
@@ -693,8 +686,6 @@ export default function CustomerDashboard() {
                       {language === 'FR' ? 'Déconnexion' : 'خروج'}
                     </button>
                   </div>
-                </>
-              )}
             </div>
           </div>
         )}
