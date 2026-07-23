@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { verifyAdminSession } from '@/lib/session';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 
+import sharp from 'sharp';
+
 // Allowed image MIME types (browser-provided — first-pass check)
 const ALLOWED_MIME_TYPES = new Set([
   'image/jpeg',
@@ -40,9 +42,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'No file provided' }, { status: 400 });
     }
 
-    // --- Security: File size limit (5 MB) ---
-    if (file.size > 5 * 1024 * 1024) {
-      return NextResponse.json({ success: false, error: 'File too large (max 5 MB)' }, { status: 400 });
+    // --- Security: File size limit (10 MB before conversion) ---
+    if (file.size > 10 * 1024 * 1024) {
+      return NextResponse.json({ success: false, error: 'File too large (max 10 MB)' }, { status: 400 });
     }
 
     // --- Security: MIME type allowlist (browser-reported) ---
@@ -61,18 +63,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'File content does not match an allowed image format.' }, { status: 400 });
     }
 
-    // Use the detected MIME (not the user-provided one) as the content type
-    const contentType = detectedMime || file.type;
+    // Automatically convert all incoming images to WebP format for optimal site performance
+    let uploadBuffer = buffer;
+    let contentType = 'image/webp';
+    let ext = 'webp';
 
-    // Sanitize filename and force an image extension
-    const ext = contentType.split('/')[1]?.replace('jpeg', 'jpg') || 'jpg';
-    const cleanFileName = file.name.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 60);
+    try {
+      uploadBuffer = await sharp(buffer)
+        .webp({ quality: 82, effort: 4 })
+        .toBuffer();
+    } catch (conversionErr) {
+      console.warn('WebP conversion fallback to original format:', conversionErr);
+      contentType = detectedMime || file.type;
+      ext = contentType.split('/')[1]?.replace('jpeg', 'jpg') || 'jpg';
+    }
+
+    // Sanitize filename and enforce .webp (or fallback extension)
+    const rawNameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+    const cleanFileName = rawNameWithoutExt.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 60);
     const filename = `${Date.now()}_${cleanFileName}.${ext}`;
 
-    // Upload to Supabase bucket 'products'
+    // Upload to Supabase bucket 'products' / local fallback
     const { error } = await supabase.storage
       .from('products')
-      .upload(filename, buffer, {
+      .upload(filename, uploadBuffer, {
         contentType,
         upsert: true,
         cacheControl: '31536000',

@@ -184,7 +184,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
                   <span className="font-semibold uppercase tracking-widest" style={{ color: 'var(--admin-text-muted)' }}>{ordersSubTab}</span>
                 </>
               )}
-              {activeTab === 'loyalty' && loyaltySubTab && loyaltySubTab !== 'members' && (
+              {activeTab === 'loyalty' && loyaltySubTab && loyaltySubTab !== 'product_points' && (
                 <>
                   <span style={{ color: 'var(--admin-text-faint)' }}>/</span>
                   <span className="font-semibold uppercase tracking-widest" style={{ color: 'var(--admin-text-muted)' }}>{loyaltySubTab}</span>

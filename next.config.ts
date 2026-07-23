@@ -27,11 +27,20 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Custom headers to ensure assets under /public/images/ are cached for a year
+  // Custom headers to ensure assets under /public/images/ and /public/uploads/ are cached for a year
   async headers() {
     return [
       {
         source: '/images/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/uploads/:path*',
         headers: [
           {
             key: 'Cache-Control',

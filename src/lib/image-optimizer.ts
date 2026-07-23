@@ -9,8 +9,8 @@
 export function getOptimizedImageUrl(src: string | undefined): string {
   if (!src) return '';
 
-  // 1. Local Image Assets
-  if (src.startsWith('/images/')) {
+  // 1. Local Image Assets & Uploads (including relative paths)
+  if (src.startsWith('/images/') || src.startsWith('/uploads/') || src.startsWith('images/') || src.startsWith('uploads/')) {
     // Convert local PNG/JPG references to WebP
     return src.replace(/\.(png|jpg|jpeg)$/i, '.webp');
   }

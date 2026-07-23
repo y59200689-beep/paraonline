@@ -6,6 +6,7 @@ import { useTranslation } from '@/context/LanguageContext';
 import { useSettings } from '@/context/SettingsContext';
 import { Sparkles, Shield, Activity, ArrowRight, ArrowLeft } from 'lucide-react';
 import { gsap } from 'gsap';
+import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 
 interface HeroProps {
   onOpenDiagnostic: () => void;
@@ -39,7 +40,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
         opacity: 1,
         y: 0,
         duration: 0.8,
-        stagger: 0.1,
+        stagger: 0.12,
         ease: 'power3.out',
       }
     );
@@ -47,25 +48,34 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
     // Animate heading words
     gsap.fromTo(
       containerRef.current.querySelectorAll('.hero-word-char'),
-      { opacity: 0, y: '100%' },
+      { y: '100%', opacity: 0 },
       {
+        y: '0%',
         opacity: 1,
-        y: 0,
-        duration: 0.8,
+        duration: 0.6,
         stagger: 0.05,
-        ease: 'power4.out',
+        ease: 'power2.out',
         delay: 0.3,
       }
     );
-  }, [mounted, language]);
+  }, [mounted]);
 
-  const getBannerAction = (banner: any) => {
-    if (banner.linkType === 'diagnostic') return onOpenDiagnostic;
-    if (banner.linkType === 'category') return () => onSelectCategory(banner.linkValue);
-    return () => onSelectCategory(banner.linkValue || 'visage');
+  // Helper to safely navigate custom banner actions
+  const getBannerAction = (banner: { linkType?: string; linkValue?: string }) => {
+    if (!banner) return () => {};
+    if (banner.linkType === 'category' && banner.linkValue) {
+      return () => onSelectCategory(banner.linkValue!);
+    }
+    if (banner.linkType === 'diagnostic') {
+      return onOpenDiagnostic;
+    }
+    if (banner.linkValue?.startsWith('http')) {
+      return () => window.open(banner.linkValue, '_blank');
+    }
+    return () => {};
   };
 
-  const customBanners = settings.banners && settings.banners.length >= 4 ? settings.banners : null;
+  const customBanners = settings?.banners?.length ? settings.banners : null;
 
   // Localized copy content for each grid card
   const CARDS = {
@@ -78,7 +88,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
       desc_ar: customBanners ? customBanners[0].descAr : 'خوارزميتنا السريرية تحلل بشرتكِ وتركّب بروتوكولاً علاجياً معتمداً من صيادلتنا مع خصم حصري 15%!',
       cta_fr: customBanners ? customBanners[0].ctaFr : 'Initialiser mon Diagnostic (-15%)',
       cta_ar: customBanners ? customBanners[0].ctaAr : 'بدء التشخيص السريري (خصم 15%-)',
-      bgImage: customBanners ? customBanners[0].bgImage : '/images/hero_skincare_clinic.png',
+      bgImage: getOptimizedImageUrl(customBanners ? customBanners[0].bgImage : '/images/hero_skincare_clinic.png'),
       action: customBanners ? getBannerAction(customBanners[0]) : onOpenDiagnostic,
     },
     card2: {
@@ -88,7 +98,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
       title_ar: customBanners ? customBanners[1].titleAr : 'سيروم الترطيب النباتي الفاخر',
       cta_fr: customBanners ? customBanners[1].ctaFr : 'Consulter la gamme',
       cta_ar: customBanners ? customBanners[1].ctaAr : 'اكتشفي المجموعة',
-      bgImage: customBanners ? customBanners[1].bgImage : '/images/hero_serum_dropper.png',
+      bgImage: getOptimizedImageUrl(customBanners ? customBanners[1].bgImage : '/images/hero_serum_dropper.png'),
       action: customBanners ? getBannerAction(customBanners[1]) : () => onSelectCategory('visage'),
     },
     card3: {
@@ -98,7 +108,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
       title_ar: customBanners ? customBanners[2].titleAr : 'بروتوكول الشباب والريتينول',
       cta_fr: customBanners ? customBanners[2].ctaFr : 'Prescrire Rétinol',
       cta_ar: customBanners ? customBanners[2].ctaAr : 'تسوقي الريتينول',
-      bgImage: customBanners ? customBanners[2].bgImage : '/images/hero_rose_cream.png',
+      bgImage: getOptimizedImageUrl(customBanners ? customBanners[2].bgImage : '/images/hero_rose_cream.png'),
       action: customBanners ? getBannerAction(customBanners[2]) : () => onSelectCategory('visage'),
     },
     card4: {
@@ -108,7 +118,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
       title_ar: customBanners ? customBanners[3].titleAr : 'توهج حمض الهيالورونيك',
       cta_fr: customBanners ? customBanners[3].ctaFr : 'Consulter la gamme',
       cta_ar: customBanners ? customBanners[3].ctaAr : 'اكتشفي المجموعة',
-      bgImage: customBanners ? customBanners[3].bgImage : '/images/hero_hydra_essence.png',
+      bgImage: getOptimizedImageUrl(customBanners ? customBanners[3].bgImage : '/images/hero_hydra_essence.png'),
       action: customBanners ? getBannerAction(customBanners[3]) : () => onSelectCategory('visage'),
     },
   };
@@ -174,7 +184,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
                   <h1
                     className="active text-xl md:text-4xl font-black font-heading leading-tight tracking-tight text-white flex flex-wrap gap-x-2"
                   >
-                    {titleWords.map((word, idx) => (
+                    {titleWords.map((word: string, idx: number) => (
                       <span key={idx} className="inline-block overflow-hidden h-fit">
                         <span className="hero-word-char inline-block translate-y-full opacity-0">
                           {word}
