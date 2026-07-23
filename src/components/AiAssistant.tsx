@@ -35,15 +35,14 @@ export const AiAssistant: React.FC = () => {
   const pathname = usePathname();
   const { language } = useTranslation();
   const { isCartOpen } = useCart();
-  const { showToast, isDiagnosticOpen, isScratchCardOpen, isRoutineBuilderOpen } = useUi();
+  const { showToast, isDiagnosticOpen, isScratchCardOpen } = useUi();
   
   if (
     pathname?.startsWith('/admin') || 
     pathname?.startsWith('/checkout') || 
     isCartOpen || 
     isDiagnosticOpen || 
-    isScratchCardOpen || 
-    isRoutineBuilderOpen
+    isScratchCardOpen
   ) {
     return null;
   }

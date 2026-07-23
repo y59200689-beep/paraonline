@@ -28,7 +28,6 @@ const SkinDiagnostic = dynamic(() => import('./SkinDiagnostic').then(m => m.Skin
 const ScratchCard = dynamic(() => import('./ScratchCard').then(m => m.ScratchCard), { ssr: false });
 const QuickViewModal = dynamic(() => import('./QuickViewModal').then(m => m.QuickViewModal), { ssr: false });
 const RoutineBundleDrawer = dynamic(() => import('./RoutineBundleDrawer').then(m => m.RoutineBundleDrawer), { ssr: false });
-const RoutineBuilderDrawer = dynamic(() => import('./RoutineBuilderDrawer').then(m => m.RoutineBuilderDrawer), { ssr: false });
 const CompareModal = dynamic(() => import('./CompareModal').then(m => m.CompareModal), { ssr: false });
 
 interface ShopShellProps {
@@ -50,7 +49,6 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
     isWishlistOpen, setWishlistOpen,
     isDiagnosticOpen, setDiagnosticOpen,
     isScratchCardOpen, setScratchCardOpen,
-    isRoutineBuilderOpen, setRoutineBuilderOpen,
     selectedProduct, setSelectedProduct
   } = useUi();
 
@@ -480,12 +478,6 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
                     </button>
                   </li>
                   <li>
-                    <button onClick={() => setRoutineBuilderOpen(true)} className="hover:text-white transition-colors duration-200 text-left cursor-pointer bg-transparent border-0 p-0 text-slate-400 flex items-center gap-2">
-                      <FlaskConical className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                      <span>{language === 'AR' ? 'تركيب الروتين المخصص' : 'Routine Sur-Mesure'}</span>
-                    </button>
-                  </li>
-                  <li>
                     <Link href="/a-propos" className="hover:text-white transition-colors duration-200 flex items-center gap-2">
                       <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                       <span>{language === 'AR' ? 'من نحن وعن الصيدلية' : 'À propos de nous'}</span>
@@ -691,14 +683,13 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
       <QuickViewModal product={selectedProduct} isOpen={selectedProduct !== null} onClose={() => setSelectedProduct(null)} />
       
       <RoutineBundleDrawer isOpen={isBundleDrawerOpen} onClose={() => setIsBundleDrawerOpen(false)} />
-      <RoutineBuilderDrawer isOpen={isRoutineBuilderOpen} onClose={() => setRoutineBuilderOpen(false)} />
 
       <CompareModal />
       <CartBubbleCoordinator />
       <OrderSuccessModal />
 
       {/* FOMO Toast (hidden when drawers or quiz modals are active to prevent mobile overlaps) */}
-      {showToast && !isCartOpen && !isDiagnosticOpen && !isScratchCardOpen && !isRoutineBuilderOpen && !selectedProduct && (
+      {showToast && !isCartOpen && !isDiagnosticOpen && !isScratchCardOpen && !selectedProduct && (
         <div className="fixed bottom-[72px] md:bottom-6 left-3 md:left-8 right-auto z-50 bg-white/95 backdrop-blur-md border border-slate-200/50 shadow-[0_15px_35px_rgba(26,37,93,0.08)] py-2.5 px-3.5 md:py-3.5 md:px-5 rounded-[12px] flex items-center gap-3 md:gap-4 w-[280px] md:w-auto max-w-[calc(100vw-24px)] md:max-w-[340px] animate-slide-in select-none">
           <div className="w-8 h-8 md:w-10 md:h-10 rounded-[8px] md:rounded-[10px] bg-primary/5 border border-primary/10 text-primary flex items-center justify-center shrink-0">
             <ShoppingBag className="w-3.5 h-3.5 md:w-4 md:h-4 stroke-[2.25]" />

@@ -131,7 +131,7 @@ export const RoutineBundleDrawer: React.FC<RoutineBundleDrawerProps> = ({ isOpen
         <div className="p-6 border-b border-border/30 flex items-center justify-between shrink-0 bg-white/90 backdrop-blur-md relative z-10">
           <div className="space-y-1">
             <h3 className="text-md md:text-lg font-black uppercase text-primary-dark tracking-tight flex items-center gap-1.5">
-              <span>{language === 'FR' ? 'Routine Sur-Mesure' : 'روتينكِ المخصص'}</span>
+              <span>{language === 'FR' ? 'Packs Rituels Cliniques' : 'مجموعات العناية'}</span>
             </h3>
             <span className="text-[10px] font-bold text-foreground/50 block">
               {language === 'FR' ? 'Un rituels en 3 étapes avec -15% et Cadeau Offert !' : 'روتين من 3 خطوات بخصم 15% وهدية مجانية!'}

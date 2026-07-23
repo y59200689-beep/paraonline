@@ -33,7 +33,6 @@ interface TopBarProps {
   currencyRef: React.RefObject<HTMLDivElement>;
 
   isRTL: boolean;
-  onOpenRoutineBuilder: () => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
@@ -55,7 +54,6 @@ export const TopBar: React.FC<TopBarProps> = ({
   onSetCurrency,
   currencyRef,
   isRTL,
-  onOpenRoutineBuilder,
 }) => (
   <div
     className="hidden md:block w-full bg-white border-y border-slate-100 shadow-sm"
@@ -69,14 +67,6 @@ export const TopBar: React.FC<TopBarProps> = ({
         <Link href="/a-propos" className="hover:text-primary transition-colors duration-200 cursor-pointer">
           {language === 'FR' ? 'À propos de nous' : 'من نحن'}
         </Link>
-        <span className="text-slate-200">|</span>
-        <button
-          onClick={onOpenRoutineBuilder}
-          className="hover:text-primary transition-colors duration-200 cursor-pointer font-medium bg-transparent border-0 p-0 text-slate-500 flex items-center gap-1"
-        >
-          <Sparkles className="w-3 h-3 text-emerald-500" />
-          <span>{language === 'FR' ? 'Routine sur Mesure' : 'روتين مخصص'}</span>
-        </button>
         <span className="text-slate-200">|</span>
         <a href="/customer" className="hover:text-primary transition-colors duration-200 cursor-pointer">
           {language === 'FR' ? 'Mon Compte' : 'حسابي'}

@@ -484,7 +484,7 @@ export const SkincareRoutineSteps: React.FC<SkincareRoutineStepsProps> = ({ onOp
                 }}
               >
                 <Sparkles className="w-4.5 h-4.5 fill-white text-white animate-pulse" />
-                <span>{language === 'FR' ? 'Créer ma Routine sur-mesure (-15% & Cadeau) 🎁' : 'صممي روتينكِ العلاجي (-15% وهدية مجانية) 🎁'}</span>
+                <span>{language === 'FR' ? 'Découvrir nos Packs Rituels Cliniques (-15% & Cadeau)' : 'تصفحي مجموعات العناية المكتملة (-15% وهدية)'}</span>
               </button>
             </Magnetic>
           </div>

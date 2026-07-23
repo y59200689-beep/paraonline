@@ -42,7 +42,6 @@ export const Header: React.FC = () => {
     setWishlistOpen,
     setDiagnosticOpen,
     setSelectedProduct,
-    setRoutineBuilderOpen,
     setActiveGlossaryKey,
     cartJiggleTrigger,
     triggerFlyToCart,
@@ -250,7 +249,6 @@ export const Header: React.FC = () => {
         onSetCurrency={setSelectedCurrency}
         currencyRef={currencyRef as React.RefObject<HTMLDivElement>}
         isRTL={isRTL}
-        onOpenRoutineBuilder={() => setRoutineBuilderOpen(true)}
       />
 
       {/* Main sticky nav */}

@@ -32,8 +32,6 @@ interface UiContextProps {
   setDiagnosticOpen: (open: boolean) => void;
   isScratchCardOpen: boolean;
   setScratchCardOpen: (open: boolean) => void;
-  isRoutineBuilderOpen: boolean;
-  setRoutineBuilderOpen: (open: boolean) => void;
   selectedProduct: Product | null;
   setSelectedProduct: (product: Product | null) => void;
 
@@ -82,7 +80,6 @@ export const UiProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   const [isWishlistOpen, setWishlistOpen] = useState(false);
   const [isDiagnosticOpen, setDiagnosticOpen] = useState(false);
   const [isScratchCardOpen, setScratchCardOpen] = useState(false);
-  const [isRoutineBuilderOpen, setRoutineBuilderOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isSuccessModalOpen, setSuccessModalOpen] = useState(false);
   const [successOrderId, setSuccessOrderId] = useState('');
@@ -200,8 +197,6 @@ export const UiProvider: React.FC<{ children: React.ReactNode }> = ({ children }
         setDiagnosticOpen,
         isScratchCardOpen,
         setScratchCardOpen,
-        isRoutineBuilderOpen,
-        setRoutineBuilderOpen,
         selectedProduct,
         setSelectedProduct,
         isSuccessModalOpen,
