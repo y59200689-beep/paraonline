@@ -10,7 +10,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Product } from '@/lib/data';
 import { useProducts } from '@/context/ProductsContext';
 import Link from 'next/link';
-import { ShoppingBag, Home as HomeIcon, Store, Sparkles, Mail, Send, ShieldCheck, Truck, MessageSquare, Lock, CheckCircle2, Award, Package, Crown, FlaskConical, Building2, Coins, CreditCard } from 'lucide-react';
+import { ShoppingBag, Home as HomeIcon, Store, Sparkles, Mail, Send, ShieldCheck, Truck, MessageSquare, Lock, CheckCircle2, Award, Package, Crown, FlaskConical, Building2, Coins, CreditCard, Scale } from 'lucide-react';
 import Image from 'next/image';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 
@@ -476,6 +476,12 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
                       <Sparkles className="w-3.5 h-3.5 text-teal-400 shrink-0" />
                       <span>{language === 'AR' ? 'تشخيص البشرة الذكي' : 'Dermo-Diagnostic IA'}</span>
                     </button>
+                  </li>
+                  <li>
+                    <Link href="/comparateur" className="hover:text-white transition-colors duration-200 flex items-center gap-2">
+                      <Scale className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                      <span>{language === 'AR' ? 'مقارن المستحضرات الطبية' : 'Comparateur Clinique'}</span>
+                    </Link>
                   </li>
                   <li>
                     <Link href="/a-propos" className="hover:text-white transition-colors duration-200 flex items-center gap-2">
