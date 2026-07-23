@@ -9,7 +9,7 @@ import {
   Search, ShoppingBag, ArrowLeft, ArrowRight, Clock, MapPin, 
   Award, Coins, Ticket, Check, Copy, Calendar, Plus, 
   Smile, Meh, Frown, Sparkles, BookOpen, Camera, X,
-  Image as ImageIcon, Heart, Trash2
+  Image as ImageIcon, Heart, Trash2, Sun, Moon
 } from 'lucide-react';
 import { Product } from '@/lib/data';
 import Link from 'next/link';
@@ -77,6 +77,25 @@ export default function CustomerDashboard() {
   const { language } = useTranslation();
   const { settings } = useSettings();
   const isRTL = language === 'AR';
+
+  const [themeMode, setThemeMode] = useState<'light' | 'dark'>('light');
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('customer_portal_theme');
+      if (saved === 'dark' || saved === 'light') {
+        setThemeMode(saved);
+      }
+    } catch (e) {}
+  }, []);
+
+  const toggleThemeMode = () => {
+    const next = themeMode === 'dark' ? 'light' : 'dark';
+    setThemeMode(next);
+    try {
+      localStorage.setItem('customer_portal_theme', next);
+    } catch (e) {}
+  };
 
   // Loyalty states
   const {
@@ -576,7 +595,11 @@ export default function CustomerDashboard() {
   return (
     <ShopShell hideHeader={!clientUser}>
       <div 
-        className={`min-h-screen bg-slate-950 text-slate-100 selection:bg-emerald-500 selection:text-slate-950 relative overflow-hidden transition-colors page-entry-animate ${
+        className={`min-h-screen relative overflow-hidden transition-colors page-entry-animate ${
+          themeMode === 'dark' 
+            ? 'bg-slate-950 text-slate-100 selection:bg-emerald-500 selection:text-slate-950' 
+            : 'bg-[#FAF9F6] text-slate-900 selection:bg-emerald-500 selection:text-white'
+        } ${
           !clientUser ? 'flex flex-col items-center justify-center p-4 sm:p-6 lg:p-10' : 'py-12 px-4 sm:px-6 lg:px-8'
         }`}
         style={{ direction: isRTL ? 'rtl' : 'ltr' }}
@@ -604,9 +627,13 @@ export default function CustomerDashboard() {
             authLoading={authLoading}
             handleLogin={handleLogin}
             handleSignup={handleSignup}
+            themeMode={themeMode}
+            onToggleTheme={toggleThemeMode}
           />
         ) : (
-          <div className="bg-white border border-slate-200/50 rounded-3xl p-6 shadow-premium relative overflow-hidden backdrop-blur-md">
+          <div className={`rounded-3xl p-6 shadow-premium relative overflow-hidden backdrop-blur-md transition-colors border ${
+            themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200/80 text-slate-900'
+          }`}>
             {/* Subtle glow background */}
             <div className="absolute -right-24 -top-24 w-48 h-48 rounded-full bg-accent/5 blur-3xl pointer-events-none" />
             
@@ -623,7 +650,7 @@ export default function CustomerDashboard() {
                       {(clientUser?.name || clientUser?.email || 'C').charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-                      <p className="text-sm font-black text-slate-800 leading-tight">{clientUser?.name || clientUser?.email}</p>
+                      <p className={`text-sm font-black leading-tight ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>{clientUser?.name || clientUser?.email}</p>
                       <div className="flex items-center gap-2 mt-1.5" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
                         <span className="relative flex h-2 w-2 shrink-0">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -635,12 +662,37 @@ export default function CustomerDashboard() {
                       </div>
                     </div>
                   </div>
-                  <button
-                    onClick={logoutClient}
-                    className="text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-rose-500 py-2.5 px-4 rounded-xl hover:bg-rose-50/50 transition-all duration-300 cursor-pointer shrink-0 border border-slate-100 hover:border-rose-100 bg-transparent"
-                  >
-                    {language === 'FR' ? 'Déconnexion' : 'خروج'}
-                  </button>
+
+                  <div className="flex items-center gap-3">
+                    {/* Theme Mode Switcher Pill */}
+                    <button
+                      onClick={toggleThemeMode}
+                      className={`px-3 py-1.5 rounded-xl border text-xs font-mono font-bold transition-all duration-300 flex items-center gap-1.5 cursor-pointer ${
+                        themeMode === 'dark'
+                          ? 'bg-slate-800 border-slate-700 text-amber-400 hover:bg-slate-750'
+                          : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
+                      }`}
+                    >
+                      {themeMode === 'dark' ? (
+                        <>
+                          <Sun className="w-3.5 h-3.5 text-amber-400" />
+                          <span>{language === 'AR' ? 'مضيء' : 'Clair'}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Moon className="w-3.5 h-3.5 text-slate-700" />
+                          <span>{language === 'AR' ? 'داكن' : 'Sombre'}</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={logoutClient}
+                      className="text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-rose-500 py-2 px-3 rounded-xl hover:bg-rose-50/50 transition-all duration-300 cursor-pointer shrink-0 border border-slate-200/50 dark:border-slate-800 bg-transparent"
+                    >
+                      {language === 'FR' ? 'Déconnexion' : 'خروج'}
+                    </button>
+                  </div>
                 </>
               )}
             </div>
@@ -712,7 +764,9 @@ export default function CustomerDashboard() {
         {clientUser && (
           <div 
             ref={tabsRef} 
-            className="t-tabs w-full border border-slate-800 rounded-[22px] p-1.5 select-none bg-slate-900/90 shadow-lg relative"
+            className={`t-tabs w-full rounded-[22px] p-1.5 select-none relative transition-colors shadow-md border ${
+              themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
+            }`}
             style={{ 
               display: 'flex', 
               position: 'relative',
@@ -733,7 +787,9 @@ export default function CustomerDashboard() {
                   aria-selected={isActive}
                   onClick={() => { setActiveTab(tab.id); setSuccessNotice(null); }}
                   className={`t-tab flex-1 py-3 px-2 rounded-xl text-[10px] font-black uppercase tracking-wider text-center cursor-pointer transition-colors duration-300 z-10 border-0 bg-transparent ${
-                    isActive ? 'text-slate-950 font-black' : 'text-slate-400 hover:text-slate-200'
+                    isActive
+                      ? 'text-slate-950 font-black'
+                      : themeMode === 'dark' ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600 hover:text-slate-900'
                   }`}
                   style={{ height: 'auto' }}
                 >
@@ -776,7 +832,9 @@ export default function CustomerDashboard() {
                 orders.map((order) => (
                   <div 
                     key={order.order_id}
-                    className="bg-white border border-slate-200/50 rounded-3xl p-6 shadow-premium space-y-6 relative overflow-hidden"
+                    className={`rounded-3xl p-6 shadow-premium space-y-6 relative overflow-hidden transition-colors border ${
+                      themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200/90 text-slate-900'
+                    }`}
                   >
                     {/* Brand line indicator */}
                     <div className="absolute top-0 right-0 left-0 h-[3px] bg-gradient-to-r from-accent via-gold to-slate-900" />
@@ -855,7 +913,9 @@ export default function CustomerDashboard() {
                     </div>
 
                     {/* Order Details & Summary Accordion */}
-                    <div className="bg-slate-50/50 border border-slate-100 rounded-2xl p-4.5 space-y-4">
+                    <div className={`rounded-2xl p-4.5 space-y-4 border transition-colors ${
+                      themeMode === 'dark' ? 'bg-slate-950/60 border-slate-800/80 text-slate-200' : 'bg-slate-50/50 border-slate-100 text-slate-800'
+                    }`}>
                       <div className="flex items-center gap-2 border-b border-slate-100/50 pb-2">
                         <MapPin className="w-3.5 h-3.5 text-slate-400" />
                         <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase">{language === 'FR' ? 'ADRESSE DE LIVRAISON' : 'عنوان التسليم'}</span>
@@ -1145,7 +1205,9 @@ export default function CustomerDashboard() {
         {activeTab === 'journal' && (
           <div className="space-y-6 animate-fade-in">
             {/* Gamification points info */}
-            <div className="bg-white border border-slate-200/50 rounded-3xl p-5 shadow-sm">
+            <div className={`rounded-3xl p-5 shadow-sm border transition-colors ${
+              themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200/80 text-slate-900'
+            }`}>
               <div 
                 className="flex items-start gap-4 text-left"
                 style={{ textAlign: isRTL ? 'right' : 'left', flexDirection: isRTL ? 'row-reverse' : 'row' }}
@@ -1154,10 +1216,10 @@ export default function CustomerDashboard() {
                   <Sparkles className="w-4.5 h-4.5 text-emerald-600 animate-pulse" />
                 </div>
                 <div className="space-y-1">
-                  <span className="text-[9px] font-black text-emerald-800 uppercase tracking-widest block font-heading">
+                  <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest block font-heading">
                     {language === 'FR' ? 'COMPLÉTEZ VOS ÉTAPES & GAGNEZ DES POINTS' : 'أتمي طقوسكِ اليومية واحصلي على نقاط'}
                   </span>
-                  <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                  <p className={`text-xs font-semibold leading-relaxed ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
                     {language === 'FR'
                       ? 'Cochez vos étapes de soin du matin et du soir, puis validez pour gagner +5 Points Fidélité par rituel chaque jour.'
                       : 'سجلي إكمال خطوات روتين الصباح والمساء يومياً، واحصلي على +5 نقاط إضافية عند تأكيد كل روتين.'}
@@ -1170,7 +1232,9 @@ export default function CustomerDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 select-none">
               
               {/* AM Skincare Planner */}
-              <div className="bg-white border border-slate-200/50 rounded-3xl p-5 shadow-sm flex flex-col justify-between gap-5 text-left" style={{ textAlign: isRTL ? 'right' : 'left' }}>
+              <div className={`rounded-3xl p-5 shadow-sm flex flex-col justify-between gap-5 text-left border transition-colors ${
+                themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200/80 text-slate-900'
+              }`} style={{ textAlign: isRTL ? 'right' : 'left' }}>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-3" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
                     <h3 className="text-xs font-black text-slate-800 font-heading uppercase tracking-wide">
@@ -1638,31 +1702,35 @@ export default function CustomerDashboard() {
         {/* ──────── TAB 4: MES FAVORIS ──────── */}
         {activeTab === 'favoris' && (
           <div className="space-y-6 animate-fade-in">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4" style={{ textAlign: isRTL ? 'right' : 'left' }}>
+            <div className={`flex items-center justify-between border-b pb-4 ${themeMode === 'dark' ? 'border-slate-800' : 'border-slate-200'}`} style={{ textAlign: isRTL ? 'right' : 'left' }}>
               <div>
-                <h3 className="text-xl font-black text-white font-heading uppercase tracking-wide flex items-center gap-2" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                <h3 className={`text-xl font-black font-heading uppercase tracking-wide flex items-center gap-2 ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`} style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
                   <Heart className="w-5 h-5 text-rose-500 fill-rose-500" />
                   <span>{language === 'FR' ? 'Mes Produits Favoris' : 'منتجاتي المفضلة'}</span>
                 </h3>
-                <p className="text-xs text-slate-400 font-semibold mt-1">
+                <p className={`text-xs font-semibold mt-1 ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
                   {language === 'FR' ? 'Retrouvez tous vos soins coup de cœur enregistrés dans votre compte.' : 'جميع المستحضرات التي قمتِ بحفظها في حسابكِ الخاص.'}
                 </p>
               </div>
-              <span className="text-xs font-mono font-bold text-slate-300 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl">
+              <span className={`text-xs font-mono font-bold px-3 py-1.5 rounded-xl border ${
+                themeMode === 'dark' ? 'text-slate-300 bg-slate-900 border-slate-800' : 'text-slate-700 bg-white border-slate-200 shadow-sm'
+              }`}>
                 {wishlist.length} {language === 'FR' ? 'produits' : 'منتجات'}
               </span>
             </div>
 
             {wishlist.length === 0 ? (
-              <div className="text-center py-16 bg-slate-900/60 border border-slate-800/80 rounded-3xl space-y-4 shadow-sm relative overflow-hidden">
+              <div className={`text-center py-16 border rounded-3xl space-y-4 shadow-sm relative overflow-hidden transition-colors ${
+                themeMode === 'dark' ? 'bg-slate-900/60 border-slate-800/80' : 'bg-white border-slate-200/80'
+              }`}>
                 <div className="w-14 h-14 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto text-rose-400">
                   <Heart className="w-6 h-6 animate-pulse" />
                 </div>
                 <div className="space-y-1">
-                  <h4 className="text-sm font-black text-white font-heading uppercase tracking-wide">
+                  <h4 className={`text-sm font-black font-heading uppercase tracking-wide ${themeMode === 'dark' ? 'text-white' : 'text-slate-800'}`}>
                     {language === 'FR' ? 'Votre Liste d\'Envies est vide' : 'قائمتكِ المفضلة فارغة حالياً'}
                   </h4>
-                  <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed font-semibold">
+                  <p className={`text-xs max-w-xs mx-auto leading-relaxed font-semibold ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
                     {language === 'FR'
                       ? 'Parcourez notre catalogue et cliquez sur l\'icône de cœur sur n\'importe quel produit pour le sauvegarder ici.'
                       : 'تصفحي منتجاتنا واضغطي على رمز القلب في أي منتج لحفظه هنا.'}
@@ -1679,7 +1747,9 @@ export default function CustomerDashboard() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {wishlist.map((product) => (
-                  <div key={product.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between space-y-4 relative group hover:border-slate-700 transition shadow-lg">
+                  <div key={product.id} className={`border rounded-2xl p-4 flex flex-col justify-between space-y-4 relative group transition shadow-md ${
+                    themeMode === 'dark' ? 'bg-slate-900 border-slate-800 hover:border-slate-700 text-white' : 'bg-white border-slate-200/90 hover:border-slate-300 text-slate-900'
+                  }`}>
                     <button
                       onClick={() => removeFromWishlist(product.id)}
                       className="absolute top-3 right-3 w-8 h-8 rounded-full bg-slate-950/80 text-slate-400 hover:text-rose-400 border border-slate-800 flex items-center justify-center transition z-10 cursor-pointer"

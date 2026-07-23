@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { 
   Sparkles, ShieldCheck, Lock, Mail, User, Phone, ArrowRight, ArrowLeft,
-  Eye, EyeOff, CheckCircle2, PackageCheck, Award, HeartHandshake, KeyRound, Zap
+  Eye, EyeOff, CheckCircle2, PackageCheck, Award, HeartHandshake, KeyRound, Zap, Sun, Moon
 } from 'lucide-react';
 import { useTranslation } from '@/context/LanguageContext';
 
@@ -25,6 +25,8 @@ interface CustomerAuthPortalProps {
   handleSignup: (e: React.FormEvent) => void;
   onClose?: () => void;
   isModal?: boolean;
+  themeMode?: 'light' | 'dark';
+  onToggleTheme?: () => void;
 }
 
 export const CustomerAuthPortal: React.FC<CustomerAuthPortalProps> = ({
@@ -44,6 +46,8 @@ export const CustomerAuthPortal: React.FC<CustomerAuthPortalProps> = ({
   handleSignup,
   onClose,
   isModal = false,
+  themeMode = 'dark',
+  onToggleTheme,
 }) => {
   const { language, toggleLanguage } = useTranslation();
   const isRTL = language === 'AR';
@@ -84,6 +88,25 @@ export const CustomerAuthPortal: React.FC<CustomerAuthPortalProps> = ({
           </div>
 
           <div className="flex items-center gap-3">
+            {onToggleTheme && (
+              <button
+                onClick={onToggleTheme}
+                className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs font-mono text-slate-300 transition cursor-pointer flex items-center gap-1.5"
+              >
+                {themeMode === 'dark' ? (
+                  <>
+                    <Sun className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Clair</span>
+                  </>
+                ) : (
+                  <>
+                    <Moon className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Sombre</span>
+                  </>
+                )}
+              </button>
+            )}
+
             <button
               onClick={toggleLanguage}
               className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs font-mono text-slate-300 transition cursor-pointer"
