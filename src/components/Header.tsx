@@ -37,7 +37,7 @@ export const Header: React.FC = () => {
   const { cart, addToCart, subtotal, setIsCartOpen } = useCart();
   const { wishlistCount } = useWishlist();
   const { settings } = useSettings();
-  const { points } = useLoyalty();
+  const { points, clientUser } = useLoyalty();
   const {
     setWishlistOpen,
     setDiagnosticOpen,
@@ -310,7 +310,13 @@ export const Header: React.FC = () => {
               convertPrice={convertPrice}
               onCartOpen={() => setIsCartOpen(true)}
               onWalletOpen={() => router.push('/customer')}
-              onWishlistOpen={() => setWishlistOpen(true)}
+              onWishlistOpen={() => {
+                if (!clientUser) {
+                  router.push('/customer');
+                } else {
+                  router.push('/customer?tab=favoris');
+                }
+              }}
               onCompareOpen={() => setIsOpenModal(true)}
             />
           </div>

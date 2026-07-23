@@ -20,7 +20,7 @@ const TRANSLATIONS_DB: Record<Language, Record<string, string>> = {
   AR: ar
 };
 
-const LanguageContext = createContext<LanguageContextProps | undefined>(undefined);
+export const LanguageContext = createContext<LanguageContextProps | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>('FR');

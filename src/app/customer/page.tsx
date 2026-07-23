@@ -6,14 +6,16 @@ import { useLoyalty, LoyaltyTier } from '@/context/LoyaltyContext';
 import { useSettings } from '@/context/SettingsContext';
 import { supabase } from '@/lib/supabase';
 import { 
-  Search, ShoppingBag, ArrowLeft, Clock, MapPin, 
+  Search, ShoppingBag, ArrowLeft, ArrowRight, Clock, MapPin, 
   Award, Coins, Ticket, Check, Copy, Calendar, Plus, 
   Smile, Meh, Frown, Sparkles, BookOpen, Camera, X,
-  Image as ImageIcon
+  Image as ImageIcon, Heart, Trash2
 } from 'lucide-react';
 import { Product } from '@/lib/data';
 import Link from 'next/link';
 import { useUi } from '@/context/UiContext';
+import { useWishlist } from '@/context/WishlistContext';
+import { useCart } from '@/context/CartContext';
 import { CustomerAuthPortal } from '@/components/CustomerAuthPortal';
 import { ShopShell } from '@/components/ShopShell';
 
@@ -98,8 +100,21 @@ export default function CustomerDashboard() {
   } = useLoyalty();
   const { showToast } = useUi();
 
+  const { wishlist, removeFromWishlist } = useWishlist();
+  const { addToCart } = useCart();
+
   // Tab State
-  const [activeTab, setActiveTab] = useState<'suivi' | 'club' | 'journal'>('suivi');
+  const [activeTab, setActiveTab] = useState<'suivi' | 'club' | 'journal' | 'favoris'>('suivi');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab');
+      if (tabParam === 'favoris') {
+        setActiveTab('favoris');
+      }
+    }
+  }, []);
 
   // Tab Bar Sliding Pill logic
   const [pillStyle, setPillStyle] = useState<{ transform: string; width: string }>({ transform: 'translateX(0)', width: '0px' });
@@ -692,6 +707,42 @@ export default function CustomerDashboard() {
             </div>
           </div>
         </div>
+
+        {/* ── Client Portal Navigation Tabs (Only when logged in) ── */}
+        {clientUser && (
+          <div 
+            ref={tabsRef} 
+            className="t-tabs w-full border border-slate-800 rounded-[22px] p-1.5 select-none bg-slate-900/90 shadow-lg relative"
+            style={{ 
+              display: 'flex', 
+              position: 'relative',
+              padding: '6px'
+            }}
+          >
+            <div className="t-tabs-pill bg-emerald-500 rounded-xl" style={{ ...pillStyle, height: 'auto', top: '6px', bottom: '6px' }} />
+            {([
+              { id: 'suivi', labelFr: '📦 Suivi Colis', labelAr: '📦 تتبع الطلب' },
+              { id: 'club', labelFr: '👑 Club Para VIP', labelAr: '👑 نادي الجمال' },
+              { id: 'journal', labelFr: '📓 Agenda & Soins', labelAr: '📓 المفكرة' },
+              { id: 'favoris', labelFr: '❤️ Mes Favoris', labelAr: '❤️ المفضلة' }
+            ] as const).map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  aria-selected={isActive}
+                  onClick={() => { setActiveTab(tab.id); setSuccessNotice(null); }}
+                  className={`t-tab flex-1 py-3 px-2 rounded-xl text-[10px] font-black uppercase tracking-wider text-center cursor-pointer transition-colors duration-300 z-10 border-0 bg-transparent ${
+                    isActive ? 'text-slate-950 font-black' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                  style={{ height: 'auto' }}
+                >
+                  {language === 'FR' ? tab.labelFr : tab.labelAr}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* ──────── TAB 1: SUIVI DE COMMANDE ──────── */}
         {activeTab === 'suivi' && (
@@ -1581,6 +1632,96 @@ export default function CustomerDashboard() {
                   : "اسحبي المنزلق لمقارنة التطور البصري لحالة بشرتكِ بين الصورتين."}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ──────── TAB 4: MES FAVORIS ──────── */}
+        {activeTab === 'favoris' && (
+          <div className="space-y-6 animate-fade-in">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4" style={{ textAlign: isRTL ? 'right' : 'left' }}>
+              <div>
+                <h3 className="text-xl font-black text-white font-heading uppercase tracking-wide flex items-center gap-2" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                  <Heart className="w-5 h-5 text-rose-500 fill-rose-500" />
+                  <span>{language === 'FR' ? 'Mes Produits Favoris' : 'منتجاتي المفضلة'}</span>
+                </h3>
+                <p className="text-xs text-slate-400 font-semibold mt-1">
+                  {language === 'FR' ? 'Retrouvez tous vos soins coup de cœur enregistrés dans votre compte.' : 'جميع المستحضرات التي قمتِ بحفظها في حسابكِ الخاص.'}
+                </p>
+              </div>
+              <span className="text-xs font-mono font-bold text-slate-300 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl">
+                {wishlist.length} {language === 'FR' ? 'produits' : 'منتجات'}
+              </span>
+            </div>
+
+            {wishlist.length === 0 ? (
+              <div className="text-center py-16 bg-slate-900/60 border border-slate-800/80 rounded-3xl space-y-4 shadow-sm relative overflow-hidden">
+                <div className="w-14 h-14 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto text-rose-400">
+                  <Heart className="w-6 h-6 animate-pulse" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-black text-white font-heading uppercase tracking-wide">
+                    {language === 'FR' ? 'Votre Liste d\'Envies est vide' : 'قائمتكِ المفضلة فارغة حالياً'}
+                  </h4>
+                  <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed font-semibold">
+                    {language === 'FR'
+                      ? 'Parcourez notre catalogue et cliquez sur l\'icône de cœur sur n\'importe quel produit pour le sauvegarder ici.'
+                      : 'تصفحي منتجاتنا واضغطي على رمز القلب في أي منتج لحفظه هنا.'}
+                  </p>
+                </div>
+                <Link
+                  href="/products"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xs uppercase tracking-widest rounded-xl transition shadow-md cursor-pointer border-0"
+                >
+                  <span>{language === 'FR' ? 'Découvrir nos soins' : 'استكشاف المنتجات'}</span>
+                  <ArrowRight className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
+                </Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {wishlist.map((product) => (
+                  <div key={product.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between space-y-4 relative group hover:border-slate-700 transition shadow-lg">
+                    <button
+                      onClick={() => removeFromWishlist(product.id)}
+                      className="absolute top-3 right-3 w-8 h-8 rounded-full bg-slate-950/80 text-slate-400 hover:text-rose-400 border border-slate-800 flex items-center justify-center transition z-10 cursor-pointer"
+                      title={language === 'FR' ? 'Retirer' : 'حذف'}
+                    >
+                      <Trash2 className="w-4 h-4 text-slate-400 hover:text-rose-400" />
+                    </button>
+
+                    <div className="space-y-3">
+                      <div className="relative w-full h-44 rounded-xl overflow-hidden bg-slate-950 border border-slate-800/80">
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                      <div className="text-left" style={{ textAlign: isRTL ? 'right' : 'left' }}>
+                        <span className="text-[9px] font-mono text-emerald-400 uppercase tracking-widest block">
+                          {product.category}
+                        </span>
+                        <h4 className="text-xs font-bold text-white leading-snug line-clamp-2 mt-0.5">
+                          {product.name}
+                        </h4>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-3 border-t border-slate-800/80" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                      <span className="text-sm font-black text-white">
+                        {product.price} MAD
+                      </span>
+                      <button
+                        onClick={() => addToCart(product, 1)}
+                        className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-[10px] font-black uppercase tracking-wider rounded-xl transition flex items-center gap-1.5 cursor-pointer border-0 shadow-sm"
+                      >
+                        <ShoppingBag className="w-3.5 h-3.5" />
+                        <span>{language === 'FR' ? 'Ajouter' : 'إضافة'}</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

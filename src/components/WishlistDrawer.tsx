@@ -1,9 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useContext } from 'react';
+import { useRouter } from 'next/navigation';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCart } from '@/context/CartContext';
 import { useTranslation } from '@/context/LanguageContext';
+import { LoyaltyContext } from '@/context/LoyaltyContext';
 import { Product } from '@/lib/data';
 import { X, Heart, ShoppingCart, Trash2 } from 'lucide-react';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
@@ -32,12 +34,22 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
   onClose,
   onSelectProduct,
 }) => {
+  const router = useRouter();
   const { language } = useTranslation();
+  const loyaltyContext = useContext(LoyaltyContext);
+  const clientUser = loyaltyContext?.clientUser ?? null;
   const { wishlist, removeFromWishlist, clearWishlist } = useWishlist();
   const { addToCart } = useCart();
   const { triggerCartJiggle } = useUi();
 
   const isRTL = language === 'AR';
+
+  useEffect(() => {
+    if (isOpen && !clientUser) {
+      onClose();
+      router.push('/customer');
+    }
+  }, [isOpen, clientUser, onClose, router]);
 
   const handleAddToCart = (product: Product) => {
     addToCart(product, 1);

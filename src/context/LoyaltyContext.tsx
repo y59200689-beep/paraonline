@@ -49,7 +49,7 @@ interface LoyaltyContextProps {
   fetchPlannerDates: () => Promise<{ amDates: string[]; pmDates: string[] }>;
 }
 
-const LoyaltyContext = createContext<LoyaltyContextProps | undefined>(undefined);
+export const LoyaltyContext = createContext<LoyaltyContextProps | undefined>(undefined);
 
 function isSupabaseConfigured() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
