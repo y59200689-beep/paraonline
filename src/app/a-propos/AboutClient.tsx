@@ -94,8 +94,8 @@ export function AboutClient() {
                   value: '24/48h',
                   labelFr: 'Livraison Express COD',
                   labelAr: 'توصيل سريع وسري',
-                  descFr: 'Dans les 12 régions',
-                  descAr: 'في 12 جهة بالمغرب',
+                  descFr: 'Partout au Maroc',
+                  descAr: 'في جميع مدن المغرب',
                   icon: Truck,
                   color: 'text-cyan-600'
                 },
@@ -306,7 +306,7 @@ export function AboutClient() {
               <div className="lg:col-span-7 space-y-6" style={{ textAlign: isRTL ? 'right' : 'left' }}>
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-mono font-bold">
                   <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>{language === 'AR' ? 'التغطية الوطنية الشاملة' : 'PRESENCE DANS 12 REGIONS'}</span>
+                  <span>{language === 'AR' ? 'التغطية الوطنية الشاملة' : 'LIVRAISON PARTOUT AU MAROC'}</span>
                 </div>
                 <h3 className="text-2xl sm:text-4xl font-black text-slate-900 font-heading tracking-tight leading-tight">
                   {language === 'AR'
@@ -315,8 +315,8 @@ export function AboutClient() {
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                   {language === 'AR'
-                    ? 'نعتمد شباك توزيع سريع محكم التغليف ومغطى ضد الصدمات للوصول إلى كبريات المدن (الرباط، فاس، طنجة، مراكش، أكادير، وجدة) والقرى النائية بنفس معايير السرعة والأمان.'
-                    : 'Notre réseau logistique dessert les 12 régions du Maroc avec des emballages isothermes certifiés. De Casablanca à Laâyoune, vos soins arrivent scellés et intacts sous 24 à 48 heures.'}
+                    ? 'نعتمد شباك توزيع سريع محكم التغليف ومغطى ضد الصدمات للوصول إلى كافة مدن المغرب (الرباط، فاس، طنجة، مراكش، أكادير، وجدة والقرى المجاورة) بنفس معايير السرعة والأمان.'
+                    : 'Notre réseau logistique dessert l\'ensemble des villes du Maroc avec des emballages isothermes certifiés. De Casablanca à Laâyoune, vos soins arrivent scellés et intacts sous 24 à 48 heures.'}
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-2">
                   {[

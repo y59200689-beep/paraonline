@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'À Propos de Nous — Para Officinal S.A',
     description:
-      'Pionnier de la parapharmacie clinique au Maroc. Produits 100% authentiques, dermo-diagnostic par IA et livraison express dans les 12 régions du Royaume.',
+      'Pionnier de la parapharmacie clinique au Maroc. Produits 100% authentiques, dermo-diagnostic par IA et livraison express partout au Maroc.',
     url: `${SITE_URL}/a-propos`,
     type: 'website',
     locale: 'fr_MA',
