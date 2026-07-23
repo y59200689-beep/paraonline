@@ -7,7 +7,6 @@ import { useCart } from '@/context/CartContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { Product } from '@/lib/data';
 import { useSettings } from '@/context/SettingsContext';
-import { useCompare } from '@/context/CompareContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useLoyalty } from '@/context/LoyaltyContext';
 import { BeautyWalletDrawer } from './BeautyWalletDrawer';
@@ -33,7 +32,6 @@ export const Header: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
   const { t, language, toggleLanguage } = useTranslation();
-  const { compareProducts, setIsOpenModal } = useCompare();
   const { cart, addToCart, subtotal, setIsCartOpen } = useCart();
   const { wishlistCount } = useWishlist();
   const { settings } = useSettings();
@@ -302,7 +300,6 @@ export const Header: React.FC = () => {
               isBumping={isBumping}
               isJiggling={isJiggling}
               wishlistCount={wishlistCount}
-              compareCount={compareProducts.length}
               points={points}
               ratesLoading={ratesLoading}
               convertPrice={convertPrice}
@@ -315,7 +312,6 @@ export const Header: React.FC = () => {
                   router.push('/customer?tab=favoris');
                 }
               }}
-              onCompareOpen={() => setIsOpenModal(true)}
             />
           </div>
 

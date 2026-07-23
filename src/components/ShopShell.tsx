@@ -28,7 +28,6 @@ const SkinDiagnostic = dynamic(() => import('./SkinDiagnostic').then(m => m.Skin
 const ScratchCard = dynamic(() => import('./ScratchCard').then(m => m.ScratchCard), { ssr: false });
 const QuickViewModal = dynamic(() => import('./QuickViewModal').then(m => m.QuickViewModal), { ssr: false });
 const RoutineBundleDrawer = dynamic(() => import('./RoutineBundleDrawer').then(m => m.RoutineBundleDrawer), { ssr: false });
-const CompareModal = dynamic(() => import('./CompareModal').then(m => m.CompareModal), { ssr: false });
 
 interface ShopShellProps {
   children: React.ReactNode;
@@ -478,12 +477,6 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
                     </button>
                   </li>
                   <li>
-                    <Link href="/comparateur" className="hover:text-white transition-colors duration-200 flex items-center gap-2">
-                      <Scale className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                      <span>{language === 'AR' ? 'مقارن المستحضرات الطبية' : 'Comparateur Clinique'}</span>
-                    </Link>
-                  </li>
-                  <li>
                     <Link href="/a-propos" className="hover:text-white transition-colors duration-200 flex items-center gap-2">
                       <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                       <span>{language === 'AR' ? 'من نحن وعن الصيدلية' : 'À propos de nous'}</span>
@@ -690,7 +683,6 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
       
       <RoutineBundleDrawer isOpen={isBundleDrawerOpen} onClose={() => setIsBundleDrawerOpen(false)} />
 
-      <CompareModal />
       <CartBubbleCoordinator />
       <OrderSuccessModal />
 

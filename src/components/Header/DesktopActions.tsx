@@ -1,10 +1,9 @@
 'use client';
 
 import React from 'react';
-import { ShoppingBag, Heart, Scale, Coins } from 'lucide-react';
+import { ShoppingBag, User, Heart, Coins } from 'lucide-react';
 import { useCurrency } from '@/context/CurrencyContext';
 import Link from 'next/link';
-import { User } from 'lucide-react';
 
 interface DesktopActionsProps {
   language: string;
@@ -14,14 +13,12 @@ interface DesktopActionsProps {
   isBumping: boolean;
   isJiggling: boolean;
   wishlistCount: number;
-  compareCount: number;
   points: number;
   ratesLoading: boolean;
   convertPrice: (price: number) => string;
   onCartOpen: () => void;
   onWalletOpen: () => void;
   onWishlistOpen: () => void;
-  onCompareOpen: () => void;
 }
 
 export const DesktopActions: React.FC<DesktopActionsProps> = ({
@@ -32,14 +29,12 @@ export const DesktopActions: React.FC<DesktopActionsProps> = ({
   isBumping,
   isJiggling,
   wishlistCount,
-  compareCount,
   points,
   ratesLoading,
   convertPrice,
   onCartOpen,
   onWalletOpen,
   onWishlistOpen,
-  onCompareOpen,
 }) => {
   return (
     <div className="flex items-center justify-end gap-6">
@@ -96,25 +91,6 @@ export const DesktopActions: React.FC<DesktopActionsProps> = ({
         </div>
         <span className="text-[9px] font-semibold uppercase tracking-wider">
           {language === 'FR' ? 'Favoris' : 'المفضلة'}
-        </span>
-      </button>
-
-      {/* Compare */}
-      <button
-        onClick={onCompareOpen}
-        aria-label={language === 'FR' ? 'Comparateur Clinique' : 'مقارنة المنتجات'}
-        className={`relative flex flex-col items-center gap-1.5 transition-all cursor-pointer group ${
-          compareCount > 0 ? 'text-primary' : 'text-slate-400 hover:text-primary'
-        }`}
-      >
-        <div className="relative">
-          <Scale className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
-          <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-accent text-white text-[8px] font-black rounded-full flex items-center justify-center border-2 border-white animate-[pulse_3s_infinite]">
-            {compareCount}
-          </span>
-        </div>
-        <span className="text-[9px] font-semibold uppercase tracking-wider">
-          {language === 'FR' ? 'Comparer' : 'مقارنة'}
         </span>
       </button>
 

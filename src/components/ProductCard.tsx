@@ -5,10 +5,9 @@ import { Product } from '@/lib/data';
 import { useCart } from '@/context/CartContext';
 import { useTranslation } from '@/context/LanguageContext';
 import { useCurrency } from '@/context/CurrencyContext';
-import { Star, ShoppingCart, Eye, Heart, Sparkles, Scale } from 'lucide-react';
+import { Star, ShoppingCart, Eye, Heart, Sparkles } from 'lucide-react';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { useAmPm } from '@/context/AmPmContext';
-import { useCompare } from '@/context/CompareContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
@@ -72,8 +71,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const { convertPrice } = useCurrency();
   const { settings } = useSettings();
   const lowStockThreshold = settings.lowStockThreshold || 5;
-  const { toggleCompare, isInCompare } = useCompare();
-  const isCompared = isInCompare(product.id);
   const { toggleWishlist, isInWishlist } = useWishlist();
   const isFavorite = isInWishlist(product.id);
   const { amPmState } = useAmPm();
@@ -359,17 +356,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             >
               <Eye className="w-3.5 h-3.5 text-white" />
               <span className="text-white">{language === 'FR' ? 'Aperçu' : 'عرض'}</span>
-            </button>
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                toggleCompare(product);
-              }}
-              className="px-4 py-2 bg-slate-900/90 backdrop-blur-sm hover:bg-slate-800 text-white rounded-lg shadow-md transition-all duration-300 cursor-pointer flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.1em] select-none"
-            >
-              <Scale className={`w-3.5 h-3.5 ${isCompared ? 'text-amber-500' : 'text-white'}`} />
-              <span className="text-white">{language === 'FR' ? 'Comparer' : 'مقارنة'}</span>
             </button>
           </div>
         </div>
