@@ -66,8 +66,8 @@ export const DesktopActions: React.FC<DesktopActionsProps> = ({
       >
         <div className="relative">
           <Coins className="w-5 h-5 group-hover:scale-110 transition-transform duration-200 text-slate-400 group-hover:text-primary" />
-          <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-accent text-white text-[8px] font-black rounded-full flex items-center justify-center border-2 border-white">
-            {points}
+          <span className="absolute -top-2 -right-2.5 min-w-[18px] h-[18px] px-1.5 bg-accent text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-xs whitespace-nowrap leading-none tracking-tight">
+            {points > 9999 ? '9999+' : points}
           </span>
         </div>
         <span className="text-[9px] font-semibold uppercase tracking-wider">
@@ -85,8 +85,8 @@ export const DesktopActions: React.FC<DesktopActionsProps> = ({
       >
         <div className="relative">
           <Heart className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
-          <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-accent text-white text-[8px] font-black rounded-full flex items-center justify-center border-2 border-white">
-            {wishlistCount > 0 ? wishlistCount : 0}
+          <span className="absolute -top-2 -right-2.5 min-w-[18px] h-[18px] px-1.5 bg-accent text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-xs whitespace-nowrap leading-none tracking-tight">
+            {wishlistCount > 9999 ? '9999+' : (wishlistCount > 0 ? wishlistCount : 0)}
           </span>
         </div>
         <span className="text-[9px] font-semibold uppercase tracking-wider">

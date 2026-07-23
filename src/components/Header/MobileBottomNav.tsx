@@ -70,12 +70,12 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         aria-label={language === 'FR' ? 'Mon Portefeuille Beauté' : 'محفظتي'}
         className="flex flex-col items-center gap-1 text-[10px] font-bold text-primary-dark relative cursor-pointer active:scale-95"
       >
-        <Coins className="w-4.5 h-4.5 text-slate-500" />
-        {points > 0 && (
-          <span className="absolute -top-1 right-2 w-3.5 h-3.5 bg-accent text-white text-[7px] font-black rounded-full flex items-center justify-center">
-            {points}
+        <div className="relative">
+          <Coins className="w-4.5 h-4.5 text-slate-500" />
+          <span className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] px-1 bg-accent text-white text-[8px] font-black rounded-full flex items-center justify-center border border-white shadow-xs whitespace-nowrap leading-none tracking-tight">
+            {points > 9999 ? '9999+' : points}
           </span>
-        )}
+        </div>
         <span>{language === 'FR' ? 'Wallet' : 'محفظة'}</span>
       </button>
 

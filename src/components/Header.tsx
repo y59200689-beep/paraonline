@@ -300,7 +300,7 @@ export const Header: React.FC = () => {
               isBumping={isBumping}
               isJiggling={isJiggling}
               wishlistCount={wishlistCount}
-              points={points}
+              points={clientUser ? points : 0}
               ratesLoading={ratesLoading}
               convertPrice={convertPrice}
               onCartOpen={() => setIsCartOpen(true)}
