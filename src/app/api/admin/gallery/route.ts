@@ -19,11 +19,15 @@ export interface GalleryImage {
 
 export const IMAGE_MANIFEST: GalleryImage[] = [
   // ── Heroes ──────────────────────────────────────────────────────────────
-  { key: 'hero_hydra_essence',     label: 'Hero — Hydra Essence',        group: 'heroes',     filePath: 'images/hero_hydra_essence.webp',     url: '/images/hero_hydra_essence.webp' },
-  { key: 'hero_rose_cream',        label: 'Hero — Rose Cream',           group: 'heroes',     filePath: 'images/hero_rose_cream.webp',         url: '/images/hero_rose_cream.webp' },
-  { key: 'hero_serum_dropper',     label: 'Hero — Serum Dropper',        group: 'heroes',     filePath: 'images/hero_serum_dropper.webp',      url: '/images/hero_serum_dropper.webp' },
-  { key: 'hero_skincare_clinic',   label: 'Hero — Skincare Clinic',      group: 'heroes',     filePath: 'images/hero_skincare_clinic.webp',    url: '/images/hero_skincare_clinic.webp' },
-  { key: 'lrp_hero_studio',        label: 'Hero — LRP Studio',           group: 'heroes',     filePath: 'images/lrp_hero_studio.png',          url: '/images/lrp_hero_studio.png' },
+  { key: 'hero_bestsellers',       label: 'Hero 1 — Best-Sellers (Meilleures Ventes)', group: 'heroes', filePath: 'images/hero_bestsellers.webp', url: '/images/hero_bestsellers.webp' },
+  { key: 'hero_summersale',        label: 'Hero 2 — Summer Sale (Offres d\'Été)',     group: 'heroes', filePath: 'images/hero_summersale.webp',  url: '/images/hero_summersale.webp' },
+  { key: 'hero_weeklypromo',       label: 'Hero 3 — Promotion De La Semaine',        group: 'heroes', filePath: 'images/hero_weeklypromo_v2.webp', url: '/images/hero_weeklypromo_v2.webp' },
+  { key: 'hero_newarrivals',       label: 'Hero 4 — Nouveaux Produits',              group: 'heroes', filePath: 'images/hero_newarrivals.webp', url: '/images/hero_newarrivals.webp' },
+  { key: 'hero_hydra_essence',     label: 'Hero — Hydra Essence (Legacy)',           group: 'heroes', filePath: 'images/hero_hydra_essence.webp', url: '/images/hero_hydra_essence.webp' },
+  { key: 'hero_rose_cream',        label: 'Hero — Rose Cream (Legacy)',              group: 'heroes', filePath: 'images/hero_rose_cream.webp',   url: '/images/hero_rose_cream.webp' },
+  { key: 'hero_serum_dropper',     label: 'Hero — Serum Dropper (Legacy)',           group: 'heroes', filePath: 'images/hero_serum_dropper.webp', url: '/images/hero_serum_dropper.webp' },
+  { key: 'hero_skincare_clinic',   label: 'Hero — Skincare Clinic (Legacy)',          group: 'heroes', filePath: 'images/hero_skincare_clinic.webp', url: '/images/hero_skincare_clinic.webp' },
+  { key: 'lrp_hero_studio',        label: 'Hero — LRP Studio',                       group: 'heroes', filePath: 'images/lrp_hero_studio.png',    url: '/images/lrp_hero_studio.png' },
 
   // ── Concerns ─────────────────────────────────────────────────────────────
   { key: 'concern_acne',           label: 'Problème — Acné',             group: 'concerns',   filePath: 'images/concern_acne.webp',            url: '/images/concern_acne.webp' },
