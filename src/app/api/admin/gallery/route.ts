@@ -6,7 +6,7 @@ import sharp from 'sharp';
 
 // ─── Image manifest ────────────────────────────────────────────────────────
 // Maps a stable key → relative path within /public and display metadata.
-// Only files listed here can be replaced. Every image is optimized as WebP.
+// Only active files used across the store are listed. Every image is WebP.
 
 export interface GalleryImage {
   key: string;
@@ -28,10 +28,6 @@ export const IMAGE_MANIFEST: GalleryImage[] = [
   { key: 'hero_summersale',        label: 'Hero 2 — Summer Sale (Offres d\'Été)',     group: 'heroes', filePath: 'images/hero_summersale.webp',  url: '/images/hero_summersale.webp' },
   { key: 'hero_weeklypromo',       label: 'Hero 3 — Promotion De La Semaine',        group: 'heroes', filePath: 'images/hero_weeklypromo_v2.webp', url: '/images/hero_weeklypromo_v2.webp' },
   { key: 'hero_newarrivals',       label: 'Hero 4 — Nouveaux Produits',              group: 'heroes', filePath: 'images/hero_newarrivals.webp', url: '/images/hero_newarrivals.webp' },
-  { key: 'hero_hydra_essence',     label: 'Hero — Hydra Essence (Legacy)',           group: 'heroes', filePath: 'images/hero_hydra_essence.webp', url: '/images/hero_hydra_essence.webp' },
-  { key: 'hero_rose_cream',        label: 'Hero — Rose Cream (Legacy)',              group: 'heroes', filePath: 'images/hero_rose_cream.webp',   url: '/images/hero_rose_cream.webp' },
-  { key: 'hero_serum_dropper',     label: 'Hero — Serum Dropper (Legacy)',           group: 'heroes', filePath: 'images/hero_serum_dropper.webp', url: '/images/hero_serum_dropper.webp' },
-  { key: 'hero_skincare_clinic',   label: 'Hero — Skincare Clinic (Legacy)',          group: 'heroes', filePath: 'images/hero_skincare_clinic.webp', url: '/images/hero_skincare_clinic.webp' },
   { key: 'lrp_hero_studio',        label: 'Hero — LRP Studio',                       group: 'heroes', filePath: 'images/lrp_hero_studio.webp',   url: '/images/lrp_hero_studio.webp' },
 
   // ── Concerns ─────────────────────────────────────────────────────────────
