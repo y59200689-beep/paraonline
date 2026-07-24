@@ -16,6 +16,10 @@ export interface GalleryImage {
   filePath: string;
   /** URL path served by Next.js */
   url: string;
+  sizeKb?: number;
+  width?: number;
+  height?: number;
+  dimensions?: string;
 }
 
 export const IMAGE_MANIFEST: GalleryImage[] = [
@@ -95,32 +99,55 @@ function detectMime(buf: Buffer): string | null {
   return null;
 }
 
-function getFileSizeKb(filePath: string): number {
+interface ImageFileInfo {
+  sizeKb: number;
+  width: number;
+  height: number;
+  dimensions: string;
+}
+
+async function getImageFileInfo(filePath: string): Promise<ImageFileInfo> {
   try {
     const abs = path.join(process.cwd(), 'public', filePath);
+    if (!fs.existsSync(abs)) return { sizeKb: 0, width: 0, height: 0, dimensions: '0 × 0 px' };
     const stat = fs.statSync(abs);
-    return Math.round(stat.size / 1024);
+    const sizeKb = Math.round(stat.size / 1024);
+    
+    const meta = await sharp(abs).metadata();
+    const width = meta.width || 0;
+    const height = meta.height || 0;
+    const dimensions = width && height ? `${width} × ${height} px` : '0 × 0 px';
+
+    return { sizeKb, width, height, dimensions };
   } catch {
-    return 0;
+    return { sizeKb: 0, width: 0, height: 0, dimensions: '0 × 0 px' };
   }
 }
 
-// ─── GET — return manifest with live file sizes ──────────────────────────────
+// ─── GET — return manifest with live file sizes & dimensions ──────────────────
 export async function GET() {
   const session = await verifyAdminSession();
   if (!session) {
     return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
   }
 
-  const images = IMAGE_MANIFEST.map(img => ({
-    ...img,
-    sizeKb: getFileSizeKb(img.filePath),
-  }));
+  const images = await Promise.all(
+    IMAGE_MANIFEST.map(async (img) => {
+      const info = await getImageFileInfo(img.filePath);
+      return {
+        ...img,
+        sizeKb: info.sizeKb,
+        width: info.width,
+        height: info.height,
+        dimensions: info.dimensions,
+      };
+    })
+  );
 
   return NextResponse.json({ success: true, images });
 }
 
-// ─── POST — replace a file by key with automatic WebP conversion ───────────
+// ─── POST — replace a file by key with automatic WebP conversion & dimension extraction ───
 export async function POST(request: Request) {
   try {
     const session = await verifyAdminSession();
@@ -175,10 +202,23 @@ export async function POST(request: Request) {
     fs.mkdirSync(path.dirname(absPath), { recursive: true });
     fs.writeFileSync(absPath, uploadBuffer);
 
+    // Extract metadata of saved WebP image
+    let width = 0;
+    let height = 0;
+    try {
+      const meta = await sharp(uploadBuffer).metadata();
+      width = meta.width || 0;
+      height = meta.height || 0;
+    } catch {}
+    const dimensions = width && height ? `${width} × ${height} px` : '0 × 0 px';
+
     return NextResponse.json({
       success: true,
       url: entry.url,
       sizeKb: Math.round(uploadBuffer.length / 1024),
+      width,
+      height,
+      dimensions,
     });
   } catch (err: any) {
     console.error('[gallery] replace error:', err);

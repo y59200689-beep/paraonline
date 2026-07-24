@@ -13,6 +13,7 @@ import {
   Filter,
   ChevronDown,
   Layers,
+  Maximize2,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -26,6 +27,9 @@ interface GalleryImage {
   filePath: string;
   url: string;
   sizeKb: number;
+  width?: number;
+  height?: number;
+  dimensions?: string;
 }
 
 interface PendingUpload {
@@ -179,6 +183,22 @@ function ImageCard({ image, isDark, pending, uploading, onPick, onCancelPending 
           </div>
         )}
 
+        {/* Pixel Dimensions Badge */}
+        {image.dimensions && !hasPending && (
+          <div
+            className="absolute bottom-2 left-2 px-2 py-0.5 rounded-lg font-mono text-[9.5px] font-bold flex items-center gap-1.5 shadow-sm"
+            style={{
+              background: isDark ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.92)',
+              backdropFilter: 'blur(8px)',
+              color: isDark ? '#38bdf8' : '#0284c7',
+              border: isDark ? '1px solid rgba(56, 189, 248, 0.3)' : '1px solid rgba(2, 132, 199, 0.25)',
+            }}
+          >
+            <Maximize2 className="w-2.5 h-2.5" />
+            <span>{image.dimensions}</span>
+          </div>
+        )}
+
         {/* Format chip */}
         <div
           className="absolute top-2 right-2 px-2 py-0.5 rounded-full font-mono text-[9px] font-bold"
@@ -195,7 +215,7 @@ function ImageCard({ image, isDark, pending, uploading, onPick, onCancelPending 
         {/* Hover overlay — Replace button */}
         {!hasPending && (
           <div
-            className="absolute inset-0 flex items-center justify-center transition-all duration-250"
+            className="absolute inset-0 flex items-center justify-center transition-all duration-250 z-10"
             style={{
               background: 'rgba(0,0,0,0.55)',
               backdropFilter: 'blur(4px)',
@@ -222,7 +242,7 @@ function ImageCard({ image, isDark, pending, uploading, onPick, onCancelPending 
         {hasPending && (
           <button
             onClick={() => onCancelPending(image.key)}
-            className="absolute top-2 right-10 p-1 rounded-full cursor-pointer transition-all duration-200 hover:scale-110"
+            className="absolute top-2 right-10 p-1 rounded-full cursor-pointer transition-all duration-200 hover:scale-110 z-20"
             style={{
               background: 'rgba(244,63,94,0.85)',
               backdropFilter: 'blur(8px)',
@@ -246,11 +266,28 @@ function ImageCard({ image, isDark, pending, uploading, onPick, onCancelPending 
           <GroupBadge group={image.group} />
         </div>
 
-        <div className="flex items-center gap-2 mt-0.5">
+        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap text-[9.5px] font-mono">
+          {/* Dimensions */}
+          {image.dimensions && (
+            <>
+              <span
+                className="font-bold flex items-center gap-1"
+                style={{ color: isDark ? '#38bdf8' : '#0284c7' }}
+              >
+                <Maximize2 className="w-2.5 h-2.5 inline" />
+                {image.dimensions}
+              </span>
+              <span
+                className="w-0.5 h-0.5 rounded-full"
+                style={{ background: isDark ? '#334155' : '#cbd5e1' }}
+              />
+            </>
+          )}
+
           {/* File size */}
           <span
-            className="text-[9.5px] font-semibold font-mono"
-            style={{ color: isDark ? '#475569' : '#94a3b8' }}
+            className="font-semibold"
+            style={{ color: isDark ? '#94a3b8' : '#64748b' }}
           >
             {hasPending
               ? formatKb(Math.round(pending!.file.size / 1024))
@@ -262,8 +299,8 @@ function ImageCard({ image, isDark, pending, uploading, onPick, onCancelPending 
           />
           {/* File path */}
           <span
-            className="text-[9.5px] font-mono truncate"
-            style={{ color: isDark ? '#334155' : '#cbd5e1' }}
+            className="truncate max-w-[110px]"
+            style={{ color: isDark ? '#475569' : '#cbd5e1' }}
           >
             {image.filePath}
           </span>
@@ -503,9 +540,15 @@ export default function GalleryPage() {
 
         if (data.success) {
           successCount++;
-          // Update size in local state
+          // Update size and dimensions in local state
           setImages(prev => prev.map(img =>
-            img.key === entry.key ? { ...img, sizeKb: data.sizeKb } : img
+            img.key === entry.key ? {
+              ...img,
+              sizeKb: data.sizeKb,
+              width: data.width,
+              height: data.height,
+              dimensions: data.dimensions,
+            } : img
           ));
         } else {
           failCount++;
