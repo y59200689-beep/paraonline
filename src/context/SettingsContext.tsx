@@ -389,7 +389,7 @@ export const DEFAULT_SETTINGS: Settings = {
       descAr: "استفيدي من خصومات حصرية أسبوعياً على مجموعة مختارة من مستحضرات التجميل.",
       ctaFr: "Voir les Promos",
       ctaAr: "شاهد العروض",
-      bgImage: "/images/hero_weeklypromo.png",
+      bgImage: "/images/hero_weeklypromo_v2.png",
       linkType: "category",
       linkValue: "offers"
     },

@@ -108,7 +108,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
       title_ar: customBanners ? customBanners[2].titleAr : 'عروض الأسبوع السريعة',
       cta_fr: customBanners ? customBanners[2].ctaFr : 'Voir les Promos',
       cta_ar: customBanners ? customBanners[2].ctaAr : 'شاهد العروض',
-      bgImage: getOptimizedImageUrl(customBanners ? customBanners[2].bgImage : '/images/hero_weeklypromo.png'),
+      bgImage: getOptimizedImageUrl(customBanners ? customBanners[2].bgImage : '/images/hero_weeklypromo_v2.png'),
       action: customBanners ? getBannerAction(customBanners[2]) : () => onSelectCategory('offers'),
     },
     card4: {
