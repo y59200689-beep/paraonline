@@ -392,15 +392,17 @@ export const DEFAULT_SETTINGS: Settings = {
       linkValue: "visage"
     },
     {
-      tagFr: "HYDRATATION INTENSE",
-      tagAr: "ترطيب مكثف",
-      titleFr: "Glow Acide Hyaluronique",
-      titleAr: "توهج حمض الهيالورونيك",
-      ctaFr: "Découvrir la gamme",
-      ctaAr: "اكتشفي المجموعة",
-      bgImage: "/images/hero_hydra_essence.png",
+      tagFr: "✨ NOUVEAUTÉS · DERNIERS ARRIVAGES",
+      tagAr: "✨ المنتجات الجديدة · أحدث الوصولات",
+      titleFr: "Nouveautés K-Beauty & Soins",
+      titleAr: "جديد العناية والجمال الكوري",
+      descFr: "Découvrez les dernières innovations dermo-cosmétiques fraîchement arrivées au Maroc.",
+      descAr: "اكتشفي أحدث الابتكارات الطبية والتجميلية الواصلة حديثاً إلى المغرب.",
+      ctaFr: "Découvrir la Nouveauté",
+      ctaAr: "اكتشفي الجديد",
+      bgImage: "/images/hero_newarrivals.png",
       linkType: "category",
-      linkValue: "visage"
+      linkValue: "kbeauty"
     }
   ],
   coupons: [

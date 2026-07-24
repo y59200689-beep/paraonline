@@ -112,14 +112,14 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
       action: customBanners ? getBannerAction(customBanners[2]) : () => onSelectCategory('visage'),
     },
     card4: {
-      tag_fr: customBanners ? customBanners[3].tagFr : 'SURATION HYDRIQUE',
-      tag_ar: customBanners ? customBanners[3].tagAr : 'ترطيب مكثف',
-      title_fr: customBanners ? customBanners[3].titleFr : 'Glow Acide Hyaluronique',
-      title_ar: customBanners ? customBanners[3].titleAr : 'توهج حمض الهيالورونيك',
-      cta_fr: customBanners ? customBanners[3].ctaFr : 'Consulter la gamme',
-      cta_ar: customBanners ? customBanners[3].ctaAr : 'اكتشفي المجموعة',
-      bgImage: getOptimizedImageUrl(customBanners ? customBanners[3].bgImage : '/images/hero_hydra_essence.png'),
-      action: customBanners ? getBannerAction(customBanners[3]) : () => onSelectCategory('visage'),
+      tag_fr: customBanners ? customBanners[3].tagFr : '✨ NOUVEAUTÉS · DERNIERS ARRIVAGES',
+      tag_ar: customBanners ? customBanners[3].tagAr : '✨ المنتجات الجديدة · أحدث الوصولات',
+      title_fr: customBanners ? customBanners[3].titleFr : 'Nouveautés K-Beauty & Soins',
+      title_ar: customBanners ? customBanners[3].titleAr : 'جديد العناية والجمال الكوري',
+      cta_fr: customBanners ? customBanners[3].ctaFr : 'Découvrir la Nouveauté',
+      cta_ar: customBanners ? customBanners[3].ctaAr : 'اكتشفي الجديد',
+      bgImage: getOptimizedImageUrl(customBanners ? customBanners[3].bgImage : '/images/hero_newarrivals.png'),
+      action: customBanners ? getBannerAction(customBanners[3]) : () => onSelectCategory('kbeauty'),
     },
   };
 
@@ -348,7 +348,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
             {/* Card 4: Bottom Half Card */}
             <div 
               onClick={CARDS.card4.action}
-              className="hero-card-gsap relative group overflow-hidden rounded-2xl ring-1 ring-black/6 bg-white shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 cursor-pointer h-[178px] md:h-[228px] lg:h-[248px] shimmer-sweep-3 card-press-feedback"
+              className="hero-card-gsap relative group overflow-hidden rounded-2xl ring-1 ring-black/10 bg-white shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 cursor-pointer h-[178px] md:h-[228px] lg:h-[248px] shimmer-sweep-3 card-press-feedback"
               style={{ opacity: mounted ? 0 : 1 }}
             >
               {/* Background image */}
@@ -359,32 +359,38 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
                 sizes="(max-width: 768px) 0vw, (max-width: 1024px) 25vw, 25vw"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2000ms] ease-[var(--ease-out-premium)] group-hover:scale-[1.06]"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-primary-dark/85 via-primary-dark/35 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/35 to-transparent" />
 
               {/* Content Container */}
               <div className="absolute inset-0 p-5 flex flex-col justify-end text-white">
                 <div className="space-y-2">
-                  <div className="inline-flex px-2.5 py-1 bg-white/10 backdrop-blur-sm border border-white/15 rounded-full text-[8px] font-black tracking-wider text-accent">
+                  <div className="inline-flex px-2.5 py-1 bg-white/15 backdrop-blur-md border border-white/20 rounded-full text-[8px] font-black tracking-wider text-sky-300 shadow-sm">
                     {isRTL ? CARDS.card4.tag_ar : CARDS.card4.tag_fr}
                   </div>
                   
-                  <h3 className="text-base md:text-lg font-black font-heading leading-tight tracking-tight text-white">
+                  <h3 className="text-base md:text-lg font-black font-heading leading-tight tracking-tight text-white drop-shadow-sm">
                     {isRTL ? CARDS.card4.title_ar : CARDS.card4.title_fr}
                   </h3>
 
-                  <div 
-                    className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider border-b pb-0.5"
-                    style={{ 
-                      color: 'var(--color-accent)', 
-                      borderColor: 'rgba(16, 185, 129, 0.25)' 
-                    }}
-                  >
-                    <span>{isRTL ? CARDS.card4.cta_ar : CARDS.card4.cta_fr}</span>
-                    {isRTL ? (
-                      <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:translate-x-[-2px]" style={{ color: 'var(--color-accent)' }} />
-                    ) : (
-                      <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-[2px]" style={{ color: 'var(--color-accent)' }} />
-                    )}
+                  <div className="pt-0.5">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        CARDS.card4.action();
+                      }}
+                      className="group/btn relative inline-flex items-center gap-2 pl-3.5 pr-1 py-1 text-[9.5px] font-black uppercase tracking-wider rounded-full shadow-md bg-sky-600 hover:bg-sky-500 text-white transition-all duration-300 ease-out cursor-pointer border border-sky-300/30 outline-none backdrop-blur-md overflow-hidden active:scale-95"
+                    >
+                      <span className="relative z-10 font-black tracking-wider">
+                        {isRTL ? CARDS.card4.cta_ar : CARDS.card4.cta_fr}
+                      </span>
+                      <span className="relative z-10 w-5 h-5 rounded-full bg-white/20 flex items-center justify-center transition-transform duration-300 group-hover/btn:translate-x-0.5 group-hover/btn:bg-white group-hover/btn:text-sky-700 shrink-0">
+                        {isRTL ? (
+                          <ArrowLeft className="w-3 h-3" />
+                        ) : (
+                          <ArrowRight className="w-3 h-3" />
+                        )}
+                      </span>
+                    </button>
                   </div>
                 </div>
               </div>
