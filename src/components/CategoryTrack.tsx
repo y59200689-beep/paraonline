@@ -95,7 +95,6 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
     { id: 'cheveux',      tag: 'cheveux',      translationKey: 'circle_cheveux',      image: '', gradientStart: '#FBE9E7', activeColor: '#B45309' },
     { id: 'corps',        tag: 'corps',        translationKey: 'circle_corps',        image: '', gradientStart: '#F3E5F5', activeColor: '#8B5CF6' },
     { id: 'appareils',    tag: 'appareils',    translationKey: 'circle_appareils',    image: '', gradientStart: '#ECE0FD', activeColor: '#6366F1' },
-    { id: 'accessoires',  tag: 'accessoires',  translationKey: 'circle_accessoires',  image: '', gradientStart: '#FFEBE6', activeColor: '#F43F5E' },
     { id: 'complements',  tag: 'complements',  translationKey: 'circle_complements',  image: '', gradientStart: '#E8F5E9', activeColor: '#10B981' },
     { id: 'maquillage',   tag: 'maquillage',   translationKey: 'circle_maquillage',   image: '', gradientStart: '#FFEBEE', activeColor: '#E11D48' },
     { id: 'sport',        tag: 'sport',        translationKey: 'circle_sport',        image: '', gradientStart: '#E0F2FE', activeColor: '#0EA5E9' },

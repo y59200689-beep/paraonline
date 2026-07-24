@@ -53,7 +53,6 @@ export const IMAGE_MANIFEST: GalleryImage[] = [
   { key: 'cat_homme',              label: 'Catégorie — Homme',            group: 'categories', filePath: 'images/categories/homme.webp',        url: '/images/categories/homme.webp' },
   { key: 'cat_maquillage',         label: 'Catégorie — Maquillage',       group: 'categories', filePath: 'images/categories/maquillage.webp',   url: '/images/categories/maquillage.webp' },
   { key: 'cat_complements',        label: 'Catégorie — Compléments',      group: 'categories', filePath: 'images/categories/complements.webp',  url: '/images/categories/complements.webp' },
-  { key: 'cat_accessoires',        label: 'Catégorie — Accessoires',      group: 'categories', filePath: 'images/categories/accessoires.webp',  url: '/images/categories/accessoires.webp' },
   { key: 'cat_masques',            label: 'Catégorie — Masques',           group: 'categories', filePath: 'images/categories/masques.webp',      url: '/images/categories/masques.webp' },
   { key: 'cat_sport',              label: 'Catégorie — Sport',             group: 'categories', filePath: 'images/categories/sport.webp',        url: '/images/categories/sport.webp' },
   { key: 'cat_appareils',          label: 'Catégorie — Appareils',        group: 'categories', filePath: 'images/categories/appareils.webp',    url: '/images/categories/appareils.webp' },
