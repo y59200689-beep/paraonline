@@ -92,14 +92,14 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
       action: customBanners ? getBannerAction(customBanners[0]) : () => onSelectCategory('offers'),
     },
     card2: {
-      tag_fr: customBanners ? customBanners[1].tagFr : 'COMPTOIR DES SOLUTES ACTIFS',
-      tag_ar: customBanners ? customBanners[1].tagAr : 'تركيبات نشطة',
-      title_fr: customBanners ? customBanners[1].titleFr : 'Botanical Hydrating Serum',
-      title_ar: customBanners ? customBanners[1].titleAr : 'سيروم الترطيب النباتي الفاخر',
-      cta_fr: customBanners ? customBanners[1].ctaFr : 'Consulter la gamme',
-      cta_ar: customBanners ? customBanners[1].ctaAr : 'اكتشفي المجموعة',
-      bgImage: getOptimizedImageUrl(customBanners ? customBanners[1].bgImage : '/images/hero_serum_dropper.png'),
-      action: customBanners ? getBannerAction(customBanners[1]) : () => onSelectCategory('visage'),
+      tag_fr: customBanners ? customBanners[1].tagFr : '☀️ SUMMER SALE · JUSQU\'À -40%',
+      tag_ar: customBanners ? customBanners[1].tagAr : '☀️ عروض الصيف · خصم حتى 40%',
+      title_fr: customBanners ? customBanners[1].titleFr : 'Packs Solaires & Offres d\'Été',
+      title_ar: customBanners ? customBanners[1].titleAr : 'عروض الصيف والباقات الشمسية',
+      cta_fr: customBanners ? customBanners[1].ctaFr : 'Profiter des Offres',
+      cta_ar: customBanners ? customBanners[1].ctaAr : 'استفيدي من العروض',
+      bgImage: getOptimizedImageUrl(customBanners ? customBanners[1].bgImage : '/images/hero_summersale.png'),
+      action: customBanners ? getBannerAction(customBanners[1]) : () => onSelectCategory('solaire'),
     },
     card3: {
       tag_fr: customBanners ? customBanners[2].tagFr : 'CURE ANTI-SÉNESCENCE',
@@ -241,7 +241,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
           {/* Card 2: Desktop Middle Tall Banner */}
           <div 
             onClick={CARDS.card2.action}
-            className="hidden md:block hero-card-gsap lg:col-span-1 relative group overflow-hidden rounded-2xl ring-1 ring-black/6 bg-white shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 cursor-pointer h-[380px] md:h-[480px] lg:h-[520px] shimmer-sweep-2 card-press-feedback"
+            className="hidden md:block hero-card-gsap lg:col-span-1 relative group overflow-hidden rounded-3xl ring-1 ring-black/10 bg-white shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 cursor-pointer h-[380px] md:h-[480px] lg:h-[520px] shimmer-sweep-2 card-press-feedback"
             style={{ opacity: mounted ? 0 : 1 }}
           >
             {/* Background image */}
@@ -252,37 +252,46 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
               sizes="(max-width: 768px) 0vw, (max-width: 1024px) 25vw, 25vw"
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2000ms] ease-[var(--ease-out-premium)] group-hover:scale-[1.06]"
             />
-            {/* Standard bottom visual gradient fade */}
-            <div className="absolute inset-0 bg-gradient-to-t from-primary-dark/85 via-primary-dark/35 to-transparent" />
+            {/* Ambient visual gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent" />
+
+            {/* Morphing ambient glow blob */}
+            <div className="absolute top-1/3 left-1/3 w-36 h-36 rounded-full bg-amber-400/20 blur-2xl pointer-events-none animate-morph-blob" />
 
             {/* Content Container */}
             <div className="absolute inset-0 p-6 md:p-8 flex flex-col justify-end text-white">
               <div className="space-y-3">
-                {/* Small active badge */}
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/10 backdrop-blur-sm border border-white/15 rounded-full text-[8px] font-black tracking-wider text-accent">
-                  <Activity className="w-3 h-3 text-accent animate-pulse" />
+                {/* Eyebrow badge */}
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-400/20 backdrop-blur-md border border-amber-300/30 rounded-full text-[8.5px] font-black tracking-widest text-amber-200 shadow-sm">
+                  <Activity className="w-3 h-3 text-amber-300 animate-pulse" />
                   <span>{isRTL ? CARDS.card2.tag_ar : CARDS.card2.tag_fr}</span>
                 </div>
 
                 {/* Heading */}
-                <h3 className="text-xl md:text-2xl font-black font-heading leading-tight tracking-tight text-white">
+                <h3 className="text-xl md:text-2xl font-black font-heading leading-tight tracking-tight text-white drop-shadow-sm">
                   {isRTL ? CARDS.card2.title_ar : CARDS.card2.title_fr}
                 </h3>
 
-                {/* Subtitle / CTA Link */}
-                <div 
-                  className="inline-flex items-center gap-1 text-[11px] font-extrabold uppercase tracking-wider border-b transition-all pb-0.5"
-                  style={{ 
-                    color: 'var(--color-accent)', 
-                    borderColor: 'rgba(16, 185, 129, 0.25)' 
-                  }}
-                >
-                  <span>{isRTL ? CARDS.card2.cta_ar : CARDS.card2.cta_fr}</span>
-                  {isRTL ? (
-                    <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:translate-x-[-2px]" style={{ color: 'var(--color-accent)' }} />
-                  ) : (
-                    <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-[2px]" style={{ color: 'var(--color-accent)' }} />
-                  )}
+                {/* Premium High Quality UI & UX Button */}
+                <div className="pt-1">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      CARDS.card2.action();
+                    }}
+                    className="group/btn relative inline-flex items-center gap-3 pl-4 pr-1.5 py-1.5 text-[10.5px] font-black uppercase tracking-wider rounded-full shadow-lg bg-emerald-600 hover:bg-emerald-500 text-white transition-all duration-300 ease-out cursor-pointer border border-emerald-400/30 outline-none backdrop-blur-md overflow-hidden active:scale-95"
+                  >
+                    <span className="relative z-10 font-black tracking-wider">
+                      {isRTL ? CARDS.card2.cta_ar : CARDS.card2.cta_fr}
+                    </span>
+                    <span className="relative z-10 w-6 h-6 rounded-full bg-white/20 flex items-center justify-center transition-transform duration-300 group-hover/btn:translate-x-0.5 group-hover/btn:bg-white group-hover/btn:text-emerald-700 shrink-0">
+                      {isRTL ? (
+                        <ArrowLeft className="w-3.5 h-3.5" />
+                      ) : (
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      )}
+                    </span>
+                  </button>
                 </div>
               </div>
             </div>

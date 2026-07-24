@@ -368,15 +368,17 @@ export const DEFAULT_SETTINGS: Settings = {
       linkValue: "offers"
     },
     {
-      tagFr: "SOIN CIBLE",
-      tagAr: "مكونات نشطة",
-      titleFr: "Botanical Hydrating Serum",
-      titleAr: "سيروم الترطيب النباتي الفاخر",
-      ctaFr: "Découvrir la gamme",
-      ctaAr: "اكتشفي المجموعة",
-      bgImage: "/images/hero_serum_dropper.png",
+      tagFr: "☀️ SUMMER SALE · JUSQU'À -40%",
+      tagAr: "☀️ عروض الصيف · خصم حتى 40%",
+      titleFr: "Packs Solaires & Offres d'Été",
+      titleAr: "عروض الصيف والباقات الشمسية",
+      descFr: "Découvrez nos essentiels solaires SPF50+ et coffrets hydratation d'été à prix irrésistibles.",
+      descAr: "اكتشفي مستحضرات الحماية من الشمس وباقات الترطيب الصيفية بأسعار مميزة.",
+      ctaFr: "Profiter des Offres",
+      ctaAr: "استفيدي من العروض",
+      bgImage: "/images/hero_summersale.png",
       linkType: "category",
-      linkValue: "visage"
+      linkValue: "solaire"
     },
     {
       tagFr: "SOIN ANTI-ÂGE",
