@@ -157,7 +157,7 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
             dir={isRTL ? 'rtl' : 'ltr'}
           >
             <div
-              className="flex flex-row flex-nowrap gap-4 snap-x pt-2 pb-6 px-5 sm:px-7 md:px-10 lg:px-12"
+              className="flex flex-row flex-nowrap gap-4 snap-x pt-2 pb-6 pl-5 sm:pl-7 md:pl-10 lg:pl-12 pr-10 sm:pr-14 md:pr-16 lg:pr-20"
             >
               {CATEGORIES.map((cat, index) => {
                  const isActive = activeCategory === cat.tag;
@@ -211,6 +211,8 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
                    </button>
                  );
               })}
+              {/* Trailing spacer so the final card is never cut off at the edge */}
+              <div className="w-6 sm:w-10 md:w-16 shrink-0 pointer-events-none" aria-hidden="true" />
             </div>
           </div>
         </div>
