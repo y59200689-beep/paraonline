@@ -94,7 +94,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
     card2: {
       tag_fr: customBanners ? customBanners[1].tagFr : '☀️ SUMMER SALE · JUSQU\'À -40%',
       tag_ar: customBanners ? customBanners[1].tagAr : '☀️ عروض الصيف · خصم حتى 40%',
-      title_fr: customBanners ? customBanners[1].titleFr : 'Packs Solaires & Offres d\'Été',
+      title_fr: customBanners ? customBanners[1].titleFr : 'Offres d\'Été',
       title_ar: customBanners ? customBanners[1].titleAr : 'عروض الصيف والباقات الشمسية',
       cta_fr: customBanners ? customBanners[1].ctaFr : 'Profiter des Offres',
       cta_ar: customBanners ? customBanners[1].ctaAr : 'استفيدي من العروض',

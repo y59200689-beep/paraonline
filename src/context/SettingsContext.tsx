@@ -370,7 +370,7 @@ export const DEFAULT_SETTINGS: Settings = {
     {
       tagFr: "☀️ SUMMER SALE · JUSQU'À -40%",
       tagAr: "☀️ عروض الصيف · خصم حتى 40%",
-      titleFr: "Packs Solaires & Offres d'Été",
+      titleFr: "Offres d'Été",
       titleAr: "عروض الصيف والباقات الشمسية",
       descFr: "Découvrez nos essentiels solaires SPF50+ et coffrets hydratation d'été à prix irrésistibles.",
       descAr: "اكتشفي مستحضرات الحماية من الشمس وباقات الترطيب الصيفية بأسعار مميزة.",
