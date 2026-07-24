@@ -396,7 +396,7 @@ export const DEFAULT_SETTINGS: Settings = {
     {
       tagFr: "✨ NOUVEAUTÉS · DERNIERS ARRIVAGES",
       tagAr: "✨ المنتجات الجديدة · أحدث الوصولات",
-      titleFr: "Nouveautés K-Beauty & Soins",
+      titleFr: "Nouveaux Produits",
       titleAr: "جديد العناية والجمال الكوري",
       descFr: "Découvrez les dernières innovations dermo-cosmétiques fraîchement arrivées au Maroc.",
       descAr: "اكتشفي أحدث الابتكارات الطبية والتجميلية الواصلة حديثاً إلى المغرب.",

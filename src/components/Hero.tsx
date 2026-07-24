@@ -114,7 +114,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
     card4: {
       tag_fr: customBanners ? customBanners[3].tagFr : '✨ NOUVEAUTÉS · DERNIERS ARRIVAGES',
       tag_ar: customBanners ? customBanners[3].tagAr : '✨ المنتجات الجديدة · أحدث الوصولات',
-      title_fr: customBanners ? customBanners[3].titleFr : 'Nouveautés K-Beauty & Soins',
+      title_fr: customBanners ? customBanners[3].titleFr : 'Nouveaux Produits',
       title_ar: customBanners ? customBanners[3].titleAr : 'جديد العناية والجمال الكوري',
       cta_fr: customBanners ? customBanners[3].ctaFr : 'Découvrir la Nouveauté',
       cta_ar: customBanners ? customBanners[3].ctaAr : 'اكتشفي الجديد',
