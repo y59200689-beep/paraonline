@@ -80,16 +80,16 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
   // Localized copy content for each grid card
   const CARDS = {
     card1: {
-      tag_fr: customBanners ? customBanners[0].tagFr : 'DIAGNOSTIC DERMOCAPTEUR (IA)',
-      tag_ar: customBanners ? customBanners[0].tagAr : 'التشخيص الجلدي الذكي',
-      title_fr: customBanners ? customBanners[0].titleFr : 'Votre Ordonnance Cutanée Personnalisée',
-      title_ar: customBanners ? customBanners[0].titleAr : 'بروتوكولكِ العلاجي المخصص بدقة',
-      desc_fr: customBanners ? customBanners[0].descFr : 'Notre protocole digital analyse votre typologie épidermique et élabore un rituel ciblé de jour et de nuit validé par nos experts dermatologiques.',
-      desc_ar: customBanners ? customBanners[0].descAr : 'خوارزميتنا السريرية تحلل بشرتكِ وتركّب بروتوكولاً علاجياً معتمداً من صيادلتنا مع خصم حصري 15%!',
-      cta_fr: customBanners ? customBanners[0].ctaFr : 'Initialiser mon Diagnostic (-15%)',
-      cta_ar: customBanners ? customBanners[0].ctaAr : 'بدء التشخيص السريري (خصم 15%-)',
-      bgImage: getOptimizedImageUrl(customBanners ? customBanners[0].bgImage : '/images/hero_skincare_clinic.png'),
-      action: customBanners ? getBannerAction(customBanners[0]) : onOpenDiagnostic,
+      tag_fr: customBanners ? customBanners[0].tagFr : '🔥 LES PLUS VENDUS · SELECTION ÉLITE',
+      tag_ar: customBanners ? customBanners[0].tagAr : '🔥 الأكثر مبيعاً · تشكيلة فاخرة',
+      title_fr: customBanners ? customBanners[0].titleFr : 'Nos Meilleures Ventes Skincare',
+      title_ar: customBanners ? customBanners[0].titleAr : 'أفضل المنتجات والأكثر مبيعاً',
+      desc_fr: customBanners ? customBanners[0].descFr : 'Découvrez les soins dermo-cliniques et pépites K-Beauty les plus plébiscités par nos clientes au Maroc. Formules certifiées, résultats prouvés et livraison gratuite.',
+      desc_ar: customBanners ? customBanners[0].descAr : 'اكتشفي أفضل مستحضرات العناية الكورية والطبية الأكثر طلباً في المغرب. نتائج مثبتة وتوصيل مجاني.',
+      cta_fr: customBanners ? customBanners[0].ctaFr : 'Explorer les Best-Sellers',
+      cta_ar: customBanners ? customBanners[0].ctaAr : 'تسوقي الأكثر مبيعاً',
+      bgImage: getOptimizedImageUrl(customBanners ? customBanners[0].bgImage : '/images/hero_bestsellers.png'),
+      action: customBanners ? getBannerAction(customBanners[0]) : () => onSelectCategory('offers'),
     },
     card2: {
       tag_fr: customBanners ? customBanners[1].tagFr : 'COMPTOIR DES SOLUTES ACTIFS',
@@ -152,11 +152,11 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2000ms] ease-[var(--ease-out-premium)] group-hover:scale-[1.06]"
             />
             {/* Soft Ambient Radial/Linear Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-primary-dark/85 via-primary-dark/45 to-transparent" style={{ direction: 'ltr' }} />
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/50 to-transparent" style={{ direction: 'ltr' }} />
             
             {/* Morphing glow blobs */}
-            <div className="absolute top-1/4 left-1/4 w-56 h-56 rounded-full bg-accent/10 blur-3xl pointer-events-none animate-morph-blob" />
-            <div className="absolute bottom-1/4 right-1/4 w-48 h-48 rounded-full bg-primary/10 blur-3xl pointer-events-none animate-morph-blob" style={{ animationDelay: '-8s' }} />
+            <div className="absolute top-1/4 left-1/4 w-56 h-56 rounded-full bg-amber-500/15 blur-3xl pointer-events-none animate-morph-blob" />
+            <div className="absolute bottom-1/4 right-1/4 w-48 h-48 rounded-full bg-emerald-500/15 blur-3xl pointer-events-none animate-morph-blob" style={{ animationDelay: '-8s' }} />
 
             {/* Content Container */}
             <div className="absolute inset-0 p-6 md:p-10 flex flex-col justify-end text-white">
@@ -164,25 +164,25 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
                 
                 {/* Eyebrow badge — fades up before heading */}
                 <div
-                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-md border border-white/15 rounded-full text-[9px] font-black tracking-widest text-accent"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/15 backdrop-blur-md border border-white/20 rounded-full text-[9.5px] font-black tracking-widest text-amber-300 shadow-sm"
                   style={{ animation: 'eyebrow-in 0.6s cubic-bezier(0.16,1,0.3,1) 0.2s both' }}
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-accent animate-pulse" />
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
                   <span>{isRTL ? CARDS.card1.tag_ar : CARDS.card1.tag_fr}</span>
                 </div>
 
                 {/* Subtitle — slides in */}
                 <span
-                  className="block text-[10px] md:text-xs font-black tracking-[0.15em] text-accent uppercase"
+                  className="block text-[10px] md:text-xs font-black tracking-[0.15em] text-emerald-400 uppercase"
                   style={{ animation: 'eyebrow-in 0.6s cubic-bezier(0.16,1,0.3,1) 0.35s both' }}
                 >
-                  {isRTL ? 'التشخيص الجلدي الذكي' : 'DIAGNOSTIC CLINIQUE INTÉGRAL'}
+                  {isRTL ? 'الأكثر طلباً وتقييماً في المغرب' : 'SÉLECTION BEST-SELLERS & K-BEAUTY'}
                 </span>
 
                 {/* Heading — curtain mask wipe */}
                 <span className="anim-heading-wrap">
                   <h1
-                    className="active text-xl md:text-4xl font-black font-heading leading-tight tracking-tight text-white flex flex-wrap gap-x-2"
+                    className="active text-xl md:text-4xl font-black font-heading leading-tight tracking-tight text-white flex flex-wrap gap-x-2 drop-shadow-sm"
                   >
                     {titleWords.map((word: string, idx: number) => (
                       <span key={idx} className="inline-block overflow-hidden h-fit">
@@ -194,15 +194,15 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
                   </h1>
                 </span>
 
-                {/* Description — soft fade-up after heading (hidden on mobile to prevent overflow) */}
+                {/* Description — soft fade-up after heading */}
                 <p
-                  className="hidden sm:block text-[12px] md:text-sm text-gray-300 leading-relaxed font-light"
+                  className="hidden sm:block text-[12px] md:text-sm text-slate-200 leading-relaxed font-normal opacity-95"
                   style={{ animation: 'body-fade-up 0.7s cubic-bezier(0.16,1,0.3,1) 0.65s both' }}
                 >
                   {isRTL ? CARDS.card1.desc_ar : CARDS.card1.desc_fr}
                 </p>
 
-                {/* CTA Button — button-in-button nested icon */}
+                {/* CTA Button — High-End UX/UI Button with button-in-button architecture */}
                 <div className="pt-1 md:pt-2" style={{ animation: 'body-fade-up 0.6s cubic-bezier(0.16,1,0.3,1) 0.8s both' }}>
                   <button
                     onClick={(e) => {
@@ -211,19 +211,25 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
                     }}
                     onMouseEnter={() => setIsHovered(true)}
                     onMouseLeave={() => setIsHovered(false)}
-                    className="group/btn inline-flex items-center gap-3 pl-5 pr-2 py-2 text-xs font-black uppercase tracking-wider rounded-full shadow-md cursor-pointer border-0 outline-none hover:shadow-lg hover:-translate-y-0.5 btn-press-feedback"
+                    className="group/btn relative inline-flex items-center gap-4 pl-6 pr-2 py-2 text-xs font-black uppercase tracking-wider rounded-full shadow-xl shadow-emerald-950/20 hover:shadow-emerald-500/30 active:scale-[0.98] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer border border-emerald-400/30 outline-none backdrop-blur-md overflow-hidden"
                     style={{
-                      backgroundColor: isHovered ? 'var(--color-gold-hover)' : 'var(--color-accent)',
-                      transition: 'background-color 0.3s var(--ease-out-premium)'
+                      backgroundColor: isHovered ? 'var(--color-gold-hover, #059669)' : '#0d9488',
+                      color: '#ffffff',
                     }}
                   >
-                    <span style={{ color: '#ffffff', fontWeight: 900 }}>{isRTL ? CARDS.card1.cta_ar : CARDS.card1.cta_fr}</span>
-                    {/* Nested icon pill — button-in-button pattern */}
-                    <span className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center transition-transform duration-300 group-hover/btn:translate-x-0.5 shrink-0">
+                    {/* Glowing highlight sweep animation */}
+                    <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000 ease-in-out" />
+                    
+                    <span className="relative z-10 font-extrabold tracking-wider drop-shadow-sm">
+                      {isRTL ? CARDS.card1.cta_ar : CARDS.card1.cta_fr}
+                    </span>
+                    
+                    {/* Button-in-Button Trailing Icon Pill */}
+                    <span className="relative z-10 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center transition-all duration-500 ease-out group-hover/btn:scale-110 group-hover/btn:bg-white group-hover/btn:text-emerald-700 shadow-inner shrink-0">
                       {isRTL ? (
-                        <ArrowLeft className="w-3.5 h-3.5 text-white" />
+                        <ArrowLeft className="w-4 h-4" />
                       ) : (
-                        <ArrowRight className="w-3.5 h-3.5 text-white" />
+                        <ArrowRight className="w-4 h-4" />
                       )}
                     </span>
                   </button>

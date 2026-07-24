@@ -355,17 +355,17 @@ export const DEFAULT_SETTINGS: Settings = {
   categories: ['visage', 'kbeauty', 'garnier', 'hadalabo', 'offers'],
   banners: [
     {
-      tagFr: "DIAGNOSTIC DERMATOLOGIQUE PAR IA",
-      tagAr: "تشخيص جلدي بالذكاء الاصطناعي",
-      titleFr: "Votre Routine Clinique Sur-Mesure",
-      titleAr: "روتينك الجلدي المخصص بدقة",
-      descFr: "Notre algorithme clinique analyse votre type de peau et formule une routine matin/soir recommandée par nos pharmaciens avec 15% de réduction exclusive !",
-      descAr: "خوارزميتنا السريرية تحلل بشرتكِ وتركّب روتيناً موصى به من صيادلتنا مع خصم حصري 15%!",
-      ctaFr: "Démarrer mon Diagnostic (-15%)",
-      ctaAr: "ابدئي التشخيص (خصم 15%-)",
-      bgImage: "/images/hero_skincare_clinic.png",
-      linkType: "diagnostic",
-      linkValue: ""
+      tagFr: "🔥 LES PLUS VENDUS · SELECTION ÉLITE",
+      tagAr: "🔥 الأكثر مبيعاً · تشكيلة فاخرة",
+      titleFr: "Nos Meilleures Ventes Skincare",
+      titleAr: "أفضل المنتجات والأكثر مبيعاً",
+      descFr: "Découvrez les soins dermo-cliniques et pépites K-Beauty les plus plébiscités par nos clientes au Maroc. Formules certifiées, résultats prouvés et livraison gratuite.",
+      descAr: "اكتشفي أفضل مستحضرات العناية الكورية والطبية الأكثر طلباً في المغرب. نتائج مثبتة وتوصيل مجاني.",
+      ctaFr: "Explorer les Best-Sellers",
+      ctaAr: "تسوقي الأكثر مبيعاً",
+      bgImage: "/images/hero_bestsellers.png",
+      linkType: "category",
+      linkValue: "offers"
     },
     {
       tagFr: "SOIN CIBLE",
