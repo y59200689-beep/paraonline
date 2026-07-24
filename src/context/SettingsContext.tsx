@@ -383,7 +383,7 @@ export const DEFAULT_SETTINGS: Settings = {
     {
       tagFr: "⚡ PROMO HEBDO · JUSQU'À -35%",
       tagAr: "⚡ تخفيضات الأسبوع · خصم حتى 35%",
-      titleFr: "Offres Flash & Ventes Hebdo",
+      titleFr: "Promotion De La Semaine",
       titleAr: "عروض الأسبوع السريعة",
       descFr: "Profitez de réductions exclusives chaque semaine sur une sélection de soins dermo-cosmétiques.",
       descAr: "استفيدي من خصومات حصرية أسبوعياً على مجموعة مختارة من مستحضرات التجميل.",
