@@ -90,7 +90,6 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
   const CATEGORIES: CategoryItem[] = [
     { id: 'all',          tag: 'all',          translationKey: 'circle_bestsellers',  image: '', gradientStart: '#FFF0E0', activeColor: '#D97706' },
     { id: 'offers',       tag: 'offers',       translationKey: 'circle_offers',       image: '', gradientStart: '#FFE5EC', activeColor: '#E11D48' },
-    { id: 'kbeauty',      tag: 'kbeauty',      translationKey: 'circle_kbeauty',      image: '', gradientStart: '#E0F2FE', activeColor: '#2573a3' },
     { id: 'solaire',      tag: 'solaire',      translationKey: 'circle_solaire',      image: '', gradientStart: '#FFF3D1', activeColor: '#F97316' },
     { id: 'visage',       tag: 'visage',       translationKey: 'circle_visage',       image: '', gradientStart: '#E0F7FA', activeColor: '#10B981' },
     { id: 'cheveux',      tag: 'cheveux',      translationKey: 'circle_cheveux',      image: '', gradientStart: '#FBE9E7', activeColor: '#B45309' },
