@@ -381,15 +381,17 @@ export const DEFAULT_SETTINGS: Settings = {
       linkValue: "solaire"
     },
     {
-      tagFr: "SOIN ANTI-ÂGE",
-      tagAr: "مكافحة الشيخوخة",
-      titleFr: "Jeunesse Rétinol",
-      titleAr: "روتين الشباب والريتينول",
-      ctaFr: "Acheter Rétinol",
-      ctaAr: "تسوقي الريتينول",
-      bgImage: "/images/hero_rose_cream.png",
+      tagFr: "⚡ PROMO HEBDO · JUSQU'À -35%",
+      tagAr: "⚡ تخفيضات الأسبوع · خصم حتى 35%",
+      titleFr: "Offres Flash & Ventes Hebdo",
+      titleAr: "عروض الأسبوع السريعة",
+      descFr: "Profitez de réductions exclusives chaque semaine sur une sélection de soins dermo-cosmétiques.",
+      descAr: "استفيدي من خصومات حصرية أسبوعياً على مجموعة مختارة من مستحضرات التجميل.",
+      ctaFr: "Voir les Promos",
+      ctaAr: "شاهد العروض",
+      bgImage: "/images/hero_weeklypromo.png",
       linkType: "category",
-      linkValue: "visage"
+      linkValue: "offers"
     },
     {
       tagFr: "✨ NOUVEAUTÉS · DERNIERS ARRIVAGES",
