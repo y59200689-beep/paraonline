@@ -2,10 +2,11 @@ import { NextResponse } from 'next/server';
 import { verifyAdminSession } from '@/lib/session';
 import path from 'path';
 import fs from 'fs';
+import sharp from 'sharp';
 
 // ─── Image manifest ────────────────────────────────────────────────────────
 // Maps a stable key → relative path within /public and display metadata.
-// Only files listed here can be replaced. No arbitrary writes.
+// Only files listed here can be replaced. Every image is optimized as WebP.
 
 export interface GalleryImage {
   key: string;
@@ -27,7 +28,7 @@ export const IMAGE_MANIFEST: GalleryImage[] = [
   { key: 'hero_rose_cream',        label: 'Hero — Rose Cream (Legacy)',              group: 'heroes', filePath: 'images/hero_rose_cream.webp',   url: '/images/hero_rose_cream.webp' },
   { key: 'hero_serum_dropper',     label: 'Hero — Serum Dropper (Legacy)',           group: 'heroes', filePath: 'images/hero_serum_dropper.webp', url: '/images/hero_serum_dropper.webp' },
   { key: 'hero_skincare_clinic',   label: 'Hero — Skincare Clinic (Legacy)',          group: 'heroes', filePath: 'images/hero_skincare_clinic.webp', url: '/images/hero_skincare_clinic.webp' },
-  { key: 'lrp_hero_studio',        label: 'Hero — LRP Studio',                       group: 'heroes', filePath: 'images/lrp_hero_studio.png',    url: '/images/lrp_hero_studio.png' },
+  { key: 'lrp_hero_studio',        label: 'Hero — LRP Studio',                       group: 'heroes', filePath: 'images/lrp_hero_studio.webp',   url: '/images/lrp_hero_studio.webp' },
 
   // ── Concerns ─────────────────────────────────────────────────────────────
   { key: 'concern_acne',           label: 'Problème — Acné',             group: 'concerns',   filePath: 'images/concern_acne.webp',            url: '/images/concern_acne.webp' },
@@ -36,12 +37,12 @@ export const IMAGE_MANIFEST: GalleryImage[] = [
   { key: 'concern_wrinkles',       label: 'Problème — Rides',            group: 'concerns',   filePath: 'images/concern_wrinkles.webp',        url: '/images/concern_wrinkles.webp' },
 
   // ── Brands ───────────────────────────────────────────────────────────────
-  { key: 'avene_showcase',         label: 'Marque — Avène',              group: 'brands',     filePath: 'images/avene_brand_showcase.png',     url: '/images/avene_brand_showcase.png' },
-  { key: 'bioderma_showcase',      label: 'Marque — Bioderma',           group: 'brands',     filePath: 'images/bioderma_brand_showcase.png',  url: '/images/bioderma_brand_showcase.png' },
-  { key: 'cerave_showcase',        label: 'Marque — CeraVe',             group: 'brands',     filePath: 'images/cerave_brand_showcase.png',    url: '/images/cerave_brand_showcase.png' },
-  { key: 'eucerin_showcase',       label: 'Marque — Eucerin',            group: 'brands',     filePath: 'images/eucerin_brand_showcase.png',   url: '/images/eucerin_brand_showcase.png' },
-  { key: 'lrp_showcase',           label: 'Marque — La Roche-Posay',     group: 'brands',     filePath: 'images/larochposay_brand_showcase.png', url: '/images/larochposay_brand_showcase.png' },
-  { key: 'vichy_showcase',         label: 'Marque — Vichy',              group: 'brands',     filePath: 'images/vichy_brand_showcase.png',     url: '/images/vichy_brand_showcase.png' },
+  { key: 'avene_showcase',         label: 'Marque — Avène',              group: 'brands',     filePath: 'images/avene_brand_showcase.webp',     url: '/images/avene_brand_showcase.webp' },
+  { key: 'bioderma_showcase',      label: 'Marque — Bioderma',           group: 'brands',     filePath: 'images/bioderma_brand_showcase.webp',  url: '/images/bioderma_brand_showcase.webp' },
+  { key: 'cerave_showcase',        label: 'Marque — CeraVe',             group: 'brands',     filePath: 'images/cerave_brand_showcase.webp',    url: '/images/cerave_brand_showcase.webp' },
+  { key: 'eucerin_showcase',       label: 'Marque — Eucerin',            group: 'brands',     filePath: 'images/eucerin_brand_showcase.webp',   url: '/images/eucerin_brand_showcase.webp' },
+  { key: 'lrp_showcase',           label: 'Marque — La Roche-Posay',     group: 'brands',     filePath: 'images/larochposay_brand_showcase.webp', url: '/images/larochposay_brand_showcase.webp' },
+  { key: 'vichy_showcase',         label: 'Marque — Vichy',              group: 'brands',     filePath: 'images/vichy_brand_showcase.webp',     url: '/images/vichy_brand_showcase.webp' },
 
   // ── Categories ───────────────────────────────────────────────────────────
   { key: 'cat_visage',             label: 'Catégorie — Visage',          group: 'categories', filePath: 'images/categories/visage.webp',       url: '/images/categories/visage.webp' },
@@ -65,16 +66,16 @@ export const IMAGE_MANIFEST: GalleryImage[] = [
   { key: 'flash_sale_product',     label: 'Bundle — Flash Sale',          group: 'bundles',    filePath: 'images/flash_sale_product.webp',      url: '/images/flash_sale_product.webp' },
 
   // ── Promo ────────────────────────────────────────────────────────────────
-  { key: 'anthelios_banner',       label: 'Promo — Anthelios Banner',     group: 'promo',      filePath: 'images/anthelios_banner_card.png',    url: '/images/anthelios_banner_card.png' },
-  { key: 'anthelios_packshot',     label: 'Promo — Anthelios Packshot',   group: 'promo',      filePath: 'images/anthelios_hero_packshot.png',  url: '/images/anthelios_hero_packshot.png' },
-  { key: 'effaclar_packshot',      label: 'Promo — Effaclar Packshot',    group: 'promo',      filePath: 'images/effaclar_hero_packshot.png',   url: '/images/effaclar_hero_packshot.png' },
-  { key: 'cicaplast_packshot',     label: 'Promo — Cicaplast Packshot',   group: 'promo',      filePath: 'images/cicaplast_hero_packshot.png',  url: '/images/cicaplast_hero_packshot.png' },
+  { key: 'anthelios_banner',       label: 'Promo — Anthelios Banner',     group: 'promo',      filePath: 'images/anthelios_banner_card.webp',    url: '/images/anthelios_banner_card.webp' },
+  { key: 'anthelios_packshot',     label: 'Promo — Anthelios Packshot',   group: 'promo',      filePath: 'images/anthelios_hero_packshot.webp',  url: '/images/anthelios_hero_packshot.webp' },
+  { key: 'effaclar_packshot',      label: 'Promo — Effaclar Packshot',    group: 'promo',      filePath: 'images/effaclar_hero_packshot.webp',   url: '/images/effaclar_hero_packshot.webp' },
+  { key: 'cicaplast_packshot',     label: 'Promo — Cicaplast Packshot',   group: 'promo',      filePath: 'images/cicaplast_hero_packshot.webp',  url: '/images/cicaplast_hero_packshot.webp' },
   { key: 'skin_diagnostic_scan',   label: 'Promo — Diagnostic Scan',      group: 'promo',      filePath: 'images/skin_diagnostic_scan.webp',    url: '/images/skin_diagnostic_scan.webp' },
   { key: 'skincare_brand_banner',  label: 'Promo — Brand Banner',         group: 'promo',      filePath: 'images/skincare_brand_banner.webp',   url: '/images/skincare_brand_banner.webp' },
 
   // ── Logo ─────────────────────────────────────────────────────────────────
   { key: 'logo',                   label: 'Logo Principal',               group: 'logo',       filePath: 'images/logo.webp',                   url: '/images/logo.webp' },
-  { key: 'og_image',               label: 'OG Image (Social)',            group: 'logo',       filePath: 'images/og-image.jpg',                url: '/images/og-image.jpg' },
+  { key: 'og_image',               label: 'OG Image (Social)',            group: 'logo',       filePath: 'images/og-image.webp',               url: '/images/og-image.webp' },
 ];
 
 // ─── Allowed image MIME types ────────────────────────────────────────────────
@@ -119,7 +120,7 @@ export async function GET() {
   return NextResponse.json({ success: true, images });
 }
 
-// ─── POST — replace a file by key ────────────────────────────────────────────
+// ─── POST — replace a file by key with automatic WebP conversion ───────────
 export async function POST(request: Request) {
   try {
     const session = await verifyAdminSession();
@@ -159,15 +160,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Le contenu du fichier ne correspond pas à un format image valide.' }, { status: 400 });
     }
 
-    // Write to the whitelisted path (overwrite in place)
+    // Automatically convert ANY incoming uploaded image to WebP using Sharp
+    let uploadBuffer = buffer;
+    try {
+      uploadBuffer = await sharp(buffer)
+        .webp({ quality: 90, effort: 4 })
+        .toBuffer();
+    } catch (sharpErr) {
+      console.warn('[gallery] Sharp WebP conversion failed, using original buffer:', sharpErr);
+    }
+
+    // Write to the whitelisted path (overwrite in place as WebP)
     const absPath = path.join(process.cwd(), 'public', entry.filePath);
     fs.mkdirSync(path.dirname(absPath), { recursive: true });
-    fs.writeFileSync(absPath, buffer);
+    fs.writeFileSync(absPath, uploadBuffer);
 
     return NextResponse.json({
       success: true,
       url: entry.url,
-      sizeKb: Math.round(buffer.length / 1024),
+      sizeKb: Math.round(uploadBuffer.length / 1024),
     });
   } catch (err: any) {
     console.error('[gallery] replace error:', err);
