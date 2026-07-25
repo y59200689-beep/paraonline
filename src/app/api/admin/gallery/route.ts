@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifyAdminSession } from '@/lib/session';
+import { supabaseAdmin as supabase } from '@/lib/supabase';
 import path from 'path';
 import fs from 'fs';
 import sharp from 'sharp';
@@ -208,11 +209,42 @@ export async function POST(request: Request) {
     } catch (sharpErr) {
       console.warn('[gallery] Sharp WebP conversion failed, using original buffer:', sharpErr);
     }
+    let finalUrl = entry.url;
 
-    // Write to the whitelisted path (overwrite in place as WebP)
-    const absPath = path.join(process.cwd(), 'public', entry.filePath);
-    fs.mkdirSync(path.dirname(absPath), { recursive: true });
-    fs.writeFileSync(absPath, uploadBuffer);
+    // 1. Attempt local filesystem write (works in local dev & persistent servers)
+    try {
+      const absPath = path.join(process.cwd(), 'public', entry.filePath);
+      fs.mkdirSync(path.dirname(absPath), { recursive: true });
+      fs.writeFileSync(absPath, uploadBuffer);
+    } catch (fsErr: any) {
+      console.warn('[gallery] Local filesystem is read-only (e.g. Vercel deployment). Falling back to cloud storage/Data URL:', fsErr?.message);
+      
+      // 2. Fallback for serverless read-only platforms (Vercel): Supabase Storage or Base64 Data URL
+      try {
+        const storagePath = `gallery_${entry.key}.webp`;
+        const { error: sbErr } = await supabase.storage
+          .from('products')
+          .upload(storagePath, uploadBuffer, {
+            contentType: 'image/webp',
+            upsert: true,
+            cacheControl: '31536000',
+          });
+
+        if (!sbErr) {
+          const { data: publicUrlData } = supabase.storage
+            .from('products')
+            .getPublicUrl(storagePath);
+          if (publicUrlData?.publicUrl) {
+            finalUrl = publicUrlData.publicUrl;
+          }
+        } else {
+          console.warn('[gallery] Supabase fallback upload error:', sbErr);
+          finalUrl = `data:image/webp;base64,${uploadBuffer.toString('base64')}`;
+        }
+      } catch {
+        finalUrl = `data:image/webp;base64,${uploadBuffer.toString('base64')}`;
+      }
+    }
 
     // Extract metadata of saved WebP image
     let width = 0;
@@ -226,7 +258,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      url: entry.url,
+      url: finalUrl,
       sizeKb: Math.round(uploadBuffer.length / 1024),
       width,
       height,
