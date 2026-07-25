@@ -12,7 +12,7 @@ import sharp from 'sharp';
 export interface GalleryImage {
   key: string;
   label: string;
-  group: 'heroes' | 'concerns' | 'brands' | 'categories' | 'bundles' | 'promo' | 'logo' | 'users';
+  group: 'heroes' | 'concerns' | 'brands' | 'categories' | 'bundles' | 'promo' | 'logo';
   /** Path relative to /public */
   filePath: string;
   /** URL path served by Next.js */
@@ -79,13 +79,6 @@ export const IMAGE_MANIFEST: GalleryImage[] = [
   { key: 'card_antiage',           label: 'Promo Card — Anti-Âge',        group: 'promo',      filePath: 'images/promo/card_antiage.webp',       url: '/images/promo/card_antiage.webp' },
   { key: 'card_baby',              label: 'Promo Card — Maternité & Bébé', group: 'promo',     filePath: 'images/promo/card_baby.webp',          url: '/images/promo/card_baby.webp' },
   { key: 'card_sun',               label: 'Promo Card — Protections Solaires', group: 'promo',  filePath: 'images/promo/card_sun.webp',           url: '/images/promo/card_sun.webp' },
-
-  // ── Users & Avis Clients ─────────────────────────────────────────────────
-  { key: 'user_sarah',             label: 'Avis Client — Sarah M.',       group: 'users',      filePath: 'images/users/user1.webp',              url: '/images/users/user1.webp' },
-  { key: 'user_kenza',             label: 'Avis Client — Kenza B.',       group: 'users',      filePath: 'images/users/user2.webp',              url: '/images/users/user2.webp' },
-  { key: 'user_yasmine',           label: 'Avis Client — Yasmine T.',     group: 'users',      filePath: 'images/users/user3.webp',              url: '/images/users/user3.webp' },
-  { key: 'user_sofia',             label: 'Avis Client — Sofia K.',       group: 'users',      filePath: 'images/users/user4.webp',              url: '/images/users/user4.webp' },
-  { key: 'user_dr_amine',          label: 'Avis Client — Dr. Amine',      group: 'users',      filePath: 'images/users/user5.webp',              url: '/images/users/user5.webp' },
 
   // ── Logo & Meta ──────────────────────────────────────────────────────────
   { key: 'logo',                   label: 'Logo Principal',               group: 'logo',       filePath: 'images/logo.webp',                   url: '/images/logo.webp' },
