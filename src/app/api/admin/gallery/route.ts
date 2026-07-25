@@ -79,9 +79,9 @@ export const IMAGE_MANIFEST: GalleryImage[] = [
   { key: 'card_antiage',           label: 'Promo Card — Anti-Âge (Fond)', group: 'promo',      filePath: 'images/promo/card_antiage.webp',       url: '/images/promo/card_antiage.webp' },
   { key: 'card_baby',              label: 'Promo Card — Maternité & Bébé (Fond)', group: 'promo', filePath: 'images/promo/card_baby.webp',          url: '/images/promo/card_baby.webp' },
   { key: 'card_sun',               label: 'Promo Card — Solaires (Fond)', group: 'promo',  filePath: 'images/promo/card_sun.webp',           url: '/images/promo/card_sun.webp' },
-  { key: 'overlay_bebe',           label: 'Promo Produit — PureBloom Lotion (Bébé)', group: 'promo', filePath: 'images/categories/bebe.webp', url: '/images/categories/bebe.webp' },
-  { key: 'overlay_solaire',        label: 'Promo Produit — Skinology SPF 50 (Solaire)', group: 'promo', filePath: 'images/categories/solaire.webp', url: '/images/categories/solaire.webp' },
-  { key: 'overlay_visage',         label: 'Promo Produit — Aqua Vital Sérum (Visage)', group: 'promo', filePath: 'images/categories/visage.webp', url: '/images/categories/visage.webp' },
+  { key: 'overlay_baby',           label: 'Promo Produit — Flacon Bébé (Card 1)', group: 'promo', filePath: 'images/promo/overlay_baby.webp', url: '/images/promo/overlay_baby.webp' },
+  { key: 'overlay_sun',            label: 'Promo Produit — Tube Solaire (Card 2)', group: 'promo', filePath: 'images/promo/overlay_sun.webp', url: '/images/promo/overlay_sun.webp' },
+  { key: 'overlay_serum',          label: 'Promo Produit — Flacon Sérum (Card 3)', group: 'promo', filePath: 'images/promo/overlay_serum.webp', url: '/images/promo/overlay_serum.webp' },
 
   // ── Logo & Meta ──────────────────────────────────────────────────────────
   { key: 'logo',                   label: 'Logo Principal',               group: 'logo',       filePath: 'images/logo.webp',                   url: '/images/logo.webp' },

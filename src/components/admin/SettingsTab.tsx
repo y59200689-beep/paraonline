@@ -2225,7 +2225,7 @@ export default function SettingsTab() {
                                   titleAr: "عناية الطفل\nمستحضرات لطيفة",
                                   price: "",
                                   bgImage: "/images/promo/card_baby.webp",
-                                  overlayImage: "/images/categories/bebe.webp",
+                                  overlayImage: "/images/promo/overlay_baby.webp",
                                   category: "bebe"
                                 },
                                 {
@@ -2235,7 +2235,7 @@ export default function SettingsTab() {
                                   titleAr: "واقيات الشمس",
                                   price: "",
                                   bgImage: "/images/promo/card_sun.webp",
-                                  overlayImage: "/images/categories/solaire.webp",
+                                  overlayImage: "/images/promo/overlay_sun.webp",
                                   category: "solaire"
                                 },
                                 {
@@ -2245,7 +2245,7 @@ export default function SettingsTab() {
                                   titleAr: "سيرومات",
                                   price: "",
                                   bgImage: "/images/promo/card_antiage.webp",
-                                  overlayImage: "/images/categories/visage.webp",
+                                  overlayImage: "/images/promo/overlay_serum.webp",
                                   category: "visage"
                                 }
                               ];

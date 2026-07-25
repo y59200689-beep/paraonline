@@ -40,7 +40,7 @@ export const TriplePromoBanners: React.FC<TriplePromoBannersProps> = ({ cards })
       titleAr: "عناية الطفل\nمستحضرات لطيفة",
       price: "",
       bgImage: "/images/promo/card_baby.webp",
-      overlayImage: "/images/categories/bebe.webp",
+      overlayImage: "/images/promo/overlay_baby.webp",
       category: "bebe"
     },
     {
@@ -50,7 +50,7 @@ export const TriplePromoBanners: React.FC<TriplePromoBannersProps> = ({ cards })
       titleAr: "واقيات الشمس",
       price: "",
       bgImage: "/images/promo/card_sun.webp",
-      overlayImage: "/images/categories/solaire.webp",
+      overlayImage: "/images/promo/overlay_sun.webp",
       category: "solaire"
     },
     {
@@ -60,7 +60,7 @@ export const TriplePromoBanners: React.FC<TriplePromoBannersProps> = ({ cards })
       titleAr: "سيرومات",
       price: "",
       bgImage: "/images/promo/card_antiage.webp",
-      overlayImage: "/images/categories/visage.webp",
+      overlayImage: "/images/promo/overlay_serum.webp",
       category: "visage"
     }
   ];
@@ -68,9 +68,9 @@ export const TriplePromoBanners: React.FC<TriplePromoBannersProps> = ({ cards })
   const list = cards && cards.length > 0 ? cards : defaultCards;
 
   const cardKeysMap: Record<number, { bgKeys: string[]; overlayKeys: string[] }> = {
-    0: { bgKeys: ['card_baby'], overlayKeys: ['overlay_bebe', 'cat_bebe'] },
-    1: { bgKeys: ['card_sun'], overlayKeys: ['overlay_solaire', 'cat_solaire'] },
-    2: { bgKeys: ['card_antiage'], overlayKeys: ['overlay_visage', 'cat_visage'] },
+    0: { bgKeys: ['card_baby'], overlayKeys: ['overlay_baby'] },
+    1: { bgKeys: ['card_sun'], overlayKeys: ['overlay_sun'] },
+    2: { bgKeys: ['card_antiage'], overlayKeys: ['overlay_serum'] },
   };
 
   return (
