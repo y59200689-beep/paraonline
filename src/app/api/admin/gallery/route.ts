@@ -12,7 +12,7 @@ import sharp from 'sharp';
 export interface GalleryImage {
   key: string;
   label: string;
-  group: 'heroes' | 'concerns' | 'brands' | 'categories' | 'bundles' | 'promo' | 'logo';
+  group: 'heroes' | 'concerns' | 'brands' | 'categories' | 'bundles' | 'promo' | 'logo' | 'products';
   /** Path relative to /public */
   filePath: string;
   /** URL path served by Next.js */
@@ -134,7 +134,7 @@ export async function GET() {
     return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
   }
 
-  const images = await Promise.all(
+  const manifestImages = await Promise.all(
     IMAGE_MANIFEST.map(async (img) => {
       const info = await getImageFileInfo(img.filePath);
       return {
@@ -147,7 +147,43 @@ export async function GET() {
     })
   );
 
-  return NextResponse.json({ success: true, images });
+  // Dynamically scan public/uploads/ for catalog product uploads
+  let uploadImages: GalleryImage[] = [];
+  try {
+    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+    if (fs.existsSync(uploadsDir)) {
+      const uploadFiles = fs.readdirSync(uploadsDir);
+      uploadImages = await Promise.all(
+        uploadFiles
+          .filter(f => !f.startsWith('.') && /\.(webp|png|jpg|jpeg)$/i.test(f))
+          .map(async f => {
+            const relPath = `uploads/${f}`;
+            const info = await getImageFileInfo(relPath);
+            const cleanName = f
+              .replace(/^\d+_/, '')
+              .replace(/_[a-f0-9-]{8,}.*/, '')
+              .replace(/_/g, ' ')
+              .replace(/\.(webp|png|jpg|jpeg)$/i, '')
+              .trim();
+            return {
+              key: `upload_${f}`,
+              label: `Produit — ${cleanName || f}`,
+              group: 'products' as const,
+              filePath: relPath,
+              url: `/${relPath}`,
+              sizeKb: info.sizeKb,
+              width: info.width,
+              height: info.height,
+              dimensions: info.dimensions,
+            };
+          })
+      );
+    }
+  } catch (e) {
+    console.warn('[gallery] Failed to scan public/uploads:', e);
+  }
+
+  return NextResponse.json({ success: true, images: [...manifestImages, ...uploadImages] });
 }
 
 // ─── POST — replace a file by key with automatic WebP conversion & dimension extraction ───
@@ -166,8 +202,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'key and file are required' }, { status: 400 });
     }
 
-    // Resolve the whitelisted entry
-    const entry = IMAGE_MANIFEST.find(img => img.key === key);
+    // Resolve the entry from manifest or dynamic upload scanner
+    let entry = IMAGE_MANIFEST.find(img => img.key === key);
+    if (!entry && key.startsWith('upload_')) {
+      const filename = key.replace('upload_', '');
+      const relPath = `uploads/${filename}`;
+      entry = {
+        key,
+        label: `Produit — ${filename}`,
+        group: 'products',
+        filePath: relPath,
+        url: `/${relPath}`,
+      };
+    }
+
     if (!entry) {
       return NextResponse.json({ success: false, error: `Unknown image key: ${key}` }, { status: 400 });
     }
