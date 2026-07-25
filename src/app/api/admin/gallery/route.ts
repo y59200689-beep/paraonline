@@ -76,9 +76,12 @@ export const IMAGE_MANIFEST: GalleryImage[] = [
   { key: 'cicaplast_packshot',     label: 'Promo — Cicaplast Packshot',   group: 'promo',      filePath: 'images/cicaplast_hero_packshot.webp',  url: '/images/cicaplast_hero_packshot.webp' },
   { key: 'skin_diagnostic_scan',   label: 'Promo — Diagnostic Scan',      group: 'promo',      filePath: 'images/skin_diagnostic_scan.webp',    url: '/images/skin_diagnostic_scan.webp' },
   { key: 'skincare_brand_banner',  label: 'Promo — Brand Banner',         group: 'promo',      filePath: 'images/skincare_brand_banner.webp',   url: '/images/skincare_brand_banner.webp' },
-  { key: 'card_antiage',           label: 'Promo Card — Anti-Âge',        group: 'promo',      filePath: 'images/promo/card_antiage.webp',       url: '/images/promo/card_antiage.webp' },
-  { key: 'card_baby',              label: 'Promo Card — Maternité & Bébé', group: 'promo',     filePath: 'images/promo/card_baby.webp',          url: '/images/promo/card_baby.webp' },
-  { key: 'card_sun',               label: 'Promo Card — Protections Solaires', group: 'promo',  filePath: 'images/promo/card_sun.webp',           url: '/images/promo/card_sun.webp' },
+  { key: 'card_antiage',           label: 'Promo Card — Anti-Âge (Fond)', group: 'promo',      filePath: 'images/promo/card_antiage.webp',       url: '/images/promo/card_antiage.webp' },
+  { key: 'card_baby',              label: 'Promo Card — Maternité & Bébé (Fond)', group: 'promo', filePath: 'images/promo/card_baby.webp',          url: '/images/promo/card_baby.webp' },
+  { key: 'card_sun',               label: 'Promo Card — Solaires (Fond)', group: 'promo',  filePath: 'images/promo/card_sun.webp',           url: '/images/promo/card_sun.webp' },
+  { key: 'overlay_bebe',           label: 'Promo Produit — PureBloom Lotion (Bébé)', group: 'promo', filePath: 'images/categories/bebe.webp', url: '/images/categories/bebe.webp' },
+  { key: 'overlay_solaire',        label: 'Promo Produit — Skinology SPF 50 (Solaire)', group: 'promo', filePath: 'images/categories/solaire.webp', url: '/images/categories/solaire.webp' },
+  { key: 'overlay_visage',         label: 'Promo Produit — Aqua Vital Sérum (Visage)', group: 'promo', filePath: 'images/categories/visage.webp', url: '/images/categories/visage.webp' },
 
   // ── Logo & Meta ──────────────────────────────────────────────────────────
   { key: 'logo',                   label: 'Logo Principal',               group: 'logo',       filePath: 'images/logo.webp',                   url: '/images/logo.webp' },
