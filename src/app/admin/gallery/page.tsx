@@ -508,7 +508,16 @@ export default function GalleryPage() {
     fetch('/api/admin/gallery')
       .then(r => r.json())
       .then(data => {
-        if (data.success) setImages(data.images);
+        if (data.success) {
+          let list: GalleryImage[] = data.images;
+          if (typeof window !== 'undefined') {
+            try {
+              const overrides = JSON.parse(localStorage.getItem('custom_gallery_overrides') || '{}');
+              list = list.map(img => overrides[img.key] ? { ...img, url: overrides[img.key] } : img);
+            } catch {}
+          }
+          setImages(list);
+        }
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -572,14 +581,27 @@ export default function GalleryPage() {
 
         if (data.success) {
           successCount++;
-          // Update size and dimensions in local state
+          const newUrl = data.url ? (data.url.startsWith('data:') ? data.url : `${data.url.split('?')[0]}?v=${Date.now()}`) : entry.previewUrl;
+
+          // Save override to localStorage for real-time site sync
+          if (typeof window !== 'undefined') {
+            try {
+              const existing = JSON.parse(localStorage.getItem('custom_gallery_overrides') || '{}');
+              existing[entry.key] = newUrl;
+              localStorage.setItem('custom_gallery_overrides', JSON.stringify(existing));
+              window.dispatchEvent(new Event('gallery_overrides_updated'));
+            } catch {}
+          }
+
+          // Update url, size, and dimensions in local state
           setImages(prev => prev.map(img =>
             img.key === entry.key ? {
               ...img,
-              sizeKb: data.sizeKb,
-              width: data.width,
-              height: data.height,
-              dimensions: data.dimensions,
+              url: newUrl,
+              sizeKb: data.sizeKb || img.sizeKb,
+              width: data.width || img.width,
+              height: data.height || img.height,
+              dimensions: data.dimensions || img.dimensions,
             } : img
           ));
         } else {
