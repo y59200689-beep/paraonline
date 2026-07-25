@@ -18,7 +18,7 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Group = 'all' | 'heroes' | 'concerns' | 'brands' | 'categories' | 'bundles' | 'promo' | 'logo';
+type Group = 'all' | 'heroes' | 'concerns' | 'brands' | 'categories' | 'bundles' | 'promo' | 'logo' | 'users';
 
 interface GalleryImage {
   key: string;
@@ -54,6 +54,7 @@ const GROUP_LABELS: Record<Group, string> = {
   bundles: 'Bundles',
   promo: 'Promotions',
   logo: 'Logo & OG',
+  users: 'Avis Clients',
 };
 
 const GROUP_COLORS: Record<Exclude<Group, 'all'>, string> = {
@@ -64,6 +65,7 @@ const GROUP_COLORS: Record<Exclude<Group, 'all'>, string> = {
   bundles: '#ec4899',
   promo: '#f43f5e',
   logo: '#8b5cf6',
+  users: '#06b6d4',
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -595,7 +597,7 @@ export default function GalleryPage() {
   const textPrimary = isDark ? 'hsl(214,35%,95%)' : 'hsl(222,47%,10%)';
   const textMuted = isDark ? 'hsl(215,22%,46%)' : 'hsl(215,18%,46%)';
 
-  const groups: Group[] = ['all', 'heroes', 'concerns', 'brands', 'categories', 'bundles', 'promo', 'logo'];
+  const groups: Group[] = ['all', 'heroes', 'concerns', 'brands', 'categories', 'bundles', 'promo', 'logo', 'users'];
 
   return (
     <>

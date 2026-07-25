@@ -6,12 +6,12 @@ import sharp from 'sharp';
 
 // ─── Image manifest ────────────────────────────────────────────────────────
 // Maps a stable key → relative path within /public and display metadata.
-// Only active files used across the store are listed. Every image is WebP.
+// Every single image asset in the project is registered here as WebP.
 
 export interface GalleryImage {
   key: string;
   label: string;
-  group: 'heroes' | 'concerns' | 'brands' | 'categories' | 'bundles' | 'promo' | 'logo';
+  group: 'heroes' | 'concerns' | 'brands' | 'categories' | 'bundles' | 'promo' | 'logo' | 'users';
   /** Path relative to /public */
   filePath: string;
   /** URL path served by Next.js */
@@ -37,12 +37,14 @@ export const IMAGE_MANIFEST: GalleryImage[] = [
   { key: 'concern_wrinkles',       label: 'Problème — Rides',            group: 'concerns',   filePath: 'images/concern_wrinkles.webp',        url: '/images/concern_wrinkles.webp' },
 
   // ── Brands ───────────────────────────────────────────────────────────────
-  { key: 'avene_showcase',         label: 'Marque — Avène',              group: 'brands',     filePath: 'images/avene_brand_showcase.webp',     url: '/images/avene_brand_showcase.webp' },
-  { key: 'bioderma_showcase',      label: 'Marque — Bioderma',           group: 'brands',     filePath: 'images/bioderma_brand_showcase.webp',  url: '/images/bioderma_brand_showcase.webp' },
-  { key: 'cerave_showcase',        label: 'Marque — CeraVe',             group: 'brands',     filePath: 'images/cerave_brand_showcase.webp',    url: '/images/cerave_brand_showcase.webp' },
-  { key: 'eucerin_showcase',       label: 'Marque — Eucerin',            group: 'brands',     filePath: 'images/eucerin_brand_showcase.webp',   url: '/images/eucerin_brand_showcase.webp' },
-  { key: 'lrp_showcase',           label: 'Marque — La Roche-Posay',     group: 'brands',     filePath: 'images/larochposay_brand_showcase.webp', url: '/images/larochposay_brand_showcase.webp' },
-  { key: 'vichy_showcase',         label: 'Marque — Vichy',              group: 'brands',     filePath: 'images/vichy_brand_showcase.webp',     url: '/images/vichy_brand_showcase.webp' },
+  { key: 'avene_showcase',         label: 'Marque — Avène Showcase',     group: 'brands',     filePath: 'images/avene_brand_showcase.webp',     url: '/images/avene_brand_showcase.webp' },
+  { key: 'bioderma_showcase',      label: 'Marque — Bioderma Showcase',  group: 'brands',     filePath: 'images/bioderma_brand_showcase.webp',  url: '/images/bioderma_brand_showcase.webp' },
+  { key: 'cerave_showcase',        label: 'Marque — CeraVe Showcase',    group: 'brands',     filePath: 'images/cerave_brand_showcase.webp',    url: '/images/cerave_brand_showcase.webp' },
+  { key: 'eucerin_showcase',       label: 'Marque — Eucerin Showcase',   group: 'brands',     filePath: 'images/eucerin_brand_showcase.webp',   url: '/images/eucerin_brand_showcase.webp' },
+  { key: 'lrp_showcase',           label: 'Marque — La Roche-Posay Showcase', group: 'brands', filePath: 'images/larochposay_brand_showcase.webp', url: '/images/larochposay_brand_showcase.webp' },
+  { key: 'vichy_showcase',         label: 'Marque — Vichy Showcase',     group: 'brands',     filePath: 'images/vichy_brand_showcase.webp',     url: '/images/vichy_brand_showcase.webp' },
+  { key: 'brand_laroche_logo',     label: 'Marque — La Roche-Posay Logo', group: 'brands',    filePath: 'images/brands/laroche.webp',           url: '/images/brands/laroche.webp' },
+  { key: 'brand_vichy_logo',       label: 'Marque — Vichy Logo',         group: 'brands',     filePath: 'images/brands/vichy.webp',             url: '/images/brands/vichy.webp' },
 
   // ── Categories ───────────────────────────────────────────────────────────
   { key: 'cat_all',                 label: 'Catégorie — Grandes Réductions', group: 'categories', filePath: 'images/categories/all.webp',       url: '/images/categories/all.webp' },
@@ -72,10 +74,23 @@ export const IMAGE_MANIFEST: GalleryImage[] = [
   { key: 'cicaplast_packshot',     label: 'Promo — Cicaplast Packshot',   group: 'promo',      filePath: 'images/cicaplast_hero_packshot.webp',  url: '/images/cicaplast_hero_packshot.webp' },
   { key: 'skin_diagnostic_scan',   label: 'Promo — Diagnostic Scan',      group: 'promo',      filePath: 'images/skin_diagnostic_scan.webp',    url: '/images/skin_diagnostic_scan.webp' },
   { key: 'skincare_brand_banner',  label: 'Promo — Brand Banner',         group: 'promo',      filePath: 'images/skincare_brand_banner.webp',   url: '/images/skincare_brand_banner.webp' },
+  { key: 'flash_sale_banner',      label: 'Promo — Flash Sale Banner',    group: 'promo',      filePath: 'images/promo/flash_sale_banner.webp',  url: '/images/promo/flash_sale_banner.webp' },
+  { key: 'summer_sale_hero',       label: 'Promo — Summer Sale Hero',     group: 'promo',      filePath: 'images/promo/summer_sale_hero.webp',   url: '/images/promo/summer_sale_hero.webp' },
+  { key: 'horizontal_promo',       label: 'Promo — Horizontal Banner',    group: 'promo',      filePath: 'images/promo/horizontal_promo.webp',   url: '/images/promo/horizontal_promo.webp' },
+  { key: 'card_antiage',           label: 'Promo Card — Anti-Âge',        group: 'promo',      filePath: 'images/promo/card_antiage.webp',       url: '/images/promo/card_antiage.webp' },
+  { key: 'card_baby',              label: 'Promo Card — Maternité & Bébé', group: 'promo',     filePath: 'images/promo/card_baby.webp',          url: '/images/promo/card_baby.webp' },
+  { key: 'card_sun',               label: 'Promo Card — Protections Solaires', group: 'promo',  filePath: 'images/promo/card_sun.webp',           url: '/images/promo/card_sun.webp' },
 
-  // ── Logo ─────────────────────────────────────────────────────────────────
+  // ── Users & Avis Clients ─────────────────────────────────────────────────
+  { key: 'user_sarah',             label: 'Avis Client — Sarah M.',       group: 'users',      filePath: 'images/users/user1.webp',              url: '/images/users/user1.webp' },
+  { key: 'user_kenza',             label: 'Avis Client — Kenza B.',       group: 'users',      filePath: 'images/users/user2.webp',              url: '/images/users/user2.webp' },
+  { key: 'user_yasmine',           label: 'Avis Client — Yasmine T.',     group: 'users',      filePath: 'images/users/user3.webp',              url: '/images/users/user3.webp' },
+  { key: 'user_sofia',             label: 'Avis Client — Sofia K.',       group: 'users',      filePath: 'images/users/user4.webp',              url: '/images/users/user4.webp' },
+  { key: 'user_dr_amine',          label: 'Avis Client — Dr. Amine',      group: 'users',      filePath: 'images/users/user5.webp',              url: '/images/users/user5.webp' },
+
+  // ── Logo & Meta ──────────────────────────────────────────────────────────
   { key: 'logo',                   label: 'Logo Principal',               group: 'logo',       filePath: 'images/logo.webp',                   url: '/images/logo.webp' },
-  { key: 'og_image',               label: 'OG Image (Social)',            group: 'logo',       filePath: 'images/og-image.webp',               url: '/images/og-image.webp' },
+  { key: 'og_image',               label: 'OG Image (Social)',            group: 'logo',       filePath: 'og-image.webp',                      url: '/og-image.webp' },
 ];
 
 // ─── Allowed image MIME types ────────────────────────────────────────────────
