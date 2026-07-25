@@ -20,10 +20,10 @@ export const HorizontalPromoBanner: React.FC<HorizontalPromoBannerProps> = ({ se
   const descFr = settings?.descFr || "La seule parapharmacie qui simplifie votre quotidien beauté au Maroc";
   const descAr = settings?.descAr || "الصيدلية الوحيدة التي تجعل حياتك أسهل وأجمل في المغرب";
   const discountPercent = settings?.discountPercent !== undefined ? settings.discountPercent : 50;
-  const bgImage = settings?.bgImage || "/images/promo/horizontal_promo.webp";
-  const overlayImage = settings?.overlayImage || "/images/promo/horizontal_promo.webp";
+  const bgImage = settings?.bgImage || "";
+  const overlayImage = settings?.overlayImage || "";
 
-  const isDefaultBg = bgImage === "/images/promo/horizontal_promo.webp";
+  const isDefaultBg = !bgImage;
 
   return (
     <section className="bg-[#FAFAFA] border-b border-slate-200/40 relative py-8 sm:py-10 md:py-12 overflow-visible reveal-on-scroll">

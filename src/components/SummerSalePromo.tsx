@@ -142,11 +142,8 @@ export const SummerSalePromo: React.FC = () => {
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          backgroundImage: `url(${getOptimizedImageUrl('/images/promo/summer_sale_hero.webp')})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center top',
-          opacity: 0.06,
-          filter: 'saturate(1.4)',
+          background: 'linear-gradient(135deg, rgba(255,240,245,0.3) 0%, rgba(255,248,240,0.3) 100%)',
+          opacity: 0.8,
         }}
       />
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 relative z-10">
