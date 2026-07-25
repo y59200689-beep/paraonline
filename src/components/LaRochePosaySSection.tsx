@@ -79,7 +79,7 @@ export const LaRochePosaySSection: React.FC = () => {
           {/* Column 1: Brand Spotlight Card */}
           <div className="relative overflow-hidden rounded-[28px] border border-slate-200/50 dark:border-white/10 shadow-lg min-h-[480px] lg:min-h-full group">
             <Image
-              src="/images/larochposay_brand_showcase.png"
+              src="/images/larochposay_brand_showcase.webp"
               alt="La Roche-Posay Brand Spotlight"
               fill
               priority

@@ -103,7 +103,7 @@ export const FlashSaleBanner: React.FC<FlashSaleBannerProps> = ({
   const titleAr = propTitleAr || `${originalProduct.name || originalProduct.title} خصم -${finalDiscountPercent}% فلاش`;
   const descFr = propDescFr || originalProduct.description || "Profitez de la protection organique culte avec sa formule gel-eau ultra-légère à prix exclusif. Aujourd'hui seulement.";
   const descAr = propDescAr || "احصل على هذا المنتج الأكثر مبيعاً بتركيبته المتميزة بسعر حصري اليوم فقط.";
-  const finalBgImage = bgImage || "/images/promo/flash_sale_banner.png";
+  const finalBgImage = bgImage || "/images/promo/flash_sale_banner.webp";
 
   const TimeBlock = ({ value, label }: { value: number; label: string }) => {
     const formatted = value.toString().padStart(2, '0');

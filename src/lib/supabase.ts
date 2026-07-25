@@ -334,14 +334,14 @@ if (isPlaceholder) {
                 {
                   name: 'La Roche Posay',
                   domain: 'laroche-posay.com',
-                  logoUrl: '/images/brands/laroche.png',
+                  logoUrl: '/images/brands/laroche.webp',
                   categoryTag: 'solaire',
-                  categoryImage: '/images/categories/solaire-custom.png'
+                  categoryImage: '/images/categories/solaire.webp'
                 },
                 {
                   name: 'Vichy',
                   domain: 'vichyusa.com',
-                  logoUrl: '/images/brands/vichy.png'
+                  logoUrl: '/images/brands/vichy.webp'
                 },
                 {
                   name: 'Cerave',

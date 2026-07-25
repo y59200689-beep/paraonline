@@ -22,8 +22,8 @@ export const SummerSalePromo: React.FC = () => {
   const summerSaleSection = hp?.sectionOrder?.find(
     (s: any) => s.type === 'summerSale'
   );
-  const leftImage = summerSaleSection?.settings?.leftImage || hp?.summerSaleLeftImage || "/images/cicaplast_bundle_nobg.png";
-  const rightImage = summerSaleSection?.settings?.rightImage || hp?.summerSaleRightImage || "/images/vichy_sunscreen_bundle_nobg.png";
+  const leftImage = summerSaleSection?.settings?.leftImage || hp?.summerSaleLeftImage || "/images/cicaplast_bundle.webp";
+  const rightImage = summerSaleSection?.settings?.rightImage || hp?.summerSaleRightImage || "/images/vichy_sunscreen_bundle.webp";
 
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 20, seconds: 0 });
   const { setSelectedProduct } = useUi();
@@ -142,7 +142,7 @@ export const SummerSalePromo: React.FC = () => {
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          backgroundImage: `url(${getOptimizedImageUrl('/images/promo/summer_sale_hero.png')})`,
+          backgroundImage: `url(${getOptimizedImageUrl('/images/promo/summer_sale_hero.webp')})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center top',
           opacity: 0.06,

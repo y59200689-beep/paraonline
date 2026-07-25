@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useTranslation } from '@/context/LanguageContext';
 import { ChevronLeft, ChevronRight, Award } from 'lucide-react';
 import { ProductCard } from './ProductCard';
+import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 
 /* ─── Brand config ──────────────────────────────────────────────── */
 const BRANDS = [
@@ -18,7 +19,7 @@ const BRANDS = [
       'Développé avec des dermatologues, CeraVe propose des formules enrichies aux 3 céramides essentiels et acide hyaluronique pour restaurer la barrière protectrice de la peau.',
     descAr:
       'تم تطويره مع أطباء الجلد، يحتوي على 3 سيراميدات أساسية وحمض الهيالورونيك لاستعادة وحماية حاجز البشرة الواقي.',
-    image: '/images/cerave_brand_showcase.png',
+    image: '/images/cerave_brand_showcase.webp',
     href: '/brand/cerave',
     glowClass: 'from-blue-500/5 to-cyan-500/5 dark:from-blue-500/10 dark:to-cyan-500/10',
     badgeBg: 'bg-blue-500/10',
@@ -44,7 +45,7 @@ const BRANDS = [
       "Développée avec des dermatologues, La Roche-Posay propose des formules innovantes avec l'Eau Thermale pour les peaux les plus sensibles.",
     descAr:
       'طورت بالشراكة مع أطباء الجلد، توفر La Roche-Posay حلولاً مبتكرة لأكثر الحالات الجلدية حساسية بفضل مياه Eau Thermale الفريدة.',
-    image: '/images/larochposay_brand_showcase.png',
+    image: '/images/larochposay_brand_showcase.webp',
     href: '/brand/la-roche-posay',
     glowClass: 'from-orange-500/5 to-rose-500/5 dark:from-orange-500/10 dark:to-rose-500/10',
     badgeBg: 'bg-orange-500/10',
@@ -68,7 +69,7 @@ const BRANDS = [
     subtitleAr: 'الماء الحراري',
     descFr: "Formulée avec l'Eau Thermale d'Avène aux propriétés apaisantes et anti-irritantes uniques, la gamme Avène est spécialement conçue pour les peaux les plus sensibles et réactives.",
     descAr: 'تمتلك أفين قوة الماء الحراري ذو الخصائص المهدئة، وهي مخصصة للبشرة الأكثر حساسية وتفاعلاً مع العوامل الخارجية.',
-    image: '/images/avene_brand_showcase.png',
+    image: '/images/avene_brand_showcase.webp',
     href: '/brand/avene',
     glowClass: 'from-rose-500/5 to-pink-500/5 dark:from-rose-500/10 dark:to-pink-500/10',
     badgeBg: 'bg-rose-500/10',
@@ -92,7 +93,7 @@ const BRANDS = [
     subtitleAr: 'الماء الحراري البركاني',
     descFr: "Enrichi en 15 minéraux rares de l'Eau Thermale de Vichy, la gamme combine innovation dermatologique et haute performance pour traiter efficacement les signes du vieillissement et protéger la peau au quotidien.",
     descAr: 'مدعوم بـ 15 معدناً نادراً من مياه فيشي الحرارية، تجمع بين الابتكار الجلدي والأداء العالي لمعالجة علامات التقدم في السن.',
-    image: '/images/vichy_brand_showcase.png',
+    image: '/images/vichy_brand_showcase.webp',
     href: '/brand/vichy',
     glowClass: 'from-emerald-500/5 to-teal-500/5 dark:from-emerald-500/10 dark:to-teal-500/10',
     badgeBg: 'bg-emerald-500/10',
@@ -116,7 +117,7 @@ const BRANDS = [
     subtitleAr: 'علم الأحياء الجلدية',
     descFr: 'Pionnier de la biologie dermatologique, Bioderma développe des solutions qui respectent le biome cutané — de la célèbre eau micellaire Sensibio H2O aux gammes Sebium et Hydrabio, pour chaque type de peau.',
     descAr: 'رائد علم الأحياء الجلدية، يطور بيوديرما حلولاً تحترم ميكروبيوم الجلد — من ماء ميسلار Sensibio إلى مجموعات Sebium وHydrabio.',
-    image: '/images/bioderma_brand_showcase.png',
+    image: '/images/bioderma_brand_showcase.webp',
     href: '/brand/bioderma',
     glowClass: 'from-pink-500/5 to-amber-500/5 dark:from-pink-500/10 dark:to-amber-500/10',
     badgeBg: 'bg-amber-500/10',
@@ -140,7 +141,7 @@ const BRANDS = [
     subtitleAr: 'عناية جلدية ألمانية',
     descFr: 'Fondé sur 130 ans d’expertise clinique allemande, Eucerin développe des formules médicalement éprouvées — Hyaluron-Filler, DermoPure et UreaRepair — pour traiter les problématiques cutanées les plus complexes.',
     descAr: 'بخبرة 130 عاماً في علم الجلد الألماني، تطور يوسيرين تركيبات مثبتة طبياً لمعالجة أصعب مشكلات البشرة.',
-    image: '/images/eucerin_brand_showcase.png',
+    image: '/images/eucerin_brand_showcase.webp',
     href: '/brand/eucerin',
     glowClass: 'from-indigo-500/5 to-blue-600/5 dark:from-indigo-500/10 dark:to-blue-600/10',
     badgeBg: 'bg-indigo-500/10',
@@ -183,7 +184,7 @@ function BrandRow({ brand, isAR }: { brand: (typeof BRANDS)[number]; isAR: boole
       {/* Brand card */}
       <div className="relative overflow-hidden rounded-[28px] border border-slate-200/50 dark:border-white/10 shadow-xl min-h-[460px] lg:min-h-full group">
         <Image
-          src={brand.image}
+          src={getOptimizedImageUrl(brand.image)}
           alt={isAR ? brand.nameAr : brand.nameFr}
           fill
           sizes="(max-width: 1024px) 100vw, 33vw"

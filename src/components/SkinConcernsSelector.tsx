@@ -23,16 +23,16 @@ export const SkinConcernsSelector: React.FC = () => {
   const concernsList = useMemo(() => {
     if (customConcerns.length > 0) {
       const imagePresets: Record<string, string> = {
-        acne: '/images/concern_acne.png',
-        spots: '/images/concern_spots.png',
-        wrinkles: '/images/concern_wrinkles.png',
-        antiage: '/images/concern_wrinkles.png',
-        dryness: '/images/concern_dryness.png',
-        hydration: '/images/concern_dryness.png',
-        redness: '/images/concern_redness.png',
-        soothing: '/images/concern_redness.png',
-        suncare: '/images/concern_suncare.png',
-        solaire: '/images/concern_suncare.png'
+        acne: '/images/concern_acne.webp',
+        spots: '/images/concern_spots.webp',
+        wrinkles: '/images/concern_wrinkles.webp',
+        antiage: '/images/concern_wrinkles.webp',
+        dryness: '/images/concern_dryness.webp',
+        hydration: '/images/concern_dryness.webp',
+        redness: '/images/concern_dryness.webp',
+        soothing: '/images/concern_dryness.webp',
+        suncare: '/images/concern_spots.webp',
+        solaire: '/images/concern_spots.webp'
       };
       return customConcerns.map((c: any) => ({
         key: c.id,

@@ -38,8 +38,8 @@ export const TriplePromoBanners: React.FC<TriplePromoBannersProps> = ({ cards })
       titleFr: "Soin Bébé\nMustela Doux",
       titleAr: "عناية الطفل\nمستحضرات لطيفة",
       price: "99 MAD",
-      bgImage: "/images/promo/card_baby_clean.png",
-      overlayImage: "/images/categories/bebe_transparent_v3.png",
+      bgImage: "/images/promo/card_baby.webp",
+      overlayImage: "/images/categories/bebe.webp",
       category: "bebe"
     },
     {
@@ -48,8 +48,8 @@ export const TriplePromoBanners: React.FC<TriplePromoBannersProps> = ({ cards })
       titleFr: "Packs Solaires\nAnthelios Pack",
       titleAr: "واقيات الشمس\nحماية متكاملة",
       price: "159 MAD",
-      bgImage: "/images/promo/card_sun_clean.png",
-      overlayImage: "/images/categories/solaire_transparent_v3.png",
+      bgImage: "/images/promo/card_sun.webp",
+      overlayImage: "/images/categories/solaire.webp",
       category: "solaire"
     },
     {
@@ -58,8 +58,8 @@ export const TriplePromoBanners: React.FC<TriplePromoBannersProps> = ({ cards })
       titleFr: "Anti-Âge\nRétinol",
       titleAr: "مكافحة الشيخوخة\nبروتوكول ريتينول",
       price: "199 MAD",
-      bgImage: "/images/promo/card_antiage_clean.png",
-      overlayImage: "/images/categories/retinol_transparent_v3.png",
+      bgImage: "/images/promo/card_antiage.webp",
+      overlayImage: "/images/categories/visage.webp",
       category: "visage"
     }
   ];
