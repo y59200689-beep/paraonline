@@ -49,6 +49,7 @@ export const IMAGE_MANIFEST: GalleryImage[] = [
   // ── Categories ───────────────────────────────────────────────────────────
   { key: 'cat_all',                 label: 'Catégorie — Grandes Réductions', group: 'categories', filePath: 'images/categories/all.webp',       url: '/images/categories/all.webp' },
   { key: 'cat_offers',              label: 'Catégorie — Meilleures Ventes',  group: 'categories', filePath: 'images/categories/offers.webp',    url: '/images/categories/offers.webp' },
+  { key: 'cat_giftbox',             label: 'Catégorie — Coffrets Cadeaux',   group: 'categories', filePath: 'images/categories/giftbox.webp',   url: '/images/categories/giftbox.webp' },
   { key: 'cat_solaire',            label: 'Catégorie — Solaires',           group: 'categories', filePath: 'images/categories/solaire.webp',   url: '/images/categories/solaire.webp' },
   { key: 'cat_visage',             label: 'Catégorie — Visage',             group: 'categories', filePath: 'images/categories/visage.webp',    url: '/images/categories/visage.webp' },
   { key: 'cat_cheveux',            label: 'Catégorie — Cheveux',            group: 'categories', filePath: 'images/categories/cheveux.webp',   url: '/images/categories/cheveux.webp' },
