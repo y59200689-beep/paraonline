@@ -37,7 +37,7 @@ export const TriplePromoBanners: React.FC<TriplePromoBannersProps> = ({ cards })
       tagAr: "خالٍ من العطور",
       titleFr: "Soin Bébé\nMustela Doux",
       titleAr: "عناية الطفل\nمستحضرات لطيفة",
-      price: "99 MAD",
+      price: "",
       bgImage: "/images/promo/card_baby.webp",
       overlayImage: "/images/categories/bebe.webp",
       category: "bebe"
@@ -45,19 +45,19 @@ export const TriplePromoBanners: React.FC<TriplePromoBannersProps> = ({ cards })
     {
       tagFr: "Protection Max",
       tagAr: "حماية قصوى",
-      titleFr: "Packs Solaires\nAnthelios Pack",
-      titleAr: "واقيات الشمس\nحماية متكاملة",
-      price: "159 MAD",
+      titleFr: "Pack Solaire",
+      titleAr: "واقيات الشمس",
+      price: "",
       bgImage: "/images/promo/card_sun.webp",
       overlayImage: "/images/categories/solaire.webp",
       category: "solaire"
     },
     {
       tagFr: "Protocole Nuit",
-      tagAr: "بروتوكول الليل",
-      titleFr: "Anti-Âge\nRétinol",
-      titleAr: "مكافحة الشيخوخة\nبروتوكول ريتينول",
-      price: "199 MAD",
+      tagAr: "عناية مركزة",
+      titleFr: "Sérums",
+      titleAr: "سيرومات",
+      price: "",
       bgImage: "/images/promo/card_antiage.webp",
       overlayImage: "/images/categories/visage.webp",
       category: "visage"
@@ -101,13 +101,6 @@ export const TriplePromoBanners: React.FC<TriplePromoBannersProps> = ({ cards })
                 </div>
 
                 <div className="mt-auto">
-                  <div className="mb-2">
-                    <span className="text-[9px] font-black uppercase tracking-wider text-white/70 block leading-none">
-                      {language === 'AR' ? 'فقط' : 'Seulement'}
-                    </span>
-                    <span className="text-xl sm:text-2xl font-sans font-black text-white leading-none drop-shadow-sm">{card.price}</span>
-                  </div>
-
                   <div
                     onClick={() => handleCategoryClick(card.category)}
                     className="px-6 py-2 font-sans font-extrabold text-[10px] uppercase tracking-wider rounded-full hover:scale-105 active:scale-95 transition-all shadow-md w-max cursor-pointer select-none text-center bg-white text-slate-800"

@@ -2223,29 +2223,29 @@ export default function SettingsTab() {
                                   tagAr: "خالٍ من العطور",
                                   titleFr: "Soin Bébé\nMustela Doux",
                                   titleAr: "عناية الطفل\nمستحضرات لطيفة",
-                                  price: "99 MAD",
-                                  bgImage: "/images/promo/card_baby.png",
-                                  overlayImage: "/images/categories/bebe.png",
+                                  price: "",
+                                  bgImage: "/images/promo/card_baby.webp",
+                                  overlayImage: "/images/categories/bebe.webp",
                                   category: "bebe"
                                 },
                                 {
                                   tagFr: "Protection Max",
                                   tagAr: "حماية قصوى",
-                                  titleFr: "Packs Solaires\nAnthelios Pack",
-                                  titleAr: "واقيات الشمس\nحماية متكاملة",
-                                  price: "159 MAD",
-                                  bgImage: "/images/promo/card_sun.png",
-                                  overlayImage: "/images/categories/solaire.png",
+                                  titleFr: "Pack Solaire",
+                                  titleAr: "واقيات الشمس",
+                                  price: "",
+                                  bgImage: "/images/promo/card_sun.webp",
+                                  overlayImage: "/images/categories/solaire.webp",
                                   category: "solaire"
                                 },
                                 {
                                   tagFr: "Protocole Nuit",
-                                  tagAr: "بروتوكول الليل",
-                                  titleFr: "Anti-Âge\nRétinol",
-                                  titleAr: "مكافحة الشيخوخة\nبروتوكول ريتينول",
-                                  price: "199 MAD",
-                                  bgImage: "/images/promo/card_antiage.png",
-                                  overlayImage: "/images/categories/retinol-custom.png",
+                                  tagAr: "عناية مركزة",
+                                  titleFr: "Sérums",
+                                  titleAr: "سيرومات",
+                                  price: "",
+                                  bgImage: "/images/promo/card_antiage.webp",
+                                  overlayImage: "/images/categories/visage.webp",
                                   category: "visage"
                                 }
                               ];
