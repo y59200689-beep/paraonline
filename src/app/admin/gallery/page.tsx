@@ -112,9 +112,20 @@ function ImageCard({ image, isDark, pending, uploading, onPick, onCancelPending 
   const inputRef = useRef<HTMLInputElement>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [fallbackTried, setFallbackTried] = useState(false);
 
-  const displayUrl = pending ? pending.previewUrl : `${image.url}?t=${Date.now()}`;
+  const displayUrl = pending
+    ? pending.previewUrl
+    : (fallbackTried ? (image.filePath ? `/${image.filePath}` : image.url) : image.url);
   const hasPending = !!pending;
+
+  const handleImageError = () => {
+    if (!fallbackTried && image.filePath && displayUrl !== `/${image.filePath}`) {
+      setFallbackTried(true);
+    } else {
+      setImgError(true);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -163,7 +174,7 @@ function ImageCard({ image, isDark, pending, uploading, onPick, onCancelPending 
             alt={image.label}
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-500"
             style={{ transform: isHovered ? 'scale(1.04)' : 'scale(1)' }}
-            onError={() => setImgError(true)}
+            onError={handleImageError}
           />
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
