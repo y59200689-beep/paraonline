@@ -472,6 +472,36 @@ export default function GalleryPage() {
   const [toast, setToast] = useState<ToastState | null>(null);
   const [search, setSearch] = useState('');
 
+  // Sync active group from URL query or localStorage on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const groupParam = params.get('group') as Group | null;
+    const storedGroup = localStorage.getItem('admin_gallery_group') as Group | null;
+    
+    const validGroups: Group[] = ['all', 'heroes', 'concerns', 'brands', 'categories', 'bundles', 'promo', 'logo', 'users'];
+    
+    if (groupParam && validGroups.includes(groupParam)) {
+      setActiveGroup(groupParam);
+    } else if (storedGroup && validGroups.includes(storedGroup)) {
+      setActiveGroup(storedGroup);
+    }
+  }, []);
+
+  const handleGroupSelect = useCallback((group: Group) => {
+    setActiveGroup(group);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('admin_gallery_group', group);
+      const url = new URL(window.location.href);
+      if (group === 'all') {
+        url.searchParams.delete('group');
+      } else {
+        url.searchParams.set('group', group);
+      }
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, []);
+
   // Fetch manifest
   useEffect(() => {
     setLoading(true);
@@ -681,7 +711,7 @@ export default function GalleryPage() {
             return (
               <button
                 key={group}
-                onClick={() => setActiveGroup(group)}
+                onClick={() => handleGroupSelect(group)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold cursor-pointer transition-all duration-200 select-none"
                 style={{
                   background: isActive
