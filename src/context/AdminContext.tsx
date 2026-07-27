@@ -111,6 +111,14 @@ export interface AdminContextProps {
   handleImportProducts: (importedProducts: any[], updateExisting: boolean) => Promise<{ success: boolean; count: number; error?: string; message?: string }>;
 
   // Reviews Handlers
+  handleCreateReview: (data: {
+    productId: number;
+    author: string;
+    rating: number;
+    comment: string;
+    status?: string;
+    reply?: string;
+  }) => Promise<boolean>;
   handleUpdateReviewStatus: (id: string, status: string) => Promise<void>;
   handleBulkUpdateReviewStatus: (status: string, selectedIds: string[]) => Promise<void>;
   handleReplyReview: (reviewId: string, text: string) => Promise<boolean>;
@@ -123,6 +131,7 @@ export interface AdminContextProps {
       rating?: number;
       status?: string;
       reply?: string;
+      productId?: number;
     }
   ) => Promise<boolean>;
 
@@ -288,6 +297,7 @@ export const useAdmin = (): AdminContextProps => {
     handleSaveNotificationTemplates: catalog.handleSaveNotificationTemplates,
 
     // Reviews Actions
+    handleCreateReview: reviews.handleCreateReview,
     handleUpdateReviewStatus: reviews.handleUpdateReviewStatus,
     handleBulkUpdateReviewStatus: reviews.handleBulkUpdateReviewStatus,
     handleReplyReview: reviews.handleReplyReview,

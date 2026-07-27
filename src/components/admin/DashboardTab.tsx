@@ -34,6 +34,7 @@ import {
   RotateCcw,
   Truck,
   AlertTriangle,
+  ShieldAlert,
 } from 'lucide-react';
 import { StatusBadge } from '@/components/admin/ui';
 
@@ -302,6 +303,8 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
     adminTheme,
     handleUpdateCartRecovery,
     products,
+    currentUser,
+    operatorsList,
   } = useAdmin();
   const { settings } = useSettings();
 
@@ -478,8 +481,49 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
     return [...orders].sort((a, b) => new Date(b.created_at || b.date || 0).getTime() - new Date(a.created_at || a.date || 0).getTime()).slice(0, 6);
   }, [orders]);
 
+  const pendingOperators = operatorsList.filter((op: any) => !op.isActive);
+
   return (
     <div className="space-y-6 admin-tab-enter pb-10">
+
+      {/* ── Pending Approvals Banner (Owner only) ────────────────────────────── */}
+      {currentUser?.role === 'owner' && pendingOperators.length > 0 && (
+        <div
+          className="flex items-center justify-between gap-4 p-4 rounded-2xl cursor-pointer group animate-in fade-in duration-300"
+          style={{
+            background: isDark
+              ? 'linear-gradient(135deg, rgba(245,158,11,0.10) 0%, rgba(245,158,11,0.05) 100%)'
+              : 'linear-gradient(135deg, rgba(245,158,11,0.12) 0%, rgba(245,158,11,0.06) 100%)',
+            border: '1px solid rgba(245,158,11,0.30)',
+          }}
+          onClick={() => {
+            setActiveSettingsSubTab('operators');
+            setActiveTab('settings');
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', boxShadow: '0 4px 14px rgba(245,158,11,0.35)' }}
+            >
+              <ShieldAlert className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-[13px] font-black text-amber-400">
+                {pendingOperators.length} demande{pendingOperators.length > 1 ? 's' : ''} d&apos;accès administrateur en attente
+              </p>
+              <p className="text-[10.5px] font-medium text-amber-300/70">
+                {pendingOperators.map((op: any) => op.name).join(', ')} — Cliquez pour approuver ou refuser
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-amber-500 text-slate-950 group-hover:bg-amber-400 transition">
+              Gérer les accès →
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* ── Top Summary & Filter Banner ────────────────────────────────────────── */}
       <div

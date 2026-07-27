@@ -6,6 +6,14 @@ import { useAdminData } from './AdminDataContext';
 import { useUi } from '@/context/UiContext';
 
 export interface AdminReviewsContextProps {
+  handleCreateReview: (data: {
+    productId: number;
+    author: string;
+    rating: number;
+    comment: string;
+    status?: string;
+    reply?: string;
+  }) => Promise<boolean>;
   handleUpdateReviewStatus: (id: string, newStatus: string) => Promise<void>;
   handleBulkUpdateReviewStatus: (status: string, selectedIds: string[]) => Promise<void>;
   handleReplyReview: (reviewId: string, text: string) => Promise<boolean>;
@@ -18,6 +26,7 @@ export interface AdminReviewsContextProps {
       rating?: number;
       status?: string;
       reply?: string;
+      productId?: number;
     }
   ) => Promise<boolean>;
 }
@@ -28,6 +37,39 @@ export const AdminReviewsProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const { currentUser } = useAdminAuth();
   const { loadReviews, logAdminAction, setIsDataLoading } = useAdminData();
   const { showToast } = useUi();
+
+  const handleCreateReview = async (data: {
+    productId: number;
+    author: string;
+    rating: number;
+    comment: string;
+    status?: string;
+    reply?: string;
+  }): Promise<boolean> => {
+    if (currentUser?.role === 'logistician') {
+      showToast("Permission refusée : Les logisticiens ne peuvent pas créer des avis.", 'error');
+      return false;
+    }
+    try {
+      const res = await fetch('/api/admin/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const result = await res.json();
+      if (result.success) {
+        await loadReviews();
+        logAdminAction('Création Avis Manuel', `Avis créé pour le produit #${data.productId} par ${data.author}.`);
+        showToast('Avis créé avec succès.', 'success');
+        return true;
+      } else {
+        showToast(result.error || "Erreur lors de la création de l'avis.", 'error');
+      }
+    } catch (e) {
+      showToast("Erreur de connexion lors de la création de l'avis.", 'error');
+    }
+    return false;
+  };
 
   const handleUpdateReviewStatus = async (id: string, newStatus: string) => {
     if (currentUser?.role === 'logistician') {
@@ -120,6 +162,7 @@ export const AdminReviewsProvider: React.FC<{ children: React.ReactNode }> = ({ 
       rating?: number;
       status?: string;
       reply?: string;
+      productId?: number;
     }
   ): Promise<boolean> => {
     if (currentUser?.role === 'logistician') {
@@ -148,6 +191,7 @@ export const AdminReviewsProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   return (
     <AdminReviewsContext.Provider value={{
+      handleCreateReview,
       handleUpdateReviewStatus,
       handleBulkUpdateReviewStatus,
       handleReplyReview,
