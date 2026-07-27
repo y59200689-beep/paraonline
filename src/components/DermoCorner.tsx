@@ -6,11 +6,13 @@ import { ProductCard } from './ProductCard';
 import { useProducts } from '@/context/ProductsContext';
 import { Sparkles, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
+import { useGalleryOverrides } from '@/lib/useGalleryOverrides';
 
 export const DermoCorner: React.FC = () => {
   const { language } = useTranslation();
   const isAR = language === 'AR';
   const { products } = useProducts();
+  const { getDisplayImage } = useGalleryOverrides();
 
   // Refs for horizontal scrolling
   const acneScrollRef = useRef<HTMLDivElement>(null);
@@ -109,7 +111,7 @@ export const DermoCorner: React.FC = () => {
             {/* Model Card Left */}
             <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6">
               <Image
-                src="https://images.unsplash.com/photo-1590439471364-192aa70c0b53?q=80&w=600&auto=format&fit=crop"
+                src={getDisplayImage('https://images.unsplash.com/photo-1590439471364-192aa70c0b53?q=80&w=600&auto=format&fit=crop', 'concern_acne')}
                 alt="Acne & Imperfections skin concern model"
                 fill
                 className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
@@ -129,7 +131,7 @@ export const DermoCorner: React.FC = () => {
                 <div className="pt-4 mt-2 border-t border-white/10">
                   <a
                     href="/products?category=visage&q=cerave"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-[10px] font-black uppercase tracking-wider text-emerald-300 hover:text-white transition-all shadow-sm"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500 text-[10px] font-black uppercase tracking-wider text-white hover:bg-emerald-400 transition-all shadow-md"
                   >
                     {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -185,7 +187,7 @@ export const DermoCorner: React.FC = () => {
             {/* Model Card Left */}
             <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6">
               <Image
-                src="https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?q=80&w=600&auto=format&fit=crop"
+                src={getDisplayImage('https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?q=80&w=600&auto=format&fit=crop', 'concern_spots')}
                 alt="Spots & Pigmentation skin concern model"
                 fill
                 className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
@@ -205,7 +207,7 @@ export const DermoCorner: React.FC = () => {
                 <div className="pt-4 mt-2 border-t border-white/10">
                   <a
                     href="/products?category=visage&q=serum"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/40 text-[10px] font-black uppercase tracking-wider text-indigo-300 hover:text-white transition-all shadow-sm"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-500 text-[10px] font-black uppercase tracking-wider text-white hover:bg-indigo-400 transition-all shadow-md"
                   >
                     {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -261,7 +263,7 @@ export const DermoCorner: React.FC = () => {
             {/* Model Card Left */}
             <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6">
               <Image
-                src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=600&auto=format&fit=crop"
+                src={getDisplayImage('https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=600&auto=format&fit=crop', 'concern_wrinkles')}
                 alt="Anti-aging & Firmness skin concern model"
                 fill
                 className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
@@ -281,7 +283,7 @@ export const DermoCorner: React.FC = () => {
                 <div className="pt-4 mt-2 border-t border-white/10">
                   <a
                     href="/products?category=visage&q=anti-age"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-[10px] font-black uppercase tracking-wider text-emerald-300 hover:text-white transition-all shadow-sm"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500 text-[10px] font-black uppercase tracking-wider text-white hover:bg-emerald-400 transition-all shadow-md"
                   >
                     {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -337,7 +339,7 @@ export const DermoCorner: React.FC = () => {
             {/* Model Card Right */}
             <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6">
               <Image
-                src="https://images.unsplash.com/photo-1519699047748-de8e457a634e?q=80&w=600&auto=format&fit=crop"
+                src={getDisplayImage('https://images.unsplash.com/photo-1519699047748-de8e457a634e?q=80&w=600&auto=format&fit=crop', 'concern_dryness')}
                 alt="Hydration & Barrier skin concern model"
                 fill
                 className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
@@ -357,7 +359,7 @@ export const DermoCorner: React.FC = () => {
                 <div className="pt-4 mt-2 border-t border-white/10">
                   <a
                     href="/products?category=visage&q=ceramide"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/40 text-[10px] font-black uppercase tracking-wider text-indigo-300 hover:text-white transition-all shadow-sm"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-500 text-[10px] font-black uppercase tracking-wider text-white hover:bg-indigo-400 transition-all shadow-md"
                   >
                     {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -413,7 +415,7 @@ export const DermoCorner: React.FC = () => {
             {/* Model Card Left */}
             <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6">
               <Image
-                src="https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=600&auto=format&fit=crop"
+                src={getDisplayImage('https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=600&auto=format&fit=crop', 'concern_redness')}
                 alt="Soothing & Sensitive skin concern model"
                 fill
                 className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
@@ -433,7 +435,7 @@ export const DermoCorner: React.FC = () => {
                 <div className="pt-4 mt-2 border-t border-white/10">
                   <a
                     href="/products?category=visage&q=centella"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-[10px] font-black uppercase tracking-wider text-emerald-300 hover:text-white transition-all shadow-sm"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500 text-[10px] font-black uppercase tracking-wider text-white hover:bg-emerald-400 transition-all shadow-md"
                   >
                     {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -489,7 +491,7 @@ export const DermoCorner: React.FC = () => {
             {/* Model Card Right */}
             <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6">
               <Image
-                src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=600&auto=format&fit=crop"
+                src={getDisplayImage('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=600&auto=format&fit=crop', 'concern_solaire')}
                 alt="Solaire & Protection concern model"
                 fill
                 className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
@@ -509,7 +511,7 @@ export const DermoCorner: React.FC = () => {
                 <div className="pt-4 mt-2 border-t border-white/10">
                   <a
                     href="/products?category=solaire"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/40 text-[10px] font-black uppercase tracking-wider text-indigo-300 hover:text-white transition-all shadow-sm"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-500 text-[10px] font-black uppercase tracking-wider text-white hover:bg-indigo-400 transition-all shadow-md"
                   >
                     {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
                     <ArrowRight className="w-3.5 h-3.5" />

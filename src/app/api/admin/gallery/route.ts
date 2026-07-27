@@ -32,10 +32,12 @@ export const IMAGE_MANIFEST: GalleryImage[] = [
   { key: 'lrp_hero_studio',        label: 'Hero — LRP Studio',                       group: 'heroes', filePath: 'images/lrp_hero_studio.webp',   url: '/images/lrp_hero_studio.webp' },
 
   // ── Concerns ─────────────────────────────────────────────────────────────
-  { key: 'concern_acne',           label: 'Problème — Acné',             group: 'concerns',   filePath: 'images/concern_acne.webp',            url: '/images/concern_acne.webp' },
-  { key: 'concern_dryness',        label: 'Problème — Sécheresse',       group: 'concerns',   filePath: 'images/concern_dryness.webp',         url: '/images/concern_dryness.webp' },
-  { key: 'concern_spots',          label: 'Problème — Taches',           group: 'concerns',   filePath: 'images/concern_spots.webp',           url: '/images/concern_spots.webp' },
-  { key: 'concern_wrinkles',       label: 'Problème — Rides',            group: 'concerns',   filePath: 'images/concern_wrinkles.webp',        url: '/images/concern_wrinkles.webp' },
+  { key: 'concern_acne',           label: 'Problème — Acné & Imperfections',             group: 'concerns',   filePath: 'images/concern_acne.webp',            url: 'https://images.unsplash.com/photo-1590439471364-192aa70c0b53?q=80&w=600&auto=format&fit=crop' },
+  { key: 'concern_spots',          label: 'Problème — Hyperpigmentation & Taches',       group: 'concerns',   filePath: 'images/concern_spots.webp',           url: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?q=80&w=600&auto=format&fit=crop' },
+  { key: 'concern_wrinkles',       label: 'Problème — Anti-Âge & Rides',                 group: 'concerns',   filePath: 'images/concern_wrinkles.webp',        url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=600&auto=format&fit=crop' },
+  { key: 'concern_dryness',        label: 'Problème — Hydratation & Peaux Sèches',       group: 'concerns',   filePath: 'images/concern_dryness.webp',         url: 'https://images.unsplash.com/photo-1519699047748-de8e457a634e?q=80&w=600&auto=format&fit=crop' },
+  { key: 'concern_redness',        label: 'Problème — Apaisant & Rougeurs',             group: 'concerns',   filePath: 'images/concern_redness.webp',         url: 'https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=600&auto=format&fit=crop' },
+  { key: 'concern_solaire',        label: 'Problème — Solaire & Protection UV',          group: 'concerns',   filePath: 'images/concern_solaire.webp',         url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=600&auto=format&fit=crop' },
 
   // ── Brands ───────────────────────────────────────────────────────────────
   { key: 'avene_showcase',         label: 'Marque — Avène Showcase',     group: 'brands',     filePath: 'images/avene_brand_showcase.webp',     url: '/images/avene_brand_showcase.webp' },
