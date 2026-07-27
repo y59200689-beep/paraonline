@@ -190,7 +190,19 @@ export async function GET(request: Request) {
     }
 
     if (search) {
-      query = query.or(`title.ilike.%${search}%,name.ilike.%${search}%,name_fr.ilike.%${search}%,vendor.ilike.%${search}%`);
+      const cleanSearch = search.replace(/"/g, '').trim();
+      if (cleanSearch) {
+        const conditions: string[] = [];
+        if (!isNaN(Number(cleanSearch))) {
+          conditions.push(`id.eq.${cleanSearch}`);
+        }
+        conditions.push(`title.ilike."%${cleanSearch}%"`);
+        conditions.push(`name.ilike."%${cleanSearch}%"`);
+        conditions.push(`name_fr.ilike."%${cleanSearch}%"`);
+        conditions.push(`sku.ilike."%${cleanSearch}%"`);
+        conditions.push(`vendor.ilike."%${cleanSearch}%"`);
+        query = query.or(conditions.join(','));
+      }
     }
 
     // Vendor filter for brand pages — case-insensitive prefix match

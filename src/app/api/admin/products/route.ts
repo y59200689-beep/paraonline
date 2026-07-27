@@ -45,10 +45,18 @@ export async function GET(request: Request) {
 
     // Apply text search
     if (search) {
-      if (!isNaN(Number(search))) {
-        query = query.or(`id.eq.${search},title.ilike.%${search}%,sku.ilike.%${search}%,vendor.ilike.%${search}%`);
-      } else {
-        query = query.or(`title.ilike.%${search}%,sku.ilike.%${search}%,vendor.ilike.%${search}%`);
+      const cleanSearch = search.replace(/"/g, '').trim();
+      if (cleanSearch) {
+        const conditions: string[] = [];
+        if (!isNaN(Number(cleanSearch))) {
+          conditions.push(`id.eq.${cleanSearch}`);
+        }
+        conditions.push(`title.ilike."%${cleanSearch}%"`);
+        conditions.push(`name.ilike."%${cleanSearch}%"`);
+        conditions.push(`name_fr.ilike."%${cleanSearch}%"`);
+        conditions.push(`sku.ilike."%${cleanSearch}%"`);
+        conditions.push(`vendor.ilike."%${cleanSearch}%"`);
+        query = query.or(conditions.join(','));
       }
     }
 
