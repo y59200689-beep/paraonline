@@ -38,9 +38,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Settings object is required' }, { status: 400 });
     }
 
+    // Preserve existing galleryOverrides stored in DB row id=1
+    let galleryOverrides = settings.galleryOverrides || {};
+    try {
+      const { data: existingData } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('id', 1)
+        .single();
+      const existingVal = existingData?.value || {};
+      galleryOverrides = { ...(existingVal.galleryOverrides || {}), ...galleryOverrides };
+    } catch {}
+
+    const mergedSettings = { ...settings, galleryOverrides };
+
     const { error } = await supabase
       .from('settings')
-      .upsert({ id: 1, value: settings }, { onConflict: 'id' });
+      .upsert({ id: 1, value: mergedSettings }, { onConflict: 'id' });
     
     if (error) throw error;
     return NextResponse.json({ success: true });

@@ -7,14 +7,25 @@ import fs from 'fs';
 // No admin auth required — only exposes image keys and their public URLs.
 export async function GET() {
   try {
-    let dbOverrides: Record<string, string> = {};
+    let dbOverrides1: Record<string, string> = {};
+    let dbOverrides99: Record<string, string> = {};
+
     try {
-      const { data } = await supabase
+      const { data: data1 } = await supabase
         .from('settings')
         .select('value')
         .eq('id', 1)
         .single();
-      dbOverrides = data?.value?.galleryOverrides || {};
+      dbOverrides1 = data1?.value?.galleryOverrides || {};
+    } catch {}
+
+    try {
+      const { data: data99 } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('id', 99)
+        .single();
+      dbOverrides99 = data99?.value || {};
     } catch {}
 
     let fileOverrides: Record<string, string> = {};
@@ -25,7 +36,7 @@ export async function GET() {
       }
     } catch {}
 
-    const overrides = { ...dbOverrides, ...fileOverrides };
+    const overrides = { ...dbOverrides1, ...dbOverrides99, ...fileOverrides };
     return NextResponse.json({ success: true, overrides });
   } catch (e: any) {
     return NextResponse.json({ success: false, overrides: {}, error: e.message });

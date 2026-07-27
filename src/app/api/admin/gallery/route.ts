@@ -153,32 +153,59 @@ function writeOverrides(overrides: Record<string, string>): void {
 }
 
 async function fetchDbOverrides(): Promise<Record<string, string>> {
+  let overrides1: Record<string, string> = {};
+  let overrides99: Record<string, string> = {};
   try {
-    const { data } = await supabase
+    const { data: data1 } = await supabase
       .from('settings')
       .select('value')
       .eq('id', 1)
       .single();
-    return data?.value?.galleryOverrides || {};
-  } catch (e) {
-    return {};
-  }
+    overrides1 = data1?.value?.galleryOverrides || {};
+  } catch {}
+
+  try {
+    const { data: data99 } = await supabase
+      .from('settings')
+      .select('value')
+      .eq('id', 99)
+      .single();
+    overrides99 = data99?.value || {};
+  } catch {}
+
+  return { ...overrides1, ...overrides99 };
 }
 
 async function saveDbOverride(key: string, url: string): Promise<void> {
+  // 1. Save to dedicated gallery row id=99 (isolated container, immune to general settings resets)
   try {
-    const { data } = await supabase
+    const { data: data99 } = await supabase
+      .from('settings')
+      .select('value')
+      .eq('id', 99)
+      .single();
+    const overrides99 = { ...(data99?.value || {}), [key]: url };
+    await supabase
+      .from('settings')
+      .upsert({ id: 99, value: overrides99 }, { onConflict: 'id' });
+  } catch (e) {
+    console.error('[gallery] Failed to update row 99 DB settings:', e);
+  }
+
+  // 2. Save to main settings row id=1
+  try {
+    const { data: data1 } = await supabase
       .from('settings')
       .select('value')
       .eq('id', 1)
       .single();
-    const currentVal = data?.value || {};
-    const galleryOverrides = { ...(currentVal.galleryOverrides || {}), [key]: url };
+    const currentVal1 = data1?.value || {};
+    const galleryOverrides1 = { ...(currentVal1.galleryOverrides || {}), [key]: url };
     await supabase
       .from('settings')
-      .upsert({ id: 1, value: { ...currentVal, galleryOverrides } }, { onConflict: 'id' });
+      .upsert({ id: 1, value: { ...currentVal1, galleryOverrides: galleryOverrides1 } }, { onConflict: 'id' });
   } catch (e) {
-    console.error('[gallery] Failed to update DB settings:', e);
+    console.error('[gallery] Failed to update row 1 DB settings:', e);
   }
 }
 
