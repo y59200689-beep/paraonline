@@ -520,7 +520,14 @@ export default function GalleryPage() {
       .then(r => r.json())
       .then(data => {
         if (data.success) {
-          setImages(data.images);
+          let list: GalleryImage[] = data.images;
+          if (typeof window !== 'undefined') {
+            try {
+              const overrides = JSON.parse(localStorage.getItem('custom_gallery_overrides') || '{}');
+              list = list.map(img => overrides[img.key] ? { ...img, url: overrides[img.key] } : img);
+            } catch {}
+          }
+          setImages(list);
         }
       })
       .catch(console.error)

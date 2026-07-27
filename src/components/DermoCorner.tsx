@@ -8,7 +8,7 @@ import { Sparkles, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import { useGalleryOverrides } from '@/lib/useGalleryOverrides';
 
-// Default local image fallbacks (used when no admin upload override exists)
+// Default image fallbacks (points to local image files updated by admin gallery)
 const CONCERN_DEFAULTS = {
   acne:     '/images/concern_acne.webp',
   spots:    '/images/concern_spots.webp',

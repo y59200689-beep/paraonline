@@ -2437,7 +2437,7 @@ export default function SettingsTab() {
                                   titleAr: 'حب الشباب والشوائب',
                                   subtitleFr: 'Centella Asiatica, BHA',
                                   subtitleAr: 'سنتيلا أسياتيكا، BHA',
-                                  image: '/images/concern_acne.png'
+                                  image: '/images/concern_acne.webp'
                                 },
                                 {
                                   key: 'spots',
@@ -2445,7 +2445,7 @@ export default function SettingsTab() {
                                   titleAr: 'نضارة البشرة والبقع',
                                   subtitleFr: 'Vitamine C, Niacinamide',
                                   subtitleAr: 'فيتامين سي، نياسيناميد',
-                                  image: '/images/concern_spots.png'
+                                  image: '/images/concern_spots.webp'
                                 },
                                 {
                                   key: 'wrinkles',
@@ -2453,7 +2453,7 @@ export default function SettingsTab() {
                                   titleAr: 'مكافحة الشيخوخة وشد البشرة',
                                   subtitleFr: 'Rétinol, Peptides',
                                   subtitleAr: 'ريتينول، ببتيدات',
-                                  image: '/images/concern_wrinkles.png'
+                                  image: '/images/concern_wrinkles.webp'
                                 },
                                 {
                                   key: 'dryness',
@@ -2461,7 +2461,7 @@ export default function SettingsTab() {
                                   titleAr: 'ترطيب وحماية حاجز البشرة',
                                   subtitleFr: 'Acide Hyaluronique, Céramides',
                                   subtitleAr: 'حمض الهيالورونيك، سيراميد',
-                                  image: '/images/concern_dryness.png'
+                                  image: '/images/concern_dryness.webp'
                                 }
                               ];
 
