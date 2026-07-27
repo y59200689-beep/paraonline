@@ -6,13 +6,11 @@ import { ProductCard } from './ProductCard';
 import { useProducts } from '@/context/ProductsContext';
 import { Sparkles, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
-import { useGalleryOverrides } from '@/lib/useGalleryOverrides';
 
 export const DermoCorner: React.FC = () => {
   const { language } = useTranslation();
   const isAR = language === 'AR';
   const { products } = useProducts();
-  const { getDisplayImage } = useGalleryOverrides();
 
   // Refs for horizontal scrolling
   const acneScrollRef = useRef<HTMLDivElement>(null);
@@ -111,7 +109,7 @@ export const DermoCorner: React.FC = () => {
             {/* Model Card Left */}
             <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-lg">
               <Image
-                src={getDisplayImage('https://images.unsplash.com/photo-1590439471364-192aa70c0b53?q=80&w=600&auto=format&fit=crop', 'concern_acne')}
+                src="https://images.unsplash.com/photo-1590439471364-192aa70c0b53?q=80&w=600&auto=format&fit=crop"
                 alt="Acne & Imperfections skin concern model"
                 fill
                 className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
@@ -189,7 +187,7 @@ export const DermoCorner: React.FC = () => {
             {/* Model Card Right */}
             <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-lg">
               <Image
-                src={getDisplayImage('https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?q=80&w=600&auto=format&fit=crop', 'concern_spots')}
+                src="https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?q=80&w=600&auto=format&fit=crop"
                 alt="Spots & Pigmentation skin concern model"
                 fill
                 className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
@@ -265,7 +263,7 @@ export const DermoCorner: React.FC = () => {
             {/* Model Card Left */}
             <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-lg">
               <Image
-                src={getDisplayImage('https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=600&auto=format&fit=crop', 'concern_wrinkles')}
+                src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=600&auto=format&fit=crop"
                 alt="Anti-aging & Firmness skin concern model"
                 fill
                 className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
@@ -341,7 +339,7 @@ export const DermoCorner: React.FC = () => {
             {/* Model Card Right */}
             <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-lg">
               <Image
-                src={getDisplayImage('https://images.unsplash.com/photo-1519699047748-de8e457a634e?q=80&w=600&auto=format&fit=crop', 'concern_dryness')}
+                src="https://images.unsplash.com/photo-1519699047748-de8e457a634e?q=80&w=600&auto=format&fit=crop"
                 alt="Hydration & Barrier skin concern model"
                 fill
                 className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
@@ -417,7 +415,7 @@ export const DermoCorner: React.FC = () => {
             {/* Model Card Left */}
             <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-lg">
               <Image
-                src={getDisplayImage('https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=600&auto=format&fit=crop', 'concern_redness')}
+                src="https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=600&auto=format&fit=crop"
                 alt="Soothing & Sensitive skin concern model"
                 fill
                 className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
@@ -493,7 +491,7 @@ export const DermoCorner: React.FC = () => {
             {/* Model Card Right */}
             <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-lg">
               <Image
-                src={getDisplayImage('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=600&auto=format&fit=crop', 'concern_solaire')}
+                src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=600&auto=format&fit=crop"
                 alt="Solaire & Protection concern model"
                 fill
                 className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
