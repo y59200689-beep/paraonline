@@ -162,6 +162,7 @@ export interface Settings {
     accentDot?: string;
     productIds?: number[];
   }[];
+  galleryOverrides?: Record<string, string>;
 }
 
 export interface HomepageSectionItem {

@@ -32,12 +32,12 @@ export const IMAGE_MANIFEST: GalleryImage[] = [
   { key: 'lrp_hero_studio',        label: 'Hero — LRP Studio',                       group: 'heroes', filePath: 'images/lrp_hero_studio.webp',   url: '/images/lrp_hero_studio.webp' },
 
   // ── Concerns ─────────────────────────────────────────────────────────────
-  { key: 'concern_acne',           label: 'Problème — Acné & Imperfections',             group: 'concerns',   filePath: 'images/concern_acne.webp',            url: 'https://images.unsplash.com/photo-1590439471364-192aa70c0b53?q=80&w=600&auto=format&fit=crop' },
-  { key: 'concern_spots',          label: 'Problème — Hyperpigmentation & Taches',       group: 'concerns',   filePath: 'images/concern_spots.webp',           url: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?q=80&w=600&auto=format&fit=crop' },
-  { key: 'concern_wrinkles',       label: 'Problème — Anti-Âge & Rides',                 group: 'concerns',   filePath: 'images/concern_wrinkles.webp',        url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=600&auto=format&fit=crop' },
-  { key: 'concern_dryness',        label: 'Problème — Hydratation & Peaux Sèches',       group: 'concerns',   filePath: 'images/concern_dryness.webp',         url: 'https://images.unsplash.com/photo-1519699047748-de8e457a634e?q=80&w=600&auto=format&fit=crop' },
-  { key: 'concern_redness',        label: 'Problème — Apaisant & Rougeurs',             group: 'concerns',   filePath: 'images/concern_redness.webp',         url: 'https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=600&auto=format&fit=crop' },
-  { key: 'concern_solaire',        label: 'Problème — Solaire & Protection UV',          group: 'concerns',   filePath: 'images/concern_solaire.webp',         url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=600&auto=format&fit=crop' },
+  { key: 'concern_acne',           label: 'Problème — Acné & Imperfections',             group: 'concerns',   filePath: 'images/concern_acne.webp',            url: '/images/concern_acne.webp' },
+  { key: 'concern_spots',          label: 'Problème — Hyperpigmentation & Taches',       group: 'concerns',   filePath: 'images/concern_spots.webp',           url: '/images/concern_spots.webp' },
+  { key: 'concern_wrinkles',       label: 'Problème — Anti-Âge & Rides',                 group: 'concerns',   filePath: 'images/concern_wrinkles.webp',        url: '/images/concern_wrinkles.webp' },
+  { key: 'concern_dryness',        label: 'Problème — Hydratation & Peaux Sèches',       group: 'concerns',   filePath: 'images/concern_dryness.webp',         url: '/images/concern_dryness.webp' },
+  { key: 'concern_redness',        label: 'Problème — Apaisant & Rougeurs',             group: 'concerns',   filePath: 'images/concern_redness.webp',         url: '/images/concern_redness.webp' },
+  { key: 'concern_solaire',        label: 'Problème — Solaire & Protection UV',          group: 'concerns',   filePath: 'images/concern_solaire.webp',         url: '/images/concern_solaire.webp' },
 
   // ── Brands ───────────────────────────────────────────────────────────────
   { key: 'avene_showcase',         label: 'Marque — Avène Showcase',     group: 'brands',     filePath: 'images/avene_brand_showcase.webp',     url: '/images/avene_brand_showcase.webp' },
@@ -139,11 +139,39 @@ export async function GET() {
     return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
   }
 
+  // Fetch gallery overrides from DB settings table
+  let dbOverrides: Record<string, string> = {};
+  try {
+    const { data: dbData } = await supabase
+      .from('settings')
+      .select('value')
+      .eq('id', 1)
+      .single();
+    if (dbData?.value?.galleryOverrides) {
+      dbOverrides = dbData.value.galleryOverrides;
+    }
+  } catch (e) {
+    console.warn('[gallery GET] Failed to fetch DB gallery overrides:', e);
+  }
+
   const manifestImages = await Promise.all(
     IMAGE_MANIFEST.map(async (img) => {
       const info = await getImageFileInfo(img.filePath);
+      let imgUrl = dbOverrides[img.key] || img.url;
+
+      // If local file exists and URL is relative, append timestamp cache buster
+      if (info.sizeKb > 0 && !imgUrl.startsWith('http') && !imgUrl.startsWith('data:')) {
+        const abs = path.join(process.cwd(), 'public', img.filePath);
+        try {
+          const stat = fs.statSync(abs);
+          const cleanUrl = imgUrl.split('?')[0];
+          imgUrl = `${cleanUrl}?v=${Math.round(stat.mtimeMs)}`;
+        } catch {}
+      }
+
       return {
         ...img,
+        url: imgUrl,
         sizeKb: info.sizeKb,
         width: info.width,
         height: info.height,
@@ -170,12 +198,15 @@ export async function GET() {
               .replace(/_/g, ' ')
               .replace(/\.(webp|png|jpg|jpeg)$/i, '')
               .trim();
+            const abs = path.join(process.cwd(), 'public', relPath);
+            let mtime = Date.now();
+            try { mtime = Math.round(fs.statSync(abs).mtimeMs); } catch {}
             return {
               key: `upload_${f}`,
               label: `Produit — ${cleanName || f}`,
               group: 'products' as const,
               filePath: relPath,
-              url: `/${relPath}`,
+              url: `/${relPath}?v=${mtime}`,
               sizeKb: info.sizeKb,
               width: info.width,
               height: info.height,
@@ -252,13 +283,15 @@ export async function POST(request: Request) {
     } catch (sharpErr) {
       console.warn('[gallery] Sharp WebP conversion failed, using original buffer:', sharpErr);
     }
-    let finalUrl = entry.url;
+
+    let finalUrl = `/${entry.filePath}?v=${Date.now()}`;
 
     // 1. Attempt local filesystem write (works in local dev & persistent servers)
     try {
       const absPath = path.join(process.cwd(), 'public', entry.filePath);
       fs.mkdirSync(path.dirname(absPath), { recursive: true });
       fs.writeFileSync(absPath, uploadBuffer);
+      finalUrl = `/${entry.filePath}?v=${Date.now()}`;
     } catch (fsErr: any) {
       console.warn('[gallery] Local filesystem is read-only (e.g. Vercel deployment). Falling back to cloud storage/Data URL:', fsErr?.message);
       
@@ -270,7 +303,7 @@ export async function POST(request: Request) {
           .upload(storagePath, uploadBuffer, {
             contentType: 'image/webp',
             upsert: true,
-            cacheControl: '31536000',
+            cacheControl: '3600',
           });
 
         if (!sbErr) {
@@ -278,7 +311,7 @@ export async function POST(request: Request) {
             .from('products')
             .getPublicUrl(storagePath);
           if (publicUrlData?.publicUrl) {
-            finalUrl = publicUrlData.publicUrl;
+            finalUrl = `${publicUrlData.publicUrl}?v=${Date.now()}`;
           }
         } else {
           console.warn('[gallery] Supabase fallback upload error:', sbErr);
@@ -287,6 +320,26 @@ export async function POST(request: Request) {
       } catch {
         finalUrl = `data:image/webp;base64,${uploadBuffer.toString('base64')}`;
       }
+    }
+
+    // Persist gallery override in Supabase settings DB table so all clients pick it up permanently
+    try {
+      const { data: dbData } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('id', 1)
+        .single();
+      
+      const currentVal = dbData?.value || {};
+      const galleryOverrides = currentVal.galleryOverrides || {};
+      galleryOverrides[entry.key] = finalUrl;
+
+      await supabase
+        .from('settings')
+        .update({ value: { ...currentVal, galleryOverrides } })
+        .eq('id', 1);
+    } catch (dbErr) {
+      console.warn('[gallery POST] Failed to update DB settings:', dbErr);
     }
 
     // Extract metadata of saved WebP image

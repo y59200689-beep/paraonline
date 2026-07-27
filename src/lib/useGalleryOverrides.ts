@@ -2,16 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
+import { useSettings } from '@/context/SettingsContext';
 
 export function useGalleryOverrides() {
-  const [overrides, setOverrides] = useState<Record<string, string>>({});
+  const [localOverrides, setLocalOverrides] = useState<Record<string, string>>({});
+  const { settings } = useSettings();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const loadOverrides = () => {
         try {
           const stored = JSON.parse(localStorage.getItem('custom_gallery_overrides') || '{}');
-          setOverrides(stored);
+          setLocalOverrides(stored);
         } catch (e) {}
       };
       loadOverrides();
@@ -19,6 +21,9 @@ export function useGalleryOverrides() {
       return () => window.removeEventListener('gallery_overrides_updated', loadOverrides);
     }
   }, []);
+
+  const dbOverrides = settings?.galleryOverrides || {};
+  const overrides = { ...dbOverrides, ...localOverrides };
 
   const getDisplayImage = (defaultSrc: string, ...keys: string[]) => {
     for (const k of keys) {
