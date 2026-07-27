@@ -4733,6 +4733,25 @@ export default function SettingsTab() {
               </form>
             )}
 
+            {/* Pending Approvals Warning Banner */}
+            {operatorsList.some((op: any) => !op.isActive) && (
+              <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center justify-between gap-3 animate-in fade-in duration-200">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 shrink-0">
+                    <ShieldAlert className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-2">
+                      {operatorsList.filter((op: any) => !op.isActive).length} Demande(s) d&apos;accès en attente d&apos;approbation
+                    </h4>
+                    <p className="text-[11px] text-amber-200/80">
+                      Ces administrateurs ont créé un compte mais ne peuvent pas se connecter tant que vous ne validez pas leur accès ci-dessous.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="overflow-x-auto border border-slate-800/60 rounded-2xl">
               <table className="w-full text-left text-xs">
                 <thead>
@@ -4741,13 +4760,13 @@ export default function SettingsTab() {
                     <th className="p-3">Utilisateur</th>
                     <th className="p-3">Rôle</th>
                     <th className="p-3">Date de création</th>
-                    <th className="p-3">Statut</th>
+                    <th className="p-3">Statut d&apos;accès</th>
                     <th className="p-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-900">
                   {operatorsList.map((op: any) => (
-                    <tr key={op.id} className="hover:bg-slate-900/10">
+                    <tr key={op.id} className={`hover:bg-slate-900/10 ${!op.isActive ? 'bg-amber-500/5' : ''}`}>
                       <td className="p-3 font-semibold">{op.name}</td>
                       <td className="p-3 font-mono text-[11px]">{op.username}</td>
                       <td className="p-3">
@@ -4761,22 +4780,22 @@ export default function SettingsTab() {
                       </td>
                       <td className="p-3 text-slate-500">{new Date(op.createdAt).toLocaleDateString('fr-FR')}</td>
                       <td className="p-3">
-                        <span className={`flex items-center gap-1.5 text-[10px] font-semibold ${op.isActive ? 'text-emerald-400' : 'text-rose-400'}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${op.isActive ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}`}></span>
-                          {op.isActive ? 'Actif' : 'Désactivé'}
+                        <span className={`flex items-center gap-1.5 text-[10px] font-bold ${op.isActive ? 'text-emerald-400' : 'text-amber-400'}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${op.isActive ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400 animate-ping'}`}></span>
+                          {op.isActive ? 'Accès Autorisé' : 'En attente d\'approbation'}
                         </span>
                       </td>
                       <td className="p-3 text-right">
                         {op.username !== 'admin' && (
                           <button
                             onClick={() => handleToggleOperatorStatus(op.id, op.isActive)}
-                            className={`px-3 py-1.5 rounded-xl border text-[9px] font-extrabold uppercase tracking-wider transition ${
+                            className={`px-3 py-1.5 rounded-xl text-[9px] font-extrabold uppercase tracking-wider transition cursor-pointer ${
                               op.isActive
-                                ? 'text-rose-400 border-rose-900/40 bg-rose-950/20 hover:bg-rose-900/20'
-                                : 'text-emerald-400 border-emerald-900/40 bg-emerald-950/20 hover:bg-emerald-900/20'
+                                ? 'text-rose-400 border border-rose-900/40 bg-rose-950/20 hover:bg-rose-900/20'
+                                : 'bg-emerald-500 text-slate-950 hover:bg-emerald-400 font-black shadow-md shadow-emerald-500/20'
                             }`}
                           >
-                            {op.isActive ? 'Désactiver' : 'Activer'}
+                            {op.isActive ? 'Révoquer l\'accès' : 'Approuver l\'accès'}
                           </button>
                         )}
                       </td>

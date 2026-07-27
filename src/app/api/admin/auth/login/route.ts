@@ -38,7 +38,6 @@ export async function POST(request: Request) {
       .from('operators')
       .select('*')
       .eq('username', username.toLowerCase())
-      .eq('is_active', true)
       .single();
 
     if (error || !operator) {
@@ -77,6 +76,22 @@ export async function POST(request: Request) {
       });
 
       return NextResponse.json({ success: false, error: "Nom d'utilisateur ou mot de passe incorrect" }, { status: 401 });
+    }
+
+    // 2b. Check if account is active/approved by Owner
+    if (operator.is_active === false) {
+      const logId = 'log_' + Math.random().toString(36).substring(2, 11);
+      await supabase.from('audit_logs').insert({
+        id: logId,
+        action: 'Connexion refusée (Non approuvé)',
+        details: `Tentative de connexion pour le compte non approuvé "${username}" depuis l'IP ${ip}.`,
+        date: new Date().toISOString()
+      });
+
+      return NextResponse.json({ 
+        success: false, 
+        error: "Votre compte est en attente d'approbation par le propriétaire. Vous ne pourrez vous connecter qu'une fois votre accès validé." 
+      }, { status: 403 });
     }
 
     // Auto-migrate operator password to scrypt format

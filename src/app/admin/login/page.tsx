@@ -43,6 +43,51 @@ function AdminLoginFormInner() {
   const [mfaSetupStep, setMfaSetupStep] = useState<'loading' | 'scan' | 'verify'>('loading');
   const [mfaSetupError, setMfaSetupError] = useState('');
 
+  // Mode state: 'login' | 'register'
+  const [mode, setMode] = useState<'login' | 'register'>('login');
+
+  // Registration local states
+  const [regName, setRegName] = useState('');
+  const [regUsername, setRegUsername] = useState('');
+  const [regPassword, setRegPassword] = useState('');
+  const [regRole, setRegRole] = useState<'operator' | 'manager' | 'logistician'>('operator');
+  const [regLoading, setRegLoading] = useState(false);
+  const [regSuccessMsg, setRegSuccessMsg] = useState('');
+  const [regErrorMsg, setRegErrorMsg] = useState('');
+
+  const handleRegisterFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRegLoading(true);
+    setRegErrorMsg('');
+    setRegSuccessMsg('');
+
+    try {
+      const res = await fetch('/api/admin/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: regName,
+          username: regUsername,
+          password: regPassword,
+          role: regRole
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setRegSuccessMsg(data.message);
+        setRegName('');
+        setRegUsername('');
+        setRegPassword('');
+      } else {
+        setRegErrorMsg(data.error || 'Erreur lors de la création du compte.');
+      }
+    } catch {
+      setRegErrorMsg('Erreur de connexion au serveur.');
+    } finally {
+      setRegLoading(false);
+    }
+  };
+
   // Fetch QR code when the forced-setup screen appears
   useEffect(() => {
     if (!requiresMfaSetup) return;
@@ -90,7 +135,7 @@ function AdminLoginFormInner() {
     return (
       <main className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-6 font-mono text-xs font-bold tracking-wider uppercase">
         <div className="w-4 h-4 border-2 border-slate-600 border-t-emerald-500 rounded-full animate-spin mr-2" />
-        Redirection vers le Console...
+        Redirection vers la Console...
       </main>
     );
   }
@@ -105,7 +150,7 @@ function AdminLoginFormInner() {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f172a_1px,transparent_1px),linear-gradient(to_bottom,#0f172a_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-35" />
 
       <div className="w-full max-w-md relative z-10">
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-400 text-xs font-semibold tracking-wider uppercase mb-3">
             <Lock className="w-3.5 h-3.5 text-emerald-400" /> Console Officielle
           </span>
@@ -116,6 +161,34 @@ function AdminLoginFormInner() {
             Portail de Gestion Logistique & Commerciale
           </p>
         </div>
+
+        {/* Mode Switcher Tabs */}
+        {!requiresMfa && !requiresMfaSetup && (
+          <div className="flex bg-slate-900/80 p-1 rounded-2xl border border-slate-800/80 mb-4">
+            <button
+              type="button"
+              onClick={() => { setMode('login'); setRegSuccessMsg(''); setRegErrorMsg(''); }}
+              className={`flex-1 py-2 text-xs font-extrabold rounded-xl transition cursor-pointer ${
+                mode === 'login'
+                  ? 'bg-emerald-500 text-slate-950 shadow-md'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Connexion
+            </button>
+            <button
+              type="button"
+              onClick={() => { setMode('register'); setRegSuccessMsg(''); setRegErrorMsg(''); }}
+              className={`flex-1 py-2 text-xs font-extrabold rounded-xl transition cursor-pointer ${
+                mode === 'register'
+                  ? 'bg-emerald-500 text-slate-950 shadow-md'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Demander un compte
+            </button>
+          </div>
+        )}
 
         {requiresMfaSetup ? (
           mfaSetupRecoveryCodes && mfaSetupRecoveryCodes.length > 0 ? (
@@ -199,12 +272,12 @@ function AdminLoginFormInner() {
                 {mfaSetupStep === 'loading' && !mfaSetupError && (
                   <div className="flex items-center justify-center py-8 gap-3 text-slate-400 text-xs">
                     <div className="w-4 h-4 border-2 border-slate-600 border-t-emerald-500 rounded-full animate-spin" />
-                    G&eacute;n&eacute;ration du QR Code...
+                    Chargement de la configuration MFA...
                   </div>
                 )}
 
                 {mfaSetupError && (
-                  <p className="text-xs text-rose-400 font-semibold flex items-center gap-1.5 justify-center">
+                  <p className="text-xs text-rose-400 font-semibold text-center flex items-center justify-center gap-1.5">
                     <AlertCircle className="w-3.5 h-3.5" /> {mfaSetupError}
                   </p>
                 )}
@@ -295,6 +368,109 @@ function AdminLoginFormInner() {
               </div>
             </div>
           )
+        ) : mode === 'register' ? (
+          /* ---- Account Request / Registration Form ---- */
+          <div className="rounded-[32px] bg-slate-900/40 border border-slate-800 p-2 shadow-premium backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200">
+            <form onSubmit={handleRegisterFormSubmit} className="bg-slate-950/80 border border-slate-900/50 rounded-[calc(32px-8px)] p-8 space-y-4">
+              <div className="text-center space-y-1 mb-2">
+                <h3 className="text-base font-black text-slate-100">Demande d&apos;Accès Administrateur</h3>
+                <p className="text-xs text-slate-400 font-light">
+                  Votre compte sera soumis à l&apos;approbation du propriétaire (Owner) avant activation.
+                </p>
+              </div>
+
+              {regSuccessMsg ? (
+                <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl space-y-3 text-center">
+                  <div className="w-10 h-10 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto">
+                    <Check className="w-5 h-5" />
+                  </div>
+                  <p className="text-xs text-emerald-300 font-semibold leading-relaxed">
+                    {regSuccessMsg}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => { setMode('login'); setRegSuccessMsg(''); }}
+                    className="px-4 py-2 bg-emerald-500 text-slate-950 text-xs font-black rounded-xl cursor-pointer hover:bg-emerald-400 transition"
+                  >
+                    Retourner à la connexion
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
+                      Nom complet
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="ex: Sarah Mansouri"
+                      value={regName}
+                      onChange={(e) => setRegName(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-800/80 focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/60 text-slate-200 rounded-xl px-4 py-2 text-sm outline-none"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
+                      Nom d&apos;utilisateur
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="ex: smansouri"
+                      value={regUsername}
+                      onChange={(e) => setRegUsername(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-800/80 focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/60 text-slate-200 rounded-xl px-4 py-2 text-sm outline-none"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
+                      Mot de passe
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="Au moins 6 caractères..."
+                      value={regPassword}
+                      onChange={(e) => setRegPassword(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-800/80 focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/60 text-slate-200 rounded-xl px-4 py-2 text-sm outline-none"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
+                      Rôle souhaité
+                    </label>
+                    <select
+                      value={regRole}
+                      onChange={(e) => setRegRole(e.target.value as any)}
+                      className="w-full bg-slate-900 border border-slate-800/80 focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/60 text-slate-200 rounded-xl px-4 py-2 text-sm outline-none"
+                    >
+                      <option value="operator">Opérateur Commercial</option>
+                      <option value="manager">Gestionnaire de Catalogue</option>
+                      <option value="logistician">Responsable Logistique / COD</option>
+                    </select>
+                  </div>
+
+                  {regErrorMsg && (
+                    <p className="text-xs text-rose-400 font-semibold flex items-center gap-1.5 justify-center pt-1 animate-pulse">
+                      <AlertCircle className="w-3.5 h-3.5" /> {regErrorMsg}
+                    </p>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={regLoading}
+                    className="w-full py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition duration-200 active:scale-[0.97] mt-3 cursor-pointer disabled:opacity-50"
+                  >
+                    {regLoading ? 'Envoi de la demande...' : 'Soumettre la demande d\'accès'}
+                  </button>
+                </>
+              )}
+            </form>
+          </div>
         ) : requiresMfa ? (
           <div className="rounded-[32px] bg-slate-900/40 border border-slate-800 p-2 shadow-premium backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200">
             <form onSubmit={handleMfaSubmit} className="bg-slate-950/80 border border-slate-900/50 rounded-[calc(32px-8px)] p-8 space-y-5">
@@ -395,8 +571,8 @@ function AdminLoginFormInner() {
                   required
                 />
                 {authError && (
-                  <p className="text-xs text-rose-400 font-semibold flex items-center gap-1.5 justify-center mt-2 animate-pulse">
-                    <AlertCircle className="w-3.5 h-3.5" /> {authError}
+                  <p className="text-xs text-rose-400 font-semibold flex items-center gap-1.5 justify-center mt-2 leading-relaxed bg-rose-500/10 p-2.5 rounded-xl border border-rose-500/20 animate-pulse">
+                    <AlertCircle className="w-4 h-4 shrink-0" /> {authError}
                   </p>
                 )}
               </div>
