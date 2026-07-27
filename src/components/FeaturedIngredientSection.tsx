@@ -19,7 +19,7 @@ const BRANDS = [
       'Développé avec des dermatologues, CeraVe propose des formules enrichies aux 3 céramides essentiels et acide hyaluronique pour restaurer la barrière protectrice de la peau.',
     descAr:
       'تم تطويره مع أطباء الجلد، يحتوي على 3 سيراميدات أساسية وحمض الهيالورونيك لاستعادة وحماية حاجز البشرة الواقي.',
-    image: '/images/cerave_brand_showcase.webp?v=2',
+    image: '/images/cerave_brand_showcase.webp',
     href: '/brand/cerave',
     glowClass: 'from-blue-500/5 to-cyan-500/5 dark:from-blue-500/10 dark:to-cyan-500/10',
     badgeBg: 'bg-blue-500/10',

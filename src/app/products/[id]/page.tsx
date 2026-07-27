@@ -54,13 +54,13 @@ async function getProduct(id: string): Promise<Product | null> {
 
 export async function generateStaticParams() {
   try {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('products')
       .select('id')
-      .limit(500);
+      .limit(20);
     
-    if (error || !data || data.length === 0) {
-      return PRODUCTS_DB.map((product) => ({
+    if (!data || data.length === 0) {
+      return PRODUCTS_DB.slice(0, 20).map((product) => ({
         id: product.id.toString(),
       }));
     }
@@ -68,9 +68,7 @@ export async function generateStaticParams() {
       id: item.id.toString(),
     }));
   } catch (err) {
-    return PRODUCTS_DB.map((product) => ({
-      id: product.id.toString(),
-    }));
+    return [];
   }
 }
 

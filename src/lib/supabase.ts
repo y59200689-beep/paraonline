@@ -520,12 +520,13 @@ class MockSupabaseQueryBuilder {
       return conditions.some(cond => {
         if (cond.includes('.ilike.')) {
           const [col, valWithPercents] = cond.split('.ilike.');
-          const searchTerm = valWithPercents.replace(/%/g, '').toLowerCase();
+          const searchTerm = valWithPercents.replace(/[%"]/g, '').toLowerCase();
           return String(item[col] || '').toLowerCase().includes(searchTerm);
         }
         if (cond.includes('.eq.')) {
           const [col, val] = cond.split('.eq.');
-          return String(item[col] || '').toLowerCase() === val.toLowerCase();
+          const cleanVal = val.replace(/^"|"$/g, '');
+          return String(item[col] || '').toLowerCase() === cleanVal.toLowerCase();
         }
         if (cond.includes('.is.null')) {
           const col = cond.split('.is.null')[0];

@@ -192,15 +192,22 @@ export async function GET(request: Request) {
     if (search) {
       const cleanSearch = search.replace(/"/g, '').trim();
       if (cleanSearch) {
+        const words = cleanSearch.split(/\s+/).filter(Boolean);
+        const fields = ['title', 'name', 'name_fr', 'sku', 'vendor', 'category', 'description'];
         const conditions: string[] = [];
+
         if (!isNaN(Number(cleanSearch))) {
           conditions.push(`id.eq.${cleanSearch}`);
         }
-        conditions.push(`title.ilike."%${cleanSearch}%"`);
-        conditions.push(`name.ilike."%${cleanSearch}%"`);
-        conditions.push(`name_fr.ilike."%${cleanSearch}%"`);
-        conditions.push(`sku.ilike."%${cleanSearch}%"`);
-        conditions.push(`vendor.ilike."%${cleanSearch}%"`);
+        fields.forEach(f => conditions.push(`${f}.ilike."%${cleanSearch}%"`));
+
+        if (words.length > 1) {
+          const prefixSearch = words.slice(0, -1).join(' ');
+          if (prefixSearch.length >= 2) {
+            fields.forEach(f => conditions.push(`${f}.ilike."%${prefixSearch}%"`));
+          }
+        }
+
         query = query.or(conditions.join(','));
       }
     }
