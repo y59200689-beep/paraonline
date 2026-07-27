@@ -41,8 +41,15 @@ export default function RestockForecastingTab() {
     currentUser, 
     adminTheme, 
     isDataLoading,
-    logAdminAction
+    logAdminAction,
+    loadOrders,
+    loadProducts
   } = useAdmin();
+
+  useEffect(() => {
+    loadOrders();
+    loadProducts();
+  }, []);
 
   // Role safety permission
   const isReadOnly = currentUser?.role === 'support';

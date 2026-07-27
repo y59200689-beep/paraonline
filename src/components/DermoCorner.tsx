@@ -3,13 +3,14 @@
 import React, { useRef } from 'react';
 import { useTranslation } from '@/context/LanguageContext';
 import { ProductCard } from './ProductCard';
-import { PRODUCTS_DB } from '@/lib/data';
+import { useProducts } from '@/context/ProductsContext';
 import { Sparkles, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 
 export const DermoCorner: React.FC = () => {
   const { language } = useTranslation();
   const isAR = language === 'AR';
+  const { products } = useProducts();
 
   // Refs for horizontal scrolling
   const acneScrollRef = useRef<HTMLDivElement>(null);
@@ -19,13 +20,48 @@ export const DermoCorner: React.FC = () => {
   const sootheScrollRef = useRef<HTMLDivElement>(null);
   const solarScrollRef = useRef<HTMLDivElement>(null);
 
-  // Get targeted products from PRODUCTS_DB
-  const acneProducts = PRODUCTS_DB.filter(p => [115, 113, 112, 107, 101].includes(p.id));
-  const spotProducts = PRODUCTS_DB.filter(p => [14, 16, 3, 105, 13].includes(p.id));
-  const antiAgeProducts = PRODUCTS_DB.filter(p => [8, 106, 6, 7, 5].includes(p.id));
-  const hydrateProducts = PRODUCTS_DB.filter(p => [101, 114, 104, 17, 13].includes(p.id));
-  const sootheProducts = PRODUCTS_DB.filter(p => [110, 109, 22, 101, 16].includes(p.id));
-  const solarProducts = PRODUCTS_DB.filter(p => [13, 17, 107, 102, 9].includes(p.id));
+  // Dynamically filter targeted products from real catalog products
+  const acneProducts = React.useMemo(() => {
+    return products.filter(p => {
+      const text = `${p.title} ${p.nameFr || ''} ${p.description || ''} ${(p.tags || []).join(' ')}`.toLowerCase();
+      return text.includes('acné') || text.includes('bouton') || text.includes('imperfection') || text.includes('sebum') || text.includes('pore') || text.includes('gel');
+    }).slice(0, 6);
+  }, [products]);
+
+  const spotProducts = React.useMemo(() => {
+    return products.filter(p => {
+      const text = `${p.title} ${p.nameFr || ''} ${p.description || ''} ${(p.tags || []).join(' ')}`.toLowerCase();
+      return text.includes('tache') || text.includes('éclat') || text.includes('bright') || text.includes('pigment') || text.includes('serum');
+    }).slice(0, 6);
+  }, [products]);
+
+  const antiAgeProducts = React.useMemo(() => {
+    return products.filter(p => {
+      const text = `${p.title} ${p.nameFr || ''} ${p.description || ''} ${(p.tags || []).join(' ')}`.toLowerCase();
+      return text.includes('anti-age') || text.includes('anti age') || text.includes('ride') || text.includes('fermeté') || text.includes('lift') || text.includes('creme');
+    }).slice(0, 6);
+  }, [products]);
+
+  const hydrateProducts = React.useMemo(() => {
+    return products.filter(p => {
+      const text = `${p.title} ${p.nameFr || ''} ${p.description || ''} ${(p.tags || []).join(' ')}`.toLowerCase();
+      return text.includes('hydrat') || text.includes('sec') || text.includes('barrière') || text.includes('baume') || text.includes('lotion');
+    }).slice(0, 6);
+  }, [products]);
+
+  const sootheProducts = React.useMemo(() => {
+    return products.filter(p => {
+      const text = `${p.title} ${p.nameFr || ''} ${p.description || ''} ${(p.tags || []).join(' ')}`.toLowerCase();
+      return text.includes('apais') || text.includes('sensible') || text.includes('cica') || text.includes('rougeur') || text.includes('eau');
+    }).slice(0, 6);
+  }, [products]);
+
+  const solarProducts = React.useMemo(() => {
+    return products.filter(p => {
+      const text = `${p.title} ${p.nameFr || ''} ${p.description || ''} ${(p.tags || []).join(' ')}`.toLowerCase();
+      return text.includes('solaire') || text.includes('spf') || text.includes('écran') || text.includes('sun');
+    }).slice(0, 6);
+  }, [products]);
 
   const handleScroll = (ref: React.RefObject<HTMLDivElement | null>, dir: 'left' | 'right') => {
     if (ref.current) {

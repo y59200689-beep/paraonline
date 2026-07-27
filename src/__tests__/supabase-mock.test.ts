@@ -61,36 +61,40 @@ describe('Supabase Mock Client', () => {
   });
 
   it('should update existing product in upsert if ID is provided', async () => {
-    const { data: original } = await supabase.from('products').select('*').eq('id', 1).single();
-    expect(original).not.toBeNull();
-    const originalPrice = original.price;
+    const { data: all } = await supabase.from('products').select('*');
+    expect(all).not.toBeNull();
+    expect(all!.length).toBeGreaterThan(0);
+    const original = all![0];
+    const originalId = original.id;
 
     const updatedProduct = {
-      id: 1,
+      id: originalId,
       title: original.title,
       price: 999 // modify price
     };
 
     await supabase.from('products').upsert(updatedProduct);
 
-    const { data: updated } = await supabase.from('products').select('*').eq('id', 1).single();
+    const { data: updated } = await supabase.from('products').select('*').eq('id', originalId).single();
     expect(updated.price).toBe(999);
   });
 
   it('should support deferred update chaining with filters', async () => {
-    // Select product with ID 2
-    const { data: original } = await supabase.from('products').select('*').eq('id', 2).single();
-    expect(original).not.toBeNull();
+    const { data: all } = await supabase.from('products').select('*');
+    expect(all).not.toBeNull();
+    expect(all!.length).toBeGreaterThan(1);
+    const targetProduct = all![1];
+    const otherProduct = all![0];
 
-    // Update product 2 price
-    await supabase.from('products').update({ price: 777 }).eq('id', 2);
+    // Update target product price
+    await supabase.from('products').update({ price: 777 }).eq('id', targetProduct.id);
 
     // Verify it updated the target product and didn't touch other products
-    const { data: updated } = await supabase.from('products').select('*').eq('id', 2).single();
+    const { data: updated } = await supabase.from('products').select('*').eq('id', targetProduct.id).single();
     expect(updated.price).toBe(777);
 
-    // Product 1 price should not have changed to 777
-    const { data: p1 } = await supabase.from('products').select('*').eq('id', 1).single();
+    // Other product price should not have changed to 777
+    const { data: p1 } = await supabase.from('products').select('*').eq('id', otherProduct.id).single();
     expect(p1.price).not.toBe(777);
   });
 

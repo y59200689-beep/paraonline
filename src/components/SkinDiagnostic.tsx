@@ -214,17 +214,25 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
     } else {
       // Find custom matches based on key concern
       if (concern === 'acne') {
-        // Anua Cleansing foam (id 22) and Anua Cleansing Oil (id 15)
-        recs = products.filter(p => p.id === 15 || p.id === 22);
+        recs = products.filter(p => {
+          const text = `${p.title} ${p.nameFr || ''} ${p.description || ''}`.toLowerCase();
+          return text.includes('acné') || text.includes('imperfection') || text.includes('bouton') || text.includes('sebum') || text.includes('gel');
+        }).slice(0, 4);
       } else if (concern === 'spots') {
-        // Garnier Vitamin C serum (id 3) and Anua TXA Serum (id 14)
-        recs = products.filter(p => p.id === 3 || p.id === 14);
+        recs = products.filter(p => {
+          const text = `${p.title} ${p.nameFr || ''} ${p.description || ''}`.toLowerCase();
+          return text.includes('tache') || text.includes('éclat') || text.includes('bright') || text.includes('pigment') || text.includes('serum');
+        }).slice(0, 4);
       } else if (concern === 'wrinkles') {
-        // Hada Labo Anti age (id 8) and Hada Labo moisturizing cream (id 5)
-        recs = products.filter(p => p.id === 8 || p.id === 5);
+        recs = products.filter(p => {
+          const text = `${p.title} ${p.nameFr || ''} ${p.description || ''}`.toLowerCase();
+          return text.includes('anti-age') || text.includes('anti age') || text.includes('ride') || text.includes('fermeté') || text.includes('creme');
+        }).slice(0, 4);
       } else {
-        // Dry skin / Dehydration: Hada Labo 7XHA lotion (id 7) and Skin-Plump Gel (id 6)
-        recs = products.filter(p => p.id === 7 || p.id === 6);
+        recs = products.filter(p => {
+          const text = `${p.title} ${p.nameFr || ''} ${p.description || ''}`.toLowerCase();
+          return text.includes('hydrat') || text.includes('sec') || text.includes('lotion') || text.includes('baume');
+        }).slice(0, 4);
       }
     }
 

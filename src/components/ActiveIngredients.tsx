@@ -3,8 +3,9 @@
 import React, { useState } from 'react';
 import { useTranslation } from '@/context/LanguageContext';
 import { ProductCard } from './ProductCard';
-import { PRODUCTS_DB, Product } from '@/lib/data';
+import { useProducts } from '@/context/ProductsContext';
 import { FlaskConical } from 'lucide-react';
+import { Product } from '@/lib/data';
 
 const ACTIVE_INGREDIENTS = [
   {
@@ -13,7 +14,6 @@ const ACTIVE_INGREDIENTS = [
     nameAr: 'نياسيناميد',
     descFr: 'Lutte contre les taches, régule le sébum et resserre les pores.',
     descAr: 'يحارب البقع الداكنة، ينظم إفراز الدهون ويصغر المسام.',
-    productIds: [14, 3, 16, 7]
   },
   {
     key: 'salicylic',
@@ -21,7 +21,6 @@ const ACTIVE_INGREDIENTS = [
     nameAr: 'حمض الساليسيليك (BHA)',
     descFr: 'Exfolie en profondeur, élimine les points noirs et prévient l\'acné.',
     descAr: 'يقشر بعمق، يزيل الرؤوس السوداء ويمنع حب الشباب.',
-    productIds: [115, 3]
   },
   {
     key: 'hyaluronic',
@@ -29,7 +28,6 @@ const ACTIVE_INGREDIENTS = [
     nameAr: 'حمض الهيالورونيك',
     descFr: 'Hydrate intensément en surface et en profondeur pour repulper la peau.',
     descAr: 'يرطب البشرة بشكل مكثف على السطح والعمق للحصول على مظهر ممتلئ.',
-    productIds: [7, 5, 17]
   },
   {
     key: 'vitaminC',
@@ -37,7 +35,6 @@ const ACTIVE_INGREDIENTS = [
     nameAr: 'فيتامين سي',
     descFr: 'Illumine le teint, estompe la fatigue et stimule le collagène.',
     descAr: 'يفتح البشرة، يزيل علامات التعب ويحفز إنتاج الكولاجين.',
-    productIds: [3, 14, 16]
   },
   {
     key: 'retinol',
@@ -45,19 +42,30 @@ const ACTIVE_INGREDIENTS = [
     nameAr: 'ريتينول',
     descFr: 'Accélère le renouvellement cellulaire et lisse les rides et ridules.',
     descAr: 'يسرع تجديد الخلايا وينعم التجاعيد والخطوط الدقيقة.',
-    productIds: [8, 14]
   }
 ];
 
 export const ActiveIngredients: React.FC = () => {
   const { language } = useTranslation();
   const isAR = language === 'AR';
+  const { products } = useProducts();
   const [activeTab, setActiveTab] = useState(ACTIVE_INGREDIENTS[0].key);
 
   const currentActive = ACTIVE_INGREDIENTS.find(i => i.key === activeTab) || ACTIVE_INGREDIENTS[0];
   
-  // Filter products in PRODUCTS_DB matching the current active ingredient
-  const matchedProducts = PRODUCTS_DB.filter(p => currentActive.productIds.includes(p.id));
+  // Dynamically filter live catalog products matching the current active ingredient
+  const matchedProducts = React.useMemo(() => {
+    const key = currentActive.key;
+    return products.filter(p => {
+      const text = `${p.title} ${p.nameFr || ''} ${p.description || ''} ${p.ingredients || ''}`.toLowerCase();
+      if (key === 'niacinamide') return text.includes('niacinamide');
+      if (key === 'salicylic') return text.includes('salicyl') || text.includes('bha');
+      if (key === 'hyaluronic') return text.includes('hyaluron');
+      if (key === 'vitaminC') return text.includes('vitamine c') || text.includes('vitamin c') || text.includes('ascorb');
+      if (key === 'retinol') return text.includes('retinol') || text.includes('retinal');
+      return false;
+    }).slice(0, 8);
+  }, [products, currentActive]);
 
   return (
     <section className="relative py-16 md:py-24 overflow-hidden bg-white dark:bg-slate-950/10 border-b border-slate-100 dark:border-white/5">

@@ -10,54 +10,54 @@ import { Grid, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
 const matchesConcern = (product: Product, concern: string) => {
-  const text = `${product.title} ${product.nameFr || ''} ${product.description} ${product.tags.join(' ')}`.toLowerCase();
-  const ingredients = product.ingredients.toLowerCase();
+  const text = `${product.title} ${product.nameFr || ''} ${product.description || ''} ${(product.tags || []).join(' ')}`.toLowerCase();
+  const ingredients = (product.ingredients || '').toLowerCase();
   
   if (concern === 'acne') {
-    return text.includes('acné') || text.includes('imperfection') || text.includes('bouton') || ingredients.includes('salicylic acid') || product.id === 3 || product.id === 22 || product.id === 15 || product.id === 16 || product.id === 17;
+    return text.includes('acné') || text.includes('imperfection') || text.includes('bouton') || ingredients.includes('salicylic');
   }
   if (concern === 'spots') {
-    return text.includes('tache') || text.includes('éclat') || text.includes('bright') || text.includes('pigment') || ingredients.includes('tranexamic') || ingredients.includes('ascorbic') || product.id === 3 || product.id === 14;
+    return text.includes('tache') || text.includes('éclat') || text.includes('bright') || text.includes('pigment') || ingredients.includes('tranexamic') || ingredients.includes('ascorbic');
   }
   if (concern === 'dryness') {
-    return text.includes('déshydrat') || text.includes('sec') || text.includes('hydrat') || ingredients.includes('hyaluronic') || product.id === 5 || product.id === 6 || product.id === 7 || product.id === 17;
+    return text.includes('déshydrat') || text.includes('sec') || text.includes('hydrat') || ingredients.includes('hyaluronic');
   }
   if (concern === 'wrinkles') {
-    return text.includes('ridule') || text.includes('âge') || text.includes('anti-aging') || text.includes('vieill') || ingredients.includes('retinol') || product.id === 8 || product.id === 5 || product.id === 6;
+    return text.includes('ridule') || text.includes('âge') || text.includes('anti-aging') || text.includes('vieill') || ingredients.includes('retinol');
   }
   if (concern === 'redness') {
-    return text.includes('rougeur') || text.includes('apais') || text.includes('sensible') || text.includes('sooth') || ingredients.includes('centella') || ingredients.includes('heartleaf') || product.id === 17 || product.id === 16 || product.id === 15;
+    return text.includes('rougeur') || text.includes('apais') || text.includes('sensible') || text.includes('sooth') || ingredients.includes('centella');
   }
   return true;
 };
 
 const matchesIngredient = (product: Product, ingredient: string) => {
-  const ingStr = product.ingredients.toLowerCase();
-  const nameStr = `${product.title} ${product.nameFr || ''} ${product.description}`.toLowerCase();
+  const ingStr = (product.ingredients || '').toLowerCase();
+  const nameStr = `${product.title} ${product.nameFr || ''} ${product.description || ''}`.toLowerCase();
   
   if (ingredient === 'niacinamide') {
-    return ingStr.includes('niacinamide') || nameStr.includes('niacinamide') || product.id === 14 || product.id === 3 || product.id === 16;
+    return ingStr.includes('niacinamide') || nameStr.includes('niacinamide');
   }
   if (ingredient === 'centella') {
-    return ingStr.includes('centella') || ingStr.includes('madécassoside') || nameStr.includes('centella') || product.id === 17 || product.id === 16 || product.id === 14;
+    return ingStr.includes('centella') || ingStr.includes('madécassoside') || nameStr.includes('centella');
   }
   if (ingredient === 'retinol') {
-    return ingStr.includes('retinol') || ingStr.includes('retinal') || nameStr.includes('retinol') || product.id === 8;
+    return ingStr.includes('retinol') || ingStr.includes('retinal') || nameStr.includes('retinol');
   }
   if (ingredient === 'vitamine_c') {
-    return ingStr.includes('ascorbic') || ingStr.includes('ascorbyl') || nameStr.includes('vitamine c') || nameStr.includes('vitamin c') || product.id === 3 || product.id === 14;
+    return ingStr.includes('ascorbic') || ingStr.includes('ascorbyl') || nameStr.includes('vitamine c') || nameStr.includes('vitamin c');
   }
   if (ingredient === 'hyaluronic') {
-    return ingStr.includes('hyaluronate') || ingStr.includes('hyaluronic') || nameStr.includes('hyaluronique') || product.id === 7 || product.id === 5 || product.id === 6 || product.id === 17;
+    return ingStr.includes('hyaluronate') || ingStr.includes('hyaluronic') || nameStr.includes('hyaluronique');
   }
   if (ingredient === 'tranexamic') {
-    return ingStr.includes('tranexamic') || nameStr.includes('tranexamique') || product.id === 14 || product.id === 16;
+    return ingStr.includes('tranexamic') || nameStr.includes('tranexamique');
   }
   if (ingredient === 'squalane') {
-    return ingStr.includes('squalane') || nameStr.includes('squalane') || product.id === 5;
+    return ingStr.includes('squalane') || nameStr.includes('squalane');
   }
   if (ingredient === 'salicylic') {
-    return ingStr.includes('salicylic') || nameStr.includes('salicylique') || product.id === 3 || product.id === 22;
+    return ingStr.includes('salicylic') || nameStr.includes('salicylique');
   }
   return true;
 };

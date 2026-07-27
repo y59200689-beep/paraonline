@@ -88,8 +88,8 @@ describe('Skin Diagnostic to Checkout Flow Integration Test', () => {
     expect(localStorage.getItem('skin_diagnostic_results')).toContain('Oily');
 
     // 3. Add routine products to the Cart with the 15% AI bundle discount enabled
-    const prod1 = PRODUCTS_DB[0]; // Price: 49.00
-    const prod2 = PRODUCTS_DB[1]; // Price: 69.00
+    const prod1 = { ...PRODUCTS_DB[0], price: 49.00 };
+    const prod2 = { ...PRODUCTS_DB[1], price: 69.00 };
 
     act(() => {
       result.current.cart.addToCart(prod1, 1, true); // apply 15% discount

@@ -164,6 +164,8 @@ describe('Smart Restock Forecasting & Supplier POs tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    sessionStorage.setItem('admin_authenticated', 'true');
+    sessionStorage.setItem('admin_user', JSON.stringify({ id: 'admin-1', name: 'Logistician Bob', username: 'bob', role: 'logistician' }));
 
     // Mock fetch calls for auth, orders and products API
     vi.spyOn(global, 'fetch').mockImplementation((url) => {
@@ -200,7 +202,7 @@ describe('Smart Restock Forecasting & Supplier POs tests', () => {
   it('renders the Forecasting view with computed sales velocity, coverage days, and status colors', async () => {
     await act(async () => {
       render(<RestockForecastingTab />, { wrapper: AllProvidersWrapper });
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 600));
     });
 
     // Check header texts
@@ -235,7 +237,7 @@ describe('Smart Restock Forecasting & Supplier POs tests', () => {
   it('filters products by vendor and allows selecting products to open the PO creation wizard', async () => {
     await act(async () => {
       render(<RestockForecastingTab />, { wrapper: AllProvidersWrapper });
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 600));
     });
 
     // Select Vendor Anua
