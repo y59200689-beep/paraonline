@@ -129,7 +129,7 @@ export const DermoCorner: React.FC = () => {
                 <div className="pt-4 mt-2 border-t border-white/10">
                   <a
                     href="/products?category=visage&q=cerave"
-                    className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-emerald-400 hover:text-emerald-300 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-[10px] font-black uppercase tracking-wider text-emerald-300 hover:text-white transition-all shadow-sm"
                   >
                     {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -205,7 +205,7 @@ export const DermoCorner: React.FC = () => {
                 <div className="pt-4 mt-2 border-t border-white/10">
                   <a
                     href="/products?category=visage&q=serum"
-                    className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-indigo-400 hover:text-indigo-300 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/40 text-[10px] font-black uppercase tracking-wider text-indigo-300 hover:text-white transition-all shadow-sm"
                   >
                     {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -281,7 +281,7 @@ export const DermoCorner: React.FC = () => {
                 <div className="pt-4 mt-2 border-t border-white/10">
                   <a
                     href="/products?category=visage&q=anti-age"
-                    className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-emerald-400 hover:text-emerald-300 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-[10px] font-black uppercase tracking-wider text-emerald-300 hover:text-white transition-all shadow-sm"
                   >
                     {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -357,7 +357,7 @@ export const DermoCorner: React.FC = () => {
                 <div className="pt-4 mt-2 border-t border-white/10">
                   <a
                     href="/products?category=visage&q=ceramide"
-                    className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-indigo-400 hover:text-indigo-300 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/40 text-[10px] font-black uppercase tracking-wider text-indigo-300 hover:text-white transition-all shadow-sm"
                   >
                     {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -433,7 +433,7 @@ export const DermoCorner: React.FC = () => {
                 <div className="pt-4 mt-2 border-t border-white/10">
                   <a
                     href="/products?category=visage&q=centella"
-                    className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-emerald-400 hover:text-emerald-300 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-[10px] font-black uppercase tracking-wider text-emerald-300 hover:text-white transition-all shadow-sm"
                   >
                     {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -509,7 +509,7 @@ export const DermoCorner: React.FC = () => {
                 <div className="pt-4 mt-2 border-t border-white/10">
                   <a
                     href="/products?category=solaire"
-                    className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-indigo-400 hover:text-indigo-300 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/40 text-[10px] font-black uppercase tracking-wider text-indigo-300 hover:text-white transition-all shadow-sm"
                   >
                     {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
                     <ArrowRight className="w-3.5 h-3.5" />
