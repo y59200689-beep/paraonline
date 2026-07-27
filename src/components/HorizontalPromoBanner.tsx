@@ -21,7 +21,7 @@ export const HorizontalPromoBanner: React.FC<HorizontalPromoBannerProps> = ({ se
   const descAr = settings?.descAr || "الصيدلية الوحيدة التي تجعل حياتك أسهل وأجمل في المغرب";
   const discountPercent = settings?.discountPercent !== undefined ? settings.discountPercent : 50;
   const bgImage = settings?.bgImage || "";
-  const overlayImage = settings?.overlayImage || "";
+  const overlayImage = settings?.overlayImage || "/images/cicaplast_bundle_nobg.png";
 
   const isDefaultBg = !bgImage;
 

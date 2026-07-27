@@ -149,6 +149,7 @@ export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps
             return <InteractiveFaqWrapper key={section.id} />;
 
           case 'customHtml':
+            if (!section.settings?.html?.trim()) return null;
             return (
               <section
                 key={section.id}
@@ -164,6 +165,8 @@ export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps
             const ctaLink = section.settings?.ctaLink || '#';
             const bgColor = section.settings?.bgColor || 'transparent';
             const textColor = section.settings?.textColor || 'inherit';
+
+            if (!title && !desc && !ctaText) return null;
 
             return (
               <section
