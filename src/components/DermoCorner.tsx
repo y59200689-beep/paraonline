@@ -8,14 +8,14 @@ import { Sparkles, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import { useGalleryOverrides } from '@/lib/useGalleryOverrides';
 
-// Default Unsplash fallbacks (used when no admin upload override exists)
+// Default local image fallbacks (used when no admin upload override exists)
 const CONCERN_DEFAULTS = {
-  acne:     'https://images.unsplash.com/photo-1590439471364-192aa70c0b53?q=80&w=600&auto=format&fit=crop',
-  spots:    'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?q=80&w=600&auto=format&fit=crop',
-  wrinkles: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=600&auto=format&fit=crop',
-  dryness:  'https://images.unsplash.com/photo-1519699047748-de8e457a634e?q=80&w=600&auto=format&fit=crop',
-  redness:  'https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=600&auto=format&fit=crop',
-  solaire:  'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=600&auto=format&fit=crop',
+  acne:     '/images/concern_acne.webp',
+  spots:    '/images/concern_spots.webp',
+  wrinkles: '/images/concern_wrinkles.webp',
+  dryness:  '/images/concern_dryness.webp',
+  redness:  '/images/concern_redness.webp',
+  solaire:  '/images/concern_solaire.webp',
 };
 
 export const DermoCorner: React.FC = () => {

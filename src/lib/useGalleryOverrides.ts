@@ -14,25 +14,32 @@ export function useGalleryOverrides() {
         const res = await fetch('/api/gallery-overrides', { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
-          if (data.overrides) {
-            setOverrides(prev => ({ ...data.overrides, ...prev }));
+          if (data.overrides && Object.keys(data.overrides).length > 0) {
+            // Server overrides take top priority over local storage!
+            setOverrides(prev => ({ ...prev, ...data.overrides }));
           }
         }
       } catch {}
     };
-    fetchServerOverrides();
 
-    // 2. Also apply any client-side localStorage overrides (for same-session real-time preview).
+    // 2. Load any client-side localStorage overrides first for instant preview
     if (typeof window !== 'undefined') {
+      try {
+        const stored = JSON.parse(localStorage.getItem('custom_gallery_overrides') || '{}');
+        setOverrides(stored);
+      } catch {}
+
       const loadLocalOverrides = () => {
         try {
           const stored = JSON.parse(localStorage.getItem('custom_gallery_overrides') || '{}');
           setOverrides(prev => ({ ...prev, ...stored }));
         } catch {}
       };
-      loadLocalOverrides();
       window.addEventListener('gallery_overrides_updated', loadLocalOverrides);
+      fetchServerOverrides();
       return () => window.removeEventListener('gallery_overrides_updated', loadLocalOverrides);
+    } else {
+      fetchServerOverrides();
     }
   }, []);
 

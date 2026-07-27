@@ -6,6 +6,7 @@ import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import { useSettings } from '@/context/SettingsContext';
+import { useGalleryOverrides } from '@/lib/useGalleryOverrides';
 
 export interface CategoryItem {
   id: string;
@@ -26,6 +27,7 @@ interface CategoryTrackProps {
 export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, onSelectCategory }) => {
   const { t, language } = useTranslation();
   const { settings } = useSettings();
+  const { getDisplayImage } = useGalleryOverrides();
 
   const brandPartnersSection = settings.homepageSections?.sectionOrder?.find(
     (s) => s.type === 'brandPartners'
@@ -39,22 +41,6 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
     },
     {}
   ) || {};
-
-  const [galleryOverrides, setGalleryOverrides] = React.useState<Record<string, string>>({});
-
-  React.useEffect(() => {
-    const loadOverrides = () => {
-      if (typeof window === 'undefined') return;
-      try {
-        const stored = JSON.parse(localStorage.getItem('custom_gallery_overrides') || '{}');
-        setGalleryOverrides(stored);
-      } catch {}
-    };
-
-    loadOverrides();
-    window.addEventListener('gallery_overrides_updated', loadOverrides);
-    return () => window.removeEventListener('gallery_overrides_updated', loadOverrides);
-  }, []);
 
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const [showLeftFade, setShowLeftFade] = React.useState(false);
@@ -203,7 +189,7 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
                      <div className="relative w-full h-[60px] sm:h-[68px] md:h-[72px] lg:h-[74px] flex items-center justify-center overflow-hidden select-none mt-1">
                        <div className="relative w-[54px] h-[54px] sm:w-[62px] sm:h-[62px] md:w-[68px] md:h-[68px] lg:w-[70px] lg:h-[70px] pointer-events-none select-none group-hover:scale-105 transition-transform duration-500 ease-out">
                          <Image 
-                           src={getOptimizedImageUrl(galleryOverrides[`cat_${cat.tag}`] || galleryOverrides[cat.tag] || customCategoryImages[cat.tag] || `/images/categories/${cat.tag}.png`) || ''}
+                           src={getDisplayImage(customCategoryImages[cat.tag] || `/images/categories/${cat.tag}.png`, `cat_${cat.tag}`, cat.tag)}
                            alt={t(cat.translationKey)}
                            fill
                            sizes="(max-width: 640px) 54px, (max-width: 768px) 62px, 70px"
