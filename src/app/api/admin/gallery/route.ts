@@ -40,7 +40,7 @@ export const IMAGE_MANIFEST: GalleryImage[] = [
   // ── Brands ───────────────────────────────────────────────────────────────
   { key: 'avene_showcase',         label: 'Marque — Avène Showcase',     group: 'brands',     filePath: 'images/avene_brand_showcase.webp',     url: '/images/avene_brand_showcase.webp' },
   { key: 'bioderma_showcase',      label: 'Marque — Bioderma Showcase',  group: 'brands',     filePath: 'images/bioderma_brand_showcase.webp',  url: '/images/bioderma_brand_showcase.webp' },
-  { key: 'cerave_showcase',        label: 'Marque — CeraVe Showcase',    group: 'brands',     filePath: 'images/cerave_brand_showcase.webp',    url: '/images/cerave_brand_showcase.webp' },
+  { key: 'cerave_showcase',        label: 'Marque — CeraVe Showcase',    group: 'brands',     filePath: 'images/cerave_showcase_banner.webp',    url: '/images/cerave_showcase_banner.webp' },
   { key: 'eucerin_showcase',       label: 'Marque — Eucerin Showcase',   group: 'brands',     filePath: 'images/eucerin_brand_showcase.webp',   url: '/images/eucerin_brand_showcase.webp' },
   { key: 'lrp_showcase',           label: 'Marque — La Roche-Posay Showcase', group: 'brands', filePath: 'images/larochposay_brand_showcase.webp', url: '/images/larochposay_brand_showcase.webp' },
   { key: 'vichy_showcase',         label: 'Marque — Vichy Showcase',     group: 'brands',     filePath: 'images/vichy_brand_showcase.webp',     url: '/images/vichy_brand_showcase.webp' },
