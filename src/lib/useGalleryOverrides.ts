@@ -2,28 +2,39 @@
 
 import { useState, useEffect } from 'react';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
-import { useSettings } from '@/context/SettingsContext';
 
 export function useGalleryOverrides() {
-  const [localOverrides, setLocalOverrides] = useState<Record<string, string>>({});
-  const { settings } = useSettings();
+  const [overrides, setOverrides] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    // 1. Fetch server-side overrides from gallery-overrides.json via public API.
+    //    This is the persistent source of truth — works after page refresh and on any browser.
+    const fetchServerOverrides = async () => {
+      try {
+        const res = await fetch('/api/gallery-overrides', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.overrides) {
+            setOverrides(prev => ({ ...data.overrides, ...prev }));
+          }
+        }
+      } catch {}
+    };
+    fetchServerOverrides();
+
+    // 2. Also apply any client-side localStorage overrides (for same-session real-time preview).
     if (typeof window !== 'undefined') {
-      const loadOverrides = () => {
+      const loadLocalOverrides = () => {
         try {
           const stored = JSON.parse(localStorage.getItem('custom_gallery_overrides') || '{}');
-          setLocalOverrides(stored);
-        } catch (e) {}
+          setOverrides(prev => ({ ...prev, ...stored }));
+        } catch {}
       };
-      loadOverrides();
-      window.addEventListener('gallery_overrides_updated', loadOverrides);
-      return () => window.removeEventListener('gallery_overrides_updated', loadOverrides);
+      loadLocalOverrides();
+      window.addEventListener('gallery_overrides_updated', loadLocalOverrides);
+      return () => window.removeEventListener('gallery_overrides_updated', loadLocalOverrides);
     }
   }, []);
-
-  const dbOverrides = settings?.galleryOverrides || {};
-  const overrides = { ...dbOverrides, ...localOverrides };
 
   const getDisplayImage = (defaultSrc: string, ...keys: string[]) => {
     for (const k of keys) {
@@ -39,3 +50,4 @@ export function useGalleryOverrides() {
 
   return { overrides, getDisplayImage };
 }
+

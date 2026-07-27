@@ -43,6 +43,7 @@ export async function GET() {
       diagnosticRules: settings.diagnosticRules || [],
       deliverySettings: settings.deliverySettings || null,
       homepageSections: settings.homepageSections,
+      galleryOverrides: settings.galleryOverrides || {},
       paymentSettings: settings.paymentSettings ? {
         onlinePaymentEnabled: settings.paymentSettings.onlinePaymentEnabled,
         stripeEnabled: settings.paymentSettings.stripeEnabled,

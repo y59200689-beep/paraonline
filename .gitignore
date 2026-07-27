@@ -42,3 +42,4 @@ next-env.d.ts
 
 # User uploads
 /public/uploads
+gallery-overrides.json

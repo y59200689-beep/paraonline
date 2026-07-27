@@ -132,6 +132,26 @@ async function getImageFileInfo(filePath: string): Promise<ImageFileInfo> {
   }
 }
 
+// ─── Helpers for the gallery-overrides.json file ────────────────────────────
+const OVERRIDES_FILE = path.join(process.cwd(), 'gallery-overrides.json');
+
+function readOverrides(): Record<string, string> {
+  try {
+    if (fs.existsSync(OVERRIDES_FILE)) {
+      return JSON.parse(fs.readFileSync(OVERRIDES_FILE, 'utf-8'));
+    }
+  } catch {}
+  return {};
+}
+
+function writeOverrides(overrides: Record<string, string>): void {
+  try {
+    fs.writeFileSync(OVERRIDES_FILE, JSON.stringify(overrides, null, 2), 'utf-8');
+  } catch (e) {
+    console.error('[gallery] Failed to write gallery-overrides.json:', e);
+  }
+}
+
 // ─── GET — return manifest with live file sizes & dimensions ──────────────────
 export async function GET() {
   const session = await verifyAdminSession();
@@ -139,27 +159,17 @@ export async function GET() {
     return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
   }
 
-  // Fetch gallery overrides from DB settings table
-  let dbOverrides: Record<string, string> = {};
-  try {
-    const { data: dbData } = await supabase
-      .from('settings')
-      .select('value')
-      .eq('id', 1)
-      .single();
-    if (dbData?.value?.galleryOverrides) {
-      dbOverrides = dbData.value.galleryOverrides;
-    }
-  } catch (e) {
-    console.warn('[gallery GET] Failed to fetch DB gallery overrides:', e);
-  }
+  // Load overrides from gallery-overrides.json (written by POST)
+  const fileOverrides = readOverrides();
 
   const manifestImages = await Promise.all(
     IMAGE_MANIFEST.map(async (img) => {
       const info = await getImageFileInfo(img.filePath);
-      let imgUrl = dbOverrides[img.key] || img.url;
+      // File override takes priority (saved by POST). Fall back to manifest URL.
+      let imgUrl = fileOverrides[img.key] || img.url;
 
-      // If local file exists and URL is relative, append timestamp cache buster
+      // If local file exists and URL is relative, append disk mtime as cache buster
+      // so the browser always fetches the newest version after a replacement.
       if (info.sizeKb > 0 && !imgUrl.startsWith('http') && !imgUrl.startsWith('data:')) {
         const abs = path.join(process.cwd(), 'public', img.filePath);
         try {
@@ -322,24 +332,13 @@ export async function POST(request: Request) {
       }
     }
 
-    // Persist gallery override in Supabase settings DB table so all clients pick it up permanently
+    // Persist override to gallery-overrides.json — survives page refreshes, server restarts, and new browsers
     try {
-      const { data: dbData } = await supabase
-        .from('settings')
-        .select('value')
-        .eq('id', 1)
-        .single();
-      
-      const currentVal = dbData?.value || {};
-      const galleryOverrides = currentVal.galleryOverrides || {};
-      galleryOverrides[entry.key] = finalUrl;
-
-      await supabase
-        .from('settings')
-        .update({ value: { ...currentVal, galleryOverrides } })
-        .eq('id', 1);
-    } catch (dbErr) {
-      console.warn('[gallery POST] Failed to update DB settings:', dbErr);
+      const overrides = readOverrides();
+      overrides[entry.key] = finalUrl;
+      writeOverrides(overrides);
+    } catch (fileErr: any) {
+      console.error('[gallery POST] Failed to write gallery-overrides.json:', fileErr?.message || fileErr);
     }
 
     // Extract metadata of saved WebP image
