@@ -109,7 +109,7 @@ export const DermoCorner: React.FC = () => {
             {/* Model Card Left */}
             <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6">
               <Image
-                src="https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=600&auto=format&fit=crop"
+                src="https://images.unsplash.com/photo-1590439471364-192aa70c0b53?q=80&w=600&auto=format&fit=crop"
                 alt="Acne & Imperfections skin concern model"
                 fill
                 className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
@@ -185,7 +185,7 @@ export const DermoCorner: React.FC = () => {
             {/* Model Card Left */}
             <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6">
               <Image
-                src="https://images.unsplash.com/photo-1612817288484-6f916006741a?q=80&w=600&auto=format&fit=crop"
+                src="https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?q=80&w=600&auto=format&fit=crop"
                 alt="Spots & Pigmentation skin concern model"
                 fill
                 className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
@@ -261,7 +261,7 @@ export const DermoCorner: React.FC = () => {
             {/* Model Card Left */}
             <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6">
               <Image
-                src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=600&auto=format&fit=crop"
+                src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=600&auto=format&fit=crop"
                 alt="Anti-aging & Firmness skin concern model"
                 fill
                 className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
@@ -337,7 +337,7 @@ export const DermoCorner: React.FC = () => {
             {/* Model Card Right */}
             <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6">
               <Image
-                src="https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?q=80&w=600&auto=format&fit=crop"
+                src="https://images.unsplash.com/photo-1519699047748-de8e457a634e?q=80&w=600&auto=format&fit=crop"
                 alt="Hydration & Barrier skin concern model"
                 fill
                 className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
@@ -413,7 +413,7 @@ export const DermoCorner: React.FC = () => {
             {/* Model Card Left */}
             <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6">
               <Image
-                src="https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=80&w=600&auto=format&fit=crop"
+                src="https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=600&auto=format&fit=crop"
                 alt="Soothing & Sensitive skin concern model"
                 fill
                 className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
@@ -489,7 +489,7 @@ export const DermoCorner: React.FC = () => {
             {/* Model Card Right */}
             <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6">
               <Image
-                src="https://images.unsplash.com/photo-1520038410233-7141be7e6f97?q=80&w=600&auto=format&fit=crop"
+                src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=600&auto=format&fit=crop"
                 alt="Solaire & Protection concern model"
                 fill
                 className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
