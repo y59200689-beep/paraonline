@@ -11,6 +11,7 @@ import { useUi } from '@/context/UiContext';
 import Image from 'next/image';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { useSettings } from '@/context/SettingsContext';
+import { useGalleryOverrides } from '@/lib/useGalleryOverrides';
 
 const cleanTitle = (title: string) => {
   return title
@@ -33,6 +34,7 @@ export const TopRatedAsymmetricGrid: React.FC = () => {
   const { products } = useProducts();
 
   const { settings } = useSettings();
+  const { getDisplayImage } = useGalleryOverrides();
   const hp = settings?.homepageSections;
 
   const showSection = hp?.showTopRated ?? true;
@@ -82,7 +84,7 @@ export const TopRatedAsymmetricGrid: React.FC = () => {
           {/* Botanical fading image on the right */}
           <div className="absolute right-0 top-0 h-full w-[55%] pointer-events-none">
             <Image 
-              src="https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=1200&auto=format&fit=crop" 
+              src={getDisplayImage("https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=1200&auto=format&fit=crop", "skincare_brand_banner")} 
               alt="Botanical background" 
               fill
               sizes="50vw"

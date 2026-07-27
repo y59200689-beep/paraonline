@@ -6,6 +6,7 @@ import { useTranslation } from '@/context/LanguageContext';
 import { ChevronLeft, ChevronRight, Award } from 'lucide-react';
 import { ProductCard } from './ProductCard';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
+import { useGalleryOverrides } from '@/lib/useGalleryOverrides';
 
 /* ─── Brand config ──────────────────────────────────────────────── */
 const BRANDS = [
@@ -164,6 +165,7 @@ function BrandRow({ brand, isAR }: { brand: (typeof BRANDS)[number]; isAR: boole
   const scrollRef = useRef<HTMLDivElement>(null);
   const [brandProducts, setBrandProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { getDisplayImage } = useGalleryOverrides();
 
   useEffect(() => {
     fetch(`/api/products?vendor=${brand.vendorQuery}&limit=100`)
@@ -184,7 +186,7 @@ function BrandRow({ brand, isAR }: { brand: (typeof BRANDS)[number]; isAR: boole
       {/* Brand card */}
       <div className="relative overflow-hidden rounded-[28px] border border-slate-200/50 dark:border-white/10 shadow-xl min-h-[460px] lg:min-h-full group">
         <Image
-          src={getOptimizedImageUrl(brand.image)}
+          src={getDisplayImage(brand.image, `${brand.id}_showcase`, brand.image)}
           alt={isAR ? brand.nameAr : brand.nameFr}
           fill
           sizes="(max-width: 1024px) 100vw, 33vw"

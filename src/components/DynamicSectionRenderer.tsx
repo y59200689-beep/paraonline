@@ -119,6 +119,7 @@ export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps
             return <TopRatedAsymmetricGrid key={section.id} />;
 
           case 'bestSellers':
+          case 'weeklySales':
             return <BestSellersDualGrid key={section.id} />;
 
           case 'routineVisualizer':

@@ -6,6 +6,7 @@ import { useUi } from '@/context/UiContext';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import { useTranslation } from '@/context/LanguageContext';
 import { useSettings } from '@/context/SettingsContext';
+import { useGalleryOverrides } from '@/lib/useGalleryOverrides';
 
 export const SkinConcernsSelector: React.FC = () => {
   const { 
@@ -16,6 +17,7 @@ export const SkinConcernsSelector: React.FC = () => {
   } = useUi();
   const { language } = useTranslation();
   const { settings } = useSettings();
+  const { getDisplayImage } = useGalleryOverrides();
 
   const activeSection = settings.homepageSections?.sectionOrder?.find(s => s.type === 'skinConcerns');
   const customConcerns = settings.customConcerns || [];
@@ -157,7 +159,7 @@ export const SkinConcernsSelector: React.FC = () => {
                   {/* Background Macro Texture Image */}
                   <div className="absolute inset-0 z-0">
                     <Image
-                      src={c.image}
+                      src={getDisplayImage(c.image, `concern_${c.key}`)}
                       alt={c.titleFr}
                       fill
                       className="object-cover transition-transform duration-[2000ms] ease-[var(--ease-out-premium)] group-hover:scale-[1.12] group-hover:rotate-1 opacity-90 dark:opacity-80"

@@ -35,7 +35,9 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
+            // Not immutable — gallery images can be replaced by admin. must-revalidate ensures
+            // the browser checks the server after the cache expires (1 hour).
+            value: 'public, max-age=3600, must-revalidate',
           },
         ],
       },
@@ -44,7 +46,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
+            value: 'public, max-age=3600, must-revalidate',
           },
         ],
       },

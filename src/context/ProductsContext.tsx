@@ -46,7 +46,7 @@ function rowToProduct(item: Record<string, unknown>): Product {
 }
 
 export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>(PRODUCTS_DB);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchProducts = useCallback(async () => {

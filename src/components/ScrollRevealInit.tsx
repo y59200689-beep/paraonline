@@ -4,6 +4,8 @@ import { useEffect } from 'react';
 
 export function ScrollRevealInit() {
   useEffect(() => {
+    const observedElements = new WeakSet<Element>();
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -12,7 +14,7 @@ export function ScrollRevealInit() {
           }
         });
       },
-      { threshold: 0.08, rootMargin: '0px 0px -50px 0px' }
+      { threshold: 0.05, rootMargin: '50px 0px 50px 0px' }
     );
 
     const selectors = [
@@ -29,13 +31,35 @@ export function ScrollRevealInit() {
       '.stagger-children',
     ].join(', ');
 
-    const revealElements = document.querySelectorAll(selectors);
-    revealElements.forEach((el) => observer.observe(el));
+    const observeNewElements = () => {
+      const revealElements = document.querySelectorAll(selectors);
+      revealElements.forEach((el) => {
+        if (!observedElements.has(el)) {
+          observedElements.add(el);
+          observer.observe(el);
+        }
+      });
+    };
+
+    // Initial scan
+    observeNewElements();
+
+    // Observe DOM mutations so dynamic imports / delayed context state components get observed as soon as they mount
+    const mutationObserver = new MutationObserver(() => {
+      observeNewElements();
+    });
+
+    mutationObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
 
     return () => {
-      revealElements.forEach((el) => observer.unobserve(el));
+      observer.disconnect();
+      mutationObserver.disconnect();
     };
   }, []);
 
   return null;
 }
+

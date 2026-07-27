@@ -7,6 +7,7 @@ import { useSettings } from '@/context/SettingsContext';
 import { Sparkles, Shield, Activity, ArrowRight, ArrowLeft } from 'lucide-react';
 import { gsap } from 'gsap';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
+import { useGalleryOverrides } from '@/lib/useGalleryOverrides';
 
 interface HeroProps {
   onOpenDiagnostic: () => void;
@@ -16,6 +17,7 @@ interface HeroProps {
 export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }) => {
   const { language } = useTranslation();
   const { settings } = useSettings();
+  const { getDisplayImage } = useGalleryOverrides();
   const isRTL = language === 'AR';
   const [isHovered, setIsHovered] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -88,7 +90,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
       desc_ar: customBanners ? customBanners[0].descAr : 'اكتشفي أفضل مستحضرات العناية الكورية والطبية الأكثر طلباً في المغرب. نتائج مثبتة وتوصيل مجاني.',
       cta_fr: customBanners ? customBanners[0].ctaFr : 'Explorer les Best-Sellers',
       cta_ar: customBanners ? customBanners[0].ctaAr : 'تسوقي الأكثر مبيعاً',
-      bgImage: getOptimizedImageUrl(customBanners ? customBanners[0].bgImage : '/images/hero_bestsellers.png'),
+      bgImage: getDisplayImage(customBanners ? customBanners[0].bgImage : '/images/hero_bestsellers.webp', 'hero_bestsellers'),
       action: customBanners ? getBannerAction(customBanners[0]) : () => onSelectCategory('offers'),
     },
     card2: {
@@ -98,7 +100,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
       title_ar: customBanners ? customBanners[1].titleAr : 'عروض الصيف والباقات الشمسية',
       cta_fr: customBanners ? customBanners[1].ctaFr : 'Profiter des Offres',
       cta_ar: customBanners ? customBanners[1].ctaAr : 'استفيدي من العروض',
-      bgImage: getOptimizedImageUrl(customBanners ? customBanners[1].bgImage : '/images/hero_summersale.png'),
+      bgImage: getDisplayImage(customBanners ? customBanners[1].bgImage : '/images/hero_summersale.webp', 'hero_summersale'),
       action: customBanners ? getBannerAction(customBanners[1]) : () => onSelectCategory('solaire'),
     },
     card3: {
@@ -108,7 +110,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
       title_ar: customBanners ? customBanners[2].titleAr : 'عروض الأسبوع السريعة',
       cta_fr: customBanners ? customBanners[2].ctaFr : 'Voir les Promos',
       cta_ar: customBanners ? customBanners[2].ctaAr : 'شاهد العروض',
-      bgImage: getOptimizedImageUrl(customBanners ? customBanners[2].bgImage : '/images/hero_weeklypromo_v2.png'),
+      bgImage: getDisplayImage(customBanners ? customBanners[2].bgImage : '/images/hero_weeklypromo_v2.webp', 'hero_weeklypromo'),
       action: customBanners ? getBannerAction(customBanners[2]) : () => onSelectCategory('offers'),
     },
     card4: {
@@ -118,7 +120,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
       title_ar: customBanners ? customBanners[3].titleAr : 'جديد العناية والجمال الكوري',
       cta_fr: customBanners ? customBanners[3].ctaFr : 'Découvrir la Nouveauté',
       cta_ar: customBanners ? customBanners[3].ctaAr : 'اكتشفي الجديد',
-      bgImage: getOptimizedImageUrl(customBanners ? customBanners[3].bgImage : '/images/hero_newarrivals.png'),
+      bgImage: getDisplayImage(customBanners ? customBanners[3].bgImage : '/images/hero_newarrivals.webp', 'hero_newarrivals'),
       action: customBanners ? getBannerAction(customBanners[3]) : () => onSelectCategory('kbeauty'),
     },
   };
