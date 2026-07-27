@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import RestockForecastingTab from '../components/admin/RestockForecastingTab';
 
 vi.mock('next/navigation', () => ({
@@ -200,13 +200,12 @@ describe('Smart Restock Forecasting & Supplier POs tests', () => {
   });
 
   it('renders the Forecasting view with computed sales velocity, coverage days, and status colors', async () => {
-    await act(async () => {
-      render(<RestockForecastingTab />, { wrapper: AllProvidersWrapper });
-      await new Promise(resolve => setTimeout(resolve, 600));
-    });
+    render(<RestockForecastingTab />, { wrapper: AllProvidersWrapper });
 
-    // Check header texts
-    expect(screen.getByText(/Ravitaillement & Vélocité de Vente/i)).toBeDefined();
+    await waitFor(() => {
+      expect(screen.getByText(/Ravitaillement & Vélocité de Vente/i)).toBeDefined();
+    });
+    
     expect(screen.getByText(/Moteur de Prévision/i)).toBeDefined();
 
     // Velocity checks:

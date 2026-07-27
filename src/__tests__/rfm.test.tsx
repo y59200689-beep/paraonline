@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import RFMTab from '../components/admin/RFMTab';
 
 vi.mock('next/navigation', () => ({
@@ -195,16 +195,15 @@ describe('Dynamic Customer RFM Segmentation tests', () => {
   });
 
   it('renders the RFM metrics dashboard and client lists correctly classified', async () => {
-    await act(async () => {
-      render(<RFMTab />, { wrapper: AllProvidersWrapper });
-      await new Promise(resolve => setTimeout(resolve, 100));
-    });
-
-    // Header validations
-    expect(screen.getByText(/Analyse Comportementale RFM des Clients/i)).toBeDefined();
+    render(<RFMTab />, { wrapper: AllProvidersWrapper });
+    
+    // Wait for async fetch data to populate the customer list
+    await waitFor(() => {
+      expect(screen.getByText(/Analyse Comportementale RFM des Clients/i)).toBeDefined();
+      expect(screen.getByText('Alice Cooper')).toBeDefined();
+    }, { timeout: 10000 });
     
     // Customer lists checking
-    expect(screen.getByText('Alice Cooper')).toBeDefined();
     expect(screen.getByText('Bob Marley')).toBeDefined();
     expect(screen.getByText('Charlie Chaplin')).toBeDefined();
     expect(screen.getByText('Diana Prince')).toBeDefined();

@@ -590,20 +590,31 @@ export default function OrdersTab() {
          .replace(/[^a-z0-9_]/g, '_')
       );
 
-      const idxOrder = headers.findIndex(h => h.includes('ref') || h.includes('cmd') || h.includes('commande') || h.includes('order') || h.includes('id_c') || h.includes('reference'));
-      const idxTracking = headers.findIndex(h => h.includes('track') || h.includes('suivi') || h.includes('envoi') || h.includes('bar') || h.includes('colis'));
-      const idxCod = headers.findIndex(h => h.includes('cod') || h.includes('amount') || h.includes('prix') || h.includes('paye') || h.includes('montant') || h.includes('valeur'));
-      const idxFee = headers.findIndex(h => h.includes('fee') || h.includes('frais') || h.includes('tarif') || h.includes('charge') || h.includes('shipping') || h.includes('cout'));
-      const idxStatus = headers.findIndex(h => h.includes('status') || h.includes('etat') || h.includes('statut'));
+      let idxOrder = headers.findIndex(h => h.includes('ref') || h.includes('cmd') || h.includes('commande') || h.includes('order') || h.includes('id_c') || h.includes('reference') || h.includes('po_'));
+      let idxTracking = headers.findIndex(h => h.includes('track') || h.includes('suivi') || h.includes('envoi') || h.includes('bar') || h.includes('colis') || h.includes('yal'));
+      let idxCod = headers.findIndex(h => h.includes('cod') || h.includes('amount') || h.includes('prix') || h.includes('paye') || h.includes('montant') || h.includes('valeur'));
+      let idxFee = headers.findIndex(h => h.includes('fee') || h.includes('frais') || h.includes('tarif') || h.includes('charge') || h.includes('shipping') || h.includes('cout'));
+      let idxStatus = headers.findIndex(h => h.includes('status') || h.includes('etat') || h.includes('statut'));
 
+      let startRowIndex = 1;
+
+      // If headers line does not contain order/tracking column keywords, line 0 is likely a raw data row
       if (idxOrder === -1 && idxTracking === -1) {
-        showToast("Impossible de trouver la colonne Référence Commande ou Numéro de Suivi dans les en-têtes.", 'error');
-        return;
+        idxTracking = 0;
+        idxOrder = 1;
+        idxCod = 2;
+        idxFee = 3;
+        idxStatus = 4;
+        startRowIndex = 0;
+      } else {
+        if (idxCod === -1) idxCod = 2;
+        if (idxFee === -1) idxFee = 3;
+        if (idxStatus === -1) idxStatus = 4;
       }
 
       const rows: any[] = [];
 
-      for (let i = 1; i < lines.length; i++) {
+      for (let i = startRowIndex; i < lines.length; i++) {
         const line = lines[i].trim();
         if (!line) continue;
 
