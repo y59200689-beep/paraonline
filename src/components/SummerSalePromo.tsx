@@ -29,10 +29,11 @@ export const SummerSalePromo: React.FC = () => {
   const { setSelectedProduct } = useUi();
 
   useEffect(() => {
-    // Generate random minutes between 15 and 30 and random seconds on client mount to avoid SSR hydration mismatch
-    const randomMins = Math.floor(Math.random() * 16) + 15; // 15 to 30
+    // Generate random hours (2 to 5), random minutes (15 to 30), and random seconds on client mount
+    const randomHours = Math.floor(Math.random() * 4) + 2; // 2 to 5 hours
+    const randomMins = Math.floor(Math.random() * 16) + 15; // 15 to 30 mins
     const randomSecs = Math.floor(Math.random() * 60);
-    setTimeLeft({ days: 0, hours: 0, minutes: randomMins, seconds: randomSecs });
+    setTimeLeft({ days: 0, hours: randomHours, minutes: randomMins, seconds: randomSecs });
 
     const timer = setInterval(() => {
       setTimeLeft(prev => {
@@ -303,6 +304,20 @@ export const SummerSalePromo: React.FC = () => {
 
               {/* Square Block Countdown Timer Row */}
               <div className="flex items-center gap-1.5 sm:gap-3 mb-6 select-none" dir="ltr">
+                {/* Hours */}
+                <div className="flex flex-col items-center">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[12px] bg-white border border-slate-100 shadow-md flex flex-col items-center justify-center">
+                    <span className="text-base sm:text-lg font-black text-primary leading-none">
+                      {String(timeLeft.hours).padStart(2, '0')}
+                    </span>
+                    <span className="text-[7px] sm:text-[8px] font-black text-slate-400 mt-1 tracking-wider uppercase">
+                      {language === 'AR' ? 'ساعة' : 'HOURS'}
+                    </span>
+                  </div>
+                </div>
+
+                <span className="text-lg font-black text-slate-300 animate-pulse">:</span>
+
                 {/* Minutes */}
                 <div className="flex flex-col items-center">
                   <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[12px] bg-white border border-slate-100 shadow-md flex flex-col items-center justify-center">
