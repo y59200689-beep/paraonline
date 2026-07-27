@@ -109,34 +109,36 @@ export const DermoCorner: React.FC = () => {
           <div className="flex flex-col lg:flex-row gap-6 p-6 rounded-[28px] bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 shadow-md hover:shadow-xl transition-all duration-300">
             
             {/* Model Card Left */}
-            <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6">
+            <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-lg">
               <Image
                 src={getDisplayImage('https://images.unsplash.com/photo-1590439471364-192aa70c0b53?q=80&w=600&auto=format&fit=crop', 'concern_acne')}
                 alt="Acne & Imperfections skin concern model"
                 fill
                 className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex flex-col justify-end p-5 z-10">
-                <span className="text-[9.5px] font-black uppercase tracking-wider text-emerald-400 mb-1">
+              {/* Dark gradient overlay */}
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(2,6,23,0.97) 0%, rgba(2,6,23,0.7) 45%, rgba(2,6,23,0.1) 100%)' }} />
+              {/* Text content */}
+              <div className="absolute inset-x-0 bottom-0 flex flex-col p-4 z-10">
+                <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400 mb-1">
                   {isAR ? 'البشرة الدهنية والشوائب' : 'Peaux Normales à Grasses'}
                 </span>
-                <h3 className="text-xl font-black text-white leading-tight">
+                <h3 className="text-[17px] font-black text-white leading-tight mb-1.5">
                   {isAR ? 'حب الشباب والمسام' : 'Acné & Imperfections'}
                 </h3>
-                <p className="text-[11px] text-slate-200 mt-2 leading-relaxed max-w-xs font-medium">
+                <p className="text-[10px] text-slate-300 leading-relaxed mb-3 font-medium">
                   {isAR
-                    ? 'يمنع ظهور البثور، يقشر بلطف وينعم نسيج البشرة دون إتلاف حاجزها الواقي.'
-                    : 'Purifie en profondeur, régule l\'excès de sébum et cible les imperfections sans altérer le film hydrolipidique.'}
+                    ? 'يمنع ظهور البثور، يقشر بلطف وينعم نسيج البشرة.'
+                    : 'Purifie, régule le sébum et cible les imperfections.'}
                 </p>
-                <div className="pt-4 mt-2 border-t border-white/10">
-                  <a
-                    href="/products?category=visage&q=cerave"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500 text-[10px] font-black uppercase tracking-wider text-white hover:bg-emerald-400 transition-all shadow-md"
-                  >
-                    {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </a>
-                </div>
+                <a
+                  href="/products?category=visage&q=cerave"
+                  className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 hover:scale-[1.02] active:scale-95"
+                  style={{ background: '#ffffff', color: '#0f172a' }}
+                >
+                  {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </a>
               </div>
             </div>
 
@@ -184,35 +186,35 @@ export const DermoCorner: React.FC = () => {
           {/* Row 2: Spot & Brightening */}
           <div className="flex flex-col lg:flex-row-reverse gap-6 p-6 rounded-[28px] bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 shadow-md hover:shadow-xl transition-all duration-300">
             
-            {/* Model Card Left */}
-            <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6">
+            {/* Model Card Right */}
+            <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-lg">
               <Image
                 src={getDisplayImage('https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?q=80&w=600&auto=format&fit=crop', 'concern_spots')}
                 alt="Spots & Pigmentation skin concern model"
                 fill
                 className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex flex-col justify-end p-5 z-10">
-                <span className="text-[9.5px] font-black uppercase tracking-wider text-indigo-400 mb-1">
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(2,6,23,0.97) 0%, rgba(2,6,23,0.7) 45%, rgba(2,6,23,0.1) 100%)' }} />
+              <div className="absolute inset-x-0 bottom-0 flex flex-col p-4 z-10">
+                <span className="text-[9px] font-black uppercase tracking-widest text-indigo-400 mb-1">
                   {isAR ? 'البقع الداكنة وتوحيد اللون' : 'Hyperpigmentation'}
                 </span>
-                <h3 className="text-xl font-black text-white leading-tight">
+                <h3 className="text-[17px] font-black text-white leading-tight mb-1.5">
                   {isAR ? 'التصبغات والنضارة' : 'Anti-Taches & Éclat'}
                 </h3>
-                <p className="text-[11px] text-slate-200 mt-2 leading-relaxed max-w-xs font-medium">
+                <p className="text-[10px] text-slate-300 leading-relaxed mb-3 font-medium">
                   {isAR
-                    ? 'يستهدف بقع الميلانين، يوحد لون البشرة ويرطبها بعمق لنضارة إشعاعية تدom.'
-                    : 'Cible efficacement la production de mélanine, réduit les taches et redonne de l\'éclat aux peaux ternes.'}
+                    ? 'يستهدف بقع الميلانين ويوحد لون البشرة.'
+                    : 'Cible la mélanine et redonne de l\'éclat.'}
                 </p>
-                <div className="pt-4 mt-2 border-t border-white/10">
-                  <a
-                    href="/products?category=visage&q=serum"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-500 text-[10px] font-black uppercase tracking-wider text-white hover:bg-indigo-400 transition-all shadow-md"
-                  >
-                    {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </a>
-                </div>
+                <a
+                  href="/products?category=visage&q=serum"
+                  className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 hover:scale-[1.02] active:scale-95"
+                  style={{ background: '#ffffff', color: '#0f172a' }}
+                >
+                  {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </a>
               </div>
             </div>
 
@@ -261,34 +263,34 @@ export const DermoCorner: React.FC = () => {
           <div className="flex flex-col lg:flex-row gap-6 p-6 rounded-[28px] bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 shadow-md hover:shadow-xl transition-all duration-300">
             
             {/* Model Card Left */}
-            <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6">
+            <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-lg">
               <Image
                 src={getDisplayImage('https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=600&auto=format&fit=crop', 'concern_wrinkles')}
                 alt="Anti-aging & Firmness skin concern model"
                 fill
                 className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex flex-col justify-end p-5 z-10">
-                <span className="text-[9.5px] font-black uppercase tracking-wider text-emerald-400 mb-1">
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(2,6,23,0.97) 0%, rgba(2,6,23,0.7) 45%, rgba(2,6,23,0.1) 100%)' }} />
+              <div className="absolute inset-x-0 bottom-0 flex flex-col p-4 z-10">
+                <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400 mb-1">
                   {isAR ? 'التجاعيد وفقدان المرونة' : 'Rides & Perte de Fermeté'}
                 </span>
-                <h3 className="text-xl font-black text-white leading-tight">
+                <h3 className="text-[17px] font-black text-white leading-tight mb-1.5">
                   {isAR ? 'مقاومة التجاعيد وشد البشرة' : 'Anti-âge & Fermeté'}
                 </h3>
-                <p className="text-[11px] text-slate-200 mt-2 leading-relaxed max-w-xs font-medium">
+                <p className="text-[10px] text-slate-300 leading-relaxed mb-3 font-medium">
                   {isAR
-                    ? 'يستهدف التجاعيد، الخطوط الدقيقة وارتخاء الجلد لاستعادة مرونة البشرة وشدها بشكل ملحوظ.'
-                    : 'Cible les rides, ridules et le relâchement cutané pour redonner de la fermeté et de l\'élasticité à la peau.'}
+                    ? 'يستهدف التجاعيد ويستعيد مرونة البشرة.'
+                    : 'Cible les rides et redonne fermeté et élasticité.'}
                 </p>
-                <div className="pt-4 mt-2 border-t border-white/10">
-                  <a
-                    href="/products?category=visage&q=anti-age"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500 text-[10px] font-black uppercase tracking-wider text-white hover:bg-emerald-400 transition-all shadow-md"
-                  >
-                    {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </a>
-                </div>
+                <a
+                  href="/products?category=visage&q=anti-age"
+                  className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 hover:scale-[1.02] active:scale-95"
+                  style={{ background: '#ffffff', color: '#0f172a' }}
+                >
+                  {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </a>
               </div>
             </div>
 
@@ -337,34 +339,34 @@ export const DermoCorner: React.FC = () => {
           <div className="flex flex-col lg:flex-row-reverse gap-6 p-6 rounded-[28px] bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 shadow-md hover:shadow-xl transition-all duration-300">
             
             {/* Model Card Right */}
-            <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6">
+            <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-lg">
               <Image
                 src={getDisplayImage('https://images.unsplash.com/photo-1519699047748-de8e457a634e?q=80&w=600&auto=format&fit=crop', 'concern_dryness')}
                 alt="Hydration & Barrier skin concern model"
                 fill
                 className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex flex-col justify-end p-5 z-10">
-                <span className="text-[9.5px] font-black uppercase tracking-wider text-indigo-400 mb-1">
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(2,6,23,0.97) 0%, rgba(2,6,23,0.7) 45%, rgba(2,6,23,0.1) 100%)' }} />
+              <div className="absolute inset-x-0 bottom-0 flex flex-col p-4 z-10">
+                <span className="text-[9px] font-black uppercase tracking-widest text-indigo-400 mb-1">
                   {isAR ? 'البشرة الجافة وشديدة الجفاف' : 'Peaux Sèches & Déshydratées'}
                 </span>
-                <h3 className="text-xl font-black text-white leading-tight">
+                <h3 className="text-[17px] font-black text-white leading-tight mb-1.5">
                   {isAR ? 'الترطيب وحاجز البشرة' : 'Hydratation & Barrière'}
                 </h3>
-                <p className="text-[11px] text-slate-200 mt-2 leading-relaxed max-w-xs font-medium">
+                <p className="text-[10px] text-slate-300 leading-relaxed mb-3 font-medium">
                   {isAR
-                    ? 'يعمل على ترميم حاجز البشرة، حبس الرطوبة وتهدئة الجفاف لراحة تدوم طوال اليوم وبشرة ناعمة.'
-                    : 'Restaure la barrière cutanée, retient l\'eau et soulage les tiraillements pour une peau souple, douce et protégée.'}
+                    ? 'يرمم حاجز البشرة ويحبس الرطوبة.'
+                    : 'Restaure la barrière cutanée et retient l\'eau.'}
                 </p>
-                <div className="pt-4 mt-2 border-t border-white/10">
-                  <a
-                    href="/products?category=visage&q=ceramide"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-500 text-[10px] font-black uppercase tracking-wider text-white hover:bg-indigo-400 transition-all shadow-md"
-                  >
-                    {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </a>
-                </div>
+                <a
+                  href="/products?category=visage&q=ceramide"
+                  className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 hover:scale-[1.02] active:scale-95"
+                  style={{ background: '#ffffff', color: '#0f172a' }}
+                >
+                  {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </a>
               </div>
             </div>
 
@@ -413,34 +415,34 @@ export const DermoCorner: React.FC = () => {
           <div className="flex flex-col lg:flex-row gap-6 p-6 rounded-[28px] bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 shadow-md hover:shadow-xl transition-all duration-300">
             
             {/* Model Card Left */}
-            <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6">
+            <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-lg">
               <Image
                 src={getDisplayImage('https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=600&auto=format&fit=crop', 'concern_redness')}
                 alt="Soothing & Sensitive skin concern model"
                 fill
                 className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex flex-col justify-end p-5 z-10">
-                <span className="text-[9.5px] font-black uppercase tracking-wider text-emerald-400 mb-1">
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(2,6,23,0.97) 0%, rgba(2,6,23,0.7) 45%, rgba(2,6,23,0.1) 100%)' }} />
+              <div className="absolute inset-x-0 bottom-0 flex flex-col p-4 z-10">
+                <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400 mb-1">
                   {isAR ? 'الاحمرار والبشرة الحساسة' : 'Rougeurs & Peaux Réactives'}
                 </span>
-                <h3 className="text-xl font-black text-white leading-tight">
+                <h3 className="text-[17px] font-black text-white leading-tight mb-1.5">
                   {isAR ? 'العناية الملطفة والتهدئة' : 'Apaisant & Sensibilité'}
                 </h3>
-                <p className="text-[11px] text-slate-200 mt-2 leading-relaxed max-w-xs font-medium">
+                <p className="text-[10px] text-slate-300 leading-relaxed mb-3 font-medium">
                   {isAR
-                    ? 'يهدئ تهيج البشرة فوراً، يخفف الاحمرار ويقوي دفاعات البشرة الحساسة وسريعة التهيج.'
-                    : 'Calme instantanément les irritations, réduit les rougeurs et renforce le seuil de tolérance des peaux les plus sensibles.'}
+                    ? 'يهدئ الاحمرار ويقوي دفاعات البشرة الحساسة.'
+                    : 'Calme les irritations et réduit les rougeurs.'}
                 </p>
-                <div className="pt-4 mt-2 border-t border-white/10">
-                  <a
-                    href="/products?category=visage&q=centella"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500 text-[10px] font-black uppercase tracking-wider text-white hover:bg-emerald-400 transition-all shadow-md"
-                  >
-                    {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </a>
-                </div>
+                <a
+                  href="/products?category=visage&q=centella"
+                  className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 hover:scale-[1.02] active:scale-95"
+                  style={{ background: '#ffffff', color: '#0f172a' }}
+                >
+                  {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </a>
               </div>
             </div>
 
@@ -489,34 +491,34 @@ export const DermoCorner: React.FC = () => {
           <div className="flex flex-col lg:flex-row-reverse gap-6 p-6 rounded-[28px] bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 shadow-md hover:shadow-xl transition-all duration-300">
             
             {/* Model Card Right */}
-            <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6">
+            <div className="w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-lg">
               <Image
                 src={getDisplayImage('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=600&auto=format&fit=crop', 'concern_solaire')}
                 alt="Solaire & Protection concern model"
                 fill
                 className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex flex-col justify-end p-5 z-10">
-                <span className="text-[9.5px] font-black uppercase tracking-wider text-indigo-400 mb-1">
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(2,6,23,0.97) 0%, rgba(2,6,23,0.7) 45%, rgba(2,6,23,0.1) 100%)' }} />
+              <div className="absolute inset-x-0 bottom-0 flex flex-col p-4 z-10">
+                <span className="text-[9px] font-black uppercase tracking-widest text-indigo-400 mb-1">
                   {isAR ? 'الحماية من أشعة الشمس وفوق البنفسجية' : 'Protection UV & Anti-Photovieillissement'}
                 </span>
-                <h3 className="text-xl font-black text-white leading-tight">
+                <h3 className="text-[17px] font-black text-white leading-tight mb-1.5">
                   {isAR ? 'الحماية والوقاية من الشمس' : 'Solaire & Protection'}
                 </h3>
-                <p className="text-[11px] text-slate-200 mt-2 leading-relaxed max-w-xs font-medium">
+                <p className="text-[10px] text-slate-300 leading-relaxed mb-3 font-medium">
                   {isAR
-                    ? 'يوفر حماية فائقة ضد الأشعة فوق البنفسجية، يمنع البقع الناتجة عن الشمس ويحارب علامات التقدم في السن.'
-                    : 'Protège efficacement contre les UVA/UVB, prévient les taches solaires et lutte contre le vieillissement prématuré.'}
+                    ? 'يحمي من الأشعة فوق البنفسجية ويمنع البقع الشمسية.'
+                    : 'Protège contre les UVA/UVB et prévient les taches solaires.'}
                 </p>
-                <div className="pt-4 mt-2 border-t border-white/10">
-                  <a
-                    href="/products?category=solaire"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-500 text-[10px] font-black uppercase tracking-wider text-white hover:bg-indigo-400 transition-all shadow-md"
-                  >
-                    {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </a>
-                </div>
+                <a
+                  href="/products?category=solaire"
+                  className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 hover:scale-[1.02] active:scale-95"
+                  style={{ background: '#ffffff', color: '#0f172a' }}
+                >
+                  {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </a>
               </div>
             </div>
 
