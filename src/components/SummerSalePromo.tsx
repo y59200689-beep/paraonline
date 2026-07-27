@@ -25,15 +25,12 @@ export const SummerSalePromo: React.FC = () => {
   const leftImage = summerSaleSection?.settings?.leftImage || hp?.summerSaleLeftImage || "/images/cicaplast_bundle.webp";
   const rightImage = summerSaleSection?.settings?.rightImage || hp?.summerSaleRightImage || "/images/vichy_sunscreen_bundle.webp";
 
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 20, seconds: 0 });
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 25, seconds: 0 });
   const { setSelectedProduct } = useUi();
 
   useEffect(() => {
-    // Generate random hours (2 to 5), random minutes (15 to 30), and random seconds on client mount
-    const randomHours = Math.floor(Math.random() * 4) + 2; // 2 to 5 hours
-    const randomMins = Math.floor(Math.random() * 16) + 15; // 15 to 30 mins
-    const randomSecs = Math.floor(Math.random() * 60);
-    setTimeLeft({ days: 0, hours: randomHours, minutes: randomMins, seconds: randomSecs });
+    // Reset timer to 00 hours, 25 minutes, 00 seconds on page mount/refresh
+    setTimeLeft({ days: 0, hours: 0, minutes: 25, seconds: 0 });
 
     const timer = setInterval(() => {
       setTimeLeft(prev => {
