@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
+import { getGalleryOverrides } from '@/lib/gallery-storage';
 
 export function useGalleryOverrides() {
   const [overrides, setOverrides] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    // 1. Fetch server-side overrides from gallery-overrides.json via public API.
-    //    This is the persistent source of truth — works after page refresh and on any browser.
+    // 1. Fetch server-side overrides via public API
     const fetchServerOverrides = async () => {
       try {
         const res = await fetch('/api/gallery-overrides', { cache: 'no-store' });
@@ -22,11 +22,11 @@ export function useGalleryOverrides() {
     };
     fetchServerOverrides();
 
-    // 2. Also apply any client-side localStorage overrides (for same-session real-time preview).
+    // 2. Also apply persistent client-side IndexedDB & localStorage overrides
     if (typeof window !== 'undefined') {
-      const loadLocalOverrides = () => {
+      const loadLocalOverrides = async () => {
         try {
-          const stored = JSON.parse(localStorage.getItem('custom_gallery_overrides') || '{}');
+          const stored = await getGalleryOverrides();
           setOverrides(prev => ({ ...prev, ...stored }));
         } catch {}
       };

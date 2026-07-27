@@ -343,11 +343,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Le contenu du fichier ne correspond pas à un format image valide.' }, { status: 400 });
     }
 
-    // Automatically convert ANY incoming uploaded image to WebP using Sharp
+    // Automatically convert & compress ANY incoming uploaded image to WebP using Sharp
     let uploadBuffer = buffer;
     try {
       uploadBuffer = await sharp(buffer)
-        .webp({ quality: 90, effort: 4 })
+        .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
+        .webp({ quality: 82, effort: 4 })
         .toBuffer();
     } catch (sharpErr) {
       console.warn('[gallery] Sharp WebP conversion failed, using original buffer:', sharpErr);
