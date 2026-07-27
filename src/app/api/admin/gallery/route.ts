@@ -132,7 +132,7 @@ async function getImageFileInfo(filePath: string): Promise<ImageFileInfo> {
   }
 }
 
-// ─── Helpers for the gallery-overrides.json file ────────────────────────────
+// ─── Helpers for database and file-based gallery overrides ──────────────────
 const OVERRIDES_FILE = path.join(process.cwd(), 'gallery-overrides.json');
 
 function readOverrides(): Record<string, string> {
@@ -152,6 +152,36 @@ function writeOverrides(overrides: Record<string, string>): void {
   }
 }
 
+async function fetchDbOverrides(): Promise<Record<string, string>> {
+  try {
+    const { data } = await supabase
+      .from('settings')
+      .select('value')
+      .eq('id', 1)
+      .single();
+    return data?.value?.galleryOverrides || {};
+  } catch (e) {
+    return {};
+  }
+}
+
+async function saveDbOverride(key: string, url: string): Promise<void> {
+  try {
+    const { data } = await supabase
+      .from('settings')
+      .select('value')
+      .eq('id', 1)
+      .single();
+    const currentVal = data?.value || {};
+    const galleryOverrides = { ...(currentVal.galleryOverrides || {}), [key]: url };
+    await supabase
+      .from('settings')
+      .upsert({ id: 1, value: { ...currentVal, galleryOverrides } }, { onConflict: 'id' });
+  } catch (e) {
+    console.error('[gallery] Failed to update DB settings:', e);
+  }
+}
+
 // ─── GET — return manifest with live file sizes & dimensions ──────────────────
 export async function GET() {
   const session = await verifyAdminSession();
@@ -159,14 +189,16 @@ export async function GET() {
     return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
   }
 
-  // Load overrides from gallery-overrides.json (written by POST)
+  // Combine DB overrides (Vercel cloud) and file overrides (local dev)
+  const dbOverrides = await fetchDbOverrides();
   const fileOverrides = readOverrides();
+  const mergedOverrides = { ...dbOverrides, ...fileOverrides };
 
   const manifestImages = await Promise.all(
     IMAGE_MANIFEST.map(async (img) => {
       const info = await getImageFileInfo(img.filePath);
-      // File override takes priority (saved by POST). Fall back to manifest URL.
-      let imgUrl = fileOverrides[img.key] || img.url;
+      // Override takes priority (saved by POST). Fall back to manifest URL.
+      let imgUrl = mergedOverrides[img.key] || img.url;
 
       // If local file exists and URL is relative, append disk mtime as cache buster
       // so the browser always fetches the newest version after a replacement.
@@ -332,13 +364,19 @@ export async function POST(request: Request) {
       }
     }
 
-    // Persist override to gallery-overrides.json — survives page refreshes, server restarts, and new browsers
+    // Persist override to both Supabase DB (for Vercel serverless) and gallery-overrides.json (for local dev)
     try {
       const overrides = readOverrides();
       overrides[entry.key] = finalUrl;
       writeOverrides(overrides);
     } catch (fileErr: any) {
       console.error('[gallery POST] Failed to write gallery-overrides.json:', fileErr?.message || fileErr);
+    }
+
+    try {
+      await saveDbOverride(entry.key, finalUrl);
+    } catch (dbErr: any) {
+      console.error('[gallery POST] Failed to write DB override:', dbErr?.message || dbErr);
     }
 
     // Extract metadata of saved WebP image
