@@ -120,9 +120,12 @@ export default async function Home() {
     }
   }
 
-  // 1b. Ensure 'dermoCorner-1' is in the list
-  if (!sectionsList.some(s => s.id === 'dermoCorner-1')) {
-    sectionsList.push({ id: 'dermoCorner-1', type: 'dermoCorner', nameFr: 'Dermo Corner (Acné vs Taches)', visible: hp.showDermoCorner ?? true });
+  // 1b. Ensure 'dermoCorner-1' is in the list and set to visible
+  const existingDermoIdx = sectionsList.findIndex(s => s.id === 'dermoCorner-1' || s.type === 'dermoCorner');
+  if (existingDermoIdx === -1) {
+    sectionsList.push({ id: 'dermoCorner-1', type: 'dermoCorner', nameFr: 'Dermo Corner (Acné vs Taches)', visible: true });
+  } else {
+    sectionsList[existingDermoIdx].visible = true;
   }
 
   // 1c. Ensure 'activeIngredients-1' is in the list

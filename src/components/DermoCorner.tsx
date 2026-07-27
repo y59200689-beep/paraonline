@@ -20,48 +20,62 @@ export const DermoCorner: React.FC = () => {
   const sootheScrollRef = useRef<HTMLDivElement>(null);
   const solarScrollRef = useRef<HTMLDivElement>(null);
 
-  // Dynamically filter targeted products from real catalog products
+  const safeProducts = React.useMemo(() => (Array.isArray(products) ? products : []), [products]);
+
+  // Dynamically filter targeted products with fallback to safeProducts
   const acneProducts = React.useMemo(() => {
-    return products.filter(p => {
-      const text = `${p.title} ${p.nameFr || ''} ${p.description || ''} ${(p.tags || []).join(' ')}`.toLowerCase();
+    const filtered = safeProducts.filter(p => {
+      if (!p) return false;
+      const text = `${p.title || ''} ${p.nameFr || ''} ${p.description || ''} ${Array.isArray(p.tags) ? p.tags.join(' ') : ''}`.toLowerCase();
       return text.includes('acné') || text.includes('bouton') || text.includes('imperfection') || text.includes('sebum') || text.includes('pore') || text.includes('gel');
-    }).slice(0, 6);
-  }, [products]);
+    });
+    return (filtered.length > 0 ? filtered : safeProducts).slice(0, 6);
+  }, [safeProducts]);
 
   const spotProducts = React.useMemo(() => {
-    return products.filter(p => {
-      const text = `${p.title} ${p.nameFr || ''} ${p.description || ''} ${(p.tags || []).join(' ')}`.toLowerCase();
+    const filtered = safeProducts.filter(p => {
+      if (!p) return false;
+      const text = `${p.title || ''} ${p.nameFr || ''} ${p.description || ''} ${Array.isArray(p.tags) ? p.tags.join(' ') : ''}`.toLowerCase();
       return text.includes('tache') || text.includes('éclat') || text.includes('bright') || text.includes('pigment') || text.includes('serum');
-    }).slice(0, 6);
-  }, [products]);
+    });
+    return (filtered.length > 0 ? filtered : safeProducts).slice(0, 6);
+  }, [safeProducts]);
 
   const antiAgeProducts = React.useMemo(() => {
-    return products.filter(p => {
-      const text = `${p.title} ${p.nameFr || ''} ${p.description || ''} ${(p.tags || []).join(' ')}`.toLowerCase();
+    const filtered = safeProducts.filter(p => {
+      if (!p) return false;
+      const text = `${p.title || ''} ${p.nameFr || ''} ${p.description || ''} ${Array.isArray(p.tags) ? p.tags.join(' ') : ''}`.toLowerCase();
       return text.includes('anti-age') || text.includes('anti age') || text.includes('ride') || text.includes('fermeté') || text.includes('lift') || text.includes('creme');
-    }).slice(0, 6);
-  }, [products]);
+    });
+    return (filtered.length > 0 ? filtered : safeProducts).slice(0, 6);
+  }, [safeProducts]);
 
   const hydrateProducts = React.useMemo(() => {
-    return products.filter(p => {
-      const text = `${p.title} ${p.nameFr || ''} ${p.description || ''} ${(p.tags || []).join(' ')}`.toLowerCase();
+    const filtered = safeProducts.filter(p => {
+      if (!p) return false;
+      const text = `${p.title || ''} ${p.nameFr || ''} ${p.description || ''} ${Array.isArray(p.tags) ? p.tags.join(' ') : ''}`.toLowerCase();
       return text.includes('hydrat') || text.includes('sec') || text.includes('barrière') || text.includes('baume') || text.includes('lotion');
-    }).slice(0, 6);
-  }, [products]);
+    });
+    return (filtered.length > 0 ? filtered : safeProducts).slice(0, 6);
+  }, [safeProducts]);
 
   const sootheProducts = React.useMemo(() => {
-    return products.filter(p => {
-      const text = `${p.title} ${p.nameFr || ''} ${p.description || ''} ${(p.tags || []).join(' ')}`.toLowerCase();
+    const filtered = safeProducts.filter(p => {
+      if (!p) return false;
+      const text = `${p.title || ''} ${p.nameFr || ''} ${p.description || ''} ${Array.isArray(p.tags) ? p.tags.join(' ') : ''}`.toLowerCase();
       return text.includes('apais') || text.includes('sensible') || text.includes('cica') || text.includes('rougeur') || text.includes('eau');
-    }).slice(0, 6);
-  }, [products]);
+    });
+    return (filtered.length > 0 ? filtered : safeProducts).slice(0, 6);
+  }, [safeProducts]);
 
   const solarProducts = React.useMemo(() => {
-    return products.filter(p => {
-      const text = `${p.title} ${p.nameFr || ''} ${p.description || ''} ${(p.tags || []).join(' ')}`.toLowerCase();
+    const filtered = safeProducts.filter(p => {
+      if (!p) return false;
+      const text = `${p.title || ''} ${p.nameFr || ''} ${p.description || ''} ${Array.isArray(p.tags) ? p.tags.join(' ') : ''}`.toLowerCase();
       return text.includes('solaire') || text.includes('spf') || text.includes('écran') || text.includes('sun');
-    }).slice(0, 6);
-  }, [products]);
+    });
+    return (filtered.length > 0 ? filtered : safeProducts).slice(0, 6);
+  }, [safeProducts]);
 
   const handleScroll = (ref: React.RefObject<HTMLDivElement | null>, dir: 'left' | 'right') => {
     if (ref.current) {
