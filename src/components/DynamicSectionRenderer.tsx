@@ -55,10 +55,20 @@ export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps
     if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const seenTypes = new Set<string>();
+
   return (
     <>
       {sections.map((section) => {
         if (section.visible === false) return null;
+
+        // Deduplicate section types so bestSellers/weeklySales or duplicates render only once
+        const normalizedType = (section.type === 'weeklySales' || section.type === 'bestSellers') 
+          ? 'bestSellers' 
+          : section.type;
+
+        if (seenTypes.has(normalizedType)) return null;
+        seenTypes.add(normalizedType);
 
         switch (section.type) {
           case 'hero':

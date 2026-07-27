@@ -96,8 +96,8 @@ export default async function Home() {
   ];
 
   const rawSectionsList = hp.sectionOrder 
-    ? hp.sectionOrder.filter((s: any) => s.type !== 'flashSale' && s.type !== 'curationClinique' && s.type !== 'horizontalPromo')
-    : defaultSections.filter(s => s.type !== 'horizontalPromo');
+    ? hp.sectionOrder.filter((s: any) => s.type !== 'flashSale' && s.type !== 'curationClinique' && s.type !== 'horizontalPromo' && s.type !== 'weeklySales')
+    : defaultSections.filter(s => s.type !== 'horizontalPromo' && s.type !== 'weeklySales');
   let sectionsList = [...rawSectionsList];
   
   // 1. Ensure 'skincareRoutineSteps-1' is in the list
