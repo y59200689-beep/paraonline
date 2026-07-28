@@ -164,13 +164,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
             <div className="absolute inset-0 p-6 md:p-10 flex flex-col justify-end text-white">
               <div className="max-w-[480px] space-y-2 md:space-y-4">
                 
-                {/* Subtitle — slides in */}
-                <span
-                  className="block text-[10px] md:text-xs font-black tracking-[0.15em] text-emerald-400 uppercase"
-                  style={{ animation: 'eyebrow-in 0.6s cubic-bezier(0.16,1,0.3,1) 0.35s both' }}
-                >
-                  {isRTL ? 'الأكثر طلباً وتقييماً في المغرب' : 'SÉLECTION BEST-SELLERS & K-BEAUTY'}
-                </span>
+
 
                 {/* Heading — curtain mask wipe */}
                 <span className="anim-heading-wrap">
