@@ -64,9 +64,9 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   // Redirect to login if session verification completes and user is not authenticated
   useEffect(() => {
     if (mounted && !isVerifyingSession && !isAuthenticated && pathname !== '/admin/login') {
-      router.push(`/admin/login?from=${encodeURIComponent(pathname)}`);
+      window.location.href = `/admin/login?from=${encodeURIComponent(pathname)}`;
     }
-  }, [mounted, isVerifyingSession, isAuthenticated, pathname, router]);
+  }, [mounted, isVerifyingSession, isAuthenticated, pathname]);
 
   // Shortcut key: Cmd+K or Ctrl+K to open spotlight
   useEffect(() => {
