@@ -8,6 +8,9 @@ import { CodeSnippetInjector } from "../components/CodeSnippetInjector";
 import { triggerLazyCron } from "@/lib/lazy-cron";
 import { getPublicSettings } from "@/lib/get-public-settings";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],

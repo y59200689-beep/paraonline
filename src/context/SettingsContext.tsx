@@ -648,19 +648,26 @@ export class SettingsErrorBoundary extends React.Component<{ children: React.Rea
 }
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode; initialSettings?: Record<string, any> }> = ({ children, initialSettings }) => {
+  // Track whether we have server-provided initialSettings so loadSettings knows to skip stale cache
+  const hasInitialSettings = !!(initialSettings && typeof initialSettings === 'object' && Object.keys(initialSettings).length > 0);
+
   const [settings, setSettings] = useState<Settings>(() => {
-    const baseSettings = (initialSettings && typeof initialSettings === 'object' && Object.keys(initialSettings).length > 0)
+    const baseSettings = hasInitialSettings
       ? { ...DEFAULT_SETTINGS, ...initialSettings }
       : null;
 
     if (typeof window !== 'undefined') {
       try {
-        const fromWindowOverrides = (window as any).__PARA_GALLERY_OVERRIDES__;
-        let localOverrides = fromWindowOverrides && typeof fromWindowOverrides === 'object' ? fromWindowOverrides : null;
-        if (!localOverrides) {
-          const stored = localStorage.getItem('custom_gallery_overrides');
-          if (stored) localOverrides = JSON.parse(stored);
+        // If we have fresh server-provided settings with galleryOverrides, clear stale localStorage
+        // overrides so old browser-cached images don't overwrite the server's authoritative values.
+        const serverGalleryOverrides = initialSettings?.galleryOverrides;
+        if (serverGalleryOverrides && typeof serverGalleryOverrides === 'object' && Object.keys(serverGalleryOverrides).length > 0) {
+          try { localStorage.removeItem('custom_gallery_overrides'); } catch {}
+          if ((window as any).__PARA_GALLERY_OVERRIDES__) {
+            (window as any).__PARA_GALLERY_OVERRIDES__ = {};
+          }
         }
+
         let source = baseSettings;
         if (!source) {
           const fromWindow = (window as any).__PARA_SETTINGS_CACHE__;
@@ -674,27 +681,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode; initialSett
           }
         }
         if (source) {
-          const merged = { ...source };
-          if (localOverrides && Object.keys(localOverrides).length > 0) {
-          merged.galleryOverrides = { ...localOverrides, ...(merged.galleryOverrides || {}) };
-            if (Array.isArray(merged.banners)) {
-              const keysMap = ['hero_bestsellers', 'hero_summersale', 'hero_weeklypromo', 'hero_newarrivals'];
-              merged.banners = merged.banners.map((b: any, idx: number) => {
-                const key = keysMap[idx];
-                const cleanBg = b.bgImage ? b.bgImage.replace(/\.png(\?.*)?$/i, '.webp$1') : b.bgImage;
-                const override = key && merged.galleryOverrides?.[key];
-                return {
-                  ...b,
-                  bgImage: override || cleanBg || DEFAULT_SETTINGS.banners?.[idx]?.bgImage
-                };
-              });
-            }
-          }
           try {
-            localStorage.setItem('para_settings_cache', JSON.stringify(merged));
-            (window as any).__PARA_SETTINGS_CACHE__ = merged;
+            localStorage.setItem('para_settings_cache', JSON.stringify(source));
+            (window as any).__PARA_SETTINGS_CACHE__ = source;
           } catch {}
-          return merged;
+          return source;
         }
       } catch (e) {}
     }
@@ -705,8 +696,17 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode; initialSett
 
   const loadSettings = async (force: boolean = false) => {
     const now = Date.now();
-    if (!force && settingsCache && (now - lastFetchedTime < CACHE_EXPIRY)) {
+    // If server-provided initialSettings exist, they are already applied as state.
+    // Only use the stale module-level cache if we have NO initialSettings (e.g. error fallback).
+    // This prevents the 60-second stale cache from overwriting correct server-side images.
+    if (!force && settingsCache && (now - lastFetchedTime < CACHE_EXPIRY) && !hasInitialSettings) {
       setSettings(settingsCache);
+      setIsLoading(false);
+      return;
+    }
+    // If initialSettings were provided AND cache is still fresh, skip the fetch entirely.
+    // The server-provided data is already the freshest possible source.
+    if (!force && hasInitialSettings && settingsCache && (now - lastFetchedTime < CACHE_EXPIRY)) {
       setIsLoading(false);
       return;
     }
@@ -838,15 +838,17 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode; initialSett
   }, [settings?.themeColors]);
 
   // Listen to live gallery/settings updates and sync state instantly
+  // Only merges localStorage overrides AFTER a new upload — not on stale page load.
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const handleUpdates = () => {
+    const handleGalleryUpdate = () => {
       try {
         const localOverrides = JSON.parse(localStorage.getItem('custom_gallery_overrides') || '{}');
         setSettings(prev => {
+          // Server galleryOverrides always take priority — local overrides only fill gaps
           const updated = {
             ...prev,
-            galleryOverrides: { ...(prev.galleryOverrides || {}), ...localOverrides }
+            galleryOverrides: { ...localOverrides, ...(prev.galleryOverrides || {}) }
           };
           try {
             localStorage.setItem('para_settings_cache', JSON.stringify(updated));
@@ -855,11 +857,17 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode; initialSett
         });
       } catch {}
     };
-    window.addEventListener('gallery_overrides_updated', handleUpdates);
-    window.addEventListener('settings_updated', handleUpdates);
+    const handleSettingsUpdate = () => {
+      // On a settings update event, force a fresh fetch from server
+      settingsCache = null;
+      lastFetchedTime = 0;
+      loadSettings(true);
+    };
+    window.addEventListener('gallery_overrides_updated', handleGalleryUpdate);
+    window.addEventListener('settings_updated', handleSettingsUpdate);
     return () => {
-      window.removeEventListener('gallery_overrides_updated', handleUpdates);
-      window.removeEventListener('settings_updated', handleUpdates);
+      window.removeEventListener('gallery_overrides_updated', handleGalleryUpdate);
+      window.removeEventListener('settings_updated', handleSettingsUpdate);
     };
   }, []);
 
