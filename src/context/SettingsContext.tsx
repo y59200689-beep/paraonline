@@ -358,7 +358,7 @@ export const DEFAULT_SETTINGS: Settings = {
     {
       tagFr: "",
       tagAr: "",
-      titleFr: "Nos Meilleures Ventes Skincare",
+      titleFr: "Nos Meilleures Ventes Produits",
       titleAr: "أفضل المنتجات والأكثر مبيعاً",
       descFr: "Découvrez les soins dermo-cliniques et pépites K-Beauty les plus plébiscités par nos clientes au Maroc. Formules certifiées, résultats prouvés et livraison gratuite.",
       descAr: "اكتشفي أفضل مستحضرات العناية الكورية والطبية الأكثر طلباً في المغرب. نتائج مثبتة وتوصيل مجاني.",
