@@ -122,15 +122,15 @@ export const TriplePromoBanners: React.FC<TriplePromoBannersProps> = ({ cards })
                   </div>
                 </div>
 
-                {/* Overlapping image */}
+                {/* Overlapping product asset */}
                 {overlaySrc && (
-                  <div className="absolute right-[-10px] bottom-[-5px] w-[150px] h-[150px] md:w-[170px] md:h-[170px] pointer-events-none select-none transform translate-y-3 translate-x-1 group-hover:scale-105 group-hover:-translate-y-1 transition-all duration-500 filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.12)]">
+                  <div className="absolute right-[-10px] sm:right-[-5px] bottom-[-10px] w-[160px] h-[160px] sm:w-[180px] sm:h-[180px] md:w-[210px] md:h-[210px] pointer-events-none select-none transform translate-y-2 group-hover:scale-105 group-hover:-translate-y-1 transition-all duration-500 filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.18)]">
                     <Image 
                       src={overlaySrc} 
                       alt="" 
                       fill
-                      sizes="(max-width: 768px) 150px, 170px"
-                      className="object-contain"
+                      sizes="(max-width: 768px) 160px, 210px"
+                      className="object-contain object-bottom-right"
                     />
                   </div>
                 )}
