@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAdmin } from '@/context/AdminContext';
-import { setGalleryOverride, getGalleryOverrides } from '@/lib/gallery-storage';
+import { setGalleryOverride, getGalleryOverrides, deleteGalleryOverride } from '@/lib/gallery-storage';
 import {
   Images,
   Upload,

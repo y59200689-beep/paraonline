@@ -23,10 +23,14 @@ export function ThemeScript() {
   if(l==='AR'){document.documentElement.dir='rtl';document.documentElement.lang='ar';}
   else{document.documentElement.dir='ltr';document.documentElement.lang='fr';}
   var go=localStorage.getItem('custom_gallery_overrides');
-  window.__PARA_GALLERY_OVERRIDES__=go?JSON.parse(go):{};
+  var overrides=go?JSON.parse(go):{};
+  window.__PARA_GALLERY_OVERRIDES__=overrides;
   var sc=localStorage.getItem('para_settings_cache');
   var sp=sc?JSON.parse(sc):null;
-  window.__PARA_SETTINGS_CACHE__=sp?sp:null;
+  if(sp && typeof sp==='object'){
+    sp.galleryOverrides=Object.assign({}, sp.galleryOverrides||{}, overrides);
+  }
+  window.__PARA_SETTINGS_CACHE__=sp;
 }catch(e){window.__PARA_GALLERY_OVERRIDES__={};window.__PARA_SETTINGS_CACHE__=null;}`,
       }}
     />

@@ -176,7 +176,53 @@ async function fetchDbOverrides(): Promise<Record<string, string>> {
   return { ...overrides1, ...overrides99 };
 }
 
+async function deleteOldStorageOrFile(oldUrl: string, newUrl: string): Promise<void> {
+  if (!oldUrl || oldUrl === newUrl) return;
+
+  const cleanOldUrl = oldUrl.split('?')[0];
+  const cleanNewUrl = newUrl ? newUrl.split('?')[0] : '';
+
+  if (cleanOldUrl === cleanNewUrl) return;
+
+  // 1. If old URL is a Supabase Storage asset (e.g. /storage/v1/object/public/products/<filename>)
+  if (cleanOldUrl.includes('/storage/v1/object/public/products/')) {
+    const filename = cleanOldUrl.split('/storage/v1/object/public/products/')[1];
+    if (filename) {
+      try {
+        console.log(`[gallery] Purging old storage asset: ${filename}`);
+        await supabase.storage.from('products').remove([decodeURIComponent(filename)]);
+      } catch (err) {
+        console.warn(`[gallery] Failed to purge old storage asset ${filename}:`, err);
+      }
+    }
+  }
+
+  // 2. If old URL is a local file in public/uploads/
+  if (cleanOldUrl.startsWith('/uploads/') || cleanOldUrl.startsWith('uploads/')) {
+    const relPath = cleanOldUrl.startsWith('/') ? cleanOldUrl.substring(1) : cleanOldUrl;
+    const absPath = path.join(process.cwd(), 'public', relPath);
+    try {
+      if (fs.existsSync(absPath)) {
+        console.log(`[gallery] Purging old local file: ${absPath}`);
+        fs.unlinkSync(absPath);
+      }
+    } catch (err) {
+      console.warn(`[gallery] Failed to unlink old file ${absPath}:`, err);
+    }
+  }
+}
+
 async function saveDbOverride(key: string, url: string): Promise<void> {
+  // Purge previous old file or storage object before writing new override
+  try {
+    const dbOverrides = await fetchDbOverrides();
+    const fileOverrides = readOverrides();
+    const oldUrl = dbOverrides[key] || fileOverrides[key];
+    if (oldUrl) {
+      await deleteOldStorageOrFile(oldUrl, url);
+    }
+  } catch {}
+
   // 1. Save to dedicated gallery row id=99 (isolated container, immune to general settings resets)
   try {
     const { data: data99 } = await supabase
@@ -430,3 +476,61 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: err.message || 'Erreur serveur' }, { status: 500 });
   }
 }
+
+// ─── DELETE — reset / remove an override by key and purge its storage asset ──────
+export async function DELETE(request: Request) {
+  try {
+    const session = await verifyAdminSession();
+    if (!session) {
+      return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const key = searchParams.get('key');
+    if (!key) {
+      return NextResponse.json({ success: false, error: 'Paramètre key requis' }, { status: 400 });
+    }
+
+    // 1. Fetch current override URL to purge storage asset
+    const dbOverrides = await fetchDbOverrides();
+    const fileOverrides = readOverrides();
+    const oldUrl = dbOverrides[key] || fileOverrides[key];
+
+    if (oldUrl) {
+      await deleteOldStorageOrFile(oldUrl, '');
+    }
+
+    // 2. Remove key from gallery-overrides.json
+    try {
+      const overrides = readOverrides();
+      delete overrides[key];
+      writeOverrides(overrides);
+    } catch {}
+
+    // 3. Remove key from Supabase DB row 99
+    try {
+      const { data: data99 } = await supabase.from('settings').select('value').eq('id', 99).single();
+      if (data99?.value) {
+        const updated99 = { ...data99.value };
+        delete updated99[key];
+        await supabase.from('settings').upsert({ id: 99, value: updated99 }, { onConflict: 'id' });
+      }
+    } catch {}
+
+    // 4. Remove key from Supabase DB row 1
+    try {
+      const { data: data1 } = await supabase.from('settings').select('value').eq('id', 1).single();
+      if (data1?.value?.galleryOverrides) {
+        const updated1 = { ...data1.value };
+        delete updated1.galleryOverrides[key];
+        await supabase.from('settings').upsert({ id: 1, value: updated1 }, { onConflict: 'id' });
+      }
+    } catch {}
+
+    return NextResponse.json({ success: true, message: `Override ${key} supprimé avec succès` });
+  } catch (err: any) {
+    console.error('[gallery DELETE] error:', err);
+    return NextResponse.json({ success: false, error: err.message || 'Erreur serveur' }, { status: 500 });
+  }
+}
+

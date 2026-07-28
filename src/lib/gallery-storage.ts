@@ -36,16 +36,64 @@ export async function setGalleryOverride(key: string, url: string): Promise<void
     console.warn('[gallery-storage] IndexedDB write failed:', e);
   }
 
-  // 2. Save to localStorage as secondary cache
+  // 2. Save to localStorage & sync both window and para_settings_cache instantly
   if (typeof window !== 'undefined') {
     try {
       const existing = JSON.parse(localStorage.getItem('custom_gallery_overrides') || '{}');
       existing[key] = url;
       localStorage.setItem('custom_gallery_overrides', JSON.stringify(existing));
+      (window as any).__PARA_GALLERY_OVERRIDES__ = existing;
+
+      const sc = localStorage.getItem('para_settings_cache');
+      if (sc) {
+        const sp = JSON.parse(sc);
+        if (sp && typeof sp === 'object') {
+          sp.galleryOverrides = { ...(sp.galleryOverrides || {}), [key]: url };
+          localStorage.setItem('para_settings_cache', JSON.stringify(sp));
+          (window as any).__PARA_SETTINGS_CACHE__ = sp;
+        }
+      }
     } catch (e) {
       console.warn('[gallery-storage] localStorage quota exceeded, IndexedDB retained override:', e);
     }
     window.dispatchEvent(new Event('gallery_overrides_updated'));
+    window.dispatchEvent(new Event('settings_updated'));
+  }
+}
+
+export async function deleteGalleryOverride(key: string): Promise<void> {
+  try {
+    const db = await openDb();
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.delete(key);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  } catch (e) {
+    console.warn('[gallery-storage] IndexedDB delete failed:', e);
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      const existing = JSON.parse(localStorage.getItem('custom_gallery_overrides') || '{}');
+      delete existing[key];
+      localStorage.setItem('custom_gallery_overrides', JSON.stringify(existing));
+      (window as any).__PARA_GALLERY_OVERRIDES__ = existing;
+
+      const sc = localStorage.getItem('para_settings_cache');
+      if (sc) {
+        const sp = JSON.parse(sc);
+        if (sp && typeof sp === 'object' && sp.galleryOverrides) {
+          delete sp.galleryOverrides[key];
+          localStorage.setItem('para_settings_cache', JSON.stringify(sp));
+          (window as any).__PARA_SETTINGS_CACHE__ = sp;
+        }
+      }
+    } catch (e) {}
+    window.dispatchEvent(new Event('gallery_overrides_updated'));
+    window.dispatchEvent(new Event('settings_updated'));
   }
 }
 

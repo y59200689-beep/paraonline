@@ -10,20 +10,25 @@ import Image from 'next/image';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { useSettings } from '@/context/SettingsContext';
 import { useCurrency } from '@/context/CurrencyContext';
+import { useGalleryOverrides } from '@/lib/useGalleryOverrides';
 
 export const SummerSalePromo: React.FC = () => {
   const { language } = useTranslation();
   const { products } = useProducts();
   const { settings } = useSettings();
   const { convertPrice } = useCurrency();
+  const { getDisplayImage } = useGalleryOverrides();
   const hp = settings?.homepageSections;
   const showSummerSale = hp?.showSummerSale ?? true;
 
   const summerSaleSection = hp?.sectionOrder?.find(
     (s: any) => s.type === 'summerSale'
   );
-  const leftImage = summerSaleSection?.settings?.leftImage || hp?.summerSaleLeftImage || "/images/cicaplast_bundle.webp";
-  const rightImage = summerSaleSection?.settings?.rightImage || hp?.summerSaleRightImage || "/images/vichy_sunscreen_bundle.webp";
+  const leftImageRaw = summerSaleSection?.settings?.leftImage || hp?.summerSaleLeftImage || "/images/cicaplast_bundle.webp";
+  const rightImageRaw = summerSaleSection?.settings?.rightImage || hp?.summerSaleRightImage || "/images/vichy_sunscreen_bundle.webp";
+
+  const leftImage = getDisplayImage(leftImageRaw, 'cicaplast_bundle');
+  const rightImage = getDisplayImage(rightImageRaw, 'vichy_sunscreen_bundle');
 
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 25, seconds: 0 });
   const { setSelectedProduct } = useUi();

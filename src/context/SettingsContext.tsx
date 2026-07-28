@@ -651,16 +651,21 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [settings, setSettings] = useState<Settings>(() => {
     if (typeof window !== 'undefined') {
       try {
+        const localOverrides = JSON.parse(localStorage.getItem('custom_gallery_overrides') || '{}');
         // window.__PARA_SETTINGS_CACHE__ is stamped by ThemeScript before React hydrates
         const fromWindow = (window as any).__PARA_SETTINGS_CACHE__;
         if (fromWindow && typeof fromWindow === 'object') {
-          return { ...DEFAULT_SETTINGS, ...fromWindow };
+          const mergedWin = { ...DEFAULT_SETTINGS, ...fromWindow };
+          mergedWin.galleryOverrides = { ...(mergedWin.galleryOverrides || {}), ...localOverrides };
+          return mergedWin;
         }
         const cached = localStorage.getItem('para_settings_cache');
         if (cached) {
           const parsed = JSON.parse(cached);
           if (parsed && typeof parsed === 'object') {
-            return { ...DEFAULT_SETTINGS, ...parsed };
+            const mergedCached = { ...DEFAULT_SETTINGS, ...parsed };
+            mergedCached.galleryOverrides = { ...(mergedCached.galleryOverrides || {}), ...localOverrides };
+            return mergedCached;
           }
         }
       } catch (e) {}
@@ -684,6 +689,16 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const data = await res.json();
       if (data.success && data.settings) {
         const merged = { ...DEFAULT_SETTINGS, ...data.settings };
+
+        // Always merge client-side persistent overrides to prevent stale caching
+        let localOverrides: Record<string, string> = {};
+        if (typeof window !== 'undefined') {
+          try {
+            localOverrides = JSON.parse(localStorage.getItem('custom_gallery_overrides') || '{}');
+          } catch {}
+        }
+        merged.galleryOverrides = { ...(merged.galleryOverrides || {}), ...localOverrides };
+
         if (!merged.banners || merged.banners.length === 0) {
           merged.banners = DEFAULT_SETTINGS.banners;
         }
@@ -781,6 +796,32 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       });
     }
   }, [settings?.themeColors]);
+
+  // Listen to live gallery/settings updates and sync state instantly
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleUpdates = () => {
+      try {
+        const localOverrides = JSON.parse(localStorage.getItem('custom_gallery_overrides') || '{}');
+        setSettings(prev => {
+          const updated = {
+            ...prev,
+            galleryOverrides: { ...(prev.galleryOverrides || {}), ...localOverrides }
+          };
+          try {
+            localStorage.setItem('para_settings_cache', JSON.stringify(updated));
+          } catch {}
+          return updated;
+        });
+      } catch {}
+    };
+    window.addEventListener('gallery_overrides_updated', handleUpdates);
+    window.addEventListener('settings_updated', handleUpdates);
+    return () => {
+      window.removeEventListener('gallery_overrides_updated', handleUpdates);
+      window.removeEventListener('settings_updated', handleUpdates);
+    };
+  }, []);
 
   useEffect(() => {
     loadSettings();

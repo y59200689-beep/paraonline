@@ -65,12 +65,20 @@ export function useGalleryOverrides() {
 
   const getDisplayImage = (defaultSrc: string, ...keys: string[]) => {
     for (const k of keys) {
-      if (overrides[k]) return overrides[k];
+      if (k && overrides[k]) return overrides[k];
     }
     if (defaultSrc) {
-      const cleanPath = defaultSrc.replace(/^\//, '');
+      const cleanUrl = defaultSrc.split('?')[0];
+      const cleanPath = cleanUrl.replace(/^\//, '');
       if (overrides[cleanPath]) return overrides[cleanPath];
+      if (overrides[cleanUrl]) return overrides[cleanUrl];
       if (overrides[defaultSrc]) return overrides[defaultSrc];
+
+      // Extract filename without extension (e.g. /images/categories/solaire.png -> solaire)
+      const filename = cleanPath.split('/').pop()?.split('.')[0];
+      if (filename && overrides[filename]) return overrides[filename];
+      if (filename && overrides[`cat_${filename}`]) return overrides[`cat_${filename}`];
+      if (filename && overrides[`concern_${filename}`]) return overrides[`concern_${filename}`];
     }
     return getOptimizedImageUrl(defaultSrc);
   };
