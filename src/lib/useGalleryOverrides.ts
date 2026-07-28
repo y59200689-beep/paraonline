@@ -30,7 +30,7 @@ export function useGalleryOverrides() {
           const data = await res.json();
           if (data.overrides) {
             setOverrides(prev => {
-              const merged = { ...data.overrides, ...prev };
+              const merged = { ...prev, ...data.overrides };
               // Persist the merged server overrides to localStorage for next render
               try {
                 localStorage.setItem('custom_gallery_overrides', JSON.stringify(merged));

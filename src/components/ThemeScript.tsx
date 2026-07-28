@@ -26,7 +26,7 @@ export function ThemeScript() {
   window.__PARA_GALLERY_OVERRIDES__=go?JSON.parse(go):{};
   var sc=localStorage.getItem('para_settings_cache');
   var sp=sc?JSON.parse(sc):null;
-  window.__PARA_SETTINGS_CACHE__=(sp&&sp.__v==='v3')?sp:null;
+  window.__PARA_SETTINGS_CACHE__=sp?sp:null;
 }catch(e){window.__PARA_GALLERY_OVERRIDES__={};window.__PARA_SETTINGS_CACHE__=null;}`,
       }}
     />

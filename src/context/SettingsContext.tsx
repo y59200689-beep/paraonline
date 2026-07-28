@@ -653,13 +653,13 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       try {
         // window.__PARA_SETTINGS_CACHE__ is stamped by ThemeScript before React hydrates
         const fromWindow = (window as any).__PARA_SETTINGS_CACHE__;
-        if (fromWindow && typeof fromWindow === 'object' && fromWindow.__v === SETTINGS_CACHE_VERSION) {
+        if (fromWindow && typeof fromWindow === 'object') {
           return { ...DEFAULT_SETTINGS, ...fromWindow };
         }
         const cached = localStorage.getItem('para_settings_cache');
         if (cached) {
           const parsed = JSON.parse(cached);
-          if (parsed && typeof parsed === 'object' && parsed.__v === SETTINGS_CACHE_VERSION) {
+          if (parsed && typeof parsed === 'object') {
             return { ...DEFAULT_SETTINGS, ...parsed };
           }
         }
