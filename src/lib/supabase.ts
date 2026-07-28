@@ -87,6 +87,7 @@ const getInitialProducts = () => {
     price: p.price,
     compare_price: p.comparePrice || null,
     category: p.category,
+    categories: p.categories?.length ? p.categories : [p.category],
     tags: p.tags || [],
     rating: p.rating || 5,
     reviews: p.reviews || 0,

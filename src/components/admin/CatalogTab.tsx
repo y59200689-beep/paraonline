@@ -337,6 +337,171 @@ function BrandCombobox({
   );
 }
 
+interface CategoryMultiSelectProps {
+  categories: string[];
+  options: string[];
+  onChange: (categories: string[]) => void;
+  adminTheme: 'light' | 'dark';
+}
+
+function CategoryMultiSelect({
+  categories,
+  options,
+  onChange,
+  adminTheme,
+}: CategoryMultiSelectProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const selectedCategories = useMemo(() => {
+    const all = categories
+      .map(category => category.trim().toLowerCase())
+      .filter(Boolean);
+    return Array.from(new Set(all));
+  }, [categories]);
+
+  const categoryOptions = useMemo(() => Array.from(new Set([
+    ...selectedCategories,
+    ...options.map(option => option.trim().toLowerCase()).filter(Boolean),
+  ])), [options, selectedCategories]);
+
+  const filteredOptions = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    return categoryOptions.filter(option => !normalizedQuery || option.includes(normalizedQuery));
+  }, [categoryOptions, query]);
+
+  const canCreate = Boolean(query.trim()) && !categoryOptions.some(option => option === query.trim().toLowerCase());
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+        setQuery('');
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const addCategory = (category: string) => {
+    const normalized = category.trim().toLowerCase();
+    if (!normalized) return;
+    onChange(Array.from(new Set([...selectedCategories, normalized])));
+    setQuery('');
+  };
+
+  const toggleCategory = (category: string) => {
+    if (selectedCategories.includes(category)) {
+      if (selectedCategories.length === 1) return;
+      onChange(selectedCategories.filter(item => item !== category));
+      return;
+    }
+    onChange([...selectedCategories, category]);
+  };
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        onClick={() => setIsOpen(open => !open)}
+        className={`w-full min-h-12 px-2.5 py-2 border rounded-xl text-left transition flex items-center justify-between gap-3 outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 ${
+          adminTheme === 'light'
+            ? 'bg-slate-50 border-slate-200 text-slate-800 hover:border-slate-300 hover:bg-white'
+            : 'bg-slate-950 border-slate-800 text-slate-100 hover:border-slate-700'
+        }`}
+      >
+        <span className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+          {selectedCategories.map(category => (
+            <span
+              key={category}
+              className={`inline-flex max-w-full items-center gap-1 rounded-lg py-1 pl-2 pr-1 text-[10px] font-bold uppercase tracking-wide ${
+                category === selectedCategories[0]
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : adminTheme === 'light'
+                    ? 'bg-slate-200/80 text-slate-700'
+                    : 'bg-slate-800 text-slate-300'
+              }`}
+            >
+              <span className="truncate">{category}</span>
+              {category === selectedCategories[0] && <span className="rounded bg-white/20 px-1 py-0.5 text-[8px] font-black">PRINCIPALE</span>}
+            </span>
+          ))}
+        </span>
+        <ChevronDown className={`w-4 h-4 shrink-0 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180 text-emerald-500' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className={`absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border shadow-xl ${
+          adminTheme === 'light' ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'
+        }`}>
+          <div className="border-b border-slate-100 p-2.5 dark:border-slate-800">
+            <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+            <input
+              autoFocus
+              value={query}
+              onChange={event => setQuery(event.target.value)}
+              placeholder="Rechercher une catégorie"
+              className={`w-full rounded-lg border py-2.5 pl-8 pr-3 text-xs font-medium outline-none transition focus:ring-2 focus:ring-emerald-500/30 ${
+                adminTheme === 'light' ? 'bg-slate-100 text-slate-800' : 'bg-slate-950 text-slate-100'
+              }`}
+            />
+            </div>
+          </div>
+          <div role="listbox" aria-multiselectable="true" className="max-h-60 overflow-y-auto p-1.5 custom-scrollbar">
+            {canCreate && (
+              <button
+                type="button"
+                onClick={() => addCategory(query)}
+                className="mb-1 flex w-full items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2.5 text-left text-xs font-bold text-emerald-700 transition hover:bg-emerald-100 dark:bg-emerald-950/50 dark:text-emerald-300 dark:hover:bg-emerald-950"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Ajouter &quot;{query.trim()}&quot;
+              </button>
+            )}
+            {filteredOptions.map(category => {
+              const selected = selectedCategories.includes(category);
+              const isPrimary = category === selectedCategories[0];
+              return (
+                <button
+                  key={category}
+                  type="button"
+                  role="option"
+                  aria-selected={selected}
+                  onClick={() => toggleCategory(category)}
+                  className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-xs font-semibold transition ${
+                    isPrimary
+                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
+                      : selected
+                        ? 'bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100'
+                        : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+                      selected ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-300 dark:border-slate-600'
+                    }`}>
+                      {selected && <Check className="h-3 w-3" />}
+                    </span>
+                    <span className="truncate">{category.toUpperCase()}</span>
+                  </span>
+                  {isPrimary && <span className="shrink-0 rounded bg-emerald-600 px-1.5 py-0.5 text-[9px] font-black text-white">PRINCIPALE</span>}
+                </button>
+              );
+            })}
+            {filteredOptions.length === 0 && !canCreate && (
+              <div className="px-3 py-5 text-center text-xs text-slate-400">Aucune catégorie trouvée.</div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function CatalogTab({
   catalogStockFilter: propCatalogStockFilter,
   setCatalogStockFilter: propSetCatalogStockFilter
@@ -481,7 +646,7 @@ export default function CatalogTab({
   const [isNewProductModalOpen, setIsNewProductModalOpen] = useState(false);
   const [modalTab, setModalTab] = useState<'general' | 'pricing' | 'variants' | 'seo'>('general');
   const [productForm, setProductForm] = useState<Partial<Product>>({
-    title: '', vendor: '', price: 0, comparePrice: 0, category: 'visage', tags: [], stock: 100, description: '', ingredients: '', usage: '', image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop', sku: '', buyingCost: 0, status: 'live'
+    title: '', vendor: '', price: 0, comparePrice: 0, category: 'visage', categories: ['visage'], tags: [], stock: 100, description: '', ingredients: '', usage: '', image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop', sku: '', buyingCost: 0, status: 'live'
   });
   const [isUploading, setIsUploading] = useState(false);
   const [isSavingProduct, setIsSavingProduct] = useState(false);
@@ -898,14 +1063,7 @@ export default function CatalogTab({
         }
       }
 
-      // 8. Validate Category
-      if (mappedProduct.category && String(mappedProduct.category).trim() !== '') {
-        const catStr = String(mappedProduct.category).trim().toLowerCase();
-        const validCategories = ['bebe', 'solaire', 'visage', 'cheveux', 'kbeauty', 'offers', 'all'];
-        if (!validCategories.includes(catStr)) {
-          warnings.category = `Catégorie non reconnue ('${catStr}').`;
-        }
-      }
+      // 8. Category values are accepted from the sheet and created automatically.
 
       // 9. Validate Image URL
       if (mappedProduct.image && String(mappedProduct.image).trim() !== '') {
@@ -1021,6 +1179,7 @@ export default function CatalogTab({
     if (h === 'sku' || h === 'codesku' || h === 'referencesku' || h === 'ref') return 'sku';
     if (h === 'buyingcost' || h === 'coutdachat' || h === 'buying' || h === 'cout') return 'buyingCost';
     if (h === 'category' || h === 'categorie' || h === 'cat') return 'category';
+    if (h === 'categories' || h === 'categoriesproduit' || h === 'productcategories' || h === 'cats') return 'categories';
     if (h === 'description' || h === 'desc') return 'description';
     if (h === 'ingredients' || h === 'composition') return 'ingredients';
     if (h === 'usage' || h === 'utilisation' || h === 'conseilsdutilisation') return 'usage';
@@ -1175,6 +1334,20 @@ export default function CatalogTab({
       if (product.tags && typeof product.tags === 'string') {
         product.tags = product.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t !== '');
       }
+      const categoryValues = [
+        product.category,
+        ...(Array.isArray(product.categories) ? product.categories : [product.categories]),
+      ];
+      const categories = categoryValues
+        .filter((category): category is string => typeof category === 'string')
+        .flatMap((category: string) => category
+          .split(/[,;|]/)
+          .map((category: string) => category.trim().toLowerCase())
+          .filter((category: string) => category !== ''));
+      if (categories.length > 0) {
+        product.category = categories[0] || 'visage';
+        product.categories = Array.from(new Set(categories));
+      }
 
       if (product.title || product.sku || product.id) {
         importedProducts.push(product);
@@ -1196,7 +1369,9 @@ export default function CatalogTab({
       
       if (result.success) {
         setImportedCount(result.count);
-        setImportMessage(result.message || '');
+        setImportMessage(result.categories?.length
+          ? `${result.message ? `${result.message} ` : ''}${result.categories.length} nouvelle(s) catégorie(s) disponible(s) : ${result.categories.join(', ')}.`
+          : (result.message || ''));
         setImportProgress(100);
         setImportStep(5);
         await fetchPaginatedProducts();
@@ -1229,8 +1404,16 @@ export default function CatalogTab({
     const cats = new Set<string>();
     products.forEach(p => p.category && cats.add(p.category));
     paginatedProducts.forEach(p => p.category && cats.add(p.category));
+    products.forEach(p => p.categories?.forEach(category => cats.add(category)));
+    paginatedProducts.forEach(p => p.categories?.forEach(category => cats.add(category)));
     return Array.from(cats);
   }, [products, paginatedProducts]);
+
+  const categoryOptions = useMemo(() => Array.from(new Set([
+    'visage', 'kbeauty', 'garnier', 'hadalabo', 'offers',
+    ...(settings.categories || []),
+    ...uniqueCategories,
+  ])).sort((a, b) => a.localeCompare(b)), [settings.categories, uniqueCategories]);
 
   const uniqueVendors = useMemo(() => {
     const vends = new Set<string>();
@@ -1359,7 +1542,9 @@ export default function CatalogTab({
         onConfirm: async () => {
           const idsSet = new Set(selectedProductIds);
           // Optimistic local update
-          setPaginatedProducts(prev => prev.map(p => idsSet.has(p.id) ? { ...p, category: categoryToUse } : p));
+          setPaginatedProducts(prev => prev.map(p => idsSet.has(p.id)
+            ? { ...p, category: categoryToUse, categories: Array.from(new Set([categoryToUse, ...(p.categories || [p.category])])) }
+            : p));
           setSelectedProductIds(new Set());
           setBulkAction('');
           setBulkCategory('');
@@ -1372,7 +1557,11 @@ export default function CatalogTab({
             const changedProducts = Array.from(idsSet)
               .map(id => productMap.get(id))
               .filter((p): p is Product => Boolean(p))
-              .map(p => ({ ...p, category: categoryToUse }));
+              .map(p => ({
+                ...p,
+                category: categoryToUse,
+                categories: Array.from(new Set([categoryToUse, ...(p.categories || [p.category])])),
+              }));
             
             const success = await handleSaveBulkProducts(changedProducts);
             if (success) {
@@ -1545,7 +1734,7 @@ export default function CatalogTab({
           showToast('Produit mis à jour avec succès !', 'success');
           setIsNewProductModalOpen(false);
           setProductForm({
-            title: '', vendor: '', price: 0, comparePrice: 0, category: 'visage', tags: [], stock: 100, description: '', ingredients: '', usage: '', image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop', sku: '', buyingCost: 0, status: 'live'
+            title: '', vendor: '', price: 0, comparePrice: 0, category: 'visage', categories: ['visage'], tags: [], stock: 100, description: '', ingredients: '', usage: '', image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop', sku: '', buyingCost: 0, status: 'live'
           });
           await loadProducts();
           await fetchPaginatedProducts();
@@ -1557,7 +1746,7 @@ export default function CatalogTab({
         if (success) {
           setIsNewProductModalOpen(false);
           setProductForm({
-            title: '', vendor: '', price: 0, comparePrice: 0, category: 'visage', tags: [], stock: 100, description: '', ingredients: '', usage: '', image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop', sku: '', buyingCost: 0, status: 'live'
+            title: '', vendor: '', price: 0, comparePrice: 0, category: 'visage', categories: ['visage'], tags: [], stock: 100, description: '', ingredients: '', usage: '', image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop', sku: '', buyingCost: 0, status: 'live'
           });
           await loadProducts();
           await fetchPaginatedProducts();
@@ -2758,7 +2947,7 @@ export default function CatalogTab({
                           <span className={`text-[10px] uppercase font-semibold tracking-wider ${
                             adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
                           }`}>
-                            {product.category}
+                            {(product.categories?.length ? product.categories : [product.category]).join(' · ')}
                           </span>
                         </td>
 
@@ -2953,7 +3142,7 @@ export default function CatalogTab({
             setIsNewProductModalOpen(false);
             setModalTab('general');
             setProductForm({
-              title: '', vendor: '', price: 0, comparePrice: 0, category: 'visage', tags: [], stock: 100, description: '', ingredients: '', usage: '', image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop', sku: '', buyingCost: 0, status: 'live'
+              title: '', vendor: '', price: 0, comparePrice: 0, category: 'visage', categories: ['visage'], tags: [], stock: 100, description: '', ingredients: '', usage: '', image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop', sku: '', buyingCost: 0, status: 'live'
             });
           }}
         >
@@ -3465,18 +3654,20 @@ export default function CatalogTab({
                   </label>
 
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-slate-400 uppercase">Catégorie Principale</label>
-                    <select 
-                      value={productForm.category} 
-                      onChange={(e) => setProductForm({...productForm, category: e.target.value})}
-                      className={`w-full text-xs font-semibold border rounded-xl px-3 py-2 transition outline-none cursor-pointer ${
-                        adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-800 text-slate-200'
-                      }`}
-                    >
-                      {['visage', 'kbeauty', 'garnier', 'hadalabo', 'offers'].map(cat => (
-                        <option key={cat} value={cat}>{cat.toUpperCase()}</option>
-                      ))}
-                    </select>
+                    <label className="text-[11px] font-bold text-slate-400 uppercase">Catégories</label>
+                    <CategoryMultiSelect
+                      categories={Array.from(new Set([
+                        productForm.category || 'visage',
+                        ...(productForm.categories || []),
+                      ]))}
+                      options={categoryOptions}
+                      onChange={(categories) => setProductForm({
+                        ...productForm,
+                        category: categories[0] || 'visage',
+                        categories,
+                      })}
+                      adminTheme={adminTheme}
+                    />
                   </div>
 
                   <div className="space-y-1.5">
@@ -3787,6 +3978,7 @@ export default function CatalogTab({
                                 <option value="sku">SKU</option>
                                 <option value="buyingCost">Coût d&apos;achat (DH)</option>
                                 <option value="category">Catégorie</option>
+                                <option value="categories">Catégories</option>
                                 <option value="description">Description</option>
                                 <option value="ingredients">Ingrédients</option>
                                 <option value="usage">Conseils d&apos;utilisation</option>

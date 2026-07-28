@@ -1,6 +1,23 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { verifyAdminSession } from '@/lib/session';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
+
+function normalizeImportedCategories(categories: unknown, primaryCategory: unknown): string[] {
+  const rawValues = Array.isArray(categories)
+    ? categories
+    : typeof categories === 'string'
+      ? categories.split(/[,;|]/)
+      : [];
+  const primary = typeof primaryCategory === 'string' ? primaryCategory.trim().toLowerCase() : '';
+  const normalized = rawValues
+    .filter((category): category is string => typeof category === 'string')
+    .map(category => category.trim().toLowerCase())
+    .filter(Boolean);
+
+  const result = Array.from(new Set([primary, ...normalized].filter(Boolean)));
+  return result.length > 0 ? result : ['visage'];
+}
 
 export async function POST(request: Request) {
   try {
@@ -29,6 +46,7 @@ export async function POST(request: Request) {
 
     const existingList = existingProducts || [];
     const productsToUpsert: any[] = [];
+    const importedCategories = new Set<string>();
 
     for (const p of products) {
       // Find match in existing products
@@ -37,6 +55,8 @@ export async function POST(request: Request) {
         (p.sku && ep.sku === p.sku)
       );
 
+      const categories = normalizeImportedCategories(p.categories, p.category);
+      categories.forEach(category => importedCategories.add(category));
       const dbProd = {
         title: p.title,
         name: p.name || p.title,
@@ -46,7 +66,8 @@ export async function POST(request: Request) {
         images: Array.isArray(p.images) ? p.images : (p.image ? [p.image] : []),
         price: Number(p.price) || 0,
         compare_price: Number(p.comparePrice || p.price) || 0,
-        category: p.category || 'visage',
+        category: categories[0],
+        categories,
         tags: Array.isArray(p.tags) ? p.tags : [],
         rating: Number(p.rating || 5),
         reviews: Number(p.reviews || 0),
@@ -82,9 +103,13 @@ export async function POST(request: Request) {
     }
 
     if (productsToUpsert.length === 0) {
+      if (importedCategories.size > 0) {
+        await syncImportedCategories(importedCategories);
+      }
       return NextResponse.json({ 
         success: true, 
         count: 0, 
+        categories: Array.from(importedCategories).sort(),
         message: updateExisting 
           ? 'Aucun produit correspondant trouvé pour la mise à jour.'
           : 'Tous les produits existent déjà. Activez "Mettre à jour les existants" pour les modifier.'
@@ -98,9 +123,44 @@ export async function POST(request: Request) {
 
     if (upsertError) throw upsertError;
 
-    return NextResponse.json({ success: true, count: productsToUpsert.length });
+    revalidatePath('/products');
+    revalidatePath('/');
+
+    // Keep the catalog's category source in sync with the imported products so
+    // new sheet categories are immediately available in the editor.
+    if (importedCategories.size > 0) await syncImportedCategories(importedCategories);
+
+    return NextResponse.json({
+      success: true,
+      count: productsToUpsert.length,
+      categories: Array.from(importedCategories).sort(),
+    });
   } catch (error: any) {
     console.error("Import error:", error);
     return NextResponse.json({ success: false, error: error.message || 'Server error' }, { status: 500 });
   }
+}
+
+async function syncImportedCategories(importedCategories: Set<string>) {
+  const { data: settingsRow, error: settingsReadError } = await supabase
+    .from('settings')
+    .select('value')
+    .eq('id', 1)
+    .maybeSingle();
+
+  if (settingsReadError) throw settingsReadError;
+  const settingsValue = settingsRow?.value && typeof settingsRow.value === 'object'
+    ? settingsRow.value as { categories?: unknown }
+    : {};
+  const existingCategories = Array.isArray(settingsValue.categories)
+    ? settingsValue.categories.filter((category): category is string => typeof category === 'string')
+    : [];
+  const { error: settingsWriteError } = await supabase
+    .from('settings')
+    .upsert({
+      id: 1,
+      value: { ...settingsValue, categories: Array.from(new Set([...existingCategories, ...importedCategories])).sort() },
+    }, { onConflict: 'id' });
+
+  if (settingsWriteError) throw settingsWriteError;
 }

@@ -1,13 +1,20 @@
 import { supabaseAdmin as supabase } from '@/lib/supabase';
-import { DEFAULT_SETTINGS } from '@/context/SettingsContext';
-import path from 'path';
-import fs from 'fs';
+import { DEFAULT_SETTINGS, type Settings } from '@/context/SettingsContext';
 
 const BANNER_KEYS = ['hero_bestsellers', 'hero_summersale', 'hero_weeklypromo', 'hero_newarrivals'];
 
-export async function getPublicSettings(): Promise<Record<string, any>> {
+interface PublicBanner {
+  bgImage?: string;
+  [key: string]: unknown;
+}
+
+type PublicSettings = Omit<Partial<Settings>, 'paymentSettings'> & {
+  paymentSettings?: Partial<NonNullable<Settings['paymentSettings']>>;
+} & Record<string, unknown>;
+
+export async function getPublicSettings(): Promise<PublicSettings> {
   try {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('settings')
       .select('*')
       .eq('id', 1)
@@ -36,26 +43,14 @@ export async function getPublicSettings(): Promise<Record<string, any>> {
       }
     } catch {}
 
-    // Read local gallery-overrides.json if present
-    let fileOverrides: Record<string, string> = {};
-    try {
-      const overridesPath = path.join(process.cwd(), 'gallery-overrides.json');
-      if (fs.existsSync(overridesPath)) {
-        fileOverrides = JSON.parse(fs.readFileSync(overridesPath, 'utf-8'));
-      }
-    } catch {}
-
-    // Merge: row 99 overrides + fileOverrides take priority over row 1's galleryOverrides
-    const mergedGalleryOverrides: Record<string, string> = {
-      ...(settings.galleryOverrides || {}),
-      ...fileOverrides,
-      ...dbGalleryOverrides,
-    };
+    // Gallery row 99 is the sole mutable image source. The settings row provides
+    // only the built-in defaults when a gallery key has never been replaced.
+    const mergedGalleryOverrides = dbGalleryOverrides;
 
     // Inject galleryOverrides directly into banners[i].bgImage
     let banners = settings.banners || [];
     if (banners.length > 0) {
-      banners = banners.map((b: any, idx: number) => {
+      banners = banners.map((b: PublicBanner, idx: number) => {
         const key = BANNER_KEYS[idx];
         const cleanBg = b.bgImage ? b.bgImage.replace(/\.png(\?.*)?$/i, '.webp$1') : b.bgImage;
         const override = key && mergedGalleryOverrides[key];
@@ -115,4 +110,3 @@ export async function getPublicSettings(): Promise<Record<string, any>> {
     return {};
   }
 }
-

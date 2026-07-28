@@ -32,6 +32,9 @@ function rowToProduct(item: Record<string, unknown>): Product {
     price: Number(item.price),
     comparePrice: Number(item.compare_price || item.price),
     category: item.category as string,
+    categories: Array.isArray(item.categories) && item.categories.length > 0
+      ? item.categories as string[]
+      : [item.category as string],
     tags: (item.tags as string[]) || [],
     rating: 4.0 + ((((item.rating ? Number(item.rating) : 5) * 7 + (item.id as number)) % 10) + 1) / 10,
     reviews: Number(item.reviews || 0),

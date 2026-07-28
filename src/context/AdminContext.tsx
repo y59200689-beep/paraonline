@@ -109,7 +109,7 @@ export interface AdminContextProps {
   handleSaveBulkProducts: (changedProducts: Product[]) => Promise<boolean>;
   handleCreateProduct: (productForm: Partial<Product>) => Promise<boolean>;
   handleRestock: (productId: number, newStock: number) => Promise<boolean>;
-  handleImportProducts: (importedProducts: any[], updateExisting: boolean) => Promise<{ success: boolean; count: number; error?: string; message?: string }>;
+  handleImportProducts: (importedProducts: any[], updateExisting: boolean) => Promise<{ success: boolean; count: number; error?: string; message?: string; categories?: string[] }>;
 
   // Reviews Handlers
   handleCreateReview: (data: {

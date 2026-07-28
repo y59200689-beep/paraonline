@@ -1,11 +1,19 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
-import path from 'path';
-import fs from 'fs';
+import { verifyAdminSession } from '@/lib/session';
 
-// Temporary debug endpoint — returns raw DB state for gallery overrides troubleshooting
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'Unknown error';
+}
+
+// Admin-only debug endpoint — returns raw DB state for gallery overrides troubleshooting
 export async function GET() {
-  const result: Record<string, any> = {};
+  const session = await verifyAdminSession();
+  if (!session) {
+    return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
+  }
+
+  const result: Record<string, unknown> = {};
 
   // 1. Read row id=1
   try {
@@ -16,8 +24,8 @@ export async function GET() {
       .single();
     result['row_1_galleryOverrides'] = data1?.value?.galleryOverrides ?? null;
     result['row_1_error'] = err1?.message ?? null;
-  } catch (e: any) {
-    result['row_1_exception'] = e.message;
+  } catch (e: unknown) {
+    result['row_1_exception'] = getErrorMessage(e);
   }
 
   // 2. Read row id=99
@@ -29,20 +37,8 @@ export async function GET() {
       .single();
     result['row_99_value'] = data99?.value ?? null;
     result['row_99_error'] = err99?.message ?? null;
-  } catch (e: any) {
-    result['row_99_exception'] = e.message;
-  }
-
-  // 3. Read gallery-overrides.json
-  try {
-    const filePath = path.join(process.cwd(), 'gallery-overrides.json');
-    if (fs.existsSync(filePath)) {
-      result['file_overrides'] = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-    } else {
-      result['file_overrides'] = 'FILE NOT FOUND';
-    }
-  } catch (e: any) {
-    result['file_exception'] = e.message;
+  } catch (e: unknown) {
+    result['row_99_exception'] = getErrorMessage(e);
   }
 
   return NextResponse.json({ success: true, debug: result });

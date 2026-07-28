@@ -22,6 +22,8 @@ export interface Product {
   price: number;
   comparePrice: number;
   category: string;
+  /** Primary category plus any additional storefront categories. */
+  categories?: string[];
   tags: string[];
   rating: number;
   reviews: number;

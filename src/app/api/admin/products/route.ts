@@ -4,6 +4,19 @@ import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { verifyAdminSession } from '@/lib/session';
 import { revalidatePath } from 'next/cache';
 
+function normalizeCategories(categories: unknown, primaryCategory: unknown): string[] {
+  const primary = typeof primaryCategory === 'string' && primaryCategory.trim()
+    ? primaryCategory.trim().toLowerCase()
+    : 'visage';
+  const supplied = Array.isArray(categories) ? categories : [];
+  const extras = supplied
+    .filter((category): category is string => typeof category === 'string')
+    .map(category => category.trim().toLowerCase())
+    .filter(Boolean);
+
+  return Array.from(new Set([primary, ...extras]));
+}
+
 // GET: Fetch products for admin catalog management (supporting pagination, sorting, search, and special filters)
 export async function GET(request: Request) {
   try {
@@ -34,7 +47,7 @@ export async function GET(request: Request) {
 
     // Apply base filters
     if (category && category !== 'all') {
-      query = query.eq('category', category);
+      query = query.or(`category.eq.${category},categories.cs.{"${category}"}`);
     }
     if (vendor && vendor !== 'all') {
       query = query.eq('vendor', vendor);
@@ -167,6 +180,9 @@ export async function GET(request: Request) {
       price: Number(item.price),
       comparePrice: Number(item.compare_price || item.price),
       category: item.category,
+      categories: Array.isArray(item.categories) && item.categories.length > 0
+        ? item.categories
+        : [item.category],
       tags: item.tags || [],
       rating: Number(item.rating || 5),
       reviews: Number(item.reviews || 0),
@@ -209,6 +225,7 @@ export async function POST(request: Request) {
 
     const newId = maxIdData ? maxIdData.id + 1 : 1001;
 
+    const categories = normalizeCategories(productData.categories, productData.category);
     const newProduct = {
       id: newId,
       title: productData.title,
@@ -219,7 +236,8 @@ export async function POST(request: Request) {
       images: Array.isArray(productData.images) ? productData.images : (productData.image ? [productData.image] : []),
       price: Number(productData.price) || 0,
       compare_price: Number(productData.comparePrice || productData.price) || 0,
-      category: productData.category || 'visage',
+      category: categories[0],
+      categories,
       tags: Array.isArray(productData.tags) ? productData.tags : (productData.tags ? productData.tags.split(',').map((t: string) => t.trim()) : []),
       rating: Number(productData.rating) || 5,
       reviews: Number(productData.reviews) || 0,
@@ -264,6 +282,7 @@ export async function PUT(request: Request) {
 
     const productId = Number(productData.id);
 
+    const categories = normalizeCategories(productData.categories, productData.category);
     const updatedProduct = {
       title: productData.title,
       name: productData.name || productData.title,
@@ -273,7 +292,8 @@ export async function PUT(request: Request) {
       images: Array.isArray(productData.images) ? productData.images : [productData.image],
       price: Number(productData.price) || 0,
       compare_price: Number(productData.comparePrice || productData.price) || 0,
-      category: productData.category,
+      category: categories[0],
+      categories,
       tags: Array.isArray(productData.tags) ? productData.tags : [],
       rating: Number(productData.rating) || 5,
       reviews: Number(productData.reviews) || 0,

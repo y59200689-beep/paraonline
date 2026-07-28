@@ -23,14 +23,14 @@ export interface AdminCatalogContextProps {
   handleSaveLoyaltySettings: (formSettings: any) => Promise<boolean>;
   handleSavePaymentSettings: (formSettings: any) => Promise<boolean>;
   handleSaveNotificationTemplates: (formSettings: any, notifTemplates: any) => Promise<boolean>;
-  handleImportProducts: (rawProducts: any[]) => Promise<{ success: boolean; count: number }>;
+  handleImportProducts: (rawProducts: any[], updateExisting: boolean) => Promise<{ success: boolean; count: number; categories?: string[]; message?: string }>;
 }
 
 const AdminCatalogContext = createContext<AdminCatalogContextProps | undefined>(undefined);
 
 export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser } = useAdminAuth();
-  const { loadProducts, logAdminAction, setProducts, products } = useAdminData();
+  const { loadProducts, logAdminAction } = useAdminData();
   const { loadSettings } = useSettings();
   const { showToast } = useUi();
 
@@ -421,72 +421,28 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return false;
   };
 
-  const handleImportProducts = async (rawProducts: any[]): Promise<{ success: boolean; count: number }> => {
+  const handleImportProducts = async (rawProducts: any[], updateExisting: boolean): Promise<{ success: boolean; count: number; categories?: string[]; message?: string }> => {
     if (currentUser?.role === 'support') {
       showToast("Permission refusée.", 'error');
       return { success: false, count: 0 };
     }
-    const isSupabaseLive = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_URL !== 'http://127.0.0.1:54321';
-    if (isSupabaseLive) {
-      try {
-        const res = await fetch('/api/admin/products/import', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ products: rawProducts })
-        });
-        const data = await res.json();
-        if (data.success) {
-          await loadProducts();
-          logAdminAction("Importation Produits (Live)", `${data.count} produits importés/mis à jour.`);
-          return { success: true, count: data.count };
-        }
-      } catch (e) {
-        showToast("Erreur de connexion lors de l'importation.", 'error');
-      }
-      return { success: false, count: 0 };
-    } else {
-      const updatedProducts = [...products];
-      let importCount = 0;
-      rawProducts.forEach(newP => {
-        const existingIdx = updatedProducts.findIndex(p => p.id === newP.id || p.sku === newP.sku);
-        if (existingIdx !== -1) {
-          updatedProducts[existingIdx] = {
-            ...updatedProducts[existingIdx],
-            ...newP,
-            price: newP.price !== undefined ? Number(newP.price) : updatedProducts[existingIdx].price,
-            comparePrice: newP.comparePrice !== undefined ? Number(newP.comparePrice) : updatedProducts[existingIdx].comparePrice,
-            stock: newP.stock !== undefined ? Number(newP.stock) : updatedProducts[existingIdx].stock,
-            buyingCost: newP.buyingCost ? Number(newP.buyingCost) : updatedProducts[existingIdx].buyingCost
-          };
-          importCount++;
-        } else {
-          const mappedProduct: Product = {
-            id: newP.id || Math.floor(Math.random() * 100000) + 10000,
-            title: newP.title || '',
-            nameFr: newP.nameFr || newP.title || '',
-            description: newP.description || '',
-            ingredients: newP.ingredients || '',
-            usage: newP.usage || '',
-            image: newP.image || '',
-            images: newP.images || [],
-            category: newP.category || 'visage',
-            tags: newP.tags || [],
-            price: newP.price !== undefined ? Number(newP.price) : 100,
-            comparePrice: newP.comparePrice !== undefined ? Number(newP.comparePrice) : (newP.price !== undefined ? Number(newP.price) : 100),
-            rating: newP.rating !== undefined ? Number(newP.rating) : 5,
-            reviews: newP.reviews !== undefined ? Number(newP.reviews) : 0,
-            vendor: newP.vendor || '',
-            stock: newP.stock !== undefined ? Number(newP.stock) : 100,
-            sku: newP.sku || '',
-            buyingCost: newP.buyingCost ? Number(newP.buyingCost) : undefined
-          };
-          updatedProducts.push(mappedProduct);
-          importCount++;
-        }
+    try {
+      const res = await fetch('/api/admin/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ products: rawProducts, updateExisting })
       });
-      setProducts(updatedProducts);
-      logAdminAction("Importation Produits (Mémoire)", `${importCount} produits importés/mis à jour en local.`);
-      return { success: true, count: importCount };
+      const data = await res.json();
+      if (data.success) {
+        await loadProducts();
+        await loadSettings();
+        logAdminAction("Importation Produits", `${data.count} produits importés/mis à jour.`);
+        return { success: true, count: data.count, categories: data.categories, message: data.message };
+      }
+      return { success: false, count: 0, message: data.error };
+    } catch (e) {
+      showToast("Erreur de connexion lors de l'importation.", 'error');
+      return { success: false, count: 0 };
     }
   };
 
@@ -508,8 +464,6 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
     handleSaveNotificationTemplates,
     handleImportProducts
   }), [
-    products,
-    setProducts,
     currentUser,
     loadProducts,
     logAdminAction,

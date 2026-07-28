@@ -70,6 +70,36 @@ function matchesIngredient(product: Product, ingredient: string) {
   return true;
 }
 
+function mapProduct(item: Record<string, unknown>): Product {
+  const category = item.category as string;
+  return {
+    id: item.id as number,
+    title: item.title as string,
+    name: (item.name as string) || undefined,
+    nameFr: (item.name_fr as string) || undefined,
+    vendor: item.vendor as string,
+    image: item.image as string,
+    images: (item.images as string[]) || [],
+    price: Number(item.price),
+    comparePrice: Number((item.compare_price as number) || item.price),
+    category,
+    categories: Array.isArray(item.categories) && item.categories.length > 0
+      ? item.categories as string[]
+      : [category],
+    tags: (item.tags as string[]) || [],
+    rating: 4.0 + (((((item.rating ? Number(item.rating) : 5) * 7) + (item.id as number)) % 10) + 1) / 10,
+    reviews: Number(item.reviews || 0),
+    description: (item.description as string) || '',
+    ingredients: (item.ingredients as string) || '',
+    usage: (item.usage as string) || '',
+    stock: item.stock !== null && item.stock !== undefined ? Number(item.stock) : 100,
+    sku: (item.sku as string) || undefined,
+    buyingCost: item.buying_cost !== null && item.buying_cost !== undefined ? Number(item.buying_cost) : undefined,
+    points: item.points !== null && item.points !== undefined ? Number(item.points) : 0,
+    status: ((item.status as string) || 'live') as 'live' | 'draft',
+  };
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
@@ -95,29 +125,7 @@ export async function GET(request: Request) {
         return NextResponse.json({ success: false, message: 'Products not found' }, { status: 404 });
       }
 
-      const products: Product[] = (data as Array<Record<string, unknown>>).map(row => ({
-        id: row.id as number,
-        title: row.title as string,
-        name: (row.name as string) || undefined,
-        nameFr: (row.name_fr as string) || undefined,
-        vendor: row.vendor as string,
-        image: row.image as string,
-        images: (row.images as string[]) || [],
-        price: Number(row.price),
-        comparePrice: Number((row.compare_price as number) || row.price),
-        category: row.category as string,
-        tags: (row.tags as string[]) || [],
-        rating: 4.0 + (((((row.rating ? Number(row.rating) : 5) * 7) + (row.id as number)) % 10) + 1) / 10,
-        reviews: Number(row.reviews || 0),
-        description: (row.description as string) || '',
-        ingredients: (row.ingredients as string) || '',
-        usage: (row.usage as string) || '',
-        stock: row.stock !== null && row.stock !== undefined ? Number(row.stock) : 100,
-        sku: (row.sku as string) || undefined,
-        buyingCost: row.buying_cost !== null && row.buying_cost !== undefined ? Number(row.buying_cost) : undefined,
-        points: row.points !== null && row.points !== undefined ? Number(row.points) : 0,
-        status: ((row.status as string) || 'live') as 'live' | 'draft',
-      }));
+      const products = (data as Array<Record<string, unknown>>).map(mapProduct);
 
       return NextResponse.json(
         { success: true, products },
@@ -138,29 +146,7 @@ export async function GET(request: Request) {
         return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
       }
       
-      const matchedProduct: Product = {
-        id: data.id,
-        title: data.title,
-        name: data.name || undefined,
-        nameFr: data.name_fr || undefined,
-        vendor: data.vendor,
-        image: data.image,
-        images: data.images || [],
-        price: Number(data.price),
-        comparePrice: Number(data.compare_price || data.price),
-        category: data.category,
-        tags: data.tags || [],
-        rating: 4.0 + ((((data.rating ? Number(data.rating) : 5) * 7 + data.id) % 10) + 1) / 10,
-        reviews: Number(data.reviews || 0),
-        description: data.description || '',
-        ingredients: data.ingredients || '',
-        usage: data.usage || '',
-        stock: data.stock !== null && data.stock !== undefined ? Number(data.stock) : 100,
-        sku: data.sku || undefined,
-        buyingCost: data.buying_cost !== null && data.buying_cost !== undefined ? Number(data.buying_cost) : undefined,
-        points: data.points !== null && data.points !== undefined ? Number(data.points) : 0,
-        status: data.status || 'live'
-      };
+      const matchedProduct = mapProduct(data as Record<string, unknown>);
       
       return NextResponse.json(
         { success: true, product: matchedProduct },
@@ -181,11 +167,11 @@ export async function GET(request: Request) {
       if (category === 'offers') {
         query = query.gt('compare_price', 'price');
       } else if (category === 'kbeauty') {
-        query = query.eq('category', 'kbeauty');
+        query = query.or('category.eq.kbeauty,categories.cs.{"kbeauty"}');
       } else if (category === 'solaire') {
-        query = query.or('category.eq.garnier,tags.cs.{"solaire"}');
+        query = query.or('category.eq.garnier,categories.cs.{"solaire"},tags.cs.{"solaire"}');
       } else {
-        query = query.or(`category.eq.${category},tags.cs.{"${category}"}`);
+        query = query.or(`category.eq.${category},categories.cs.{"${category}"},tags.cs.{"${category}"}`);
       }
     }
 
@@ -225,29 +211,7 @@ export async function GET(request: Request) {
       throw error || new Error('No products returned');
     }
 
-    let products: Product[] = data.map((item: any) => ({
-      id: item.id,
-      title: item.title,
-      name: item.name || undefined,
-      nameFr: item.name_fr || undefined,
-      vendor: item.vendor,
-      image: item.image,
-      images: item.images || [],
-      price: Number(item.price),
-      comparePrice: Number(item.compare_price || item.price),
-      category: item.category,
-      tags: item.tags || [],
-      rating: 4.0 + ((((item.rating ? Number(item.rating) : 5) * 7 + item.id) % 10) + 1) / 10,
-      reviews: Number(item.reviews || 0),
-      description: item.description || '',
-      ingredients: item.ingredients || '',
-      usage: item.usage || '',
-      stock: item.stock !== null && item.stock !== undefined ? Number(item.stock) : 100,
-      sku: item.sku || undefined,
-      buyingCost: item.buying_cost !== null && item.buying_cost !== undefined ? Number(item.buying_cost) : undefined,
-      points: item.points !== null && item.points !== undefined ? Number(item.points) : 0,
-      status: item.status || 'live'
-    }));
+    let products = (data as Array<Record<string, unknown>>).map(mapProduct);
 
     // Fetch custom concerns from settings
     let customConcerns: any[] = [];

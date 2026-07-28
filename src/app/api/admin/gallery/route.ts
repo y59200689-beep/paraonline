@@ -5,6 +5,7 @@ import { supabaseAdmin as supabase } from '@/lib/supabase';
 import path from 'path';
 import fs from 'fs';
 import sharp from 'sharp';
+import { randomUUID } from 'crypto';
 
 // ─── Image manifest ────────────────────────────────────────────────────────
 // Maps a stable key → relative path within /public and display metadata.
@@ -115,6 +116,10 @@ interface ImageFileInfo {
   dimensions: string;
 }
 
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'Erreur serveur';
+}
+
 async function getImageFileInfo(filePath: string): Promise<ImageFileInfo> {
   try {
     const abs = path.join(process.cwd(), 'public', filePath);
@@ -133,89 +138,20 @@ async function getImageFileInfo(filePath: string): Promise<ImageFileInfo> {
   }
 }
 
-// ─── Helpers for database and file-based gallery overrides ──────────────────
-const OVERRIDES_FILE = path.join(process.cwd(), 'gallery-overrides.json');
+const isProduction = process.env.NODE_ENV === 'production';
 
-function readOverrides(): Record<string, string> {
-  try {
-    if (fs.existsSync(OVERRIDES_FILE)) {
-      return JSON.parse(fs.readFileSync(OVERRIDES_FILE, 'utf-8'));
-    }
-  } catch {}
-  return {};
-}
-
-function writeOverrides(overrides: Record<string, string>): void {
-  try {
-    fs.writeFileSync(OVERRIDES_FILE, JSON.stringify(overrides, null, 2), 'utf-8');
-  } catch (e) {
-    console.error('[gallery] Failed to write gallery-overrides.json:', e);
-  }
-}
+// ─── Helpers for database gallery overrides ─────────────────────────────────
 
 async function fetchDbOverrides(): Promise<Record<string, string>> {
-  let overrides1: Record<string, string> = {};
-  let overrides99: Record<string, string> = {};
-  try {
-    const { data: data1 } = await supabase
-      .from('settings')
-      .select('value')
-      .eq('id', 1)
-      .maybeSingle();
+  const { data, error } = await supabase
+    .from('settings')
+    .select('value')
+    .eq('id', 99)
+    .maybeSingle();
 
-    // Start with explicit galleryOverrides
-    overrides1 = data1?.value?.galleryOverrides || {};
-
-    // Also pull banners[i].bgImage as authoritative hero overrides
-    // This ensures the gallery page always shows what the homepage is actually displaying,
-    // even if the image was set via the admin settings page rather than gallery upload.
-    const BANNER_KEYS = ['hero_bestsellers', 'hero_summersale', 'hero_weeklypromo', 'hero_newarrivals'];
-    const banners: any[] = data1?.value?.banners || [];
-    banners.forEach((b: any, idx: number) => {
-      const key = BANNER_KEYS[idx];
-      if (key && b?.bgImage && b.bgImage.trim() !== '') {
-        // Banner bgImage wins if it's a real URL (Supabase storage or non-trivial path)
-        // — but only override if galleryOverrides doesn't already have a newer value
-        if (!overrides1[key]) {
-          overrides1[key] = b.bgImage;
-        }
-      }
-    });
-
-    // Also pull category images from brandPartners sectionOrder
-    const sectionOrder: any[] = data1?.value?.homepageSections?.sectionOrder || [];
-    const brandPartnersSection = sectionOrder.find((s: any) => s.type === 'brandPartners');
-    const brands: any[] = brandPartnersSection?.settings?.brands || [];
-    brands.forEach((b: any) => {
-      if (b?.categoryTag && b?.categoryImage && b.categoryImage.trim() !== '') {
-        const catKey = `cat_${b.categoryTag}`;
-        if (!overrides1[catKey]) {
-          overrides1[catKey] = b.categoryImage;
-        }
-      }
-    });
-
-    // Pull summer sale bundle images
-    const homepageSections = data1?.value?.homepageSections || {};
-    if (homepageSections.summerSaleLeftImage && !overrides1['cicaplast_bundle']) {
-      overrides1['cicaplast_bundle'] = homepageSections.summerSaleLeftImage;
-    }
-    if (homepageSections.summerSaleRightImage && !overrides1['vichy_sunscreen_bundle']) {
-      overrides1['vichy_sunscreen_bundle'] = homepageSections.summerSaleRightImage;
-    }
-  } catch {}
-
-  try {
-    const { data: data99 } = await supabase
-      .from('settings')
-      .select('value')
-      .eq('id', 99)
-      .maybeSingle();
-    overrides99 = data99?.value || {};
-  } catch {}
-
-  // Row 99 (explicit gallery uploads) takes final priority over everything else
-  return { ...overrides1, ...overrides99 };
+  if (error) throw new Error(`Failed to read gallery settings: ${error.message}`);
+  if (!data?.value || typeof data.value !== 'object' || Array.isArray(data.value)) return {};
+  return data.value as Record<string, string>;
 }
 
 async function deleteOldStorageOrFile(oldUrl: string, newUrl: string): Promise<void> {
@@ -254,60 +190,44 @@ async function deleteOldStorageOrFile(oldUrl: string, newUrl: string): Promise<v
   }
 }
 
+async function uploadGalleryImageToStorage(key: string, uploadBuffer: Buffer): Promise<string | null> {
+  const storagePath = `gallery/${key}-${Date.now()}-${randomUUID()}.webp`;
+  const { error } = await supabase.storage
+    .from('products')
+    .upload(storagePath, uploadBuffer, {
+      contentType: 'image/webp',
+      upsert: false,
+      cacheControl: '3600',
+    });
+
+  if (error) {
+    console.warn('[gallery] Supabase storage upload failed:', error);
+    return null;
+  }
+
+  const { data } = supabase.storage.from('products').getPublicUrl(storagePath);
+  return data?.publicUrl ? `${data.publicUrl}?v=${Date.now()}` : null;
+}
+
+function writeGalleryImageToPublic(filePath: string, uploadBuffer: Buffer): string {
+  const absPath = path.join(process.cwd(), 'public', filePath);
+  fs.mkdirSync(path.dirname(absPath), { recursive: true });
+  fs.writeFileSync(absPath, uploadBuffer);
+  return `/${filePath}?v=${Date.now()}`;
+}
+
 async function saveDbOverride(key: string, url: string): Promise<void> {
-  // Purge previous old file or storage object before writing new override
-  try {
-    const dbOverrides = await fetchDbOverrides();
-    const fileOverrides = readOverrides();
-    const oldUrl = dbOverrides[key] || fileOverrides[key];
-    if (oldUrl) {
-      await deleteOldStorageOrFile(oldUrl, url);
-    }
-  } catch {}
+  const overrides = await fetchDbOverrides();
+  const oldUrl = overrides[key];
+  const { error } = await supabase
+    .from('settings')
+    .upsert({ id: 99, value: { ...overrides, [key]: url } }, { onConflict: 'id' });
 
-  // 1. Save to dedicated gallery row id=99 (isolated container, immune to general settings resets)
-  try {
-    const { data: data99 } = await supabase
-      .from('settings')
-      .select('value')
-      .eq('id', 99)
-      .maybeSingle();
-    const overrides99 = { ...(data99?.value || {}), [key]: url };
-    await supabase
-      .from('settings')
-      .upsert({ id: 99, value: overrides99 }, { onConflict: 'id' });
-  } catch (e) {
-    console.error('[gallery] Failed to update row 99 DB settings:', e);
-  }
+  if (error) throw new Error(`Failed to save gallery settings: ${error.message}`);
 
-  // 2. Save to main settings row id=1 & update embedded banner/section objects
-  try {
-    const { data: data1 } = await supabase
-      .from('settings')
-      .select('value')
-      .eq('id', 1)
-      .single();
-    const currentVal1 = data1?.value || {};
-    const galleryOverrides1 = { ...(currentVal1.galleryOverrides || {}), [key]: url };
-
-    // Also update embedded banner array images directly in row 1
-    if (Array.isArray(currentVal1.banners)) {
-      if (key === 'hero_bestsellers' && currentVal1.banners[0]) currentVal1.banners[0].bgImage = url;
-      if (key === 'hero_summersale' && currentVal1.banners[1]) currentVal1.banners[1].bgImage = url;
-      if (key === 'hero_weeklypromo' && currentVal1.banners[2]) currentVal1.banners[2].bgImage = url;
-      if (key === 'hero_newarrivals' && currentVal1.banners[3]) currentVal1.banners[3].bgImage = url;
-    }
-    if (currentVal1.homepageSections) {
-      if (key === 'cicaplast_bundle') currentVal1.homepageSections.summerSaleLeftImage = url;
-      if (key === 'vichy_sunscreen_bundle') currentVal1.homepageSections.summerSaleRightImage = url;
-    }
-
-    await supabase
-      .from('settings')
-      .upsert({ id: 1, value: { ...currentVal1, galleryOverrides: galleryOverrides1 } }, { onConflict: 'id' });
-  } catch (e) {
-    console.error('[gallery] Failed to update row 1 DB settings:', e);
-  }
+  // The database now points to the replacement, so an unsuccessful cleanup can
+  // leave only an orphaned object, never a broken homepage image.
+  if (oldUrl) await deleteOldStorageOrFile(oldUrl, url);
 }
 
 // ─── GET — return manifest with live file sizes & dimensions ──────────────────
@@ -317,10 +237,9 @@ export async function GET() {
     return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
   }
 
-  // Combine DB overrides (Vercel cloud) and file overrides (local dev)
+  // DB overrides are the single source of truth for homepage/gallery sync.
   const dbOverrides = await fetchDbOverrides();
-  const fileOverrides = readOverrides();
-  const mergedOverrides = { ...dbOverrides, ...fileOverrides };
+  const mergedOverrides = dbOverrides;
 
   const manifestImages = await Promise.all(
     IMAGE_MANIFEST.map(async (img) => {
@@ -455,57 +374,37 @@ export async function POST(request: Request) {
       console.warn('[gallery] Sharp WebP conversion failed, using original buffer:', sharpErr);
     }
 
-    let finalUrl = `/${entry.filePath}?v=${Date.now()}`;
+    let finalUrl: string | null = null;
 
-    // 1. Attempt local filesystem write (works in local dev & persistent servers)
-    try {
-      const absPath = path.join(process.cwd(), 'public', entry.filePath);
-      fs.mkdirSync(path.dirname(absPath), { recursive: true });
-      fs.writeFileSync(absPath, uploadBuffer);
-      finalUrl = `/${entry.filePath}?v=${Date.now()}`;
-    } catch (fsErr: any) {
-      console.warn('[gallery] Local filesystem is read-only (e.g. Vercel deployment). Falling back to cloud storage/Data URL:', fsErr?.message);
-      
-      // 2. Fallback for serverless read-only platforms (Vercel): Supabase Storage or Base64 Data URL
+    if (isProduction) {
+      // Production instances must use durable object storage. A deployed public/
+      // directory is immutable or ephemeral and cannot be the gallery source.
+      finalUrl = await uploadGalleryImageToStorage(entry.key, uploadBuffer);
+    } else {
       try {
-        const storagePath = `gallery_${entry.key}.webp`;
-        const { error: sbErr } = await supabase.storage
-          .from('products')
-          .upload(storagePath, uploadBuffer, {
-            contentType: 'image/webp',
-            upsert: true,
-            cacheControl: '3600',
-          });
-
-        if (!sbErr) {
-          const { data: publicUrlData } = supabase.storage
-            .from('products')
-            .getPublicUrl(storagePath);
-          if (publicUrlData?.publicUrl) {
-            finalUrl = `${publicUrlData.publicUrl}?v=${Date.now()}`;
-          }
-        } else {
-          console.warn('[gallery] Supabase fallback upload error:', sbErr);
-          finalUrl = `data:image/webp;base64,${uploadBuffer.toString('base64')}`;
-        }
-      } catch {
-        finalUrl = `data:image/webp;base64,${uploadBuffer.toString('base64')}`;
+        finalUrl = writeGalleryImageToPublic(entry.filePath, uploadBuffer);
+      } catch (fsErr: unknown) {
+        console.warn('[gallery] Local filesystem is read-only. Falling back to Supabase Storage:', getErrorMessage(fsErr));
+        finalUrl = await uploadGalleryImageToStorage(entry.key, uploadBuffer);
       }
     }
 
-    // Persist override to both Supabase DB (for Vercel serverless) and gallery-overrides.json (for local dev)
-    try {
-      const overrides = readOverrides();
-      overrides[entry.key] = finalUrl;
-      writeOverrides(overrides);
-    } catch (fileErr: any) {
-      console.error('[gallery POST] Failed to write gallery-overrides.json:', fileErr?.message || fileErr);
+    if (!finalUrl) {
+      return NextResponse.json(
+        { success: false, error: 'Le stockage d’images est indisponible. Réessayez plus tard.' },
+        { status: 503 }
+      );
     }
 
     try {
       await saveDbOverride(entry.key, finalUrl);
-    } catch (dbErr: any) {
-      console.error('[gallery POST] Failed to write DB override:', dbErr?.message || dbErr);
+    } catch (dbErr: unknown) {
+      console.error('[gallery POST] Failed to write DB override:', getErrorMessage(dbErr));
+      if (finalUrl) await deleteOldStorageOrFile(finalUrl, '');
+      return NextResponse.json(
+        { success: false, error: 'Impossible d’enregistrer l’image dans la galerie.' },
+        { status: 500 }
+      );
     }
 
     // Extract metadata of saved WebP image
@@ -529,9 +428,9 @@ export async function POST(request: Request) {
       height,
       dimensions,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[gallery] replace error:', err);
-    return NextResponse.json({ success: false, error: err.message || 'Erreur serveur' }, { status: 500 });
+    return NextResponse.json({ success: false, error: getErrorMessage(err) }, { status: 500 });
   }
 }
 
@@ -549,46 +448,25 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: false, error: 'Paramètre key requis' }, { status: 400 });
     }
 
-    // 1. Fetch current override URL to purge storage asset
+    // 1. Fetch the current authoritative override.
     const dbOverrides = await fetchDbOverrides();
-    const fileOverrides = readOverrides();
-    const oldUrl = dbOverrides[key] || fileOverrides[key];
+    const oldUrl = dbOverrides[key];
 
-    if (oldUrl) {
-      await deleteOldStorageOrFile(oldUrl, '');
-    }
+    // 2. Remove the database reference before deleting the object. That leaves a
+    // harmless orphan if cleanup fails, rather than a homepage pointing at a 404.
+    const updatedOverrides = { ...dbOverrides };
+    delete updatedOverrides[key];
+    const { error } = await supabase
+      .from('settings')
+      .upsert({ id: 99, value: updatedOverrides }, { onConflict: 'id' });
+    if (error) throw new Error(`Failed to remove gallery setting: ${error.message}`);
 
-    // 2. Remove key from gallery-overrides.json
-    try {
-      const overrides = readOverrides();
-      delete overrides[key];
-      writeOverrides(overrides);
-    } catch {}
-
-    // 3. Remove key from Supabase DB row 99
-    try {
-      const { data: data99 } = await supabase.from('settings').select('value').eq('id', 99).maybeSingle();
-      if (data99?.value) {
-        const updated99 = { ...data99.value };
-        delete updated99[key];
-        await supabase.from('settings').upsert({ id: 99, value: updated99 }, { onConflict: 'id' });
-      }
-    } catch {}
-
-    // 4. Remove key from Supabase DB row 1
-    try {
-      const { data: data1 } = await supabase.from('settings').select('value').eq('id', 1).maybeSingle();
-      if (data1?.value?.galleryOverrides) {
-        const updated1 = { ...data1.value };
-        delete updated1.galleryOverrides[key];
-        await supabase.from('settings').upsert({ id: 1, value: updated1 }, { onConflict: 'id' });
-      }
-    } catch {}
+    if (oldUrl) await deleteOldStorageOrFile(oldUrl, '');
+    try { revalidatePath('/'); } catch {}
 
     return NextResponse.json({ success: true, message: `Override ${key} supprimé avec succès` });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[gallery DELETE] error:', err);
-    return NextResponse.json({ success: false, error: err.message || 'Erreur serveur' }, { status: 500 });
+    return NextResponse.json({ success: false, error: getErrorMessage(err) }, { status: 500 });
   }
 }
-
