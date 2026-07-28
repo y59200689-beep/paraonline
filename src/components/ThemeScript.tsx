@@ -29,7 +29,7 @@ export function ThemeScript() {
   var sc=localStorage.getItem('para_settings_cache');
   var sp=sc?JSON.parse(sc):null;
   if(sp&&typeof sp==='object'){
-    sp.galleryOverrides=Object.assign({},sp.galleryOverrides||{},overrides);
+    sp.galleryOverrides=Object.assign({},overrides,sp.galleryOverrides||{});
     var keysMap=['hero_bestsellers','hero_summersale','hero_weeklypromo','hero_newarrivals'];
     if(Array.isArray(sp.banners)){
       sp.banners=sp.banners.map(function(b,i){
