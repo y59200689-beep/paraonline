@@ -649,20 +649,27 @@ export class SettingsErrorBoundary extends React.Component<{ children: React.Rea
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode; initialSettings?: Record<string, any> }> = ({ children, initialSettings }) => {
   const [settings, setSettings] = useState<Settings>(() => {
+    const baseSettings = (initialSettings && typeof initialSettings === 'object' && Object.keys(initialSettings).length > 0)
+      ? { ...DEFAULT_SETTINGS, ...initialSettings }
+      : null;
+
     if (typeof window !== 'undefined') {
       try {
         const localOverrides = JSON.parse(localStorage.getItem('custom_gallery_overrides') || '{}');
-        // window.__PARA_SETTINGS_CACHE__ is stamped by ThemeScript before React hydrates.
-        // ThemeScript now patches banners[i].bgImage from galleryOverrides, so this
-        // cache already has the correct image URLs — read it first.
-        const fromWindow = (window as any).__PARA_SETTINGS_CACHE__;
-        let raw: any = fromWindow && typeof fromWindow === 'object' ? fromWindow : null;
-        if (!raw) {
-          const cached = localStorage.getItem('para_settings_cache');
-          if (cached) raw = JSON.parse(cached);
+        let source = baseSettings;
+        if (!source) {
+          const fromWindow = (window as any).__PARA_SETTINGS_CACHE__;
+          let raw: any = fromWindow && typeof fromWindow === 'object' ? fromWindow : null;
+          if (!raw) {
+            const cached = localStorage.getItem('para_settings_cache');
+            if (cached) raw = JSON.parse(cached);
+          }
+          if (raw && typeof raw === 'object') {
+            source = { ...DEFAULT_SETTINGS, ...raw };
+          }
         }
-        if (raw && typeof raw === 'object') {
-          const merged = { ...DEFAULT_SETTINGS, ...raw };
+        if (source) {
+          const merged = { ...source };
           merged.galleryOverrides = { ...(merged.galleryOverrides || {}), ...localOverrides };
           if (Array.isArray(merged.banners)) {
             const keysMap = ['hero_bestsellers', 'hero_summersale', 'hero_weeklypromo', 'hero_newarrivals'];
@@ -676,15 +683,15 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode; initialSett
               };
             });
           }
+          try {
+            localStorage.setItem('para_settings_cache', JSON.stringify(merged));
+            (window as any).__PARA_SETTINGS_CACHE__ = merged;
+          } catch {}
           return merged;
         }
       } catch (e) {}
     }
-    // No localStorage cache — use server-fetched initialSettings if provided (fresh visitors)
-    // initialSettings already has galleryOverrides merged into banners[i].bgImage
-    if (initialSettings && typeof initialSettings === 'object' && Object.keys(initialSettings).length > 0) {
-      return { ...DEFAULT_SETTINGS, ...initialSettings };
-    }
+    if (baseSettings) return baseSettings;
     return DEFAULT_SETTINGS;
   });
   const [isLoading, setIsLoading] = useState(true);

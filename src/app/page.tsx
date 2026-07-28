@@ -58,17 +58,11 @@ const websiteJsonLd = {
 import { ShopShell } from '@/components/ShopShell';
 import { ScrollRevealInit } from '@/components/ScrollRevealInit';
 import { DynamicSectionRenderer } from '@/components/DynamicSectionRenderer';
-import { supabaseAdmin } from '@/lib/supabase';
 import { HomepageSectionItem } from '@/context/SettingsContext';
+import { getPublicSettings } from '@/lib/get-public-settings';
 
 export default async function Home() {
-  const { data: dbData } = await supabaseAdmin
-    .from('settings')
-    .select('*')
-    .eq('id', 1)
-    .single();
-
-  const settings = dbData?.value || {};
+  const settings = await getPublicSettings();
   const hp = settings.homepageSections || {};
 
   const defaultSections: HomepageSectionItem[] = [

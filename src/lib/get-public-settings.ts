@@ -1,15 +1,7 @@
-/**
- * getPublicSettings
- *
- * Server-side function that fetches public settings from Supabase,
- * merges gallery overrides from row 99 into banners and homepageSections.
- *
- * Used by:
- *  - /api/settings/public  (API route)
- *  - layout.tsx            (server component — embeds correct images into initial HTML)
- */
-
 import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { IMAGE_MANIFEST } from '@/app/api/admin/gallery/route';
+import path from 'path';
+import fs from 'fs';
 
 const BANNER_KEYS = ['hero_bestsellers', 'hero_summersale', 'hero_weeklypromo', 'hero_newarrivals'];
 
@@ -38,11 +30,49 @@ export async function getPublicSettings(): Promise<Record<string, any>> {
       }
     } catch {}
 
-    // Merge: row 99 overrides take priority over row 1's galleryOverrides
+    // Read local gallery-overrides.json if present
+    let fileOverrides: Record<string, string> = {};
+    try {
+      const overridesPath = path.join(process.cwd(), 'gallery-overrides.json');
+      if (fs.existsSync(overridesPath)) {
+        fileOverrides = JSON.parse(fs.readFileSync(overridesPath, 'utf-8'));
+      }
+    } catch {}
+
+    // Merge: row 99 overrides + fileOverrides take priority over row 1's galleryOverrides
     const mergedGalleryOverrides: Record<string, string> = {
       ...(settings.galleryOverrides || {}),
+      ...fileOverrides,
       ...dbGalleryOverrides,
     };
+
+    // Attach disk mtime cache buster to manifest images if no explicit DB override exists
+    for (const img of IMAGE_MANIFEST) {
+      if (!mergedGalleryOverrides[img.key]) {
+        try {
+          const abs = path.join(process.cwd(), 'public', img.filePath);
+          if (fs.existsSync(abs)) {
+            const stat = fs.statSync(abs);
+            mergedGalleryOverrides[img.key] = `/${img.filePath}?v=${Math.round(stat.mtimeMs)}`;
+          }
+        } catch {}
+      }
+    }
+
+    // Ensure all local file URLs in mergedGalleryOverrides have cache-busting timestamps
+    for (const key of Object.keys(mergedGalleryOverrides)) {
+      const url = mergedGalleryOverrides[key];
+      if (url && typeof url === 'string' && !url.includes('?') && !url.startsWith('data:') && !url.startsWith('http')) {
+        const cleanPath = url.startsWith('/') ? url.substring(1) : url;
+        try {
+          const abs = path.join(process.cwd(), 'public', cleanPath);
+          if (fs.existsSync(abs)) {
+            const stat = fs.statSync(abs);
+            mergedGalleryOverrides[key] = `${url}?v=${Math.round(stat.mtimeMs)}`;
+          }
+        } catch {}
+      }
+    }
 
     // Inject galleryOverrides directly into banners[i].bgImage
     let banners = settings.banners || [];
@@ -107,3 +137,4 @@ export async function getPublicSettings(): Promise<Record<string, any>> {
     return {};
   }
 }
+

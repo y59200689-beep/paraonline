@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { verifyAdminSession } from '@/lib/session';
 
@@ -57,6 +58,7 @@ export async function POST(request: Request) {
       .upsert({ id: 1, value: mergedSettings }, { onConflict: 'id' });
     
     if (error) throw error;
+    try { revalidatePath('/'); } catch {}
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error("Save settings error:", error);

@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { getGalleryOverrides } from '@/lib/gallery-storage';
+import { useSettings } from '@/context/SettingsContext';
 
 // Read the gallery overrides stamped onto window by ThemeScript BEFORE React hydrates.
 // Falls back to direct localStorage read if the inline script hasn't run yet.
-function getInitialOverrides(): Record<string, string> {
+function getWindowOverrides(): Record<string, string> {
   if (typeof window === 'undefined') return {};
   try {
     if ((window as any).__PARA_GALLERY_OVERRIDES__) {
@@ -19,7 +20,8 @@ function getInitialOverrides(): Record<string, string> {
 }
 
 export function useGalleryOverrides() {
-  const [overrides, setOverrides] = useState<Record<string, string>>(getInitialOverrides);
+  const { settings } = useSettings();
+  const [localOverrides, setLocalOverrides] = useState<Record<string, string>>(getWindowOverrides);
 
   useEffect(() => {
     // 1. Fetch server-side overrides via public API and merge into localStorage cache
@@ -29,9 +31,8 @@ export function useGalleryOverrides() {
         if (res.ok) {
           const data = await res.json();
           if (data.overrides) {
-            setOverrides(prev => {
+            setLocalOverrides(prev => {
               const merged = { ...prev, ...data.overrides };
-              // Persist the merged server overrides to localStorage for next render
               try {
                 localStorage.setItem('custom_gallery_overrides', JSON.stringify(merged));
               } catch {}
@@ -48,7 +49,7 @@ export function useGalleryOverrides() {
       const loadLocalOverrides = async () => {
         try {
           const stored = await getGalleryOverrides();
-          setOverrides(prev => {
+          setLocalOverrides(prev => {
             const merged = { ...prev, ...stored };
             try {
               localStorage.setItem('custom_gallery_overrides', JSON.stringify(merged));
@@ -63,26 +64,32 @@ export function useGalleryOverrides() {
     }
   }, []);
 
+  const activeOverrides: Record<string, string> = {
+    ...(settings?.galleryOverrides || {}),
+    ...localOverrides,
+  };
+
   const getDisplayImage = (defaultSrc: string, ...keys: string[]) => {
     for (const k of keys) {
-      if (k && overrides[k]) return overrides[k];
+      if (k && activeOverrides[k]) return activeOverrides[k];
     }
     if (defaultSrc) {
       const cleanUrl = defaultSrc.split('?')[0];
       const cleanPath = cleanUrl.replace(/^\//, '');
-      if (overrides[cleanPath]) return overrides[cleanPath];
-      if (overrides[cleanUrl]) return overrides[cleanUrl];
-      if (overrides[defaultSrc]) return overrides[defaultSrc];
+      if (activeOverrides[cleanPath]) return activeOverrides[cleanPath];
+      if (activeOverrides[cleanUrl]) return activeOverrides[cleanUrl];
+      if (activeOverrides[defaultSrc]) return activeOverrides[defaultSrc];
 
       // Extract filename without extension (e.g. /images/categories/solaire.png -> solaire)
       const filename = cleanPath.split('/').pop()?.split('.')[0];
-      if (filename && overrides[filename]) return overrides[filename];
-      if (filename && overrides[`cat_${filename}`]) return overrides[`cat_${filename}`];
-      if (filename && overrides[`concern_${filename}`]) return overrides[`concern_${filename}`];
+      if (filename && activeOverrides[filename]) return activeOverrides[filename];
+      if (filename && activeOverrides[`cat_${filename}`]) return activeOverrides[`cat_${filename}`];
+      if (filename && activeOverrides[`concern_${filename}`]) return activeOverrides[`concern_${filename}`];
     }
     const normalizedDefault = defaultSrc ? defaultSrc.replace(/\.png(\?.*)?$/i, '.webp$1') : defaultSrc;
     return getOptimizedImageUrl(normalizedDefault);
   };
 
-  return { overrides, getDisplayImage };
+  return { overrides: activeOverrides, getDisplayImage };
 }
+
