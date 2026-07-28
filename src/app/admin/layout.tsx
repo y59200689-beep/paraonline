@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import { useAdmin, AdminProvider } from '@/context/AdminContext';
 import { AdminUIProvider, useAdminUI } from './AdminUIContext';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import '../styles/admin.css';
 import {
   Menu,
@@ -21,6 +21,7 @@ import { AdminSpotlight } from '@/components/admin/AdminSpotlight';
 function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const {
     isAuthenticated,
+    isVerifyingSession,
     adminTheme,
     toggleAdminTheme,
     isDataLoading,
@@ -52,12 +53,20 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   } = useAdminUI();
 
   const pathname = usePathname();
+  const router = useRouter();
   const [mounted, setMounted] = React.useState(false);
   const [isProfileOpen, setIsProfileOpen] = React.useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Redirect to login if session verification completes and user is not authenticated
+  useEffect(() => {
+    if (mounted && !isVerifyingSession && !isAuthenticated && pathname !== '/admin/login') {
+      router.push(`/admin/login?from=${encodeURIComponent(pathname)}`);
+    }
+  }, [mounted, isVerifyingSession, isAuthenticated, pathname, router]);
 
   // Shortcut key: Cmd+K or Ctrl+K to open spotlight
   useEffect(() => {
@@ -81,14 +90,32 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
-  // If not mounted on client, render nothing to avoid hydration mismatches
-  if (!mounted) {
-    return null;
+  // If not mounted or verifying session, show admin-themed loading indicator
+  if (!mounted || isVerifyingSession) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-slate-950 text-slate-100 font-sans">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-slate-700 border-t-emerald-500 rounded-full animate-spin" />
+          <span className="text-xs font-mono font-bold tracking-widest text-slate-400 uppercase">
+            Vérification de la session...
+          </span>
+        </div>
+      </div>
+    );
   }
 
-  // If not authenticated, render nothing (Middleware will redirect the user)
+  // If not authenticated, show redirection screen while router navigates to login
   if (!isAuthenticated) {
-    return null;
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-slate-950 text-slate-100 font-sans">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-slate-700 border-t-emerald-500 rounded-full animate-spin" />
+          <span className="text-xs font-mono font-bold tracking-widest text-slate-400 uppercase">
+            Redirection vers la connexion...
+          </span>
+        </div>
+      </div>
+    );
   }
 
   const isDark = adminTheme === 'dark';

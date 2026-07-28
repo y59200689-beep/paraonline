@@ -23,6 +23,7 @@ export interface AdminContextProps {
   // Authentication
   currentUser: AdminUser | null;
   isAuthenticated: boolean;
+  isVerifyingSession: boolean;
   authError: string;
   setAuthError: (err: string) => void;
   handleLogin: (username: string, password: string) => Promise<boolean>;
@@ -219,6 +220,7 @@ export const useAdmin = (): AdminContextProps => {
     // Auth
     currentUser: auth.currentUser,
     isAuthenticated: auth.isAuthenticated,
+    isVerifyingSession: auth.isVerifyingSession,
     authError: auth.authError,
     setAuthError: auth.setAuthError,
     handleLogin: auth.handleLogin,

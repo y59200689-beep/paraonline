@@ -12,6 +12,7 @@ export interface AdminUser {
 export interface AdminAuthContextProps {
   currentUser: AdminUser | null;
   isAuthenticated: boolean;
+  isVerifyingSession: boolean;
   authError: string;
   setAuthError: (err: string) => void;
   handleLogin: (username: string, password: string) => Promise<boolean>;
@@ -45,6 +46,12 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       return sessionStorage.getItem('admin_authenticated') === 'true';
     }
     return false;
+  });
+  const [isVerifyingSession, setIsVerifyingSession] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('admin_authenticated') !== 'true';
+    }
+    return true;
   });
   const [authError, setAuthError] = useState('');
   const [requiresMfa, setRequiresMfa] = useState(false);
@@ -93,6 +100,8 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           setIsAuthenticated(false);
           setCurrentUser(null);
         }
+      } finally {
+        setIsVerifyingSession(false);
       }
     };
     verifySession();
@@ -230,6 +239,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     <AdminAuthContext.Provider value={{
       currentUser,
       isAuthenticated,
+      isVerifyingSession,
       authError,
       setAuthError,
       handleLogin,
