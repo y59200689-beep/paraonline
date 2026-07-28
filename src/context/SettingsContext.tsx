@@ -670,7 +670,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               const override = key && merged.galleryOverrides?.[key];
               return {
                 ...b,
-                bgImage: override || cleanBg || DEFAULT_SETTINGS.banners[idx]?.bgImage
+                bgImage: override || cleanBg || DEFAULT_SETTINGS.banners?.[idx]?.bgImage
               };
             });
           }
@@ -717,7 +717,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             const override = key && merged.galleryOverrides?.[key];
             return {
               ...b,
-              bgImage: override || cleanBg || DEFAULT_SETTINGS.banners[idx]?.bgImage
+              bgImage: override || cleanBg || DEFAULT_SETTINGS.banners?.[idx]?.bgImage
             };
           });
         }
