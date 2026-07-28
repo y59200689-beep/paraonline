@@ -654,19 +654,27 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const localOverrides = JSON.parse(localStorage.getItem('custom_gallery_overrides') || '{}');
         // window.__PARA_SETTINGS_CACHE__ is stamped by ThemeScript before React hydrates
         const fromWindow = (window as any).__PARA_SETTINGS_CACHE__;
-        if (fromWindow && typeof fromWindow === 'object') {
-          const mergedWin = { ...DEFAULT_SETTINGS, ...fromWindow };
-          mergedWin.galleryOverrides = { ...(mergedWin.galleryOverrides || {}), ...localOverrides };
-          return mergedWin;
+        let raw: any = fromWindow && typeof fromWindow === 'object' ? fromWindow : null;
+        if (!raw) {
+          const cached = localStorage.getItem('para_settings_cache');
+          if (cached) raw = JSON.parse(cached);
         }
-        const cached = localStorage.getItem('para_settings_cache');
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (parsed && typeof parsed === 'object') {
-            const mergedCached = { ...DEFAULT_SETTINGS, ...parsed };
-            mergedCached.galleryOverrides = { ...(mergedCached.galleryOverrides || {}), ...localOverrides };
-            return mergedCached;
+        if (raw && typeof raw === 'object') {
+          const merged = { ...DEFAULT_SETTINGS, ...raw };
+          merged.galleryOverrides = { ...(merged.galleryOverrides || {}), ...localOverrides };
+          if (Array.isArray(merged.banners)) {
+            const keysMap = ['hero_bestsellers', 'hero_summersale', 'hero_weeklypromo', 'hero_newarrivals'];
+            merged.banners = merged.banners.map((b: any, idx: number) => {
+              const key = keysMap[idx];
+              const cleanBg = b.bgImage ? b.bgImage.replace(/\.png(\?.*)?$/i, '.webp$1') : b.bgImage;
+              const override = key && merged.galleryOverrides?.[key];
+              return {
+                ...b,
+                bgImage: override || cleanBg || DEFAULT_SETTINGS.banners[idx]?.bgImage
+              };
+            });
           }
+          return merged;
         }
       } catch (e) {}
     }
@@ -701,6 +709,17 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
         if (!merged.banners || merged.banners.length === 0) {
           merged.banners = DEFAULT_SETTINGS.banners;
+        } else {
+          const keysMap = ['hero_bestsellers', 'hero_summersale', 'hero_weeklypromo', 'hero_newarrivals'];
+          merged.banners = merged.banners.map((b: any, idx: number) => {
+            const key = keysMap[idx];
+            const cleanBg = b.bgImage ? b.bgImage.replace(/\.png(\?.*)?$/i, '.webp$1') : b.bgImage;
+            const override = key && merged.galleryOverrides?.[key];
+            return {
+              ...b,
+              bgImage: override || cleanBg || DEFAULT_SETTINGS.banners[idx]?.bgImage
+            };
+          });
         }
         if (!merged.notificationTemplates) {
           merged.notificationTemplates = DEFAULT_SETTINGS.notificationTemplates;

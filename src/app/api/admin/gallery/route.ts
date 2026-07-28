@@ -238,7 +238,7 @@ async function saveDbOverride(key: string, url: string): Promise<void> {
     console.error('[gallery] Failed to update row 99 DB settings:', e);
   }
 
-  // 2. Save to main settings row id=1
+  // 2. Save to main settings row id=1 & update embedded banner/section objects
   try {
     const { data: data1 } = await supabase
       .from('settings')
@@ -247,6 +247,19 @@ async function saveDbOverride(key: string, url: string): Promise<void> {
       .single();
     const currentVal1 = data1?.value || {};
     const galleryOverrides1 = { ...(currentVal1.galleryOverrides || {}), [key]: url };
+
+    // Also update embedded banner array images directly in row 1
+    if (Array.isArray(currentVal1.banners)) {
+      if (key === 'hero_bestsellers' && currentVal1.banners[0]) currentVal1.banners[0].bgImage = url;
+      if (key === 'hero_summersale' && currentVal1.banners[1]) currentVal1.banners[1].bgImage = url;
+      if (key === 'hero_weeklypromo' && currentVal1.banners[2]) currentVal1.banners[2].bgImage = url;
+      if (key === 'hero_newarrivals' && currentVal1.banners[3]) currentVal1.banners[3].bgImage = url;
+    }
+    if (currentVal1.homepageSections) {
+      if (key === 'cicaplast_bundle') currentVal1.homepageSections.summerSaleLeftImage = url;
+      if (key === 'vichy_sunscreen_bundle') currentVal1.homepageSections.summerSaleRightImage = url;
+    }
+
     await supabase
       .from('settings')
       .upsert({ id: 1, value: { ...currentVal1, galleryOverrides: galleryOverrides1 } }, { onConflict: 'id' });

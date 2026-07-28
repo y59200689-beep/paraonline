@@ -80,7 +80,8 @@ export function useGalleryOverrides() {
       if (filename && overrides[`cat_${filename}`]) return overrides[`cat_${filename}`];
       if (filename && overrides[`concern_${filename}`]) return overrides[`concern_${filename}`];
     }
-    return getOptimizedImageUrl(defaultSrc);
+    const normalizedDefault = defaultSrc ? defaultSrc.replace(/\.png(\?.*)?$/i, '.webp$1') : defaultSrc;
+    return getOptimizedImageUrl(normalizedDefault);
   };
 
   return { overrides, getDisplayImage };
