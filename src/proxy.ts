@@ -73,17 +73,6 @@ export async function proxy(request: NextRequest) {
       return response;
     }
   }
-  
-  // If user accesses /admin/login but is already authenticated, redirect to /admin
-  if (path === '/admin/login') {
-    const sessionCookie = request.cookies.get('admin_session')?.value;
-    if (sessionCookie) {
-      const payload = await verifySessionToken(sessionCookie);
-      if (payload) {
-        return NextResponse.redirect(new URL('/admin', request.url));
-      }
-    }
-  }
 
   return NextResponse.next();
 }

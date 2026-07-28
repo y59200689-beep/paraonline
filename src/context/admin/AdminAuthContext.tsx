@@ -92,6 +92,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           setCurrentUser(null);
           sessionStorage.removeItem('admin_authenticated');
           sessionStorage.removeItem('admin_user');
+          fetch('/api/admin/auth/logout', { method: 'POST' }).catch(() => {});
         }
       } catch (e) {
         clearTimeout(timeoutId);
@@ -99,6 +100,8 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         if (!sessionStorage.getItem('admin_user')) {
           setIsAuthenticated(false);
           setCurrentUser(null);
+          sessionStorage.removeItem('admin_authenticated');
+          fetch('/api/admin/auth/logout', { method: 'POST' }).catch(() => {});
         }
       } finally {
         setIsVerifyingSession(false);
