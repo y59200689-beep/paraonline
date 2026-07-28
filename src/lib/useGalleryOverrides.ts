@@ -4,30 +4,53 @@ import { useState, useEffect } from 'react';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { getGalleryOverrides } from '@/lib/gallery-storage';
 
+// Read localStorage synchronously so first render has the right images
+function getInitialOverrides(): Record<string, string> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const stored = localStorage.getItem('custom_gallery_overrides');
+    if (stored) return JSON.parse(stored);
+  } catch {}
+  return {};
+}
+
 export function useGalleryOverrides() {
-  const [overrides, setOverrides] = useState<Record<string, string>>({});
+  const [overrides, setOverrides] = useState<Record<string, string>>(getInitialOverrides);
 
   useEffect(() => {
-    // 1. Fetch server-side overrides via public API
+    // 1. Fetch server-side overrides via public API and merge into localStorage cache
     const fetchServerOverrides = async () => {
       try {
         const res = await fetch('/api/gallery-overrides', { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
           if (data.overrides) {
-            setOverrides(prev => ({ ...data.overrides, ...prev }));
+            setOverrides(prev => {
+              const merged = { ...data.overrides, ...prev };
+              // Persist the merged server overrides to localStorage for next render
+              try {
+                localStorage.setItem('custom_gallery_overrides', JSON.stringify(merged));
+              } catch {}
+              return merged;
+            });
           }
         }
       } catch {}
     };
     fetchServerOverrides();
 
-    // 2. Also apply persistent client-side IndexedDB & localStorage overrides
+    // 2. Also apply persistent client-side IndexedDB overrides (async, higher fidelity)
     if (typeof window !== 'undefined') {
       const loadLocalOverrides = async () => {
         try {
           const stored = await getGalleryOverrides();
-          setOverrides(prev => ({ ...prev, ...stored }));
+          setOverrides(prev => {
+            const merged = { ...prev, ...stored };
+            try {
+              localStorage.setItem('custom_gallery_overrides', JSON.stringify(merged));
+            } catch {}
+            return merged;
+          });
         } catch {}
       };
       loadLocalOverrides();
@@ -50,4 +73,3 @@ export function useGalleryOverrides() {
 
   return { overrides, getDisplayImage };
 }
-

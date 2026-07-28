@@ -356,54 +356,54 @@ export const DEFAULT_SETTINGS: Settings = {
   categories: ['visage', 'kbeauty', 'garnier', 'hadalabo', 'offers'],
   banners: [
     {
-      tagFr: "🔥 LES PLUS VENDUS · SELECTION ÉLITE",
-      tagAr: "🔥 الأكثر مبيعاً · تشكيلة فاخرة",
+      tagFr: "",
+      tagAr: "",
       titleFr: "Nos Meilleures Ventes Skincare",
       titleAr: "أفضل المنتجات والأكثر مبيعاً",
       descFr: "Découvrez les soins dermo-cliniques et pépites K-Beauty les plus plébiscités par nos clientes au Maroc. Formules certifiées, résultats prouvés et livraison gratuite.",
       descAr: "اكتشفي أفضل مستحضرات العناية الكورية والطبية الأكثر طلباً في المغرب. نتائج مثبتة وتوصيل مجاني.",
       ctaFr: "Explorer les Best-Sellers",
       ctaAr: "تسوقي الأكثر مبيعاً",
-      bgImage: "/images/hero_bestsellers.png",
+      bgImage: "/images/hero_bestsellers.webp",
       linkType: "category",
       linkValue: "offers"
     },
     {
-      tagFr: "☀️ SUMMER SALE · JUSQU'À -40%",
-      tagAr: "☀️ عروض الصيف · خصم حتى 40%",
+      tagFr: "",
+      tagAr: "",
       titleFr: "Offres d'Été",
       titleAr: "عروض الصيف والباقات الشمسية",
       descFr: "Découvrez nos essentiels solaires SPF50+ et coffrets hydratation d'été à prix irrésistibles.",
       descAr: "اكتشفي مستحضرات الحماية من الشمس وباقات الترطيب الصيفية بأسعار مميزة.",
       ctaFr: "Profiter des Offres",
       ctaAr: "استفيدي من العروض",
-      bgImage: "/images/hero_summersale.png",
+      bgImage: "/images/hero_summersale.webp",
       linkType: "category",
       linkValue: "solaire"
     },
     {
-      tagFr: "⚡ PROMO HEBDO · JUSQU'À -35%",
-      tagAr: "⚡ تخفيضات الأسبوع · خصم حتى 35%",
+      tagFr: "",
+      tagAr: "",
       titleFr: "Promotion De La Semaine",
       titleAr: "عروض الأسبوع السريعة",
       descFr: "Profitez de réductions exclusives chaque semaine sur une sélection de soins dermo-cosmétiques.",
       descAr: "استفيدي من خصومات حصرية أسبوعياً على مجموعة مختارة من مستحضرات التجميل.",
       ctaFr: "Voir les Promos",
       ctaAr: "شاهد العروض",
-      bgImage: "/images/hero_weeklypromo_v2.png",
+      bgImage: "/images/hero_weeklypromo_v2.webp",
       linkType: "category",
       linkValue: "offers"
     },
     {
-      tagFr: "✨ NOUVEAUTÉS · DERNIERS ARRIVAGES",
-      tagAr: "✨ المنتجات الجديدة · أحدث الوصولات",
+      tagFr: "",
+      tagAr: "",
       titleFr: "Nouveaux Produits",
       titleAr: "جديد العناية والجمال الكوري",
       descFr: "Découvrez les dernières innovations dermo-cosmétiques fraîchement arrivées au Maroc.",
       descAr: "اكتشفي أحدث الابتكارات الطبية والتجميلية الواصلة حديثاً إلى المغرب.",
       ctaFr: "Découvrir la Nouveauté",
       ctaAr: "اكتشفي الجديد",
-      bgImage: "/images/hero_newarrivals.png",
+      bgImage: "/images/hero_newarrivals.webp",
       linkType: "category",
       linkValue: "kbeauty"
     }
@@ -646,7 +646,20 @@ export class SettingsErrorBoundary extends React.Component<{ children: React.Rea
 }
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState<Settings>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('para_settings_cache');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed && typeof parsed === 'object') {
+            return { ...DEFAULT_SETTINGS, ...parsed };
+          }
+        }
+      } catch (e) {}
+    }
+    return DEFAULT_SETTINGS;
+  });
   const [isLoading, setIsLoading] = useState(true);
 
   const loadSettings = async (force: boolean = false) => {
@@ -704,6 +717,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setSettings(merged);
         settingsCache = merged;
         lastFetchedTime = Date.now();
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('para_settings_cache', JSON.stringify(merged));
+          } catch (e) {}
+        }
       }
     } catch (e) {
       console.error("Failed to load settings:", e);
@@ -729,6 +747,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setSettings(newSettings);
         settingsCache = newSettings;
         lastFetchedTime = Date.now();
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('para_settings_cache', JSON.stringify(newSettings));
+          } catch (e) {}
+        }
         return true;
       }
       return false;
