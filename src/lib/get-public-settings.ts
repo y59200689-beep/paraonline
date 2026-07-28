@@ -1,4 +1,5 @@
 import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { DEFAULT_SETTINGS } from '@/context/SettingsContext';
 import { IMAGE_MANIFEST } from '@/app/api/admin/gallery/route';
 import path from 'path';
 import fs from 'fs';
@@ -13,9 +14,15 @@ export async function getPublicSettings(): Promise<Record<string, any>> {
       .eq('id', 1)
       .single();
 
-    if (error) throw error;
-
-    const settings = data?.value || {};
+    const dbSettings = data?.value || {};
+    const settings = {
+      ...DEFAULT_SETTINGS,
+      ...dbSettings,
+      homepageSections: {
+        ...DEFAULT_SETTINGS.homepageSections,
+        ...(dbSettings.homepageSections || {}),
+      },
+    };
 
     // Fetch dedicated gallery overrides row (id=99) — authoritative source
     let dbGalleryOverrides: Record<string, string> = {};
