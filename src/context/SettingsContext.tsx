@@ -620,6 +620,8 @@ const SettingsContext = createContext<SettingsContextProps | undefined>(undefine
 let settingsCache: Settings | null = null;
 let lastFetchedTime: number = 0;
 const CACHE_EXPIRY = 60000; // 60 seconds cache
+// Bump this version whenever DEFAULT_SETTINGS changes to invalidate stale browser caches
+const SETTINGS_CACHE_VERSION = 'v3';
 
 export class SettingsErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
@@ -651,13 +653,13 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       try {
         // window.__PARA_SETTINGS_CACHE__ is stamped by ThemeScript before React hydrates
         const fromWindow = (window as any).__PARA_SETTINGS_CACHE__;
-        if (fromWindow && typeof fromWindow === 'object') {
+        if (fromWindow && typeof fromWindow === 'object' && fromWindow.__v === SETTINGS_CACHE_VERSION) {
           return { ...DEFAULT_SETTINGS, ...fromWindow };
         }
         const cached = localStorage.getItem('para_settings_cache');
         if (cached) {
           const parsed = JSON.parse(cached);
-          if (parsed && typeof parsed === 'object') {
+          if (parsed && typeof parsed === 'object' && parsed.__v === SETTINGS_CACHE_VERSION) {
             return { ...DEFAULT_SETTINGS, ...parsed };
           }
         }
@@ -724,7 +726,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         lastFetchedTime = Date.now();
         if (typeof window !== 'undefined') {
           try {
-            localStorage.setItem('para_settings_cache', JSON.stringify(merged));
+            localStorage.setItem('para_settings_cache', JSON.stringify({ ...merged, __v: SETTINGS_CACHE_VERSION }));
           } catch (e) {}
         }
       }
@@ -754,7 +756,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         lastFetchedTime = Date.now();
         if (typeof window !== 'undefined') {
           try {
-            localStorage.setItem('para_settings_cache', JSON.stringify(newSettings));
+            localStorage.setItem('para_settings_cache', JSON.stringify({ ...newSettings, __v: SETTINGS_CACHE_VERSION }));
           } catch (e) {}
         }
         return true;

@@ -25,7 +25,8 @@ export function ThemeScript() {
   var go=localStorage.getItem('custom_gallery_overrides');
   window.__PARA_GALLERY_OVERRIDES__=go?JSON.parse(go):{};
   var sc=localStorage.getItem('para_settings_cache');
-  window.__PARA_SETTINGS_CACHE__=sc?JSON.parse(sc):null;
+  var sp=sc?JSON.parse(sc):null;
+  window.__PARA_SETTINGS_CACHE__=(sp&&sp.__v==='v3')?sp:null;
 }catch(e){window.__PARA_GALLERY_OVERRIDES__={};window.__PARA_SETTINGS_CACHE__=null;}`,
       }}
     />
