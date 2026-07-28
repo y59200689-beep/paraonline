@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { verifyAdminSession } from '@/lib/session';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import path from 'path';
@@ -475,6 +476,9 @@ export async function POST(request: Request) {
       height = meta.height || 0;
     } catch {}
     const dimensions = width && height ? `${width} × ${height} px` : '0 × 0 px';
+
+    // Bust ISR cache — next homepage request will be server-rendered with fresh settings
+    try { revalidatePath('/'); } catch {}
 
     return NextResponse.json({
       success: true,

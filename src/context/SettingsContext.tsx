@@ -649,32 +649,12 @@ export class SettingsErrorBoundary extends React.Component<{ children: React.Rea
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode; initialSettings?: Record<string, any> }> = ({ children, initialSettings }) => {
   const [settings, setSettings] = useState<Settings>(() => {
-    // 1. If server-fetched initialSettings were passed (from layout.tsx server component),
-    //    use them as the baseline — these already have galleryOverrides merged into banners.
-    //    This eliminates the flash for ALL users regardless of localStorage state.
-    if (initialSettings && typeof initialSettings === 'object' && Object.keys(initialSettings).length > 0) {
-      const merged = { ...DEFAULT_SETTINGS, ...initialSettings };
-      // Still apply any local overrides the user might have (most up-to-date)
-      if (typeof window !== 'undefined') {
-        try {
-          const localOverrides = JSON.parse(localStorage.getItem('custom_gallery_overrides') || '{}');
-          merged.galleryOverrides = { ...(merged.galleryOverrides || {}), ...localOverrides };
-          if (Array.isArray(merged.banners)) {
-            const keysMap = ['hero_bestsellers', 'hero_summersale', 'hero_weeklypromo', 'hero_newarrivals'];
-            merged.banners = merged.banners.map((b: any, idx: number) => {
-              const key = keysMap[idx];
-              const override = key && merged.galleryOverrides?.[key];
-              return { ...b, bgImage: override || b.bgImage };
-            });
-          }
-        } catch {}
-      }
-      return merged;
-    }
     if (typeof window !== 'undefined') {
       try {
         const localOverrides = JSON.parse(localStorage.getItem('custom_gallery_overrides') || '{}');
-        // window.__PARA_SETTINGS_CACHE__ is stamped by ThemeScript before React hydrates
+        // window.__PARA_SETTINGS_CACHE__ is stamped by ThemeScript before React hydrates.
+        // ThemeScript now patches banners[i].bgImage from galleryOverrides, so this
+        // cache already has the correct image URLs — read it first.
         const fromWindow = (window as any).__PARA_SETTINGS_CACHE__;
         let raw: any = fromWindow && typeof fromWindow === 'object' ? fromWindow : null;
         if (!raw) {
@@ -699,6 +679,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode; initialSett
           return merged;
         }
       } catch (e) {}
+    }
+    // No localStorage cache — use server-fetched initialSettings if provided (fresh visitors)
+    // initialSettings already has galleryOverrides merged into banners[i].bgImage
+    if (initialSettings && typeof initialSettings === 'object' && Object.keys(initialSettings).length > 0) {
+      return { ...DEFAULT_SETTINGS, ...initialSettings };
     }
     return DEFAULT_SETTINGS;
   });
