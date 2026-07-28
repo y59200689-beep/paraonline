@@ -162,7 +162,47 @@ async function fetchDbOverrides(): Promise<Record<string, string>> {
       .select('value')
       .eq('id', 1)
       .maybeSingle();
+
+    // Start with explicit galleryOverrides
     overrides1 = data1?.value?.galleryOverrides || {};
+
+    // Also pull banners[i].bgImage as authoritative hero overrides
+    // This ensures the gallery page always shows what the homepage is actually displaying,
+    // even if the image was set via the admin settings page rather than gallery upload.
+    const BANNER_KEYS = ['hero_bestsellers', 'hero_summersale', 'hero_weeklypromo', 'hero_newarrivals'];
+    const banners: any[] = data1?.value?.banners || [];
+    banners.forEach((b: any, idx: number) => {
+      const key = BANNER_KEYS[idx];
+      if (key && b?.bgImage && b.bgImage.trim() !== '') {
+        // Banner bgImage wins if it's a real URL (Supabase storage or non-trivial path)
+        // — but only override if galleryOverrides doesn't already have a newer value
+        if (!overrides1[key]) {
+          overrides1[key] = b.bgImage;
+        }
+      }
+    });
+
+    // Also pull category images from brandPartners sectionOrder
+    const sectionOrder: any[] = data1?.value?.homepageSections?.sectionOrder || [];
+    const brandPartnersSection = sectionOrder.find((s: any) => s.type === 'brandPartners');
+    const brands: any[] = brandPartnersSection?.settings?.brands || [];
+    brands.forEach((b: any) => {
+      if (b?.categoryTag && b?.categoryImage && b.categoryImage.trim() !== '') {
+        const catKey = `cat_${b.categoryTag}`;
+        if (!overrides1[catKey]) {
+          overrides1[catKey] = b.categoryImage;
+        }
+      }
+    });
+
+    // Pull summer sale bundle images
+    const homepageSections = data1?.value?.homepageSections || {};
+    if (homepageSections.summerSaleLeftImage && !overrides1['cicaplast_bundle']) {
+      overrides1['cicaplast_bundle'] = homepageSections.summerSaleLeftImage;
+    }
+    if (homepageSections.summerSaleRightImage && !overrides1['vichy_sunscreen_bundle']) {
+      overrides1['vichy_sunscreen_bundle'] = homepageSections.summerSaleRightImage;
+    }
   } catch {}
 
   try {
@@ -174,6 +214,7 @@ async function fetchDbOverrides(): Promise<Record<string, string>> {
     overrides99 = data99?.value || {};
   } catch {}
 
+  // Row 99 (explicit gallery uploads) takes final priority over everything else
   return { ...overrides1, ...overrides99 };
 }
 
