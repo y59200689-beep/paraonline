@@ -164,15 +164,6 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
             <div className="absolute inset-0 p-6 md:p-10 flex flex-col justify-end text-white">
               <div className="max-w-[480px] space-y-2 md:space-y-4">
                 
-                {/* Eyebrow badge — fades up before heading */}
-                <div
-                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/15 backdrop-blur-md border border-white/20 rounded-full text-[9.5px] font-black tracking-widest text-amber-300 shadow-sm"
-                  style={{ animation: 'eyebrow-in 0.6s cubic-bezier(0.16,1,0.3,1) 0.2s both' }}
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
-                  <span>{isRTL ? CARDS.card1.tag_ar : CARDS.card1.tag_fr}</span>
-                </div>
-
                 {/* Subtitle — slides in */}
                 <span
                   className="block text-[10px] md:text-xs font-black tracking-[0.15em] text-emerald-400 uppercase"
@@ -263,12 +254,6 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
             {/* Content Container */}
             <div className="absolute inset-0 p-6 md:p-8 flex flex-col justify-end text-white">
               <div className="space-y-3">
-                {/* Eyebrow badge */}
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-400/20 backdrop-blur-md border border-amber-300/30 rounded-full text-[8.5px] font-black tracking-widest text-amber-200 shadow-sm">
-                  <Activity className="w-3 h-3 text-amber-300 animate-pulse" />
-                  <span>{isRTL ? CARDS.card2.tag_ar : CARDS.card2.tag_fr}</span>
-                </div>
-
                 {/* Heading */}
                 <h3 className="text-xl md:text-2xl font-black font-heading leading-tight tracking-tight text-white drop-shadow-sm">
                   {isRTL ? CARDS.card2.title_ar : CARDS.card2.title_fr}
@@ -321,10 +306,6 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
               {/* Content Container */}
               <div className="absolute inset-0 p-5 flex flex-col justify-end text-white">
                 <div className="space-y-2">
-                  <div className="inline-flex px-2.5 py-1 bg-rose-500/20 backdrop-blur-md border border-rose-300/30 rounded-full text-[8px] font-black tracking-wider text-rose-200 shadow-sm">
-                    {isRTL ? CARDS.card3.tag_ar : CARDS.card3.tag_fr}
-                  </div>
-                  
                   <h3 className="text-base md:text-lg font-black font-heading leading-tight tracking-tight text-white drop-shadow-sm">
                     {isRTL ? CARDS.card3.title_ar : CARDS.card3.title_fr}
                   </h3>
@@ -372,10 +353,6 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
               {/* Content Container */}
               <div className="absolute inset-0 p-5 flex flex-col justify-end text-white">
                 <div className="space-y-2">
-                  <div className="inline-flex px-2.5 py-1 bg-white/15 backdrop-blur-md border border-white/20 rounded-full text-[8px] font-black tracking-wider text-sky-300 shadow-sm">
-                    {isRTL ? CARDS.card4.tag_ar : CARDS.card4.tag_fr}
-                  </div>
-                  
                   <h3 className="text-base md:text-lg font-black font-heading leading-tight tracking-tight text-white drop-shadow-sm">
                     {isRTL ? CARDS.card4.title_ar : CARDS.card4.title_fr}
                   </h3>
@@ -425,9 +402,6 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
               <div className="absolute inset-0 bg-gradient-to-t from-primary-dark/95 via-primary-dark/50 to-transparent" />
               <div className="absolute inset-0 p-2 flex flex-col justify-end text-white">
                 <div className="space-y-1">
-                  <span className="text-[6.5px] font-black uppercase tracking-wider text-accent block">
-                    {isRTL ? CARDS.card2.tag_ar : CARDS.card2.tag_fr}
-                  </span>
                   <h3 className="text-[9.5px] font-black leading-tight font-heading text-white line-clamp-2">
                     {isRTL ? CARDS.card2.title_ar : CARDS.card2.title_fr}
                   </h3>
@@ -455,9 +429,6 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
               <div className="absolute inset-0 bg-gradient-to-t from-primary-dark/95 via-primary-dark/50 to-transparent" />
               <div className="absolute inset-0 p-2 flex flex-col justify-end text-white">
                 <div className="space-y-1">
-                  <span className="text-[6.5px] font-black uppercase tracking-wider text-accent block">
-                    {isRTL ? CARDS.card3.tag_ar : CARDS.card3.tag_fr}
-                  </span>
                   <h3 className="text-[9.5px] font-black leading-tight font-heading text-white line-clamp-2">
                     {isRTL ? CARDS.card3.title_ar : CARDS.card3.title_fr}
                   </h3>
@@ -485,9 +456,6 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
               <div className="absolute inset-0 bg-gradient-to-t from-primary-dark/95 via-primary-dark/50 to-transparent" />
               <div className="absolute inset-0 p-2 flex flex-col justify-end text-white">
                 <div className="space-y-1">
-                  <span className="text-[6.5px] font-black uppercase tracking-wider text-accent block">
-                    {isRTL ? CARDS.card4.tag_ar : CARDS.card4.tag_fr}
-                  </span>
                   <h3 className="text-[9.5px] font-black leading-tight font-heading text-white line-clamp-2">
                     {isRTL ? CARDS.card4.title_ar : CARDS.card4.title_fr}
                   </h3>
