@@ -1,6 +1,5 @@
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { DEFAULT_SETTINGS } from '@/context/SettingsContext';
-import { IMAGE_MANIFEST } from '@/app/api/admin/gallery/route';
 import path from 'path';
 import fs from 'fs';
 
@@ -31,7 +30,7 @@ export async function getPublicSettings(): Promise<Record<string, any>> {
         .from('settings')
         .select('value')
         .eq('id', 99)
-        .single();
+        .maybeSingle();
       if (data99?.value && typeof data99.value === 'object') {
         dbGalleryOverrides = data99.value as Record<string, string>;
       }

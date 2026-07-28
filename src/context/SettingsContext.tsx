@@ -649,49 +649,35 @@ export class SettingsErrorBoundary extends React.Component<{ children: React.Rea
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode; initialSettings?: Record<string, any> }> = ({ children, initialSettings }) => {
   const [settings, setSettings] = useState<Settings>(() => {
-    const baseSettings = (initialSettings && typeof initialSettings === 'object' && Object.keys(initialSettings).length > 0)
-      ? { ...DEFAULT_SETTINGS, ...initialSettings }
-      : null;
+    // Server-provided initialSettings is the authoritative source of truth.
+    // We NO LONGER merge localStorage gallery overrides here — that was causing
+    // stale/broken image URLs to override the correct server-provided paths.
+    if (initialSettings && typeof initialSettings === 'object' && Object.keys(initialSettings).length > 0) {
+      const merged = { ...DEFAULT_SETTINGS, ...initialSettings };
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('para_settings_cache', JSON.stringify(merged));
+          (window as any).__PARA_SETTINGS_CACHE__ = merged;
+        } catch {}
+      }
+      return merged;
+    }
 
+    // Fallback: try window cache / localStorage ONLY if no server settings provided
     if (typeof window !== 'undefined') {
       try {
-        const localOverrides = JSON.parse(localStorage.getItem('custom_gallery_overrides') || '{}');
-        let source = baseSettings;
-        if (!source) {
-          const fromWindow = (window as any).__PARA_SETTINGS_CACHE__;
-          let raw: any = fromWindow && typeof fromWindow === 'object' ? fromWindow : null;
-          if (!raw) {
-            const cached = localStorage.getItem('para_settings_cache');
-            if (cached) raw = JSON.parse(cached);
-          }
-          if (raw && typeof raw === 'object') {
-            source = { ...DEFAULT_SETTINGS, ...raw };
-          }
+        const fromWindow = (window as any).__PARA_SETTINGS_CACHE__;
+        let raw: any = fromWindow && typeof fromWindow === 'object' ? fromWindow : null;
+        if (!raw) {
+          const cached = localStorage.getItem('para_settings_cache');
+          if (cached) raw = JSON.parse(cached);
         }
-        if (source) {
-          const merged = { ...source };
-          merged.galleryOverrides = { ...(merged.galleryOverrides || {}), ...localOverrides };
-          if (Array.isArray(merged.banners)) {
-            const keysMap = ['hero_bestsellers', 'hero_summersale', 'hero_weeklypromo', 'hero_newarrivals'];
-            merged.banners = merged.banners.map((b: any, idx: number) => {
-              const key = keysMap[idx];
-              const cleanBg = b.bgImage ? b.bgImage.replace(/\.png(\?.*)?$/i, '.webp$1') : b.bgImage;
-              const override = key && merged.galleryOverrides?.[key];
-              return {
-                ...b,
-                bgImage: override || cleanBg || DEFAULT_SETTINGS.banners?.[idx]?.bgImage
-              };
-            });
-          }
-          try {
-            localStorage.setItem('para_settings_cache', JSON.stringify(merged));
-            (window as any).__PARA_SETTINGS_CACHE__ = merged;
-          } catch {}
-          return merged;
+        if (raw && typeof raw === 'object') {
+          return { ...DEFAULT_SETTINGS, ...raw };
         }
       } catch (e) {}
     }
-    if (baseSettings) return baseSettings;
+
     return DEFAULT_SETTINGS;
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -712,28 +698,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode; initialSett
       if (data.success && data.settings) {
         const merged = { ...DEFAULT_SETTINGS, ...data.settings };
 
-        // Always merge client-side persistent overrides to prevent stale caching
-        let localOverrides: Record<string, string> = {};
-        if (typeof window !== 'undefined') {
-          try {
-            localOverrides = JSON.parse(localStorage.getItem('custom_gallery_overrides') || '{}');
-          } catch {}
-        }
-        merged.galleryOverrides = { ...(merged.galleryOverrides || {}), ...localOverrides };
+        // Server galleryOverrides is the single source of truth.
+        // No localStorage merging — that was causing stale/broken image URLs.
 
         if (!merged.banners || merged.banners.length === 0) {
           merged.banners = DEFAULT_SETTINGS.banners;
-        } else {
-          const keysMap = ['hero_bestsellers', 'hero_summersale', 'hero_weeklypromo', 'hero_newarrivals'];
-          merged.banners = merged.banners.map((b: any, idx: number) => {
-            const key = keysMap[idx];
-            const cleanBg = b.bgImage ? b.bgImage.replace(/\.png(\?.*)?$/i, '.webp$1') : b.bgImage;
-            const override = key && merged.galleryOverrides?.[key];
-            return {
-              ...b,
-              bgImage: override || cleanBg || DEFAULT_SETTINGS.banners?.[idx]?.bgImage
-            };
-          });
         }
         if (!merged.notificationTemplates) {
           merged.notificationTemplates = DEFAULT_SETTINGS.notificationTemplates;

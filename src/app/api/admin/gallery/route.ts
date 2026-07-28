@@ -161,7 +161,7 @@ async function fetchDbOverrides(): Promise<Record<string, string>> {
       .from('settings')
       .select('value')
       .eq('id', 1)
-      .single();
+      .maybeSingle();
     overrides1 = data1?.value?.galleryOverrides || {};
   } catch {}
 
@@ -170,7 +170,7 @@ async function fetchDbOverrides(): Promise<Record<string, string>> {
       .from('settings')
       .select('value')
       .eq('id', 99)
-      .single();
+      .maybeSingle();
     overrides99 = data99?.value || {};
   } catch {}
 
@@ -230,7 +230,7 @@ async function saveDbOverride(key: string, url: string): Promise<void> {
       .from('settings')
       .select('value')
       .eq('id', 99)
-      .single();
+      .maybeSingle();
     const overrides99 = { ...(data99?.value || {}), [key]: url };
     await supabase
       .from('settings')
@@ -526,7 +526,7 @@ export async function DELETE(request: Request) {
 
     // 3. Remove key from Supabase DB row 99
     try {
-      const { data: data99 } = await supabase.from('settings').select('value').eq('id', 99).single();
+      const { data: data99 } = await supabase.from('settings').select('value').eq('id', 99).maybeSingle();
       if (data99?.value) {
         const updated99 = { ...data99.value };
         delete updated99[key];
@@ -536,7 +536,7 @@ export async function DELETE(request: Request) {
 
     // 4. Remove key from Supabase DB row 1
     try {
-      const { data: data1 } = await supabase.from('settings').select('value').eq('id', 1).single();
+      const { data: data1 } = await supabase.from('settings').select('value').eq('id', 1).maybeSingle();
       if (data1?.value?.galleryOverrides) {
         const updated1 = { ...data1.value };
         delete updated1.galleryOverrides[key];
