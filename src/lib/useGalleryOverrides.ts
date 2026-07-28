@@ -4,10 +4,14 @@ import { useState, useEffect } from 'react';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { getGalleryOverrides } from '@/lib/gallery-storage';
 
-// Read localStorage synchronously so first render has the right images
+// Read the gallery overrides stamped onto window by ThemeScript BEFORE React hydrates.
+// Falls back to direct localStorage read if the inline script hasn't run yet.
 function getInitialOverrides(): Record<string, string> {
   if (typeof window === 'undefined') return {};
   try {
+    if ((window as any).__PARA_GALLERY_OVERRIDES__) {
+      return (window as any).__PARA_GALLERY_OVERRIDES__;
+    }
     const stored = localStorage.getItem('custom_gallery_overrides');
     if (stored) return JSON.parse(stored);
   } catch {}
