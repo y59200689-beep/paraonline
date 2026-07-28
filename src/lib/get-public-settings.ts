@@ -46,34 +46,6 @@ export async function getPublicSettings(): Promise<Record<string, any>> {
       ...dbGalleryOverrides,
     };
 
-    // Attach disk mtime cache buster to manifest images if no explicit DB override exists
-    for (const img of IMAGE_MANIFEST) {
-      if (!mergedGalleryOverrides[img.key]) {
-        try {
-          const abs = path.join(process.cwd(), 'public', img.filePath);
-          if (fs.existsSync(abs)) {
-            const stat = fs.statSync(abs);
-            mergedGalleryOverrides[img.key] = `/${img.filePath}?v=${Math.round(stat.mtimeMs)}`;
-          }
-        } catch {}
-      }
-    }
-
-    // Ensure all local file URLs in mergedGalleryOverrides have cache-busting timestamps
-    for (const key of Object.keys(mergedGalleryOverrides)) {
-      const url = mergedGalleryOverrides[key];
-      if (url && typeof url === 'string' && !url.includes('?') && !url.startsWith('data:') && !url.startsWith('http')) {
-        const cleanPath = url.startsWith('/') ? url.substring(1) : url;
-        try {
-          const abs = path.join(process.cwd(), 'public', cleanPath);
-          if (fs.existsSync(abs)) {
-            const stat = fs.statSync(abs);
-            mergedGalleryOverrides[key] = `${url}?v=${Math.round(stat.mtimeMs)}`;
-          }
-        } catch {}
-      }
-    }
-
     // Inject galleryOverrides directly into banners[i].bgImage
     let banners = settings.banners || [];
     if (banners.length > 0) {
