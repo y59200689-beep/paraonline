@@ -37,6 +37,8 @@ export async function hashPasswordAsync(password: string): Promise<string> {
  * Returns true if valid, false otherwise.
  */
 export async function verifyPassword(password: string, stored: string): Promise<boolean> {
+  if (!stored || !password) return false;
+
   if (stored.includes(':')) {
     // New scrypt format: "salt:hash"
     const [salt, storedHash] = stored.split(':');
@@ -57,10 +59,23 @@ export async function verifyPassword(password: string, stored: string): Promise<
       });
     });
   }
-  // Legacy SHA-256 format (64-char hex) — for migration path
-  const legacy = hashPassword(password);
+
+  if (/^[a-f0-9]{64}$/i.test(stored)) {
+    // Legacy SHA-256 format (64-char hex) — for migration path
+    const legacy = hashPassword(password);
+    try {
+      const a = Buffer.from(legacy);
+      const b = Buffer.from(stored);
+      if (a.length !== b.length) return false;
+      return crypto.timingSafeEqual(a, b);
+    } catch {
+      return false;
+    }
+  }
+
+  // Plain-text format (for credentials entered directly into Supabase table editor)
   try {
-    const a = Buffer.from(legacy);
+    const a = Buffer.from(password);
     const b = Buffer.from(stored);
     if (a.length !== b.length) return false;
     return crypto.timingSafeEqual(a, b);

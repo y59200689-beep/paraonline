@@ -33,11 +33,13 @@ export async function POST(request: Request) {
       }, { status: 429 });
     }
 
+    const cleanUsername = username.trim().toLowerCase();
+
     // 2. Query operator in Supabase
     const { data: operator, error } = await supabase
       .from('operators')
       .select('*')
-      .eq('username', username.toLowerCase())
+      .eq('username', cleanUsername)
       .single();
 
     if (error || !operator) {
