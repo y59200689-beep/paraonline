@@ -15,7 +15,7 @@ export async function GET() {
         .from('settings')
         .select('value')
         .eq('id', 1)
-        .single();
+        .maybeSingle();
       dbOverrides1 = data1?.value?.galleryOverrides || {};
     } catch {}
 
@@ -24,7 +24,7 @@ export async function GET() {
         .from('settings')
         .select('value')
         .eq('id', 99)
-        .single();
+        .maybeSingle();
       dbOverrides99 = data99?.value || {};
     } catch {}
 
