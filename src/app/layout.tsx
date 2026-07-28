@@ -6,6 +6,7 @@ import { AppProviders } from "../context/AppProviders";
 import { AiAssistant } from "../components/AiAssistant";
 import { CodeSnippetInjector } from "../components/CodeSnippetInjector";
 import { triggerLazyCron } from "@/lib/lazy-cron";
+import { getPublicSettings } from "@/lib/get-public-settings";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -80,18 +81,26 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   triggerLazyCron();
+
+  // Fetch real settings from Supabase server-side.
+  // These include galleryOverrides already merged into banners[i].bgImage.
+  // Passed to SettingsProvider as initialSettings so the very first HTML
+  // the browser receives already has the correct images baked in —
+  // no flash, no delay, no localStorage dependency, works on every browser.
+  const initialSettings = await getPublicSettings();
+
   return (
     <html lang="fr" dir="ltr" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <head />
       <body className="antialiased selection:bg-primary/30 selection:text-primary-dark" suppressHydrationWarning>
         <ThemeScript />
-        <AppProviders>
+        <AppProviders initialSettings={initialSettings}>
           <CodeSnippetInjector />
           {children}
           <AiAssistant />
@@ -100,4 +109,3 @@ export default function RootLayout({
     </html>
   );
 }
-

@@ -6,7 +6,7 @@
  * Single composition boundary for all global React context providers.
  * Provider order is intentional — each layer may depend on contexts above it:
  *
- *  1. SettingsProvider   — fetches store config; no deps
+ *  1. SettingsProvider   — fetches store config; accepts initialSettings from server
  *  2. ProductsProvider   — fetches catalogue; no deps
  *  3. UiProvider         — toast / modal state; no deps
  *  4. LanguageProvider   — i18n; no deps
@@ -36,11 +36,12 @@ import { WishlistProvider } from './WishlistContext';
 
 interface AppProvidersProps {
   children: React.ReactNode;
+  initialSettings?: Record<string, any>;
 }
 
-export function AppProviders({ children }: AppProvidersProps) {
+export function AppProviders({ children, initialSettings }: AppProvidersProps) {
   return (
-    <SettingsProvider>
+    <SettingsProvider initialSettings={initialSettings}>
       <ProductsProvider>
         <UiProvider>
           <LanguageProvider>
