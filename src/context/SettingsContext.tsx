@@ -726,7 +726,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         lastFetchedTime = Date.now();
         if (typeof window !== 'undefined') {
           try {
-            localStorage.setItem('para_settings_cache', JSON.stringify({ ...merged, __v: SETTINGS_CACHE_VERSION }));
+            localStorage.setItem('para_settings_cache', JSON.stringify(merged));
           } catch (e) {}
         }
       }
@@ -756,7 +756,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         lastFetchedTime = Date.now();
         if (typeof window !== 'undefined') {
           try {
-            localStorage.setItem('para_settings_cache', JSON.stringify({ ...newSettings, __v: SETTINGS_CACHE_VERSION }));
+            localStorage.setItem('para_settings_cache', JSON.stringify(newSettings));
           } catch (e) {}
         }
         return true;
