@@ -16,6 +16,9 @@ function rowToProduct(item: any): Product {
     price: Number(item.price),
     comparePrice: Number(item.compare_price || item.price),
     category: item.category as string,
+    categories: Array.isArray(item.categories) && item.categories.length > 0
+      ? item.categories as string[]
+      : [item.category as string],
     tags: (item.tags as string[]) || [],
     rating: Number(item.rating || 5),
     reviews: Number(item.reviews || 0),
@@ -32,15 +35,22 @@ function rowToProduct(item: any): Product {
 export default async function ProductsPage() {
   let products: Product[] = [];
   try {
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('status', 'live')
-      .order('id', { ascending: true })
-      .limit(500);
-    
-    if (!error && data) {
-      products = data.map(rowToProduct);
+    const pageSize = 1000;
+
+    for (let from = 0; ; from += pageSize) {
+      const to = from + pageSize - 1;
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('status', 'live')
+        .order('id', { ascending: true })
+        .range(from, to);
+
+      if (error) throw error;
+      const batch = data || [];
+      products.push(...batch.map(rowToProduct));
+
+      if (batch.length < pageSize) break;
     }
   } catch (err) {
     console.error("Error loading products on server:", err);

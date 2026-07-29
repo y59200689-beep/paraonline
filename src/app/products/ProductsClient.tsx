@@ -17,24 +17,6 @@ const CONCERNS = [
   { id: 'redness', labelFR: 'Rougeurs & Peau Sensible', labelAR: 'الاحمرار والبشرة الحساسة' }
 ];
 
-const BRANDS = [
-  'Garnier',
-  'Hada Labo Tokyo',
-  'Bioderma',
-  'Anua',
-  'Skin1004',
-  'Beauty of Joseon',
-  'Solgar',
-  'Embryolisse',
-  'Vichy',
-  'La Roche-Posay',
-  'Mixa Bébé',
-  'Maybelline',
-  'Kérastase',
-  'Foreo',
-  'BeautyBlender'
-];
-
 const CATEGORIES = [
   { id: 'all', labelFR: 'Toutes catégories', labelAR: 'جميع الفئات' },
   { id: 'visage', labelFR: 'Visage & Peau', labelAR: 'الوجه والبشرة' },
@@ -79,6 +61,24 @@ const matchesConcern = (product: Product, concernId: string, customConcerns: any
     return text.includes('rougeur') || text.includes('apais') || text.includes('sensible') || text.includes('sooth') || ingredients.includes('centella') || ingredients.includes('heartleaf') || product.id === 17 || product.id === 16 || product.id === 15;
   }
   return true;
+};
+
+const categoryLabelFromId = (id: string) => id
+  .split(/[-_\s]+/)
+  .filter(Boolean)
+  .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+  .join(' ');
+
+const productCategoryIds = (product: Product) => {
+  const categories = Array.isArray(product.categories) && product.categories.length > 0
+    ? product.categories
+    : [product.category];
+
+  return Array.from(new Set(
+    categories
+      .map(category => String(category || '').trim().toLowerCase())
+      .filter(Boolean)
+  ));
 };
 
 const getProductMatchScore = (product: Product, diagnostic: any) => {
@@ -140,14 +140,37 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
   const customConcerns = settings.customConcerns || [];
 
   const CATEGORIES_LIST = useMemo(() => {
-    if (customCategories.length > 0) {
-      return [
-        { id: 'all', labelFR: 'Toutes catégories', labelAR: 'جميع الفئات' },
-        ...customCategories.map((c: any) => ({ id: c.id, labelFR: c.labelFr, labelAR: c.labelAr }))
-      ];
-    }
-    return CATEGORIES;
-  }, [customCategories]);
+    const byId = new Map<string, { id: string; labelFR: string; labelAR: string }>();
+    CATEGORIES.forEach(category => byId.set(category.id, category));
+
+    customCategories.forEach((category: any) => {
+      if (!category?.id) return;
+      const id = String(category.id).trim().toLowerCase();
+      byId.set(id, {
+        id,
+        labelFR: category.labelFr || categoryLabelFromId(id),
+        labelAR: category.labelAr || category.labelFr || categoryLabelFromId(id),
+      });
+    });
+
+    initialProducts.forEach(product => {
+      productCategoryIds(product).forEach(id => {
+        if (byId.has(id)) return;
+        byId.set(id, {
+          id,
+          labelFR: categoryLabelFromId(id),
+          labelAR: categoryLabelFromId(id),
+        });
+      });
+    });
+
+    const allCategory = byId.get('all') || { id: 'all', labelFR: 'Toutes catégories', labelAR: 'جميع الفئات' };
+    const rest = Array.from(byId.values())
+      .filter(category => category.id !== 'all')
+      .sort((a, b) => a.labelFR.localeCompare(b.labelFR));
+
+    return [allCategory, ...rest];
+  }, [customCategories, initialProducts]);
 
   const CONCERNS_LIST = useMemo(() => {
     if (customConcerns.length > 0) {
@@ -168,6 +191,15 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
 
   const products = initialProducts;
 
+  const brandsList = useMemo(() => {
+    const brands = new Set<string>();
+    products.forEach(product => {
+      const vendor = product.vendor?.trim();
+      if (vendor && vendor !== '-') brands.add(vendor);
+    });
+    return Array.from(brands).sort((a, b) => a.localeCompare(b));
+  }, [products]);
+
   // Dynamic counts for filters
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -175,7 +207,7 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
       if (cat.id === 'all') {
         counts[cat.id] = products.length;
       } else {
-        counts[cat.id] = products.filter(p => p.category === cat.id || p.tags.includes(cat.id)).length;
+        counts[cat.id] = products.filter(p => productCategoryIds(p).includes(cat.id) || p.tags.includes(cat.id)).length;
       }
     });
     return counts;
@@ -191,11 +223,11 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
 
   const brandCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    BRANDS.forEach(brand => {
+    brandsList.forEach(brand => {
       counts[brand] = products.filter(p => p.vendor === brand).length;
     });
     return counts;
-  }, [products]);
+  }, [products, brandsList]);
 
   // Sync initial query params if present
   useEffect(() => {
@@ -246,7 +278,7 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
 
     // Category filter
     if (selectedCategory !== 'all') {
-      result = result.filter(p => p.category === selectedCategory || p.tags.includes(selectedCategory));
+      result = result.filter(p => productCategoryIds(p).includes(selectedCategory) || p.tags.includes(selectedCategory));
     }
 
     // Brands filter
@@ -282,7 +314,7 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
     }
 
     return result;
-  }, [products, searchQuery, selectedCategory, selectedBrands, selectedConcerns, maxPrice, sortOption, showOnlyMatches, diagnostic]);
+  }, [products, searchQuery, selectedCategory, selectedBrands, selectedConcerns, maxPrice, sortOption, showOnlyMatches, diagnostic, customConcerns]);
 
   const recommendations = useMemo(() => {
     return [...products]
@@ -450,7 +482,7 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
                 {language === 'FR' ? 'Marques' : 'العلامات التجارية'}
               </span>
               <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-2 mt-2 custom-sidebar-scroll">
-                {BRANDS.map(brand => {
+                {brandsList.map(brand => {
                   const isChecked = selectedBrands.includes(brand);
                   return (
                     <label 
@@ -810,7 +842,7 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
                   {language === 'FR' ? 'Marques' : 'العلامات التجارية'}
                 </label>
                 <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto pr-1">
-                  {BRANDS.map(brand => {
+                  {brandsList.map(brand => {
                     const isChecked = selectedBrands.includes(brand);
                     return (
                       <label 
