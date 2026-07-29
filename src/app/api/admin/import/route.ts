@@ -19,6 +19,124 @@ function normalizeImportedCategories(categories: unknown, primaryCategory: unkno
   return result.length > 0 ? result : ['visage'];
 }
 
+function hasValue(value: unknown): boolean {
+  return value !== undefined && value !== null && String(value).trim() !== '';
+}
+
+async function fetchAllExistingProducts() {
+  const pageSize = 1000;
+  const allProducts: any[] = [];
+
+  for (let from = 0; ; from += pageSize) {
+    const to = from + pageSize - 1;
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .range(from, to);
+
+    if (error) throw error;
+    const batch = data || [];
+    allProducts.push(...batch);
+
+    if (batch.length < pageSize) break;
+  }
+
+  return allProducts;
+}
+
+function buildExistingProductUpdate(imported: any, existing: any) {
+  const updateData: any = {};
+
+  if (hasValue(imported.title)) {
+    updateData.title = imported.title;
+    updateData.name = hasValue(imported.name) ? imported.name : imported.title;
+    updateData.name_fr = hasValue(imported.nameFr) ? imported.nameFr : imported.title;
+  } else {
+    if (hasValue(imported.name)) updateData.name = imported.name;
+    if (hasValue(imported.nameFr)) updateData.name_fr = imported.nameFr;
+  }
+
+  if (hasValue(imported.vendor)) updateData.vendor = imported.vendor;
+  if (hasValue(imported.image)) {
+    updateData.image = imported.image;
+    updateData.images = Array.isArray(imported.images) ? imported.images : [imported.image];
+  } else if (Array.isArray(imported.images) && imported.images.length > 0) {
+    updateData.images = imported.images;
+  }
+  if (hasValue(imported.price)) updateData.price = Number(imported.price);
+  if (hasValue(imported.comparePrice)) updateData.compare_price = Number(imported.comparePrice);
+  if (imported.tags !== undefined) updateData.tags = Array.isArray(imported.tags) ? imported.tags : [];
+  if (hasValue(imported.rating)) updateData.rating = Number(imported.rating);
+  if (hasValue(imported.reviews)) updateData.reviews = Number(imported.reviews);
+  if (hasValue(imported.description)) updateData.description = imported.description;
+  if (hasValue(imported.ingredients)) updateData.ingredients = imported.ingredients;
+  if (hasValue(imported.usage)) updateData.usage = imported.usage;
+  if (hasValue(imported.stock)) updateData.stock = Number(imported.stock);
+  if (hasValue(imported.sku)) updateData.sku = imported.sku;
+  if (hasValue(imported.buyingCost)) updateData.buying_cost = Number(imported.buyingCost);
+  if (hasValue(imported.status)) updateData.status = imported.status;
+
+  const hasCategoryValue = hasValue(imported.category)
+    || (Array.isArray(imported.categories) && imported.categories.some(hasValue))
+    || (typeof imported.categories === 'string' && hasValue(imported.categories));
+  if (hasCategoryValue) {
+    const categories = normalizeImportedCategories(imported.categories, imported.category);
+    updateData.category = categories[0];
+    updateData.categories = categories;
+  }
+
+  return {
+    ...existing,
+    ...updateData,
+    id: existing.id,
+  };
+}
+
+function buildNewProduct(imported: any) {
+  const categories = normalizeImportedCategories(imported.categories, imported.category);
+
+  return {
+    ...(imported.id ? { id: Number(imported.id) } : {}),
+    title: hasValue(imported.title) ? imported.title : imported.name || imported.nameFr || imported.sku || 'Produit importé',
+    name: imported.name || imported.title || imported.nameFr || imported.sku || 'Produit importé',
+    name_fr: imported.nameFr || imported.title || imported.name || imported.sku || 'Produit importé',
+    vendor: imported.vendor || '',
+    image: imported.image || '',
+    images: Array.isArray(imported.images) ? imported.images : (imported.image ? [imported.image] : []),
+    price: Number(imported.price) || 0,
+    compare_price: Number(imported.comparePrice || imported.price) || 0,
+    category: categories[0],
+    categories,
+    tags: Array.isArray(imported.tags) ? imported.tags : [],
+    rating: Number(imported.rating || 5),
+    reviews: Number(imported.reviews || 0),
+    description: imported.description || '',
+    ingredients: imported.ingredients || '',
+    usage: imported.usage || '',
+    stock: imported.stock !== undefined ? Number(imported.stock) : 100,
+    sku: imported.sku || null,
+    buying_cost: imported.buyingCost !== undefined && imported.buyingCost !== null ? Number(imported.buyingCost) : null,
+    status: imported.status || 'live'
+  };
+}
+
+async function upsertInBatches(products: any[]) {
+  const batchSize = 500;
+  let processed = 0;
+
+  for (let index = 0; index < products.length; index += batchSize) {
+    const batch = products.slice(index, index + batchSize);
+    const { error } = await supabase
+      .from('products')
+      .upsert(batch, { onConflict: 'id' });
+
+    if (error) throw error;
+    processed += batch.length;
+  }
+
+  return processed;
+}
+
 export async function POST(request: Request) {
   try {
     const session = await verifyAdminSession();
@@ -34,17 +152,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Invalid products array' }, { status: 400 });
     }
 
-    // 1. Fetch existing products from Supabase to match by ID / SKU
-    const { data: existingProducts, error: fetchError } = await supabase
-      .from('products')
-      .select('id, sku');
-    
-    if (fetchError) {
-      console.warn("Supabase fetch failed during import, throwing error:", fetchError);
-      throw fetchError;
-    }
-
-    const existingList = existingProducts || [];
+    // Fetch all existing rows in pages. Supabase REST responses are capped at
+    // 1000 rows, so a single select would miss most of a large catalogue.
+    const existingList = await fetchAllExistingProducts();
     const productsToUpsert: any[] = [];
     const importedCategories = new Set<string>();
 
@@ -55,37 +165,14 @@ export async function POST(request: Request) {
         (p.sku && ep.sku === p.sku)
       );
 
-      const categories = normalizeImportedCategories(p.categories, p.category);
-      categories.forEach(category => importedCategories.add(category));
-      const dbProd = {
-        title: p.title,
-        name: p.name || p.title,
-        name_fr: p.nameFr || p.title,
-        vendor: p.vendor,
-        image: p.image || '',
-        images: Array.isArray(p.images) ? p.images : (p.image ? [p.image] : []),
-        price: Number(p.price) || 0,
-        compare_price: Number(p.comparePrice || p.price) || 0,
-        category: categories[0],
-        categories,
-        tags: Array.isArray(p.tags) ? p.tags : [],
-        rating: Number(p.rating || 5),
-        reviews: Number(p.reviews || 0),
-        description: p.description || '',
-        ingredients: p.ingredients || '',
-        usage: p.usage || '',
-        stock: p.stock !== undefined ? Number(p.stock) : 100,
-        sku: p.sku || null,
-        buying_cost: p.buyingCost !== undefined && p.buyingCost !== null ? Number(p.buyingCost) : null
-      };
+      if (hasValue(p.category) || hasValue(p.categories) || (Array.isArray(p.categories) && p.categories.length > 0)) {
+        normalizeImportedCategories(p.categories, p.category).forEach(category => importedCategories.add(category));
+      }
 
       if (updateExisting) {
         // If updating existing, only process if a match is found
         if (match) {
-          productsToUpsert.push({
-            id: match.id,
-            ...dbProd
-          });
+          productsToUpsert.push(buildExistingProductUpdate(p, match));
         }
       } else {
         // New product import — if a match exists by ID/SKU, include the id
@@ -94,10 +181,9 @@ export async function POST(request: Request) {
           // Skip silently — don't overwrite existing products when updateExisting is false
           // (user chose "import new only")
         } else {
-          productsToUpsert.push({
-            ...(p.id ? { id: Number(p.id) } : {}),
-            ...dbProd
-          });
+          const newProduct = buildNewProduct(p);
+          normalizeImportedCategories(newProduct.categories, newProduct.category).forEach(category => importedCategories.add(category));
+          productsToUpsert.push(newProduct);
         }
       }
     }
@@ -116,12 +202,7 @@ export async function POST(request: Request) {
       });
     }
 
-    // Upsert into Supabase
-    const { error: upsertError } = await supabase
-      .from('products')
-      .upsert(productsToUpsert, { onConflict: 'id' });
-
-    if (upsertError) throw upsertError;
+    const processedCount = await upsertInBatches(productsToUpsert);
 
     revalidatePath('/products');
     revalidatePath('/');
@@ -132,7 +213,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      count: productsToUpsert.length,
+      count: processedCount,
       categories: Array.from(importedCategories).sort(),
     });
   } catch (error: any) {
