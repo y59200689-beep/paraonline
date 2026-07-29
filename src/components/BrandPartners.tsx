@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { type CSSProperties } from 'react';
 import { BrandLogoCard } from './BrandLogoCard';
 import { useSettings } from '@/context/SettingsContext';
 
@@ -6,12 +6,31 @@ interface BrandPartnersProps {
   brands?: { name: string; domain: string; logoUrl?: string }[];
 }
 
-export const BrandPartners: React.FC<BrandPartnersProps> = () => {
+type Brand = { name: string; domain: string; logoUrl?: string };
+
+const MINIMUM_ROW_CARDS = 18;
+
+function buildSeamlessTrack(row: Brand[]): Brand[] {
+  if (row.length === 0) return [];
+
+  // Make one segment longer than any viewport before duplicating it. This
+  // prevents a visible empty edge when a merchant only has a few brands.
+  const repeats = Math.ceil(MINIMUM_ROW_CARDS / row.length);
+  const segment = Array.from({ length: repeats }, () => row).flat();
+  return [...segment, ...segment];
+}
+
+function marqueeDuration(row: Brand[], speedFactor = 1): string {
+  const segmentLength = Math.max(MINIMUM_ROW_CARDS, row.length);
+  return `${Math.max(34, Math.round(segmentLength * 2.25 * speedFactor))}s`;
+}
+
+export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands }) => {
   const { settings } = useSettings();
   
   // Resolve brands from settings
   const activeSection = settings.homepageSections?.sectionOrder?.find(s => s.type === 'brandPartners');
-  const customBrands = activeSection?.settings?.brands || [];
+  const customBrands = brands?.length ? brands : activeSection?.settings?.brands || [];
   
   // High quality default brands with pre-uploaded logos in database
   const defaultBrands = [
@@ -35,19 +54,17 @@ export const BrandPartners: React.FC<BrandPartnersProps> = () => {
     mergedBrandsMap.set(b.name.toLowerCase(), b);
   });
 
-  const allBrands = Array.from(mergedBrandsMap.values());
+  const allBrands = Array.from(mergedBrandsMap.values()) as Brand[];
 
-  // Split into 3 rows for the marquee
-  const len = allBrands.length;
-  const size = Math.ceil(len / 3);
-  const row1 = allBrands.slice(0, size);
-  const row2 = allBrands.slice(size, size * 2);
-  const row3 = allBrands.slice(size * 2);
+  // Deal brands into rows rather than slicing groups. Each row therefore has
+  // a varied sequence and no row gets stranded with a short tail of cards.
+  const rows: Brand[][] = [[], [], []];
+  allBrands.forEach((brand, index) => rows[index % rows.length].push(brand));
+  const [row1, row2, row3] = rows;
 
-  // Duplicate each row for seamless -50% translateX loop
-  const row1Items = [...row1, ...row1];
-  const row2Items = [...row2, ...row2];
-  const row3Items = [...row3, ...row3];
+  const row1Items = buildSeamlessTrack(row1);
+  const row2Items = buildSeamlessTrack(row2);
+  const row3Items = buildSeamlessTrack(row3);
 
   return (
     <section 
@@ -64,37 +81,31 @@ export const BrandPartners: React.FC<BrandPartnersProps> = () => {
         }
         .brand-marquee-l-1 {
           display: flex;
-          gap: 0.5rem;
+          gap: 0.75rem;
           width: max-content;
-          animation: marqueeL 22s linear infinite;
+          animation: marqueeL var(--marquee-duration) linear infinite;
           will-change: transform;
+          transform: translate3d(0, 0, 0);
         }
         .brand-marquee-r {
           display: flex;
-          gap: 0.5rem;
+          gap: 0.75rem;
           width: max-content;
-          animation: marqueeR 20s linear infinite;
+          animation: marqueeR var(--marquee-duration) linear infinite;
           will-change: transform;
+          transform: translate3d(0, 0, 0);
         }
         .brand-marquee-l-2 {
           display: flex;
-          gap: 0.5rem;
+          gap: 0.75rem;
           width: max-content;
-          animation: marqueeL 24s linear infinite;
+          animation: marqueeL var(--marquee-duration) linear infinite;
           will-change: transform;
+          transform: translate3d(0, 0, 0);
         }
         @media (min-width: 640px) {
           .brand-marquee-l-1 {
             gap: 1rem;
-            animation-duration: 30s;
-          }
-          .brand-marquee-r {
-            gap: 1rem;
-            animation-duration: 26s;
-          }
-          .brand-marquee-l-2 {
-            gap: 1rem;
-            animation-duration: 34s;
           }
         }
         /* Pause animation on hover so users can click reliably */
@@ -109,6 +120,13 @@ export const BrandPartners: React.FC<BrandPartnersProps> = () => {
         .brand-marquee-l-2 a {
           pointer-events: auto;
           cursor: pointer;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .brand-marquee-l-1,
+          .brand-marquee-r,
+          .brand-marquee-l-2 {
+            animation: none;
+          }
         }
       `}</style>
 
@@ -141,7 +159,10 @@ export const BrandPartners: React.FC<BrandPartnersProps> = () => {
             <div className="absolute top-0 bottom-0 right-0 w-12 sm:w-20 bg-gradient-to-l from-white via-white/80 to-transparent z-10 pointer-events-none" />
             
             {/* Ticker Row 1 (Left) */}
-            <div className="brand-marquee-l-1">
+            <div
+              className="brand-marquee-l-1"
+              style={{ '--marquee-duration': marqueeDuration(row1, 1) } as CSSProperties}
+            >
               {row1Items.map((brand, i) => (
                 <div key={brand.name + '-r1-' + i} className="w-[72px] sm:w-[150px] shrink-0">
                   <BrandLogoCard brand={brand} />
@@ -150,7 +171,10 @@ export const BrandPartners: React.FC<BrandPartnersProps> = () => {
             </div>
 
             {/* Ticker Row 2 (Right) */}
-            <div className="brand-marquee-r">
+            <div
+              className="brand-marquee-r"
+              style={{ '--marquee-duration': marqueeDuration(row2, 0.88), animationDelay: '-11s' } as CSSProperties}
+            >
               {row2Items.map((brand, i) => (
                 <div key={brand.name + '-r2-' + i} className="w-[72px] sm:w-[150px] shrink-0">
                   <BrandLogoCard brand={brand} />
@@ -159,7 +183,10 @@ export const BrandPartners: React.FC<BrandPartnersProps> = () => {
             </div>
 
             {/* Ticker Row 3 (Left slower) */}
-            <div className="brand-marquee-l-2">
+            <div
+              className="brand-marquee-l-2"
+              style={{ '--marquee-duration': marqueeDuration(row3, 1.12), animationDelay: '-19s' } as CSSProperties}
+            >
               {row3Items.map((brand, i) => (
                 <div key={brand.name + '-r3-' + i} className="w-[72px] sm:w-[150px] shrink-0">
                   <BrandLogoCard brand={brand} />
