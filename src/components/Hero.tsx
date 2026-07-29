@@ -147,6 +147,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
             {/* Background image parallax — 2s ease-out-premium for visible breath */}
             <Image
               src={CARDS.card1.bgImage}
+              unoptimized
               alt=""
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 50vw"
@@ -234,6 +235,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
             {/* Background image */}
             <Image
               src={CARDS.card2.bgImage}
+              unoptimized
               alt=""
               fill
               sizes="(max-width: 768px) 0vw, (max-width: 1024px) 25vw, 25vw"
@@ -290,6 +292,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
               {/* Background image */}
               <Image
                 src={CARDS.card3.bgImage}
+                unoptimized
                 alt=""
                 fill
                 sizes="(max-width: 768px) 0vw, (max-width: 1024px) 25vw, 25vw"
@@ -337,6 +340,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
               {/* Background image */}
               <Image
                 src={CARDS.card4.bgImage}
+                unoptimized
                 alt=""
                 fill
                 sizes="(max-width: 768px) 0vw, (max-width: 1024px) 25vw, 25vw"
@@ -388,6 +392,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
             >
               <Image
                 src={CARDS.card2.bgImage}
+                unoptimized
                 alt=""
                 fill
                 sizes="33vw"
@@ -415,6 +420,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
             >
               <Image
                 src={CARDS.card3.bgImage}
+                unoptimized
                 alt=""
                 fill
                 sizes="33vw"
@@ -442,6 +448,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
             >
               <Image
                 src={CARDS.card4.bgImage}
+                unoptimized
                 alt=""
                 fill
                 sizes="33vw"
