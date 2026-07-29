@@ -147,18 +147,21 @@ async function runAtlascomSync() {
       || `Produit ${sku}`;
 
     const stock = rawStock ? parseInt(rawStock, 10) : 0;
-    const price = rawPrice ? parseFloat(rawPrice) : 0;
+    const price = rawPrice ? parseFloat(rawPrice) : NaN;
     const existing = productMap.get(sku.trim().toLowerCase());
 
     if (existing) {
+      const nextPrice = Number.isFinite(price) && price > 0
+        ? price
+        : Number(existing.price || existing.compare_price || existing.comparePrice || 0);
       const nextRow = {
         ...existing,
         title,
         name: title,
         name_fr: title,
         stock: Number.isFinite(stock) ? stock : 0,
-        price: Number.isFinite(price) ? price : 0,
-        compare_price: existing.compare_price ?? existing.comparePrice ?? price,
+        price: nextPrice,
+        compare_price: existing.compare_price ?? existing.comparePrice ?? nextPrice,
       };
 
       if (
@@ -177,8 +180,8 @@ async function runAtlascomSync() {
         title,
         name: title,
         name_fr: title,
-        price: Number.isFinite(price) ? price : 0,
-        compare_price: Number.isFinite(price) ? price : 0,
+        price: Number.isFinite(price) && price > 0 ? price : 0,
+        compare_price: Number.isFinite(price) && price > 0 ? price : 0,
         stock: Number.isFinite(stock) ? stock : 0,
         vendor: 'Atlascom',
         category: 'visage',

@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     '/api/admin/recover-mock-data': ['./supabase-mock-db.json', './supabase-mock-db.json.bak'],
+    '/api/admin/repair-product-fields': ['./supabase-mock-db.json'],
   },
   images: {
     minimumCacheTTL: 31536000,
