@@ -107,6 +107,8 @@ async function loadCatalogPage(category: string) {
     }
 
     const { data, count, error } = await query
+      .order('stock', { ascending: false })
+      .order('title', { ascending: true })
       .order('id', { ascending: true })
       .range(0, PAGE_SIZE - 1);
 

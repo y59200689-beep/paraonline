@@ -160,10 +160,20 @@ async function buildCatalogFacets() {
 }
 
 function applySort(query: any, sort: string) {
-  if (sort === 'price-asc') return query.order('price', { ascending: true });
-  if (sort === 'price-desc') return query.order('price', { ascending: false });
-  if (sort === 'rating') return query.order('rating', { ascending: false }).order('id', { ascending: true });
-  return query.order('id', { ascending: true });
+  // Availability is the first public catalogue rule: products with stock are
+  // shown before sold-out items. Product name is the stable A-Z tie-breaker.
+  const availableFirst = query.order('stock', { ascending: false });
+
+  if (sort === 'price-asc') {
+    return availableFirst.order('price', { ascending: true }).order('title', { ascending: true });
+  }
+  if (sort === 'price-desc') {
+    return availableFirst.order('price', { ascending: false }).order('title', { ascending: true });
+  }
+  if (sort === 'rating') {
+    return availableFirst.order('rating', { ascending: false }).order('title', { ascending: true });
+  }
+  return availableFirst.order('title', { ascending: true }).order('id', { ascending: true });
 }
 
 export async function GET(request: Request) {

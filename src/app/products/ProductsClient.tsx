@@ -207,7 +207,7 @@ export default function ProductsClient({
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedConcerns, setSelectedConcerns] = useState<string[]>([]);
   const [maxPrice, setMaxPrice] = useState(1500);
-  const [sortOption, setSortOption] = useState('popular'); // popular, price-asc, price-desc, rating
+  const [sortOption, setSortOption] = useState('alphabetical'); // alphabetical, price-asc, price-desc, rating
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [showOnlyMatches, setShowOnlyMatches] = useState(false);
   const [products, setProducts] = useState<Product[]>(initialProducts);
@@ -277,7 +277,7 @@ export default function ProductsClient({
           selectedBrands.length === 0 &&
           selectedConcerns.length === 0 &&
           maxPrice === 1500 &&
-          sortOption === 'popular'
+          sortOption === 'alphabetical'
         ) {
           return;
         }
@@ -713,7 +713,7 @@ export default function ProductsClient({
                     onChange={(e) => setSortOption(e.target.value)}
                     className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-primary/50 text-slate-700 dark:text-slate-300 text-xs rounded-xl px-3 py-2 outline-none cursor-pointer font-bold select-none"
                   >
-                    <option value="popular">{language === 'FR' ? 'Trier par : Popularité' : 'الترتيب حسب: الأكثر شعبية'}</option>
+                    <option value="alphabetical">{language === 'FR' ? 'Trier par : Nom A à Z' : 'الترتيب حسب: الاسم من أ إلى ي'}</option>
                     <option value="price-asc">{language === 'FR' ? 'Prix : Croissant' : 'السعر: من الأقل إلى الأكثر'}</option>
                     <option value="price-desc">{language === 'FR' ? 'Prix : Décroissant' : 'السعر: من الأكثر إلى الأقل'}</option>
                     <option value="rating">{language === 'FR' ? 'Trier par : Note Client' : 'الترتيب حسب: تقييم العملاء'}</option>
