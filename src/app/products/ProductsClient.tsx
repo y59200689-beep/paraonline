@@ -579,68 +579,6 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
               </div>
             )}
 
-            {/* Quick-Filter Pills */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none select-none w-full">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest shrink-0 mr-1.5">
-                {language === 'FR' ? 'Accès rapide :' : 'وصول سريع:'}
-              </span>
-              
-              {/* Reset / All Pill */}
-              <button
-                onClick={() => setSelectedCategory('all')}
-                className={`px-4 py-1.5 rounded-full text-xs font-bold border transition-all shrink-0 cursor-pointer ${
-                  selectedCategory === 'all'
-                    ? 'bg-primary border-primary text-white shadow-sm shadow-primary/20'
-                    : 'bg-white dark:bg-slate-950 border-slate-200/80 dark:border-slate-800/80 text-slate-600 dark:text-slate-400 hover:border-slate-300'
-                }`}
-              >
-                {language === 'FR' ? 'Tous les produits' : 'جميع المنتجات'}
-              </button>
-
-              {/* Tag Pills */}
-              {[
-                { id: 'solaire', labelFR: 'Solaire ☀️', labelAR: 'واقي شمس' },
-                { id: 'kbeauty', labelFR: 'K-Beauty 🇰🇷', labelAR: 'جمال كوري' },
-                { id: 'visage', labelFR: 'Soin Visage 🧴', labelAR: 'عناية بالوجه' },
-                { id: 'acne', labelFR: 'Anti-Acné 🌿', labelAR: 'حب الشباب', type: 'concern' },
-                { id: 'spots', labelFR: 'Anti-Taches ✨', labelAR: 'تفتيح البقع', type: 'concern' },
-                { id: 'wrinkles', labelFR: 'Anti-Âge 🧬', labelAR: 'مكافحة الشيخوخة', type: 'concern' },
-                { id: 'Garnier', labelFR: 'Garnier', labelAR: 'Garnier', type: 'brand' },
-                { id: 'Anua', labelFR: 'Anua', labelAR: 'Anua', type: 'brand' },
-                { id: 'Skin1004', labelFR: 'Skin1004', labelAR: 'Skin1004', type: 'brand' },
-                { id: 'Beauty of Joseon', labelFR: 'Joseon', labelAR: 'Joseon', type: 'brand' }
-              ].map(pill => {
-                let isActive = false;
-                if (!pill.type) isActive = selectedCategory === pill.id;
-                else if (pill.type === 'concern') isActive = selectedConcerns.includes(pill.id);
-                else if (pill.type === 'brand') isActive = selectedBrands.includes(pill.id);
-
-                const handlePillClick = () => {
-                  if (!pill.type) {
-                    setSelectedCategory(pill.id);
-                  } else if (pill.type === 'concern') {
-                    handleConcernToggle(pill.id);
-                  } else if (pill.type === 'brand') {
-                    handleBrandToggle(pill.id);
-                  }
-                };
-
-                return (
-                  <button
-                    key={pill.id}
-                    onClick={handlePillClick}
-                    className={`px-4 py-1.5 rounded-full text-xs font-bold border transition-all shrink-0 cursor-pointer ${
-                      isActive
-                        ? 'bg-primary border-primary text-white shadow-sm shadow-primary/20'
-                        : 'bg-white dark:bg-slate-950 border-slate-200/80 dark:border-slate-800/80 text-slate-600 dark:text-slate-400 hover:border-slate-300'
-                    }`}
-                  >
-                    {language === 'FR' ? pill.labelFR : pill.labelAR}
-                  </button>
-                );
-              })}
-            </div>
-
             {/* Toolbar: Sorting & Count */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 rounded-2xl shadow-sm">
               <span className="text-xs font-semibold text-slate-500">
