@@ -103,6 +103,45 @@ export default function CategoriesTab() {
     return Array.from(byId.values()).sort((a, b) => a.labelFr.localeCompare(b.labelFr));
   }, [customCategories, products]);
 
+  const domainFromBrandName = (name: string) => `${name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'brand'}.com`;
+
+  const displayBrands = useMemo(() => {
+    const byName = new Map<string, any>();
+
+    customBrands.forEach((brand: any) => {
+      if (!brand?.name) return;
+      const name = String(brand.name).trim();
+      if (!name) return;
+      byName.set(name.toLowerCase(), {
+        ...brand,
+        name,
+        domain: brand.domain || domainFromBrandName(name),
+        source: 'settings',
+      });
+    });
+
+    products.forEach(product => {
+      const vendor = product.vendor?.trim();
+      if (!vendor || vendor === '-') return;
+      const key = vendor.toLowerCase();
+      if (byName.has(key)) return;
+      byName.set(key, {
+        name: vendor,
+        domain: domainFromBrandName(vendor),
+        logoUrl: '',
+        source: 'catalog',
+      });
+    });
+
+    return Array.from(byName.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [customBrands, products]);
+
   const saveUpdatedBrands = async (newBrands: any[]) => {
     const sectionOrder = settings.homepageSections?.sectionOrder || [];
     const updatedSections = sectionOrder.map((s: any) => {
@@ -209,7 +248,7 @@ export default function CategoriesTab() {
     try {
       if (activeTab === 'brands') {
         const brandName = formLabelFr.trim();
-        if (customBrands.some((b: any) => b.name.toLowerCase() === brandName.toLowerCase())) {
+        if (displayBrands.some((b: any) => b.name.toLowerCase() === brandName.toLowerCase())) {
           showToast('Une marque avec ce nom existe déjà.', 'error');
           setIsSaving(false);
           return;
@@ -673,7 +712,7 @@ export default function CategoriesTab() {
             <span className="font-semibold uppercase tracking-widest" style={{ fontSize: 'var(--admin-text-2xs)', color: 'var(--admin-text-faint)' }}>Total Marques</span>
           </div>
           <div className="mt-3">
-            <h3 className="font-bold font-mono leading-none" style={{ fontSize: 'var(--admin-text-2xl)', color: 'var(--admin-text-primary)' }}>{customBrands.length}</h3>
+            <h3 className="font-bold font-mono leading-none" style={{ fontSize: 'var(--admin-text-2xl)', color: 'var(--admin-text-primary)' }}>{displayBrands.length}</h3>
             <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-1">Laboratoires K-Beauty</span>
           </div>
         </div>
@@ -1131,7 +1170,7 @@ export default function CategoriesTab() {
         })}
 
         {/* If brands list is selected */}
-        {activeTab === 'brands' && customBrands.map((brand: any) => {
+        {activeTab === 'brands' && displayBrands.map((brand: any) => {
           const matchedProducts = products.filter(p => getProductAssignment(p, 'brand', brand.name));
           return (
             <div 
@@ -1161,24 +1200,28 @@ export default function CategoriesTab() {
                   </div>
 
                   <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => startEdit(brand)}
-                      title="Modifier"
-                      className={`p-1.5 rounded-lg border transition ${
-                        adminTheme === 'light' ? 'bg-slate-50 hover:bg-slate-100 border-slate-200' : 'bg-slate-800 hover:bg-slate-700 border-slate-700'
-                      }`}
-                    >
-                      <Edit3 className="w-3.5 h-3.5 text-slate-500 hover:text-slate-700" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteItem(brand.name)}
-                      title="Supprimer"
-                      className={`p-1.5 rounded-lg border transition ${
-                        adminTheme === 'light' ? 'bg-slate-50 hover:bg-rose-50 border-slate-200 hover:border-rose-200 text-slate-500 hover:text-rose-600' : 'bg-slate-800 hover:bg-rose-950/20 border-slate-700 hover:border-rose-900 text-slate-500 hover:text-rose-400'
-                      }`}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    {brand.source === 'settings' && (
+                      <>
+                        <button
+                          onClick={() => startEdit(brand)}
+                          title="Modifier"
+                          className={`p-1.5 rounded-lg border transition ${
+                            adminTheme === 'light' ? 'bg-slate-50 hover:bg-slate-100 border-slate-200' : 'bg-slate-800 hover:bg-slate-700 border-slate-700'
+                          }`}
+                        >
+                          <Edit3 className="w-3.5 h-3.5 text-slate-500 hover:text-slate-700" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteItem(brand.name)}
+                          title="Supprimer"
+                          className={`p-1.5 rounded-lg border transition ${
+                            adminTheme === 'light' ? 'bg-slate-50 hover:bg-rose-50 border-slate-200 hover:border-rose-200 text-slate-500 hover:text-rose-600' : 'bg-slate-800 hover:bg-rose-950/20 border-slate-700 hover:border-rose-900 text-slate-500 hover:text-rose-400'
+                          }`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1216,7 +1259,7 @@ export default function CategoriesTab() {
             <div className="flex justify-between items-center pb-3 border-b border-slate-200/50 dark:border-slate-800">
               <h3 className="text-sm font-black uppercase flex items-center gap-2">
                 <Plus className="w-4 h-4 text-emerald-500" /> 
-                {activeTab === 'categories' ? 'Créer une Catégorie' : 'Créer une Préoccupation Cutanée'}
+                {activeTab === 'categories' ? 'Créer une Catégorie' : activeTab === 'brands' ? 'Créer une Marque' : 'Créer une Préoccupation Cutanée'}
               </h3>
               <button
                 onClick={() => { setIsNewModalOpen(false); resetForm(); }}
