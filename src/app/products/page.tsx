@@ -97,6 +97,12 @@ async function loadCatalogFacets() {
     .eq('status', 'live')
     .or('category.eq."anti rides",categories.cs.{"anti rides"}');
   if (wrinklesCountError) throw wrinklesCountError;
+  const { count: rednessCount, error: rednessCountError } = await supabase
+    .from('products')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'live')
+    .or('category.eq."anti rougeur",categories.cs.{"anti rougeur"}');
+  if (rednessCountError) throw rednessCountError;
 
   return {
     total,
@@ -105,7 +111,7 @@ async function loadCatalogFacets() {
       .concat(offerCount > 0 ? [{ id: 'offers', count: offerCount }] : [])
       .sort((a, b) => a.id.localeCompare(b.id)),
     brands: Array.from(brandCounts.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => a.name.localeCompare(b.name)),
-    concerns: { acne: acneCount || 0, spots: spotsCount || 0, wrinkles: wrinklesCount || 0 },
+    concerns: { acne: acneCount || 0, spots: spotsCount || 0, wrinkles: wrinklesCount || 0, redness: rednessCount || 0 },
   };
 }
 
