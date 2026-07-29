@@ -75,6 +75,69 @@ const loadFromDisk = () => {
   return false;
 };
 
+const loadBackupFromDisk = () => {
+  if (process.env.NODE_ENV === 'test') return null;
+  if (typeof window !== 'undefined' || !isPlaceholder) return null;
+
+  try {
+    const fs = require('fs');
+    const backupPath = `${getDbFilePath()}.bak`;
+    if (!fs.existsSync(backupPath)) return null;
+
+    return JSON.parse(fs.readFileSync(backupPath, 'utf-8'));
+  } catch (err) {
+    console.error('Failed to read mock db backup:', err);
+    return null;
+  }
+};
+
+const recoverMockDbCollections = () => {
+  if (!globalForMock.mockDb) return false;
+
+  const backupDb = loadBackupFromDisk();
+  let mutated = false;
+
+  const currentProducts = Array.isArray(globalForMock.mockDb.products)
+    ? globalForMock.mockDb.products
+    : [];
+  const backupProducts = Array.isArray(backupDb?.products)
+    ? backupDb.products
+    : [];
+  const initialProducts = getInitialProducts();
+
+  if (currentProducts.length <= initialProducts.length && backupProducts.length > currentProducts.length) {
+    globalForMock.mockDb.products = backupProducts;
+    mutated = true;
+    console.warn(`[mock-db] Restored ${backupProducts.length} products from supabase-mock-db.json.bak.`);
+  }
+
+  const currentSnippets = Array.isArray(globalForMock.mockDb.code_snippets)
+    ? globalForMock.mockDb.code_snippets
+    : [];
+  const backupSnippets = Array.isArray(backupDb?.code_snippets)
+    ? backupDb.code_snippets
+    : [];
+  const initialSnippets = getInitialCodeSnippets();
+
+  if (currentSnippets.length === 0 && backupSnippets.length > 0) {
+    globalForMock.mockDb.code_snippets = backupSnippets;
+    mutated = true;
+    console.warn(`[mock-db] Restored ${backupSnippets.length} code snippets from supabase-mock-db.json.bak.`);
+  } else {
+    const existingIds = new Set(currentSnippets.map((snippet: any) => snippet.id));
+    for (const snippet of initialSnippets) {
+      if (!existingIds.has(snippet.id)) {
+        currentSnippets.push(snippet);
+        existingIds.add(snippet.id);
+        mutated = true;
+      }
+    }
+    globalForMock.mockDb.code_snippets = currentSnippets;
+  }
+
+  return mutated;
+};
+
 const getInitialProducts = () => {
   return PRODUCTS_DB.map(p => ({
     id: p.id,
@@ -238,7 +301,7 @@ if (isPlaceholder) {
     };
     saveToDisk();
   } else if (loaded && globalForMock.mockDb) {
-    let mutated = false;
+    let mutated = recoverMockDbCollections();
     if (globalForMock.mockDb.products) {
       globalForMock.mockDb.products = globalForMock.mockDb.products.map((p: any) => {
         let singleMutated = false;

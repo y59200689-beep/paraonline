@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { Product, PRODUCTS_DB } from '@/lib/data';
+import { Product } from '@/lib/data';
 import { useAdminAuth } from './AdminAuthContext';
 import { useSettings } from '@/context/SettingsContext';
 
@@ -214,10 +214,12 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (data.success && data.products) {
         setProducts(data.products);
       } else {
-        setProducts(PRODUCTS_DB);
+        console.error("Failed to load admin products:", data.error || data);
+        setProducts(prev => prev.length > 0 ? prev : []);
       }
     } catch (e) {
-      setProducts(PRODUCTS_DB);
+      console.error("Failed to load admin products:", e);
+      setProducts(prev => prev.length > 0 ? prev : []);
     } finally {
       setIsProductsLoading(false);
     }
