@@ -699,9 +699,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode; initialSett
       setIsLoading(false);
       return;
     }
-    // If initialSettings were provided AND cache is still fresh, skip the fetch entirely.
-    // The server-provided data is already the freshest possible source.
-    if (!force && hasInitialSettings && settingsCache && (now - lastFetchedTime < CACHE_EXPIRY)) {
+    // The server-rendered settings are already the authoritative source for
+    // the initial page load. Gallery and settings updates explicitly call this
+    // function with force=true, so this avoids a duplicate client request.
+    if (!force && hasInitialSettings) {
       setIsLoading(false);
       return;
     }

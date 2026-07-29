@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { verifyAdminSession } from '@/lib/session';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { PUBLIC_SETTINGS_CACHE_TAG } from '@/lib/get-public-settings';
 
 function normalizeImportedCategories(categories: unknown, primaryCategory: unknown): string[] {
   const rawValues = Array.isArray(categories)
@@ -244,4 +245,5 @@ async function syncImportedCategories(importedCategories: Set<string>) {
     }, { onConflict: 'id' });
 
   if (settingsWriteError) throw settingsWriteError;
+  revalidateTag(PUBLIC_SETTINGS_CACHE_TAG, { expire: 0 });
 }

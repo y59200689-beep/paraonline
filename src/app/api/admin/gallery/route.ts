@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { verifyAdminSession } from '@/lib/session';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { PUBLIC_SETTINGS_CACHE_TAG } from '@/lib/get-public-settings';
 import path from 'path';
 import fs from 'fs';
 import sharp from 'sharp';
@@ -463,8 +464,12 @@ export async function POST(request: Request) {
     } catch {}
     const dimensions = width && height ? `${width} × ${height} px` : '0 × 0 px';
 
-    // Bust ISR cache — next homepage request will be server-rendered with fresh settings
-    try { revalidatePath('/'); } catch {}
+    // Expire both the page and its shared settings cache so the next visit
+    // immediately renders the newly uploaded gallery asset.
+    try {
+      revalidateTag(PUBLIC_SETTINGS_CACHE_TAG, { expire: 0 });
+      revalidatePath('/');
+    } catch {}
 
     return NextResponse.json({
       success: true,
@@ -508,7 +513,10 @@ export async function DELETE(request: Request) {
     if (error) throw new Error(`Failed to remove gallery setting: ${error.message}`);
 
     if (oldUrl) await deleteOldStorageOrFile(oldUrl, '');
-    try { revalidatePath('/'); } catch {}
+    try {
+      revalidateTag(PUBLIC_SETTINGS_CACHE_TAG, { expire: 0 });
+      revalidatePath('/');
+    } catch {}
 
     return NextResponse.json({ success: true, message: `Override ${key} supprimé avec succès` });
   } catch (err: unknown) {

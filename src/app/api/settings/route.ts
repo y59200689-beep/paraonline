@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { verifyAdminSession } from '@/lib/session';
+import { PUBLIC_SETTINGS_CACHE_TAG } from '@/lib/get-public-settings';
 
 export async function GET() {
   try {
@@ -58,7 +59,10 @@ export async function POST(request: Request) {
       .upsert({ id: 1, value: mergedSettings }, { onConflict: 'id' });
     
     if (error) throw error;
-    try { revalidatePath('/'); } catch {}
+    try {
+      revalidateTag(PUBLIC_SETTINGS_CACHE_TAG, { expire: 0 });
+      revalidatePath('/');
+    } catch {}
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error("Save settings error:", error);

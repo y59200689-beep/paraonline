@@ -1,7 +1,9 @@
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { DEFAULT_SETTINGS, type Settings } from '@/context/SettingsContext';
+import { unstable_cache } from 'next/cache';
 
 const BANNER_KEYS = ['hero_bestsellers', 'hero_summersale', 'hero_weeklypromo', 'hero_newarrivals'];
+export const PUBLIC_SETTINGS_CACHE_TAG = 'public-settings';
 
 interface PublicBanner {
   bgImage?: string;
@@ -12,7 +14,7 @@ type PublicSettings = Omit<Partial<Settings>, 'paymentSettings'> & {
   paymentSettings?: Partial<NonNullable<Settings['paymentSettings']>>;
 } & Record<string, unknown>;
 
-export async function getPublicSettings(): Promise<PublicSettings> {
+async function fetchPublicSettings(): Promise<PublicSettings> {
   try {
     const { data } = await supabase
       .from('settings')
@@ -109,4 +111,17 @@ export async function getPublicSettings(): Promise<PublicSettings> {
     console.error('[getPublicSettings] failed:', e);
     return {};
   }
+}
+
+// Settings are shared by every storefront visitor. Cache them until an admin
+// mutation explicitly invalidates this tag, rather than querying Supabase for
+// each page render.
+const getCachedPublicSettings = unstable_cache(
+  fetchPublicSettings,
+  ['public-settings'],
+  { tags: [PUBLIC_SETTINGS_CACHE_TAG], revalidate: false }
+);
+
+export async function getPublicSettings(): Promise<PublicSettings> {
+  return getCachedPublicSettings();
 }
