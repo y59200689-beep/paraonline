@@ -5,7 +5,7 @@ import { useTranslation } from '@/context/LanguageContext';
 import { Product } from '@/lib/data';
 import { ProductCard } from '@/components/ProductCard';
 import { ShopShell } from '@/components/ShopShell';
-import { Search, SlidersHorizontal, Check, ArrowUpDown, X, AlertTriangle, Sparkles, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, SlidersHorizontal, Check, ArrowUpDown, X, AlertTriangle, Sparkles, Loader2, ChevronLeft, ChevronRight, RotateCcw, Tags, HeartPulse, CircleDollarSign } from 'lucide-react';
 import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 
@@ -37,53 +37,7 @@ type CatalogFacets = {
   total: number;
   categories: Array<{ id: string; count: number }>;
   brands: Array<{ name: string; count: number }>;
-  concerns?: { acne?: number; spots?: number; wrinkles?: number; redness?: number };
-};
-
-const matchesConcern = (product: Product, concernId: string, customConcerns: any[] = []) => {
-  const text = `${product.title} ${product.nameFr || ''} ${product.description} ${product.tags.join(' ')}`.toLowerCase();
-  const ingredients = product.ingredients.toLowerCase();
-  const hasCategory = (category: string) => {
-    const normalize = (value: string) => value
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .trim()
-      .toLowerCase();
-    const categories = product.categories?.length ? product.categories : [product.category];
-    return categories.some(item => normalize(String(item || '')) === normalize(category));
-  };
-  
-  // Find concern config in dynamic list
-  const concern = customConcerns.find(c => c.id === concernId);
-  if (concern) {
-    const keywords = concern.keywords || [];
-    const ingredientKeywords = concern.ingredientKeywords || [];
-    const productIds = concern.productIds || [];
-    
-    if (productIds.includes(product.id)) return true;
-    
-    const kwMatch = keywords.some((kw: string) => text.includes(kw.toLowerCase()));
-    const ingMatch = ingredientKeywords.some((kw: string) => ingredients.includes(kw.toLowerCase()) || text.includes(kw.toLowerCase()));
-    return kwMatch || ingMatch;
-  }
-
-  // fallbacks
-  if (concernId === 'acne') {
-    return hasCategory('acné') || text.includes('acné') || text.includes('imperfection') || text.includes('bouton') || ingredients.includes('salicylic acid') || product.id === 3 || product.id === 22 || product.id === 15 || product.id === 16 || product.id === 17;
-  }
-  if (concernId === 'spots') {
-    return hasCategory('anti tache') || text.includes('tache') || text.includes('éclat') || text.includes('bright') || text.includes('pigment') || ingredients.includes('tranexamic') || ingredients.includes('ascorbic') || product.id === 3 || product.id === 14;
-  }
-  if (concernId === 'dryness') {
-    return text.includes('déshydrat') || text.includes('sec') || text.includes('hydrat') || ingredients.includes('hyaluronic') || product.id === 5 || product.id === 6 || product.id === 7 || product.id === 17;
-  }
-  if (concernId === 'wrinkles') {
-    return hasCategory('anti rides') || text.includes('ridule') || text.includes('âge') || text.includes('anti-aging') || text.includes('vieill') || ingredients.includes('retinol') || product.id === 8 || product.id === 5 || product.id === 6;
-  }
-  if (concernId === 'redness') {
-    return hasCategory('anti rougeur') || text.includes('rougeur') || text.includes('apais') || text.includes('sensible') || text.includes('sooth') || ingredients.includes('centella') || ingredients.includes('heartleaf') || product.id === 17 || product.id === 16 || product.id === 15;
-  }
-  return true;
+  concerns?: Record<string, number>;
 };
 
 const categoryLabelFromId = (id: string) => id
@@ -235,6 +189,13 @@ export default function ProductsClient({
   const didHydrate = useRef(false);
 
   const pageSize = initialPagination.limit || 50;
+  const activeFilterCount =
+    (selectedCategory !== 'all' ? 1 : 0) +
+    selectedBrands.length +
+    selectedConcerns.length +
+    (searchQuery.trim() ? 1 : 0) +
+    (maxPrice < 1500 ? 1 : 0) +
+    (showOnlyMatches ? 1 : 0);
 
   const displayedCategories = useMemo(() => {
     if (selectedCategory === 'all') return CATEGORIES_LIST;
@@ -265,20 +226,10 @@ export default function ProductsClient({
   const concernCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     CONCERNS_LIST.forEach((c: any) => {
-      if (c.id === 'acne') {
-        counts[c.id] = catalogFacets.concerns?.acne || 0;
-      } else if (c.id === 'spots') {
-        counts[c.id] = catalogFacets.concerns?.spots || 0;
-      } else if (c.id === 'wrinkles') {
-        counts[c.id] = catalogFacets.concerns?.wrinkles || 0;
-      } else if (c.id === 'redness') {
-        counts[c.id] = catalogFacets.concerns?.redness || 0;
-      } else {
-        counts[c.id] = products.filter(p => matchesConcern(p, c.id, customConcerns)).length;
-      }
+      counts[c.id] = catalogFacets.concerns?.[c.id] || 0;
     });
     return counts;
-  }, [products, CONCERNS_LIST, customConcerns, catalogFacets.concerns]);
+  }, [CONCERNS_LIST, catalogFacets.concerns]);
 
   const brandCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -355,9 +306,7 @@ export default function ProductsClient({
   };
 
   const handleConcernToggle = (concernId: string) => {
-    setSelectedConcerns(prev =>
-      prev.includes(concernId) ? prev.filter(c => c !== concernId) : [...prev, concernId]
-    );
+    setSelectedConcerns([concernId]);
   };
 
   const clearFilters = () => {
@@ -374,14 +323,6 @@ export default function ProductsClient({
   const filteredProducts = useMemo(() => {
     let result = [...products];
 
-    // Multiple concern selections are refined on the currently loaded batch.
-    // Single concern selections are handled by the API so totals stay accurate.
-    if (selectedConcerns.length > 1) {
-      result = result.filter(p => 
-        selectedConcerns.every(concernId => matchesConcern(p, concernId, customConcerns))
-      );
-    }
-
     // Diagnostic compatibility filter
     if (showOnlyMatches && diagnostic) {
       result = result.filter(p => {
@@ -391,7 +332,7 @@ export default function ProductsClient({
     }
 
     return result;
-  }, [products, selectedConcerns, showOnlyMatches, diagnostic, customConcerns]);
+  }, [products, showOnlyMatches, diagnostic]);
 
   const recommendations = useMemo(() => {
     return [...products]
@@ -399,9 +340,7 @@ export default function ProductsClient({
       .slice(0, 4);
   }, [products]);
 
-  const totalResults = showOnlyMatches || selectedConcerns.length > 1
-    ? filteredProducts.length
-    : pagination.total;
+  const totalResults = showOnlyMatches ? filteredProducts.length : pagination.total;
   const pageStart = pagination.total > 0 ? ((pagination.page - 1) * pagination.limit) + 1 : 0;
   const pageEnd = Math.min(pagination.page * pagination.limit, pagination.total);
   const visiblePages = useMemo(() => {
@@ -449,11 +388,11 @@ export default function ProductsClient({
         {/* Layout: Sidebar Filters & Grid */}
         <div className="flex flex-col lg:flex-row gap-10 items-start">
           
-          {/* Desktop Filters Sidebar - 1/4 Width */}
-          <aside className="hidden lg:block w-72 shrink-0 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 rounded-2xl p-6 space-y-6 shadow-sm sticky top-28 max-h-[calc(100vh-140px)] overflow-y-auto pr-3 custom-sidebar-scroll">
+          {/* Desktop Filters Sidebar */}
+          <aside className="hidden lg:block w-[300px] shrink-0 sticky top-24 max-h-[calc(100vh-116px)] overflow-y-auto custom-sidebar-scroll">
             <style dangerouslySetInnerHTML={{__html: `
               .custom-sidebar-scroll::-webkit-scrollbar {
-                width: 4px;
+                width: 6px;
               }
               .custom-sidebar-scroll::-webkit-scrollbar-track {
                 background: transparent;
@@ -488,139 +427,169 @@ export default function ProductsClient({
               }
             `}} />
 
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-900">
-              <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                <SlidersHorizontal className="w-4 h-4 text-primary" />
-                {language === 'FR' ? 'Filtres de recherche' : 'خيارات التصفية'}
-              </span>
-              <button 
-                onClick={clearFilters}
-                className="text-[11px] font-bold text-primary hover:text-accent uppercase transition"
-              >
-                {language === 'FR' ? 'Réinitialiser' : 'إعادة تعيين'}
-              </button>
-            </div>
-
-            {/* 1. Search Bar */}
-            <div className="space-y-2 pb-4 border-b border-slate-100/60 dark:border-slate-900/60">
-              <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
-                {language === 'FR' ? 'Recherche rapide' : 'بحث سريع'}
-              </span>
-              <div className="relative mt-2">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input 
-                  type="text"
-                  placeholder={language === 'FR' ? 'Saisir un mot-clé...' : 'اكتب للبحث...'}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 focus:border-primary/50 text-slate-800 dark:text-slate-100 placeholder-slate-400 text-xs rounded-xl pl-9 pr-4 py-2.5 outline-none transition"
-                />
-              </div>
-            </div>
-
-            {/* 2. Categories */}
-            <div className="space-y-3 pb-4 border-b border-slate-100/60 dark:border-slate-900/60">
-              <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
-                {language === 'FR' ? 'Catégories' : 'الفئات'}
-              </span>
-              <div className="flex flex-col gap-1.5 mt-2">
-                {displayedCategories.map(cat => (
-                  <button
-                    key={cat.id}
-                    onClick={() => setSelectedCategory(cat.id)}
-                    className={`text-left px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-between ${
-                      selectedCategory === cat.id
-                        ? 'bg-primary/5 text-primary'
-                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900'
-                    }`}
-                  >
-                    <span className="flex items-center gap-1.5">
-                      <span>{language === 'FR' ? cat.labelFR : cat.labelAR}</span>
-                      <span className="text-[9.5px] opacity-60 font-mono">({categoryCounts[cat.id] || 0})</span>
-                    </span>
-                    {selectedCategory === cat.id && <Check className="w-3.5 h-3.5 text-primary" />}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* 3. Skin Concerns */}
-            <div className="space-y-3 pb-4 border-b border-slate-100/60 dark:border-slate-900/60">
-              <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
-                {language === 'FR' ? 'Préoccupations de Peau' : 'مشاكل البشرة'}
-              </span>
-              <div className="space-y-2 mt-2">
-                {CONCERNS_LIST.map((c: any) => {
-                  const isChecked = selectedConcerns.includes(c.id);
-                  return (
-                    <label 
-                      key={c.id}
-                      className="flex items-center gap-3 cursor-pointer text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 select-none justify-between w-full"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <input 
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={() => handleConcernToggle(c.id)}
-                          className="rounded border-slate-300 dark:border-slate-800 text-primary focus:ring-primary w-4 h-4"
-                        />
-                        <span>{language === 'FR' ? c.labelFR : c.labelAR}</span>
-                      </div>
-                      <span className="text-[9.5px] opacity-60 font-mono">({concernCounts[c.id] || 0})</span>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* 4. Brands */}
-            <div className="space-y-3 pb-4 border-b border-slate-100/60 dark:border-slate-900/60">
-              <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
-                {language === 'FR' ? 'Marques' : 'العلامات التجارية'}
-              </span>
-              <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-2 mt-2 custom-sidebar-scroll">
-                {brandsList.map(brand => {
-                  const isChecked = selectedBrands.includes(brand);
-                  return (
-                    <label 
-                      key={brand}
-                      className="flex items-center gap-3 cursor-pointer text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 select-none justify-between w-full"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <input 
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={() => handleBrandToggle(brand)}
-                          className="rounded border-slate-300 dark:border-slate-800 text-primary focus:ring-primary w-4 h-4"
-                        />
-                        <span>{brand}</span>
-                      </div>
-                      <span className="text-[9.5px] opacity-60 font-mono">({brandCounts[brand] || 0})</span>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* 5. Price Limit */}
-            <div className="space-y-3">
-              <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
-                {language === 'FR' ? 'Prix Maximum' : 'السعر الأقصى'}
-              </span>
-              <div className="space-y-3 mt-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs font-semibold text-slate-500">{language === 'FR' ? 'Limite' : 'الحد'}</span>
-                  <span className="text-xs font-mono font-bold text-primary">{maxPrice} DH</span>
+            <div className="overflow-hidden rounded-lg border border-slate-200/80 bg-white shadow-[0_12px_30px_rgba(15,23,42,0.07)] dark:border-slate-800 dark:bg-slate-950">
+              <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-white shadow-sm shadow-primary/20">
+                    <SlidersHorizontal className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <h2 className="text-sm font-extrabold text-slate-900 dark:text-white">
+                      {language === 'FR' ? 'Filtres' : 'التصفية'}
+                    </h2>
+                    <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                      {activeFilterCount > 0
+                        ? `${activeFilterCount} ${language === 'FR' ? 'actif' : 'نشط'}${activeFilterCount > 1 && language === 'FR' ? 's' : ''}`
+                        : language === 'FR' ? 'Affinez le catalogue' : 'خصصي الكتالوج'}
+                    </p>
+                  </div>
                 </div>
-                <input 
-                  type="range"
-                  min="30"
-                  max="1500"
-                  step="10"
-                  value={maxPrice}
-                  onChange={(e) => setMaxPrice(Number(e.target.value))}
-                  className="w-full accent-primary bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none h-1.5 cursor-pointer"
-                />
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  disabled={activeFilterCount === 0}
+                  aria-label={language === 'FR' ? 'Réinitialiser les filtres' : 'إعادة تعيين التصفية'}
+                  className="flex h-9 w-9 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-primary disabled:cursor-not-allowed disabled:opacity-35 dark:text-slate-400 dark:hover:bg-slate-900"
+                  title={language === 'FR' ? 'Réinitialiser les filtres' : 'إعادة تعيين'}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="space-y-5 p-5">
+                <div className="space-y-2">
+                  <label htmlFor="catalog-filter-search" className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+                    {language === 'FR' ? 'Rechercher' : 'بحث'}
+                  </label>
+                  <div className="relative">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <input
+                      id="catalog-filter-search"
+                      type="search"
+                      placeholder={language === 'FR' ? 'Nom, marque, référence' : 'اسم، علامة، مرجع'}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="h-10 w-full rounded-md border border-slate-200 bg-slate-50/70 pl-9 pr-9 text-xs font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/10 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:focus:bg-slate-950"
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setSearchQuery('')}
+                        aria-label={language === 'FR' ? 'Effacer la recherche' : 'مسح البحث'}
+                        className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <section className="border-t border-slate-100 pt-5 dark:border-slate-800">
+                  <div className="mb-2.5 flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+                    <Tags className="h-3.5 w-3.5 text-primary" />
+                    {language === 'FR' ? 'Catégories' : 'الفئات'}
+                  </div>
+                  <div className="max-h-64 space-y-1 overflow-y-auto pr-1 custom-sidebar-scroll">
+                    {displayedCategories.map(cat => {
+                      const isSelected = selectedCategory === cat.id;
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => setSelectedCategory(cat.id)}
+                          className={`group flex min-h-9 w-full items-center justify-between rounded-md px-2.5 text-left text-xs font-semibold transition ${
+                            isSelected
+                              ? 'bg-primary text-white shadow-sm shadow-primary/20'
+                              : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-900'
+                          }`}
+                        >
+                          <span className="min-w-0 truncate">{language === 'FR' ? cat.labelFR : cat.labelAR}</span>
+                          <span className={`ml-3 flex shrink-0 items-center gap-1.5 text-[10px] font-bold tabular-nums ${isSelected ? 'text-white/80' : 'text-slate-400 dark:text-slate-500'}`}>
+                            {categoryCounts[cat.id] || 0}
+                            {isSelected && <Check className="h-3.5 w-3.5 text-white" />}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+
+                <section className="border-t border-slate-100 pt-5 dark:border-slate-800">
+                  <div className="mb-2.5 flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+                    <HeartPulse className="h-3.5 w-3.5 text-primary" />
+                    {language === 'FR' ? 'Préoccupations' : 'مشاكل البشرة'}
+                  </div>
+                  <div className="space-y-1">
+                    {CONCERNS_LIST.map((c: any) => {
+                      const isChecked = selectedConcerns.includes(c.id);
+                      return (
+                        <label key={c.id} className="group flex min-h-9 cursor-pointer items-center justify-between rounded-md px-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-900">
+                          <span className="flex min-w-0 items-center gap-2.5">
+                            <input
+                              type="radio"
+                              name="catalog-concern"
+                              checked={isChecked}
+                              onChange={() => handleConcernToggle(c.id)}
+                              className="h-4 w-4 shrink-0 border-slate-300 text-primary focus:ring-primary/25 dark:border-slate-700"
+                            />
+                            <span className="truncate">{language === 'FR' ? c.labelFR : c.labelAR}</span>
+                          </span>
+                          <span className="ml-3 shrink-0 text-[10px] font-bold tabular-nums text-slate-400 dark:text-slate-500">{concernCounts[c.id] || 0}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </section>
+
+                <section className="border-t border-slate-100 pt-5 dark:border-slate-800">
+                  <div className="mb-2.5 flex items-center justify-between text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+                    <span>{language === 'FR' ? 'Marques' : 'العلامات التجارية'}</span>
+                    <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[9px] tabular-nums text-slate-500 dark:bg-slate-900 dark:text-slate-400">{brandsList.length}</span>
+                  </div>
+                  <div className="max-h-44 space-y-1 overflow-y-auto pr-1 custom-sidebar-scroll">
+                    {brandsList.map(brand => {
+                      const isChecked = selectedBrands.includes(brand);
+                      return (
+                        <label key={brand} className="group flex min-h-9 cursor-pointer items-center justify-between rounded-md px-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-900">
+                          <span className="flex min-w-0 items-center gap-2.5">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => handleBrandToggle(brand)}
+                              className="h-4 w-4 shrink-0 rounded border-slate-300 text-primary focus:ring-primary/25 dark:border-slate-700"
+                            />
+                            <span className="truncate">{brand}</span>
+                          </span>
+                          <span className="ml-3 shrink-0 text-[10px] font-bold tabular-nums text-slate-400 dark:text-slate-500">{brandCounts[brand] || 0}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </section>
+
+                <section className="border-t border-slate-100 pt-5 dark:border-slate-800">
+                  <div className="mb-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+                      <CircleDollarSign className="h-3.5 w-3.5 text-primary" />
+                      {language === 'FR' ? 'Budget maximum' : 'الحد الأقصى للسعر'}
+                    </div>
+                    <output className="rounded-md bg-primary/10 px-2 py-1 text-[11px] font-extrabold tabular-nums text-primary">{maxPrice} DH</output>
+                  </div>
+                  <input
+                    type="range"
+                    min="30"
+                    max="1500"
+                    step="10"
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(Number(e.target.value))}
+                    className="h-1.5 w-full cursor-pointer appearance-none rounded bg-slate-200 accent-primary dark:bg-slate-800"
+                    aria-label={language === 'FR' ? 'Prix maximum' : 'أقصى سعر'}
+                  />
+                  <div className="mt-2 flex justify-between text-[10px] font-medium tabular-nums text-slate-400 dark:text-slate-500">
+                    <span>30 DH</span>
+                    <span>1 500 DH</span>
+                  </div>
+                </section>
               </div>
             </div>
           </aside>
@@ -716,7 +685,7 @@ export default function ProductsClient({
                   ? (language === 'FR' ? '1 produit disponible' : 'منتج واحد متوفر')
                   : (language === 'FR' ? `${totalResults} produits disponibles` : `${totalResults} منتجات متوفرة`)}
                 </span>
-                {pagination.total > 0 && !showOnlyMatches && selectedConcerns.length <= 1 && (
+                {pagination.total > 0 && !showOnlyMatches && (
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                     {language === 'FR'
                       ? `Lot ${pageStart}-${pageEnd} sur ${pagination.total}`
@@ -867,7 +836,7 @@ export default function ProductsClient({
             )}
             </div>
 
-            {pagination.totalPages > 1 && !showOnlyMatches && selectedConcerns.length <= 1 && (
+            {pagination.totalPages > 1 && !showOnlyMatches && (
               <div className="rounded-3xl border border-slate-100 bg-white p-3 sm:p-4 shadow-sm dark:border-slate-900 dark:bg-slate-950">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
@@ -989,7 +958,8 @@ export default function ProductsClient({
                         className="flex items-center gap-3 cursor-pointer text-xs font-medium text-slate-600 dark:text-slate-400 select-none"
                       >
                         <input 
-                          type="checkbox"
+                          type="radio"
+                          name="catalog-mobile-concern"
                           checked={isChecked}
                           onChange={() => handleConcernToggle(c.id)}
                           className="rounded border-slate-300 dark:border-slate-800 text-primary focus:ring-primary w-4 h-4"

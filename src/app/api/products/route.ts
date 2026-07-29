@@ -1,52 +1,8 @@
 import { NextResponse } from 'next/server';
 import { Product } from '@/lib/data';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
-
-function matchesConcern(product: Product, concernId: string, customConcerns: any[] = []) {
-  const text = `${product.title} ${product.nameFr || ''} ${product.description || ''} ${(product.tags || []).join(' ')}`.toLowerCase();
-  const ingredients = (product.ingredients || '').toLowerCase();
-  const hasCategory = (category: string) => {
-    const normalize = (value: string) => value
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .trim()
-      .toLowerCase();
-    const categories = product.categories?.length ? product.categories : [product.category];
-    return categories.some(item => normalize(String(item || '')) === normalize(category));
-  };
-  
-  // Find concern config in dynamic list
-  const concern = customConcerns.find((c: any) => c.id === concernId);
-  if (concern) {
-    const keywords = concern.keywords || [];
-    const ingredientKeywords = concern.ingredientKeywords || [];
-    const productIds = concern.productIds || [];
-    
-    if (productIds.includes(product.id)) return true;
-    
-    const kwMatch = keywords.some((kw: string) => text.includes(kw.toLowerCase()));
-    const ingMatch = ingredientKeywords.some((kw: string) => ingredients.includes(kw.toLowerCase()) || text.includes(kw.toLowerCase()));
-    return kwMatch || ingMatch;
-  }
-
-  // Fallbacks for hardcoded defaults
-  if (concernId === 'acne') {
-    return hasCategory('acné') || text.includes('acné') || text.includes('imperfection') || text.includes('bouton') || ingredients.includes('salicylic acid') || product.id === 3 || product.id === 22 || product.id === 15 || product.id === 16 || product.id === 17;
-  }
-  if (concernId === 'spots') {
-    return hasCategory('anti tache') || text.includes('tache') || text.includes('éclat') || text.includes('bright') || text.includes('pigment') || ingredients.includes('tranexamic') || ingredients.includes('ascorbic') || product.id === 3 || product.id === 14;
-  }
-  if (concernId === 'dryness') {
-    return text.includes('déshydrat') || text.includes('sec') || text.includes('hydrat') || ingredients.includes('hyaluronic') || product.id === 5 || product.id === 6 || product.id === 7 || product.id === 17;
-  }
-  if (concernId === 'wrinkles') {
-    return hasCategory('anti rides') || text.includes('ridule') || text.includes('âge') || text.includes('anti-aging') || text.includes('vieill') || ingredients.includes('retinol') || product.id === 8 || product.id === 5 || product.id === 6;
-  }
-  if (concernId === 'redness') {
-    return hasCategory('anti rougeur') || text.includes('rougeur') || text.includes('apais') || text.includes('sensible') || text.includes('sooth') || ingredients.includes('centella') || ingredients.includes('heartleaf') || product.id === 17 || product.id === 16 || product.id === 15;
-  }
-  return true;
-}
+import { countCatalogConcerns, getCatalogConcerns, matchesCatalogConcern } from '@/lib/catalog-concerns';
+import { catalogCategoryFilter, normalizeCatalogCategoryId } from '@/lib/catalog-categories';
 
 function matchesIngredient(product: Product, ingredient: string) {
   const ingStr = (product.ingredients || '').toLowerCase();
@@ -117,7 +73,7 @@ async function fetchProductFacetRows() {
     const to = from + pageSize - 1;
     const { data, error } = await supabase
       .from('products')
-      .select('category,categories,vendor,price,compare_price')
+      .select('id,title,name_fr,category,categories,tags,description,ingredients,vendor,price,compare_price')
       .eq('status', 'live')
       .range(from, to);
 
@@ -132,7 +88,7 @@ async function fetchProductFacetRows() {
 }
 
 async function buildCatalogFacets() {
-  const rows = await fetchProductFacetRows();
+  const [rows, concerns] = await Promise.all([fetchProductFacetRows(), getCatalogConcerns()]);
   const categoryCounts = new Map<string, number>();
   const brandCounts = new Map<string, number>();
   let offerCount = 0;
@@ -145,7 +101,7 @@ async function buildCatalogFacets() {
 
     const uniqueCategories = Array.from(new Set(
       categories
-        .map(category => String(category || '').trim().toLowerCase())
+        .map(category => normalizeCatalogCategoryId(String(category || '')))
         .filter(Boolean)
     ));
 
@@ -159,31 +115,6 @@ async function buildCatalogFacets() {
     }
   }
 
-  const { count: acneCount, error: acneCountError } = await supabase
-    .from('products')
-    .select('id', { count: 'exact', head: true })
-    .eq('status', 'live')
-    .or('category.eq.acné,categories.cs.{"acné"},category.eq.acne,categories.cs.{"acne"}');
-  if (acneCountError) throw acneCountError;
-  const { count: spotsCount, error: spotsCountError } = await supabase
-    .from('products')
-    .select('id', { count: 'exact', head: true })
-    .eq('status', 'live')
-    .or('category.eq."anti tache",categories.cs.{"anti tache"}');
-  if (spotsCountError) throw spotsCountError;
-  const { count: wrinklesCount, error: wrinklesCountError } = await supabase
-    .from('products')
-    .select('id', { count: 'exact', head: true })
-    .eq('status', 'live')
-    .or('category.eq."anti rides",categories.cs.{"anti rides"}');
-  if (wrinklesCountError) throw wrinklesCountError;
-  const { count: rednessCount, error: rednessCountError } = await supabase
-    .from('products')
-    .select('id', { count: 'exact', head: true })
-    .eq('status', 'live')
-    .or('category.eq."anti rougeur",categories.cs.{"anti rougeur"}');
-  if (rednessCountError) throw rednessCountError;
-
   return {
     total: rows.length,
     categories: Array.from(categoryCounts.entries())
@@ -193,7 +124,7 @@ async function buildCatalogFacets() {
     brands: Array.from(brandCounts.entries())
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => a.name.localeCompare(b.name)),
-    concerns: { acne: acneCount || 0, spots: spotsCount || 0, wrinkles: wrinklesCount || 0, redness: rednessCount || 0 },
+    concerns: countCatalogConcerns(rows.map(mapProduct), concerns),
   };
 }
 
@@ -218,7 +149,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
   const limit = Math.max(1, parseInt(searchParams.get('limit') || '15'));
-  const category = searchParams.get('category') || 'all';
+  const category = normalizeCatalogCategoryId(searchParams.get('category') || 'all');
   const search = searchParams.get('search') || '';
   const vendor = searchParams.get('vendor') || '';
   const vendors = (searchParams.get('vendors') || '').split(',').map(v => v.trim()).filter(Boolean);
@@ -293,7 +224,7 @@ export async function GET(request: Request) {
       if (category === 'offers') {
         query = query.gt('compare_price', 'price');
       } else {
-        query = query.or(`category.eq.${category},categories.cs.{"${category}"}`);
+        query = query.or(catalogCategoryFilter(category));
       }
     }
 
@@ -332,20 +263,7 @@ export async function GET(request: Request) {
       query = query.lte('price', maxPrice);
     }
 
-    // Fetch custom concerns from settings
-    let customConcerns: any[] = [];
-    try {
-      const { data: settingsData } = await supabase
-        .from('settings')
-        .select('value')
-        .eq('id', 1)
-        .single();
-      if (settingsData && settingsData.value) {
-        customConcerns = settingsData.value.customConcerns || [];
-      }
-    } catch (e) {
-      console.error("Failed to load settings in products API route:", e);
-    }
+    const catalogConcerns = concern !== 'all' ? await getCatalogConcerns() : [];
 
     const needsPostFilter = concern !== 'all' || ingredient !== 'all';
     let products: Product[] = [];
@@ -377,7 +295,7 @@ export async function GET(request: Request) {
     }
 
     if (concern !== 'all') {
-      products = products.filter(p => matchesConcern(p, concern, customConcerns));
+      products = products.filter(product => matchesCatalogConcern(product, concern, catalogConcerns));
     }
     if (ingredient !== 'all') {
       products = products.filter(p => matchesIngredient(p, ingredient));

@@ -3,6 +3,8 @@ import { supabase } from '@/lib/supabase';
 import ProductsClient from './ProductsClient';
 import { unstable_cache } from 'next/cache';
 import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/catalog-cache';
+import { countCatalogConcerns, getCatalogConcerns } from '@/lib/catalog-concerns';
+import { catalogCategoryFilter, normalizeCatalogCategoryId } from '@/lib/catalog-categories';
 
 // A full product card carries images, controls, and rich product metadata.
 // Keep the first catalogue view compact; pagination provides the rest without
@@ -43,18 +45,20 @@ async function loadCatalogFacets() {
   let offerCount = 0;
   let total = 0;
   const pageSize = 1000;
+  const products: Product[] = [];
 
   for (let from = 0; ; from += pageSize) {
     const to = from + pageSize - 1;
     const { data, error } = await supabase
       .from('products')
-      .select('category,categories,vendor,price,compare_price')
+      .select('id,title,name_fr,category,categories,tags,description,ingredients,vendor,price,compare_price')
       .eq('status', 'live')
       .range(from, to);
 
     if (error) throw error;
     const batch = data || [];
     total += batch.length;
+    products.push(...batch.map(rowToProduct));
 
     batch.forEach((item: any) => {
       if (Number(item.compare_price) > Number(item.price)) offerCount += 1;
@@ -64,7 +68,7 @@ async function loadCatalogFacets() {
 
       Array.from(new Set<string>(
         categories
-          .map((category: unknown) => String(category || '').trim().toLowerCase())
+          .map((category: unknown) => normalizeCatalogCategoryId(String(category || '')))
           .filter(Boolean)
       )).forEach(category => {
         categoryCounts.set(category, (categoryCounts.get(category) || 0) + 1);
@@ -79,30 +83,7 @@ async function loadCatalogFacets() {
     if (batch.length < pageSize) break;
   }
 
-  const { count: acneCount, error: acneCountError } = await supabase
-    .from('products')
-    .select('id', { count: 'exact', head: true })
-    .eq('status', 'live')
-    .or('category.eq.acné,categories.cs.{"acné"},category.eq.acne,categories.cs.{"acne"}');
-  if (acneCountError) throw acneCountError;
-  const { count: spotsCount, error: spotsCountError } = await supabase
-    .from('products')
-    .select('id', { count: 'exact', head: true })
-    .eq('status', 'live')
-    .or('category.eq."anti tache",categories.cs.{"anti tache"}');
-  if (spotsCountError) throw spotsCountError;
-  const { count: wrinklesCount, error: wrinklesCountError } = await supabase
-    .from('products')
-    .select('id', { count: 'exact', head: true })
-    .eq('status', 'live')
-    .or('category.eq."anti rides",categories.cs.{"anti rides"}');
-  if (wrinklesCountError) throw wrinklesCountError;
-  const { count: rednessCount, error: rednessCountError } = await supabase
-    .from('products')
-    .select('id', { count: 'exact', head: true })
-    .eq('status', 'live')
-    .or('category.eq."anti rougeur",categories.cs.{"anti rougeur"}');
-  if (rednessCountError) throw rednessCountError;
+  const concerns = await getCatalogConcerns();
 
   return {
     total,
@@ -111,7 +92,7 @@ async function loadCatalogFacets() {
       .concat(offerCount > 0 ? [{ id: 'offers', count: offerCount }] : [])
       .sort((a, b) => a.id.localeCompare(b.id)),
     brands: Array.from(brandCounts.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => a.name.localeCompare(b.name)),
-    concerns: { acne: acneCount || 0, spots: spotsCount || 0, wrinkles: wrinklesCount || 0, redness: rednessCount || 0 },
+    concerns: countCatalogConcerns(products, concerns),
   };
 }
 
@@ -134,7 +115,7 @@ async function loadCatalogPage(category: string) {
     if (category === 'offers') {
       query = query.gt('compare_price', 'price');
     } else if (category !== 'all') {
-      query = query.or(`category.eq.${category},categories.cs.{"${category}"}`);
+      query = query.or(catalogCategoryFilter(category));
     }
 
     const { data, count, error } = await query
@@ -166,7 +147,7 @@ const getCachedCatalogPage = unstable_cache(
 
 function normalizeCategory(value: string | string[] | undefined) {
   const category = typeof value === 'string' ? value.trim().toLowerCase() : 'all';
-  return /^[a-z0-9_-]+$/.test(category) ? category : 'all';
+  return /^[a-z0-9_\- &]+$/.test(category) ? normalizeCatalogCategoryId(category) : 'all';
 }
 
 export default async function ProductsPage({
