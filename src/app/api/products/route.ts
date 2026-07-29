@@ -159,6 +159,13 @@ async function buildCatalogFacets() {
     }
   }
 
+  const { count: acneCount, error: acneCountError } = await supabase
+    .from('products')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'live')
+    .or('category.eq.acné,categories.cs.{"acné"},category.eq.acne,categories.cs.{"acne"}');
+  if (acneCountError) throw acneCountError;
+
   return {
     total: rows.length,
     categories: Array.from(categoryCounts.entries())
@@ -168,6 +175,7 @@ async function buildCatalogFacets() {
     brands: Array.from(brandCounts.entries())
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => a.name.localeCompare(b.name)),
+    concerns: { acne: acneCount || 0 },
   };
 }
 

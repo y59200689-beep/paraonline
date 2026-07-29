@@ -37,6 +37,7 @@ type CatalogFacets = {
   total: number;
   categories: Array<{ id: string; count: number }>;
   brands: Array<{ name: string; count: number }>;
+  concerns?: { acne?: number };
 };
 
 const matchesConcern = (product: Product, concernId: string, customConcerns: any[] = []) => {
@@ -264,10 +265,12 @@ export default function ProductsClient({
   const concernCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     CONCERNS_LIST.forEach((c: any) => {
-      counts[c.id] = products.filter(p => matchesConcern(p, c.id, customConcerns)).length;
+      counts[c.id] = c.id === 'acne'
+        ? catalogFacets.concerns?.acne || 0
+        : products.filter(p => matchesConcern(p, c.id, customConcerns)).length;
     });
     return counts;
-  }, [products, CONCERNS_LIST, customConcerns]);
+  }, [products, CONCERNS_LIST, customConcerns, catalogFacets.concerns]);
 
   const brandCounts = useMemo(() => {
     const counts: Record<string, number> = {};
