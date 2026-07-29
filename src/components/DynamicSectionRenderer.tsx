@@ -14,25 +14,28 @@ import { ProductGrid } from '@/components/ProductGrid';
 import { HomepageSectionItem } from '@/context/SettingsContext';
 
 // Below-the-fold Components (Dynamically Imported to defer non-critical JS)
-const BrandPartners = dynamic(() => import('@/components/BrandPartners').then((m) => m.BrandPartners));
-const DiagnosticBanner = dynamic(() => import('@/components/DiagnosticBanner').then((m) => m.DiagnosticBanner));
-const SummerSalePromo = dynamic(() => import('@/components/SummerSalePromo').then((m) => m.SummerSalePromo));
-const SkinConcernsSelector = dynamic(() => import('@/components/SkinConcernsSelector').then((m) => m.SkinConcernsSelector));
-const HorizontalPromoBanner = dynamic(() => import('@/components/HorizontalPromoBanner').then((m) => m.HorizontalPromoBanner));
-const MoroccoTrustBar = dynamic(() => import('@/components/MoroccoTrustBar').then((m) => m.MoroccoTrustBar));
-const CustomerReviews = dynamic(() => import('@/components/CustomerReviews').then((m) => m.CustomerReviews));
-const TriplePromoBanners = dynamic(() => import('@/components/TriplePromoBanners').then((m) => m.TriplePromoBanners));
-const TopRatedAsymmetricGrid = dynamic(() => import('@/components/TopRatedAsymmetricGrid').then((m) => m.TopRatedAsymmetricGrid));
-const BestSellersDualGrid = dynamic(() => import('@/components/BestSellersDualGrid').then((m) => m.BestSellersDualGrid));
-const SkincareRoutineSteps = dynamic(() => import('@/components/SkincareRoutineSteps').then((m) => m.SkincareRoutineSteps));
-const RoutineVisualizer = dynamic(() => import('@/components/RoutineVisualizer').then((m) => m.RoutineVisualizer));
-const IngredientDictionary = dynamic(() => import('@/components/IngredientDictionary').then((m) => m.IngredientDictionary));
-const InteractiveFaqWrapper = dynamic(() => import('@/components/InteractiveFaqWrapper').then((m) => m.InteractiveFaqWrapper));
-const FeaturedIngredientSection = dynamic(() => import('@/components/FeaturedIngredientSection').then((m) => m.FeaturedIngredientSection));
-const LaRochePosaySSection = dynamic(() => import('@/components/LaRochePosaySSection').then((m) => m.LaRochePosaySSection));
-const DermoCorner = dynamic(() => import('@/components/DermoCorner').then((m) => m.DermoCorner));
-const ActiveIngredients = dynamic(() => import('@/components/ActiveIngredients').then((m) => m.ActiveIngredients));
-const OfficialDistributorBadge = dynamic(() => import('@/components/OfficialDistributorBadge').then((m) => m.OfficialDistributorBadge));
+// These sections sit below the initial storefront viewport. Rendering them on
+// the server was creating a 1 MB document and more than 200 image elements
+// before the customer could interact with the page.
+const BrandPartners = dynamic(() => import('@/components/BrandPartners').then((m) => m.BrandPartners), { ssr: false });
+const DiagnosticBanner = dynamic(() => import('@/components/DiagnosticBanner').then((m) => m.DiagnosticBanner), { ssr: false });
+const SummerSalePromo = dynamic(() => import('@/components/SummerSalePromo').then((m) => m.SummerSalePromo), { ssr: false });
+const SkinConcernsSelector = dynamic(() => import('@/components/SkinConcernsSelector').then((m) => m.SkinConcernsSelector), { ssr: false });
+const HorizontalPromoBanner = dynamic(() => import('@/components/HorizontalPromoBanner').then((m) => m.HorizontalPromoBanner), { ssr: false });
+const MoroccoTrustBar = dynamic(() => import('@/components/MoroccoTrustBar').then((m) => m.MoroccoTrustBar), { ssr: false });
+const CustomerReviews = dynamic(() => import('@/components/CustomerReviews').then((m) => m.CustomerReviews), { ssr: false });
+const TriplePromoBanners = dynamic(() => import('@/components/TriplePromoBanners').then((m) => m.TriplePromoBanners), { ssr: false });
+const TopRatedAsymmetricGrid = dynamic(() => import('@/components/TopRatedAsymmetricGrid').then((m) => m.TopRatedAsymmetricGrid), { ssr: false });
+const BestSellersDualGrid = dynamic(() => import('@/components/BestSellersDualGrid').then((m) => m.BestSellersDualGrid), { ssr: false });
+const SkincareRoutineSteps = dynamic(() => import('@/components/SkincareRoutineSteps').then((m) => m.SkincareRoutineSteps), { ssr: false });
+const RoutineVisualizer = dynamic(() => import('@/components/RoutineVisualizer').then((m) => m.RoutineVisualizer), { ssr: false });
+const IngredientDictionary = dynamic(() => import('@/components/IngredientDictionary').then((m) => m.IngredientDictionary), { ssr: false });
+const InteractiveFaqWrapper = dynamic(() => import('@/components/InteractiveFaqWrapper').then((m) => m.InteractiveFaqWrapper), { ssr: false });
+const FeaturedIngredientSection = dynamic(() => import('@/components/FeaturedIngredientSection').then((m) => m.FeaturedIngredientSection), { ssr: false });
+const LaRochePosaySSection = dynamic(() => import('@/components/LaRochePosaySSection').then((m) => m.LaRochePosaySSection), { ssr: false });
+const DermoCorner = dynamic(() => import('@/components/DermoCorner').then((m) => m.DermoCorner), { ssr: false });
+const ActiveIngredients = dynamic(() => import('@/components/ActiveIngredients').then((m) => m.ActiveIngredients), { ssr: false });
+const OfficialDistributorBadge = dynamic(() => import('@/components/OfficialDistributorBadge').then((m) => m.OfficialDistributorBadge), { ssr: false });
 
 interface DynamicSectionRendererProps {
   sections: HomepageSectionItem[];
