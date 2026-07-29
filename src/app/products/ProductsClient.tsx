@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from '@/context/LanguageContext';
 import { Product } from '@/lib/data';
 import { ProductCard } from '@/components/ProductCard';
 import { ShopShell } from '@/components/ShopShell';
-import { Search, SlidersHorizontal, Check, ArrowUpDown, X, AlertTriangle, Sparkles } from 'lucide-react';
+import { Search, SlidersHorizontal, Check, ArrowUpDown, X, AlertTriangle, Sparkles, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 
@@ -25,6 +25,19 @@ const CATEGORIES = [
   { id: 'kbeauty', labelFR: 'K-Beauty Coréenne', labelAR: 'الجمال الكوري' },
   { id: 'offers', labelFR: 'Offres & Coffrets', labelAR: 'العروض والمجموعات' }
 ];
+
+type CatalogPagination = {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+
+type CatalogFacets = {
+  total: number;
+  categories: Array<{ id: string; count: number }>;
+  brands: Array<{ name: string; count: number }>;
+};
 
 const matchesConcern = (product: Product, concernId: string, customConcerns: any[] = []) => {
   const text = `${product.title} ${product.nameFr || ''} ${product.description} ${product.tags.join(' ')}`.toLowerCase();
@@ -131,7 +144,15 @@ const getProductMatchScore = (product: Product, diagnostic: any) => {
   return Math.max(68, Math.min(99, score));
 };
 
-export default function ProductsClient({ initialProducts }: { initialProducts: Product[] }) {
+export default function ProductsClient({
+  initialProducts,
+  initialPagination,
+  catalogFacets,
+}: {
+  initialProducts: Product[];
+  initialPagination: CatalogPagination;
+  catalogFacets: CatalogFacets;
+}) {
   const { language } = useTranslation();
   const { diagnostic } = useUi();
   const { settings } = useSettings();
@@ -153,15 +174,14 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
       });
     });
 
-    initialProducts.forEach(product => {
-      productCategoryIds(product).forEach(id => {
+    catalogFacets.categories.forEach(category => {
+      const id = category.id;
         if (byId.has(id)) return;
         byId.set(id, {
           id,
           labelFR: categoryLabelFromId(id),
           labelAR: categoryLabelFromId(id),
         });
-      });
     });
 
     const allCategory = byId.get('all') || { id: 'all', labelFR: 'Toutes catégories', labelAR: 'جميع الفئات' };
@@ -170,7 +190,7 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
       .sort((a, b) => a.labelFR.localeCompare(b.labelFR));
 
     return [allCategory, ...rest];
-  }, [customCategories, initialProducts]);
+  }, [customCategories, catalogFacets.categories]);
 
   const CONCERNS_LIST = useMemo(() => {
     if (customConcerns.length > 0) {
@@ -188,30 +208,30 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
   const [sortOption, setSortOption] = useState('popular'); // popular, price-asc, price-desc, rating
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [showOnlyMatches, setShowOnlyMatches] = useState(false);
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [pagination, setPagination] = useState<CatalogPagination>(initialPagination);
+  const [currentPage, setCurrentPage] = useState(initialPagination.page || 1);
+  const [isPageLoading, setIsPageLoading] = useState(false);
+  const didHydrate = useRef(false);
 
-  const products = initialProducts;
+  const pageSize = initialPagination.limit || 50;
 
   const brandsList = useMemo(() => {
-    const brands = new Set<string>();
-    products.forEach(product => {
-      const vendor = product.vendor?.trim();
-      if (vendor && vendor !== '-') brands.add(vendor);
-    });
-    return Array.from(brands).sort((a, b) => a.localeCompare(b));
-  }, [products]);
+    return catalogFacets.brands.map(brand => brand.name);
+  }, [catalogFacets.brands]);
 
   // Dynamic counts for filters
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     CATEGORIES_LIST.forEach(cat => {
       if (cat.id === 'all') {
-        counts[cat.id] = products.length;
+        counts[cat.id] = catalogFacets.total || pagination.total;
       } else {
-        counts[cat.id] = products.filter(p => productCategoryIds(p).includes(cat.id) || p.tags.includes(cat.id)).length;
+        counts[cat.id] = catalogFacets.categories.find(category => category.id === cat.id)?.count || 0;
       }
     });
     return counts;
-  }, [products, CATEGORIES_LIST]);
+  }, [catalogFacets, CATEGORIES_LIST, pagination.total]);
 
   const concernCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -223,11 +243,71 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
 
   const brandCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    brandsList.forEach(brand => {
-      counts[brand] = products.filter(p => p.vendor === brand).length;
+    catalogFacets.brands.forEach(brand => {
+      counts[brand.name] = brand.count;
     });
     return counts;
-  }, [products, brandsList]);
+  }, [catalogFacets.brands]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategory, selectedBrands, selectedConcerns, maxPrice, sortOption, showOnlyMatches]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadPage = async () => {
+      if (!didHydrate.current) {
+        didHydrate.current = true;
+        if (
+          currentPage === initialPagination.page &&
+          searchQuery.trim() === '' &&
+          selectedCategory === 'all' &&
+          selectedBrands.length === 0 &&
+          selectedConcerns.length === 0 &&
+          maxPrice === 1500 &&
+          sortOption === 'popular'
+        ) {
+          return;
+        }
+      }
+
+      setIsPageLoading(true);
+      try {
+        const params = new URLSearchParams();
+        params.set('page', String(currentPage));
+        params.set('limit', String(pageSize));
+        params.set('sort', sortOption);
+        params.set('maxPrice', String(maxPrice));
+        if (selectedCategory !== 'all') params.set('category', selectedCategory);
+        if (searchQuery.trim()) params.set('search', searchQuery.trim());
+        if (selectedBrands.length > 0) params.set('vendors', selectedBrands.join(','));
+        if (selectedConcerns.length === 1) params.set('concern', selectedConcerns[0]);
+
+        const response = await fetch(`/api/products?${params.toString()}`, {
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+        const data = await response.json();
+
+        if (!data.success) throw new Error(data.error || 'Failed to load products');
+
+        setProducts(data.products || []);
+        setPagination(data.pagination || { total: 0, page: currentPage, limit: pageSize, totalPages: 1 });
+      } catch (error: any) {
+        if (error?.name !== 'AbortError') {
+          console.error('Failed to load product page:', error);
+          setProducts([]);
+          setPagination(prev => ({ ...prev, total: 0, totalPages: 1 }));
+        }
+      } finally {
+        if (!controller.signal.aborted) setIsPageLoading(false);
+      }
+    };
+
+    loadPage();
+    return () => controller.abort();
+  }, [currentPage, pageSize, searchQuery, selectedCategory, selectedBrands, selectedConcerns, maxPrice, sortOption]);
 
   // Sync initial query params if present
   useEffect(() => {
@@ -259,42 +339,20 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
     setSelectedConcerns([]);
     setMaxPrice(1500);
     setShowOnlyMatches(false);
+    setCurrentPage(1);
   };
 
   // Filter & Sort Logic
   const filteredProducts = useMemo(() => {
     let result = [...products];
 
-    // Search filter
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(p => 
-        p.title.toLowerCase().includes(q) ||
-        (p.nameFr || '').toLowerCase().includes(q) ||
-        (p.vendor || '').toLowerCase().includes(q) ||
-        (p.description || '').toLowerCase().includes(q)
-      );
-    }
-
-    // Category filter
-    if (selectedCategory !== 'all') {
-      result = result.filter(p => productCategoryIds(p).includes(selectedCategory) || p.tags.includes(selectedCategory));
-    }
-
-    // Brands filter
-    if (selectedBrands.length > 0) {
-      result = result.filter(p => selectedBrands.includes(p.vendor));
-    }
-
-    // Concerns filter
-    if (selectedConcerns.length > 0) {
+    // Multiple concern selections are refined on the currently loaded batch.
+    // Single concern selections are handled by the API so totals stay accurate.
+    if (selectedConcerns.length > 1) {
       result = result.filter(p => 
         selectedConcerns.every(concernId => matchesConcern(p, concernId, customConcerns))
       );
     }
-
-    // Price filter
-    result = result.filter(p => p.price <= maxPrice);
 
     // Diagnostic compatibility filter
     if (showOnlyMatches && diagnostic) {
@@ -304,23 +362,34 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
       });
     }
 
-    // Sorting
-    if (sortOption === 'price-asc') {
-      result.sort((a, b) => a.price - b.price);
-    } else if (sortOption === 'price-desc') {
-      result.sort((a, b) => b.price - a.price);
-    } else if (sortOption === 'rating') {
-      result.sort((a, b) => b.rating - a.rating);
-    }
-
     return result;
-  }, [products, searchQuery, selectedCategory, selectedBrands, selectedConcerns, maxPrice, sortOption, showOnlyMatches, diagnostic, customConcerns]);
+  }, [products, selectedConcerns, showOnlyMatches, diagnostic, customConcerns]);
 
   const recommendations = useMemo(() => {
     return [...products]
       .filter(p => p.rating >= 4.7)
       .slice(0, 4);
   }, [products]);
+
+  const totalResults = showOnlyMatches || selectedConcerns.length > 1
+    ? filteredProducts.length
+    : pagination.total;
+  const pageStart = pagination.total > 0 ? ((pagination.page - 1) * pagination.limit) + 1 : 0;
+  const pageEnd = Math.min(pagination.page * pagination.limit, pagination.total);
+  const visiblePages = useMemo(() => {
+    const totalPages = Math.max(1, pagination.totalPages || 1);
+    const start = Math.max(1, Math.min(currentPage - 2, totalPages - 4));
+    return Array.from({ length: Math.min(5, totalPages) }, (_, index) => start + index)
+      .filter(page => page >= 1 && page <= totalPages);
+  }, [currentPage, pagination.totalPages]);
+
+  const goToPage = (page: number) => {
+    const nextPage = Math.max(1, Math.min(page, pagination.totalPages || 1));
+    setCurrentPage(nextPage);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   return (
     <ShopShell>
@@ -613,11 +682,20 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
 
             {/* Toolbar: Sorting & Count */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 rounded-2xl shadow-sm">
-              <span className="text-xs font-semibold text-slate-500">
-                {filteredProducts.length === 1 
+              <div className="space-y-1">
+                <span className="text-xs font-semibold text-slate-500 block">
+                {totalResults === 1 
                   ? (language === 'FR' ? '1 produit disponible' : 'منتج واحد متوفر')
-                  : (language === 'FR' ? `${filteredProducts.length} produits disponibles` : `${filteredProducts.length} منتجات متوفرة`)}
-              </span>
+                  : (language === 'FR' ? `${totalResults} produits disponibles` : `${totalResults} منتجات متوفرة`)}
+                </span>
+                {pagination.total > 0 && !showOnlyMatches && selectedConcerns.length <= 1 && (
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    {language === 'FR'
+                      ? `Lot ${pageStart}-${pageEnd} sur ${pagination.total}`
+                      : `الدفعة ${pageStart}-${pageEnd} من ${pagination.total}`}
+                  </span>
+                )}
+              </div>
 
               <div className="flex items-center gap-3 self-end sm:self-auto">
                 <button
@@ -694,6 +772,15 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
             )}
 
             {/* Products Grid */}
+            <div className="relative min-h-[420px]">
+            {isPageLoading && (
+              <div className="absolute inset-0 z-20 rounded-3xl bg-white/70 dark:bg-slate-950/70 backdrop-blur-sm flex items-start justify-center pt-24">
+                <div className="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-xs font-black uppercase tracking-wider text-slate-600 shadow-xl shadow-slate-900/5 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
+                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                  {language === 'FR' ? 'Chargement du lot...' : 'تحميل الدفعة...'}
+                </div>
+              </div>
+            )}
             {filteredProducts.length === 0 ? (
               <div className="space-y-12">
                 <div className="text-center py-16 bg-white dark:bg-slate-950 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 space-y-4 shadow-sm">
@@ -732,18 +819,68 @@ export default function ProductsClient({ initialProducts }: { initialProducts: P
               </div>
             ) : (
               <div 
-                key={`${selectedCategory}-${selectedBrands.join(',')}-${selectedConcerns.join(',')}-${searchQuery}-${maxPrice}-${showOnlyMatches}-${sortOption}`}
+                key={`${currentPage}-${selectedCategory}-${selectedBrands.join(',')}-${selectedConcerns.join(',')}-${searchQuery}-${maxPrice}-${showOnlyMatches}-${sortOption}`}
                 className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6"
               >
                 {filteredProducts.map((product, index) => (
                   <div 
                     key={product.id} 
                     className="w-full h-full animate-fade-in-up-stagger"
-                    style={{ animationDelay: `${Math.min(11, index) * 35}ms` }}
+                    style={{
+                      animationDelay: `${Math.min(11, index) * 35}ms`,
+                      contentVisibility: 'auto',
+                      containIntrinsicSize: '340px 520px',
+                    }}
                   >
                     <ProductCard product={product} showMatchScore={true} searchQuery={searchQuery} priority={index < 4} />
                   </div>
                 ))}
+              </div>
+            )}
+            </div>
+
+            {pagination.totalPages > 1 && !showOnlyMatches && selectedConcerns.length <= 1 && (
+              <div className="rounded-3xl border border-slate-100 bg-white p-3 sm:p-4 shadow-sm dark:border-slate-900 dark:bg-slate-950">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    {language === 'FR'
+                      ? `Page ${pagination.page} / ${pagination.totalPages} - 50 produits par page`
+                      : `الصفحة ${pagination.page} / ${pagination.totalPages}`}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => goToPage(currentPage - 1)}
+                      disabled={currentPage <= 1 || isPageLoading}
+                      className="h-9 px-3 rounded-xl border border-slate-200 bg-white text-xs font-black text-slate-600 transition hover:border-primary/30 hover:text-primary disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    {visiblePages.map(page => (
+                      <button
+                        key={page}
+                        type="button"
+                        onClick={() => goToPage(page)}
+                        disabled={isPageLoading}
+                        className={`h-9 min-w-9 rounded-xl border px-3 text-xs font-black transition ${
+                          page === currentPage
+                            ? 'border-primary bg-primary text-white shadow-md shadow-primary/15'
+                            : 'border-slate-200 bg-white text-slate-600 hover:border-primary/30 hover:text-primary dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => goToPage(currentPage + 1)}
+                      disabled={currentPage >= pagination.totalPages || isPageLoading}
+                      className="h-9 px-3 rounded-xl border border-slate-200 bg-white text-xs font-black text-slate-600 transition hover:border-primary/30 hover:text-primary disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>

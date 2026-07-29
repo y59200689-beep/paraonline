@@ -100,6 +100,72 @@ function mapProduct(item: Record<string, unknown>): Product {
   };
 }
 
+async function fetchProductFacetRows() {
+  const pageSize = 1000;
+  const rows: Array<Record<string, unknown>> = [];
+
+  for (let from = 0; ; from += pageSize) {
+    const to = from + pageSize - 1;
+    const { data, error } = await supabase
+      .from('products')
+      .select('category,categories,vendor')
+      .eq('status', 'live')
+      .range(from, to);
+
+    if (error) throw error;
+    const batch = (data || []) as Array<Record<string, unknown>>;
+    rows.push(...batch);
+
+    if (batch.length < pageSize) break;
+  }
+
+  return rows;
+}
+
+async function buildCatalogFacets() {
+  const rows = await fetchProductFacetRows();
+  const categoryCounts = new Map<string, number>();
+  const brandCounts = new Map<string, number>();
+
+  for (const row of rows) {
+    const categories = Array.isArray(row.categories) && row.categories.length > 0
+      ? row.categories as string[]
+      : [row.category as string];
+
+    const uniqueCategories = Array.from(new Set(
+      categories
+        .map(category => String(category || '').trim().toLowerCase())
+        .filter(Boolean)
+    ));
+
+    for (const category of uniqueCategories) {
+      categoryCounts.set(category, (categoryCounts.get(category) || 0) + 1);
+    }
+
+    const vendor = typeof row.vendor === 'string' ? row.vendor.trim() : '';
+    if (vendor && vendor !== '-') {
+      brandCounts.set(vendor, (brandCounts.get(vendor) || 0) + 1);
+    }
+  }
+
+  return {
+    total: rows.length,
+    categories: Array.from(categoryCounts.entries())
+      .map(([id, count]) => ({ id, count }))
+      .sort((a, b) => a.id.localeCompare(b.id)),
+    brands: Array.from(brandCounts.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+  };
+}
+
+function applySort(query: any, sort: string) {
+  if (sort === 'price-asc') return query.order('price', { ascending: true });
+  if (sort === 'price-desc') return query.order('price', { ascending: false });
+  if (sort === 'rating') return query.order('rating', { ascending: false }).order('id', { ascending: true });
+  return query.order('id', { ascending: true });
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
@@ -107,12 +173,24 @@ export async function GET(request: Request) {
   const category = searchParams.get('category') || 'all';
   const search = searchParams.get('search') || '';
   const vendor = searchParams.get('vendor') || '';
+  const vendors = (searchParams.get('vendors') || '').split(',').map(v => v.trim()).filter(Boolean);
   const concern = searchParams.get('concern') || 'all';
   const ingredient = searchParams.get('ingredient') || 'all';
+  const sort = searchParams.get('sort') || 'popular';
+  const maxPrice = Number(searchParams.get('maxPrice') || '0');
+  const facetsOnly = searchParams.get('facets') === 'true';
   const idStr = searchParams.get('id') || '';
   const idsStr = searchParams.get('ids') || '';
 
   try {
+    if (facetsOnly) {
+      const facets = await buildCatalogFacets();
+      return NextResponse.json(
+        { success: true, facets },
+        { headers: { 'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=3600' } }
+      );
+    }
+
     // Batch fetch by comma-separated IDs (used by curated ProductGrid)
     if (idsStr) {
       const ids = idsStr.split(',').map(Number).filter(Boolean).slice(0, 15);
@@ -202,16 +280,13 @@ export async function GET(request: Request) {
       query = query.filter('vendor', 'ilike', `${firstChunk}%`);
     }
 
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
-    query = query.range(from, to).order('id', { ascending: true });
-
-    const { data, count, error } = await query;
-    if (error || !data) {
-      throw error || new Error('No products returned');
+    if (vendors.length > 0) {
+      query = query.in('vendor', vendors);
     }
 
-    let products = (data as Array<Record<string, unknown>>).map(mapProduct);
+    if (Number.isFinite(maxPrice) && maxPrice > 0) {
+      query = query.lte('price', maxPrice);
+    }
 
     // Fetch custom concerns from settings
     let customConcerns: any[] = [];
@@ -228,15 +303,45 @@ export async function GET(request: Request) {
       console.error("Failed to load settings in products API route:", e);
     }
 
-    let total = count || products.length;
+    const needsPostFilter = concern !== 'all' || ingredient !== 'all';
+    let products: Product[] = [];
+    let total = 0;
+
+    if (needsPostFilter) {
+      const pageSize = 1000;
+      const allRows: Product[] = [];
+
+      for (let from = 0; ; from += pageSize) {
+        const to = from + pageSize - 1;
+        const { data, error } = await applySort(query, sort).range(from, to);
+        if (error || !data) throw error || new Error('No products returned');
+        const batch = (data as Array<Record<string, unknown>>).map(mapProduct);
+        allRows.push(...batch);
+        if (batch.length < pageSize) break;
+      }
+
+      products = allRows;
+    } else {
+      const from = (page - 1) * limit;
+      const to = from + limit - 1;
+      const { data, count, error } = await applySort(query, sort).range(from, to);
+      if (error || !data) {
+        throw error || new Error('No products returned');
+      }
+      products = (data as Array<Record<string, unknown>>).map(mapProduct);
+      total = count || products.length;
+    }
 
     if (concern !== 'all') {
       products = products.filter(p => matchesConcern(p, concern, customConcerns));
-      total = products.length;
     }
     if (ingredient !== 'all') {
       products = products.filter(p => matchesIngredient(p, ingredient));
+    }
+    if (needsPostFilter) {
       total = products.length;
+      const from = (page - 1) * limit;
+      products = products.slice(from, from + limit);
     }
 
     return NextResponse.json(
