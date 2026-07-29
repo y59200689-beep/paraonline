@@ -5,6 +5,15 @@ import { supabaseAdmin as supabase } from '@/lib/supabase';
 function matchesConcern(product: Product, concernId: string, customConcerns: any[] = []) {
   const text = `${product.title} ${product.nameFr || ''} ${product.description || ''} ${(product.tags || []).join(' ')}`.toLowerCase();
   const ingredients = (product.ingredients || '').toLowerCase();
+  const hasCategory = (category: string) => {
+    const normalize = (value: string) => value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLowerCase();
+    const categories = product.categories?.length ? product.categories : [product.category];
+    return categories.some(item => normalize(String(item || '')) === normalize(category));
+  };
   
   // Find concern config in dynamic list
   const concern = customConcerns.find((c: any) => c.id === concernId);
@@ -22,7 +31,7 @@ function matchesConcern(product: Product, concernId: string, customConcerns: any
 
   // Fallbacks for hardcoded defaults
   if (concernId === 'acne') {
-    return text.includes('acné') || text.includes('imperfection') || text.includes('bouton') || ingredients.includes('salicylic acid') || product.id === 3 || product.id === 22 || product.id === 15 || product.id === 16 || product.id === 17;
+    return hasCategory('acné') || text.includes('acné') || text.includes('imperfection') || text.includes('bouton') || ingredients.includes('salicylic acid') || product.id === 3 || product.id === 22 || product.id === 15 || product.id === 16 || product.id === 17;
   }
   if (concernId === 'spots') {
     return text.includes('tache') || text.includes('éclat') || text.includes('bright') || text.includes('pigment') || ingredients.includes('tranexamic') || ingredients.includes('ascorbic') || product.id === 3 || product.id === 14;
