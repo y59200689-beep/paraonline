@@ -5,6 +5,7 @@ import { useTranslation } from '@/context/LanguageContext';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useSettings } from '@/context/SettingsContext';
 import { useGalleryOverrides } from '@/lib/useGalleryOverrides';
 
@@ -164,6 +165,7 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
             >
               {CATEGORIES.map((cat, index) => {
                  const isActive = activeCategory === cat.tag;
+                 const isProductsLink = cat.tag === 'solaire';
                  
                  // Exact top-down gradient; borderless layout with soft shadow; overflow-hidden to crop bleeding illustrations
                  const cardStyle: React.CSSProperties = {
@@ -176,15 +178,8 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
                    willChange: 'transform, box-shadow'
                  };
 
-                 return (
-                   <button
-                     key={cat.id}
-                     onClick={() => onSelectCategory(cat.tag)}
-                     className={`relative flex flex-col items-center justify-between snap-start shrink-0 pt-3 pb-3 px-2 rounded-[20px] transition-all duration-500 focus:outline-none overflow-hidden group active:scale-95 cursor-pointer w-[100px] h-[110px] sm:w-[110px] sm:h-[120px] md:w-[115px] md:h-[125px] lg:w-[calc((100%-112px)/8)] lg:h-[128px] animate-slide-up hover:-translate-y-1 ${
-                       isActive ? 'scale-[1.03]' : ''
-                     }`}
-                     style={cardStyle}
-                   >
+                 const cardContent = (
+                   <>
                      {/* Premium Real Product Photography */}
                      <div className="relative w-full h-[60px] sm:h-[68px] md:h-[72px] lg:h-[74px] flex items-center justify-center overflow-hidden select-none mt-1">
                        <div className="relative w-[54px] h-[54px] sm:w-[62px] sm:h-[62px] md:w-[68px] md:h-[68px] lg:w-[70px] lg:h-[70px] pointer-events-none select-none group-hover:scale-105 transition-transform duration-500 ease-out">
@@ -211,6 +206,31 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
                      >
                        {t(cat.translationKey)}
                      </span>
+                   </>
+                 );
+
+                 const cardClassName = `relative flex flex-col items-center justify-between snap-start shrink-0 pt-3 pb-3 px-2 rounded-[20px] transition-all duration-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary overflow-hidden group active:scale-95 cursor-pointer w-[100px] h-[110px] sm:w-[110px] sm:h-[120px] md:w-[115px] md:h-[125px] lg:w-[calc((100%-112px)/8)] lg:h-[128px] animate-slide-up hover:-translate-y-1 ${
+                       isActive ? 'scale-[1.03]' : ''
+                     }`;
+
+                 return isProductsLink ? (
+                   <Link
+                     key={cat.id}
+                     href="/products?category=solaire"
+                     className={cardClassName}
+                     style={cardStyle}
+                   >
+                     {cardContent}
+                   </Link>
+                 ) : (
+                   <button
+                     key={cat.id}
+                     type="button"
+                     onClick={() => onSelectCategory(cat.tag)}
+                     className={cardClassName}
+                     style={cardStyle}
+                   >
+                     {cardContent}
                    </button>
                  );
               })}
