@@ -17,6 +17,105 @@ function normalizeCategories(categories: unknown, primaryCategory: unknown): str
   return Array.from(new Set([primary, ...extras]));
 }
 
+function applyProductFilters(
+  query: any,
+  {
+    category,
+    vendor,
+    status,
+    search,
+    specialFilters,
+    lowStockThreshold,
+  }: {
+    category: string;
+    vendor: string;
+    status: string;
+    search: string;
+    specialFilters: string[];
+    lowStockThreshold: number;
+  },
+  options: { includeStatus?: boolean } = {}
+) {
+  if (category && category !== 'all') {
+    query = query.or(`category.eq.${category},categories.cs.{"${category}"}`);
+  }
+  if (vendor && vendor !== 'all') {
+    query = query.eq('vendor', vendor);
+  }
+  if (options.includeStatus !== false && status && status !== 'all') {
+    query = query.eq('status', status);
+  }
+
+  if (search) {
+    const cleanSearch = search.replace(/"/g, '').trim();
+    if (cleanSearch) {
+      const words = cleanSearch.split(/\s+/).filter(Boolean);
+      const fields = ['title', 'name', 'name_fr', 'sku', 'vendor', 'category', 'description'];
+
+      if (!isNaN(Number(cleanSearch)) && words.length === 1) {
+        query = query.or(`id.eq.${cleanSearch},title.ilike."%${cleanSearch}%",name.ilike."%${cleanSearch}%",name_fr.ilike."%${cleanSearch}%",sku.ilike."%${cleanSearch}%",vendor.ilike."%${cleanSearch}%"`);
+      } else {
+        words.forEach(w => {
+          const wordConditions = fields.map(f => `${f}.ilike."%${w}%"`).join(',');
+          query = query.or(wordConditions);
+        });
+      }
+    }
+  }
+
+  if (specialFilters.length > 0 && !specialFilters.includes('all')) {
+    if (specialFilters.includes('no_image')) {
+      query = query.or('image.eq.,image.eq./placeholder.png,image.is.null');
+    }
+    if (specialFilters.includes('negative_stock')) {
+      query = query.lt('stock', 0);
+    }
+    if (specialFilters.includes('out_of_stock')) {
+      query = query.eq('stock', 0);
+    }
+    if (specialFilters.includes('positive_stock')) {
+      query = query.gt('stock', 0);
+    }
+    if (specialFilters.includes('positive_stock_no_vendor')) {
+      query = query.gt('stock', 0).or('vendor.eq.,vendor.eq.-,vendor.is.null');
+    }
+    if (specialFilters.includes('positive_stock_no_desc')) {
+      query = query.gt('stock', 0).or('description.eq.,description.is.null');
+    }
+    if (specialFilters.includes('low_stock')) {
+      query = query.lte('stock', lowStockThreshold);
+    }
+    if (specialFilters.includes('no_desc')) {
+      query = query.or('description.eq.,description.is.null');
+    }
+  }
+
+  return query;
+}
+
+async function countProductsByStatus(filters: {
+  category: string;
+  vendor: string;
+  search: string;
+  specialFilters: string[];
+  lowStockThreshold: number;
+}) {
+  const countFor = async (status: 'live' | 'draft') => {
+    const query = applyProductFilters(
+      supabase.from('products').select('id', { count: 'exact', head: true }),
+      { ...filters, status, },
+      { includeStatus: true }
+    );
+
+    const { count, data, error } = await query;
+    if (error) throw error;
+    return count ?? data?.length ?? 0;
+  };
+
+  const [live, draft] = await Promise.all([countFor('live'), countFor('draft')]);
+  return { all: live + draft, live, draft };
+}
+
 // GET: Fetch products for admin catalog management (supporting pagination, sorting, search, and special filters)
 export async function GET(request: Request) {
   try {
@@ -41,66 +140,10 @@ export async function GET(request: Request) {
 
     const specialFilters = special ? special.split(',') : [];
 
-    let query = supabase
-      .from('products')
-      .select('*', { count: 'exact' });
-
-    // Apply base filters
-    if (category && category !== 'all') {
-      query = query.or(`category.eq.${category},categories.cs.{"${category}"}`);
-    }
-    if (vendor && vendor !== 'all') {
-      query = query.eq('vendor', vendor);
-    }
-    if (status && status !== 'all') {
-      query = query.eq('status', status);
-    }
-
-    // Apply text search
-    if (search) {
-      const cleanSearch = search.replace(/"/g, '').trim();
-      if (cleanSearch) {
-        const words = cleanSearch.split(/\s+/).filter(Boolean);
-        const fields = ['title', 'name', 'name_fr', 'sku', 'vendor', 'category', 'description'];
-
-        if (!isNaN(Number(cleanSearch)) && words.length === 1) {
-          query = query.or(`id.eq.${cleanSearch},title.ilike."%${cleanSearch}%",name.ilike."%${cleanSearch}%",name_fr.ilike."%${cleanSearch}%",sku.ilike."%${cleanSearch}%",vendor.ilike."%${cleanSearch}%"`);
-        } else {
-          words.forEach(w => {
-            const wordConditions = fields.map(f => `${f}.ilike."%${w}%"`).join(',');
-            query = query.or(wordConditions);
-          });
-        }
-      }
-    }
-
-    // Apply special filters (except dead_products, low_margin, on_sale which require manual processing)
-    if (specialFilters.length > 0 && !specialFilters.includes('all')) {
-      if (specialFilters.includes('no_image')) {
-        query = query.or('image.eq.,image.eq./placeholder.png,image.is.null');
-      }
-      if (specialFilters.includes('negative_stock')) {
-        query = query.lt('stock', 0);
-      }
-      if (specialFilters.includes('out_of_stock')) {
-        query = query.eq('stock', 0);
-      }
-      if (specialFilters.includes('positive_stock')) {
-        query = query.gt('stock', 0);
-      }
-      if (specialFilters.includes('positive_stock_no_vendor')) {
-        query = query.gt('stock', 0).or('vendor.eq.,vendor.eq.-,vendor.is.null');
-      }
-      if (specialFilters.includes('positive_stock_no_desc')) {
-        query = query.gt('stock', 0).or('description.eq.,description.is.null');
-      }
-      if (specialFilters.includes('low_stock')) {
-        query = query.lte('stock', lowStockThreshold);
-      }
-      if (specialFilters.includes('no_desc')) {
-        query = query.or('description.eq.,description.is.null');
-      }
-    }
+    let query = applyProductFilters(
+      supabase.from('products').select('*', { count: 'exact' }),
+      { category, vendor, status, search, specialFilters, lowStockThreshold }
+    );
 
     // Apply sorting
     let finalSortField = 'id';
@@ -196,7 +239,21 @@ export async function GET(request: Request) {
       status: item.status || 'live'
     }));
 
-    return NextResponse.json({ success: true, products, totalCount });
+    const statusCounts = await countProductsByStatus({
+      category,
+      vendor,
+      search,
+      specialFilters: specialFilters.filter(f => !['dead_products', 'low_margin', 'on_sale'].includes(f)),
+      lowStockThreshold,
+    });
+
+    if (needsInRouteProcessing) {
+      statusCounts.all = totalCount;
+      statusCounts.live = products.filter(p => p.status !== 'draft').length;
+      statusCounts.draft = products.filter(p => p.status === 'draft').length;
+    }
+
+    return NextResponse.json({ success: true, products, totalCount, statusCounts });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message || 'Server error' }, { status: 500 });
   }

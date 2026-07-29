@@ -693,6 +693,7 @@ export default function CatalogTab({
   // Local state for paginated products and total count
   const [paginatedProducts, setPaginatedProducts] = useState<Product[]>([]);
   const [totalProducts, setTotalProducts] = useState<number>(0);
+  const [statusCounts, setStatusCounts] = useState<{ all: number; live: number; draft: number } | null>(null);
   const [isLocalLoading, setIsLocalLoading] = useState<boolean>(false);
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
 
@@ -737,9 +738,11 @@ export default function CatalogTab({
       if (data.success && data.products) {
         setPaginatedProducts(data.products);
         setTotalProducts(data.totalCount);
+        setStatusCounts(data.statusCounts || null);
       } else {
         setPaginatedProducts([]);
         setTotalProducts(0);
+        setStatusCounts(null);
         showToast(data.error || "Erreur lors du chargement des produits.", "error");
       }
     } catch (err: any) {
@@ -1423,6 +1426,14 @@ export default function CatalogTab({
   }, [products, paginatedProducts]);
 
   const counts = useMemo(() => {
+    if (statusCounts) {
+      return {
+        all: Math.max(statusCounts.all, totalProducts),
+        live: statusCounts.live,
+        draft: statusCounts.draft,
+      };
+    }
+
     let live = 0;
     let draft = 0;
     const sourceList = products.length > 0 ? products : paginatedProducts;
@@ -1432,7 +1443,7 @@ export default function CatalogTab({
     });
     const all = Math.max(totalProducts, sourceList.length);
     return { all, live, draft };
-  }, [products, paginatedProducts, totalProducts]);
+  }, [products, paginatedProducts, totalProducts, statusCounts]);
 
   // Pagination calculations
   const totalPages = Math.ceil(totalProducts / itemsPerPage) || 1;
