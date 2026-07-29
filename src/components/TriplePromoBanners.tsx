@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { useTranslation } from '@/context/LanguageContext';
-import { useUi } from '@/context/UiContext';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useGalleryOverrides } from '@/lib/useGalleryOverrides';
 
 export interface TriplePromoCard {
@@ -23,14 +23,7 @@ interface TriplePromoBannersProps {
 
 export const TriplePromoBanners: React.FC<TriplePromoBannersProps> = ({ cards }) => {
   const { language } = useTranslation();
-  const { setActiveCategory } = useUi();
   const { getDisplayImage } = useGalleryOverrides();
-
-  const handleCategoryClick = (category: string) => {
-    const el = document.getElementById('boutique-grid');
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
-    setActiveCategory(category);
-  };
 
   const defaultCards: TriplePromoCard[] = [
     {
@@ -83,8 +76,9 @@ export const TriplePromoBanners: React.FC<TriplePromoBannersProps> = ({ cards })
             const overlaySrc = card.overlayImage ? getDisplayImage(card.overlayImage, ...keys.overlayKeys) : '';
 
             return (
-              <div 
+              <Link
                 key={idx}
+                href={`/products?category=${encodeURIComponent(card.category)}`}
                 className="group relative overflow-hidden rounded-[24px] p-6 flex flex-col justify-between h-[200px] md:h-[210px] transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(93,133,248,0.15)] shadow-md border border-slate-100/20"
               >
                 {/* Premium editorial background */}
@@ -114,8 +108,7 @@ export const TriplePromoBanners: React.FC<TriplePromoBannersProps> = ({ cards })
 
                   <div className="mt-auto">
                     <div
-                      onClick={() => handleCategoryClick(card.category)}
-                      className="px-6 py-2 font-sans font-extrabold text-[10px] uppercase tracking-wider rounded-full hover:scale-105 active:scale-95 transition-all shadow-md w-max cursor-pointer select-none text-center bg-white text-slate-800"
+                      className="px-6 py-2 font-sans font-extrabold text-[10px] uppercase tracking-wider rounded-full group-hover:scale-105 group-active:scale-95 transition-all shadow-md w-max cursor-pointer select-none text-center bg-white text-slate-800"
                     >
                       {language === 'AR' ? 'تسوق الآن' : 'Acheter'}
                     </div>
@@ -134,7 +127,7 @@ export const TriplePromoBanners: React.FC<TriplePromoBannersProps> = ({ cards })
                     />
                   </div>
                 )}
-              </div>
+              </Link>
             );
           })}
         </div>
