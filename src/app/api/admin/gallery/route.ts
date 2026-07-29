@@ -197,9 +197,13 @@ interface StorageUploadResult {
 
 async function uploadGalleryImageToStorage(key: string, uploadBuffer: Buffer): Promise<StorageUploadResult> {
   const storagePath = `gallery/${key}-${Date.now()}-${randomUUID()}.webp`;
+
+  // Supabase Storage's raw Buffer transport can be text-coerced in serverless
+  // runtimes, corrupting binary WebP bytes. A Blob uses multipart binary upload.
+  const imageBlob = new Blob([new Uint8Array(uploadBuffer)], { type: 'image/webp' });
   const { error } = await supabase.storage
     .from('products')
-    .upload(storagePath, uploadBuffer, {
+    .upload(storagePath, imageBlob, {
       contentType: 'image/webp',
       upsert: false,
       cacheControl: '3600',
@@ -218,6 +222,28 @@ async function uploadGalleryImageToStorage(key: string, uploadBuffer: Buffer): P
     return {
       url: null,
       error: 'Supabase Storage n’a pas retourné d’URL publique. Vérifiez que le bucket « products » existe et est public.',
+    };
+  }
+
+  // Do not mark a replacement as saved until the exact stored object can be
+  // decoded. This prevents a broken image URL from ever reaching the homepage.
+  try {
+    const { data: storedFile, error: downloadError } = await supabase.storage
+      .from('products')
+      .download(storagePath);
+    if (downloadError || !storedFile) {
+      throw new Error(downloadError?.message || 'Fichier introuvable après l’envoi.');
+    }
+
+    const metadata = await sharp(Buffer.from(await storedFile.arrayBuffer())).metadata();
+    if (!metadata.width || !metadata.height || metadata.format !== 'webp') {
+      throw new Error('Le fichier stocké n’est pas une image WebP valide.');
+    }
+  } catch (verificationError: unknown) {
+    await supabase.storage.from('products').remove([storagePath]);
+    return {
+      url: null,
+      error: `L’image a été refusée car Supabase Storage l’a enregistrée de façon invalide : ${getErrorMessage(verificationError)}`,
     };
   }
 
