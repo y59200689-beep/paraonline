@@ -165,7 +165,9 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
             >
               {CATEGORIES.map((cat, index) => {
                  const isActive = activeCategory === cat.tag;
-                 const isProductsLink = cat.tag === 'solaire';
+                 const productsHref = ['solaire', 'visage', 'cheveux'].includes(cat.tag)
+                   ? `/products?category=${cat.tag}`
+                   : null;
                  
                  // Exact top-down gradient; borderless layout with soft shadow; overflow-hidden to crop bleeding illustrations
                  const cardStyle: React.CSSProperties = {
@@ -213,10 +215,10 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
                        isActive ? 'scale-[1.03]' : ''
                      }`;
 
-                 return isProductsLink ? (
+                 return productsHref ? (
                    <Link
                      key={cat.id}
-                     href="/products?category=solaire"
+                     href={productsHref}
                      className={cardClassName}
                      style={cardStyle}
                    >
