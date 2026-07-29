@@ -30,6 +30,14 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '*.supabase.co',
       },
+      // Gallery uploads are served from this project's public Supabase bucket.
+      // Keep the exact host in addition to the wildcard because the Vercel image
+      // optimizer enforces this allowlist at runtime.
+      {
+        protocol: 'https',
+        hostname: 'doaoitspwukhwbcweewn.supabase.co',
+        pathname: '/storage/v1/object/public/products/**',
+      },
     ],
   },
   // Custom headers to ensure assets under /public/images/ and /public/uploads/ are cached for a year
