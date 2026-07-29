@@ -1968,7 +1968,7 @@ export default function CatalogTab({
                   setFilterCategory(val);
                   setCurrentPage(1);
                 }}
-                options={uniqueCategories}
+                options={categoryOptions}
                 placeholder="Rechercher une catégorie..."
                 emptyMessage="Aucune catégorie trouvée"
                 adminTheme={adminTheme}
@@ -2455,7 +2455,7 @@ export default function CatalogTab({
                           onChange={(e) => handleBulkCellChange(p.id, 'category', e.target.value)}
                           className="bg-slate-950 border border-slate-900 rounded px-1.5 py-1 focus:border-accent text-slate-300 outline-none font-sans text-xs cursor-pointer"
                         >
-                          {['visage', 'kbeauty', 'garnier', 'hadalabo', 'offers'].map(cat => (
+                          {categoryOptions.map(cat => (
                             <option key={cat} value={cat}>{cat}</option>
                           ))}
                         </select>
@@ -2606,7 +2606,7 @@ export default function CatalogTab({
                         Assigner Catégorie
                       </div>
                       <div className="space-y-1">
-                        {uniqueCategories.map(cat => (
+                        {categoryOptions.map(cat => (
                           <button
                             key={cat}
                             type="button"
@@ -4452,7 +4452,7 @@ export default function CatalogTab({
                   Assigner Catégorie
                 </div>
                 <div className="space-y-1">
-                  {uniqueCategories.map(cat => (
+                  {categoryOptions.map(cat => (
                     <button
                       key={cat}
                       type="button"

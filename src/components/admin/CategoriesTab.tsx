@@ -61,6 +61,48 @@ export default function CategoriesTab() {
   const brandSection = settings.homepageSections?.sectionOrder?.find((s: any) => s.type === 'brandPartners');
   const customBrands = brandSection?.settings?.brands || [];
 
+  const categoryLabelFromId = (id: string) => id
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+
+  const displayCategories = useMemo(() => {
+    const byId = new Map<string, any>();
+
+    customCategories.forEach((category: any) => {
+      if (!category?.id) return;
+      const id = String(category.id).trim().toLowerCase();
+      byId.set(id, {
+        ...category,
+        id,
+        labelFr: category.labelFr || categoryLabelFromId(id),
+        labelAr: category.labelAr || '-',
+        source: 'settings',
+      });
+    });
+
+    products.forEach(product => {
+      const productCategories = Array.isArray(product.categories) && product.categories.length > 0
+        ? product.categories
+        : [product.category];
+
+      productCategories.forEach(category => {
+        if (!category) return;
+        const id = String(category).trim().toLowerCase();
+        if (!id || byId.has(id)) return;
+        byId.set(id, {
+          id,
+          labelFr: categoryLabelFromId(id),
+          labelAr: '-',
+          source: 'catalog',
+        });
+      });
+    });
+
+    return Array.from(byId.values()).sort((a, b) => a.labelFr.localeCompare(b.labelFr));
+  }, [customCategories, products]);
+
   const saveUpdatedBrands = async (newBrands: any[]) => {
     const sectionOrder = settings.homepageSections?.sectionOrder || [];
     const updatedSections = sectionOrder.map((s: any) => {
@@ -187,7 +229,7 @@ export default function CategoriesTab() {
         }
       } else if (activeTab === 'categories') {
         // Check for duplicates
-        if (customCategories.some((c: any) => c.id === itemKey)) {
+        if (displayCategories.some((c: any) => c.id === itemKey)) {
           showToast('Une catégorie avec cet identifiant existe déjà.', 'error');
           setIsSaving(false);
           return;
@@ -425,7 +467,10 @@ export default function CategoriesTab() {
   // Helper: Checks if a product belongs to a Category, Concern or Brand
   const getProductAssignment = (p: Product, type: 'category' | 'concern' | 'brand', id: string) => {
     if (type === 'category') {
-      return p.category === id;
+      const categories = Array.isArray(p.categories) && p.categories.length > 0
+        ? p.categories
+        : [p.category];
+      return categories.some(category => String(category).trim().toLowerCase() === id.toLowerCase());
     } else if (type === 'brand') {
       return p.vendor?.toLowerCase() === id.toLowerCase();
     } else {
@@ -596,7 +641,7 @@ export default function CategoriesTab() {
             <span className="font-semibold uppercase tracking-widest" style={{ fontSize: 'var(--admin-text-2xs)', color: 'var(--admin-text-faint)' }}>Total Catégories</span>
           </div>
           <div className="mt-3">
-            <h3 className="font-bold font-mono leading-none" style={{ fontSize: 'var(--admin-text-2xl)', color: 'var(--admin-text-primary)' }}>{customCategories.length}</h3>
+            <h3 className="font-bold font-mono leading-none" style={{ fontSize: 'var(--admin-text-2xl)', color: 'var(--admin-text-primary)' }}>{displayCategories.length}</h3>
             <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-1">Figures catalogue</span>
           </div>
         </div>
@@ -912,8 +957,8 @@ export default function CategoriesTab() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         
         {/* If product categories list is selected */}
-        {activeTab === 'categories' && customCategories.map((cat: any) => {
-          const matchedProducts = products.filter(p => p.category === cat.id);
+        {activeTab === 'categories' && displayCategories.map((cat: any) => {
+          const matchedProducts = products.filter(p => getProductAssignment(p, 'category', cat.id));
           return (
             <div 
               key={cat.id} 
@@ -933,22 +978,26 @@ export default function CategoriesTab() {
                     </div>
                   </div>
                   <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => startEdit(cat)}
-                      title="Modifier"
-                      className={`p-1.5 rounded-lg border transition ${
-                        adminTheme === 'light' ? 'bg-slate-50 hover:bg-slate-100 border-slate-200' : 'bg-slate-800 hover:bg-slate-700 border-slate-700'
-                      }`}
-                    >
-                      <Edit3 className="w-3.5 h-3.5 text-slate-500" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteItem(cat.id)}
-                      title="Supprimer"
-                      className="p-1.5 rounded-lg border border-rose-200 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 transition"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    {cat.source === 'settings' && (
+                      <button
+                        onClick={() => startEdit(cat)}
+                        title="Modifier"
+                        className={`p-1.5 rounded-lg border transition ${
+                          adminTheme === 'light' ? 'bg-slate-50 hover:bg-slate-100 border-slate-200' : 'bg-slate-800 hover:bg-slate-700 border-slate-700'
+                        }`}
+                      >
+                        <Edit3 className="w-3.5 h-3.5 text-slate-500" />
+                      </button>
+                    )}
+                    {cat.source === 'settings' && (
+                      <button
+                        onClick={() => handleDeleteItem(cat.id)}
+                        title="Supprimer"
+                        className="p-1.5 rounded-lg border border-rose-200 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 transition"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
 

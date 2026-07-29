@@ -93,6 +93,31 @@ function applyProductFilters(
   return query;
 }
 
+function buildAdminProductsQuery(filters: {
+  category: string;
+  vendor: string;
+  status: string;
+  search: string;
+  specialFilters: string[];
+  lowStockThreshold: number;
+  sortField: string;
+  sortDirection: string;
+}) {
+  let query = applyProductFilters(
+    supabase.from('products').select('*', { count: 'exact' }),
+    filters
+  );
+
+  let finalSortField = 'id';
+  if (filters.sortField === 'name') {
+    finalSortField = 'title';
+  } else if (['sku', 'stock', 'price', 'category', 'vendor', 'id'].includes(filters.sortField)) {
+    finalSortField = filters.sortField;
+  }
+
+  return query.order(finalSortField, { ascending: filters.sortDirection === 'asc' });
+}
+
 async function countProductsByStatus(filters: {
   category: string;
   vendor: string;
@@ -140,37 +165,38 @@ export async function GET(request: Request) {
 
     const specialFilters = special ? special.split(',') : [];
 
-    let query = applyProductFilters(
-      supabase.from('products').select('*', { count: 'exact' }),
-      { category, vendor, status, search, specialFilters, lowStockThreshold }
-    );
-
-    // Apply sorting
-    let finalSortField = 'id';
-    if (sortField === 'name') {
-      finalSortField = 'title';
-    } else if (['sku', 'stock', 'price', 'category', 'vendor', 'id'].includes(sortField)) {
-      finalSortField = sortField;
-    }
-    query = query.order(finalSortField, { ascending: sortDirection === 'asc' });
-
     // We fetch without range limit if the special filter requires in-route array filtering
     const needsInRouteProcessing = specialFilters.some(f => f === 'dead_products' || f === 'low_margin' || f === 'on_sale');
 
-    if (!needsInRouteProcessing) {
+    const queryFilters = { category, vendor, status, search, specialFilters, lowStockThreshold, sortField, sortDirection };
+    let resultProducts: any[] = [];
+    let totalCount = 0;
+
+    if (isPaginated && !needsInRouteProcessing) {
+      let query = buildAdminProductsQuery(queryFilters);
       const from = (page - 1) * limit;
       const to = from + limit - 1;
       query = query.range(from, to);
+      const { data, count, error } = await query;
+      if (error || !data) {
+        throw error || new Error('No products returned');
+      }
+      resultProducts = data;
+      totalCount = count || data.length;
+    } else {
+      const pageSize = 1000;
+      for (let from = 0; ; from += pageSize) {
+        const to = from + pageSize - 1;
+        const { data, count, error } = await buildAdminProductsQuery(queryFilters).range(from, to);
+        if (error || !data) {
+          throw error || new Error('No products returned');
+        }
+        if (from === 0) totalCount = count || 0;
+        resultProducts.push(...data);
+        if (data.length < pageSize) break;
+      }
+      if (!totalCount) totalCount = resultProducts.length;
     }
-
-    const { data, count, error } = await query;
-
-    if (error || !data) {
-      throw error || new Error('No products returned');
-    }
-
-    let resultProducts = data;
-    let totalCount = count || data.length;
 
     // Handle in-route manual filtering for complex metrics
     if (needsInRouteProcessing) {
