@@ -13,7 +13,7 @@ jobs:
       - name: Trigger scheduled snippet runner
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
-          CRON_URL: https://paraonline-weld.vercel.app/api/cron/snippets
+          CRON_URL: https://paraonline-weld.vercel.app/api/cron/atlascom-sync
         run: |
           set -euo pipefail
 

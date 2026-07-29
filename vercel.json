@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/cron/snippets",
+      "path": "/api/cron/atlascom-sync",
       "schedule": "0 0 * * *"
     }
   ]
