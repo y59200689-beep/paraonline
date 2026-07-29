@@ -658,15 +658,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode; initialSett
 
     if (typeof window !== 'undefined') {
       try {
-        // If we have fresh server-provided settings with galleryOverrides, clear stale localStorage
-        // overrides so old browser-cached images don't overwrite the server's authoritative values.
-        const serverGalleryOverrides = initialSettings?.galleryOverrides;
-        if (serverGalleryOverrides && typeof serverGalleryOverrides === 'object' && Object.keys(serverGalleryOverrides).length > 0) {
-          try { localStorage.removeItem('custom_gallery_overrides'); } catch {}
-          if ((window as any).__PARA_GALLERY_OVERRIDES__) {
-            (window as any).__PARA_GALLERY_OVERRIDES__ = {};
-          }
-        }
+        // Gallery image URLs are server-owned. Remove stale values left by the
+        // retired browser-only gallery cache before hydration can use them.
+        try { localStorage.removeItem('custom_gallery_overrides'); } catch {}
+        (window as any).__PARA_GALLERY_OVERRIDES__ = {};
 
         let source = baseSettings;
         if (!source) {
@@ -719,14 +714,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode; initialSett
       if (data.success && data.settings) {
         const merged = { ...DEFAULT_SETTINGS, ...data.settings };
 
-        // Always merge client-side persistent overrides to support local/IndexedDB uploads
-        let localOverrides: Record<string, string> = {};
-        if (typeof window !== 'undefined') {
-          try {
-            localOverrides = JSON.parse(localStorage.getItem('custom_gallery_overrides') || '{}');
-          } catch {}
-        }
-        merged.galleryOverrides = { ...localOverrides, ...(merged.galleryOverrides || {}) };
+        merged.galleryOverrides = merged.galleryOverrides || {};
 
         if (!merged.banners || merged.banners.length === 0) {
           merged.banners = DEFAULT_SETTINGS.banners;
@@ -837,25 +825,13 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode; initialSett
     }
   }, [settings?.themeColors]);
 
-  // Listen to live gallery/settings updates and sync state instantly
-  // Only merges localStorage overrides AFTER a new upload — not on stale page load.
+  // Gallery updates always re-fetch the server-owned image registry.
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const handleGalleryUpdate = () => {
-      try {
-        const localOverrides = JSON.parse(localStorage.getItem('custom_gallery_overrides') || '{}');
-        setSettings(prev => {
-          // Server galleryOverrides always take priority — local overrides only fill gaps
-          const updated = {
-            ...prev,
-            galleryOverrides: { ...localOverrides, ...(prev.galleryOverrides || {}) }
-          };
-          try {
-            localStorage.setItem('para_settings_cache', JSON.stringify(updated));
-          } catch {}
-          return updated;
-        });
-      } catch {}
+      settingsCache = null;
+      lastFetchedTime = 0;
+      loadSettings(true);
     };
     const handleSettingsUpdate = () => {
       // On a settings update event, force a fresh fetch from server

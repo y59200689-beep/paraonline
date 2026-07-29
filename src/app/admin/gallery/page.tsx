@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAdmin } from '@/context/AdminContext';
-import { setGalleryOverride, getGalleryOverrides, deleteGalleryOverride } from '@/lib/gallery-storage';
 import {
   Images,
   Upload,
@@ -519,16 +518,9 @@ export default function GalleryPage() {
     setLoading(true);
     fetch('/api/admin/gallery')
       .then(r => r.json())
-      .then(async data => {
+      .then(data => {
         if (data.success) {
-          let list: GalleryImage[] = data.images;
-          if (typeof window !== 'undefined') {
-            try {
-              const overrides = await getGalleryOverrides();
-              list = list.map(img => overrides[img.key] ? { ...img, url: overrides[img.key] } : img);
-            } catch {}
-          }
-          setImages(list);
+          setImages(data.images);
         }
       })
       .catch(console.error)
@@ -594,9 +586,6 @@ export default function GalleryPage() {
         if (data.success) {
           successCount++;
           const newUrl = data.url ? (data.url.startsWith('data:') ? data.url : `${data.url.split('?')[0]}?v=${Date.now()}`) : entry.previewUrl;
-
-          // Save override persistently (IndexedDB + localStorage fallback)
-          await setGalleryOverride(entry.key, newUrl);
 
           // Update url, size, and dimensions in local state
           setImages(prev => prev.map(img =>
