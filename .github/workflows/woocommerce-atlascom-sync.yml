@@ -1,0 +1,26 @@
+name: WooCommerce Atlascom Sync
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  trigger-sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger scheduled snippet runner
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          CRON_URL: https://paraonline-weld.vercel.app/api/cron/snippets
+        run: |
+          set -euo pipefail
+
+          if [ -n "$CRON_SECRET" ]; then
+            curl --fail --show-error --silent \
+              --header "Authorization: Bearer $CRON_SECRET" \
+              "$CRON_URL"
+          else
+            curl --fail --show-error --silent "$CRON_URL"
+          fi
