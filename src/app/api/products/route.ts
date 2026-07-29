@@ -34,7 +34,7 @@ function matchesConcern(product: Product, concernId: string, customConcerns: any
     return hasCategory('acné') || text.includes('acné') || text.includes('imperfection') || text.includes('bouton') || ingredients.includes('salicylic acid') || product.id === 3 || product.id === 22 || product.id === 15 || product.id === 16 || product.id === 17;
   }
   if (concernId === 'spots') {
-    return text.includes('tache') || text.includes('éclat') || text.includes('bright') || text.includes('pigment') || ingredients.includes('tranexamic') || ingredients.includes('ascorbic') || product.id === 3 || product.id === 14;
+    return hasCategory('anti tache') || text.includes('tache') || text.includes('éclat') || text.includes('bright') || text.includes('pigment') || ingredients.includes('tranexamic') || ingredients.includes('ascorbic') || product.id === 3 || product.id === 14;
   }
   if (concernId === 'dryness') {
     return text.includes('déshydrat') || text.includes('sec') || text.includes('hydrat') || ingredients.includes('hyaluronic') || product.id === 5 || product.id === 6 || product.id === 7 || product.id === 17;
@@ -165,6 +165,12 @@ async function buildCatalogFacets() {
     .eq('status', 'live')
     .or('category.eq.acné,categories.cs.{"acné"},category.eq.acne,categories.cs.{"acne"}');
   if (acneCountError) throw acneCountError;
+  const { count: spotsCount, error: spotsCountError } = await supabase
+    .from('products')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'live')
+    .or('category.eq."anti tache",categories.cs.{"anti tache"}');
+  if (spotsCountError) throw spotsCountError;
 
   return {
     total: rows.length,
@@ -175,7 +181,7 @@ async function buildCatalogFacets() {
     brands: Array.from(brandCounts.entries())
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => a.name.localeCompare(b.name)),
-    concerns: { acne: acneCount || 0 },
+    concerns: { acne: acneCount || 0, spots: spotsCount || 0 },
   };
 }
 

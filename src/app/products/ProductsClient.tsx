@@ -37,7 +37,7 @@ type CatalogFacets = {
   total: number;
   categories: Array<{ id: string; count: number }>;
   brands: Array<{ name: string; count: number }>;
-  concerns?: { acne?: number };
+  concerns?: { acne?: number; spots?: number };
 };
 
 const matchesConcern = (product: Product, concernId: string, customConcerns: any[] = []) => {
@@ -72,7 +72,7 @@ const matchesConcern = (product: Product, concernId: string, customConcerns: any
     return hasCategory('acné') || text.includes('acné') || text.includes('imperfection') || text.includes('bouton') || ingredients.includes('salicylic acid') || product.id === 3 || product.id === 22 || product.id === 15 || product.id === 16 || product.id === 17;
   }
   if (concernId === 'spots') {
-    return text.includes('tache') || text.includes('éclat') || text.includes('bright') || text.includes('pigment') || ingredients.includes('tranexamic') || ingredients.includes('ascorbic') || product.id === 3 || product.id === 14;
+    return hasCategory('anti tache') || text.includes('tache') || text.includes('éclat') || text.includes('bright') || text.includes('pigment') || ingredients.includes('tranexamic') || ingredients.includes('ascorbic') || product.id === 3 || product.id === 14;
   }
   if (concernId === 'dryness') {
     return text.includes('déshydrat') || text.includes('sec') || text.includes('hydrat') || ingredients.includes('hyaluronic') || product.id === 5 || product.id === 6 || product.id === 7 || product.id === 17;
@@ -265,9 +265,13 @@ export default function ProductsClient({
   const concernCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     CONCERNS_LIST.forEach((c: any) => {
-      counts[c.id] = c.id === 'acne'
-        ? catalogFacets.concerns?.acne || 0
-        : products.filter(p => matchesConcern(p, c.id, customConcerns)).length;
+      if (c.id === 'acne') {
+        counts[c.id] = catalogFacets.concerns?.acne || 0;
+      } else if (c.id === 'spots') {
+        counts[c.id] = catalogFacets.concerns?.spots || 0;
+      } else {
+        counts[c.id] = products.filter(p => matchesConcern(p, c.id, customConcerns)).length;
+      }
     });
     return counts;
   }, [products, CONCERNS_LIST, customConcerns, catalogFacets.concerns]);
