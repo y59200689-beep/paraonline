@@ -37,7 +37,7 @@ function applyProductFilters(
   options: { includeStatus?: boolean } = {}
 ) {
   if (category && category !== 'all') {
-    query = query.or(`category.eq.${category},categories.cs.{"${category}"}`);
+    query = query.or(`category.eq.${category},categories.cs.["${category}"]`);
   }
   if (vendor && vendor !== 'all') {
     query = query.eq('vendor', vendor);

@@ -244,12 +244,8 @@ export async function GET(request: Request) {
     if (category !== 'all') {
       if (category === 'offers') {
         query = query.gt('compare_price', 'price');
-      } else if (category === 'kbeauty') {
-        query = query.or('category.eq.kbeauty,categories.cs.{"kbeauty"}');
-      } else if (category === 'solaire') {
-        query = query.or('category.eq.garnier,categories.cs.{"solaire"},tags.cs.{"solaire"}');
       } else {
-        query = query.or(`category.eq.${category},categories.cs.{"${category}"},tags.cs.{"${category}"}`);
+        query = query.or(`category.eq.${category},categories.cs.["${category}"],tags.cs.["${category}"]`);
       }
     }
 
