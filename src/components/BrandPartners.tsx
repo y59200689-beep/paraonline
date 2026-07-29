@@ -66,32 +66,35 @@ export const BrandPartners: React.FC<BrandPartnersProps> = () => {
           display: flex;
           gap: 0.5rem;
           width: max-content;
-          animation: marqueeL 120s linear infinite;
+          animation: marqueeL 22s linear infinite;
+          will-change: transform;
         }
         .brand-marquee-r {
           display: flex;
           gap: 0.5rem;
           width: max-content;
-          animation: marqueeR 100s linear infinite;
+          animation: marqueeR 20s linear infinite;
+          will-change: transform;
         }
         .brand-marquee-l-2 {
           display: flex;
           gap: 0.5rem;
           width: max-content;
-          animation: marqueeL 140s linear infinite;
+          animation: marqueeL 24s linear infinite;
+          will-change: transform;
         }
         @media (min-width: 640px) {
           .brand-marquee-l-1 {
             gap: 1rem;
-            animation-duration: 380s;
+            animation-duration: 30s;
           }
           .brand-marquee-r {
             gap: 1rem;
-            animation-duration: 320s;
+            animation-duration: 26s;
           }
           .brand-marquee-l-2 {
             gap: 1rem;
-            animation-duration: 440s;
+            animation-duration: 34s;
           }
         }
         /* Pause animation on hover so users can click reliably */
