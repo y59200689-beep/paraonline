@@ -40,7 +40,7 @@ function matchesConcern(product: Product, concernId: string, customConcerns: any
     return text.includes('déshydrat') || text.includes('sec') || text.includes('hydrat') || ingredients.includes('hyaluronic') || product.id === 5 || product.id === 6 || product.id === 7 || product.id === 17;
   }
   if (concernId === 'wrinkles') {
-    return text.includes('ridule') || text.includes('âge') || text.includes('anti-aging') || text.includes('vieill') || ingredients.includes('retinol') || product.id === 8 || product.id === 5 || product.id === 6;
+    return hasCategory('anti rides') || text.includes('ridule') || text.includes('âge') || text.includes('anti-aging') || text.includes('vieill') || ingredients.includes('retinol') || product.id === 8 || product.id === 5 || product.id === 6;
   }
   if (concernId === 'redness') {
     return text.includes('rougeur') || text.includes('apais') || text.includes('sensible') || text.includes('sooth') || ingredients.includes('centella') || ingredients.includes('heartleaf') || product.id === 17 || product.id === 16 || product.id === 15;
@@ -171,6 +171,12 @@ async function buildCatalogFacets() {
     .eq('status', 'live')
     .or('category.eq."anti tache",categories.cs.{"anti tache"}');
   if (spotsCountError) throw spotsCountError;
+  const { count: wrinklesCount, error: wrinklesCountError } = await supabase
+    .from('products')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'live')
+    .or('category.eq."anti rides",categories.cs.{"anti rides"}');
+  if (wrinklesCountError) throw wrinklesCountError;
 
   return {
     total: rows.length,
@@ -181,7 +187,7 @@ async function buildCatalogFacets() {
     brands: Array.from(brandCounts.entries())
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => a.name.localeCompare(b.name)),
-    concerns: { acne: acneCount || 0, spots: spotsCount || 0 },
+    concerns: { acne: acneCount || 0, spots: spotsCount || 0, wrinkles: wrinklesCount || 0 },
   };
 }
 

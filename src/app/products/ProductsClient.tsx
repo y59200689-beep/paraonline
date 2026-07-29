@@ -37,7 +37,7 @@ type CatalogFacets = {
   total: number;
   categories: Array<{ id: string; count: number }>;
   brands: Array<{ name: string; count: number }>;
-  concerns?: { acne?: number; spots?: number };
+  concerns?: { acne?: number; spots?: number; wrinkles?: number };
 };
 
 const matchesConcern = (product: Product, concernId: string, customConcerns: any[] = []) => {
@@ -78,7 +78,7 @@ const matchesConcern = (product: Product, concernId: string, customConcerns: any
     return text.includes('déshydrat') || text.includes('sec') || text.includes('hydrat') || ingredients.includes('hyaluronic') || product.id === 5 || product.id === 6 || product.id === 7 || product.id === 17;
   }
   if (concernId === 'wrinkles') {
-    return text.includes('ridule') || text.includes('âge') || text.includes('anti-aging') || text.includes('vieill') || ingredients.includes('retinol') || product.id === 8 || product.id === 5 || product.id === 6;
+    return hasCategory('anti rides') || text.includes('ridule') || text.includes('âge') || text.includes('anti-aging') || text.includes('vieill') || ingredients.includes('retinol') || product.id === 8 || product.id === 5 || product.id === 6;
   }
   if (concernId === 'redness') {
     return text.includes('rougeur') || text.includes('apais') || text.includes('sensible') || text.includes('sooth') || ingredients.includes('centella') || ingredients.includes('heartleaf') || product.id === 17 || product.id === 16 || product.id === 15;
@@ -269,6 +269,8 @@ export default function ProductsClient({
         counts[c.id] = catalogFacets.concerns?.acne || 0;
       } else if (c.id === 'spots') {
         counts[c.id] = catalogFacets.concerns?.spots || 0;
+      } else if (c.id === 'wrinkles') {
+        counts[c.id] = catalogFacets.concerns?.wrinkles || 0;
       } else {
         counts[c.id] = products.filter(p => matchesConcern(p, c.id, customConcerns)).length;
       }
