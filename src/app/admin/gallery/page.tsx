@@ -573,6 +573,7 @@ export default function GalleryPage() {
     const entries = Array.from(pendingMap.values());
     let successCount = 0;
     let failCount = 0;
+    const failureMessages: string[] = [];
 
     for (const entry of entries) {
       try {
@@ -600,10 +601,13 @@ export default function GalleryPage() {
           ));
         } else {
           failCount++;
-          console.error(`[gallery] Failed to replace ${entry.key}:`, data.error);
+          const message = typeof data.error === 'string' ? data.error : 'Le serveur a refusé le remplacement de l’image.';
+          failureMessages.push(message);
+          console.error(`[gallery] Failed to replace ${entry.key}:`, message);
         }
       } catch (err) {
         failCount++;
+        failureMessages.push('Impossible de joindre le serveur pendant l’envoi de l’image.');
         console.error(`[gallery] Error replacing ${entry.key}:`, err);
       } finally {
         URL.revokeObjectURL(entry.previewUrl);
@@ -618,9 +622,9 @@ export default function GalleryPage() {
         ? 'Image remplacée avec succès.'
         : `${successCount} images remplacées avec succès.`);
     } else if (successCount === 0) {
-      showToast('error', `Échec du remplacement de ${failCount} image${failCount > 1 ? 's' : ''}.`);
+      showToast('error', failureMessages[0] || `Échec du remplacement de ${failCount} image${failCount > 1 ? 's' : ''}.`);
     } else {
-      showToast('success', `${successCount} image${successCount > 1 ? 's' : ''} remplacée${successCount > 1 ? 's' : ''}. ${failCount} en échec.`);
+      showToast('error', `${successCount} image${successCount > 1 ? 's' : ''} remplacée${successCount > 1 ? 's' : ''}. ${failCount} en échec : ${failureMessages[0] || 'erreur inconnue'}`);
     }
   }, [uploading, pendingMap]);
 

@@ -190,7 +190,12 @@ async function deleteOldStorageOrFile(oldUrl: string, newUrl: string): Promise<v
   }
 }
 
-async function uploadGalleryImageToStorage(key: string, uploadBuffer: Buffer): Promise<string | null> {
+interface StorageUploadResult {
+  url: string | null;
+  error?: string;
+}
+
+async function uploadGalleryImageToStorage(key: string, uploadBuffer: Buffer): Promise<StorageUploadResult> {
   const storagePath = `gallery/${key}-${Date.now()}-${randomUUID()}.webp`;
   const { error } = await supabase.storage
     .from('products')
@@ -202,11 +207,21 @@ async function uploadGalleryImageToStorage(key: string, uploadBuffer: Buffer): P
 
   if (error) {
     console.warn('[gallery] Supabase storage upload failed:', error);
-    return null;
+    return {
+      url: null,
+      error: `Impossible d’envoyer l’image vers Supabase Storage : ${error.message}`,
+    };
   }
 
   const { data } = supabase.storage.from('products').getPublicUrl(storagePath);
-  return data?.publicUrl ? `${data.publicUrl}?v=${Date.now()}` : null;
+  if (!data?.publicUrl) {
+    return {
+      url: null,
+      error: 'Supabase Storage n’a pas retourné d’URL publique. Vérifiez que le bucket « products » existe et est public.',
+    };
+  }
+
+  return { url: `${data.publicUrl}?v=${Date.now()}` };
 }
 
 function writeGalleryImageToPublic(filePath: string, uploadBuffer: Buffer): string {
@@ -375,23 +390,28 @@ export async function POST(request: Request) {
     }
 
     let finalUrl: string | null = null;
+    let storageError: string | undefined;
 
     if (isProduction) {
       // Production instances must use durable object storage. A deployed public/
       // directory is immutable or ephemeral and cannot be the gallery source.
-      finalUrl = await uploadGalleryImageToStorage(entry.key, uploadBuffer);
+      const result = await uploadGalleryImageToStorage(entry.key, uploadBuffer);
+      finalUrl = result.url;
+      storageError = result.error;
     } else {
       try {
         finalUrl = writeGalleryImageToPublic(entry.filePath, uploadBuffer);
       } catch (fsErr: unknown) {
         console.warn('[gallery] Local filesystem is read-only. Falling back to Supabase Storage:', getErrorMessage(fsErr));
-        finalUrl = await uploadGalleryImageToStorage(entry.key, uploadBuffer);
+        const result = await uploadGalleryImageToStorage(entry.key, uploadBuffer);
+        finalUrl = result.url;
+        storageError = result.error;
       }
     }
 
     if (!finalUrl) {
       return NextResponse.json(
-        { success: false, error: 'Le stockage d’images est indisponible. Réessayez plus tard.' },
+        { success: false, error: storageError || 'Le stockage d’images est indisponible. Réessayez plus tard.' },
         { status: 503 }
       );
     }
