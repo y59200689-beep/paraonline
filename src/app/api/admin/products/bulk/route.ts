@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { verifyAdminSession } from '@/lib/session';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/catalog-cache';
 
 function normalizeCategories(categories: unknown, primaryCategory: unknown): string[] {
   const primary = typeof primaryCategory === 'string' && primaryCategory.trim()
@@ -59,6 +60,7 @@ export async function POST(request: Request) {
 
     revalidatePath('/products');
     revalidatePath('/');
+    revalidateTag(PUBLIC_CATALOG_CACHE_TAG, { expire: 0 });
 
     return NextResponse.json({ success: true, count: products.length });
   } catch (error: any) {

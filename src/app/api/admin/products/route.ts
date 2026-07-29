@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { Product } from '@/lib/data';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { verifyAdminSession } from '@/lib/session';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/catalog-cache';
 
 function normalizeCategories(categories: unknown, primaryCategory: unknown): string[] {
   const primary = typeof primaryCategory === 'string' && primaryCategory.trim()
@@ -343,6 +344,7 @@ export async function POST(request: Request) {
     revalidatePath('/products');
     revalidatePath(`/products/${newId}`);
     revalidatePath('/');
+    revalidateTag(PUBLIC_CATALOG_CACHE_TAG, { expire: 0 });
 
     return NextResponse.json({ success: true, product: newProduct });
   } catch (error: any) {
@@ -400,6 +402,7 @@ export async function PUT(request: Request) {
     revalidatePath('/products');
     revalidatePath(`/products/${productId}`);
     revalidatePath('/');
+    revalidateTag(PUBLIC_CATALOG_CACHE_TAG, { expire: 0 });
 
     return NextResponse.json({ success: true, product: { id: productId, ...updatedProduct } });
   } catch (error: any) {
@@ -452,6 +455,7 @@ export async function DELETE(request: Request) {
 
     revalidatePath('/products');
     revalidatePath('/');
+    revalidateTag(PUBLIC_CATALOG_CACHE_TAG, { expire: 0 });
 
     return NextResponse.json({ success: true, count: idsToDelete.length, deletedIds: idsToDelete });
   } catch (error: any) {

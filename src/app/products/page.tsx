@@ -1,8 +1,9 @@
 import { Product } from '@/lib/data';
 import { supabase } from '@/lib/supabase';
 import ProductsClient from './ProductsClient';
+import { unstable_cache } from 'next/cache';
+import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/catalog-cache';
 
-export const revalidate = 3600; // 1 hour
 const PAGE_SIZE = 50;
 
 function rowToProduct(item: any): Product {
@@ -80,21 +81,31 @@ async function loadCatalogFacets() {
   };
 }
 
-export default async function ProductsPage() {
+const getCachedCatalogFacets = unstable_cache(
+  loadCatalogFacets,
+  ['catalog-facets'],
+  { tags: [PUBLIC_CATALOG_CACHE_TAG], revalidate: 3600 }
+);
+
+async function loadCatalogPage(category: string) {
   let products: Product[] = [];
   let pagination = { total: 0, page: 1, limit: PAGE_SIZE, totalPages: 1 };
-  let facets = { total: 0, categories: [] as Array<{ id: string; count: number }>, brands: [] as Array<{ name: string; count: number }> };
 
   try {
-    const [{ data, count, error }, catalogFacets] = await Promise.all([
-      supabase
-        .from('products')
-        .select('*', { count: 'exact' })
-        .eq('status', 'live')
-        .order('id', { ascending: true })
-        .range(0, PAGE_SIZE - 1),
-      loadCatalogFacets(),
-    ]);
+    let query = supabase
+      .from('products')
+      .select('*', { count: 'exact' })
+      .eq('status', 'live');
+
+    if (category === 'offers') {
+      query = query.gt('compare_price', 'price');
+    } else if (category !== 'all') {
+      query = query.or(`category.eq.${category},categories.cs.{"${category}"}`);
+    }
+
+    const { data, count, error } = await query
+      .order('id', { ascending: true })
+      .range(0, PAGE_SIZE - 1);
 
     if (error) throw error;
     products = (data || []).map(rowToProduct);
@@ -104,10 +115,41 @@ export default async function ProductsPage() {
       limit: PAGE_SIZE,
       totalPages: Math.max(1, Math.ceil((count || products.length) / PAGE_SIZE)),
     };
-    facets = catalogFacets;
   } catch (err) {
     console.error("Error loading products on server:", err);
   }
 
-  return <ProductsClient initialProducts={products} initialPagination={pagination} catalogFacets={facets} />;
+  return { products, pagination };
+}
+
+const getCachedCatalogPage = unstable_cache(
+  loadCatalogPage,
+  ['catalog-page'],
+  { tags: [PUBLIC_CATALOG_CACHE_TAG], revalidate: 300 }
+);
+
+function normalizeCategory(value: string | string[] | undefined) {
+  const category = typeof value === 'string' ? value.trim().toLowerCase() : 'all';
+  return /^[a-z0-9_-]+$/.test(category) ? category : 'all';
+}
+
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string | string[] }>;
+}) {
+  const initialCategory = normalizeCategory((await searchParams).category);
+  const [{ products, pagination }, catalogFacets] = await Promise.all([
+    getCachedCatalogPage(initialCategory),
+    getCachedCatalogFacets(),
+  ]);
+
+  return (
+    <ProductsClient
+      initialProducts={products}
+      initialPagination={pagination}
+      catalogFacets={catalogFacets}
+      initialCategory={initialCategory}
+    />
+  );
 }

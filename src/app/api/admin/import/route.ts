@@ -3,6 +3,7 @@ import { revalidatePath, revalidateTag } from 'next/cache';
 import { verifyAdminSession } from '@/lib/session';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { PUBLIC_SETTINGS_CACHE_TAG } from '@/lib/get-public-settings';
+import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/catalog-cache';
 
 function normalizeImportedCategories(categories: unknown, primaryCategory: unknown): string[] {
   const rawValues = Array.isArray(categories)
@@ -207,6 +208,7 @@ export async function POST(request: Request) {
 
     revalidatePath('/products');
     revalidatePath('/');
+    revalidateTag(PUBLIC_CATALOG_CACHE_TAG, { expire: 0 });
 
     // Keep the catalog's category source in sync with the imported products so
     // new sheet categories are immediately available in the editor.

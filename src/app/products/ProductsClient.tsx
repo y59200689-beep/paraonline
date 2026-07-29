@@ -148,10 +148,12 @@ export default function ProductsClient({
   initialProducts,
   initialPagination,
   catalogFacets,
+  initialCategory,
 }: {
   initialProducts: Product[];
   initialPagination: CatalogPagination;
   catalogFacets: CatalogFacets;
+  initialCategory: string;
 }) {
   const { language } = useTranslation();
   const { diagnostic } = useUi();
@@ -201,7 +203,7 @@ export default function ProductsClient({
 
   // Filters State
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedConcerns, setSelectedConcerns] = useState<string[]>([]);
   const [maxPrice, setMaxPrice] = useState(1500);
@@ -215,6 +217,15 @@ export default function ProductsClient({
   const didHydrate = useRef(false);
 
   const pageSize = initialPagination.limit || 50;
+
+  const displayedCategories = useMemo(() => {
+    if (selectedCategory === 'all') return CATEGORIES_LIST;
+
+    const selected = CATEGORIES_LIST.find(category => category.id === selectedCategory);
+    if (!selected) return CATEGORIES_LIST;
+
+    return [selected, ...CATEGORIES_LIST.filter(category => category.id !== selectedCategory)];
+  }, [CATEGORIES_LIST, selectedCategory]);
 
   const brandsList = useMemo(() => {
     return catalogFacets.brands.map(brand => brand.name);
@@ -262,7 +273,7 @@ export default function ProductsClient({
         if (
           currentPage === initialPagination.page &&
           searchQuery.trim() === '' &&
-          selectedCategory === 'all' &&
+          selectedCategory === initialCategory &&
           selectedBrands.length === 0 &&
           selectedConcerns.length === 0 &&
           maxPrice === 1500 &&
@@ -308,17 +319,6 @@ export default function ProductsClient({
     loadPage();
     return () => controller.abort();
   }, [currentPage, pageSize, searchQuery, selectedCategory, selectedBrands, selectedConcerns, maxPrice, sortOption]);
-
-  // Sync initial query params if present
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const cat = params.get('category');
-      if (cat) setSelectedCategory(cat);
-      const q = params.get('search');
-      if (q) setSearchQuery(q);
-    }
-  }, []);
 
   const handleBrandToggle = (brand: string) => {
     setSelectedBrands(prev => 
@@ -496,7 +496,7 @@ export default function ProductsClient({
                 {language === 'FR' ? 'Catégories' : 'الفئات'}
               </span>
               <div className="flex flex-col gap-1.5 mt-2">
-                {CATEGORIES_LIST.map(cat => (
+                {displayedCategories.map(cat => (
                   <button
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}
@@ -931,7 +931,7 @@ export default function ProductsClient({
                   {language === 'FR' ? 'Catégories' : 'الفئات'}
                 </label>
                 <div className="flex flex-wrap gap-1.5">
-                  {CATEGORIES_LIST.map(cat => (
+                  {displayedCategories.map(cat => (
                     <button
                       key={cat.id}
                       onClick={() => setSelectedCategory(cat.id)}
