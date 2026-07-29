@@ -124,58 +124,106 @@ async function upsertInBatches<T>(table: string, rows: T[], batchSize = 500) {
   return processed;
 }
 
-export async function POST(request: Request) {
-  try {
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé.' }, { status: 401 });
-    }
-    if (session.role !== 'owner') {
-      return NextResponse.json({ success: false, error: 'Accès refusé. Propriétaire uniquement.' }, { status: 403 });
-    }
+async function recoverMockData(options: {
+  dryRun: boolean;
+  includeProducts: boolean;
+  includeSnippets: boolean;
+  actorName: string;
+}) {
+  const mockDb = readMockDb();
+  const products = options.includeProducts ? (mockDb.products || []).map(normalizeProduct) : [];
+  const snippets = options.includeSnippets ? (mockDb.code_snippets || []).map(normalizeSnippet) : [];
 
-    const body = await request.json().catch(() => ({}));
-    const dryRun = body?.dryRun !== false;
-    const includeProducts = body?.products !== false;
-    const includeSnippets = body?.snippets !== false;
-
-    const mockDb = readMockDb();
-    const products = includeProducts ? (mockDb.products || []).map(normalizeProduct) : [];
-    const snippets = includeSnippets ? (mockDb.code_snippets || []).map(normalizeSnippet) : [];
-
-    if (dryRun) {
-      return NextResponse.json({
-        success: true,
-        dryRun: true,
-        products: products.length,
-        snippets: snippets.filter(s => s.trigger_type === 'client').length,
-        cronTasks: snippets.filter(s => s.trigger_type === 'cron').length,
-      });
-    }
-
-    const productCount = includeProducts ? await upsertInBatches('products', products) : 0;
-    const snippetCount = includeSnippets ? await upsertInBatches('code_snippets', snippets, 100) : 0;
-
-    await supabase.from('audit_logs').insert({
-      id: `log_${Math.random().toString(36).substring(2, 11)}`,
-      action: 'Récupération Données Admin',
-      details: `${session.name} a restauré ${productCount} produits et ${snippetCount} snippets/tâches depuis supabase-mock-db.json.`,
-      date: new Date().toISOString(),
-    });
-
-    revalidatePath('/');
-    revalidatePath('/products');
-    revalidatePath('/admin/catalog');
-    revalidatePath('/admin/snippets');
-    revalidatePath('/admin/cron');
-
-    return NextResponse.json({
+  if (options.dryRun) {
+    return {
       success: true,
-      dryRun: false,
-      products: productCount,
+      dryRun: true,
+      products: products.length,
       snippets: snippets.filter(s => s.trigger_type === 'client').length,
       cronTasks: snippets.filter(s => s.trigger_type === 'cron').length,
+    };
+  }
+
+  const productCount = options.includeProducts ? await upsertInBatches('products', products) : 0;
+  const snippetCount = options.includeSnippets ? await upsertInBatches('code_snippets', snippets, 100) : 0;
+
+  await supabase.from('audit_logs').insert({
+    id: `log_${Math.random().toString(36).substring(2, 11)}`,
+    action: 'Récupération Données Admin',
+    details: `${options.actorName} a restauré ${productCount} produits et ${snippetCount} snippets/tâches depuis supabase-mock-db.json.`,
+    date: new Date().toISOString(),
+  });
+
+  revalidatePath('/');
+  revalidatePath('/products');
+  revalidatePath('/admin/catalog');
+  revalidatePath('/admin/snippets');
+  revalidatePath('/admin/cron');
+
+  return {
+    success: true,
+    dryRun: false,
+    products: productCount,
+    snippets: snippets.filter(s => s.trigger_type === 'client').length,
+    cronTasks: snippets.filter(s => s.trigger_type === 'cron').length,
+  };
+}
+
+async function assertOwnerSession() {
+  const session = await verifyAdminSession();
+  if (!session) {
+    return {
+      session: null,
+      response: NextResponse.json({ success: false, error: 'Accès non autorisé.' }, { status: 401 }),
+    };
+  }
+  if (session.role !== 'owner') {
+    return {
+      session: null,
+      response: NextResponse.json({ success: false, error: 'Accès refusé. Propriétaire uniquement.' }, { status: 403 }),
+    };
+  }
+  return { session, response: null };
+}
+
+export async function GET(request: Request) {
+  try {
+    const { session, response } = await assertOwnerSession();
+    if (response) return response;
+
+    const { searchParams } = new URL(request.url);
+    const restoreConfirmed = searchParams.get('confirm') === 'restore';
+    const result = await recoverMockData({
+      dryRun: !restoreConfirmed,
+      includeProducts: searchParams.get('products') !== 'false',
+      includeSnippets: searchParams.get('snippets') !== 'false',
+      actorName: session.name,
     });
+
+    return NextResponse.json({
+      ...result,
+      message: restoreConfirmed
+        ? 'Récupération terminée. Rafraîchissez /admin/catalog, /admin/snippets et /admin/cron.'
+        : 'Simulation seulement. Ajoutez ?confirm=restore à cette URL pour lancer la récupération.',
+    });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message || 'Erreur serveur' }, { status: 500 });
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const { session, response } = await assertOwnerSession();
+    if (response) return response;
+    const body = await request.json().catch(() => ({}));
+    const result = await recoverMockData({
+      dryRun: body?.dryRun !== false,
+      includeProducts: body?.products !== false,
+      includeSnippets: body?.snippets !== false,
+      actorName: session.name,
+    });
+
+    return NextResponse.json(result);
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message || 'Erreur serveur' }, { status: 500 });
   }
