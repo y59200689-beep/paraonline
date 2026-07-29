@@ -163,12 +163,20 @@ export default function ProductsClient({
   const customConcerns = settings.customConcerns || [];
 
   const CATEGORIES_LIST = useMemo(() => {
+    const categoryCountsById = new Map(
+      catalogFacets.categories.map(category => [category.id, category.count])
+    );
     const byId = new Map<string, { id: string; labelFR: string; labelAR: string }>();
-    CATEGORIES.forEach(category => byId.set(category.id, category));
+    CATEGORIES.forEach(category => {
+      if (category.id === 'all' || (categoryCountsById.get(category.id) || 0) > 0) {
+        byId.set(category.id, category);
+      }
+    });
 
     customCategories.forEach((category: any) => {
       if (!category?.id) return;
       const id = String(category.id).trim().toLowerCase();
+      if ((categoryCountsById.get(id) || 0) === 0) return;
       byId.set(id, {
         id,
         labelFR: category.labelFr || categoryLabelFromId(id),

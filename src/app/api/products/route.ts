@@ -108,7 +108,7 @@ async function fetchProductFacetRows() {
     const to = from + pageSize - 1;
     const { data, error } = await supabase
       .from('products')
-      .select('category,categories,vendor')
+      .select('category,categories,vendor,price,compare_price')
       .eq('status', 'live')
       .range(from, to);
 
@@ -126,8 +126,10 @@ async function buildCatalogFacets() {
   const rows = await fetchProductFacetRows();
   const categoryCounts = new Map<string, number>();
   const brandCounts = new Map<string, number>();
+  let offerCount = 0;
 
   for (const row of rows) {
+    if (Number(row.compare_price) > Number(row.price)) offerCount += 1;
     const categories = Array.isArray(row.categories) && row.categories.length > 0
       ? row.categories as string[]
       : [row.category as string];
@@ -152,6 +154,7 @@ async function buildCatalogFacets() {
     total: rows.length,
     categories: Array.from(categoryCounts.entries())
       .map(([id, count]) => ({ id, count }))
+      .concat(offerCount > 0 ? [{ id: 'offers', count: offerCount }] : [])
       .sort((a, b) => a.id.localeCompare(b.id)),
     brands: Array.from(brandCounts.entries())
       .map(([name, count]) => ({ name, count }))

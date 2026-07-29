@@ -40,6 +40,7 @@ function rowToProduct(item: any): Product {
 async function loadCatalogFacets() {
   const categoryCounts = new Map<string, number>();
   const brandCounts = new Map<string, number>();
+  let offerCount = 0;
   let total = 0;
   const pageSize = 1000;
 
@@ -47,7 +48,7 @@ async function loadCatalogFacets() {
     const to = from + pageSize - 1;
     const { data, error } = await supabase
       .from('products')
-      .select('category,categories,vendor')
+      .select('category,categories,vendor,price,compare_price')
       .eq('status', 'live')
       .range(from, to);
 
@@ -56,6 +57,7 @@ async function loadCatalogFacets() {
     total += batch.length;
 
     batch.forEach((item: any) => {
+      if (Number(item.compare_price) > Number(item.price)) offerCount += 1;
       const categories = Array.isArray(item.categories) && item.categories.length > 0
         ? item.categories
         : [item.category];
@@ -79,7 +81,10 @@ async function loadCatalogFacets() {
 
   return {
     total,
-    categories: Array.from(categoryCounts.entries()).map(([id, count]) => ({ id, count })).sort((a, b) => a.id.localeCompare(b.id)),
+    categories: Array.from(categoryCounts.entries())
+      .map(([id, count]) => ({ id, count }))
+      .concat(offerCount > 0 ? [{ id: 'offers', count: offerCount }] : [])
+      .sort((a, b) => a.id.localeCompare(b.id)),
     brands: Array.from(brandCounts.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => a.name.localeCompare(b.name)),
   };
 }
