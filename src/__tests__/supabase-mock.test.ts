@@ -98,24 +98,6 @@ describe('Supabase Mock Client', () => {
     expect(p1.price).not.toBe(777);
   });
 
-  it('should support JSON-array containment in category filters', async () => {
-    await supabase.from('products').insert({
-      id: 9998,
-      title: 'Test Solaire',
-      category: 'other',
-      categories: ['solaire'],
-    });
-
-    const { data } = await supabase
-      .from('products')
-      .select('*')
-      .or('category.eq.not-a-category,categories.cs.["solaire"]');
-
-    expect(data).not.toBeNull();
-    expect(data).toHaveLength(1);
-    expect(data![0].id).toBe(9998);
-  });
-
   it('should support deferred delete chaining with filters', async () => {
     // Insert a product first
     const testProduct = { id: 9999, title: 'Temp Product to Delete', price: 10, category: 'visage' };

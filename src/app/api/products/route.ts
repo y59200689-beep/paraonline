@@ -245,7 +245,7 @@ export async function GET(request: Request) {
       if (category === 'offers') {
         query = query.gt('compare_price', 'price');
       } else {
-        query = query.or(`category.eq.${category},categories.cs.["${category}"],tags.cs.["${category}"]`);
+        query = query.or(`category.eq.${category},categories.cs.{"${category}"}`);
       }
     }
 

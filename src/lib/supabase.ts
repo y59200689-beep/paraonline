@@ -598,7 +598,7 @@ class MockSupabaseQueryBuilder {
         }
         if (cond.includes('.cs.')) {
           const [col, val] = cond.split('.cs.');
-          const cleanVal = val.replace(/[\[{""}\]]/g, '').toLowerCase();
+          const cleanVal = val.replace(/[{""}]/g, '').toLowerCase();
           const arr = item[col] || [];
           return Array.isArray(arr) && arr.some(x => String(x).toLowerCase().includes(cleanVal));
         }
