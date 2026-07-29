@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const SESSION_SECRET = process.env.ADMIN_SESSION_SECRET || 'fallback-super-secret-key-po-2026';
+const SESSION_SECRET = process.env.ADMIN_SESSION_SECRET;
 
 async function verifySessionToken(token: string): Promise<any> {
   try {
+    if (!SESSION_SECRET || SESSION_SECRET.length < 32) return null;
     const [payloadB64, signature] = token.split('.');
     if (!payloadB64 || !signature) return null;
     
@@ -54,6 +55,9 @@ export async function proxy(request: NextRequest) {
   // We only intercept paths starting with /admin
   // but we do NOT intercept /admin/login
   if (path.startsWith('/admin') && path !== '/admin/login') {
+    if (!SESSION_SECRET || SESSION_SECRET.length < 32) {
+      return new NextResponse('Admin authentication is not configured.', { status: 503 });
+    }
     const sessionCookie = request.cookies.get('admin_session')?.value;
     
     if (!sessionCookie) {

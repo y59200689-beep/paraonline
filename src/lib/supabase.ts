@@ -877,6 +877,27 @@ const mockSupabaseClient = {
   auth: mockAuth,
   from: (table: string) => new MockSupabaseQueryBuilder(table),
   rpc: async (fn: string, args: any) => {
+    if (fn === 'create_order_with_stock') {
+      const order = args?.p_order;
+      const items = Array.isArray(order?.items) ? order.items : [];
+      const products = globalForMock.mockDb.products || [];
+
+      for (const item of items) {
+        const product = products.find((candidate: any) => Number(candidate.id) === Number(item.id));
+        if (!product || Number(product.stock || 0) < Number(item.quantity || 0)) {
+          return { data: null, error: { message: `INSUFFICIENT_STOCK:${item.id}` } };
+        }
+      }
+
+      for (const item of items) {
+        const product = products.find((candidate: any) => Number(candidate.id) === Number(item.id));
+        product.stock -= Number(item.quantity);
+      }
+      globalForMock.mockDb.orders = [...(globalForMock.mockDb.orders || []), order];
+      globalForMock.mockDb.products = products;
+      saveToDisk();
+      return { data: null, error: null };
+    }
     if (fn === 'decrement_product_stock') {
       const { product_id, qty } = args;
       const idNum = Number(product_id);

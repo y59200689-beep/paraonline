@@ -1,11 +1,14 @@
 import crypto from 'crypto';
 import { cookies } from 'next/headers';
 
-const SESSION_SECRET = process.env.ADMIN_SESSION_SECRET || 'fallback-super-secret-key-po-2026';
+const MIN_SESSION_SECRET_LENGTH = 32;
 
-// Warn loudly in production if the secret is not explicitly set
-if (process.env.NODE_ENV === 'production' && !process.env.ADMIN_SESSION_SECRET) {
-  console.error('[SECURITY] ADMIN_SESSION_SECRET is not set. Using insecure fallback — set this env var immediately!');
+export function getAdminSessionSecret(): string {
+  const secret = process.env.ADMIN_SESSION_SECRET;
+  if (!secret || secret.length < MIN_SESSION_SECRET_LENGTH) {
+    throw new Error(`ADMIN_SESSION_SECRET must be configured with at least ${MIN_SESSION_SECRET_LENGTH} characters.`);
+  }
+  return secret;
 }
 
 /**
@@ -88,11 +91,12 @@ export async function verifyPassword(password: string, stored: string): Promise<
  * Generate a base64 encoded payload signed with HMAC-SHA256
  */
 export function createSessionToken(payload: object, expiryMs: number = 7 * 24 * 60 * 60 * 1000): string {
+  const sessionSecret = getAdminSessionSecret();
   const payloadStr = JSON.stringify({
     ...payload,
     exp: Date.now() + expiryMs
   });
-  const signature = crypto.createHmac('sha256', SESSION_SECRET).update(payloadStr).digest('hex');
+  const signature = crypto.createHmac('sha256', sessionSecret).update(payloadStr).digest('hex');
   return Buffer.from(payloadStr).toString('base64') + '.' + signature;
 }
 
@@ -101,11 +105,12 @@ export function createSessionToken(payload: object, expiryMs: number = 7 * 24 * 
  */
 export function verifySessionToken(token: string): any {
   try {
+    const sessionSecret = getAdminSessionSecret();
     const [payloadB64, signature] = token.split('.');
     if (!payloadB64 || !signature) return null;
     
     const payloadStr = Buffer.from(payloadB64, 'base64').toString('utf8');
-    const expectedSignature = crypto.createHmac('sha256', SESSION_SECRET).update(payloadStr).digest('hex');
+    const expectedSignature = crypto.createHmac('sha256', sessionSecret).update(payloadStr).digest('hex');
 
     // Use timing-safe comparison to prevent signature oracle attacks
     const sigBuf = Buffer.from(signature.padEnd(expectedSignature.length, '0'));
@@ -245,4 +250,3 @@ export function generateRecoveryCodes(count = 8): string[] {
   }
   return codes;
 }
-

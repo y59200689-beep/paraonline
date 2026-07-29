@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
-import { hashPassword, hashPasswordAsync, verifyPassword, createSessionToken } from '@/lib/session';
+import { hashPassword, hashPasswordAsync, verifyPassword, createSessionToken, getAdminSessionSecret } from '@/lib/session';
 
 export async function POST(request: Request) {
   try {
+    try {
+      getAdminSessionSecret();
+    } catch {
+      return NextResponse.json({ success: false, error: 'L’authentification administrateur n’est pas configurée.' }, { status: 503 });
+    }
     const { username, password } = await request.json();
 
     if (!username || !password) {

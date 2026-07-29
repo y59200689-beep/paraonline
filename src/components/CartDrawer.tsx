@@ -201,7 +201,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       const res = await fetch('/api/payment/cmi', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: total, orderId, customerName: formFields.name, phone: formFields.phone }),
+        body: JSON.stringify({ orderId }),
       });
       const data = await res.json();
       if (data.success && data.apiUrl && data.params) {
@@ -250,7 +250,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
           const res = await fetch('/api/payment/stripe', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ amount: total, orderId: orderRes.orderId }),
+            body: JSON.stringify({ orderId: orderRes.orderId }),
           });
           const data = await res.json();
           if (data.success && data.clientSecret) {

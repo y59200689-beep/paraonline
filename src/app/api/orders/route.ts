@@ -1,245 +1,265 @@
+import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { createOrderTrackingToken, createOrderVerificationToken, verifyOrderToken } from '@/lib/order-security';
 import { rateLimit, getClientIp } from '@/lib/rateLimit';
+
+type ProductRecord = {
+  id: number;
+  title: string;
+  price: number;
+  stock: number;
+  image?: string | null;
+  sku?: string | null;
+  status?: string | null;
+};
+
+type Coupon = {
+  code: string;
+  discountPercent?: number;
+  discountType?: 'percent' | 'fixed';
+  discountValue?: number;
+  freeShipping?: boolean;
+  minPurchase?: number;
+  expiryDate?: string;
+  startDate?: string;
+  usageLimit?: number;
+  isActive?: boolean;
+};
+
+const MOCK_COUPONS: Record<string, Coupon> = {
+  BEAUTY10: { code: 'BEAUTY10', discountPercent: 10 },
+  CLINICAL15: { code: 'CLINICAL15', discountPercent: 15 },
+  FREESHIP: { code: 'FREESHIP', freeShipping: true, minPurchase: 300 },
+  GIFTGLOW: { code: 'GIFTGLOW' },
+};
+
+const roundMoney = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+
+function safeTrackingOrder(order: Record<string, unknown>) {
+  return {
+    order_id: order.order_id,
+    items: Array.isArray(order.items) ? order.items : [],
+    subtotal: order.subtotal,
+    discount_amount: order.discount_amount,
+    applied_coupon: order.applied_coupon,
+    gift_item: order.gift_item,
+    total: order.total,
+    status: order.status,
+    payment_status: order.payment_status,
+    created_at: order.created_at,
+    carrier: order.carrier,
+    tracking_number: order.tracking_number,
+    estimated_delivery: order.estimated_delivery,
+    package_weight: order.package_weight,
+    logs: order.logs,
+  };
+}
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const search = searchParams.get('search');
-    
-    if (!search || search.trim().length < 3) {
-      return NextResponse.json({ success: true, orders: [] });
+    const orderId = searchParams.get('orderId')?.trim() || '';
+    const token = searchParams.get('token')?.trim() || '';
+
+    if (!orderId || !token) {
+      return NextResponse.json({ success: false, error: 'Une référence et un code de suivi sont requis.' }, { status: 400 });
     }
 
-    // Rate limit: 20 tracking queries per IP per minute
     const ip = getClientIp(request);
     const { allowed } = await rateLimit(`order-track:${ip}`, 20, 60_000);
     if (!allowed) {
       return NextResponse.json({ success: false, error: 'Trop de requêtes. Veuillez réessayer dans une minute.' }, { status: 429 });
     }
 
-    const cleanSearch = search.trim();
-    
-    const { data, error } = await supabase
-      .from('orders')
-      .select('*')
-      .or(`phone_number.eq.${cleanSearch},order_id.eq.${cleanSearch},customer_name.eq.${cleanSearch}`);
-
-    if (error) throw error;
-
-    const orders = data || [];
-    for (const order of orders) {
-      if (order.items && Array.isArray(order.items)) {
-        for (const item of order.items) {
-          if (!item.image && !item.image_url) {
-            if (item.id) {
-              try {
-                const { data: prod } = await supabase
-                  .from('products')
-                  .select('image')
-                  .eq('id', item.id)
-                  .single();
-                if (prod?.image) {
-                  item.image = prod.image;
-                }
-              } catch (_) {}
-            }
-            if (!item.image && item.title) {
-              try {
-                const firstWord = item.title.trim().split(' ')[0];
-                if (firstWord && firstWord.length >= 3) {
-                  const { data: prods } = await supabase
-                    .from('products')
-                    .select('image')
-                    .ilike('title', `%${firstWord}%`)
-                    .limit(1);
-                  if (prods && prods[0]?.image) {
-                    item.image = prods[0].image;
-                  }
-                }
-              } catch (_) {}
-            }
-          }
-        }
-      }
+    const [tokenOrderId, signature] = token.split('.');
+    if (tokenOrderId !== orderId || !signature || !verifyOrderToken(orderId, signature, 'track')) {
+      return NextResponse.json({ success: false, error: 'Code de suivi invalide.' }, { status: 403 });
     }
 
-    return NextResponse.json({ success: true, orders });
+    const { data: order, error } = await supabase
+      .from('orders')
+      .select('order_id, items, subtotal, discount_amount, applied_coupon, gift_item, total, status, payment_status, created_at, carrier, tracking_number, estimated_delivery, package_weight, logs')
+      .eq('order_id', orderId)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!order) {
+      return NextResponse.json({ success: true, orders: [] });
+    }
+
+    return NextResponse.json({ success: true, orders: [safeTrackingOrder(order)] });
   } catch (error: any) {
     console.error('Order tracking error:', error);
-    return NextResponse.json({ success: false, error: error.message || 'Erreur serveur' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Erreur serveur' }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   try {
-    // Rate limit: 10 order submissions per IP per minute
     const ip = getClientIp(request);
     const { allowed } = await rateLimit(`orders:${ip}`, 10, 60_000);
     if (!allowed) {
       return NextResponse.json({ success: false, error: 'Trop de requêtes. Veuillez réessayer dans une minute.' }, { status: 429 });
     }
 
-
     const body = await request.json();
-    const {
-      orderData,
-      items,
-      subtotal,
-      discountAmount,
-      appliedCoupon,
-      giftItem,
-      total,
-      skinDiagnostic,
-      loyaltyPoints,
-      loyaltyTier,
-      paymentMethod,
-      paymentStatus
-    } = body;
+    const orderData = body.orderData;
+    const requestedItems = Array.isArray(body.items) ? body.items : [];
+    const paymentMethod = ['cod', 'stripe', 'cmi'].includes(body.paymentMethod) ? body.paymentMethod : 'cod';
 
-    if (!orderData || !items || !Array.isArray(items)) {
+    if (!orderData?.name || !orderData?.phone || !orderData?.address || !orderData?.city || requestedItems.length === 0) {
       return NextResponse.json({ success: false, error: 'Informations de commande invalides' }, { status: 400 });
     }
 
-    // Validate coupon on the server if one was applied to prevent coupon abuse/price tampering
-    if (appliedCoupon) {
-      const normalizedCode = appliedCoupon.trim().toUpperCase();
-      
-      const MOCK_COUPONS: Record<string, any> = {
-        'BEAUTY10': { code: 'BEAUTY10', discountPercent: 10, freeShipping: false, isActive: true },
-        'CLINICAL15': { code: 'CLINICAL15', discountPercent: 15, freeShipping: false, isActive: true },
-        'FREESHIP': { code: 'FREESHIP', discountPercent: 0, freeShipping: true, minPurchase: 300, isActive: true },
-        'GIFTGLOW': { code: 'GIFTGLOW', discountPercent: 0, freeShipping: false, giftItem: 'Masque Hydra-Glow Offert', isActive: true }
+    const quantities = new Map<number, number>();
+    for (const item of requestedItems) {
+      const id = Number(item?.id);
+      const quantity = Number(item?.quantity);
+      if (!Number.isInteger(id) || !Number.isInteger(quantity) || quantity < 1 || quantity > 100) {
+        return NextResponse.json({ success: false, error: 'Panier invalide.' }, { status: 400 });
+      }
+      quantities.set(id, (quantities.get(id) || 0) + quantity);
+    }
+
+    const productIds = [...quantities.keys()];
+    const [{ data: products, error: productError }, { data: settingsData }] = await Promise.all([
+      supabase.from('products').select('id, title, price, stock, image, sku, status').in('id', productIds),
+      supabase.from('settings').select('value').eq('id', 1).maybeSingle(),
+    ]);
+    if (productError) throw productError;
+    if (!products || products.length !== productIds.length) {
+      return NextResponse.json({ success: false, error: 'Un ou plusieurs produits ne sont plus disponibles.' }, { status: 409 });
+    }
+
+    const productById = new Map((products as ProductRecord[]).map((product) => [Number(product.id), product]));
+    const items = productIds.map((id) => {
+      const product = productById.get(id)!;
+      const quantity = quantities.get(id)!;
+      if (product.status && product.status !== 'live') {
+        throw new Error('PRODUCT_UNAVAILABLE');
+      }
+      if (!Number.isFinite(Number(product.price)) || Number(product.stock) < quantity) {
+        throw new Error('INSUFFICIENT_STOCK');
+      }
+      return {
+        id: Number(product.id),
+        title: product.title,
+        price: roundMoney(Number(product.price)),
+        quantity,
+        image: product.image || undefined,
+        sku: product.sku || undefined,
       };
+    });
 
-      // 1. Get settings for dynamic coupons
-      let settingsCoupons: any[] = [];
-      try {
-        const { data: settingsData, error: settingsError } = await supabase
-          .from('settings')
-          .select('*')
-          .eq('id', 1)
-          .single();
-        
-        if (!settingsError && settingsData?.value?.coupons) {
-          settingsCoupons = settingsData.value.coupons;
-        }
-      } catch (dbErr) {
-        console.error("Error reading store settings for coupons in order endpoint:", dbErr);
+    const subtotal = roundMoney(items.reduce((sum, item) => sum + item.price * item.quantity, 0));
+    const settings = settingsData?.value || {};
+    const coupon = await resolveCoupon(body.appliedCoupon, subtotal, settings);
+    const discountAmount = calculateDiscount(subtotal, coupon);
+    const shippingFee = calculateShipping(subtotal, String(orderData.city), coupon, settings);
+    const total = roundMoney(subtotal - discountAmount + shippingFee);
+    const giftRange = Array.isArray(settings.giftRanges)
+      ? settings.giftRanges.find((range: any) => subtotal >= Number(range.minAmount) && subtotal <= Number(range.maxAmount))
+      : null;
+    const orderId = `PO-${crypto.randomInt(100000, 1000000)}`;
+    const isCod = paymentMethod === 'cod';
+
+    // Fail before persisting anything when a required public-order secret is absent.
+    const trackingToken = createOrderTrackingToken(orderId);
+    const verificationToken = isCod ? createOrderVerificationToken(orderId) : '';
+
+    const order = {
+      order_id: orderId,
+      customer_name: String(orderData.name).trim().slice(0, 120),
+      phone_number: String(orderData.phone).trim().slice(0, 40),
+      address: String(orderData.address).trim().slice(0, 500),
+      city: String(orderData.city).trim().slice(0, 120),
+      notes: String(orderData.note || '').trim().slice(0, 1000),
+      items,
+      subtotal,
+      discount_amount: discountAmount,
+      applied_coupon: coupon?.code || '',
+      gift_item: giftRange ? giftRange.productName : null,
+      total,
+      status: isCod ? 'Pending' : 'Pending Payment',
+      skin_diagnostic: body.skinDiagnostic || null,
+      loyalty_points: 0,
+      loyalty_tier: null,
+      payment_method: paymentMethod,
+      payment_status: 'unpaid',
+    };
+
+    const { error: createError } = await supabase.rpc('create_order_with_stock', { p_order: order });
+    if (createError) {
+      if (String(createError.message).includes('INSUFFICIENT_STOCK')) {
+        return NextResponse.json({ success: false, error: 'Stock insuffisant pour un ou plusieurs produits.' }, { status: 409 });
       }
-
-      let coupon = settingsCoupons.find((c: any) => c.code === normalizedCode);
-      if (!coupon) {
-        coupon = MOCK_COUPONS[normalizedCode];
-      }
-
-      if (!coupon || coupon.isActive === false) {
-        return NextResponse.json({ success: false, error: 'Code promo invalide ou inactif.' }, { status: 400 });
-      }
-
-      const todayStr = new Date().toISOString().split('T')[0];
-      if (coupon.startDate && coupon.startDate > todayStr) {
-        return NextResponse.json({ success: false, error: "Ce code promo n'est pas encore actif." }, { status: 400 });
-      }
-
-      if (coupon.expiryDate) {
-        const expiryTime = new Date(coupon.expiryDate).getTime();
-        const todayTime = new Date().setHours(0, 0, 0, 0);
-        if (expiryTime < todayTime) {
-          return NextResponse.json({ success: false, error: 'Ce code promo a expiré.' }, { status: 400 });
-        }
-      }
-
-      if (coupon.minPurchase && subtotal < coupon.minPurchase) {
-        return NextResponse.json({ success: false, error: `Minimum d'achat de ${coupon.minPurchase} DH requis pour ce code.` }, { status: 400 });
-      }
-
-      if (coupon.usageLimit !== undefined && coupon.usageLimit !== null && coupon.usageLimit > 0) {
-        const { count, error: countError } = await supabase
-          .from('orders')
-          .select('order_id', { count: 'exact', head: true })
-          .eq('applied_coupon', normalizedCode)
-          .not('status', 'eq', 'Cancelled');
-
-        if (!countError && count !== null && count >= coupon.usageLimit) {
-          return NextResponse.json({ success: false, error: "Ce code promo a atteint sa limite d'utilisation." }, { status: 400 });
-        }
-      }
+      throw createError;
     }
 
-    const orderId = 'PO-' + Math.floor(100000 + Math.random() * 900000);
-
-    const { error: insertError } = await supabase
-      .from('orders')
-      .insert({
-        order_id: orderId,
-        customer_name: orderData.name,
-        phone_number: orderData.phone,
-        address: orderData.address,
-        city: orderData.city,
-        notes: orderData.note || null,
-        items,
-        subtotal,
-        discount_amount: discountAmount,
-        applied_coupon: appliedCoupon,
-        gift_item: giftItem,
-        total,
-        status: paymentMethod && paymentMethod !== 'cod' ? 'Pending Payment' : 'Pending',
-        skin_diagnostic: skinDiagnostic,
-        loyalty_points: loyaltyPoints,
-        loyalty_tier: loyaltyTier,
-        payment_method: paymentMethod || 'cod',
-        payment_status: paymentStatus || 'unpaid'
-      });
-
-    if (insertError) {
-      console.error('Supabase DB Insert Error:', insertError);
-      throw insertError;
-    }
-
-    // 2. Decrement stock securely in Supabase via RPC to prevent race conditions
-    try {
-      for (const item of items) {
-        await supabase.rpc('decrement_product_stock', {
-          product_id: item.id,
-          qty: item.quantity
-        });
-      }
-    } catch (stockError) {
-      console.error('Error executing secure stock decrement:', stockError);
-    }
-
-    const isCod = !paymentMethod || paymentMethod === 'cod';
-    let verificationToken = '';
-    if (isCod) {
-      verificationToken = await generateVerificationToken(orderId);
-      console.log(`[WhatsApp COD Verification Link] https://paraofficinal.ma/api/orders/verify?token=${verificationToken}&action=confirm`);
-    }
-
-    return NextResponse.json({ success: true, orderId, verificationToken });
+    return NextResponse.json({
+      success: true,
+      orderId,
+      verificationToken,
+      trackingToken,
+      subtotal,
+      discountAmount,
+      shippingFee,
+      total,
+      items,
+    });
   } catch (error: any) {
+    if (error?.message === 'PRODUCT_UNAVAILABLE') {
+      return NextResponse.json({ success: false, error: 'Un produit du panier est indisponible.' }, { status: 409 });
+    }
+    if (error?.message === 'INSUFFICIENT_STOCK') {
+      return NextResponse.json({ success: false, error: 'Stock insuffisant pour un ou plusieurs produits.' }, { status: 409 });
+    }
+    if (error?.message === 'INVALID_COUPON') {
+      return NextResponse.json({ success: false, error: 'Code promo invalide ou non applicable.' }, { status: 400 });
+    }
     console.error('Checkout error:', error);
-    return NextResponse.json({ success: false, error: error.message || 'Erreur serveur' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Impossible de créer la commande.' }, { status: 500 });
   }
 }
 
-async function generateVerificationToken(orderId: string) {
-  const secret = process.env.SUPABASE_SERVICE_ROLE_KEY || 'secret-key';
-  const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    'raw',
-    encoder.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
-  );
-  const signature = await crypto.subtle.sign(
-    'HMAC',
-    key,
-    encoder.encode(orderId)
-  );
-  const hex = Array.from(new Uint8Array(signature))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
-  return `${orderId}.${hex}`;
+async function resolveCoupon(code: unknown, subtotal: number, settings: Record<string, any>) {
+  if (typeof code !== 'string' || !code.trim()) return null;
+  const normalizedCode = code.trim().toUpperCase();
+  const settingsCoupons = Array.isArray(settings.coupons) ? settings.coupons : [];
+  const coupon: Coupon | undefined = settingsCoupons.find((candidate: Coupon) => candidate.code?.toUpperCase() === normalizedCode)
+    || MOCK_COUPONS[normalizedCode];
+
+  if (!coupon || coupon.isActive === false) throw new Error('INVALID_COUPON');
+  const today = new Date().toISOString().slice(0, 10);
+  if ((coupon.startDate && coupon.startDate > today) || (coupon.expiryDate && coupon.expiryDate < today)) {
+    throw new Error('INVALID_COUPON');
+  }
+  if (coupon.minPurchase && subtotal < coupon.minPurchase) throw new Error('INVALID_COUPON');
+
+  if (coupon.usageLimit && coupon.usageLimit > 0) {
+    const { count, error } = await supabase
+      .from('orders')
+      .select('order_id', { count: 'exact', head: true })
+      .eq('applied_coupon', normalizedCode)
+      .not('status', 'eq', 'Cancelled');
+    if (error) throw error;
+    if ((count || 0) >= coupon.usageLimit) throw new Error('INVALID_COUPON');
+  }
+  return { ...coupon, code: normalizedCode };
+}
+
+function calculateDiscount(subtotal: number, coupon: Coupon | null) {
+  if (!coupon) return 0;
+  const value = Number(coupon.discountValue ?? coupon.discountPercent ?? 0);
+  const discount = coupon.discountType === 'fixed' ? Math.min(subtotal, value) : subtotal * (value / 100);
+  return roundMoney(Math.max(0, discount));
+}
+
+function calculateShipping(subtotal: number, city: string, coupon: Coupon | null, settings: Record<string, any>) {
+  if (coupon?.freeShipping || subtotal >= Number(settings.freeShippingThreshold || 600)) return 0;
+  const cityRule = Array.isArray(settings.shippingRules)
+    ? settings.shippingRules.find((rule: any) => String(rule.city).toLowerCase() === city.toLowerCase())
+    : null;
+  return roundMoney(Number(cityRule?.fee ?? settings.shippingFee ?? 35));
 }

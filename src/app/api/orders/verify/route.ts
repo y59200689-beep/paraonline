@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { verifyOrderToken } from '@/lib/order-security';
 
 export async function GET(request: Request) {
   try {
@@ -14,7 +15,7 @@ export async function GET(request: Request) {
     const [orderId, hex] = token.split('.');
     
     // Verify cryptographic signature
-    const isValid = await verifyTokenSignature(orderId, hex);
+    const isValid = verifyOrderToken(orderId, hex, 'confirm');
     if (!isValid) {
       return renderHtmlResponse(false, 'Signature de sécurité invalide.', 'توقيع الحماية غير صالح.');
     }
@@ -60,27 +61,6 @@ export async function GET(request: Request) {
     console.error('Order verification endpoint error:', error);
     return renderHtmlResponse(false, 'Une erreur technique est survenue.', 'حدث خطأ تقني غير متوقع.');
   }
-}
-
-async function verifyTokenSignature(orderId: string, hexSignature: string) {
-  const secret = process.env.SUPABASE_SERVICE_ROLE_KEY || 'secret-key';
-  const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    'raw',
-    encoder.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
-  );
-  const signature = await crypto.subtle.sign(
-    'HMAC',
-    key,
-    encoder.encode(orderId)
-  );
-  const expectedHex = Array.from(new Uint8Array(signature))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
-  return expectedHex === hexSignature;
 }
 
 function renderHtmlResponse(success: boolean, titleFr: string, titleAr: string, descFr: string = '', descAr: string = '') {

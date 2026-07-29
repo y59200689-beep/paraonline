@@ -4,9 +4,23 @@ import Stripe from 'stripe';
 
 export async function POST(request: Request) {
   try {
-    const { amount, orderId } = await request.json();
-    if (!amount || !orderId) {
-      return NextResponse.json({ success: false, error: 'Amount and orderId are required' }, { status: 400 });
+    const { orderId } = await request.json();
+    if (!orderId || typeof orderId !== 'string') {
+      return NextResponse.json({ success: false, error: 'orderId is required' }, { status: 400 });
+    }
+
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .select('order_id, total, payment_method, payment_status')
+      .eq('order_id', orderId)
+      .maybeSingle();
+    if (orderError) throw orderError;
+    if (!order || order.payment_method !== 'stripe' || order.payment_status === 'paid') {
+      return NextResponse.json({ success: false, error: 'Commande Stripe invalide.' }, { status: 409 });
+    }
+    const amount = Number(order.total);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return NextResponse.json({ success: false, error: 'Montant de commande invalide.' }, { status: 409 });
     }
 
     // Load settings from Supabase
@@ -31,7 +45,7 @@ export async function POST(request: Request) {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100), // Stripe expects amounts in cents/subunit
       currency: 'mad',
-      metadata: { orderId },
+      metadata: { orderId, expectedAmount: String(Math.round(amount * 100)) },
     });
 
     return NextResponse.json({
@@ -40,6 +54,6 @@ export async function POST(request: Request) {
     });
   } catch (error: any) {
     console.error('Stripe payment intent error:', error);
-    return NextResponse.json({ success: false, error: error.message || 'Server error' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Erreur serveur' }, { status: 500 });
   }
 }

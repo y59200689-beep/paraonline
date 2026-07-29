@@ -33,6 +33,15 @@ export const OrderSuccessModal: React.FC = () => {
     }
   };
 
+  const handleTracking = () => {
+    const token = sessionStorage.getItem(`orderTrackingToken:${successOrderId}`);
+    const url = token
+      ? `/suivi-commande?order=${encodeURIComponent(successOrderId)}&token=${encodeURIComponent(token)}`
+      : '/suivi-commande';
+    setSuccessModalOpen(false);
+    router.push(url);
+  };
+
   const handleClose = () => {
     setSuccessModalOpen(false);
     router.push('/');
@@ -115,6 +124,16 @@ export const OrderSuccessModal: React.FC = () => {
             >
               <MessageSquare className="w-4 h-4" />
               <span>{isRTL ? 'إتمام عبر واتساب' : 'Finaliser sur WhatsApp'}</span>
+            </button>
+          )}
+
+          {successOrderId && (
+            <button
+              onClick={handleTracking}
+              className="w-full py-3.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 border-0 outline-none"
+            >
+              <Package className="w-4 h-4" />
+              <span>{isRTL ? 'تتبع الطلب' : 'Suivre ma commande'}</span>
             </button>
           )}
 

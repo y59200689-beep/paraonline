@@ -119,9 +119,10 @@ interface Order {
 export default function SuiviCommandeClient() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get('order') || searchParams.get('id') || '';
+  const initialToken = searchParams.get('token') || '';
 
   const [query, setQuery] = useState(initialQuery);
-  const [searchTab, setSearchTab] = useState<'all' | 'order' | 'phone'>('all');
+  const [trackingToken, setTrackingToken] = useState(initialToken);
   const [loading, setLoading] = useState(false);
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -142,22 +143,28 @@ export default function SuiviCommandeClient() {
   const isRTL = language === 'AR';
 
   useEffect(() => {
-    if (initialQuery) {
-      handleSearch(initialQuery);
+    const savedToken = initialQuery && typeof window !== 'undefined'
+      ? sessionStorage.getItem(`orderTrackingToken:${initialQuery}`) || ''
+      : '';
+    const token = initialToken || savedToken;
+    if (initialQuery && token) {
+      setTrackingToken(token);
+      handleSearch(initialQuery, token);
     } else {
       setOrder(null);
     }
-  }, [initialQuery]);
+  }, [initialQuery, initialToken]);
 
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const handleSearch = async (searchTarget?: string) => {
+  const handleSearch = async (searchTarget?: string, accessToken?: string) => {
     const searchTerm = (searchTarget !== undefined ? searchTarget : query).trim();
-    if (!searchTerm) {
-      setError(language === 'AR' ? 'الرجاء إدخال رقم الطلب أو رقم الهاتف.' : 'Veuillez saisir votre numéro de commande ou téléphone.');
+    const token = (accessToken !== undefined ? accessToken : trackingToken).trim();
+    if (!searchTerm || !token) {
+      setError(language === 'AR' ? 'الرجاء إدخال رقم الطلب ورمز التتبع.' : 'Veuillez saisir votre numéro de commande et votre code de suivi.');
       return;
     }
 
@@ -166,7 +173,7 @@ export default function SuiviCommandeClient() {
 
     // Fetch real order from backend API endpoint (Supabase Database)
     try {
-      const res = await fetch(`/api/orders?search=${encodeURIComponent(searchTerm)}`);
+      const res = await fetch(`/api/orders?orderId=${encodeURIComponent(searchTerm)}&token=${encodeURIComponent(token)}`);
       const data = await res.json();
 
       if (data.success && data.orders && data.orders.length > 0) {
@@ -216,7 +223,7 @@ export default function SuiviCommandeClient() {
 
   const copyTrackingLink = () => {
     if (!order) return;
-    const url = `${window.location.origin}/suivi-commande?order=${order.order_id}`;
+    const url = `${window.location.origin}/suivi-commande?order=${order.order_id}&token=${encodeURIComponent(trackingToken)}`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     triggerToast(language === 'AR' ? 'تم نسخ رابط التتبع!' : 'Lien de suivi copié !');
@@ -375,8 +382,8 @@ export default function SuiviCommandeClient() {
               </h1>
               <p className="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
                 {isRTL
-                  ? 'أدخلي رقم الطلب أو رقم الهاتف المسجل لمتابعة حالة الشحنة وموعد الوصول إلى باب منزلِك.'
-                  : 'Saisissez votre numéro de commande (ex: PO-102948) ou votre numéro de téléphone pour consulter l\'état réel de votre livraison.'}
+                  ? 'أدخلي رقم الطلب ورمز التتبع الآمن الخاص بكِ لمتابعة حالة الشحنة وموعد الوصول.'
+                  : 'Saisissez votre numéro de commande et votre code de suivi sécurisé pour consulter l\'état réel de votre livraison.'}
               </p>
             </div>
 
@@ -384,43 +391,6 @@ export default function SuiviCommandeClient() {
             <div className="mt-10 max-w-3xl mx-auto">
               <div className="bg-slate-900/80 p-2 sm:p-3 rounded-[2.5rem] border border-slate-800/90 shadow-2xl shadow-slate-950/90 backdrop-blur-2xl">
                 
-                {/* Search Type Filter Tabs */}
-                <div className="flex items-center gap-2 mb-3 px-2 pt-1 border-b border-slate-800/60 pb-3 text-xs">
-                  <span className="text-slate-500 font-medium mr-1 text-[11px]">
-                    {isRTL ? 'البحث بواسطة:' : 'Rechercher par:'}
-                  </span>
-                  <button
-                    onClick={() => setSearchTab('all')}
-                    className={`px-3.5 py-1.5 rounded-xl font-bold transition-all ${
-                      searchTab === 'all'
-                        ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
-                        : 'bg-slate-950/60 text-slate-400 hover:text-white border border-slate-800'
-                    }`}
-                  >
-                    {isRTL ? 'الكل' : 'Tout'}
-                  </button>
-                  <button
-                    onClick={() => setSearchTab('order')}
-                    className={`px-3.5 py-1.5 rounded-xl font-bold transition-all ${
-                      searchTab === 'order'
-                        ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
-                        : 'bg-slate-950/60 text-slate-400 hover:text-white border border-slate-800'
-                    }`}
-                  >
-                    {isRTL ? 'رقم الطلب (PO-)' : 'N° Commande (PO-)'}
-                  </button>
-                  <button
-                    onClick={() => setSearchTab('phone')}
-                    className={`px-3.5 py-1.5 rounded-xl font-bold transition-all ${
-                      searchTab === 'phone'
-                        ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
-                        : 'bg-slate-950/60 text-slate-400 hover:text-white border border-slate-800'
-                    }`}
-                  >
-                    {isRTL ? 'رقم الهاتف' : 'N° Téléphone'}
-                  </button>
-                </div>
-
                 {/* Inner Search Input */}
                 <form
                   onSubmit={(e) => {
@@ -433,19 +403,22 @@ export default function SuiviCommandeClient() {
                     <Search className="w-6 h-6" />
                   </div>
 
-                  <input
-                    type="text"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder={
-                      searchTab === 'order'
-                        ? (isRTL ? 'أدخلي رقم الطلب مثل: PO-102948' : 'Exemple: PO-102948')
-                        : searchTab === 'phone'
-                        ? (isRTL ? 'أدخلي رقم الهاتف مثل: 0661234567' : 'Exemple: 0661234567')
-                        : (isRTL ? 'أدخلي رقم الطلب أو رقم الهاتف...' : 'N° de commande ou téléphone...')
-                    }
-                    className="w-full bg-transparent text-white placeholder-slate-500 text-sm sm:text-base font-mono py-3.5 px-2 focus:outline-none"
-                  />
+                  <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                    <input
+                      type="text"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      placeholder={isRTL ? 'رقم الطلب PO-...' : 'N° de commande PO-...'}
+                      className="w-full bg-transparent text-white placeholder-slate-500 text-sm font-mono py-3.5 px-2 focus:outline-none"
+                    />
+                    <input
+                      type="password"
+                      value={trackingToken}
+                      onChange={(e) => setTrackingToken(e.target.value)}
+                      placeholder={isRTL ? 'رمز التتبع' : 'Code de suivi'}
+                      className="w-full bg-transparent text-white placeholder-slate-500 text-sm font-mono py-3.5 px-2 focus:outline-none border-t sm:border-t-0 sm:border-l border-slate-800"
+                    />
+                  </div>
 
                   {query && (
                     <button
@@ -519,8 +492,8 @@ export default function SuiviCommandeClient() {
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
                   {isRTL
-                    ? 'يرجى إدخال رقم الطلب (مثال: PO-102948) أو رقم الهاتف المستخدم أثناء الشراء لعرض تفاصيل ومسار الشحنة.'
-                    : 'Consultez la progression réelle de votre livraison en saisissant votre référence de commande ou numéro de téléphone dans la barre ci-dessus.'}
+                  ? 'أدخلي رقم الطلب (مثال: PO-102948) ورمز التتبع الذي تلقيته بعد تأكيد الطلب لعرض تفاصيل الشحنة.'
+                    : 'Consultez la progression réelle de votre livraison avec votre référence de commande et le code de suivi reçu après confirmation.'}
                 </p>
               </div>
 

@@ -36,16 +36,13 @@ export const AiAssistant: React.FC = () => {
   const { language } = useTranslation();
   const { isCartOpen } = useCart();
   const { showToast, isDiagnosticOpen, isScratchCardOpen } = useUi();
-  
-  if (
+
+  const shouldHideAssistant =
     pathname?.startsWith('/admin') || 
     pathname?.startsWith('/checkout') || 
     isCartOpen || 
     isDiagnosticOpen || 
-    isScratchCardOpen
-  ) {
-    return null;
-  }
+    isScratchCardOpen;
 
   const { products } = useProducts();
 
@@ -60,6 +57,29 @@ export const AiAssistant: React.FC = () => {
   const [isOrderSubmitting, setIsOrderSubmitting] = useState(false);
   const [lastPlacedOrderId, setLastPlacedOrderId] = useState<string | null>(null);
   const [verificationToken, setVerificationToken] = useState<string>('');
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [messages, setMessages] = useState<Message[]>( [
+    {
+      sender: 'ai',
+      textFr: "Bonjour ! Je suis votre conseillère dermo-cosmétique digitale. Posez-moi une question sur vos ingrédients actifs ou sur la compatibilité de vos soins.",
+      textAr: "مرحباً ! أنا مستشارتكِ الجلدية الرقمية. اسأليني عن المكونات النشطة أو مدى توافق مستحضرات العناية ببشرتكِ."
+    }
+  ]);
+  const [isTyping, setIsTyping] = useState(false);
+  const [inputText, setInputText] = useState('');
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, isTyping]);
+
+  if (shouldHideAssistant) {
+    return null;
+  }
 
   const handleUpdateQty = (productId: number, diff: number) => {
     if (!activeOrderForm) return;
@@ -138,25 +158,6 @@ export const AiAssistant: React.FC = () => {
   };
 
   const isRTL = language === 'AR';
-
-  const [isOpen, setIsOpen] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  const [messages, setMessages] = useState<Message[]>( [
-    {
-      sender: 'ai',
-      textFr: "Bonjour ! Je suis votre conseillère dermo-cosmétique digitale. Posez-moi une question sur vos ingrédients actifs ou sur la compatibilité de vos soins.",
-      textAr: "مرحباً ! أنا مستشارتكِ الجلدية الرقمية. اسأليني عن المكونات النشطة أو مدى توافق مستحضرات العناية ببشرتكِ."
-    }
-  ]);
-  const [isTyping, setIsTyping] = useState(false);
-  const [inputText, setInputText] = useState('');
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages, isTyping]);
 
   const PRESETS = [
     {

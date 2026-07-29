@@ -52,9 +52,15 @@ export async function POST(request: Request) {
         // Fetch current order status to prevent duplicate processing
         const { data: order } = await supabase
           .from('orders')
-          .select('status')
+          .select('status, total, payment_method')
           .eq('order_id', orderId)
           .single();
+
+        const expectedAmount = Math.round(Number(order?.total) * 100);
+        if (order?.payment_method !== 'stripe' || paymentIntent.currency !== 'mad' || paymentIntent.amount !== expectedAmount) {
+          console.error(`Stripe payment amount or currency mismatch for order ${orderId}.`);
+          return NextResponse.json({ received: true });
+        }
 
         if (order?.status === 'Paid') {
           console.log(`Order ${orderId} is already marked as Paid. Skipping duplicate webhook.`);
@@ -94,9 +100,13 @@ export async function POST(request: Request) {
         // Fetch current order status to prevent duplicate or late-arriving failed overwrites
         const { data: order } = await supabase
           .from('orders')
-          .select('status')
+          .select('status, payment_method')
           .eq('order_id', orderId)
           .single();
+
+        if (order?.payment_method !== 'stripe') {
+          return NextResponse.json({ received: true });
+        }
 
         if (order?.status === 'Paid') {
           console.log(`Order ${orderId} is already Paid. Ignoring late-arriving failed payment webhook.`);
@@ -136,4 +146,3 @@ export async function POST(request: Request) {
   }
 }
 export const dynamic = 'force-dynamic';
-

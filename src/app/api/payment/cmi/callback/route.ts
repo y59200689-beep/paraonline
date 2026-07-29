@@ -23,7 +23,11 @@ export async function POST(request: Request) {
       .single();
 
     const cmiStoreKey =
-      settingsData?.value?.paymentSettings?.cmiStoreKey || 'TEST_KEY_123456';
+      settingsData?.value?.paymentSettings?.cmiStoreKey || process.env.CMI_STORE_KEY;
+    if (!cmiStoreKey) {
+      console.error('[CMI Callback] CMI store key is not configured.');
+      return new Response('ACTION=REJECT', { status: 200, headers: { 'Content-Type': 'text/plain' } });
+    }
 
     // -------------------------------------------------------------------
     // CMI ver3 HASH verification
@@ -70,12 +74,25 @@ export async function POST(request: Request) {
     const approved = responseCode === '00' && mdStatus === '1';
 
     if (orderId) {
-      // Fetch current order status to prevent duplicate processing or late-arriving failures
+      // Verify that this callback belongs to the stored CMI order and amount.
       const { data: order } = await supabase
         .from('orders')
-        .select('status')
+        .select('status, total, payment_method')
         .eq('order_id', orderId)
         .single();
+
+      const callbackAmount = Number(params.amount);
+      const isCorrectOrder = order?.payment_method === 'cmi'
+        && Number.isFinite(callbackAmount)
+        && Math.round(callbackAmount * 100) === Math.round(Number(order.total) * 100)
+        && params.symbol === '504';
+      if (!isCorrectOrder) {
+        console.error(`[CMI Callback] Invalid order, amount, currency, or payment method for ${orderId}.`);
+        return new Response('ACTION=REJECT', {
+          status: 200,
+          headers: { 'Content-Type': 'text/plain' },
+        });
+      }
 
       if (order?.status === 'Paid') {
         console.log(`Order ${orderId} is already marked as Paid. Skipping duplicate CMI callback.`);

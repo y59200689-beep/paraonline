@@ -60,7 +60,7 @@ interface CartContextProps {
     address: string;
     city: string;
     note?: string;
-  }) => Promise<{ success: boolean; orderId?: string; whatsappUrl: string }>;
+  }) => Promise<{ success: boolean; orderId?: string; trackingToken?: string; whatsappUrl: string }>;
   isSubmitting: boolean;
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
@@ -438,6 +438,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const data = await res.json();
       
       if (data.success && data.orderId) {
+        if (data.trackingToken) {
+          sessionStorage.setItem(`orderTrackingToken:${data.orderId}`, data.trackingToken);
+        }
         // Clear abandoned cart since the user checked out successfully
         try {
           await fetch(`/api/admin/abandoned-carts?phone=${encodeURIComponent(orderData.phone)}`, {
@@ -479,6 +482,7 @@ Merci pour votre confiance ! Nous confirmons votre livraison le jour même`;
           return {
             success: true,
             orderId: data.orderId,
+            trackingToken: data.trackingToken,
             whatsappUrl
           };
         } else {
@@ -488,6 +492,7 @@ Merci pour votre confiance ! Nous confirmons votre livraison le jour même`;
           return {
             success: true,
             orderId: data.orderId,
+            trackingToken: data.trackingToken,
             whatsappUrl: ''
           };
         }
