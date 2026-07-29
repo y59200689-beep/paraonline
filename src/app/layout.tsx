@@ -8,6 +8,10 @@ import { CodeSnippetInjector } from "../components/CodeSnippetInjector";
 import { triggerLazyCron } from "@/lib/lazy-cron";
 import { getPublicSettings } from "@/lib/get-public-settings";
 
+// The storefront catalogue response is too large for Vercel ISR. Keep the
+// route dynamic, while getPublicSettings remains independently cached.
+export const dynamic = 'force-dynamic';
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
