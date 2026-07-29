@@ -165,8 +165,19 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
             >
               {CATEGORIES.map((cat, index) => {
                  const isActive = activeCategory === cat.tag;
-                 const productsHref = ['solaire', 'visage', 'cheveux'].includes(cat.tag)
-                   ? `/products?category=${cat.tag}`
+                 const productCategoryByCardTag: Record<string, string> = {
+                   solaire: 'solaire',
+                   visage: 'visage',
+                   cheveux: 'cheveux',
+                   corps: 'corp',
+                   appareils: 'accessories',
+                   complements: 'complement',
+                   bebe: 'bébé',
+                   homme: 'homme',
+                 };
+                 const productCategory = productCategoryByCardTag[cat.tag];
+                 const productsHref = productCategory
+                   ? `/products?category=${productCategory}`
                    : null;
                  
                  // Exact top-down gradient; borderless layout with soft shadow; overflow-hidden to crop bleeding illustrations
