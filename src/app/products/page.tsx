@@ -4,7 +4,10 @@ import ProductsClient from './ProductsClient';
 import { unstable_cache } from 'next/cache';
 import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/catalog-cache';
 
-const PAGE_SIZE = 50;
+// A full product card carries images, controls, and rich product metadata.
+// Keep the first catalogue view compact; pagination provides the rest without
+// blocking navigation or hydration with 50 cards at once.
+const PAGE_SIZE = 24;
 
 function rowToProduct(item: any): Product {
   return {
