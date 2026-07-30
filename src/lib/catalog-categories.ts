@@ -3,8 +3,18 @@ import type { Product } from '@/lib/data';
 const normalize = (value: string) => value
   .normalize('NFD')
   .replace(/[\u0300-\u036f]/g, '')
+  .replace(/[-_]+/g, ' ')
+  .replace(/\s+/g, ' ')
   .trim()
   .toLowerCase();
+
+const CATEGORY_FILTER_VARIANTS: Record<string, string[]> = {
+  acne: ['acne', 'acné'],
+  'anti tache': ['anti tache', 'anti-tache'],
+  'anti age': ['anti age', 'anti-age'],
+  'secheresse & hydratation': ['secheresse & hydratation', 'sécheresse & hydratation'],
+  'anti rougeur': ['anti rougeur', 'anti-rougeur'],
+};
 
 /**
  * The storefront has one solar category. Source data may call it "solaire",
@@ -36,5 +46,11 @@ export function catalogCategoryFilter(categoryId: string) {
     return 'category.ilike.%solaire%,categories.cs.{"solaire"},categories.cs.{"protection solaire"},categories.cs.{"solaire & protection"}';
   }
 
-  return `category.eq.${category},categories.cs.{"${category}"}`;
+  const variants = CATEGORY_FILTER_VARIANTS[category] || [category];
+  return variants
+    .flatMap((variant) => [
+      `category.ilike.%${variant}%`,
+      `categories.cs.{"${variant}"}`,
+    ])
+    .join(',');
 }
