@@ -1184,7 +1184,7 @@ export default function CatalogTab({
     if (h === 'category' || h === 'categorie' || h === 'cat') return 'category';
     if (h === 'categories' || h === 'categoriesproduit' || h === 'productcategories' || h === 'cats') return 'categories';
     if (h === 'description' || h === 'desc') return 'description';
-    if (h === 'ingredients' || h === 'composition') return 'ingredients';
+    if (['ingredient', 'ingredients', 'composition', 'ingredientsactifs', 'actifs', 'inci', 'formule'].includes(h)) return 'ingredients';
     if (h === 'usage' || h === 'utilisation' || h === 'conseilsdutilisation') return 'usage';
     if (h === 'image' || h === 'urlimage' || h === 'photo' || h === 'img') return 'image';
     if (h === 'tags' || h === 'motscles') return 'tags';

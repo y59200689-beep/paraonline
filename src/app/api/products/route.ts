@@ -4,36 +4,24 @@ import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { countCatalogConcerns, getCatalogConcerns, matchesCatalogConcern } from '@/lib/catalog-concerns';
 import { catalogCategoryFilter, normalizeCatalogCategoryId } from '@/lib/catalog-categories';
 
-function matchesIngredient(product: Product, ingredient: string) {
-  const ingStr = (product.ingredients || '').toLowerCase();
-  const nameStr = `${product.title} ${product.nameFr || ''} ${product.description || ''}`.toLowerCase();
-  
-  if (ingredient === 'niacinamide') {
-    return ingStr.includes('niacinamide') || nameStr.includes('niacinamide') || product.id === 14 || product.id === 3 || product.id === 16;
-  }
-  if (ingredient === 'centella') {
-    return ingStr.includes('centella') || ingStr.includes('madécassoside') || nameStr.includes('centella') || product.id === 17 || product.id === 16 || product.id === 14;
-  }
-  if (ingredient === 'retinol') {
-    return ingStr.includes('retinol') || ingStr.includes('retinal') || nameStr.includes('retinol') || product.id === 8;
-  }
-  if (ingredient === 'vitamine_c') {
-    return ingStr.includes('ascorbic') || ingStr.includes('ascorbyl') || nameStr.includes('vitamine c') || nameStr.includes('vitamin c') || product.id === 3 || product.id === 14;
-  }
-  if (ingredient === 'hyaluronic') {
-    return ingStr.includes('hyaluronate') || ingStr.includes('hyaluronic') || nameStr.includes('hyaluronique') || product.id === 7 || product.id === 5 || product.id === 6 || product.id === 17;
-  }
-  if (ingredient === 'tranexamic') {
-    return ingStr.includes('tranexamic') || nameStr.includes('tranexamique') || product.id === 14 || product.id === 16;
-  }
-  if (ingredient === 'squalane') {
-    return ingStr.includes('squalane') || nameStr.includes('squalane') || product.id === 5;
-  }
-  if (ingredient === 'salicylic') {
-    return ingStr.includes('salicylic') || nameStr.includes('salicylique') || product.id === 3 || product.id === 22;
-  }
-  return true;
-}
+const INGREDIENT_ALIASES: Record<string, string[]> = {
+  niacinamide: ['niacinamide'],
+  acide_hyaluronique: ['hyaluron'],
+  retinol: ['retinol', 'rétinol', 'retinal'],
+  vitamine_c: ['vitamine c', 'vitamin c', 'ascorb', 'ascorbyl'],
+  acide_salicylique: ['salicyl'],
+  centella_asiatica: ['centella', 'madecassoside', 'madécassoside'],
+  acide_tranexamique: ['tranexamic', 'tranexamique'],
+  squalane: ['squalane'],
+};
+
+const normalizeIngredientKey = (value: string) => value
+  .trim()
+  .toLowerCase()
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .replace(/[^a-z0-9]+/g, '_')
+  .replace(/^_|_$/g, '');
 
 function mapProduct(item: Record<string, unknown>): Product {
   const category = item.category as string;
@@ -154,7 +142,7 @@ export async function GET(request: Request) {
   const vendor = searchParams.get('vendor') || '';
   const vendors = (searchParams.get('vendors') || '').split(',').map(v => v.trim()).filter(Boolean);
   const concern = searchParams.get('concern') || 'all';
-  const ingredient = searchParams.get('ingredient') || 'all';
+  const ingredient = (searchParams.get('ingredient') || '').trim().slice(0, 100);
   const sort = searchParams.get('sort') || 'popular';
   const maxPrice = Number(searchParams.get('maxPrice') || '0');
   const facetsOnly = searchParams.get('facets') === 'true';
@@ -263,9 +251,20 @@ export async function GET(request: Request) {
       query = query.lte('price', maxPrice);
     }
 
+    // Ingredients are imported into the dedicated products.ingredients column.
+    // Keep this query database-side so filtering remains quick for a large catalogue.
+    if (ingredient) {
+      const aliases = INGREDIENT_ALIASES[normalizeIngredientKey(ingredient)];
+      if (aliases) {
+        query = query.or(aliases.map(value => `ingredients.ilike.%${value}%`).join(','));
+      } else {
+        query = query.ilike('ingredients', `%${ingredient.replace(/[%_]/g, '\\$&')}%`);
+      }
+    }
+
     const catalogConcerns = concern !== 'all' ? await getCatalogConcerns() : [];
 
-    const needsPostFilter = concern !== 'all' || ingredient !== 'all';
+    const needsPostFilter = concern !== 'all';
     let products: Product[] = [];
     let total = 0;
 
@@ -296,9 +295,6 @@ export async function GET(request: Request) {
 
     if (concern !== 'all') {
       products = products.filter(product => matchesCatalogConcern(product, concern, catalogConcerns));
-    }
-    if (ingredient !== 'all') {
-      products = products.filter(p => matchesIngredient(p, ingredient));
     }
     if (needsPostFilter) {
       total = products.length;

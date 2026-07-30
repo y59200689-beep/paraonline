@@ -5,7 +5,7 @@ import { useTranslation } from '@/context/LanguageContext';
 import { Product } from '@/lib/data';
 import { ProductCard } from '@/components/ProductCard';
 import { ShopShell } from '@/components/ShopShell';
-import { Search, SlidersHorizontal, Check, ArrowUpDown, X, AlertTriangle, Sparkles, Loader2, ChevronLeft, ChevronRight, RotateCcw, Tags, HeartPulse, CircleDollarSign } from 'lucide-react';
+import { Search, SlidersHorizontal, Check, ArrowUpDown, X, AlertTriangle, Sparkles, Loader2, ChevronLeft, ChevronRight, RotateCcw, Tags, HeartPulse, CircleDollarSign, FlaskConical } from 'lucide-react';
 import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 
@@ -24,6 +24,17 @@ const CATEGORIES = [
   { id: 'cheveux', labelFR: 'Soin Capillaire', labelAR: 'العناية بالشعر' },
   { id: 'kbeauty', labelFR: 'K-Beauty Coréenne', labelAR: 'الجمال الكوري' },
   { id: 'offers', labelFR: 'Offres & Coffrets', labelAR: 'العروض والمجموعات' }
+];
+
+const INGREDIENTS = [
+  { label: 'Niacinamide', query: 'niacinamide' },
+  { label: 'Acide hyaluronique', query: 'acide hyaluronique' },
+  { label: 'Rétinol', query: 'retinol' },
+  { label: 'Vitamine C', query: 'vitamine c' },
+  { label: 'Acide salicylique', query: 'acide salicylique' },
+  { label: 'Centella asiatica', query: 'centella asiatica' },
+  { label: 'Acide tranexamique', query: 'acide tranexamique' },
+  { label: 'Squalane', query: 'squalane' },
 ];
 
 type CatalogPagination = {
@@ -180,6 +191,7 @@ export default function ProductsClient({
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [selectedBrands, setSelectedBrands] = useState<string[]>(initialBrands);
   const [selectedConcerns, setSelectedConcerns] = useState<string[]>([]);
+  const [ingredientQuery, setIngredientQuery] = useState('');
   const [maxPrice, setMaxPrice] = useState(1500);
   const [sortOption, setSortOption] = useState('alphabetical'); // alphabetical, price-asc, price-desc, rating
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
@@ -195,6 +207,7 @@ export default function ProductsClient({
     (selectedCategory !== 'all' ? 1 : 0) +
     selectedBrands.length +
     selectedConcerns.length +
+    (ingredientQuery.trim() ? 1 : 0) +
     (searchQuery.trim() ? 1 : 0) +
     (maxPrice < 1500 ? 1 : 0) +
     (showOnlyMatches ? 1 : 0);
@@ -243,7 +256,7 @@ export default function ProductsClient({
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedCategory, selectedBrands, selectedConcerns, maxPrice, sortOption, showOnlyMatches]);
+  }, [searchQuery, selectedCategory, selectedBrands, selectedConcerns, ingredientQuery, maxPrice, sortOption, showOnlyMatches]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -257,6 +270,7 @@ export default function ProductsClient({
           selectedCategory === initialCategory &&
           selectedBrands.join(',') === initialBrands.join(',') &&
           selectedConcerns.length === 0 &&
+          ingredientQuery.trim() === '' &&
           maxPrice === 1500 &&
           sortOption === 'alphabetical'
         ) {
@@ -275,6 +289,7 @@ export default function ProductsClient({
         if (searchQuery.trim()) params.set('search', searchQuery.trim());
         if (selectedBrands.length > 0) params.set('vendors', selectedBrands.join(','));
         if (selectedConcerns.length === 1) params.set('concern', selectedConcerns[0]);
+        if (ingredientQuery.trim()) params.set('ingredient', ingredientQuery.trim());
 
         const response = await fetch(`/api/products?${params.toString()}`, {
           cache: 'no-store',
@@ -299,7 +314,7 @@ export default function ProductsClient({
 
     loadPage();
     return () => controller.abort();
-  }, [currentPage, pageSize, searchQuery, selectedCategory, selectedBrands, selectedConcerns, maxPrice, sortOption]);
+  }, [currentPage, pageSize, searchQuery, selectedCategory, selectedBrands, selectedConcerns, ingredientQuery, maxPrice, sortOption]);
 
   const handleBrandToggle = (brand: string) => {
     setSelectedBrands(prev => 
@@ -316,6 +331,7 @@ export default function ProductsClient({
     setSelectedCategory('all');
     setSelectedBrands([]);
     setSelectedConcerns([]);
+    setIngredientQuery('');
     setMaxPrice(1500);
     setShowOnlyMatches(false);
     setCurrentPage(1);
@@ -544,6 +560,52 @@ export default function ProductsClient({
                 </section>
 
                 <section className="border-t border-slate-100 pt-5 dark:border-slate-800">
+                  <div className="mb-2.5 flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+                    <FlaskConical className="h-3.5 w-3.5 text-primary" />
+                    {language === 'FR' ? 'Ingrédients' : 'المكونات'}
+                  </div>
+                  <div className="relative">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="search"
+                      value={ingredientQuery}
+                      onChange={(event) => setIngredientQuery(event.target.value)}
+                      placeholder={language === 'FR' ? 'Rechercher un ingrédient' : 'ابحث عن مكوّن'}
+                      className="h-10 w-full rounded-md border border-slate-200 bg-slate-50/70 pl-8 pr-8 text-xs font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/10 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:focus:bg-slate-950"
+                    />
+                    {ingredientQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setIngredientQuery('')}
+                        aria-label={language === 'FR' ? 'Effacer l’ingrédient' : 'مسح المكوّن'}
+                        className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                  <div className="mt-2.5 flex flex-wrap gap-1.5">
+                    {INGREDIENTS.map(ingredient => (
+                      <button
+                        key={ingredient.query}
+                        type="button"
+                        onClick={() => setIngredientQuery(current => current.toLocaleLowerCase() === ingredient.query ? '' : ingredient.query)}
+                        className={`rounded-md border px-2 py-1 text-[10px] font-semibold transition ${
+                          ingredientQuery.toLocaleLowerCase() === ingredient.query
+                            ? 'border-primary bg-primary text-white shadow-sm shadow-primary/20'
+                            : 'border-slate-200 bg-white text-slate-600 hover:border-primary/35 hover:text-primary dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400'
+                        }`}
+                      >
+                        {ingredient.label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-[10px] leading-relaxed text-slate-400 dark:text-slate-500">
+                    {language === 'FR' ? 'Recherche dans les ingrédients importés des fiches produits.' : 'البحث داخل مكوّنات المنتجات المستوردة.'}
+                  </p>
+                </section>
+
+                <section className="border-t border-slate-100 pt-5 dark:border-slate-800">
                   <div className="mb-2.5 flex items-center justify-between text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
                     <span>{language === 'FR' ? 'Marques' : 'العلامات التجارية'}</span>
                     <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[9px] tabular-nums text-slate-500 dark:bg-slate-900 dark:text-slate-400">{brandsList.length}</span>
@@ -625,9 +687,9 @@ export default function ProductsClient({
               >
                 <SlidersHorizontal className="w-3.5 h-3.5 text-primary" />
                 <span>{language === 'FR' ? 'Filtrer' : 'تصفية'}</span>
-                {(selectedCategory !== 'all' || selectedBrands.length > 0 || selectedConcerns.length > 0 || searchQuery || maxPrice < 1500 || showOnlyMatches) && (
+                {(selectedCategory !== 'all' || selectedBrands.length > 0 || selectedConcerns.length > 0 || ingredientQuery.trim() || searchQuery || maxPrice < 1500 || showOnlyMatches) && (
                   <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-primary text-white text-[9px] font-black flex items-center justify-center">
-                    {selectedBrands.length + selectedConcerns.length + (selectedCategory !== 'all' ? 1 : 0) + (searchQuery ? 1 : 0) + (maxPrice < 1500 ? 1 : 0) + (showOnlyMatches ? 1 : 0)}
+                    {selectedBrands.length + selectedConcerns.length + (ingredientQuery.trim() ? 1 : 0) + (selectedCategory !== 'all' ? 1 : 0) + (searchQuery ? 1 : 0) + (maxPrice < 1500 ? 1 : 0) + (showOnlyMatches ? 1 : 0)}
                   </span>
                 )}
               </button>
@@ -722,7 +784,7 @@ export default function ProductsClient({
             </div>
 
             {/* Active Filter Tags */}
-            {(selectedCategory !== 'all' || selectedBrands.length > 0 || selectedConcerns.length > 0 || searchQuery || maxPrice < 1500) && (
+            {(selectedCategory !== 'all' || selectedBrands.length > 0 || selectedConcerns.length > 0 || ingredientQuery.trim() || searchQuery || maxPrice < 1500) && (
               <div className="flex flex-wrap gap-2 items-center">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{language === 'FR' ? 'Filtres actifs :' : 'التصفيات النشطة:'}</span>
                 
@@ -753,6 +815,13 @@ export default function ProductsClient({
                     <X className="w-3.5 h-3.5 text-slate-400 hover:text-slate-600 cursor-pointer" onClick={() => handleConcernToggle(concernId)} />
                   </span>
                 ))}
+
+                {ingredientQuery.trim() && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-50 border border-slate-100 rounded-lg text-xs font-bold text-slate-600">
+                    {ingredientQuery.trim()}
+                    <X className="w-3.5 h-3.5 text-slate-400 hover:text-slate-600 cursor-pointer" onClick={() => setIngredientQuery('')} />
+                  </span>
+                )}
 
                 {maxPrice < 1500 && (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-50 border border-slate-100 rounded-lg text-xs font-bold text-slate-600">
@@ -973,7 +1042,51 @@ export default function ProductsClient({
                 </div>
               </div>
 
-              {/* 4. Mobile Brands */}
+              {/* 4. Mobile Ingredients */}
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                  <FlaskConical className="w-3.5 h-3.5 text-primary" />
+                  {language === 'FR' ? 'Ingrédients' : 'المكونات'}
+                </label>
+                <div className="relative">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="search"
+                    value={ingredientQuery}
+                    onChange={(event) => setIngredientQuery(event.target.value)}
+                    placeholder={language === 'FR' ? 'Rechercher un ingrédient' : 'ابحث عن مكوّن'}
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 focus:border-primary/50 text-slate-800 dark:text-slate-100 text-xs rounded-xl pl-9 pr-9 py-2.5 outline-none transition"
+                  />
+                  {ingredientQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setIngredientQuery('')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+                      aria-label={language === 'FR' ? 'Effacer l’ingrédient' : 'مسح المكوّن'}
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {INGREDIENTS.map(ingredient => (
+                    <button
+                      key={ingredient.query}
+                      type="button"
+                      onClick={() => setIngredientQuery(current => current.toLocaleLowerCase() === ingredient.query ? '' : ingredient.query)}
+                      className={`px-2.5 py-1.5 rounded-lg border text-[10px] font-bold transition ${
+                        ingredientQuery.toLocaleLowerCase() === ingredient.query
+                          ? 'bg-primary border-primary text-white'
+                          : 'bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-400'
+                      }`}
+                    >
+                      {ingredient.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 5. Mobile Brands */}
               <div className="space-y-3">
                 <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                   {language === 'FR' ? 'Marques' : 'العلامات التجارية'}
@@ -999,7 +1112,7 @@ export default function ProductsClient({
                 </div>
               </div>
 
-              {/* 5. Mobile Price */}
+              {/* 6. Mobile Price */}
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
