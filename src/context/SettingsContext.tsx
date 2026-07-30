@@ -242,6 +242,7 @@ export interface HomepageSectionConfig {
   showDermoCorner?: boolean;
   showActiveIngredients?: boolean;
   showOfficialDistributor?: boolean;
+  showClinicalSelection?: boolean;
 
   topRatedTitleFr?: string;
   topRatedTitleAr?: string;
@@ -304,6 +305,7 @@ export const DEFAULT_SETTINGS: Settings = {
     showDermoCorner: true,
     showActiveIngredients: true,
     showOfficialDistributor: true,
+    showClinicalSelection: true,
 
     topRatedTitleFr: "Produits les Mieux Notés",
     topRatedTitleAr: "المنتجات الأعلى تقييماً",
@@ -337,6 +339,7 @@ export const DEFAULT_SETTINGS: Settings = {
       { id: 'skincareRoutineSteps-1', type: 'skincareRoutineSteps', nameFr: 'Étapes de la Routine Skincare', visible: true },
       { id: 'activeIngredients-1', type: 'activeIngredients', nameFr: 'Molécules & Ingrédients Actifs', visible: true },
       { id: 'ingredientDictionary-1', type: 'ingredientDictionary', nameFr: 'Dictionnaire Clinique des Ingrédients', visible: true },
+      { id: 'clinicalSelection-1', type: 'clinicalSelection', nameFr: 'Sélection Clinique Solaire', visible: true },
       { id: 'faq-1', type: 'faq', nameFr: 'Foire Aux Questions (FAQ)', visible: true },
       { id: 'officialDistributor-1', type: 'officialDistributor', nameFr: 'Badge Distributeur Officiel', visible: true },
       { id: 'trustBar-1', type: 'trustBar', nameFr: 'Barre de Confiance Maroc', visible: true }

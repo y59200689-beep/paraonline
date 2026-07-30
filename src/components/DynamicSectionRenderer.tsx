@@ -36,6 +36,7 @@ const LaRochePosaySSection = dynamic(() => import('@/components/LaRochePosaySSec
 const DermoCorner = dynamic(() => import('@/components/DermoCorner').then((m) => m.DermoCorner), { ssr: false });
 const ActiveIngredients = dynamic(() => import('@/components/ActiveIngredients').then((m) => m.ActiveIngredients), { ssr: false });
 const OfficialDistributorBadge = dynamic(() => import('@/components/OfficialDistributorBadge').then((m) => m.OfficialDistributorBadge), { ssr: false });
+const ClinicalSelection = dynamic(() => import('@/components/ClinicalSelection').then((m) => m.ClinicalSelection), { ssr: false });
 
 interface DynamicSectionRendererProps {
   sections: HomepageSectionItem[];
@@ -158,6 +159,9 @@ export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps
 
           case 'officialDistributor':
             return <OfficialDistributorBadge key={section.id} />;
+
+          case 'clinicalSelection':
+            return <ClinicalSelection key={section.id} />;
 
           case 'faq':
             return <InteractiveFaqWrapper key={section.id} />;
