@@ -361,7 +361,6 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         loadLoyaltyOverrides(),
         loadOperatorsList(),
         loadAdviceArticles(),
-        loadProducts(),
         loadReviews()
       ]).catch((e) => {
         console.error("Background data fetch error:", e);

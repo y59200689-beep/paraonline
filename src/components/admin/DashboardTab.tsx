@@ -302,7 +302,6 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
     auditLogs,
     adminTheme,
     handleUpdateCartRecovery,
-    products,
     currentUser,
     operatorsList,
   } = useAdmin();
@@ -312,6 +311,32 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
   const [chartHoverIdx, setChartHoverIdx] = useState<number | null>(null);
   const [selectedAbandonedCart, setSelectedAbandonedCart] = useState<AbandonedCart | null>(null);
+  const [lowStockCount, setLowStockCount] = useState<number | null>(null);
+  const lowStockThreshold = settings.lowStockThreshold ?? 5;
+
+  React.useEffect(() => {
+    const controller = new AbortController();
+
+    const loadLowStockCount = async () => {
+      try {
+        const response = await fetch(
+          `/api/admin/products?summary=low-stock&lowStockThreshold=${lowStockThreshold}`,
+          { signal: controller.signal, cache: 'no-store' }
+        );
+        const data = await response.json();
+        if (response.ok && data.success) {
+          setLowStockCount(Number(data.lowStockCount) || 0);
+        }
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          console.error('Failed to load low-stock count:', error);
+        }
+      }
+    };
+
+    void loadLowStockCount();
+    return () => controller.abort();
+  }, [lowStockThreshold]);
 
   // Widget Layout Configuration
   const DEFAULT_WIDGETS = [
@@ -714,8 +739,6 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
             .filter(o => o.courier && !o.reconciled && o.status !== 'Cancelled')
             .reduce((sum, o) => sum + (o.total || 0), 0);
 
-          const lowStockCount = products.filter(p => (p.stock || 0) <= 5).length;
-
           const WIDGET_DEFS: Record<string, any> = {
             sales: {
               label: "Chiffre d'Affaires",
@@ -772,12 +795,12 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
             },
             low_stock: {
               label: "Stock Faible (Alertes)",
-              raw: lowStockCount,
+              raw: lowStockCount ?? 0,
               suffix: " art.",
               icon: AlertTriangle,
               color: "#ef4444",
               accentGradient: "#ef4444",
-              badgeText: "Réapprovisionner",
+              badgeText: lowStockCount === null ? "Chargement..." : "Réapprovisionner",
               badgePositive: false,
             },
           };

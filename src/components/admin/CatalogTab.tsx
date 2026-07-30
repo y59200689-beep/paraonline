@@ -3280,7 +3280,6 @@ export default function CatalogTab({
                                   : 'bg-slate-900 border-slate-800 text-slate-200 focus:border-emerald-500'
                               }`} 
                               placeholder="https://..."
-                              required 
                             />
                             <label 
                               htmlFor="product-file-input"

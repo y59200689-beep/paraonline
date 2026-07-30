@@ -163,6 +163,22 @@ export async function GET(request: Request) {
     const sortField = searchParams.get('sortField') || 'id';
     const sortDirection = searchParams.get('sortDirection') || 'asc';
     const lowStockThreshold = parseInt(searchParams.get('lowStockThreshold') || '5');
+    const summary = searchParams.get('summary') || '';
+
+    // Dashboard KPI: count in the database without transferring the full catalogue.
+    if (summary === 'low-stock') {
+      const { count, error } = await supabase
+        .from('products')
+        .select('id', { count: 'exact', head: true })
+        .lte('stock', lowStockThreshold);
+
+      if (error) throw error;
+
+      return NextResponse.json(
+        { success: true, lowStockCount: count || 0 },
+        { headers: { 'Cache-Control': 'private, no-store' } }
+      );
+    }
 
     const specialFilters = special ? special.split(',') : [];
 
