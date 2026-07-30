@@ -82,16 +82,15 @@ export default async function Home() {
     { id: 'skincareRoutineSteps-1', type: 'skincareRoutineSteps', nameFr: 'Étapes de la Routine Skincare', visible: hp.showRoutineVisualizer ?? true },
     { id: 'activeIngredients-1', type: 'activeIngredients', nameFr: 'Molécules & Ingrédients Actifs', visible: true },
     { id: 'ingredientDictionary-1', type: 'ingredientDictionary', nameFr: 'Dictionnaire Clinique des Ingrédients', visible: hp.showIngredientDictionary ?? true },
-    { id: 'clinicalSelection-1', type: 'clinicalSelection', nameFr: 'Sélection Clinique Solaire', visible: hp.showClinicalSelection ?? true },
     { id: 'faq-1', type: 'faq', nameFr: 'Foire Aux Questions (FAQ)', visible: hp.showFaq ?? true },
     { id: 'officialDistributor-1', type: 'officialDistributor', nameFr: 'Badge Distributeur Officiel', visible: true },
     { id: 'trustBar-1', type: 'trustBar', nameFr: 'Barre de Confiance Maroc', visible: hp.showTrustBar ?? true }
   ];
 
   const rawSectionsList = hp.sectionOrder 
-    ? hp.sectionOrder.filter((s: any) => s.type !== 'flashSale' && s.type !== 'curationClinique' && s.type !== 'skinConcerns' && s.type !== 'ingredientDictionary' && s.type !== 'horizontalPromo' && s.type !== 'weeklySales')
+    ? hp.sectionOrder.filter((s: any) => s.type !== 'flashSale' && s.type !== 'curationClinique' && s.type !== 'clinicalSelection' && s.type !== 'skinConcerns' && s.type !== 'ingredientDictionary' && s.type !== 'horizontalPromo' && s.type !== 'weeklySales')
     : defaultSections.filter(s => s.type !== 'skinConcerns' && s.type !== 'ingredientDictionary' && s.type !== 'horizontalPromo' && s.type !== 'weeklySales');
-  let sectionsList = [...rawSectionsList];
+  const sectionsList = [...rawSectionsList];
   
   // 1. Ensure 'skincareRoutineSteps-1' is in the list
   if (!sectionsList.some(s => s.id === 'skincareRoutineSteps-1')) {
@@ -139,18 +138,6 @@ export default async function Home() {
     } else {
       sectionsList.push({ id: 'officialDistributor-1', type: 'officialDistributor', nameFr: 'Badge Distributeur Officiel', visible: true });
     }
-  }
-
-  // Keep the editorial selection immediately before the service protocols.
-  const clinicalSelectionIdx = sectionsList.findIndex(s => s.id === 'clinicalSelection-1' || s.type === 'clinicalSelection');
-  const clinicalSelection = clinicalSelectionIdx === -1
-    ? { id: 'clinicalSelection-1', type: 'clinicalSelection', nameFr: 'Sélection Clinique Solaire', visible: hp.showClinicalSelection ?? true }
-    : sectionsList.splice(clinicalSelectionIdx, 1)[0];
-  const updatedFaqIdx = sectionsList.findIndex(s => s.id === 'faq-1' || s.type === 'faq');
-  if (updatedFaqIdx >= 0) {
-    sectionsList.splice(updatedFaqIdx, 0, clinicalSelection);
-  } else {
-    sectionsList.push(clinicalSelection);
   }
 
   // 2. Programmatically place 'featuredIngredient-1' directly under 'routineVisualizer-1'

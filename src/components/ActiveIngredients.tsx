@@ -58,6 +58,51 @@ type IngredientPagination = {
 
 const BATCH_SIZE = 6;
 
+type IngredientPage = {
+  products: Product[];
+  pagination: IngredientPagination;
+};
+
+const ingredientPageCache = new Map<string, IngredientPage>();
+const ingredientPageRequests = new Map<string, Promise<IngredientPage>>();
+
+const ingredientPageKey = (ingredient: string, page: number) => `${ingredient}:${page}`;
+
+async function loadIngredientPage(ingredient: string, page: number): Promise<IngredientPage> {
+  const key = ingredientPageKey(ingredient, page);
+  const cached = ingredientPageCache.get(key);
+  if (cached) return cached;
+
+  const pending = ingredientPageRequests.get(key);
+  if (pending) return pending;
+
+  const request = (async () => {
+    const params = new URLSearchParams({
+      ingredient,
+      page: String(page),
+      limit: String(BATCH_SIZE),
+      sort: 'alphabetical',
+    });
+    const response = await fetch(`/api/products?${params.toString()}`, { cache: 'no-store' });
+    const data = await response.json();
+    if (!data.success) throw new Error(data.error || 'Unable to load ingredient products');
+
+    const result = {
+      products: data.products || [],
+      pagination: data.pagination || { total: 0, page, limit: BATCH_SIZE, totalPages: 1 },
+    };
+    ingredientPageCache.set(key, result);
+    return result;
+  })();
+
+  ingredientPageRequests.set(key, request);
+  try {
+    return await request;
+  } finally {
+    ingredientPageRequests.delete(key);
+  }
+}
+
 export const ActiveIngredients: React.FC = () => {
   const { language } = useTranslation();
   const isAR = language === 'AR';
@@ -70,40 +115,44 @@ export const ActiveIngredients: React.FC = () => {
   const currentActive = ACTIVE_INGREDIENTS.find(item => item.key === activeTab) || ACTIVE_INGREDIENTS[0];
 
   useEffect(() => {
-    const controller = new AbortController();
+    let cancelled = false;
 
     const loadIngredientProducts = async () => {
-      setIsLoading(true);
+      const cached = ingredientPageCache.get(ingredientPageKey(currentActive.query, page));
+      setIsLoading(!cached);
       try {
-        const params = new URLSearchParams({
-          ingredient: currentActive.query,
-          page: String(page),
-          limit: String(BATCH_SIZE),
-          sort: 'alphabetical',
-        });
-        const response = await fetch(`/api/products?${params.toString()}`, {
-          cache: 'no-store',
-          signal: controller.signal,
-        });
-        const data = await response.json();
-        if (!data.success) throw new Error(data.error || 'Unable to load ingredient products');
-
-        setProducts(data.products || []);
-        setPagination(data.pagination || { total: 0, page, limit: BATCH_SIZE, totalPages: 1 });
+        const result = cached || await loadIngredientPage(currentActive.query, page);
+        if (cancelled) return;
+        setProducts(result.products);
+        setPagination(result.pagination);
       } catch (error: any) {
-        if (error?.name !== 'AbortError') {
-          console.error('Failed to load active ingredient products:', error);
-          setProducts([]);
-          setPagination({ total: 0, page: 1, limit: BATCH_SIZE, totalPages: 1 });
-        }
+        if (cancelled) return;
+        console.error('Failed to load active ingredient products:', error);
+        setProducts([]);
+        setPagination({ total: 0, page: 1, limit: BATCH_SIZE, totalPages: 1 });
       } finally {
-        if (!controller.signal.aborted) setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
 
     loadIngredientProducts();
-    return () => controller.abort();
+    return () => { cancelled = true; };
   }, [currentActive.query, page]);
+
+  useEffect(() => {
+    if (pagination.page < pagination.totalPages) {
+      void loadIngredientPage(currentActive.query, pagination.page + 1);
+    }
+
+    const prefetchOtherIngredients = () => {
+      ACTIVE_INGREDIENTS
+        .filter(item => item.query !== currentActive.query)
+        .forEach(item => { void loadIngredientPage(item.query, 1); });
+    };
+
+    const timeoutId = window.setTimeout(prefetchOtherIngredients, 500);
+    return () => window.clearTimeout(timeoutId);
+  }, [currentActive.query, pagination.page, pagination.totalPages]);
 
   const selectIngredient = (key: string) => {
     setActiveTab(key);
