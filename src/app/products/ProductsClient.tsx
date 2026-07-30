@@ -113,11 +113,13 @@ export default function ProductsClient({
   initialPagination,
   catalogFacets,
   initialCategory,
+  initialBrands = [],
 }: {
   initialProducts: Product[];
   initialPagination: CatalogPagination;
   catalogFacets: CatalogFacets;
   initialCategory: string;
+  initialBrands?: string[];
 }) {
   const { language } = useTranslation();
   const { diagnostic } = useUi();
@@ -176,7 +178,7 @@ export default function ProductsClient({
   // Filters State
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
-  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const [selectedBrands, setSelectedBrands] = useState<string[]>(initialBrands);
   const [selectedConcerns, setSelectedConcerns] = useState<string[]>([]);
   const [maxPrice, setMaxPrice] = useState(1500);
   const [sortOption, setSortOption] = useState('alphabetical'); // alphabetical, price-asc, price-desc, rating
@@ -253,7 +255,7 @@ export default function ProductsClient({
           currentPage === initialPagination.page &&
           searchQuery.trim() === '' &&
           selectedCategory === initialCategory &&
-          selectedBrands.length === 0 &&
+          selectedBrands.join(',') === initialBrands.join(',') &&
           selectedConcerns.length === 0 &&
           maxPrice === 1500 &&
           sortOption === 'alphabetical'

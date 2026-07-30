@@ -102,7 +102,7 @@ const getCachedCatalogFacets = unstable_cache(
   { tags: [PUBLIC_CATALOG_CACHE_TAG], revalidate: 3600 }
 );
 
-async function loadCatalogPage(category: string) {
+async function loadCatalogPage(category: string, brand = '') {
   let products: Product[] = [];
   let pagination = { total: 0, page: 1, limit: PAGE_SIZE, totalPages: 1 };
 
@@ -112,7 +112,9 @@ async function loadCatalogPage(category: string) {
       .select('*', { count: 'exact' })
       .eq('status', 'live');
 
-    if (category === 'offers') {
+    if (brand) {
+      query = query.ilike('vendor', brand);
+    } else if (category === 'offers') {
       query = query.gt('compare_price', 'price');
     } else if (category !== 'all') {
       query = query.or(catalogCategoryFilter(category));
@@ -150,14 +152,21 @@ function normalizeCategory(value: string | string[] | undefined) {
   return /^[a-z0-9_\- &]+$/.test(category) ? normalizeCatalogCategoryId(category) : 'all';
 }
 
+function normalizeBrand(value: string | string[] | undefined) {
+  if (typeof value !== 'string') return '';
+  return value.trim().slice(0, 100);
+}
+
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string | string[] }>;
+  searchParams: Promise<{ category?: string | string[]; brand?: string | string[] }>;
 }) {
-  const initialCategory = normalizeCategory((await searchParams).category);
+  const params = await searchParams;
+  const initialCategory = normalizeCategory(params.category);
+  const initialBrand = normalizeBrand(params.brand);
   const [{ products, pagination }, catalogFacets] = await Promise.all([
-    getCachedCatalogPage(initialCategory),
+    getCachedCatalogPage(initialCategory, initialBrand),
     getCachedCatalogFacets(),
   ]);
 
@@ -167,6 +176,7 @@ export default async function ProductsPage({
       initialPagination={pagination}
       catalogFacets={catalogFacets}
       initialCategory={initialCategory}
+      initialBrands={initialBrand ? [initialBrand] : []}
     />
   );
 }

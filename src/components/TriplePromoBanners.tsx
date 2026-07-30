@@ -15,6 +15,7 @@ export interface TriplePromoCard {
   bgImage: string;
   overlayImage: string;
   category: string;
+  brand?: string;
 }
 
 interface TriplePromoBannersProps {
@@ -34,7 +35,8 @@ export const TriplePromoBanners: React.FC<TriplePromoBannersProps> = ({ cards })
       price: "",
       bgImage: "/images/promo/card_baby.webp",
       overlayImage: "/images/promo/overlay_baby.webp",
-      category: "bebe"
+      category: "bebe",
+      brand: "MUSTELA"
     },
     {
       tagFr: "Protection Max",
@@ -74,11 +76,16 @@ export const TriplePromoBanners: React.FC<TriplePromoBannersProps> = ({ cards })
             const keys = cardKeysMap[idx] || { bgKeys: [], overlayKeys: [] };
             const bgSrc = getDisplayImage(card.bgImage, ...keys.bgKeys);
             const overlaySrc = card.overlayImage ? getDisplayImage(card.overlayImage, ...keys.overlayKeys) : '';
+            // Existing saved homepage settings predate the optional `brand` field.
+            const brand = card.brand || (idx === 0 && /mustela/i.test(card.titleFr) ? 'MUSTELA' : '');
+            const destination = brand
+              ? `/products?brand=${encodeURIComponent(brand)}`
+              : `/products?category=${encodeURIComponent(card.category)}`;
 
             return (
               <Link
                 key={idx}
-                href={`/products?category=${encodeURIComponent(card.category)}`}
+                href={destination}
                 className="group relative overflow-hidden rounded-[24px] p-6 flex flex-col justify-between h-[200px] md:h-[210px] transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_20px_50px_rgba(93,133,248,0.15)] shadow-md border border-slate-100/20"
               >
                 {/* Premium editorial background */}
