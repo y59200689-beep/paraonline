@@ -25,7 +25,7 @@ const ACTIVE_INGREDIENTS = [
   },
   {
     key: 'hyaluronic',
-    query: 'acide hyaluronique',
+    query: 'hyaluronic',
     nameFr: 'Acide Hyaluronique',
     nameAr: 'حمض الهيالورونيك',
     descFr: 'Hydrate intensément en surface et en profondeur pour repulper la peau.',

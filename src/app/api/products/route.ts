@@ -7,7 +7,7 @@ import { catalogCategoryFilter, normalizeCatalogCategoryId } from '@/lib/catalog
 const INGREDIENT_ALIASES: Record<string, string[]> = {
   niacinamide: ['niacinamide'],
   acide_hyaluronique: ['hyaluron'],
-  retinol: ['retinol', 'rétinol', 'retinal'],
+  retinol: ['retinol', 'rétinol'],
   vitamine_c: ['vitamine c', 'vitamin c', 'ascorb', 'ascorbyl'],
   acide_salicylique: ['salicyl'],
   centella_asiatica: ['centella', 'madecassoside', 'madécassoside'],
