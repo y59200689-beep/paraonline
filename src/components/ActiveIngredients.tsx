@@ -17,7 +17,7 @@ const ACTIVE_INGREDIENTS = [
   },
   {
     key: 'salicylic',
-    query: 'acide salicylique',
+    query: 'salicylic acid',
     nameFr: 'Acide Salicylique (BHA)',
     nameAr: 'حمض الساليسيليك (BHA)',
     descFr: 'Exfolie en profondeur, élimine les points noirs et prévient l’acné.',
