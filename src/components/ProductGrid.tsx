@@ -122,10 +122,22 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, onSele
           ingredient: activeIngredient,
         });
 
-        const res = await fetch(`/api/products?${queryParams.toString()}`);
-        const data = await res.json();
+        let res = await fetch(`/api/products?${queryParams.toString()}`, { cache: 'no-store' });
+        let data = await res.json();
+
+        // Bypass an already cached empty catalogue response while a fresh API
+        // deployment is propagating through the edge network.
+        if (isDefaultFilter && data.success && (data.products || []).length === 0) {
+          queryParams.set('refresh', String(Date.now()));
+          res = await fetch(`/api/products?${queryParams.toString()}`, { cache: 'no-store' });
+          data = await res.json();
+        }
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || 'Unable to load products');
+        }
         
-        if (active && data.success) {
+        if (active) {
           const fetchedList = [...(data.products || [])];
           // Re-order general catalog products so matching routine context appears first
           const isAM = amPmState === 'am';

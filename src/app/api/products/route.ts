@@ -4,6 +4,11 @@ import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { countCatalogConcerns, getCatalogConcerns, matchesCatalogConcern } from '@/lib/catalog-concerns';
 import { catalogCategoryFilter, normalizeCatalogCategoryId } from '@/lib/catalog-categories';
 
+// Catalogue data is operational data. Never allow a transient empty response
+// to become a Vercel edge-cache entry for every storefront visitor.
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const INGREDIENT_ALIASES: Record<string, string[]> = {
   niacinamide: ['niacinamide'],
   acide_hyaluronique: ['hyaluron'],
@@ -117,20 +122,16 @@ async function buildCatalogFacets() {
 }
 
 function applySort(query: any, sort: string) {
-  // Availability is the first public catalogue rule: products with stock are
-  // shown before sold-out items. Product name is the stable A-Z tie-breaker.
-  const availableFirst = query.order('stock', { ascending: false });
-
   if (sort === 'price-asc') {
-    return availableFirst.order('price', { ascending: true }).order('title', { ascending: true });
+    return query.order('price', { ascending: true }).order('title', { ascending: true });
   }
   if (sort === 'price-desc') {
-    return availableFirst.order('price', { ascending: false }).order('title', { ascending: true });
+    return query.order('price', { ascending: false }).order('title', { ascending: true });
   }
   if (sort === 'rating') {
-    return availableFirst.order('rating', { ascending: false }).order('title', { ascending: true });
+    return query.order('rating', { ascending: false }).order('title', { ascending: true });
   }
-  return availableFirst.order('title', { ascending: true }).order('id', { ascending: true });
+  return query.order('title', { ascending: true }).order('id', { ascending: true });
 }
 
 export async function GET(request: Request) {
@@ -285,7 +286,28 @@ export async function GET(request: Request) {
     } else {
       const from = (page - 1) * limit;
       const to = from + limit - 1;
-      const { data, count, error } = await applySort(query, sort).range(from, to);
+      let { data, count, error } = await applySort(query, sort).range(from, to);
+
+      // The storefront must remain usable even if a database ordering index is
+      // temporarily unavailable. This is deliberately limited to the default
+      // catalogue view so intentional empty search/filter results stay intact.
+      const isDefaultCatalogRequest = category === 'all'
+        && !search
+        && !vendor
+        && vendors.length === 0
+        && !ingredient
+        && maxPrice === 0;
+      if (!error && isDefaultCatalogRequest && (!data || data.length === 0)) {
+        const fallback = await supabase
+          .from('products')
+          .select('*', { count: 'exact' })
+          .eq('status', 'live')
+          .order('title', { ascending: true })
+          .range(from, to);
+        data = fallback.data;
+        count = fallback.count;
+        error = fallback.error;
+      }
       if (error || !data) {
         throw error || new Error('No products returned');
       }
@@ -315,7 +337,7 @@ export async function GET(request: Request) {
       },
       {
         headers: {
-          'Cache-Control': 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400',
+          'Cache-Control': 'no-store, max-age=0',
         },
       }
     );
