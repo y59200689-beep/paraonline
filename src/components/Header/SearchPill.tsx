@@ -11,7 +11,7 @@ const CATEGORIES = [
   { id: 'solaire', labelFR: 'Protections Solaires',    labelAR: 'الوقاية من الشمس' },
   { id: 'visage',  labelFR: 'Soins du Visage',         labelAR: 'العناية بالوجه' },
   { id: 'cheveux', labelFR: 'Soins Capillaires',       labelAR: 'العناية بالشعر' },
-  { id: 'kbeauty', labelFR: 'K-Beauty Clinique',       labelAR: 'الجمال الكوري العيادي' },
+  { id: 'kbeauty', labelFR: 'K-Beauty',                labelAR: 'الجمال الكوري' },
 ];
 
 interface SearchPillProps {

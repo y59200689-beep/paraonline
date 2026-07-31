@@ -270,17 +270,17 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
                 <div className="space-y-2 text-center lg:text-left max-w-xl" style={{ textAlign: isRTL ? 'right' : undefined }}>
                   <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-mono font-bold uppercase tracking-widest rounded-full">
                     <Sparkles className="w-3 h-3 text-amber-400" />
-                    <span>{language === 'AR' ? 'نادي الجمال الخاص' : 'CLUB PRIVILÈGE & CONSEIL SKINCARE'}</span>
+                    <span>{language === 'AR' ? 'نصائح وعروض' : 'CONSEILS ET OFFRES'}</span>
                   </div>
                   <h3 className="text-xl sm:text-2xl font-black text-white font-heading tracking-tight">
                     {language === 'AR'
-                      ? 'احصلي على خصم 10% ونشرات العناية بالبشرة'
-                      : 'Rejoignez le Club & Profitez de -10% sur votre 1ère Commande'}
+                      ? 'اكتشفي نصائحنا وعروضنا'
+                      : 'Recevez nos conseils et nos offres'}
                   </h3>
                   <p className="text-xs text-slate-400 font-normal leading-relaxed">
                     {language === 'AR'
-                      ? 'اشتركي للحصول على نصائح دكاترة الصيدلة، العروض الحصرية المستهدفة وأحدث تركيبات الجمال الطبي.'
-                      : 'Recevez les rituels prescrits par nos pharmaciens, nos offres privées exclusives et l\'actualité dermo-cosmétique.'}
+                      ? 'اشتركي لتصلك نصائح العناية، المستجدات والعروض الخاصة.'
+                      : 'Recevez nos conseils beauté, nos nouveautés et nos offres.'}
                   </p>
                 </div>
 
@@ -289,7 +289,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
                   {newsletterSubscribed ? (
                     <div className="p-4 bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 rounded-2xl text-xs font-bold text-center flex items-center justify-center gap-2 shadow-inner">
                       <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                      <span>{language === 'AR' ? 'تم الاشتراك بنجاح! شكراً لانضمامكِ.' : 'Inscription réussie ! Votre code privilège vous a été envoyé.'}</span>
+                      <span>{language === 'AR' ? 'تم الاشتراك بنجاح. شكراً لانضمامكِ.' : 'Merci, votre inscription est enregistrée.'}</span>
                     </div>
                   ) : (
                     <div className="flex flex-col sm:flex-row gap-2.5">
@@ -324,34 +324,34 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
             <div className="py-8 border-b border-slate-800/80 grid grid-cols-2 lg:grid-cols-4 gap-4 text-left" style={{ textAlign: isRTL ? 'right' : undefined }}>
               {[
                 {
-                  titleFr: '100% Produits Authentiques',
-                  titleAr: 'منتجات أصلية 100%',
-                  descFr: 'Directement des laboratoires officiels',
-                  descAr: 'مباشرة من المختبرات المعتمدة',
+                  titleFr: 'Produits sélectionnés',
+                  titleAr: 'منتجات مختارة',
+                  descFr: 'Des marques reconnues',
+                  descAr: 'من علامات تجارية معروفة',
                   icon: ShieldCheck,
                   color: 'text-emerald-400'
                 },
                 {
-                  titleFr: 'Livraison Express Maroc',
-                  titleAr: 'توصيل سريع وسري بالمغرب',
-                  descFr: 'Sous 24h-48h avec paiement à la livraison',
-                  descAr: 'في 24-48 ساعة مع الدفع عند الاستلام',
+                  titleFr: 'Livraison au Maroc',
+                  titleAr: 'التوصيل في المغرب',
+                  descFr: 'Selon les délais indiqués à la commande',
+                  descAr: 'حسب المواعيد المعروضة عند الطلب',
                   icon: Truck,
                   color: 'text-teal-400'
                 },
                 {
-                  titleFr: 'Concierge WhatsApp 6j/7',
-                  titleAr: 'استشارة واتساب خاصة 6/7',
-                  descFr: 'Conseil dermo-pharmacologique dédié',
-                  descAr: 'دعم واستشارة صيدلانية مخصصة',
+                  titleFr: 'Conseil WhatsApp',
+                  titleAr: 'نصيحة عبر واتساب',
+                  descFr: 'Notre équipe vous accompagne',
+                  descAr: 'فريقنا يرافقك',
                   icon: MessageSquare,
                   color: 'text-cyan-400'
                 },
                 {
-                  titleFr: 'Paiement & Données Sécurisés',
-                  titleAr: 'دفع وأمان بيانات مطلق',
-                  descFr: 'Normes de chiffrement CMI & SSL 256-bit',
-                  descAr: 'حماية وتشفير عالي المعايير CMI',
+                  titleFr: 'Paiement sécurisé',
+                  titleAr: 'دفع آمن',
+                  descFr: 'En ligne ou à la livraison',
+                  descAr: 'عبر الإنترنت أو عند التسليم',
                   icon: Lock,
                   color: 'text-amber-400'
                 }
@@ -393,22 +393,22 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
 
                 <p className="text-xs text-slate-400 leading-relaxed font-normal max-w-sm">
                   {language === 'AR'
-                    ? 'المؤسسة الرسمية للجمال السريري والعناية الصيدلانية بالبشرة في المغرب. نضمن أصالة المستحضرات مع الاستشارة الطبية الفائقة.'
-                    : 'Maison officielle de parapharmacie clinique et dermo-cosmétique au Maroc. Nous fusionnons la rigueur officinale avec l\'excellence technologique.'}
+                    ? 'متجركم للعناية بالبشرة والجمال في المغرب.'
+                    : 'Votre boutique de parapharmacie et de soins beauté au Maroc.'}
                 </p>
 
                 <div className="flex flex-wrap gap-2 pt-1">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-slate-900 border border-slate-800 text-slate-300">
                     <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                    CMI CERTIFIED
+                    PAIEMENT SÉCURISÉ
                   </span>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-slate-900 border border-slate-800 text-slate-300">
                     <Truck className="w-3 h-3 text-teal-400" />
-                    COD MOROCCO
+                    PAIEMENT À LA LIVRAISON
                   </span>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-slate-900 border border-slate-800 text-slate-300">
                     <Award className="w-3 h-3 text-amber-400" />
-                    100% OFFICIEL
+                    BOUTIQUE EN LIGNE
                   </span>
                 </div>
               </div>

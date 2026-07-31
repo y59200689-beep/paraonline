@@ -183,7 +183,7 @@ export const ActiveIngredients: React.FC = () => {
             )}
           </h2>
           <p className="text-xs font-medium text-slate-500 dark:text-slate-400 md:text-sm">
-            {isAR ? 'حددي المكون الذي تبحثين عنه واكتشفي الحلول العلاجية المناسبة لكِ.' : 'Choisissez un ingrédient clé pour découvrir les soins cliniques formulés spécifiquement pour son efficacité.'}
+            {isAR ? 'حددي المكون الذي تبحثين عنه واكتشفي المنتجات التي تحتوي عليه.' : 'Choisissez un ingrédient clé pour découvrir les produits qui en contiennent.'}
           </p>
         </div>
 

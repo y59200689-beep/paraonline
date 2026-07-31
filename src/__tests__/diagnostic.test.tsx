@@ -137,11 +137,11 @@ describe('SkinDiagnostic Component & WebRTC Camera Tests', () => {
       await new Promise(resolve => setTimeout(resolve, 350));
     });
 
-    // Wait for step 1: Skin Type Question (Profil Séborrhéique matches Oily)
-    expect(screen.getByText(/Quel est votre profil ou typologie cutanée/i)).toBeDefined();
+    // Wait for step 1: skin type question.
+    expect(screen.getByText(/Quel est votre type de peau/i)).toBeDefined();
 
-    // Select skin type 'Profil Séborrhéique' (Oily)
-    const oilyOption = screen.getByText(/Profil Séborrhéique/i);
+    // Select oily skin.
+    const oilyOption = screen.getByText(/Peau grasse/i);
     fireEvent.click(oilyOption);
 
     // Wait 350ms for transition
@@ -149,11 +149,11 @@ describe('SkinDiagnostic Component & WebRTC Camera Tests', () => {
       await new Promise(resolve => setTimeout(resolve, 350));
     });
 
-    // Auto-advance to Step 2: Main Concern
-    expect(screen.getByText(/Quelle est la préoccupation épidermique majeure/i)).toBeDefined();
+    // Auto-advance to Step 2: main concern.
+    expect(screen.getByText(/Quelle est votre priorité/i)).toBeDefined();
 
-    // Select concern 'Imperfections Acnéiques'
-    const acneOption = screen.getByText(/Imperfections Acnéiques/i);
+    // Select imperfections.
+    const acneOption = screen.getByText(/Imperfections et pores obstrués/i);
     fireEvent.click(acneOption);
 
     // Wait 350ms for transition
@@ -161,11 +161,11 @@ describe('SkinDiagnostic Component & WebRTC Camera Tests', () => {
       await new Promise(resolve => setTimeout(resolve, 350));
     });
 
-    // Auto-advance to Step 3: Sun Exposure
-    expect(screen.getByText(/Quel est le niveau d'exposition de votre peau/i)).toBeDefined();
+    // Auto-advance to Step 3: sun exposure.
+    expect(screen.getByText(/À quelle fréquence vous exposez-vous au soleil/i)).toBeDefined();
 
-    // Select sun exposure 'Exposition Solaire Intermédiaire'
-    const sunOption = screen.getByText(/Exposition Solaire Intermédiaire/i);
+    // Select moderate sun exposure.
+    const sunOption = screen.getByText(/Modérément/i);
     fireEvent.click(sunOption);
 
     // Wait 350ms for transition

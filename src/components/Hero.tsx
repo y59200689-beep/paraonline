@@ -86,7 +86,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
       tag_ar: customBanners ? customBanners[0].tagAr : '🔥 الأكثر مبيعاً · تشكيلة فاخرة',
       title_fr: customBanners ? customBanners[0].titleFr : 'Nos Meilleures Ventes Produits',
       title_ar: customBanners ? customBanners[0].titleAr : 'أفضل المنتجات والأكثر مبيعاً',
-      desc_fr: customBanners ? customBanners[0].descFr : 'Découvrez les soins dermo-cliniques et pépites K-Beauty les plus plébiscités par nos clientes au Maroc. Formules certifiées, résultats prouvés et livraison gratuite.',
+      desc_fr: customBanners ? customBanners[0].descFr : 'Découvrez une sélection de soins et de produits K-Beauty appréciés au Maroc.',
       desc_ar: customBanners ? customBanners[0].descAr : 'اكتشفي أفضل مستحضرات العناية الكورية والطبية الأكثر طلباً في المغرب. نتائج مثبتة وتوصيل مجاني.',
       cta_fr: customBanners ? customBanners[0].ctaFr : 'Explorer les Best-Sellers',
       cta_ar: customBanners ? customBanners[0].ctaAr : 'تسوقي الأكثر مبيعاً',

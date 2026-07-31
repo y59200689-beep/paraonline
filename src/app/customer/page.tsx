@@ -332,7 +332,7 @@ export default function CustomerDashboard() {
         } as Product, 1);
       }
     });
-    showToast(isRTL ? 'تمت إضافة الروتين العلاجي الكامل إلى السلة!' : 'La routine clinique complète a été ajoutée à votre panier !');
+    showToast(isRTL ? 'تمت إضافة الروتين الكامل إلى السلة!' : 'La routine complète a été ajoutée à votre panier !');
   };
 
   // Filtered Orders calculation
@@ -752,7 +752,7 @@ export default function CustomerDashboard() {
                         onClick={() => setActiveTab('diagnostic')}
                         className="w-full py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 font-bold text-xs flex items-center justify-center gap-1.5 border border-amber-500/20 transition cursor-pointer"
                       >
-                        <span>Voir l'ordonnance</span>
+                        <span>Voir la routine</span>
                         <ChevronRight className={`w-3.5 h-3.5 ${isRTL ? 'rotate-180' : ''}`} />
                       </button>
                     </div>
@@ -1103,11 +1103,11 @@ export default function CustomerDashboard() {
                         <div className="flex items-center gap-2">
                           <Sparkles className="w-4 h-4 text-emerald-500" />
                           <span className="text-xs font-mono font-bold text-emerald-500 uppercase tracking-widest">
-                            ORDONNANCE DE SOINS PERSONNALISÉE
+                            ROUTINE DE SOINS PERSONNALISÉE
                           </span>
                         </div>
                         <h3 className={`text-xl font-black font-heading ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                          Rituel Prescrit par notre Algorithme Officinal
+                          Routine recommandée selon vos préférences
                         </h3>
                       </div>
 

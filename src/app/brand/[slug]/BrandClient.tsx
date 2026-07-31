@@ -242,7 +242,7 @@ export default function BrandClient({ brand, initialProducts = [] }: BrandClient
                 <div className="flex flex-wrap gap-3 justify-center md:justify-start pt-2">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-900/30 rounded-full text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 select-none">
                     <ShieldCheck className="w-3.5 h-3.5" />
-                    {isRtl ? 'منتجات أصلية 100%' : '100% Authentique'}
+                    {isRtl ? 'علامة متوفرة في المتجر' : 'Marque disponible en boutique'}
                   </span>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-50 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-800 rounded-full text-[10px] font-bold text-slate-500 dark:text-slate-400 select-none">
                     <Globe className="w-3.5 h-3.5" />
@@ -250,7 +250,7 @@ export default function BrandClient({ brand, initialProducts = [] }: BrandClient
                   </span>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-teal-50 dark:bg-teal-950/20 border border-teal-100/50 dark:border-teal-900/30 rounded-full text-[10px] font-black uppercase text-teal-600 dark:text-teal-400 select-none">
                     <Sparkles className="w-3.5 h-3.5" />
-                    {isRtl ? 'موصى به طبيا' : 'Conseil Dermatologique'}
+                    {isRtl ? 'اختيارات للعناية' : 'Sélection soin'}
                   </span>
                 </div>
               </div>

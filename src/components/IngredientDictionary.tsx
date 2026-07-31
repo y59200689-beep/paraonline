@@ -95,7 +95,7 @@ export const IngredientDictionary: React.FC = () => {
             <span>{language === 'FR' ? 'Encyclopédie Dermo-Active' : 'قاموس المكونات الجلدية'}</span>
           </div>
           <h2 className="font-black font-heading text-slate-800 tracking-tight leading-tight text-[clamp(28px,3.5vw,38px)]">
-            {language === 'FR' ? 'Décryptez les Actifs Cliniques' : 'افهمي المكونات النشطة وفوائدها'}
+            {language === 'FR' ? 'Comprendre les ingrédients actifs' : 'افهمي المكونات النشطة وفوائدها'}
           </h2>
           <p className="text-slate-500 font-medium leading-relaxed max-w-lg text-[13.5px]">
             {language === 'FR'
@@ -264,7 +264,7 @@ export const IngredientDictionary: React.FC = () => {
                   <div className="flex items-center gap-2 mb-3">
                     <Zap className="w-3.5 h-3.5" style={{ color: theme.accent }} />
                     <span className="text-[9.5px] font-black uppercase tracking-[0.2em]" style={{ color: theme.accent }}>
-                      {language === 'FR' ? "Rapport d'efficacité clinique" : 'الفعالية والتأثير'}
+                      {language === 'FR' ? "Bénéfices de l'ingrédient" : 'الفعالية والتأثير'}
                     </span>
                   </div>
                   <p className="text-slate-600 font-medium leading-relaxed text-[13.5px]">

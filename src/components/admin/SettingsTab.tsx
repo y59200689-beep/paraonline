@@ -164,9 +164,9 @@ export default function SettingsTab() {
         { id: 'routineVisualizer-1', type: 'routineVisualizer', nameFr: 'Visualiseur de Routine de Soins', visible: hp.showRoutineVisualizer ?? true },
         { id: 'featuredIngredient-1', type: 'featuredIngredient', nameFr: 'Ingrédient Focus de la Semaine', visible: hp.showFeaturedIngredient ?? true },
         { id: 'activeIngredients-1', type: 'activeIngredients', nameFr: 'Molécules & Ingrédients Actifs', visible: hp.showActiveIngredients ?? true },
-        { id: 'ingredientDictionary-1', type: 'ingredientDictionary', nameFr: 'Dictionnaire Clinique des Ingrédients', visible: hp.showIngredientDictionary ?? true },
+        { id: 'ingredientDictionary-1', type: 'ingredientDictionary', nameFr: 'Dictionnaire des ingrédients', visible: hp.showIngredientDictionary ?? true },
         { id: 'faq-1', type: 'faq', nameFr: 'Foire Aux Questions (FAQ)', visible: hp.showFaq ?? true },
-        { id: 'officialDistributor-1', type: 'officialDistributor', nameFr: 'Badge Distributeur Officiel', visible: hp.showOfficialDistributor ?? true },
+        { id: 'officialDistributor-1', type: 'officialDistributor', nameFr: 'Marques sélectionnées', visible: hp.showOfficialDistributor ?? true },
         { id: 'trustBar-1', type: 'trustBar', nameFr: 'Barre de Confiance Maroc', visible: hp.showTrustBar ?? true }
       ];
       const filteredOrder = hp.sectionOrder && hp.sectionOrder.length > 0
@@ -731,9 +731,9 @@ export default function SettingsTab() {
             routineVisualizer: { nameFr: 'Visualiseur de Routine de Soins', descFr: 'Parcours interactif de soins matin/soir.', icon: Activity, color: 'from-teal-500 to-cyan-500' },
             featuredIngredient: { nameFr: 'Ingrédient Focus de la Semaine', descFr: 'Section focus sur un ingrédient.', icon: Star, color: 'from-purple-500 to-indigo-500' },
             activeIngredients: { nameFr: 'Molécules & Ingrédients Actifs', descFr: 'Filtrer les produits par molécules / ingrédients actifs.', icon: FlaskConical, color: 'from-blue-500 to-indigo-600' },
-            ingredientDictionary: { nameFr: 'Dictionnaire des Ingrédients', descFr: 'Encyclopédie clinique des ingrédients.', icon: BookOpen, color: 'from-blue-500 to-teal-500' },
+            ingredientDictionary: { nameFr: 'Dictionnaire des ingrédients', descFr: 'Informations utiles sur les ingrédients.', icon: BookOpen, color: 'from-blue-500 to-teal-500' },
             faq: { nameFr: 'Foire Aux Questions (FAQ)', descFr: 'FAQ et centre d\'aide interactif.', icon: HelpCircle, color: 'from-emerald-500 to-blue-500' },
-            officialDistributor: { nameFr: 'Badge Distributeur Officiel', descFr: 'Badge de réassurance d\'authenticité et partenaires.', icon: ShieldCheck, color: 'from-emerald-500 to-teal-500' },
+            officialDistributor: { nameFr: 'Marques sélectionnées', descFr: 'Présente les marques proposées dans la boutique.', icon: ShieldCheck, color: 'from-emerald-500 to-teal-500' },
             customHtml: { nameFr: 'Code HTML Personnalisé', descFr: 'Bloc de code HTML ou scripts embeds libre.', icon: Terminal, color: 'from-slate-700 to-slate-900' },
             richText: { nameFr: 'Texte Enrichi & CTA', descFr: 'Bannière de texte avec titre, description et bouton.', icon: FileText, color: 'from-rose-500 to-amber-500' }
           };

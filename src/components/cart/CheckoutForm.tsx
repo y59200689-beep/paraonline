@@ -604,7 +604,7 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
       ══════════════════════════════════════════════════════════════════ */}
       {checkoutSubStep === 'payment' && (
         <div className="space-y-4">
-          {testMode && (
+          {process.env.NODE_ENV !== 'production' && testMode && (
             <div className="bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[10px] py-2 px-3 rounded-lg font-bold uppercase tracking-wider text-center flex items-center justify-center gap-1.5 animate-pulse">
               <AlertTriangle className="w-3.5 h-3.5" />
               <span>{isFR ? 'Mode Test (Simulation)' : 'وضع تجريبي / محاكاة'}</span>

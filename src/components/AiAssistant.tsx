@@ -168,7 +168,7 @@ export const AiAssistant: React.FC = () => {
       responseAr: "فيتامين سي والريتينول مكونان قويان للغاية، لكن لا يجب تطبيقهما في نفس الوقت لتفادي تهيج واحمرار البشرة.",
       hasCard: true,
       cardData: {
-        titleFr: "Règles d'Or d'Association Clinique",
+        titleFr: "Conseils pour associer vos soins",
         titleAr: "القواعد الذهبية للدمج العلاجي",
         tagFr: "Conseil de Pharmacienne",
         tagAr: "نصيحة الصيدلية",
@@ -193,7 +193,7 @@ export const AiAssistant: React.FC = () => {
       responseAr: "بالنسبة للبشرة الدهنية المعرضة لحب الشباب، الهدف الأساسي هو تنظيم الدهون الزائدة دون إتلاف الحاجز الطبيعي الواقي.",
       hasCard: true,
       cardData: {
-        titleFr: "Ordonnance Clinique Recommandée",
+        titleFr: "Routine recommandée",
         titleAr: "الوصفة العلاجية الموصى بها",
         tagFr: "Expertise Peau Grasse",
         tagAr: "خبرة البشرة الدهنية",
@@ -418,7 +418,7 @@ export const AiAssistant: React.FC = () => {
                   {language === 'FR' ? 'Pharmacienne Digitale IA' : 'الصيدلانية الرقمية الذكية'}
                 </h4>
                 <span className="text-[9px] font-black uppercase text-accent tracking-widest block mt-0.5 select-none">
-                  {language === 'FR' ? 'Consultation Clinique' : 'مستشارة العناية بالبشرة'}
+                  {language === 'FR' ? 'Conseil beauté' : 'مستشارة العناية بالبشرة'}
                 </span>
               </div>
             </div>
@@ -647,7 +647,7 @@ export const AiAssistant: React.FC = () => {
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               disabled={isTyping}
-              placeholder={language === 'FR' ? "Posez votre question clinique..." : "اسألي سؤالكِ الطبي..."}
+              placeholder={language === 'FR' ? "Posez votre question..." : "اطرحي سؤالكِ..."}
               className={`flex-grow px-3 py-2 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-primary-dark disabled:opacity-50 ${isRTL ? 'text-right' : 'text-left'}`}
             />
             <button

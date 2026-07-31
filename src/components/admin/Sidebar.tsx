@@ -53,7 +53,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Opérations',
       items: [
         { id: 'dashboard', label: 'Tableau de bord', icon: LayoutDashboard, count: orders.filter(o => o.status.toLowerCase() === 'pending').length || undefined, countColor: '#f43f5e' },
-        { id: 'analytics', label: 'Analytiques', icon: BarChart2 },
+        { id: 'analytics', label: 'Statistiques', icon: BarChart2 },
         { id: 'orders', label: 'Commandes', icon: ShoppingBag, count: orders.filter(o => o.status.toLowerCase() === 'pending').length || undefined, countColor: '#f43f5e' },
         { id: 'catalog', label: 'Catalogue', icon: Table },
       ],
@@ -61,7 +61,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     {
       label: 'Clients',
       items: [
-        { id: 'crm', label: 'CRM & Clients', icon: Users },
+        { id: 'crm', label: 'Clients', icon: Users },
         { id: 'loyalty', label: 'Fidélité', icon: Award },
         { id: 'reviews', label: 'Avis Clients', icon: Star, count: reviews.filter(r => r.status === 'pending').length || undefined, countColor: '#f59e0b' },
       ],
@@ -72,10 +72,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         { id: 'advice', label: 'Espace Conseils', icon: BookOpen },
         { id: 'branding', label: 'Personnalisation', icon: Palette },
         { id: 'gallery', label: 'Galerie Médias', icon: Images },
-        { id: 'snippets', label: 'Snippets Code', icon: Code },
-        { id: 'cron', label: 'Tâches Planifiées', icon: Clock },
+        { id: 'snippets', label: 'Scripts du site', icon: Code },
+        { id: 'cron', label: 'Automatisations planifiées', icon: Clock },
         { id: 'coupons', label: 'Promotions', icon: Ticket },
-        ...(currentUser?.role === 'owner' ? [{ id: 'audit-logs', label: "Journaux d'Audit", icon: Shield, count: undefined, countColor: undefined }] : []),
+        ...(currentUser?.role === 'owner' ? [{ id: 'audit-logs', label: "Journal d'activité", icon: Shield, count: undefined, countColor: undefined }] : []),
         { id: 'settings', label: 'Paramètres', icon: Sliders },
       ],
     },
@@ -134,7 +134,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   <span className="text-[10px] font-semibold" style={{ color: isDark ? '#475569' : '#94a3b8' }}>
-                    Base active
+                    Boutique active
                   </span>
                 </div>
               </div>

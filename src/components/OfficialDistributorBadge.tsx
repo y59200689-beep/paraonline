@@ -25,10 +25,10 @@ export const OfficialDistributorBadge: React.FC = () => {
             <div className="text-left">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-1.5">
                 <Award className="w-3 h-3" />
-                {isAR ? 'ضمان الأصالة' : 'AUTHENTICITÉ GARANTIE'}
+                {isAR ? 'منتجات مختارة بعناية' : 'SÉLECTION SOIGNÉE'}
               </div>
               <h3 className="text-xl md:text-2xl font-black tracking-tight leading-none text-white">
-                {isAR ? 'موزع رسمي معتمد' : 'Distributeur Officiel Agréé'}
+                {isAR ? 'Des marques reconnues, choisies avec soin' : 'Des marques reconnues, choisies avec soin'}
               </h3>
             </div>
           </div>
@@ -37,21 +37,21 @@ export const OfficialDistributorBadge: React.FC = () => {
           <div className="col-span-12 lg:col-span-4 text-center lg:text-left space-y-2 lg:border-l lg:border-slate-800 lg:pl-10">
             <p className="text-xs md:text-sm text-slate-300 leading-relaxed font-medium">
               {isAR
-                ? 'جميع منتجات العناية بالبشرة والـ K-Beauty لدينا أصلية 100٪، مستوردة مباشرة من المختبرات المعتمدة والشركاء الرسميين. نحن نحارب المنتجات المقلدة لضمان أمان بشرتكِ.'
-                : 'Lutte active contre la contrefaçon. Tous nos soins dermo-cosmétiques et produits K-Beauty proviennent directement des laboratoires et distributeurs agréés officiels. 100% traçables.'}
+                ? 'نختار منتجات العناية بالبشرة والـ K-Beauty من موردين وعلامات تجارية معروفة.'
+                : 'Nous sélectionnons des soins et produits K-Beauty auprès de fournisseurs et de marques reconnus.'}
             </p>
             <div className="flex flex-wrap justify-center lg:justify-start gap-4 text-[10px] md:text-[11px] font-bold text-slate-400">
               <span className="flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                {isAR ? 'من المصنع مباشرة' : 'Direct Labo'}
+                {isAR ? 'علامات معروفة' : 'Marques reconnues'}
               </span>
               <span className="flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                {isAR ? 'تغليف آمن ومعقم' : 'Emballage Stérile'}
+                {isAR ? 'تغليف آمن' : 'Emballage soigné'}
               </span>
               <span className="flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                {isAR ? 'تتبع كامل للمنتج' : 'Traçabilité Totale'}
+                {isAR ? 'متابعة الطلب' : 'Suivi de commande'}
               </span>
             </div>
           </div>
@@ -59,7 +59,7 @@ export const OfficialDistributorBadge: React.FC = () => {
           {/* Right Block: Brand logos trust stack */}
           <div className="col-span-12 lg:col-span-4 bg-slate-800/40 border border-slate-700/30 rounded-2xl p-5 md:p-6 flex flex-col justify-center items-center lg:items-start gap-3">
             <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 block w-full text-center lg:text-left mb-1">
-              {isAR ? 'الشركاء الرسميون' : 'Partenaires Officiels'}
+              {isAR ? 'علامات مختارة' : 'Marques sélectionnées'}
             </span>
             <div className="flex flex-wrap justify-center lg:justify-start items-center gap-4 text-xs font-black tracking-widest text-slate-400">
               <span className="opacity-80 hover:opacity-100 hover:text-white transition-opacity select-none">CERAVE</span>

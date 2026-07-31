@@ -31,7 +31,7 @@ const getProductBadge = (id: number, lang: string): string => {
     17: { fr: "Étape 3: Sérum Solaire Fluide", ar: "الخطوة 3: سيروم واقي" },
     1: { fr: "Étape 3: Gel Solaire Frais", ar: "الخطوة 3: جل واقي شمس" }
   };
-  return lang === 'FR' ? (badges[id]?.fr || "Soin Clinique") : (badges[id]?.ar || "عناية سريرية");
+  return lang === 'FR' ? (badges[id]?.fr || "Soin ciblé") : (badges[id]?.ar || "عناية مخصصة");
 };
 
 interface SkincareRoutineStepsProps {
@@ -105,7 +105,7 @@ export const SkincareRoutineSteps: React.FC<SkincareRoutineStepsProps> = ({ onOp
       ]
     },
     {
-      title_fr: "Protection Clinique",
+      title_fr: "Protection solaire",
       title_ar: "حماية شمسية",
       navLabelFr: "Protéger",
       navLabelAr: "حماية",
@@ -203,23 +203,23 @@ export const SkincareRoutineSteps: React.FC<SkincareRoutineStepsProps> = ({ onOp
               
               <p className="text-xs md:text-[13px] text-slate-500 leading-relaxed font-medium">
                 {language === 'FR'
-                  ? 'Notre algorithme dermo-clinique croise votre type de peau, vos préoccupations majeures et votre niveau d\'exposition environnementale pour concevoir un rituel de soin ultra-personnalisé, validé par nos pharmaciens.'
-                  : 'يقوم خوارزميتنا الجلدية السريرية بدمج نوع بشرتكِ، ومشاكلها المحددة، وتعرضها البيئي لتصميم روتين عناية شخصي للغاية معتمد من قبل صيادلتنا.'}
+                  ? 'Notre outil prend en compte votre type de peau, vos besoins et votre exposition au soleil pour vous proposer une routine personnalisée.'
+                  : 'تأخذ أداتنا بعين الاعتبار نوع بشرتكِ واحتياجاتها وتعرّضكِ للشمس لاقتراح روتين عناية مخصص.'}
               </p>
 
               <div className="space-y-3 pt-2">
                 {[
                   { 
-                    fr: "Analyse spectrale IA instantanée par caméra", 
-                    ar: "تحليل طيفي فوري بالذكاء الاصطناعي عبر الكاميرا" 
+                    fr: "Questions simples sur votre peau",
+                    ar: "أسئلة بسيطة عن بشرتكِ"
                   },
                   { 
-                    fr: "Ordonnance clinique sur-mesure validée par nos pharmaciens", 
-                    ar: "وصفة علاجية مخصصة معتمدة من صيادلتنا" 
+                    fr: "Routine personnalisée selon vos réponses",
+                    ar: "روتين مخصص حسب إجاباتكِ"
                   },
                   { 
-                    fr: "15% de réduction immédiate + Cadeau offert sur votre pack", 
-                    ar: "خصم فوري 15% + هدية مجانية على مجموعتكِ المخصصة" 
+                    fr: "Produits proposés selon vos besoins",
+                    ar: "منتجات مقترحة حسب احتياجاتكِ"
                   }
                 ].map((bullet, idx) => (
                   <div 
@@ -484,7 +484,7 @@ export const SkincareRoutineSteps: React.FC<SkincareRoutineStepsProps> = ({ onOp
                 }}
               >
                 <Sparkles className="w-4.5 h-4.5 fill-white text-white animate-pulse" />
-                <span>{language === 'FR' ? 'Découvrir nos Packs Rituels Cliniques (-15% & Cadeau)' : 'تصفحي مجموعات العناية المكتملة (-15% وهدية)'}</span>
+                <span>{language === 'FR' ? 'Découvrir nos routines' : 'اكتشفي روتينات العناية'}</span>
               </button>
             </Magnetic>
           </div>

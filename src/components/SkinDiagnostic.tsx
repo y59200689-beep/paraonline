@@ -501,7 +501,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                   { 
                     num: '01', 
                     title: language === 'FR' ? 'Questionnaire' : 'الاستبيان', 
-                    desc: language === 'FR' ? '3 questions cliniques de base ciblées.' : '3 أسئلة سريرية سريعة وموجهة.' 
+                    desc: language === 'FR' ? '3 questions simples pour mieux connaître votre peau.' : '3 أسئلة بسيطة للتعرّف على بشرتكِ.'
                   },
                   { 
                     num: '02', 
@@ -510,8 +510,8 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                   },
                   { 
                     num: '03', 
-                    title: language === 'FR' ? 'Ordonnance' : 'روتين مخصص', 
-                    desc: language === 'FR' ? 'Votre pack personnalisé à -15% !' : 'روتينك المخصص وخصم 15% عند الطلب !' 
+                    title: language === 'FR' ? 'Routine' : 'روتين مخصص',
+                    desc: language === 'FR' ? 'Une sélection adaptée à vos réponses.' : 'اختيارات مناسبة لإجاباتكِ.'
                   }
                 ].map((item, idx) => (
                   <div 
@@ -781,8 +781,8 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
               {/* Transparency Disclaimer */}
               <p className="text-[10px] text-[#705e55]/70 italic max-w-xs mx-auto leading-normal mt-4">
                 {language === 'FR'
-                  ? "*Le scan caméra sert d'assistance visuelle pour calibrer l'éclairage. L'ordonnance finale est déterminée par vos réponses cliniques."
-                  : "*يعمل مسح الكاميرا كمساعدة بصرية لضبط الإضاءة. يتم تحديد روتينك النهائي بناءً على إجاباتك السريرية."
+                  ? "*Le scan caméra aide à ajuster l'éclairage. Les recommandations sont proposées à partir de vos réponses."
+                  : "*يساعد مسح الكاميرا على ضبط الإضاءة. تُقترح التوصيات بناءً على إجاباتكِ."
                 }
               </p>
             </div>
@@ -820,14 +820,14 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                 style={{ padding: '24px' }}
               >
                 <span className="text-[10px] font-black uppercase tracking-wider text-primary-dark block text-center border-b border-[#eedfd2]/30 pb-2">
-                  {language === 'FR' ? 'Rapport Biométrique Dermo-IA' : 'تقرير المقاييس الحيوية للبشرة'}
+                  {language === 'FR' ? 'Vos résultats' : 'نتائجكِ'}
                 </span>
                 <div className="flex flex-col gap-3.5">
                   {/* 1. Hydration */}
                   <div className="flex flex-col gap-1.5">
                     <div className="flex justify-between text-[10px] font-black text-primary-dark">
                       <span>
-                        {language === 'FR' ? 'HYDRATATION CLINIQUE' : 'الرطوبة السريرية'}
+                        {language === 'FR' ? 'HYDRATATION' : 'الترطيب'}
                       </span>
                       <span className={scores.hydration < 40 ? 'text-rose-500 animate-pulse' : 'text-primary'}>{scores.hydration}%</span>
                     </div>
@@ -878,7 +878,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
               {/* Products routines split layout */}
               <div className="flex flex-col gap-4 pr-1">
                 <span className="text-[10px] font-black uppercase tracking-widest text-[#705e55] block text-center">
-                  {language === 'FR' ? 'Votre Ordonnance Personnalisée' : 'روتين العناية المقترح'}
+                  {language === 'FR' ? 'Votre routine personnalisée' : 'روتين العناية المقترح'}
                 </span>
                 {recommendedProducts.map((product, idx) => (
                   <div 

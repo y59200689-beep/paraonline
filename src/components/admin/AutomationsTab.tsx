@@ -242,17 +242,17 @@ export default function AutomationsTab() {
           <div className="flex justify-between items-center">
             <div>
               <h3 className={`text-base font-black tracking-tight ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-100'}`}>
-                Générateur d'Automatisation Marketing
+                Automatisations marketing
               </h3>
               <p className="text-xs text-slate-500 mt-1">
-                Concevez des parcours clients automatisés (relance paniers, WhatsApp segments, relances fidélité).
+                Créez des parcours clients automatisés : relances de panier, messages WhatsApp et fidélisation.
               </p>
             </div>
             <button
               onClick={handleCreateNew}
               className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow transition active:scale-95 cursor-pointer"
             >
-              <Plus className="w-4 h-4" /> Créer un parcours
+              <Plus className="w-4 h-4" /> Créer une automatisation
             </button>
           </div>
 
@@ -356,12 +356,12 @@ export default function AutomationsTab() {
             {flows.length === 0 && (
               <div className="col-span-2 text-center py-16 border border-dashed rounded-3xl border-slate-200 dark:border-slate-800">
                 <AlertCircle className="w-8 h-8 text-slate-400 mx-auto" />
-                <p className="text-xs text-slate-500 mt-2 font-semibold">Aucun parcours d'automatisation actif configuré.</p>
+                <p className="text-xs text-slate-500 mt-2 font-semibold">Aucune automatisation active.</p>
                 <button
                   onClick={handleCreateNew}
                   className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] uppercase tracking-wider rounded-lg cursor-pointer"
                 >
-                  Créer le premier flux
+                  Créer une automatisation
                 </button>
               </div>
             )}
@@ -402,7 +402,7 @@ export default function AutomationsTab() {
             <div className={`p-5 rounded-3xl border space-y-4 h-fit ${
               adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/30 border-slate-900'
             }`}>
-              <h4 className="text-xs uppercase tracking-wider font-black text-slate-400">Paramètres d'Entrée</h4>
+              <h4 className="text-xs uppercase tracking-wider font-black text-slate-400">Déclenchement et audience</h4>
               
               <div>
                 <label className="block text-[10px] uppercase font-black text-slate-400 mb-1.5">Nom de l'automatisation</label>

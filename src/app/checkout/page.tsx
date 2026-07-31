@@ -244,7 +244,7 @@ function CheckoutPageContent() {
         </h2>
         <p className="text-xs text-slate-500 font-medium max-w-sm mb-8 leading-relaxed">
           {language === 'FR' 
-            ? 'Ajoutez des rituels de soin K-Beauty cliniques avant de procéder à la validation de commande.' 
+            ? 'Ajoutez des produits à votre panier avant de procéder à la commande.'
             : 'أضيفي بعض منتجات العناية بالبشرة الكورية الفاخرة إلى سلتكِ أولاً لتتمكني من إتمام الطلب.'}
         </p>
         <Link 
@@ -267,7 +267,7 @@ function CheckoutPageContent() {
         </h1>
         <p className="text-xs text-slate-500 font-medium leading-relaxed max-w-md">
           {language === 'FR'
-            ? 'Finalisez votre protocole de soin K-Beauty officiel en toute sécurité.'
+            ? 'Finalisez votre commande en toute sécurité.'
             : 'أكملي بروتوكول العناية بالبشرة الكوري الرسمي بكل أمان وخصوصية.'}
         </p>
       </div>

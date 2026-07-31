@@ -398,7 +398,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen,
                   <div className="space-y-3">
                     <p className="text-[10px] text-foreground/60 font-extrabold flex items-center gap-1.5">
                       <Info className="w-3.5 h-3.5 text-accent" />
-                      {language === 'FR' ? 'Cliquez sur les ingrédients en gras pour leur fiche clinique.' : 'انقري على المكونات لعرض خصائصها.'}
+                      {language === 'FR' ? 'Cliquez sur les ingrédients en gras pour voir leur fiche détaillée.' : 'انقري على المكونات لعرض خصائصها.'}
                     </p>
                     {renderIngredientsWithGlossary()}
                   </div>

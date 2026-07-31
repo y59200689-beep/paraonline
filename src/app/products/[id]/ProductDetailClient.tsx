@@ -133,8 +133,8 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
         setNewRating(5);
         
         showToast(language === 'FR'
-          ? 'Votre avis a été soumis avec succès et est en attente de validation clinique !'
-          : 'تم تقديم تقييمكِ بنجاح وهو قيد المراجعة الطبية!',
+          ? 'Votre avis a été envoyé et sera publié après vérification.'
+          : 'تم إرسال تقييمكِ وسيُنشر بعد المراجعة.',
           'success'
         );
       } else {
@@ -452,8 +452,8 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
       const isHydrating = ingL.includes('hyaluron') || ingL.includes('glycerin') || titleL.includes('hydra') || titleL.includes('moistur') || tagsL.includes('hydratant') || product.id === 7 || product.id === 6 || descL.includes('sécheresse') || descL.includes('déshydratation');
       if (isHydrating) {
         score += 15;
-        reasonsFr.push("Hydratation cliniquement prouvée pour recharger l'épiderme en eau");
-        reasonsAr.push("ترطيب مثبت سريرياً لإعادة شحن خلايا الجلد بالماء");
+        reasonsFr.push("Aide à maintenir l'hydratation de la peau");
+        reasonsAr.push("يساعد على الحفاظ على ترطيب البشرة");
       }
     }
 
@@ -745,7 +745,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                     </h4>
                     <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
                       {language === 'FR' 
-                        ? 'Déterminez la compatibilité clinique de ce produit avec votre peau.'
+                        ? 'Découvrez comment ce produit peut correspondre à votre peau.'
                         : 'حددي مدى ملاءمة هذا المستحضر لنوع وجهك ومشاكل بشرتكِ.'}
                     </p>
                   </div>
@@ -912,10 +912,10 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   <ShieldCheck className="w-3.5 h-3.5 text-accent" />
                 </div>
                 <span className="text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 text-center leading-tight mt-0.5">
-                  {language === 'FR' ? '100% Officiel' : 'أصلي 100%'}
+                  {language === 'FR' ? 'Marque sélectionnée' : 'علامة مختارة'}
                 </span>
                 <p className="text-[8.5px] text-slate-400 dark:text-slate-500 text-center leading-tight font-medium">
-                  {language === 'FR' ? 'Certifié authentique' : 'منتجات مضمونة'}
+                  {language === 'FR' ? 'Produit proposé dans notre catalogue' : 'منتج متوفر في كتالوجنا'}
                 </p>
               </div>
 
@@ -953,7 +953,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   </div>
                   <div className="space-y-1">
                     <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
-                      {language === 'FR' ? 'Skin Matcher Diagnostic' : 'مقياس ملاءمة البشرة'}
+                      {language === 'FR' ? 'Compatibilité avec votre peau' : 'مقياس ملاءمة البشرة'}
                     </h4>
                     <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
                       {language === 'FR'
@@ -970,7 +970,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 >
                   <Award className="w-4 h-4 shrink-0" />
                   <span>
-                    {language === 'FR' ? 'Lancer le Diagnostic Clinique' : 'ابدئي الفحص السريري الآن'}
+                    {language === 'FR' ? 'Lancer le diagnostic de peau' : 'ابدئي تشخيص البشرة الآن'}
                   </span>
                 </button>
               </div>
@@ -1045,7 +1045,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
               >
                 <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2.5">
                   <Sparkles className="w-4.5 h-4.5 text-gold-hover" />
-                  {language === 'FR' ? 'Fiche Clinique des Ingrédients Actifs' : 'التحليل المخبري للمكونات النشطة'}
+                  {language === 'FR' ? 'Ingrédients actifs' : 'المكونات النشطة'}
                 </span>
                 <div className={`transition-transform duration-300 ${ingredientsOpen ? 'rotate-180' : ''}`}>
                   <ChevronDown className="w-4.5 h-4.5" />
@@ -1062,7 +1062,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                       <>
                         <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                           {language === 'FR'
-                            ? 'Notre laboratoire a identifié les principes actifs clés suivants formulés dans ce produit :'
+                            ? 'Voici les ingrédients actifs identifiés dans ce produit :'
                             : 'لقد حدد خبراؤنا المركبات النشطة والمكونات الأساسية المركبة في هذا المستحضر :'}
                         </p>
                         
@@ -1100,7 +1100,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                       </>
                     ) : (
                       <div className="text-center py-6 text-slate-500 text-xs">
-                        {language === 'FR' ? 'Aucun ingrédient spécifique de la fiche clinique identifié.' : 'لم نجد مكونات سريرية مصنفة في قاعدة البيانات.'}
+                        {language === 'FR' ? "Aucun ingrédient de notre glossaire n'a été identifié." : 'لم نجد مكونات مصنفة في قاعدة البيانات.'}
                       </div>
                     )}
 
@@ -1126,7 +1126,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
           <div className="text-center max-w-xl mx-auto space-y-3">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest border border-emerald-200/20">
               <Sparkles className="w-3.5 h-3.5" />
-              {language === 'FR' ? 'Synergie Clinique' : 'التكامل السريري'}
+              {language === 'FR' ? 'Routine complémentaire' : 'روتين متكامل'}
             </span>
             <h2 className="text-2xl sm:text-3xl font-black font-heading text-slate-900 dark:text-white">
               {language === 'FR' ? 'Complétez votre Routine' : 'أكملي روتين العناية الخاص بكِ'}
@@ -1309,12 +1309,12 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
               <div className="space-y-1 text-center md:text-left">
                 <h4 className="text-sm font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center justify-center md:justify-start gap-1.5">
                   <Sparkle className="w-4 h-4 text-emerald-500 animate-spin-slow" />
-                  {language === 'FR' ? 'La Routine Complète Certifiée' : 'الروتين الكامل المعتمد'}
+                  {language === 'FR' ? 'La routine complète' : 'الروتين الكامل'}
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   {language === 'FR'
-                    ? 'Optimisez votre traitement clinique. Ajoutez les 4 étapes en un clic.'
-                    : 'ضاعفي كفاءة علاجكِ السريري. أضيفي الخطوات الأربع بضغطة واحدة.'}
+                    ? 'Complétez votre routine en ajoutant les 4 étapes en un clic.'
+                    : 'أكملي روتينكِ بإضافة الخطوات الأربع بضغطة واحدة.'}
                 </p>
               </div>
 

@@ -4,14 +4,14 @@ import { AboutClient } from './AboutClient';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://paraofficinal.ma';
 
 export const metadata: Metadata = {
-  title: 'À Propos de Nous — Para Officinal S.A | Parapharmacie Clinique & Soins au Maroc',
+  title: 'À propos — Para Officinal S.A | Parapharmacie et soins au Maroc',
   description:
-    'Découvrez l\'histoire, la vision et l\'engagement de Para Officinal S.A : la première parapharmacie clinique et digitale au Maroc alliant rigueur médicale, produits 100% authentiques et dermo-diagnostic par IA.',
+    'Découvrez l\'histoire, la vision et l\'engagement de Para Officinal S.A, votre boutique de parapharmacie et de soins beauté au Maroc.',
   alternates: { canonical: '/a-propos' },
   openGraph: {
     title: 'À Propos de Nous — Para Officinal S.A',
     description:
-      'Pionnier de la parapharmacie clinique au Maroc. Produits 100% authentiques, dermo-diagnostic par IA et livraison express partout au Maroc.',
+      'Une sélection de soins et produits beauté pour accompagner vos routines au Maroc.',
     url: `${SITE_URL}/a-propos`,
     type: 'website',
     locale: 'fr_MA',

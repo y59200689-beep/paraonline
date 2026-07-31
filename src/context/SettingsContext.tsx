@@ -360,8 +360,8 @@ export const DEFAULT_SETTINGS: Settings = {
       tagAr: "",
       titleFr: "Nos Meilleures Ventes Produits",
       titleAr: "أفضل المنتجات والأكثر مبيعاً",
-      descFr: "Découvrez les soins dermo-cliniques et pépites K-Beauty les plus plébiscités par nos clientes au Maroc. Formules certifiées, résultats prouvés et livraison gratuite.",
-      descAr: "اكتشفي أفضل مستحضرات العناية الكورية والطبية الأكثر طلباً في المغرب. نتائج مثبتة وتوصيل مجاني.",
+      descFr: "Découvrez une sélection de soins et de produits K-Beauty appréciés au Maroc.",
+      descAr: "اكتشفي مجموعة من منتجات العناية والجمال الكوري المختارة في المغرب.",
       ctaFr: "Explorer les Best-Sellers",
       ctaAr: "تسوقي الأكثر مبيعاً",
       bgImage: "/images/hero_bestsellers.webp",
@@ -400,7 +400,7 @@ export const DEFAULT_SETTINGS: Settings = {
       titleFr: "Nouveaux Produits",
       titleAr: "جديد العناية والجمال الكوري",
       descFr: "Découvrez les dernières innovations dermo-cosmétiques fraîchement arrivées au Maroc.",
-      descAr: "اكتشفي أحدث الابتكارات الطبية والتجميلية الواصلة حديثاً إلى المغرب.",
+      descAr: "اكتشفي أحدث منتجات العناية والجمال الواصلة إلى المغرب.",
       ctaFr: "Découvrir la Nouveauté",
       ctaAr: "اكتشفي الجديد",
       bgImage: "/images/hero_newarrivals.webp",
@@ -416,9 +416,9 @@ export const DEFAULT_SETTINGS: Settings = {
   faq: [
     {
       q_fr: "Les produits sont-ils authentiques ?",
-      a_fr: "Absolument. Tous nos soins proviennent directement de laboratoires pharmaceutiques agréés et de distributeurs officiels de confiance au Maroc.",
+      a_fr: "Nous sélectionnons nos produits auprès de fournisseurs et de marques reconnus.",
       q_ar: "هل المنتجات أصلية؟",
-      a_ar: "بالتأكيد. جميع منتجات العناية لدينا تأتي مباشرة من المختبرات الصيدلانية المعتمدة والموزعين الرسميين الموثوقين في المغرب."
+      a_ar: "نختار منتجاتنا من موردين وعلامات تجارية معروفة."
     },
     {
       q_fr: "Quel est le délai de livraison ?",

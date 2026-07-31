@@ -166,7 +166,7 @@ function MarkdownEditor({ value, onChange, disabled, placeholder, lang, adminThe
           <button
             type="button"
             onClick={() => insertMarkdown('code', '// code ici')}
-            title="Code block"
+            title="Bloc de code"
             disabled={disabled}
             className={`p-1.5 rounded hover:bg-slate-500/10 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition cursor-pointer`}
           >
@@ -616,7 +616,7 @@ export default function AdminAdvicePage() {
             }`}>
               <div>
                 <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
-                  {editingId ? "Modifier l'Article Conseils" : "Créer un Nouvel Article Conseils"}
+                  {editingId ? "Modifier l'article" : "Créer un article"}
                 </h3>
                 <span className="text-[10px] text-slate-400 font-light block">
                   {isOwner ? "Saisissez les informations dans les deux langues." : "Mode aperçu - Modification désactivée."}
@@ -861,7 +861,7 @@ export default function AdminAdvicePage() {
                     type="submit"
                     className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-emerald-500/10 cursor-pointer text-xs active:scale-[0.98] transition"
                   >
-                    {editingId ? "Enregistrer les modifications" : "Publier / Créer l'Article"}
+                    {editingId ? "Enregistrer les modifications" : "Publier l'article"}
                   </button>
                 </div>
               )}

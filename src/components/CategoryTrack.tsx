@@ -120,7 +120,7 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
           dir={isRTL ? 'rtl' : 'ltr'}
         >
           <h2 className="text-xl sm:text-2xl md:text-[22px] font-bold text-slate-800 tracking-tight leading-none">
-            {language === 'AR' ? 'الفئات' : 'Categories'}
+            {language === 'AR' ? 'الفئات' : 'Catégories'}
           </h2>
         </div>
 

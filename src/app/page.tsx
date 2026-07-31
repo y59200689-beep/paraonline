@@ -4,15 +4,15 @@ import type { Metadata } from 'next';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://paraofficinal.ma';
 
 export const metadata: Metadata = {
-  title: 'Parapharmacie & K-Beauty Officiel au Maroc',
+  title: 'Parapharmacie et K-Beauty au Maroc',
   description:
-    'Leader de la K-Beauty et de la Dermo-Cosmétique au Maroc. Diagnostic de peau IA, livraison gratuite le jour même, paiement à la livraison sécurisé.',
+    'Découvrez une sélection de soins, maquillage et produits K-Beauty, avec livraison au Maroc et paiement sécurisé.',
   alternates: { canonical: '/' },
   openGraph: {
     type: 'website',
     url: SITE_URL,
     title: 'Para Officinal S.A | Parapharmacie & K-Beauty',
-    description: 'Leader de la K-Beauty au Maroc. Diagnostic IA, livraison gratuite.',
+    description: 'Soins, maquillage et produits K-Beauty avec livraison au Maroc.',
     images: [{ url: '/og-image.jpg', width: 1200, height: 630 }],
   },
 };
@@ -24,7 +24,7 @@ const organizationJsonLd = {
   name: 'Para Officinal S.A',
   url: SITE_URL,
   logo: `${SITE_URL}/images/logo.png`,
-  description: 'Leader de la K-Beauty et de la Dermo-Cosmétique au Maroc.',
+  description: 'Parapharmacie et soins beauté au Maroc.',
   address: {
     '@type': 'PostalAddress',
     addressCountry: 'MA',

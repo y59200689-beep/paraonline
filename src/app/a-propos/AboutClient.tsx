@@ -45,7 +45,7 @@ export function AboutClient() {
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200/80 rounded-full text-emerald-800 text-xs font-mono font-bold tracking-widest uppercase shadow-sm">
               <Sparkles className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
               <span>
-                {language === 'AR' ? 'المؤسسة الطبية للتجميل بالمرطب' : 'Maison de Parapharmacie Clinique & Officinale'}
+                {language === 'AR' ? 'العناية والجمال' : 'Parapharmacie et soins beauté'}
               </span>
             </div>
 
@@ -57,7 +57,7 @@ export function AboutClient() {
                 </>
               ) : (
                 <>
-                  Redéfinir la <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent">Dermo-Cosmétique</span> au Maroc avec Vigueur Scientifique
+                  Prendre soin de votre <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent">peau</span> au Maroc
                 </>
               )}
             </h1>
@@ -65,46 +65,46 @@ export function AboutClient() {
             {/* Narrative Spine Subtitle */}
             <p className="text-sm sm:text-base lg:text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed font-normal">
               {language === 'AR'
-                ? 'فارما أوفيسينال ص.م هي المنصة الرائدة في المغرب في مجال الصيدلة البديلة والجمال السريري. نجمع بين الخبرة الصيدلانية الأوروبية ومفهوم التشخيص الذكي بالذكاء الاصطناعي لضمان أفضل نتائج لجميع أنواع البشرة.'
-                : 'Pionnier de la parapharmacie officinale connectée au Maroc. Nous fusionnons la rigueur pharmacologique européenne avec l\'innovation technologique et l\'accessibilité logistique sur l\'ensemble du territoire national.'}
+                ? 'بارا أوفيسينال هو متجركم للعناية بالبشرة والجمال في المغرب، مع اختيارات تناسب روتينكم اليومي.'
+                : 'Para Officinal est votre boutique de soins et de beauté au Maroc, avec une sélection pensée pour vos routines quotidiennes.'}
             </p>
 
             {/* Key Metrics Deck */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 max-w-5xl mx-auto">
               {[
                 {
-                  value: '100%',
-                  labelFr: 'Produits Authentiques',
-                  labelAr: 'منتجات أصلية 100%',
-                  descFr: 'Directement des laboratoires',
-                  descAr: 'مباشرة من المختبرات',
+                  value: '90+',
+                  labelFr: 'Marques disponibles',
+                  labelAr: 'علامات متوفرة',
+                  descFr: 'Pour vos routines',
+                  descAr: 'لروتينكِ اليومي',
                   icon: ShieldCheck,
                   color: 'text-emerald-600'
                 },
                 {
-                  value: '50 000+',
-                  labelFr: 'Peaux Accompagnées',
-                  labelAr: 'أكثر من 50,000 عميلة',
-                  descFr: 'Dans tout le Royaume',
-                  descAr: 'في جميع أنحاء المغرب',
+                  value: '24/48h',
+                  labelFr: 'Livraison au Maroc',
+                  labelAr: 'توصيل في المغرب',
+                  descFr: 'Selon la zone de livraison',
+                  descAr: 'حسب منطقة التوصيل',
                   icon: Users,
                   color: 'text-teal-600'
                 },
                 {
-                  value: '24/48h',
-                  labelFr: 'Livraison Express COD',
-                  labelAr: 'توصيل سريع وسري',
-                  descFr: 'Partout au Maroc',
-                  descAr: 'في جميع مدن المغرب',
+                  value: '6j/7',
+                  labelFr: 'Équipe disponible',
+                  labelAr: 'فريق متاح',
+                  descFr: 'Pour vous accompagner',
+                  descAr: 'لمرافقتكِ',
                   icon: Truck,
                   color: 'text-cyan-600'
                 },
                 {
-                  value: '90+',
-                  labelFr: 'Marques Prestataires',
-                  labelAr: 'ماركة عالمية معتمدة',
-                  descFr: 'Curation dermatologique',
-                  descAr: 'اختبارات سريرية مؤكدة',
+                  value: 'COD',
+                  labelFr: 'Paiement à la livraison',
+                  labelAr: 'الدفع عند التسليم',
+                  descFr: 'Selon les options proposées',
+                  descAr: 'حسب الخيارات المتاحة',
                   icon: Award,
                   color: 'text-amber-600'
                 }
@@ -165,13 +165,13 @@ export function AboutClient() {
                   </h3>
                   <p className="text-xs text-slate-600 leading-relaxed font-normal">
                     {language === 'AR'
-                      ? 'نوفر مستودعات معقمة ومراقبة حرارياً بين 15°C و 25°C للحفاظ على كفاءة المواد الفعالة الحساسة مثل الريتينول وفيتامين C وحمض الهيالورونيك.'
-                      : 'Nos entrepôts sont thermo-régulés entre 15°C et 25°C. Nous préservons l\'intégrité moléculaire des principes actifs sensibles (Vitamine C, Rétinol, Céramides) contre les variations de chaleur.'}
+                      ? 'نهتم بتجهيز طلباتكم بعناية لحماية المنتجات أثناء الشحن.'
+                      : 'Nous préparons vos commandes avec soin pour protéger les produits pendant le transport.'}
                   </p>
                 </div>
                 <div className="pt-4 border-t border-slate-100 flex items-center gap-2 text-[11px] font-mono text-emerald-700 font-semibold">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>{language === 'AR' ? 'معايير النظافة الصيدلانية' : 'Protocoles d\'Hygiène Stérile'}</span>
+                  <span>{language === 'AR' ? 'تجهيز بعناية' : 'Préparation soignée'}</span>
                 </div>
               </div>
 
@@ -182,17 +182,17 @@ export function AboutClient() {
                     <Sparkles className="w-7 h-7" />
                   </div>
                   <h3 className="text-lg font-black text-slate-900 font-heading tracking-tight">
-                    {language === 'AR' ? '2. تشخيص البشرة بالذكاء الاصطناعي' : '2. Diagnostic de Peau Clinique par IA'}
+                    {language === 'AR' ? '2. تشخيص البشرة' : '2. Diagnostic de peau'}
                   </h3>
                   <p className="text-xs text-slate-600 leading-relaxed font-normal">
                     {language === 'AR'
-                      ? 'مطور بالتعاون مع خبراء الجلدية. تحليل فوري لنوع البشرة والمشاكل (حب الشباب، التصبغات، الجفاف) لتقديم روتين شخصي بدقة متناهية.'
-                      : 'Développé en synergie avec des praticiens dermatologues. Notre algorithme exclusif analyse votre profil cutané et génère votre ordonnance de soins personnalisée en 60 secondes.'}
+                      ? 'أجيبي عن أسئلة بسيطة لتحصلي على اقتراحات تناسب احتياجات بشرتكِ.'
+                      : 'Répondez à quelques questions pour recevoir des suggestions adaptées aux besoins de votre peau.'}
                   </p>
                 </div>
                 <div className="pt-4 border-t border-slate-100 flex items-center gap-2 text-[11px] font-mono text-teal-700 font-semibold">
                   <CheckCircle2 className="w-4 h-4 text-teal-600 shrink-0" />
-                  <span>{language === 'AR' ? 'توصيات دقيقة ومخصصة' : 'Recommandations Ultra-Ciblées'}</span>
+                  <span>{language === 'AR' ? 'توصيات مخصصة' : 'Recommandations personnalisées'}</span>
                 </div>
               </div>
 
@@ -203,17 +203,17 @@ export function AboutClient() {
                     <ShieldCheck className="w-7 h-7" />
                   </div>
                   <h3 className="text-lg font-black text-slate-900 font-heading tracking-tight">
-                    {language === 'AR' ? '3. أصالة وموثوقية مضاعفة' : '3. Traçabilité & Authenticité Certifiée'}
+                    {language === 'AR' ? '3. اختيار واضح' : '3. Sélection transparente'}
                   </h3>
                   <p className="text-xs text-slate-600 leading-relaxed font-normal">
                     {language === 'AR'
-                      ? 'جميع المستحضرات يتم استيرادها مباشرة من الموزعين الرسميين المعتمدين مع مراقبة صارمة لتواريخ الصلاحية وأرقام الشحنات.'
-                      : 'Chaque référence est directement sourcée auprès des filiales laboratoires officielles (La Roche-Posay, CeraVe, Vichy, Bioderma, Avene, SVR). 0% contrefaçon garanti.'}
+                      ? 'نختار المنتجات من علامات وموردين معروفين ونوضح معلوماتها في صفحاتها.'
+                      : 'Nous sélectionnons les produits auprès de marques et de fournisseurs reconnus, avec des informations claires sur chaque fiche.'}
                   </p>
                 </div>
                 <div className="pt-4 border-t border-slate-100 flex items-center gap-2 text-[11px] font-mono text-cyan-700 font-semibold">
                   <CheckCircle2 className="w-4 h-4 text-cyan-600 shrink-0" />
-                  <span>{language === 'AR' ? 'موزع رسمي معتمد بالمغرب' : 'Distributeur Agréé Maroc'}</span>
+                  <span>{language === 'AR' ? 'معلومات واضحة عن المنتجات' : 'Informations produits claires'}</span>
                 </div>
               </div>
             </div>
@@ -241,10 +241,10 @@ export function AboutClient() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
                 {
-                  titleFr: '1. Ingrédients Validés',
-                  titleAr: '1. مكونات معتمدة طبياً',
-                  descFr: 'Formules testées dermatologiquement sans composants controversés.',
-                  descAr: 'تركيبات مجربة سريرياً ومناسبة حتى للبشرة الأكثر حساسية.',
+                  titleFr: '1. Informations utiles',
+                  titleAr: '1. معلومات مفيدة',
+                  descFr: 'Des fiches produits pour vous aider à choisir votre routine.',
+                  descAr: 'معلومات عن المنتجات لمساعدتكِ في اختيار روتينكِ.',
                   icon: Stethoscope,
                   gradient: 'bg-emerald-50/50 border-emerald-100',
                   border: 'hover:border-emerald-400'
@@ -252,16 +252,16 @@ export function AboutClient() {
                 {
                   titleFr: '2. Expédition Sécurisée',
                   titleAr: '2. شحن آمن وسريع',
-                  descFr: 'Emballage anti-chocs hermétique scellé avec paiement à la livraison.',
+                  descFr: 'Des commandes préparées avec soin et un paiement à la livraison disponible.',
                   descAr: 'تغليف محكم ضد الصدمات مع إمكانية الدفع عند الاستلام.',
                   icon: Lock,
                   gradient: 'bg-teal-50/50 border-teal-100',
                   border: 'hover:border-teal-400'
                 },
                 {
-                  titleFr: '3. Conciergerie WhatsApp',
+                  titleFr: '3. Conseil WhatsApp',
                   titleAr: '3. استشارة واتساب خاصة',
-                  descFr: 'Support dermo-conseil disponible 6j/7 pour vous orienter.',
+                  descFr: 'Notre équipe vous accompagne sur WhatsApp pour vos questions.',
                   descAr: 'فريق مستشارات التجميل متواجد طيلة الأسبوع لإجابة استفساراتكِ.',
                   icon: MessageSquareCheck,
                   gradient: 'bg-cyan-50/50 border-cyan-100',
@@ -270,7 +270,7 @@ export function AboutClient() {
                 {
                   titleFr: '4. Transparence & Équité',
                   titleAr: '4. شفافية وأسعار عادلة',
-                  descFr: 'Prix justes, remises fidélité cumulables et cadeaux officinaux.',
+                  descFr: 'Des prix affichés clairement et des offres selon les conditions indiquées.',
                   descAr: 'أسعار مناسبة، نقاط مكافآت هدايا عينات مع كل طلبية.',
                   icon: HeartHandshake,
                   gradient: 'bg-amber-50/50 border-amber-100',
@@ -316,7 +316,7 @@ export function AboutClient() {
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                   {language === 'AR'
                     ? 'نعتمد شباك توزيع سريع محكم التغليف ومغطى ضد الصدمات للوصول إلى كافة مدن المغرب (الرباط، فاس، طنجة، مراكش، أكادير، وجدة والقرى المجاورة) بنفس معايير السرعة والأمان.'
-                    : 'Notre réseau logistique dessert l\'ensemble des villes du Maroc avec des emballages isothermes certifiés. De Casablanca à Laâyoune, vos soins arrivent scellés et intacts sous 24 à 48 heures.'}
+                    : 'Notre réseau de livraison dessert de nombreuses villes au Maroc. Les délais affichés lors de la commande varient selon votre zone.'}
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-2">
                   {[

@@ -389,15 +389,15 @@ export default function ProductsClient({
             
             <div className="relative z-10 max-w-2xl space-y-3">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-white text-[10px] font-black uppercase tracking-[0.2em] font-sans">
-                {language === 'FR' ? 'Boutique Officielle' : 'المتجر الرسمي'}
+                {language === 'FR' ? 'Sélection beauté' : 'اختيارات الجمال'}
               </span>
               <h1 className="text-3xl sm:text-4xl font-extrabold font-heading tracking-tight text-white leading-none">
-                {language === 'FR' ? "L'Herboristerie Clinique" : 'الصيدلية السريرية'}
+                {language === 'FR' ? "L'Herboristerie" : 'العناية الطبيعية'}
               </h1>
               <p className="text-slate-400 text-xs sm:text-sm font-light leading-relaxed">
                 {language === 'FR' 
-                  ? 'Découvrez notre collection de soins dermatologiques et coréens formulés pour restaurer la vitalité naturelle de votre barrière cutanée.'
-                  : 'اكتشفي مجموعتنا من مستحضرات العناية الكورية والطبية المصممة لترميم وتغذية الحاجز الطبيعي لبشرتكِ.'}
+                  ? 'Découvrez notre sélection de soins, d’inspiration coréenne et naturelle, pour votre routine quotidienne.'
+                  : 'اكتشفي مجموعتنا من منتجات العناية الكورية والطبيعية لروتينكِ اليومي.'}
               </p>
             </div>
           </div>

@@ -34,11 +34,11 @@ export const viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NAME} | Parapharmacie & K-Beauty Officiel au Maroc`,
+    default: `${SITE_NAME} | Parapharmacie et K-Beauty au Maroc`,
     template: `%s | ${SITE_NAME}`,
   },
   description:
-    'Leader de la K-Beauty et de la Dermo-Cosmétique au Maroc. Diagnostic de peau IA, livraison gratuite le jour même, paiement à la livraison sécurisé.',
+    'Découvrez une sélection de soins, maquillage et produits K-Beauty, avec livraison au Maroc et paiement sécurisé.',
   keywords: [
     'parapharmacie maroc',
     'k-beauty maroc',

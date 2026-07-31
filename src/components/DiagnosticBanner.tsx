@@ -34,7 +34,7 @@ export const DiagnosticBanner: React.FC = () => {
 
               {/* Paragraph */}
               <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                Découvrez votre routine K-Beauty sur-mesure en 2 minutes grâce à notre Diagnostic de Peau IA de grade clinique.
+                Découvrez une routine K-Beauty adaptée à vos besoins en 2 minutes grâce à notre diagnostic de peau.
               </p>
 
               {/* Premium Nested CTA Button with Button-in-Button architecture */}
@@ -58,7 +58,7 @@ export const DiagnosticBanner: React.FC = () => {
               <div className="absolute inset-0 bg-slate-100 dark:bg-slate-800">
                 <Image
                   src={getOptimizedImageUrl("/images/skin_diagnostic_scan.png")}
-                  alt="Diagnostic de Peau Clinique IA"
+                  alt="Diagnostic de peau"
                   fill
                   sizes="(max-w-768px) 100vw, 50vw"
                   className="object-cover transition-transform duration-1000 group-hover:scale-105"

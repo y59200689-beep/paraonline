@@ -9,9 +9,9 @@ import RestockForecastingTab from '@/components/admin/RestockForecastingTab';
 import { List, TrendingUp, FolderTree } from 'lucide-react';
 
 const CATALOG_TABS = [
-  { id: 'products', label: 'Liste des Produits',       icon: List },
-  { id: 'categories', label: 'Catégories & Préoccupations', icon: FolderTree },
-  { id: 'restock',  label: 'Prévisions & Ravitaillement', icon: TrendingUp },
+  { id: 'products', label: 'Produits',                 icon: List },
+  { id: 'categories', label: 'Catégories, besoins et marques', icon: FolderTree },
+  { id: 'restock',  label: 'Stock et réapprovisionnement', icon: TrendingUp },
 ] as const;
 
 type CatalogSubTab = typeof CATALOG_TABS[number]['id'];
