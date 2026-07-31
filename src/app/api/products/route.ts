@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { Product } from '@/lib/data';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
-import { countCatalogConcerns, getCatalogConcerns, matchesCatalogConcern } from '@/lib/catalog-concerns';
+import { catalogCategoryForConcern, countCatalogConcerns, getCatalogConcerns, matchesCatalogConcern } from '@/lib/catalog-concerns';
 import { catalogCategoryFilter, normalizeCatalogCategoryId } from '@/lib/catalog-categories';
 
 // Catalogue data is operational data. Never allow a transient empty response
@@ -263,9 +263,14 @@ export async function GET(request: Request) {
       }
     }
 
-    const catalogConcerns = concern !== 'all' ? await getCatalogConcerns() : [];
+    const categoryBackedConcern = catalogCategoryForConcern(concern);
+    const canFilterConcernInDatabase = Boolean(categoryBackedConcern) && category === 'all';
+    if (canFilterConcernInDatabase && categoryBackedConcern) {
+      query = query.or(catalogCategoryFilter(categoryBackedConcern));
+    }
 
-    const needsPostFilter = concern !== 'all';
+    const needsPostFilter = concern !== 'all' && !canFilterConcernInDatabase;
+    const catalogConcerns = needsPostFilter ? await getCatalogConcerns() : [];
     let products: Product[] = [];
     let total = 0;
 
@@ -315,7 +320,7 @@ export async function GET(request: Request) {
       total = count || products.length;
     }
 
-    if (concern !== 'all') {
+    if (needsPostFilter) {
       products = products.filter(product => matchesCatalogConcern(product, concern, catalogConcerns));
     }
     if (needsPostFilter) {

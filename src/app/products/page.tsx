@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 import ProductsClient from './ProductsClient';
 import { unstable_cache } from 'next/cache';
 import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/catalog-cache';
-import { countCatalogConcerns, getCatalogConcerns } from '@/lib/catalog-concerns';
+import { catalogCategoryForConcern, countCatalogConcerns, getCatalogConcerns } from '@/lib/catalog-concerns';
 import { catalogCategoryFilter, normalizeCatalogCategoryId } from '@/lib/catalog-categories';
 
 // A full product card carries images, controls, and rich product metadata.
@@ -102,7 +102,7 @@ const getCachedCatalogFacets = unstable_cache(
   { tags: [PUBLIC_CATALOG_CACHE_TAG], revalidate: 3600 }
 );
 
-async function loadCatalogPage(category: string, brand = '') {
+async function loadCatalogPage(category: string, brand = '', concern = 'all') {
   let products: Product[] = [];
   let pagination = { total: 0, page: 1, limit: PAGE_SIZE, totalPages: 1 };
 
@@ -118,6 +118,11 @@ async function loadCatalogPage(category: string, brand = '') {
       query = query.gt('compare_price', 'price');
     } else if (category !== 'all') {
       query = query.or(catalogCategoryFilter(category));
+    }
+
+    const categoryBackedConcern = category === 'all' ? catalogCategoryForConcern(concern) : undefined;
+    if (categoryBackedConcern) {
+      query = query.or(catalogCategoryFilter(categoryBackedConcern));
     }
 
     const { data, count, error } = await query
@@ -157,16 +162,22 @@ function normalizeBrand(value: string | string[] | undefined) {
   return value.trim().slice(0, 100);
 }
 
+function normalizeConcern(value: string | string[] | undefined) {
+  if (typeof value !== 'string') return 'all';
+  return catalogCategoryForConcern(value) ? value : 'all';
+}
+
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string | string[]; brand?: string | string[] }>;
+  searchParams: Promise<{ category?: string | string[]; brand?: string | string[]; concern?: string | string[] }>;
 }) {
   const params = await searchParams;
   const initialCategory = normalizeCategory(params.category);
   const initialBrand = normalizeBrand(params.brand);
+  const initialConcern = normalizeConcern(params.concern);
   const [{ products, pagination }, catalogFacets] = await Promise.all([
-    getCachedCatalogPage(initialCategory, initialBrand),
+    getCachedCatalogPage(initialCategory, initialBrand, initialConcern),
     getCachedCatalogFacets(),
   ]);
 
@@ -177,6 +188,7 @@ export default async function ProductsPage({
       catalogFacets={catalogFacets}
       initialCategory={initialCategory}
       initialBrands={initialBrand ? [initialBrand] : []}
+      initialConcerns={initialConcern === 'all' ? [] : [initialConcern]}
     />
   );
 }

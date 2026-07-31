@@ -101,7 +101,7 @@ export const DermoCorner: React.FC = () => {
 
   const hydrateFallbackProducts = React.useMemo(() => {
     return safeProducts
-      .filter((product) => product && matchesCatalogCategoryPhrase(product, 'secheresse & hydratation'));
+      .filter((product) => product && matchesCatalogCategoryPhrase(product, 'secheresse'));
   }, [safeProducts]);
 
   const sootheFallbackProducts = React.useMemo(() => {
@@ -117,7 +117,7 @@ export const DermoCorner: React.FC = () => {
   const acneRail = useDermoRail('acne', acneFallbackProducts);
   const spotRail = useDermoRail('anti tache', spotFallbackProducts);
   const antiAgeRail = useDermoRail('anti age', antiAgeFallbackProducts);
-  const hydrateRail = useDermoRail('secheresse & hydratation', hydrateFallbackProducts);
+  const hydrateRail = useDermoRail('secheresse', hydrateFallbackProducts);
   const sootheRail = useDermoRail('anti rougeur', sootheFallbackProducts);
   const solarRail = useDermoRail('solaire', solarFallbackProducts);
 
@@ -408,7 +408,7 @@ export const DermoCorner: React.FC = () => {
             
             {/* Model Card Right */}
             <Link
-              href="/products?category=s%C3%A9cheresse%20%26%20hydratation"
+              href="/products?concern=dryness"
               aria-label={isAR ? 'عرض منتجات الترطيب' : 'Voir les produits Sécheresse & hydratation'}
               className="group w-full lg:w-[240px] shrink-0 relative aspect-[16/9] lg:aspect-[3/4.2] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
             >

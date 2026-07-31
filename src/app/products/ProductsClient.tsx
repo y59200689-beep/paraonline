@@ -32,9 +32,6 @@ const INGREDIENTS = [
   { label: 'Rétinol', query: 'retinol' },
   { label: 'Vitamine C', query: 'vitamine c' },
   { label: 'Acide salicylique', query: 'acide salicylique' },
-  { label: 'Centella asiatica', query: 'centella asiatica' },
-  { label: 'Acide tranexamique', query: 'acide tranexamique' },
-  { label: 'Squalane', query: 'squalane' },
 ];
 
 type CatalogPagination = {
@@ -125,12 +122,14 @@ export default function ProductsClient({
   catalogFacets,
   initialCategory,
   initialBrands = [],
+  initialConcerns = [],
 }: {
   initialProducts: Product[];
   initialPagination: CatalogPagination;
   catalogFacets: CatalogFacets;
   initialCategory: string;
   initialBrands?: string[];
+  initialConcerns?: string[];
 }) {
   const { language } = useTranslation();
   const { diagnostic } = useUi();
@@ -190,7 +189,7 @@ export default function ProductsClient({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [selectedBrands, setSelectedBrands] = useState<string[]>(initialBrands);
-  const [selectedConcerns, setSelectedConcerns] = useState<string[]>([]);
+  const [selectedConcerns, setSelectedConcerns] = useState<string[]>(initialConcerns);
   const [ingredientQuery, setIngredientQuery] = useState('');
   const [maxPrice, setMaxPrice] = useState(1500);
   const [sortOption, setSortOption] = useState('alphabetical'); // alphabetical, price-asc, price-desc, rating
@@ -269,7 +268,8 @@ export default function ProductsClient({
           searchQuery.trim() === '' &&
           selectedCategory === initialCategory &&
           selectedBrands.join(',') === initialBrands.join(',') &&
-          selectedConcerns.length === 0 &&
+          selectedConcerns.join(',') === initialConcerns.join(',') &&
+          (initialConcerns.length === 0 || initialCategory === 'all') &&
           ingredientQuery.trim() === '' &&
           maxPrice === 1500 &&
           sortOption === 'alphabetical'
@@ -314,7 +314,7 @@ export default function ProductsClient({
 
     loadPage();
     return () => controller.abort();
-  }, [currentPage, pageSize, searchQuery, selectedCategory, selectedBrands, selectedConcerns, ingredientQuery, maxPrice, sortOption]);
+  }, [currentPage, pageSize, searchQuery, selectedCategory, selectedBrands, selectedConcerns, ingredientQuery, maxPrice, sortOption, initialConcerns]);
 
   const handleBrandToggle = (brand: string) => {
     setSelectedBrands(prev => 
@@ -560,49 +560,48 @@ export default function ProductsClient({
                 </section>
 
                 <section className="border-t border-slate-100 pt-5 dark:border-slate-800">
-                  <div className="mb-2.5 flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
-                    <FlaskConical className="h-3.5 w-3.5 text-primary" />
-                    {language === 'FR' ? 'Ingrédients' : 'المكونات'}
-                  </div>
-                  <div className="relative">
-                    <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-                    <input
-                      type="search"
-                      value={ingredientQuery}
-                      onChange={(event) => setIngredientQuery(event.target.value)}
-                      placeholder={language === 'FR' ? 'Rechercher un ingrédient' : 'ابحث عن مكوّن'}
-                      className="h-10 w-full rounded-md border border-slate-200 bg-slate-50/70 pl-8 pr-8 text-xs font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/10 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:focus:bg-slate-950"
-                    />
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-lg border border-primary/15 bg-primary/5 text-primary">
+                        <FlaskConical className="h-3.5 w-3.5" />
+                      </span>
+                      {language === 'FR' ? 'Ingrédients' : 'المكونات'}
+                    </div>
                     {ingredientQuery && (
                       <button
                         type="button"
                         onClick={() => setIngredientQuery('')}
-                        aria-label={language === 'FR' ? 'Effacer l’ingrédient' : 'مسح المكوّن'}
-                        className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                        className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-bold text-primary transition hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                       >
-                        <X className="h-3.5 w-3.5" />
+                        <RotateCcw className="h-3 w-3" />
+                        {language === 'FR' ? 'Effacer' : 'مسح'}
                       </button>
                     )}
                   </div>
-                  <div className="mt-2.5 flex flex-wrap gap-1.5">
+                  <div className="grid grid-cols-2 gap-1.5" role="group" aria-label={language === 'FR' ? 'Filtrer par ingrédient' : 'التصفية حسب المكوّن'}>
                     {INGREDIENTS.map(ingredient => (
                       <button
                         key={ingredient.query}
                         type="button"
                         onClick={() => setIngredientQuery(current => current.toLocaleLowerCase() === ingredient.query ? '' : ingredient.query)}
-                        className={`rounded-md border px-2 py-1 text-[10px] font-semibold transition ${
+                        aria-pressed={ingredientQuery.toLocaleLowerCase() === ingredient.query}
+                        className={`group flex min-h-11 items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-[10px] font-bold transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
                           ingredientQuery.toLocaleLowerCase() === ingredient.query
-                            ? 'border-primary bg-primary text-white shadow-sm shadow-primary/20'
-                            : 'border-slate-200 bg-white text-slate-600 hover:border-primary/35 hover:text-primary dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400'
+                            ? 'border-primary bg-primary text-white shadow-[0_6px_14px_rgba(14,116,144,0.18)]'
+                            : 'border-slate-200/80 bg-slate-50/60 text-slate-600 hover:border-primary/35 hover:bg-white hover:text-slate-900 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:border-primary/50 dark:hover:bg-slate-900 dark:hover:text-white'
                         }`}
                       >
-                        {ingredient.label}
+                        <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition ${
+                          ingredientQuery.toLocaleLowerCase() === ingredient.query
+                            ? 'border-white/30 bg-white/15 text-white'
+                            : 'border-primary/15 bg-primary/5 text-primary group-hover:bg-primary/10'
+                        }`}>
+                          {ingredientQuery.toLocaleLowerCase() === ingredient.query ? <Check className="h-3 w-3" /> : <FlaskConical className="h-3 w-3" />}
+                        </span>
+                        <span className="min-w-0 leading-tight">{ingredient.label}</span>
                       </button>
                     ))}
                   </div>
-                  <p className="mt-2 text-[10px] leading-relaxed text-slate-400 dark:text-slate-500">
-                    {language === 'FR' ? 'Recherche dans les ingrédients importés des fiches produits.' : 'البحث داخل مكوّنات المنتجات المستوردة.'}
-                  </p>
                 </section>
 
                 <section className="border-t border-slate-100 pt-5 dark:border-slate-800">
@@ -1043,44 +1042,46 @@ export default function ProductsClient({
               </div>
 
               {/* 4. Mobile Ingredients */}
-              <div className="space-y-3">
-                <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-                  <FlaskConical className="w-3.5 h-3.5 text-primary" />
-                  {language === 'FR' ? 'Ingrédients' : 'المكونات'}
-                </label>
-                <div className="relative">
-                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="search"
-                    value={ingredientQuery}
-                    onChange={(event) => setIngredientQuery(event.target.value)}
-                    placeholder={language === 'FR' ? 'Rechercher un ingrédient' : 'ابحث عن مكوّن'}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 focus:border-primary/50 text-slate-800 dark:text-slate-100 text-xs rounded-xl pl-9 pr-9 py-2.5 outline-none transition"
-                  />
+              <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 dark:border-slate-800 dark:bg-slate-900/45">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-lg border border-primary/15 bg-primary/5 text-primary">
+                      <FlaskConical className="h-3.5 w-3.5" />
+                    </span>
+                    {language === 'FR' ? 'Ingrédients' : 'المكونات'}
+                  </div>
                   {ingredientQuery && (
                     <button
                       type="button"
                       onClick={() => setIngredientQuery('')}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
-                      aria-label={language === 'FR' ? 'Effacer l’ingrédient' : 'مسح المكوّن'}
+                      className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-bold text-primary transition hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                     >
-                      <X className="w-3.5 h-3.5" />
+                      <RotateCcw className="h-3 w-3" />
+                      {language === 'FR' ? 'Effacer' : 'مسح'}
                     </button>
                   )}
                 </div>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="grid grid-cols-2 gap-2" role="group" aria-label={language === 'FR' ? 'Filtrer par ingrédient' : 'التصفية حسب المكوّن'}>
                   {INGREDIENTS.map(ingredient => (
                     <button
                       key={ingredient.query}
                       type="button"
                       onClick={() => setIngredientQuery(current => current.toLocaleLowerCase() === ingredient.query ? '' : ingredient.query)}
-                      className={`px-2.5 py-1.5 rounded-lg border text-[10px] font-bold transition ${
+                      aria-pressed={ingredientQuery.toLocaleLowerCase() === ingredient.query}
+                      className={`flex min-h-12 items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-[10px] font-bold transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
                         ingredientQuery.toLocaleLowerCase() === ingredient.query
-                          ? 'bg-primary border-primary text-white'
-                          : 'bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-400'
+                          ? 'border-primary bg-primary text-white shadow-[0_6px_14px_rgba(14,116,144,0.18)]'
+                          : 'border-slate-200/80 bg-white text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300'
                       }`}
                     >
-                      {ingredient.label}
+                      <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${
+                        ingredientQuery.toLocaleLowerCase() === ingredient.query
+                          ? 'border-white/30 bg-white/15 text-white'
+                          : 'border-primary/15 bg-primary/5 text-primary'
+                      }`}>
+                        {ingredientQuery.toLocaleLowerCase() === ingredient.query ? <Check className="h-3 w-3" /> : <FlaskConical className="h-3 w-3" />}
+                      </span>
+                      <span className="min-w-0 leading-tight">{ingredient.label}</span>
                     </button>
                   ))}
                 </div>

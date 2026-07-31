@@ -22,16 +22,21 @@ const DEFAULT_CONCERNS: CatalogConcern[] = [
 const CATEGORY_BACKED_CONCERNS: Record<string, string> = {
   acne: 'acne',
   spots: 'anti tache',
+  dryness: 'secheresse',
   wrinkles: 'anti rides',
   redness: 'anti rougeur',
   suncare: 'solaire',
 };
 
+export function catalogCategoryForConcern(concernId: string) {
+  return CATEGORY_BACKED_CONCERNS[concernId];
+}
+
 export function matchesCatalogConcern(product: Product, concernId: string, concerns: CatalogConcern[] = []) {
   const text = `${product.title} ${product.nameFr || ''} ${product.description || ''} ${(product.tags || []).join(' ')}`.toLowerCase();
   const ingredients = (product.ingredients || '').toLowerCase();
 
-  const categoryPhrase = CATEGORY_BACKED_CONCERNS[concernId];
+  const categoryPhrase = catalogCategoryForConcern(concernId);
   if (categoryPhrase) return matchesCatalogCategoryPhrase(product, categoryPhrase);
 
   const concern = concerns.find(item => item.id === concernId);
