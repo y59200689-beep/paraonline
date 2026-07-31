@@ -57,6 +57,8 @@ type IngredientPagination = {
 };
 
 const BATCH_SIZE = 6;
+// Separates the live rail from a previously cached six-card API response.
+const INGREDIENT_RAIL_CACHE_VERSION = '2';
 
 type IngredientPage = {
   products: Product[];
@@ -82,6 +84,7 @@ async function loadIngredientPage(ingredient: string, page: number): Promise<Ing
       page: String(page),
       limit: String(BATCH_SIZE),
       sort: 'alphabetical',
+      railVersion: INGREDIENT_RAIL_CACHE_VERSION,
     });
     const response = await fetch(`/api/products?${params.toString()}`, { cache: 'no-store' });
     const data = await response.json();
