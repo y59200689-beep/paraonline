@@ -1342,6 +1342,7 @@ export default function OrdersTab() {
                       );
                       const defaultFallback = 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop';
                       const itemImg = item.image || matchingProd?.image || matchingProd?.images?.[0] || defaultFallback;
+                      const atlascomSku = item.sku || matchingProd?.sku;
 
                       return (
                         <div key={i} className="py-3.5 flex items-center justify-between gap-4">
@@ -1380,10 +1381,9 @@ export default function OrdersTab() {
                                 )}
                               </div>
 
-                              {/* SKU + Stock */}
-                              {(matchingProd?.sku || matchingProd?.stock !== undefined) && (() => {
+                              {/* Atlascom reference + stock */}
+                              {(() => {
                                 const stock = matchingProd?.stock;
-                                const sku = matchingProd?.sku;
                                 const isOutOfStock = stock !== undefined && stock <= 0;
                                 const isLowStock = stock !== undefined && stock > 0 && stock <= 3;
                                 const isGoodStock = stock !== undefined && stock > 3;
@@ -1410,12 +1410,17 @@ export default function OrdersTab() {
 
                                 return (
                                   <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                    {sku && (
+                                    {atlascomSku && (
                                       <span
                                         className="font-mono text-[9.5px] tracking-wide"
                                         style={{ color: textMuted }}
                                       >
-                                        {sku}
+                                        Réf. Atlascom: {atlascomSku}
+                                      </span>
+                                    )}
+                                    {!atlascomSku && (
+                                      <span className="text-[9.5px] font-bold text-rose-600 dark:text-rose-300">
+                                        Réf. Atlascom introuvable
                                       </span>
                                     )}
                                     {stock !== undefined && (

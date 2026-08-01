@@ -20,12 +20,23 @@ export async function GET() {
     if (error) throw error;
 
     const orderIds = (data || []).map((order: any) => order.order_id);
-    const [exportsResult, notesResult] = orderIds.length
+    const productIds = [...new Set((data || []).flatMap((order: any) =>
+      Array.isArray(order.items)
+        ? order.items.map((item: any) => Number(item?.id)).filter(Number.isFinite)
+        : []
+    ))];
+    const [exportsResult, notesResult, productsResult] = orderIds.length
       ? await Promise.all([
           supabase.from('atlascom_order_exports').select('*').in('order_id', orderIds),
           supabase.from('order_notes').select('*').in('order_id', orderIds).order('created_at', { ascending: false }),
+          productIds.length
+            ? supabase.from('products').select('id, sku').in('id', productIds)
+            : Promise.resolve({ data: [] }),
         ])
-      : [{ data: [] }, { data: [] }];
+      : [{ data: [] }, { data: [] }, { data: [] }];
+    const skuByProductId = new Map((productsResult.data || [])
+      .filter((product: any) => product.sku)
+      .map((product: any) => [Number(product.id), String(product.sku)]));
     const exportByOrder = new Map((exportsResult.data || []).map((job: any) => [job.order_id, job]));
     const notesByOrder = new Map<string, any[]>();
     for (const note of notesResult.data || []) {
@@ -38,6 +49,9 @@ export async function GET() {
       success: true,
       orders: (data || []).map((order: any) => ({
         ...order,
+        items: Array.isArray(order.items)
+          ? order.items.map((item: any) => ({ ...item, sku: item.sku || skuByProductId.get(Number(item.id)) || undefined }))
+          : [],
         atlascom_export: exportByOrder.get(order.order_id) || null,
         internal_notes: notesByOrder.get(order.order_id) || [],
       })),

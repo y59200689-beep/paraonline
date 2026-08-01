@@ -20,6 +20,7 @@ export interface OrderItem {
   quantity: number;
   price: number;
   image?: string;
+  sku?: string;
 }
 
 export interface Order {
