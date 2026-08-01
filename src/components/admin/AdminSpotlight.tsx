@@ -30,7 +30,7 @@ import {
 interface AdminSpotlightProps {
   isSearchOpen: boolean;
   setIsSearchOpen: (open: boolean) => void;
-  setActiveTab: (tab: 'dashboard' | 'analytics' | 'orders' | 'catalog' | 'crm' | 'reviews' | 'settings' | 'loyalty' | 'branding' | 'advice' | 'snippets' | 'cron' | 'audit-logs' | 'coupons') => void;
+  setActiveTab: (tab: 'dashboard' | 'analytics' | 'orders' | 'catalog' | 'crm' | 'reviews' | 'settings' | 'loyalty' | 'branding' | 'advice' | 'snippets' | 'cron' | 'audit-logs' | 'coupons' | 'gallery') => void;
   setOrdersSubTab: (sub: 'list' | 'abandoned' | 'shipping') => void;
   setCrmSubTab: (sub: 'clients' | 'diagnostics' | 'leads') => void;
   setActiveSettingsSubTab: (sub: 'general' | 'banners' | 'coupons' | 'shipping' | 'loyalty' | 'faq' | 'logs' | 'notifications' | 'operators') => void;
@@ -38,6 +38,7 @@ interface AdminSpotlightProps {
   setIsNewProductModalOpen: (open: boolean) => void;
   setSelectedOrder: (order: any) => void;
   setProductForm: (form: any) => void;
+  setSpotlightTarget: (target: { type: 'order' | 'product'; id: string } | null) => void;
   handleOpenCrmCustomer: (phone: string, name: string, orders: any[], totalSpend: number) => void;
   setLoyaltySubTab: (sub: 'members' | 'product_points' | 'bulk_points' | 'logs') => void;
 }
@@ -53,6 +54,7 @@ export const AdminSpotlight: React.FC<AdminSpotlightProps> = ({
   setIsNewProductModalOpen,
   setSelectedOrder,
   setProductForm,
+  setSpotlightTarget,
   handleOpenCrmCustomer,
   setLoyaltySubTab
 }) => {
@@ -125,10 +127,16 @@ export const AdminSpotlight: React.FC<AdminSpotlightProps> = ({
             {[
               { label: "Basculer le Thème (Clair/Sombre)", icon: Sun, aliases: ["theme", "light", "dark", "clair", "sombre", "mode"], action: () => { toggleAdminTheme(); setIsSearchOpen(false); } },
               { label: "Aller au Tableau de bord", icon: BarChart2, aliases: ["home", "accueil", "stats", "graphique", "analytics"], action: () => { setActiveTab('dashboard'); setIsSearchOpen(false); } },
+              { label: "Voir les Analytiques", icon: BarChart2, aliases: ["analytics", "rapports", "revenu", "performance"], action: () => { setActiveTab('analytics'); setIsSearchOpen(false); } },
               { label: "Gérer les Commandes", icon: ShoppingCart, aliases: ["orders", "ventes", "livraison", "statut"], action: () => { setActiveTab('orders'); setOrdersSubTab('list'); setIsSearchOpen(false); } },
               { label: "Expéditions & Reconciliation COD", icon: Truck, aliases: ["shipping", "livraison", "cod", "yalidine", "cathedis", "reconciliation", "suivi"], action: () => { setActiveTab('orders'); setOrdersSubTab('shipping'); setIsSearchOpen(false); } },
               { label: "Voir le Catalogue Produits", icon: Package, aliases: ["products", "stock", "article", "nouveau produit", "produits"], action: () => { setActiveTab('catalog'); setIsSearchOpen(false); } },
               { label: "Gérer la Fidélité & CRM (Clients)", icon: ClipboardList, aliases: ["customers", "clients", "points", "beauty wallet", "fidélité"], action: () => { setActiveTab('crm'); setCrmSubTab('clients'); setIsSearchOpen(false); } },
+              { label: "Gérer les Avis Clients", icon: MessageSquare, aliases: ["avis", "reviews", "commentaires", "notes"], action: () => { setActiveTab('reviews'); setIsSearchOpen(false); } },
+              { label: "Gérer la Galerie Médias", icon: Layers, aliases: ["gallery", "images", "médias", "bannières"], action: () => { setActiveTab('gallery'); setIsSearchOpen(false); } },
+              { label: "Ouvrir les Promotions", icon: Tag, aliases: ["promotions", "coupons", "réductions", "offres"], action: () => { setActiveTab('coupons'); setIsSearchOpen(false); } },
+              { label: "Voir les Tâches Planifiées", icon: ClipboardList, aliases: ["cron", "sync", "automatisation", "stock"], action: () => { setActiveTab('cron'); setIsSearchOpen(false); } },
+              { label: "Ouvrir les Paramètres", icon: Sliders, aliases: ["settings", "configuration", "paramètres", "paiement"], action: () => { setActiveTab('settings'); setIsSearchOpen(false); } },
               { label: "Créer un Code Promo", icon: Save, aliases: ["coupon", "réduction", "rabais", "code promo", "coupons", "promotions"], action: () => { setActiveTab('coupons'); setIsAddingCoupon(true); setIsSearchOpen(false); } },
               { label: "Créer un Nouveau Produit", icon: Upload, aliases: ["add product", "nouveau produit", "ajouter"], action: () => { setIsNewProductModalOpen(true); setIsSearchOpen(false); } }
             ].filter(cmd => 
@@ -182,7 +190,9 @@ export const AdminSpotlight: React.FC<AdminSpotlightProps> = ({
                       >
                         <div 
                           onClick={() => {
-                            setSelectedOrder(o);
+                            setOrdersSubTab('list');
+                            setSpotlightTarget({ type: 'order', id: o.order_id });
+                            setActiveTab('orders');
                             setIsSearchOpen(false);
                           }}
                           className="flex items-center gap-3 cursor-pointer min-w-0 flex-1"
@@ -265,23 +275,8 @@ export const AdminSpotlight: React.FC<AdminSpotlightProps> = ({
                       <button
                         key={p.id}
                         onClick={() => {
-                          setProductForm({
-                            id: p.id,
-                            title: p.title,
-                            name: p.name || '',
-                            price: p.price,
-                            comparePrice: p.comparePrice || 0,
-                            stock: p.stock || 0,
-                            image: p.image,
-                            category: p.category || '',
-                            description: p.description || '',
-                            ingredients: p.ingredients || '',
-                            usage: p.usage || '',
-                            slug: p.slug || '',
-                            metaTitle: p.metaTitle || '',
-                            metaDescription: p.metaDescription || ''
-                          });
-                          setIsNewProductModalOpen(true);
+                          setSpotlightTarget({ type: 'product', id: String(p.id) });
+                          setActiveTab('catalog');
                           setIsSearchOpen(false);
                         }}
                         className={`w-full text-left px-3 py-2 rounded-xl text-xs transition duration-150 flex items-center justify-between cursor-pointer border-0 active:scale-[0.98] ${

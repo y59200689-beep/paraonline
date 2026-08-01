@@ -7,7 +7,6 @@ import { DashboardTab } from '@/components/admin/DashboardTab';
 export default function AdminDashboardPage() {
   const {
     setActiveTab,
-    setCatalogStockFilter,
     setActiveSettingsSubTab,
     analyticsRange,
     setAnalyticsRange,
@@ -20,7 +19,6 @@ export default function AdminDashboardPage() {
   return (
     <DashboardTab 
       setActiveTab={setActiveTab}
-      setCatalogStockFilter={setCatalogStockFilter}
       setActiveSettingsSubTab={setActiveSettingsSubTab}
       analyticsRange={analyticsRange}
       setAnalyticsRange={setAnalyticsRange}

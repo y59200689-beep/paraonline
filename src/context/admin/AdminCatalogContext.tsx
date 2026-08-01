@@ -23,7 +23,7 @@ export interface AdminCatalogContextProps {
   handleSaveLoyaltySettings: (formSettings: any) => Promise<boolean>;
   handleSavePaymentSettings: (formSettings: any) => Promise<boolean>;
   handleSaveNotificationTemplates: (formSettings: any, notifTemplates: any) => Promise<boolean>;
-  handleImportProducts: (rawProducts: any[], updateExisting: boolean) => Promise<{ success: boolean; count: number; categories?: string[]; message?: string }>;
+  handleImportProducts: (rawProducts: any[], updateExisting: boolean, metadata?: { fileName?: string; validationErrorCount?: number }) => Promise<{ success: boolean; count: number; categories?: string[]; message?: string; createdCount?: number; updatedCount?: number; skippedCount?: number; validationErrorCount?: number }>;
 }
 
 const AdminCatalogContext = createContext<AdminCatalogContextProps | undefined>(undefined);
@@ -421,7 +421,7 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return false;
   };
 
-  const handleImportProducts = async (rawProducts: any[], updateExisting: boolean): Promise<{ success: boolean; count: number; categories?: string[]; message?: string }> => {
+  const handleImportProducts = async (rawProducts: any[], updateExisting: boolean, metadata?: { fileName?: string; validationErrorCount?: number }): Promise<{ success: boolean; count: number; categories?: string[]; message?: string; createdCount?: number; updatedCount?: number; skippedCount?: number; validationErrorCount?: number }> => {
     if (currentUser?.role === 'support') {
       showToast("Permission refusée.", 'error');
       return { success: false, count: 0 };
@@ -430,14 +430,23 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const res = await fetch('/api/admin/import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ products: rawProducts, updateExisting })
+        body: JSON.stringify({ products: rawProducts, updateExisting, ...metadata })
       });
       const data = await res.json();
       if (data.success) {
         await loadProducts();
         await loadSettings();
         logAdminAction("Importation Produits", `${data.count} produits importés/mis à jour.`);
-        return { success: true, count: data.count, categories: data.categories, message: data.message };
+        return {
+          success: true,
+          count: data.count,
+          categories: data.categories,
+          message: data.message,
+          createdCount: data.createdCount,
+          updatedCount: data.updatedCount,
+          skippedCount: data.skippedCount,
+          validationErrorCount: data.validationErrorCount,
+        };
       }
       return { success: false, count: 0, message: data.error };
     } catch (e) {

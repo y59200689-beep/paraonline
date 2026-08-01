@@ -101,3 +101,34 @@ To simulate cron-triggered background tasks (like automatic code snippets or dat
 ```bash
 npm run cron-runner
 ```
+
+### 6. Atlascom automatic synchronisation
+
+The production deployment schedules `/api/cron/atlascom-sync` every 30 minutes through the project's native Vercel Cron configuration. No separate scheduler or third-party cron website is required.
+
+Configure the first three environment variables in the production Vercel project before deploying. `ATLASCOM_WSDL_URL` is optional and defaults to the current Atlascom endpoint:
+
+```bash
+CRON_SECRET=<a long random secret>
+ATLASCOM_EMPLOYEE_CODE=<Atlascom employee code>
+ATLASCOM_PASSWORD=<Atlascom password>
+ATLASCOM_WSDL_URL=https://paraoficinal.ruijieddnsa.com/WebServiceAtlasCom/atlascomservice.asmx
+```
+
+Vercel sends `Authorization: Bearer <CRON_SECRET>` when it invokes the scheduled route. The Atlascom credentials are intentionally read only from environment variables and must never be committed to the repository.
+
+### 7. Atlascom order export (COD)
+
+When an operator moves an order from **En attente** to **Confirmée**, the server queues an immediate Atlascom export. It is idempotent: each Para Officinal order has one export record, so a double click or later status update cannot submit it twice. The payload contains only order/account codes, monetary totals, and product lines; it excludes customer identity, contact, delivery, and note data. A private Atlascom note is shown in the order detail after every successful send or failed attempt.
+
+Apply the migration `20260801000000_add_atlascom_order_exports.sql`, then configure these production variables:
+
+```env
+ATLASCOM_ORDER_EXPORT_ENABLED=true
+ATLASCOM_AGENCY_CODE=000052
+ATLASCOM_COMMERCIAL_CODE=000052
+ATLASCOM_WEB_CUSTOMER_CODE=6666
+ATLASCOM_TAX_RATE=0
+```
+
+`/api/cron/atlascom-order-retries` is scheduled every 5 minutes only for retrying failed exports. The initial export happens immediately after confirmation; the retry route is the safety net. COD is sent with an empty `codeModeP`, as Atlascom does not require a payment-code mapping. Keep `ATLASCOM_ORDER_EXPORT_ENABLED` unset until Atlascom validates the tax value.

@@ -271,6 +271,23 @@ export default function CronTab() {
         )}
       </div>
 
+      {!loading && !error && (
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-3" aria-label="État des automatisations">
+          {[
+            { label: 'Tâches actives', value: snippets.filter(item => item.active).length, detail: 'prêtes à s’exécuter', color: '#10b981' },
+            { label: 'Synchronisations', value: snippets.filter(item => /atlas|woo|sync/i.test(item.name)).length, detail: 'fournisseur & catalogue', color: '#3b82f6' },
+            { label: 'Échecs à traiter', value: snippets.filter(item => item.last_run_status === 'error').length, detail: 'consultez les journaux', color: '#f43f5e' },
+            { label: 'Dernier résultat', value: snippets.find(item => item.last_run)?.last_run_status === 'success' ? 'OK' : 'À vérifier', detail: snippets.find(item => item.last_run)?.last_run ? new Date(snippets.find(item => item.last_run)!.last_run!).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : 'aucune exécution', color: '#8b5cf6' },
+          ].map(metric => (
+            <div key={metric.label} className={`rounded-2xl border p-4 ${adminTheme === 'light' ? 'bg-white border-slate-200 shadow-[0_2px_10px_rgba(15,23,42,0.035)]' : 'bg-slate-900/60 border-slate-800'}`}>
+              <span className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">{metric.label}</span>
+              <p className="mt-2 text-xl font-black font-mono" style={{ color: metric.color }}>{metric.value}</p>
+              <p className="mt-1 text-[10px] font-medium text-slate-500">{metric.detail}</p>
+            </div>
+          ))}
+        </section>
+      )}
+
       {!isOwner && (
         <div className={`p-4 rounded-2xl border flex items-center gap-3 ${
           adminTheme === 'light' ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-amber-950/20 border-amber-950 text-amber-300'

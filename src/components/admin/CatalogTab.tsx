@@ -44,6 +44,7 @@ import { useAdmin } from '@/context/AdminContext';
 import { Product } from '@/lib/data';
 import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
+import { useAdminUI } from '@/app/admin/AdminUIContext';
 import { StatusBadge, EmptyState } from '@/components/admin/ui';
 
 interface CatalogTabProps {
@@ -691,6 +692,7 @@ export default function CatalogTab({
 
   const { settings } = useSettings();
   const { showToast } = useUi();
+  const { spotlightTarget, setSpotlightTarget } = useAdminUI();
   const lowStockThreshold = settings.lowStockThreshold || 5;
 
   const [isMounted, setIsMounted] = useState(false);
@@ -713,6 +715,17 @@ export default function CatalogTab({
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [filterVendor, setFilterVendor] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<'all' | 'live' | 'draft'>('all');
+
+  useEffect(() => {
+    if (spotlightTarget?.type !== 'product') return;
+
+    const product = products.find(item => String(item.id) === spotlightTarget.id);
+    if (product) {
+      setProductSearchQuery(product.title || product.name || '');
+      setCurrentPage(1);
+    }
+    setSpotlightTarget(null);
+  }, [products, setSpotlightTarget, spotlightTarget]);
 
   // ── Sliding pill refs — Status filter bar ──────────────────────────────────
   const statusPillRef  = useRef<HTMLSpanElement>(null);
@@ -840,6 +853,8 @@ export default function CatalogTab({
   const [importedCount, setImportedCount] = useState(0);
   const [importError, setImportError] = useState('');
   const [importMessage, setImportMessage] = useState('');
+  const [importResult, setImportResult] = useState<{ created: number; updated: number; skipped: number; validationErrors: number } | null>(null);
+  const [importHistory, setImportHistory] = useState<Array<{ id: string; date: string; details: string }>>([]);
 
   // Saved mapping profiles
   const [savedProfiles, setSavedProfiles] = useState<Record<string, Record<string, string>>>({});
@@ -851,6 +866,58 @@ export default function CatalogTab({
   const [filterSpecial, setFilterSpecial] = useState<string>('all');
   const [isSpecialOpen, setIsSpecialOpen] = useState(false);
   const specialDropdownRef = React.useRef<HTMLDivElement>(null);
+  const [isSavedViewsOpen, setIsSavedViewsOpen] = useState(false);
+  const [savedViewName, setSavedViewName] = useState('');
+  const [savedViews, setSavedViews] = useState<Array<{ id: string; name: string; search: string; category: string; vendor: string; status: string; special: string }>>([]);
+  const savedViewsRef = React.useRef<HTMLDivElement>(null);
+
+  const downloadImportErrors = () => {
+    const errorRows = rowValidations.filter(validation => Object.keys(validation.errors).length > 0 || Object.keys(validation.warnings).length > 0);
+    if (errorRows.length === 0) {
+      showToast('Aucune erreur ou avertissement à exporter.', 'success');
+      return;
+    }
+    const escape = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+    const csv = [
+      ['Ligne', 'Titre', 'SKU', 'Erreurs', 'Avertissements'],
+      ...errorRows.map(validation => [
+        validation.rowIdx + 2,
+        validation.mappedProduct.title || '',
+        validation.mappedProduct.sku || '',
+        Object.values(validation.errors).join(' | '),
+        Object.values(validation.warnings).join(' | '),
+      ]),
+    ].map(row => row.map(escape).join(',')).join('\n');
+    const url = URL.createObjectURL(new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `erreurs_import_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const applySavedView = (view: { search: string; category: string; vendor: string; status: string; special: string }) => {
+    setProductSearchQuery(view.search);
+    setFilterCategory(view.category);
+    setFilterVendor(view.vendor);
+    setFilterStatus(view.status as 'all' | 'live' | 'draft');
+    setFilterSpecial(view.special);
+    setCurrentPage(1);
+    setIsSavedViewsOpen(false);
+  };
+
+  const saveCurrentView = () => {
+    const name = savedViewName.trim();
+    if (!name) {
+      showToast('Donnez un nom à cette vue.', 'error');
+      return;
+    }
+    const next = [{ id: `view_${Date.now()}`, name, search: productSearchQuery, category: filterCategory, vendor: filterVendor, status: filterStatus, special: filterSpecial }, ...savedViews].slice(0, 12);
+    setSavedViews(next);
+    localStorage.setItem('admin_catalog_saved_views', JSON.stringify(next));
+    setSavedViewName('');
+    showToast(`Vue « ${name} » enregistrée.`, 'success');
+  };
 
   // Reusable confirmation modal state
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -963,9 +1030,33 @@ export default function CatalogTab({
       if (specialDropdownRef.current && !specialDropdownRef.current.contains(event.target as Node)) {
         setIsSpecialOpen(false);
       }
+      if (savedViewsRef.current && !savedViewsRef.current.contains(event.target as Node)) {
+        setIsSavedViewsOpen(false);
+      }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (!isImportModalOpen) return;
+    void fetch('/api/admin/audit-logs', { cache: 'no-store' })
+      .then(response => response.json())
+      .then(data => {
+        if (data?.success) {
+          setImportHistory((data.logs || []).filter((log: any) => log.action === 'Import catalogue').slice(0, 5));
+        }
+      })
+      .catch(() => setImportHistory([]));
+  }, [isImportModalOpen]);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('admin_catalog_saved_views');
+      if (stored) setSavedViews(JSON.parse(stored));
+    } catch {
+      setSavedViews([]);
+    }
   }, []);
 
   // Escape key listener for confirmation modal
@@ -1030,11 +1121,27 @@ export default function CatalogTab({
     let positiveStock = 0;
     let positiveStockNoVendor = 0;
     let positiveStockNoDesc = 0;
+    let noPrice = 0;
+    let noCategory = 0;
+    let noVendor = 0;
+    let noIngredients = 0;
+    let needsReview = 0;
 
     products.forEach((p: any) => {
       if (!p.image || p.image === '' || p.image === '/placeholder.png') {
         noImage++;
       }
+      const missingImage = !p.image || p.image === '' || p.image === '/placeholder.png';
+      const missingPrice = !Number(p.price);
+      const missingStock = p.stock === undefined || p.stock === null;
+      const missingCategory = !p.category || p.category.trim() === '';
+      const missingVendor = !p.vendor || p.vendor.trim() === '' || p.vendor === '-';
+      const missingIngredients = !p.ingredients || p.ingredients.trim() === '';
+      if (missingPrice) noPrice++;
+      if (missingCategory) noCategory++;
+      if (missingVendor) noVendor++;
+      if (missingIngredients) noIngredients++;
+      if (missingImage || missingPrice || missingStock || missingCategory || missingVendor || missingIngredients) needsReview++;
       if (p.stock !== undefined && p.stock !== null && p.stock < 0) {
         negativeStock++;
       }
@@ -1079,7 +1186,12 @@ export default function CatalogTab({
       onSale,
       positiveStock,
       positiveStockNoVendor,
-      positiveStockNoDesc
+      positiveStockNoDesc,
+      noPrice,
+      noCategory,
+      noVendor,
+      noIngredients,
+      needsReview
     };
   }, [products, deadProductIds, lowStockThreshold]);
 
@@ -1539,11 +1651,21 @@ export default function CatalogTab({
     setImportProgress(35);
 
     try {
-      const result = await handleImportProducts(importedProducts, importUpdateExisting);
+      const validationErrorCount = rowValidations.filter(validation => Object.keys(validation.errors).length > 0).length;
+      const result = await handleImportProducts(importedProducts, importUpdateExisting, {
+        fileName: importFile?.name,
+        validationErrorCount,
+      });
       setImportProgress(85);
       
       if (result.success) {
         setImportedCount(result.count);
+        setImportResult({
+          created: result.createdCount || 0,
+          updated: result.updatedCount || 0,
+          skipped: result.skippedCount || 0,
+          validationErrors: result.validationErrorCount || validationErrorCount,
+        });
         setImportMessage(result.categories?.length
           ? `${result.message ? `${result.message} ` : ''}${result.categories.length} nouvelle(s) catégorie(s) disponible(s) : ${result.categories.join(', ')}.`
           : (result.message || ''));
@@ -1569,10 +1691,11 @@ export default function CatalogTab({
   useEffect(() => {
     if (isCatalogBulkMode) {
       const source = paginatedProducts.length > 0 ? paginatedProducts : products;
-      setBulkProducts(JSON.parse(JSON.stringify(source))); // deep clone
+      const selected = source.filter(product => selectedProductIds.has(product.id));
+      setBulkProducts(JSON.parse(JSON.stringify(selected.length > 0 ? selected : source))); // deep clone
       setChangedProductIds(new Set());
     }
-  }, [isCatalogBulkMode, products, paginatedProducts]);
+  }, [isCatalogBulkMode, products, paginatedProducts, selectedProductIds]);
 
   // Get unique categories and vendors for filtering select boxes
   const uniqueCategories = useMemo(() => {
@@ -1952,6 +2075,24 @@ export default function CatalogTab({
 
   return (
     <div className="space-y-4 admin-tab-enter">
+      <section className={`rounded-2xl border p-4 ${adminTheme === 'light' ? 'bg-white border-slate-200 shadow-[0_3px_16px_rgba(15,23,42,0.04)]' : 'bg-slate-900/60 border-slate-800'}`} aria-label="Qualité du catalogue">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <p className={`text-[11px] font-black uppercase tracking-[0.14em] ${adminTheme === 'light' ? 'text-slate-800' : 'text-white'}`}>Qualité du catalogue</p>
+            <p className="mt-1 text-[10.5px] text-slate-500">Repérez les fiches qui empêchent une publication propre avant de travailler la sélection.</p>
+          </div>
+          <button type="button" onClick={() => { setFilterSpecial('needs_review'); setCurrentPage(1); }} className="self-start sm:self-auto rounded-xl px-3 py-2 text-[10px] font-black text-amber-700 bg-amber-50 border border-amber-200 hover:bg-amber-100 transition">Voir les fiches à compléter</button>
+        </div>
+        <div className="mt-4 grid grid-cols-2 sm:grid-cols-5 gap-2">
+          {[
+            { label: 'À compléter', value: specialFilterCounts.needsReview, action: 'needs_review', color: '#f59e0b' },
+            { label: 'Sans image', value: specialFilterCounts.noImage, action: 'no_image', color: '#f43f5e' },
+            { label: 'Sans prix', value: specialFilterCounts.noPrice, action: 'needs_review', color: '#8b5cf6' },
+            { label: 'Sans catégorie', value: specialFilterCounts.noCategory, action: 'needs_review', color: '#3b82f6' },
+            { label: 'Sans ingrédients', value: specialFilterCounts.noIngredients, action: 'needs_review', color: '#10b981' },
+          ].map(item => <button key={item.label} type="button" onClick={() => { setFilterSpecial(item.action); setCurrentPage(1); }} className={`rounded-xl border px-3 py-2.5 text-left transition hover:-translate-y-0.5 ${adminTheme === 'light' ? 'bg-slate-50 border-slate-200 hover:bg-white' : 'bg-slate-950/50 border-slate-800'}`}><span className="block text-[9px] font-bold text-slate-500">{item.label}</span><span className="mt-1 block text-lg font-black font-mono" style={{ color: item.color }}>{item.value}</span></button>)}
+        </div>
+      </section>
       {/* Search/Filters & Operations Toolbar */}
       <div className={`flex flex-col gap-4 p-3 rounded-2xl border transition-all duration-200 ${
         adminTheme === 'light'
@@ -2200,6 +2341,7 @@ export default function CatalogTab({
                   {filterSpecial === 'out_of_stock' && 'En rupture'}
                   {filterSpecial === 'low_stock' && 'Stock critique'}
                   {filterSpecial === 'on_sale' && 'En promotion'}
+                  {filterSpecial === 'needs_review' && 'À compléter'}
                 </span>
                 {filterSpecial !== 'all' && (
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
@@ -2248,6 +2390,26 @@ export default function CatalogTab({
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] font-mono opacity-60 font-medium">{counts.all}</span>
                         {filterSpecial === 'all' && <Check className="w-3 h-3 text-emerald-500" />}
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleFilterSpecialToggle('needs_review')}
+                      title="Image, prix, stock, catégorie, marque ou ingrédients manquants"
+                      className={`w-full text-left text-xs px-2.5 py-1.5 rounded-lg transition-colors flex items-center justify-between cursor-pointer ${
+                        filterSpecial.split(',').includes('needs_review')
+                          ? (adminTheme === 'light' ? 'bg-amber-50 text-amber-900 font-bold' : 'bg-amber-500/15 text-amber-300 font-bold')
+                          : (adminTheme === 'light' ? 'hover:bg-amber-50/70 text-slate-600 hover:text-slate-900' : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200')
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                        <span>Fiches à compléter</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono opacity-60 font-medium">{specialFilterCounts.needsReview}</span>
+                        {filterSpecial.split(',').includes('needs_review') && <Check className="w-3 h-3 text-emerald-500" />}
                       </div>
                     </button>
 
@@ -2519,11 +2681,42 @@ export default function CatalogTab({
 
           {/* Right Side: Action Buttons */}
           <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <div ref={savedViewsRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setIsSavedViewsOpen(value => !value)}
+                className={`px-3 h-9 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition cursor-pointer ${
+                  adminTheme === 'light'
+                    ? 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-violet-50 hover:border-violet-200 hover:text-violet-700 shadow-sm'
+                    : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700 hover:bg-slate-800/50'
+                }`}
+              >
+                <Eye className="w-3.5 h-3.5 text-violet-500" />
+                <span>Vues</span>
+              </button>
+              {isSavedViewsOpen && (
+                <div className={`absolute right-0 mt-2 z-50 w-72 rounded-2xl border p-3 shadow-2xl ${adminTheme === 'light' ? 'bg-white border-slate-200' : 'bg-slate-950 border-slate-800'}`}>
+                  <p className="text-[10px] uppercase tracking-wider font-black text-slate-400 mb-2">Enregistrer cette vue</p>
+                  <div className="flex gap-2">
+                    <input value={savedViewName} onChange={(event) => setSavedViewName(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') saveCurrentView(); }} placeholder="Ex. Stock faible" className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs text-slate-700 outline-none focus:border-violet-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                    <button type="button" onClick={saveCurrentView} className="rounded-lg bg-violet-600 px-3 text-xs font-bold text-white hover:bg-violet-500">Sauver</button>
+                  </div>
+                  <div className="mt-3 max-h-52 space-y-1 overflow-y-auto">
+                    {savedViews.length === 0 ? <p className="px-1 py-2 text-xs text-slate-400">Aucune vue enregistrée.</p> : savedViews.map(view => (
+                      <div key={view.id} className="group flex items-center gap-1 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900">
+                        <button type="button" onClick={() => applySavedView(view)} className="min-w-0 flex-1 truncate px-2.5 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200">{view.name}</button>
+                        <button type="button" onClick={() => { const next = savedViews.filter(item => item.id !== view.id); setSavedViews(next); localStorage.setItem('admin_catalog_saved_views', JSON.stringify(next)); }} className="p-2 text-slate-400 hover:text-rose-500" title="Supprimer la vue"><X className="h-3.5 w-3.5" /></button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Importer */}
             <button
               type="button"
-              onClick={() => setIsImportModalOpen(true)}
+              onClick={() => { setImportResult(null); setIsImportModalOpen(true); }}
               className={`px-3 h-9 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition cursor-pointer ${
                 adminTheme === 'light'
                   ? 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-emerald-50/50 hover:border-emerald-200 hover:text-emerald-700 shadow-sm font-medium'
@@ -2596,6 +2789,8 @@ export default function CatalogTab({
                   <th className="p-3 w-[250px]">Titre Français</th>
                   <th className="p-3 w-40">SKU</th>
                   <th className="p-3">Catégorie</th>
+                  <th className="p-3">Statut</th>
+                  <th className="p-3 w-52">Ingrédients actifs</th>
                   <th className="p-3">Prix (DH)</th>
                   <th className="p-3">Prix Comp. (DH)</th>
                   <th className="p-3">Stock</th>
@@ -2639,6 +2834,25 @@ export default function CatalogTab({
                             <option key={cat} value={cat}>{cat}</option>
                           ))}
                         </select>
+                      </td>
+                      <td className="p-3">
+                        <select
+                          value={p.status || 'live'}
+                          onChange={(e) => handleBulkCellChange(p.id, 'status', e.target.value)}
+                          className="bg-slate-950 border border-slate-900 rounded px-1.5 py-1 focus:border-accent text-slate-300 outline-none font-sans text-xs cursor-pointer"
+                        >
+                          <option value="live">Publié</option>
+                          <option value="draft">Brouillon</option>
+                        </select>
+                      </td>
+                      <td className="p-3 w-52">
+                        <input
+                          type="text"
+                          value={p.ingredients || ''}
+                          onChange={(e) => handleBulkCellChange(p.id, 'ingredients', e.target.value)}
+                          placeholder="Ex. niacinamide, rétinol"
+                          className="w-full bg-slate-950 border border-slate-900 rounded px-2 py-1 focus:border-accent text-slate-200 outline-none font-sans text-xs"
+                        />
                       </td>
                       <td className="p-3 w-24">
                         <input
@@ -3915,6 +4129,7 @@ export default function CatalogTab({
                 setImportFile(null);
                 setImportError('');
                 setImportMessage('');
+                setImportResult(null);
               }}
               className={`transition-colors cursor-pointer ${
                 adminTheme === 'light' ? 'text-slate-400 hover:text-slate-600' : 'text-slate-500 hover:text-slate-200'
@@ -4047,6 +4262,25 @@ export default function CatalogTab({
                             <option value="&#9;">Tabulation</option>
                           </select>
                         </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className={`rounded-xl border p-3 ${adminTheme === 'light' ? 'border-slate-200 bg-slate-50/70' : 'border-slate-800 bg-slate-950/30'}`}>
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Historique des imports</span>
+                      <span className="text-[10px] text-slate-400">Audit partagé</span>
+                    </div>
+                    {importHistory.length === 0 ? (
+                      <p className="text-[10px] text-slate-400">Aucun import catalogue enregistré.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {importHistory.map(item => (
+                          <div key={item.id} className="flex items-start justify-between gap-3 text-[10px]">
+                            <p className="min-w-0 flex-1 leading-relaxed text-slate-500">{item.details}</p>
+                            <time className="shrink-0 font-mono text-slate-400">{new Date(item.date).toLocaleDateString('fr-FR')}</time>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -4257,6 +4491,16 @@ export default function CatalogTab({
                       <label htmlFor="ignore-errors-check" className="cursor-pointer font-extrabold text-[11px]">
                         Ignorer les lignes erronées à l&apos;importation
                       </label>
+                      {(totalErrors > 0 || totalWarnings > 0) && (
+                        <button
+                          type="button"
+                          onClick={downloadImportErrors}
+                          className="ml-2 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[10px] font-black uppercase tracking-wide text-sky-700 bg-sky-50 border border-sky-200 hover:bg-sky-100 transition"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          Fichier d&apos;erreurs
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -4385,6 +4629,21 @@ export default function CatalogTab({
                       ⚠️ {importMessage}
                     </p>
                   )}
+                  {importResult && (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full max-w-xl text-left">
+                      {[
+                        ['Nouveaux', importResult.created, 'text-emerald-600'],
+                        ['Mis à jour', importResult.updated, 'text-sky-600'],
+                        ['Ignorés', importResult.skipped, 'text-slate-500'],
+                        ['Erreurs', importResult.validationErrors, importResult.validationErrors > 0 ? 'text-rose-600' : 'text-slate-500'],
+                      ].map(([label, value, color]) => (
+                        <div key={String(label)} className={`rounded-xl border px-3 py-2 bg-white/70 dark:bg-slate-950/30 ${adminTheme === 'light' ? 'border-slate-200' : 'border-slate-800'}`}>
+                          <p className="text-[9px] font-black uppercase tracking-wide text-slate-400">{label}</p>
+                          <p className={`text-base font-black font-mono ${color}`}>{value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -4403,6 +4662,7 @@ export default function CatalogTab({
                     setIsImportModalOpen(false);
                     setImportFile(null);
                     setImportError('');
+                    setImportResult(null);
                   }}
                   className={`px-4 py-2 border font-bold rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer ${
                     adminTheme === 'light'
@@ -4481,6 +4741,7 @@ export default function CatalogTab({
                   setImportedCount(0);
                   setImportError('');
                   setImportMessage('');
+                  setImportResult(null);
                 }}
                 className="px-5 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black uppercase rounded-xl hover:from-emerald-400 hover:to-teal-400 shadow-md shadow-emerald-500/10 hover:shadow-lg hover:shadow-emerald-500/20 transition-all duration-200 cursor-pointer"
               >
@@ -4656,6 +4917,15 @@ export default function CatalogTab({
           </div>
 
           <div className="w-px h-5 bg-slate-200 dark:bg-slate-800" />
+
+          <button
+            type="button"
+            onClick={() => setIsCatalogBulkMode(true)}
+            className="px-3.5 py-1.5 border font-bold text-xs rounded-xl active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 outline-none bg-white border-slate-200 text-slate-700 hover:border-amber-300 hover:bg-amber-50 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+          >
+            <Table className="w-3.5 h-3.5 text-amber-500" />
+            <span>Éditer</span>
+          </button>
 
           {/* Dismiss */}
           <button

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
+import { after } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { verifyAdminSession } from '@/lib/session';
+import { processAtlascomOrderExport, queueAtlascomOrderExport } from '@/lib/atlascom-orders';
 
 // GET: Retrieve all orders
 export async function GET() {
@@ -17,7 +19,29 @@ export async function GET() {
 
     if (error) throw error;
 
-    return NextResponse.json({ success: true, orders: data || [] });
+    const orderIds = (data || []).map((order: any) => order.order_id);
+    const [exportsResult, notesResult] = orderIds.length
+      ? await Promise.all([
+          supabase.from('atlascom_order_exports').select('*').in('order_id', orderIds),
+          supabase.from('order_notes').select('*').in('order_id', orderIds).order('created_at', { ascending: false }),
+        ])
+      : [{ data: [] }, { data: [] }];
+    const exportByOrder = new Map((exportsResult.data || []).map((job: any) => [job.order_id, job]));
+    const notesByOrder = new Map<string, any[]>();
+    for (const note of notesResult.data || []) {
+      const notes = notesByOrder.get(note.order_id) || [];
+      notes.push(note);
+      notesByOrder.set(note.order_id, notes);
+    }
+
+    return NextResponse.json({
+      success: true,
+      orders: (data || []).map((order: any) => ({
+        ...order,
+        atlascom_export: exportByOrder.get(order.order_id) || null,
+        internal_notes: notesByOrder.get(order.order_id) || [],
+      })),
+    });
   } catch (error: any) {
     console.error('Get orders error:', error);
     return NextResponse.json({ success: false, error: error.message || 'Server error' }, { status: 500 });
@@ -37,6 +61,18 @@ export async function PUT(request: Request) {
       return NextResponse.json({ success: false, error: 'Order ID and status are required' }, { status: 400 });
     }
 
+    const { data: currentOrder, error: currentOrderError } = await supabase
+      .from('orders')
+      .select('order_id, status')
+      .eq('order_id', orderId)
+      .maybeSingle();
+    if (currentOrderError) throw currentOrderError;
+    if (!currentOrder) {
+      return NextResponse.json({ success: false, error: 'Commande introuvable.' }, { status: 404 });
+    }
+
+    const wasConfirmed = String(currentOrder.status || '').toLowerCase() === 'confirmed';
+    const becomesConfirmed = String(status).toLowerCase() === 'confirmed';
     const { error } = await supabase
       .from('orders')
       .update({ status })
@@ -44,7 +80,20 @@ export async function PUT(request: Request) {
 
     if (error) throw error;
 
-    return NextResponse.json({ success: true });
+    if (becomesConfirmed && !wasConfirmed) {
+      const queued = await queueAtlascomOrderExport(orderId);
+      if (queued.queued) {
+        after(async () => {
+          try {
+            await processAtlascomOrderExport(orderId);
+          } catch (exportError) {
+            console.error('Atlascom order export error:', exportError);
+          }
+        });
+      }
+    }
+
+    return NextResponse.json({ success: true, atlascomQueued: becomesConfirmed && !wasConfirmed });
   } catch (error: any) {
     console.error('Update order error:', error);
     return NextResponse.json({ success: false, error: error.message || 'Server error' }, { status: 500 });

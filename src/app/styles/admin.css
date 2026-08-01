@@ -26,11 +26,11 @@
   --admin-space-12: 48px;
 
   /* ── Border Radii ────────────────────────────────────────────────────── */
-  --admin-radius-sm:  8px;
-  --admin-radius-md:  12px;
-  --admin-radius-lg:  16px;
-  --admin-radius-xl:  20px;
-  --admin-radius-2xl: 28px;
+  --admin-radius-sm:  6px;
+  --admin-radius-md:  8px;
+  --admin-radius-lg:  10px;
+  --admin-radius-xl:  12px;
+  --admin-radius-2xl: 16px;
 
   /* ── Accent ──────────────────────────────────────────────────────────── */
   --admin-accent:         #10b981;   /* emerald-500 */
@@ -166,14 +166,15 @@
 
 /* Primary */
 .admin-btn-primary {
-  background: linear-gradient(135deg, var(--admin-accent) 0%, var(--admin-accent-hover) 100%);
+  background: #0f766e;
+  border-color: #0f766e;
   color: #fff;
-  box-shadow: 0 2px 8px var(--admin-accent-muted), 0 1px 2px rgba(0,0,0,0.06);
+  box-shadow: 0 1px 2px rgba(15, 118, 110, 0.22);
 }
 .admin-btn-primary:hover {
-  filter: brightness(1.06);
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
-  transform: translateY(-1px);
+  background: #0b665f;
+  border-color: #0b665f;
+  box-shadow: 0 2px 5px rgba(15, 118, 110, 0.24);
 }
 
 /* Secondary (ghost border) */
@@ -209,6 +210,21 @@
   border-radius: var(--admin-radius-sm);
 }
 
+/* ── Light-mode controls: avoid white buttons disappearing on white cards ── */
+.admin-light button.bg-white {
+  background-color: #eef3f7;
+  border-color: rgba(15, 30, 54, 0.12);
+  box-shadow: 0 1px 2px rgba(15, 30, 54, 0.05);
+}
+.admin-light button.bg-white:hover:not(:disabled) {
+  background-color: #e4edf3;
+  border-color: rgba(15, 30, 54, 0.2);
+  box-shadow: 0 3px 10px rgba(15, 30, 54, 0.08);
+}
+.admin-light button.bg-white:active:not(:disabled) {
+  background-color: #dae6ee;
+}
+
 /* ── Section divider line ─────────────────────────────────────────────── */
 .admin-divider {
   border: none;
@@ -228,31 +244,21 @@
 
 /* Admin page background — subtle warm-cool tint */
 .admin-page-bg {
-  background-color: #f1f5f9;
-  background-image:
-    radial-gradient(at 0% 0%, hsla(160 84% 39% / 0.08) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, hsla(217 91% 60% / 0.06) 0px, transparent 50%),
-    radial-gradient(at 50% 100%, hsla(250 84% 67% / 0.05) 0px, transparent 50%);
-  background-attachment: fixed;
+  background: #f6f8fb;
 }
 
 /* Admin page background — deep obsidian dark with rich glowing ambient mesh orbs */
 .admin-page-bg-dark {
-  background-color: #060913;
-  background-image:
-    radial-gradient(at 10% 0%, hsla(160 84% 39% / 0.12) 0px, transparent 45%),
-    radial-gradient(at 90% 100%, hsla(224 76% 48% / 0.10) 0px, transparent 45%),
-    radial-gradient(at 50% 50%, hsla(280 65% 55% / 0.04) 0px, transparent 60%);
-  background-attachment: fixed;
+  background: #0b1018;
 }
 
 /* Admin sidebar — premium dark gradient panel */
 .admin-sidebar-light {
-  background: linear-gradient(180deg, #ffffff 0%, hsl(220,20%,98%) 100%);
+  background: #ffffff;
   border-right: 1px solid rgba(0,0,0,0.07);
 }
 .admin-sidebar-dark {
-  background: linear-gradient(180deg, hsl(224,30%,8%) 0%, hsl(228,28%,6%) 100%);
+  background: hsl(224 28% 8%);
   border-right: 1px solid rgba(255,255,255,0.05);
 }
 
@@ -269,11 +275,11 @@
 
 /* Active nav item backgrounds — premium pill with accent glow */
 .admin-nav-active-light {
-  background: linear-gradient(135deg, rgba(16,185,129,0.10) 0%, rgba(99,102,241,0.06) 100%);
+  background: rgba(16, 185, 129, 0.10);
   border-color: rgba(16,185,129,0.25) !important;
 }
 .admin-nav-active-dark {
-  background: linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(99,102,241,0.07) 100%);
+  background: rgba(16, 185, 129, 0.12);
   border-color: rgba(16,185,129,0.20) !important;
   box-shadow: inset 0 0 0 1px rgba(16,185,129,0.08);
 }
@@ -497,16 +503,16 @@
 .admin-light .bg-slate-950\/80 {
   background-color: rgba(15, 23, 42, 0.4) !important;
 }
-.admin-light .bg-slate-900,
-.admin-light .bg-slate-900\/30,
-.admin-light .bg-slate-900\/40,
-.admin-light .bg-slate-900\/60,
-.admin-light .bg-slate-950 {
+.admin-light .bg-slate-900:not(button),
+.admin-light .bg-slate-900\/30:not(button),
+.admin-light .bg-slate-900\/40:not(button),
+.admin-light .bg-slate-900\/60:not(button),
+.admin-light .bg-slate-950:not(button) {
   background-color: #ffffff !important;
   border-color: #e2e8f0 !important;
   color: #0f172a !important;
 }
-.admin-light .bg-slate-900 {
+.admin-light .bg-slate-900:not(button) {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
 }
 
@@ -574,6 +580,60 @@
 }
 .admin-light .divide-y > * + * {
   border-color: #f1f5f9 !important;
+}
+
+/* ── Shared dashboard workspace layer ──────────────────────────────────
+   Keeps every admin route in the same compact operational visual system. */
+.admin-workspace {
+  color: var(--admin-text-primary);
+}
+
+.admin-workspace .admin-tab-enter {
+  max-width: 1640px;
+}
+
+.admin-workspace :is(input, select, textarea) {
+  border-radius: var(--admin-radius-md);
+  box-shadow: none;
+}
+
+.admin-workspace :is(input, select, textarea):focus {
+  border-color: var(--admin-accent) !important;
+  box-shadow: 0 0 0 3px var(--admin-accent-muted) !important;
+}
+
+.admin-workspace table {
+  border-color: var(--admin-border);
+}
+
+.admin-workspace table thead tr {
+  background: var(--admin-surface-2) !important;
+}
+
+.admin-workspace table thead th {
+  font-size: var(--admin-text-2xs) !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-workspace table tbody tr {
+  transition: background-color var(--admin-transition-fast);
+}
+
+.admin-workspace table tbody tr:hover {
+  background: var(--admin-surface-hover) !important;
+}
+
+/* Top-level route surfaces share the Tableau de bord's quiet, compact frame.
+   Nested controls retain their own intended geometry. */
+.admin-workspace .admin-tab-enter > :is([class*="rounded-2xl"], [class*="rounded-3xl"]),
+.admin-workspace .admin-tab-enter > .grid > :is([class*="rounded-2xl"], [class*="rounded-3xl"]) {
+  border-radius: var(--admin-radius-lg) !important;
+  box-shadow: var(--admin-shadow-xs) !important;
+}
+
+.admin-workspace .admin-tab-enter > .grid > :is([class*="rounded-2xl"], [class*="rounded-3xl"]) {
+  border-color: var(--admin-border) !important;
 }
 
 /* ================================================================
@@ -843,6 +903,24 @@ input.pl-7 {
   color: #f1f5f9;
 }
 
+@media (max-width: 640px) {
+  .floating-bulk-bar {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    width: auto;
+    max-width: none;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px;
+    border-radius: 16px;
+  }
+  .floating-bulk-bar.active {
+    transform: translateY(0);
+  }
+}
+
 /* Empty states card with shadow and icon animation */
 .rich-empty-state {
   display: flex;
@@ -878,8 +956,43 @@ input.pl-7 {
   transform: scale(1.08) rotate(2deg);
 }
 
+/* Premium operational baseline: keyboard clarity and responsive workflow density. */
+.admin-workspace :is(button, a, input, select, textarea):focus-visible,
+.admin-workspace [role="tab"]:focus-visible,
+.admin-workspace [role="button"]:focus-visible,
+aside :is(button, a):focus-visible {
+  outline: 3px solid rgba(16, 185, 129, 0.5) !important;
+  outline-offset: 3px;
+  border-radius: 12px;
+}
 
+.admin-workspace ::selection {
+  color: #052e2b;
+  background: rgba(110, 231, 183, 0.65);
+}
 
+.admin-quiet-label {
+  color: #64748b;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
 
+.admin-dark .admin-quiet-label { color: #94a3b8; }
 
+@media (max-width: 767px) {
+  .admin-workspace {
+    padding: 16px !important;
+    padding-bottom: 88px !important;
+  }
+  .admin-workspace table { min-width: 720px; }
+  .admin-workspace [data-admin-scroll] { scrollbar-width: thin; }
+}
 
+@media (prefers-reduced-motion: reduce) {
+  .admin-workspace *, aside * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

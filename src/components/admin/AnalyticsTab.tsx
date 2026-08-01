@@ -377,6 +377,29 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
         </div>
       )}
 
+      <section className={`rounded-2xl border p-4 md:p-5 ${adminTheme === 'light' ? 'bg-white border-slate-200 shadow-[0_3px_16px_rgba(15,23,42,0.04)]' : 'bg-slate-900/60 border-slate-800'}`} aria-label="Décisions prioritaires">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+          <div>
+            <p className={`text-[11px] font-black uppercase tracking-[0.14em] ${adminTheme === 'light' ? 'text-slate-800' : 'text-white'}`}>À surveiller maintenant</p>
+            <p className="mt-1 text-[11px] text-slate-500">Les exceptions passent avant les graphiques pour accélérer les décisions quotidiennes.</p>
+          </div>
+          <span className="text-[10px] font-bold text-slate-500">Période sélectionnée</span>
+        </div>
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {[
+            { label: 'Commandes non confirmées', value: rangeOrders.filter(order => order.status === 'Pending').length, detail: 'à contacter ou préparer', color: '#f59e0b' },
+            { label: 'Paniers à récupérer', value: rangeAbandoned.length, detail: 'opportunités de relance', color: '#6366f1' },
+            { label: 'Marge à protéger', value: data.pct.netMargin !== null && data.pct.netMargin < 0 ? `${Math.abs(data.pct.netMargin)}%` : 'Stable', detail: data.pct.netMargin !== null && data.pct.netMargin < 0 ? 'en baisse sur la période' : 'aucune baisse détectée', color: data.pct.netMargin !== null && data.pct.netMargin < 0 ? '#f43f5e' : '#10b981' },
+          ].map(item => (
+            <div key={item.label} className={`rounded-xl border px-4 py-3 ${adminTheme === 'light' ? 'bg-slate-50/80 border-slate-200' : 'bg-slate-950/50 border-slate-800'}`}>
+              <span className="text-[10px] font-bold text-slate-500">{item.label}</span>
+              <p className="mt-1 text-lg font-black font-mono" style={{ color: item.color }}>{item.value}</p>
+              <p className="mt-1 text-[10px] text-slate-500">{item.detail}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* 2-Tier Executive KPI Cards Grid */}
       <div className="space-y-4">
         {/* Primary 4 Hero Cards */}

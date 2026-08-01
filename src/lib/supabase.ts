@@ -27,6 +27,8 @@ const globalForMock = globalThis as unknown as {
     code_snippets: any[];
     marketing_flows: any[];
     marketing_flow_runs: any[];
+    atlascom_order_exports: any[];
+    order_notes: any[];
   }
 };
 
@@ -297,7 +299,9 @@ if (isPlaceholder) {
       advice_articles: getInitialAdviceArticles(),
       code_snippets: getInitialCodeSnippets(),
       marketing_flows: [],
-      marketing_flow_runs: []
+      marketing_flow_runs: [],
+      atlascom_order_exports: [],
+      order_notes: []
     };
     saveToDisk();
   } else if (loaded && globalForMock.mockDb) {
@@ -354,7 +358,16 @@ if (isPlaceholder) {
     if (!globalForMock.mockDb.marketing_flow_runs) {
       globalForMock.mockDb.marketing_flow_runs = [];
       mutated = true;
-    } else {
+    }
+    if (!globalForMock.mockDb.atlascom_order_exports) {
+      globalForMock.mockDb.atlascom_order_exports = [];
+      mutated = true;
+    }
+    if (!globalForMock.mockDb.order_notes) {
+      globalForMock.mockDb.order_notes = [];
+      mutated = true;
+    }
+    if (globalForMock.mockDb.marketing_flow_runs) {
       // Migrate existing mock snippets to include new fields if missing
       globalForMock.mockDb.code_snippets = globalForMock.mockDb.code_snippets.map((s: any) => {
         if (!s.trigger_type) {

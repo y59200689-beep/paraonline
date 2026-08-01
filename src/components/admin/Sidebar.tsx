@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAdmin } from '@/context/AdminContext';
 import { useSettings } from '@/context/SettingsContext';
@@ -45,6 +45,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { orders, reviews, currentUser, adminTheme, handleLogout } = useAdmin();
   const { settings } = useSettings();
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const isDark = adminTheme === 'dark';
 
@@ -72,14 +73,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
         { id: 'advice', label: 'Espace Conseils', icon: BookOpen },
         { id: 'branding', label: 'Personnalisation', icon: Palette },
         { id: 'gallery', label: 'Galerie Médias', icon: Images },
-        { id: 'snippets', label: 'Scripts du site', icon: Code },
-        { id: 'cron', label: 'Automatisations planifiées', icon: Clock },
         { id: 'coupons', label: 'Promotions', icon: Ticket },
-        ...(currentUser?.role === 'owner' ? [{ id: 'audit-logs', label: "Journal d'activité", icon: Shield, count: undefined, countColor: undefined }] : []),
         { id: 'settings', label: 'Paramètres', icon: Sliders },
       ],
     },
   ];
+
+  const advancedItems = [
+    { id: 'cron', label: 'Automatisations planifiées', icon: Clock },
+    { id: 'snippets', label: 'Scripts du site', icon: Code },
+    ...(currentUser?.role === 'owner' ? [{ id: 'audit-logs', label: "Journal d'activité", icon: Shield }] : []),
+  ];
+
+  useEffect(() => {
+    if (['cron', 'snippets', 'audit-logs'].includes(activeTab)) setAdvancedOpen(true);
+  }, [activeTab]);
+
+  useEffect(() => {
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsMobileDrawerOpen(false);
+    };
+    window.addEventListener('keydown', onEscape);
+    return () => window.removeEventListener('keydown', onEscape);
+  }, [setIsMobileDrawerOpen]);
 
   const sidebarStyle: React.CSSProperties = {
     background: isDark
@@ -97,6 +113,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div
           onClick={() => setIsMobileDrawerOpen(false)}
           className="fixed inset-0 z-40 md:hidden"
+          aria-hidden="true"
           style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' } as React.CSSProperties}
         />
       )}
@@ -108,6 +125,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             ? 'fixed inset-y-0 left-0 w-64 z-50 flex shadow-2xl animate-slide-in'
             : 'hidden md:flex'
         } ${sidebarCollapsed ? 'md:w-[68px]' : 'md:w-64'}`}
+        aria-label="Navigation principale de l'administration"
       >
         {/* ── TOP SECTION ───────────────────────────────────────────── */}
         <div className="flex flex-col gap-5 p-3">
@@ -177,7 +195,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         href={item.id === 'dashboard' ? '/admin' : `/admin/${item.id}`}
                         prefetch={true}
                         title={sidebarCollapsed ? item.label : undefined}
-                        onClick={() => setIsMobileDrawerOpen(false)}
+                        onClick={() => {
+                          if (item.id === 'orders') window.dispatchEvent(new Event('admin:open-orders-list'));
+                          setIsMobileDrawerOpen(false);
+                        }}
                         className={`relative flex items-center rounded-xl border transition-all duration-150 cursor-pointer select-none group ${
                           sidebarCollapsed ? 'justify-center px-2 py-2.5' : 'justify-between px-3 py-2.5'
                         }`}
@@ -269,6 +290,61 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
               </div>
             ))}
+
+            <div className="pt-4">
+              <div
+                className="mb-2 mx-2"
+                style={{ height: '1px', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)' }}
+              />
+              <button
+                type="button"
+                onClick={() => setAdvancedOpen(open => !open)}
+                aria-expanded={advancedOpen}
+                className={`w-full flex items-center rounded-xl border transition-all duration-150 cursor-pointer select-none ${
+                  sidebarCollapsed ? 'justify-center px-2 py-2.5' : 'justify-between px-3 py-2.5'
+                }`}
+                style={{
+                  color: isDark ? '#64748b' : '#64748b',
+                  borderColor: 'transparent',
+                  background: advancedOpen ? (isDark ? 'rgba(255,255,255,0.035)' : 'rgba(15,23,42,0.035)') : 'transparent',
+                }}
+                title={sidebarCollapsed ? 'Configuration avancée' : undefined}
+              >
+                <span className="flex items-center gap-2.5 min-w-0">
+                  <Sliders className="w-4 h-4 shrink-0" />
+                  {!sidebarCollapsed && <span className="text-[11px] font-bold">Configuration avancée</span>}
+                </span>
+                {!sidebarCollapsed && <ChevronRight className={`w-3.5 h-3.5 transition-transform ${advancedOpen ? 'rotate-90' : ''}`} />}
+              </button>
+              {advancedOpen && (
+                <div className="mt-1 space-y-0.5">
+                  {advancedItems.map(item => {
+                    const Icon = item.icon;
+                    const isActive = activeTab === item.id;
+                    return (
+                      <Link
+                        key={item.id}
+                        href={`/admin/${item.id}`}
+                        prefetch={true}
+                        onClick={() => setIsMobileDrawerOpen(false)}
+                        className={`relative flex items-center rounded-xl border transition-all duration-150 cursor-pointer select-none ${
+                          sidebarCollapsed ? 'justify-center px-2 py-2.5' : 'gap-2.5 px-3 py-2.5'
+                        }`}
+                        style={{
+                          background: isActive ? (isDark ? 'rgba(16,185,129,0.12)' : 'rgba(16,185,129,0.08)') : 'transparent',
+                          color: isActive ? (isDark ? '#6ee7b7' : '#047857') : (isDark ? '#64748b' : '#64748b'),
+                          borderColor: isActive ? (isDark ? 'rgba(16,185,129,0.22)' : 'rgba(16,185,129,0.2)') : 'transparent',
+                        }}
+                        title={sidebarCollapsed ? item.label : undefined}
+                      >
+                        <Icon className="w-4 h-4 shrink-0" />
+                        {!sidebarCollapsed && <span className="text-[11px] font-semibold truncate">{item.label}</span>}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </nav>
         </div>
 

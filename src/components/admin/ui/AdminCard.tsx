@@ -36,12 +36,12 @@ export function AdminCard({
 }: AdminCardProps) {
   const isLight = theme === 'light';
 
-  const base = `rounded-[var(--admin-radius-xl)] transition-all ${paddingMap[padding]}`;
+  const base = `rounded-[var(--admin-radius-lg)] transition-colors ${paddingMap[padding]}`;
 
   const variantStyles = {
     default: isLight
-      ? 'bg-white border border-[hsl(220_13%_90%)] shadow-[0_2px_12px_rgba(15,30,54,0.04),inset_0_1px_1px_rgba(255,255,255,0.9)]'
-      : 'bg-[hsl(224_20%_9%)] border border-[hsl(224_15%_16%)] shadow-[0_4px_24px_rgba(0,0,0,0.35),inset_0_1px_1px_rgba(255,255,255,0.12)]',
+      ? 'bg-white border border-[hsl(220_13%_90%)] shadow-[0_1px_3px_rgba(15,30,54,0.05)]'
+      : 'bg-[hsl(224_20%_9%)] border border-[hsl(224_15%_16%)] shadow-[0_1px_3px_rgba(0,0,0,0.30)]',
 
     flat: isLight
       ? 'bg-white border border-[hsl(220_13%_90%)]'
@@ -58,16 +58,16 @@ export function AdminCard({
 
   const hoverStyles = hoverable
     ? isLight
-      ? 'hover:shadow-[0_8px_30px_rgba(15,30,54,0.08)] hover:-translate-y-0.5 cursor-pointer active:scale-[0.985] transition-all'
-      : 'hover:border-[hsl(224_14%_24%)] hover:shadow-[0_12px_36px_rgba(0,0,0,0.5)] hover:-translate-y-0.5 cursor-pointer active:scale-[0.985] transition-all'
+      ? 'hover:border-[hsl(160_50%_74%)] hover:shadow-[0_3px_10px_rgba(15,30,54,0.07)] cursor-pointer active:scale-[0.99]'
+      : 'hover:border-[hsl(160_30%_28%)] hover:shadow-[0_3px_10px_rgba(0,0,0,0.38)] cursor-pointer active:scale-[0.99]'
     : '';
 
   if (bezel && variant === 'default') {
     return (
-      <div className={`p-1 rounded-[calc(var(--admin-radius-xl)+4px)] ${
+      <div className={`rounded-[var(--admin-radius-lg)] ${
         isLight
-          ? 'bg-slate-200/50 border border-slate-200/80 shadow-xs'
-          : 'bg-white/[0.03] border border-white/[0.08] shadow-md'
+          ? 'bg-transparent'
+          : 'bg-transparent'
       }`}>
         <Tag
           className={`${base} ${variantStyles[variant]} ${hoverStyles} ${className}`}

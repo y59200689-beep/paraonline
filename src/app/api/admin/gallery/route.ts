@@ -141,6 +141,20 @@ async function getImageFileInfo(filePath: string): Promise<ImageFileInfo> {
 
 const isProduction = process.env.NODE_ENV === 'production';
 
+async function logGalleryUploadFailure(imageKey: string | null, reason: string): Promise<void> {
+  try {
+    await supabase.from('audit_logs').insert({
+      id: `log_gallery_${Date.now()}_${randomUUID().slice(0, 8)}`,
+      action: 'Échec d’envoi Galerie',
+      details: `Image ${imageKey || 'inconnue'} : ${reason}`,
+      date: new Date().toISOString(),
+    });
+  } catch (auditError) {
+    // Never hide the original upload error if audit logging is unavailable.
+    console.warn('[gallery] Failed to log upload error:', auditError);
+  }
+}
+
 // ─── Helpers for database gallery overrides ─────────────────────────────────
 
 async function fetchDbOverrides(): Promise<Record<string, string>> {
@@ -355,6 +369,7 @@ export async function GET() {
 
 // ─── POST — replace a file by key with automatic WebP conversion & dimension extraction ───
 export async function POST(request: Request) {
+  let imageKey: string | null = null;
   try {
     const session = await verifyAdminSession();
     if (!session) {
@@ -363,6 +378,7 @@ export async function POST(request: Request) {
 
     const formData = await request.formData();
     const key = formData.get('key') as string;
+    imageKey = key || null;
     const file = formData.get('file') as File;
 
     if (!key || !file) {
@@ -437,6 +453,7 @@ export async function POST(request: Request) {
     }
 
     if (!finalUrl) {
+      await logGalleryUploadFailure(entry.key, storageError || 'Le stockage d’images est indisponible.');
       return NextResponse.json(
         { success: false, error: storageError || 'Le stockage d’images est indisponible. Réessayez plus tard.' },
         { status: 503 }
@@ -448,6 +465,7 @@ export async function POST(request: Request) {
     } catch (dbErr: unknown) {
       console.error('[gallery POST] Failed to write DB override:', getErrorMessage(dbErr));
       if (finalUrl) await deleteOldStorageOrFile(finalUrl, '');
+      await logGalleryUploadFailure(entry.key, `Impossible d’enregistrer l’image : ${getErrorMessage(dbErr)}`);
       return NextResponse.json(
         { success: false, error: 'Impossible d’enregistrer l’image dans la galerie.' },
         { status: 500 }
@@ -481,6 +499,7 @@ export async function POST(request: Request) {
     });
   } catch (err: unknown) {
     console.error('[gallery] replace error:', err);
+    await logGalleryUploadFailure(imageKey, getErrorMessage(err));
     return NextResponse.json({ success: false, error: getErrorMessage(err) }, { status: 500 });
   }
 }

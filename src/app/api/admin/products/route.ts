@@ -89,6 +89,15 @@ function applyProductFilters(
     if (specialFilters.includes('no_desc')) {
       query = query.or('description.eq.,description.is.null');
     }
+    if (specialFilters.includes('no_price')) {
+      query = query.or('price.eq.0,price.is.null');
+    }
+    if (specialFilters.includes('no_vendor')) {
+      query = query.or('vendor.eq.,vendor.eq.-,vendor.is.null');
+    }
+    if (specialFilters.includes('no_ingredients')) {
+      query = query.or('ingredients.eq.,ingredients.is.null');
+    }
   }
 
   return query;
@@ -104,7 +113,7 @@ function buildAdminProductsQuery(filters: {
   sortField: string;
   sortDirection: string;
 }) {
-  let query = applyProductFilters(
+  const query = applyProductFilters(
     supabase.from('products').select('*', { count: 'exact' }),
     filters
   );
@@ -183,7 +192,7 @@ export async function GET(request: Request) {
     const specialFilters = special ? special.split(',') : [];
 
     // We fetch without range limit if the special filter requires in-route array filtering
-    const needsInRouteProcessing = specialFilters.some(f => f === 'dead_products' || f === 'low_margin' || f === 'on_sale');
+    const needsInRouteProcessing = specialFilters.some(f => f === 'dead_products' || f === 'low_margin' || f === 'on_sale' || f === 'needs_review');
 
     const queryFilters = { category, vendor, status, search, specialFilters, lowStockThreshold, sortField, sortDirection };
     let resultProducts: any[] = [];
@@ -244,6 +253,17 @@ export async function GET(request: Request) {
       
       if (specialFilters.includes('on_sale')) {
         resultProducts = resultProducts.filter((p: any) => p.compare_price !== null && p.compare_price !== undefined && Number(p.compare_price) > Number(p.price));
+      }
+
+      if (specialFilters.includes('needs_review')) {
+        resultProducts = resultProducts.filter((product: any) =>
+          !product.image || product.image === '/placeholder.png'
+          || !Number(product.price)
+          || product.stock === null || product.stock === undefined
+          || !product.category
+          || !product.vendor || product.vendor === '-'
+          || !product.ingredients
+        );
       }
 
       totalCount = resultProducts.length;
@@ -362,6 +382,13 @@ export async function POST(request: Request) {
     revalidatePath('/');
     revalidateTag(PUBLIC_CATALOG_CACHE_TAG, { expire: 0 });
 
+    await supabase.from('audit_logs').insert({
+      id: `log_product_create_${Date.now()}`,
+      action: 'Produit créé',
+      details: `${session.name} a créé « ${newProduct.title} » (${newProduct.sku || `#${newProduct.id}`}).`,
+      date: new Date().toISOString(),
+    });
+
     return NextResponse.json({ success: true, product: newProduct });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message || 'Server error' }, { status: 500 });
@@ -419,6 +446,13 @@ export async function PUT(request: Request) {
     revalidatePath(`/products/${productId}`);
     revalidatePath('/');
     revalidateTag(PUBLIC_CATALOG_CACHE_TAG, { expire: 0 });
+
+    await supabase.from('audit_logs').insert({
+      id: `log_product_update_${Date.now()}`,
+      action: 'Produit modifié',
+      details: `${session.name} a modifié « ${updatedProduct.title} » (#${productId}) : prix, stock, catégories, ingrédients et statut enregistrés.`,
+      date: new Date().toISOString(),
+    });
 
     return NextResponse.json({ success: true, product: { id: productId, ...updatedProduct } });
   } catch (error: any) {

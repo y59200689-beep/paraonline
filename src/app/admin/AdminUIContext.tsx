@@ -13,6 +13,8 @@ export interface AdminUIContextProps {
   setIsMobileDrawerOpen: React.Dispatch<React.SetStateAction<boolean>>;
   isSearchOpen: boolean;
   setIsSearchOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  spotlightTarget: { type: 'order' | 'product'; id: string } | null;
+  setSpotlightTarget: React.Dispatch<React.SetStateAction<{ type: 'order' | 'product'; id: string } | null>>;
 
   // Sub-tabs syncing
   ordersSubTab: 'list' | 'abandoned' | 'shipping' | 'reconciliation';
@@ -83,6 +85,7 @@ export const AdminUIProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [spotlightTarget, setSpotlightTarget] = useState<{ type: 'order' | 'product'; id: string } | null>(null);
 
   const [ordersSubTab, setOrdersSubTab] = useState<'list' | 'abandoned' | 'shipping' | 'reconciliation'>('list');
   const [crmSubTab, setCrmSubTab] = useState<'clients' | 'analytics' | 'diagnostics' | 'leads' | 'rules' | 'rfm' | 'reminders' | 'automations'>('clients');
@@ -179,6 +182,8 @@ export const AdminUIProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsMobileDrawerOpen,
     isSearchOpen,
     setIsSearchOpen,
+    spotlightTarget,
+    setSpotlightTarget,
     ordersSubTab,
     setOrdersSubTab,
     crmSubTab,
@@ -215,6 +220,7 @@ export const AdminUIProvider: React.FC<{ children: React.ReactNode }> = ({ child
     sidebarCollapsed,
     isMobileDrawerOpen,
     isSearchOpen,
+    spotlightTarget,
     ordersSubTab,
     crmSubTab,
     loyaltySubTab,

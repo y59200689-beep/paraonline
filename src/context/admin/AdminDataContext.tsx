@@ -54,6 +54,13 @@ export interface Order {
   has_account?: boolean;
   user_id?: string;
   email?: string;
+  atlascom_export?: {
+    status: 'queued' | 'sending' | 'sent' | 'failed' | 'blocked';
+    remote_order_id?: string | null;
+    last_error?: string | null;
+    sent_at?: string | null;
+  } | null;
+  internal_notes?: Array<{ id: string | number; body: string; kind: 'internal' | 'atlascom'; created_at: string }>;
 }
 
 export interface Review {
@@ -195,6 +202,8 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           payment_method: o.payment_method || 'cod',
           transaction_id: o.transaction_id || undefined,
           notes: o.notes || undefined,
+          atlascom_export: o.atlascom_export || null,
+          internal_notes: o.internal_notes || [],
         }));
         setOrders(parsed);
       } else {

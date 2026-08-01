@@ -39,8 +39,13 @@ export async function POST(request: Request) {
         category: categories[0],
         categories,
         buying_cost: Number(item.buyingCost) || 0,
-        sku: item.sku
+        sku: item.sku,
       };
+
+      // Preserve data from older bulk clients that do not send this field.
+      if (item.ingredients !== undefined) {
+        updateData.ingredients = item.ingredients || '';
+      }
 
       if (item.points !== undefined) {
         updateData.points = Number(item.points);
@@ -61,6 +66,20 @@ export async function POST(request: Request) {
     revalidatePath('/products');
     revalidatePath('/');
     revalidateTag(PUBLIC_CATALOG_CACHE_TAG, { expire: 0 });
+
+    const changedFields = Array.from(new Set(products.flatMap((product: any) => [
+      product.category !== undefined || product.categories !== undefined ? 'catégories' : null,
+      product.ingredients !== undefined ? 'ingrédients' : null,
+      product.status !== undefined ? 'statut' : null,
+      product.price !== undefined || product.buyingCost !== undefined ? 'prix / marge' : null,
+      product.stock !== undefined ? 'stock' : null,
+    ].filter(Boolean))));
+    await supabase.from('audit_logs').insert({
+      id: `log_catalog_bulk_${Date.now()}`,
+      action: 'Modification catalogue (lot)',
+      details: `${session.name} a modifié ${products.length} produit(s) : ${changedFields.join(', ') || 'données produit'}.`,
+      date: new Date().toISOString(),
+    });
 
     return NextResponse.json({ success: true, count: products.length });
   } catch (error: any) {

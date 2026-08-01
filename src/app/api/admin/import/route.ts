@@ -149,7 +149,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Accès refusé. Propriétaire uniquement.' }, { status: 403 });
     }
 
-    const { products, updateExisting } = await request.json();
+    const { products, updateExisting, fileName, validationErrorCount = 0 } = await request.json();
     if (!products || !Array.isArray(products)) {
       return NextResponse.json({ success: false, error: 'Invalid products array' }, { status: 400 });
     }
@@ -159,6 +159,9 @@ export async function POST(request: Request) {
     const existingList = await fetchAllExistingProducts();
     const productsToUpsert: any[] = [];
     const importedCategories = new Set<string>();
+    let createdCount = 0;
+    let updatedCount = 0;
+    let skippedCount = 0;
 
     for (const p of products) {
       // Find match in existing products
@@ -175,6 +178,9 @@ export async function POST(request: Request) {
         // If updating existing, only process if a match is found
         if (match) {
           productsToUpsert.push(buildExistingProductUpdate(p, match));
+          updatedCount++;
+        } else {
+          skippedCount++;
         }
       } else {
         // New product import — if a match exists by ID/SKU, include the id
@@ -182,10 +188,12 @@ export async function POST(request: Request) {
         if (match) {
           // Skip silently — don't overwrite existing products when updateExisting is false
           // (user chose "import new only")
+          skippedCount++;
         } else {
           const newProduct = buildNewProduct(p);
           normalizeImportedCategories(newProduct.categories, newProduct.category).forEach(category => importedCategories.add(category));
           productsToUpsert.push(newProduct);
+          createdCount++;
         }
       }
     }
@@ -194,13 +202,24 @@ export async function POST(request: Request) {
       if (importedCategories.size > 0) {
         await syncImportedCategories(importedCategories);
       }
+      const message = updateExisting
+        ? 'Aucun produit correspondant trouvé pour la mise à jour.'
+        : 'Tous les produits existent déjà. Activez "Mettre à jour les existants" pour les modifier.';
+      await supabase.from('audit_logs').insert({
+        id: `log_import_${Date.now()}`,
+        action: 'Import catalogue',
+        details: `${session.name} a importé ${fileName || 'un fichier'} : 0 créé, 0 mis à jour, ${skippedCount} ignoré, ${Number(validationErrorCount) || 0} erreur(s) de validation. ${message}`,
+        date: new Date().toISOString(),
+      });
       return NextResponse.json({ 
         success: true, 
         count: 0, 
+        createdCount,
+        updatedCount,
+        skippedCount,
+        validationErrorCount: Number(validationErrorCount) || 0,
         categories: Array.from(importedCategories).sort(),
-        message: updateExisting 
-          ? 'Aucun produit correspondant trouvé pour la mise à jour.'
-          : 'Tous les produits existent déjà. Activez "Mettre à jour les existants" pour les modifier.'
+        message,
       });
     }
 
@@ -214,9 +233,20 @@ export async function POST(request: Request) {
     // new sheet categories are immediately available in the editor.
     if (importedCategories.size > 0) await syncImportedCategories(importedCategories);
 
+    await supabase.from('audit_logs').insert({
+      id: `log_import_${Date.now()}`,
+      action: 'Import catalogue',
+      details: `${session.name} a importé ${fileName || 'un fichier'} : ${createdCount} créé(s), ${updatedCount} mis à jour, ${skippedCount} ignoré(s), ${Number(validationErrorCount) || 0} erreur(s) de validation.`,
+      date: new Date().toISOString(),
+    });
+
     return NextResponse.json({
       success: true,
       count: processedCount,
+      createdCount,
+      updatedCount,
+      skippedCount,
+      validationErrorCount: Number(validationErrorCount) || 0,
       categories: Array.from(importedCategories).sort(),
     });
   } catch (error: any) {

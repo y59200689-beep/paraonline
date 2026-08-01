@@ -11,19 +11,6 @@ import {
   BarChart2,
   ChevronRight,
   MessageSquare,
-  Check,
-  X,
-  Clock,
-  Layers,
-  ArrowUpRight,
-  Sparkles,
-  AlertCircle,
-  ExternalLink,
-  PackageCheck,
-  Users,
-  Calendar,
-  Filter,
-  CheckCircle2,
   Package,
   Pin,
   Eye,
@@ -32,15 +19,15 @@ import {
   MoveRight,
   Settings2,
   RotateCcw,
+  RefreshCw,
   Truck,
   AlertTriangle,
   ShieldAlert,
+  Workflow,
 } from 'lucide-react';
-import { StatusBadge } from '@/components/admin/ui';
 
 interface DashboardTabProps {
   setActiveTab: (tab: 'dashboard' | 'analytics' | 'orders' | 'catalog' | 'crm' | 'reviews' | 'settings' | 'loyalty' | 'branding' | 'advice' | 'snippets' | 'cron' | 'audit-logs' | 'coupons' | 'gallery') => void;
-  setCatalogStockFilter: (filter: boolean) => void;
   setActiveSettingsSubTab: (sub: 'general' | 'banners' | 'coupons' | 'shipping' | 'loyalty' | 'faq' | 'logs' | 'notifications' | 'operators' | 'payment' | 'security' | 'gifts' | 'delivery' | 'homepage') => void;
   analyticsRange: 'today' | '7d' | '30d' | 'month' | 'all' | 'custom';
   setAnalyticsRange: (range: 'today' | '7d' | '30d' | 'month' | 'all' | 'custom') => void;
@@ -59,7 +46,6 @@ interface KpiCardProps {
   suffix: string;
   icon: React.ComponentType<{ className?: string; strokeWidth?: number; style?: React.CSSProperties }>;
   color: string;
-  accentGradient: string;
   isDark: boolean;
   sparklineData?: number[];
   badgeText?: string;
@@ -75,13 +61,11 @@ interface KpiCardProps {
 }
 
 function KpiCard({
-  id,
   label,
   raw,
   suffix,
   icon: Icon,
   color,
-  accentGradient,
   isDark,
   sparklineData,
   badgeText,
@@ -165,28 +149,20 @@ function KpiCard({
 
   return (
     <div
-      className={`group relative flex flex-col justify-between p-5 rounded-2xl transition-all duration-300 overflow-hidden ${
-        isCustomizeMode ? 'ring-2 ring-emerald-500/50 animate-pulse' : ''
+      className={`group relative flex flex-col justify-between min-h-[154px] p-4 rounded-lg transition-all duration-200 overflow-hidden ${
+        isCustomizeMode ? 'ring-2 ring-emerald-500/50' : ''
       }`}
       style={{
         background: isDark
           ? 'hsl(224,25%,9%)'
           : '#ffffff',
         border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.07)',
-        boxShadow: isDark
-          ? '0 4px 20px rgba(0,0,0,0.35)'
-          : '0 2px 10px rgba(15,30,54,0.05)',
+        boxShadow: isDark ? 'none' : '0 1px 2px rgba(15,30,54,0.03)',
       }}
     >
-      {/* Background micro glow */}
-      <div
-        className="absolute -right-8 -top-8 w-28 h-28 rounded-full opacity-10 blur-2xl transition-opacity group-hover:opacity-25"
-        style={{ background: accentGradient }}
-      />
-
       {/* Customize overlay controls */}
       {isCustomizeMode && (
-        <div className="absolute top-2 right-2 z-30 flex items-center gap-1 p-1 rounded-xl bg-slate-950/80 backdrop-blur-md border border-slate-700 text-white">
+        <div className="absolute top-2 right-2 z-30 flex items-center gap-1 p-1 rounded-lg bg-slate-950/90 border border-slate-700 text-white">
           {!isFirst && (
             <button
               onClick={onMoveLeft}
@@ -227,7 +203,7 @@ function KpiCard({
         <div className="flex items-center gap-1.5 min-w-0">
           {isPinned && <Pin className="w-3 h-3 text-amber-500 shrink-0" />}
           <span
-            className="text-[10px] font-extrabold uppercase tracking-widest block truncate"
+            className="text-[10px] font-bold uppercase tracking-wider block truncate"
             style={{ color: isDark ? '#64748b' : '#94a3b8' }}
           >
             {label}
@@ -235,7 +211,7 @@ function KpiCard({
         </div>
         {!isCustomizeMode && (
           <div
-            className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110"
+            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105"
             style={{
               background: `${color}18`,
               border: `1px solid ${color}30`,
@@ -247,10 +223,10 @@ function KpiCard({
       </div>
 
       {/* Body: Kinetic number + Sparkline */}
-      <div className="flex items-end justify-between gap-2 mt-4 relative z-10">
+      <div className="flex items-end justify-between gap-2 mt-5 relative z-10">
         <div>
           <h3
-            className="text-2xl font-black font-mono tracking-tight leading-none"
+            className="text-[26px] font-black tracking-tight leading-none tabular-nums"
             style={{ color: isDark ? '#f1f5f9' : '#0f172a' }}
           >
             {value.toLocaleString('fr-FR')}
@@ -263,7 +239,7 @@ function KpiCard({
           {badgeText && (
             <div className="flex items-center gap-1 mt-1.5">
               <span
-                className="text-[9px] font-bold px-1.5 py-0.5 rounded-md inline-flex items-center gap-0.5 font-mono"
+                className="text-[9px] font-bold px-1.5 py-0.5 rounded inline-flex items-center gap-0.5"
                 style={{
                   background: badgePositive ? 'rgba(16,185,129,0.12)' : 'rgba(244,63,94,0.12)',
                   color: badgePositive ? '#10b981' : '#f43f5e',
@@ -285,7 +261,6 @@ function KpiCard({
 
 export const DashboardTab: React.FC<DashboardTabProps> = ({
   setActiveTab,
-  setCatalogStockFilter,
   setActiveSettingsSubTab,
   analyticsRange,
   setAnalyticsRange,
@@ -297,11 +272,8 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   const {
     orders,
     getDashboardStats,
-    cartRecoveryStatus,
     abandonedCarts,
-    auditLogs,
     adminTheme,
-    handleUpdateCartRecovery,
     currentUser,
     operatorsList,
   } = useAdmin();
@@ -310,8 +282,10 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   const isDark = adminTheme === 'dark';
 
   const [chartHoverIdx, setChartHoverIdx] = useState<number | null>(null);
-  const [selectedAbandonedCart, setSelectedAbandonedCart] = useState<AbandonedCart | null>(null);
   const [lowStockCount, setLowStockCount] = useState<number | null>(null);
+  const [atlasSync, setAtlasSync] = useState<{ lastRun: string; status: string; logs: string }>({ lastRun: '', status: '', logs: '' });
+  const [isRetryingAtlas, setIsRetryingAtlas] = useState(false);
+  const [atlasRetryMessage, setAtlasRetryMessage] = useState('');
   const lowStockThreshold = settings.lowStockThreshold ?? 5;
 
   React.useEffect(() => {
@@ -338,6 +312,44 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
     return () => controller.abort();
   }, [lowStockThreshold]);
 
+  const loadOperationalHealth = React.useCallback(async () => {
+    try {
+      const snippetsResponse = await fetch('/api/admin/snippets', { cache: 'no-store' });
+      const snippetsData = await snippetsResponse.json().catch(() => null);
+
+      if (snippetsResponse.ok && snippetsData?.success) {
+        const atlasSnippet = (snippetsData.snippets || []).find((snippet: any) => snippet.id === 'cron_1782133436889');
+        setAtlasSync(atlasSnippet ? {
+          lastRun: atlasSnippet.last_run || '',
+          status: atlasSnippet.last_run_status || '',
+          logs: atlasSnippet.last_run_logs || '',
+        } : { lastRun: '', status: '', logs: '' });
+      }
+    } catch (error) {
+      console.error('Failed to load supplier sync health:', error);
+    }
+  }, []);
+
+  const retryAtlasSync = async () => {
+    setIsRetryingAtlas(true);
+    setAtlasRetryMessage('');
+    try {
+      const response = await fetch('/api/admin/atlascom-sync', { method: 'POST' });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || 'Échec de la synchronisation.');
+      setAtlasRetryMessage(`${result.updated || 0} mis à jour, ${result.inserted || 0} nouveaux.`);
+      await loadOperationalHealth();
+    } catch (error: any) {
+      setAtlasRetryMessage(error.message || 'Échec de la synchronisation.');
+    } finally {
+      setIsRetryingAtlas(false);
+    }
+  };
+
+  React.useEffect(() => {
+    void loadOperationalHealth();
+  }, [loadOperationalHealth]);
+
   // Widget Layout Configuration
   const DEFAULT_WIDGETS = [
     { id: 'sales', visible: true, pinned: true },
@@ -359,7 +371,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
         if (Array.isArray(parsed) && parsed.length > 0) {
           setWidgetConfig(parsed);
         }
-      } catch (e) {
+      } catch {
         // Fallback
       }
     }
@@ -509,7 +521,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   const pendingOperators = operatorsList.filter((op: any) => !op.isActive);
 
   return (
-    <div className="space-y-6 admin-tab-enter pb-10">
+    <div className="space-y-5 admin-tab-enter pb-10 max-w-[1640px]">
 
       {/* ── Pending Approvals Banner (Owner only) ────────────────────────────── */}
       {currentUser?.role === 'owner' && pendingOperators.length > 0 && (
@@ -550,53 +562,50 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
         </div>
       )}
 
-      {/* ── Top Summary & Filter Banner ────────────────────────────────────────── */}
+      {/* ── Dashboard toolbar ─────────────────────────────────────────────────── */}
       <div
-        className="flex items-center justify-between gap-4 flex-wrap p-4 rounded-2xl"
+        className="flex items-center justify-between gap-5 flex-wrap px-1 py-1"
         style={{
-          background: isDark
-            ? 'linear-gradient(135deg, rgba(16,185,129,0.07) 0%, rgba(99,102,241,0.05) 100%)'
-            : 'linear-gradient(135deg, rgba(16,185,129,0.06) 0%, rgba(99,102,241,0.04) 100%)',
-          border: `1px solid ${isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.2)'}`,
+          borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(15,30,54,0.08)'}`,
         }}
       >
         <div className="flex items-center gap-3">
           <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+            className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
             style={{
-              background: 'linear-gradient(135deg, #10b981 0%, #6366f1 100%)',
-              boxShadow: '0 4px 14px rgba(16,185,129,0.35)',
+              background: 'rgba(16,185,129,0.12)',
+              border: '1px solid rgba(16,185,129,0.22)',
             }}
           >
-            <Sparkles className="w-5 h-5 text-white" />
+            <BarChart2 className="w-5 h-5 text-emerald-500" />
           </div>
           <div>
-            <p className="text-[13px] font-black" style={{ color: textPrimary }}>
-              Vue d'ensemble des opérations
+            <p className="text-[18px] font-black tracking-tight" style={{ color: textPrimary }}>
+              Tableau de bord
             </p>
-            <p className="text-[10.5px] font-medium" style={{ color: textMuted }}>
-              Suivi en temps réel des ventes, commandes et paniers abandonnés
+            <p className="text-[11px] font-medium" style={{ color: textMuted }}>
+              Performance commerciale et opérations en temps réel
             </p>
           </div>
         </div>
 
         {/* Date range filter pills */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-wrap">
           {(['today', '7d', '30d', 'month', 'all', 'custom'] as const).map(range => {
             const isActive = analyticsRange === range;
             return (
               <button
                 key={range}
                 onClick={() => setAnalyticsRange(range)}
-                className="px-3 py-1.5 rounded-xl text-[11px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-200"
+                className="px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-colors duration-200"
                 style={{
                   background: isActive
-                    ? 'rgba(16,185,129,0.15)'
+                    ? '#0f766e'
                     : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'),
                   border: isActive
-                    ? '1px solid rgba(16,185,129,0.3)'
+                    ? '1px solid #0f766e'
                     : `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}`,
-                  color: isActive ? '#10b981' : (isDark ? '#64748b' : '#94a3b8'),
+                  color: isActive ? '#ffffff' : (isDark ? '#94a3b8' : '#64748b'),
                 }}
               >
                 {range === 'today'
@@ -619,7 +628,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
       {/* Custom Date Range Picker */}
       {analyticsRange === 'custom' && (
         <div
-          className="flex flex-wrap items-center gap-3 rounded-2xl px-4 py-3"
+          className="flex flex-wrap items-center gap-3 rounded-lg px-4 py-3"
           style={{
             background: cardBg,
             border: borderStyle,
@@ -635,7 +644,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
               value={customDateFrom}
               max={customDateTo || new Date().toISOString().split('T')[0]}
               onChange={e => setCustomDateFrom(e.target.value)}
-              className="px-3 py-1.5 rounded-xl text-[11px] font-mono outline-none cursor-pointer"
+              className="px-3 py-1.5 rounded-lg text-[11px] font-mono outline-none cursor-pointer"
               style={{
                 background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
                 border: borderStyle,
@@ -651,7 +660,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
               min={customDateFrom}
               max={new Date().toISOString().split('T')[0]}
               onChange={e => setCustomDateTo(e.target.value)}
-              className="px-3 py-1.5 rounded-xl text-[11px] font-mono outline-none cursor-pointer"
+              className="px-3 py-1.5 rounded-lg text-[11px] font-mono outline-none cursor-pointer"
               style={{
                 background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
                 border: borderStyle,
@@ -662,7 +671,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
           {customDateFrom && (
             <button
               onClick={() => { setCustomDateFrom(''); setCustomDateTo(''); }}
-              className="text-[9px] font-black uppercase px-3 py-1.5 rounded-xl text-rose-500 cursor-pointer"
+              className="text-[9px] font-black uppercase px-3 py-1.5 rounded-lg text-rose-500 cursor-pointer"
               style={{
                 background: 'rgba(244,63,94,0.1)',
                 border: '1px solid rgba(244,63,94,0.2)',
@@ -674,8 +683,42 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
         </div>
       )}
 
+      {/* ── Supplier synchronization health ───────────────────────────────── */}
+      {(() => {
+        const changed = atlasSync.logs.match(/Updated\s+(\d+), inserted\s+(\d+)/i);
+        const duration = atlasSync.logs.match(/Duration\s+(\d+s)/i);
+        const hasRecentSuccess = atlasSync.status === 'success';
+        return (
+          <section className="rounded-lg px-4 py-3.5" style={{ background: cardBg, border: borderStyle, boxShadow: isDark ? 'none' : '0 1px 2px rgba(15,30,54,0.03)' }}>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${hasRecentSuccess ? 'bg-emerald-500/10' : 'bg-rose-500/10'}`}>
+                  <Workflow className={`h-4 w-4 ${hasRecentSuccess ? 'text-emerald-500' : 'text-rose-500'}`} />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-[12px] font-black" style={{ color: textPrimary }}>Santé Atlascom / WooCommerce</h2>
+                    <span className={`rounded-full px-2 py-0.5 text-[9px] font-black uppercase ${hasRecentSuccess ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-500'}`}>{hasRecentSuccess ? 'Synchronisé' : 'À vérifier'}</span>
+                  </div>
+                  <p className="mt-0.5 text-[10px] font-medium" style={{ color: textMuted }}>
+                    {atlasSync.lastRun ? `Dernière exécution : ${new Date(atlasSync.lastRun).toLocaleString('fr-FR')}` : 'Aucune exécution enregistrée'}
+                    {changed ? ` · ${Number(changed[1]) + Number(changed[2])} produits modifiés` : ''}
+                    {duration ? ` · ${duration[1]}` : ''}
+                  </p>
+                  {atlasRetryMessage && <p className={`mt-1 text-[10px] font-semibold ${atlasRetryMessage.includes('Échec') || atlasRetryMessage.includes('configuré') ? 'text-rose-500' : 'text-emerald-600'}`}>{atlasRetryMessage}</p>}
+                </div>
+              </div>
+              <button type="button" onClick={() => void retryAtlasSync()} disabled={isRetryingAtlas} className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-[10px] font-black text-white transition hover:bg-slate-700 disabled:cursor-wait disabled:opacity-60 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400">
+                <RefreshCw className={`h-3.5 w-3.5 ${isRetryingAtlas ? 'animate-spin' : ''}`} />
+                {isRetryingAtlas ? 'Synchronisation...' : 'Relancer'}
+              </button>
+            </div>
+          </section>
+        );
+      })()}
+
       {/* ── Executive KPI Cards Grid Header Controls ────────────────────────── */}
-      <div className="flex items-center justify-between gap-2 px-1">
+      <div className="flex items-center justify-between gap-2 pt-1">
         <div className="flex items-center gap-2">
           <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">
             Indicateurs Clés (KPIs)
@@ -690,7 +733,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
           <button
             type="button"
             onClick={() => setIsCustomizeMode(!isCustomizeMode)}
-            className={`px-3 py-1.5 rounded-xl text-[10.5px] font-bold transition flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-[10.5px] font-bold transition flex items-center gap-1.5 cursor-pointer ${
               isCustomizeMode
                 ? 'bg-emerald-500 text-slate-950 shadow-md font-extrabold'
                 : 'bg-slate-200/60 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700'
@@ -703,7 +746,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
             <button
               type="button"
               onClick={handleResetWidgets}
-              className="px-2.5 py-1.5 rounded-xl text-[10.5px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-rose-400 transition flex items-center gap-1 cursor-pointer"
+            className="px-2.5 py-1.5 rounded-lg text-[10.5px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-rose-400 transition flex items-center gap-1 cursor-pointer"
               title="Réinitialiser la disposition"
             >
               <RotateCcw className="w-3 h-3" />
@@ -715,7 +758,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
       {/* Hidden Widgets Drawer when in Customize Mode */}
       {isCustomizeMode && widgetConfig.some(w => !w.visible) && (
-        <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-slate-300 text-xs space-y-2">
+        <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-slate-300 text-xs space-y-2">
           <span className="text-[10px] font-extrabold uppercase text-amber-400 block">Widgets Masqués (Cliquez pour réafficher) :</span>
           <div className="flex items-center gap-2 flex-wrap">
             {widgetConfig.filter(w => !w.visible).map(w => (
@@ -733,7 +776,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
       )}
 
       {/* ── Dynamic KPI Cards Grid ────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-3">
         {(() => {
           const pendingCodAmount = orders
             .filter(o => o.courier && !o.reconciled && o.status !== 'Cancelled')
@@ -819,7 +862,6 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                 suffix={def.suffix}
                 icon={def.icon}
                 color={def.color}
-                accentGradient={def.accentGradient}
                 isDark={isDark}
                 sparklineData={def.sparklineData}
                 badgeText={def.badgeText}
@@ -839,22 +881,22 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
       </div>
 
       {/* ── Main Section: Sales Trend SVG Chart & Status Breakdown ─────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
 
         {/* Sales Trend SVG Area Chart (2 cols) */}
         <div
-          className="lg:col-span-2 rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden transition-all duration-300"
+          className="xl:col-span-2 rounded-lg p-5 flex flex-col justify-between relative overflow-hidden transition-all duration-200"
           style={{
             background: cardBg,
             border: borderStyle,
-            boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.35)' : '0 2px 10px rgba(15,30,54,0.05)',
+            boxShadow: isDark ? 'none' : '0 1px 2px rgba(15,30,54,0.03)',
           }}
         >
           {/* Card Header */}
           <div className="flex items-center justify-between gap-2 mb-4">
             <div className="flex items-center gap-2.5">
               <div
-                className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+                className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
                 style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)' }}
               >
                 <BarChart2 className="w-4 h-4 text-emerald-500" />
@@ -870,7 +912,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
             </div>
 
             <div
-              className="flex items-center gap-1.5 px-3 py-1 rounded-full font-mono text-[10.5px] font-bold"
+              className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10.5px] font-bold tabular-nums"
               style={{
                 background: 'rgba(16,185,129,0.1)',
                 border: '1px solid rgba(16,185,129,0.2)',
@@ -982,16 +1024,16 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
         {/* Order Status Breakdown (1 col) */}
         <div
-          className="rounded-2xl p-5 flex flex-col justify-between transition-all duration-300"
+          className="rounded-lg p-5 flex flex-col justify-between transition-all duration-200"
           style={{
             background: cardBg,
             border: borderStyle,
-            boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.35)' : '0 2px 10px rgba(15,30,54,0.05)',
+            boxShadow: isDark ? 'none' : '0 1px 2px rgba(15,30,54,0.03)',
           }}
         >
           <div className="flex items-center gap-2.5 mb-4">
             <div
-              className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
               style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)' }}
             >
               <ClipboardList className="w-4 h-4 text-indigo-500" />
@@ -1044,11 +1086,11 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                     </div>
                   </div>
                   <div
-                    className="h-1.5 rounded-full overflow-hidden"
+                      className="h-1.5 rounded overflow-hidden"
                     style={{ background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}
                   >
                     <div
-                      className="h-full rounded-full transition-all duration-500"
+                      className="h-full rounded transition-all duration-500"
                       style={{ width: `${pct}%`, background: cfg.color }}
                     />
                   </div>
@@ -1060,24 +1102,24 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
       </div>
 
       {/* ── Bottom Section: Recent Orders & Bestsellers ───────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
 
         {/* Recent Orders Card */}
         <div
-          className="lg:col-span-2 rounded-3xl p-6 flex flex-col justify-between transition-all duration-300 relative overflow-hidden"
+          className="xl:col-span-2 rounded-lg p-5 flex flex-col justify-between transition-all duration-200 relative overflow-hidden"
           style={{
             background: cardBg,
             border: borderStyle,
-            boxShadow: isDark ? '0 4px 24px rgba(0,0,0,0.35)' : '0 4px 20px rgba(15,30,54,0.04)',
+            boxShadow: isDark ? 'none' : '0 1px 2px rgba(15,30,54,0.03)',
           }}
         >
           {/* Header */}
           <div className="flex items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
               <div
-                className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-sm transition-transform duration-300 hover:scale-105"
+                className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-200 hover:scale-105"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(99,102,241,0.12) 100%)',
+                  background: 'rgba(59,130,246,0.11)',
                   border: '1px solid rgba(59,130,246,0.25)',
                 }}
               >
@@ -1095,7 +1137,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
             <button
               onClick={() => setActiveTab('orders')}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-[11px] font-extrabold transition-all duration-200 cursor-pointer active:scale-95"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[11px] font-extrabold transition-all duration-200 cursor-pointer active:scale-95"
               style={{
                 background: isDark ? 'rgba(16,185,129,0.12)' : 'rgba(16,185,129,0.08)',
                 border: '1px solid rgba(16,185,129,0.25)',
@@ -1108,11 +1150,11 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
           </div>
 
           {/* Orders Feed List */}
-          <div className="space-y-2.5">
+          <div className="overflow-x-auto">
             {/* Column Headers */}
             <div
-              className="grid grid-cols-12 gap-3 px-3.5 py-2 text-[9.5px] font-black uppercase tracking-widest"
-              style={{ color: textMuted }}
+              className="grid min-w-[620px] grid-cols-12 gap-3 px-3 py-2 text-[9.5px] font-black uppercase tracking-widest border-b"
+              style={{ color: textMuted, borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,30,54,0.08)' }}
             >
               <div className="col-span-5">Client</div>
               <div className="col-span-3">Statut</div>
@@ -1182,16 +1224,16 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                 <div
                   key={order.order_id || idx}
                   onClick={() => setActiveTab('orders')}
-                  className="group grid grid-cols-12 gap-3 items-center px-3.5 py-3 rounded-2xl transition-all duration-200 cursor-pointer"
+                  className="group grid min-w-[620px] grid-cols-12 gap-3 items-center px-3 py-3 border-b transition-colors duration-200 cursor-pointer"
                   style={{
-                    background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.015)',
-                    border: `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}`,
+                    background: 'transparent',
+                    borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(15,30,54,0.06)',
                   }}
                 >
                   {/* Customer Info */}
                   <div className="col-span-5 flex items-center gap-3 min-w-0">
                     <div
-                      className="w-8 h-8 rounded-xl flex items-center justify-center font-black text-white text-[10px] shrink-0 shadow-sm transition-transform duration-200 group-hover:scale-105"
+                      className="w-8 h-8 rounded-full flex items-center justify-center font-black text-white text-[10px] shrink-0 transition-transform duration-200 group-hover:scale-105"
                       style={{ background: avatarBg }}
                     >
                       {order.customer_name ? order.customer_name.slice(0, 2).toUpperCase() : 'CL'}
@@ -1209,7 +1251,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                   {/* Status Badge */}
                   <div className="col-span-3">
                     <span
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold"
+                      className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-extrabold"
                       style={{
                         background: pill.bg,
                         color: pill.text,
@@ -1231,7 +1273,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                   {/* Date */}
                   <div className="col-span-2 text-right">
                     <span
-                      className="inline-block px-2 py-0.5 rounded-md text-[9.5px] font-mono font-bold"
+                      className="inline-block px-2 py-0.5 rounded text-[9.5px] font-mono font-bold"
                       style={{
                         background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
                         color: textMuted,
@@ -1254,17 +1296,17 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
         {/* Top 5 Bestsellers (1 col) */}
         <div
-          className="rounded-2xl p-5 flex flex-col justify-between transition-all duration-300"
+          className="rounded-lg p-5 flex flex-col justify-between transition-all duration-200"
           style={{
             background: cardBg,
             border: borderStyle,
-            boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.35)' : '0 2px 10px rgba(15,30,54,0.05)',
+            boxShadow: isDark ? 'none' : '0 1px 2px rgba(15,30,54,0.03)',
           }}
         >
           {/* Header */}
           <div className="flex items-center gap-2.5 mb-4">
             <div
-              className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
               style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)' }}
             >
               <Package className="w-4 h-4 text-amber-500" />
@@ -1344,17 +1386,17 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
       {/* ── Abandoned Carts Recovery Card ────────────────────────────────────── */}
       {abandonedCarts && abandonedCarts.length > 0 && (
         <div
-          className="rounded-2xl p-5 transition-all duration-300 space-y-4"
+          className="rounded-lg p-5 transition-all duration-200 space-y-4"
           style={{
             background: cardBg,
             border: borderStyle,
-            boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.35)' : '0 2px 10px rgba(15,30,54,0.05)',
+            boxShadow: isDark ? 'none' : '0 1px 2px rgba(15,30,54,0.03)',
           }}
         >
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-2.5">
               <div
-                className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+                className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
                 style={{ background: 'rgba(244,63,94,0.12)', border: '1px solid rgba(244,63,94,0.25)' }}
               >
                 <ClipboardList className="w-4 h-4 text-rose-500" />

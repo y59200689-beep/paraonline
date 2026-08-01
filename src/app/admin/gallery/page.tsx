@@ -481,6 +481,7 @@ export default function GalleryPage() {
   const [pendingMap, setPendingMap] = useState<Map<string, PendingUpload>>(new Map());
   const [uploading, setUploading] = useState(false);
   const [toast, setToast] = useState<ToastState | null>(null);
+  const [lastHomepageRefresh, setLastHomepageRefresh] = useState<string | null>(null);
   const [search, setSearch] = useState('');
 
   // Sync active group from URL query or localStorage on mount
@@ -618,9 +619,11 @@ export default function GalleryPage() {
     setUploading(false);
 
     if (failCount === 0) {
+      const refreshedAt = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      setLastHomepageRefresh(refreshedAt);
       showToast('success', successCount === 1
-        ? 'Image remplacée avec succès.'
-        : `${successCount} images remplacées avec succès.`);
+        ? 'Image remplacée et cache de la page d’accueil actualisé.'
+        : `${successCount} images remplacées et cache de la page d’accueil actualisé.`);
     } else if (successCount === 0) {
       showToast('error', failureMessages[0] || `Échec du remplacement de ${failCount} image${failCount > 1 ? 's' : ''}.`);
     } else {
@@ -679,6 +682,19 @@ export default function GalleryPage() {
                 Cliquez sur une image pour la remplacer · Confirmez avant d'envoyer
               </p>
             </div>
+          </div>
+
+          <div
+            className="flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-bold"
+            style={{
+              background: lastHomepageRefresh ? (isDark ? 'rgba(16,185,129,0.10)' : 'rgba(16,185,129,0.08)') : (isDark ? 'rgba(255,255,255,0.035)' : 'rgba(15,23,42,0.035)'),
+              color: lastHomepageRefresh ? (isDark ? '#6ee7b7' : '#047857') : textMuted,
+              border: `1px solid ${lastHomepageRefresh ? (isDark ? 'rgba(16,185,129,0.22)' : 'rgba(16,185,129,0.2)') : border}`,
+            }}
+            aria-live="polite"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${uploading ? 'animate-spin' : ''}`} />
+            {uploading ? 'Publication en cours...' : lastHomepageRefresh ? `Accueil actualisé à ${lastHomepageRefresh}` : 'Accueil synchronisé après publication'}
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">

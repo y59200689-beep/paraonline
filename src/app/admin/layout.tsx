@@ -38,6 +38,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
     setIsMobileDrawerOpen,
     isSearchOpen,
     setIsSearchOpen,
+    setSpotlightTarget,
     setOrdersSubTab,
     ordersSubTab,
     setCrmSubTab,
@@ -136,7 +137,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
       />
 
       {/* 2. Main content container */}
-      <section className="flex-1 min-w-0 px-6 py-6 md:px-9 md:py-8 space-y-7 overflow-y-auto max-h-screen relative z-10 transition-colors duration-300">
+      <section className="admin-workspace flex-1 min-w-0 px-5 py-5 md:px-8 md:py-7 space-y-5 overflow-y-auto max-h-screen relative z-10 transition-colors duration-300">
         
         {/* Loading Skeleton Screen */}
         {isDataLoading && (
@@ -238,6 +239,8 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
                     : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                 }`}
                 title="Ouvrir le menu"
+                aria-label="Ouvrir la navigation"
+                aria-expanded={isMobileDrawerOpen}
               >
                 <Menu className="w-4 h-4" />
               </button>
@@ -472,6 +475,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
         setIsNewProductModalOpen={setIsNewProductModalOpen}
         setSelectedOrder={setSelectedOrder}
         setProductForm={setProductForm}
+        setSpotlightTarget={setSpotlightTarget}
         handleOpenCrmCustomer={handleOpenCrmCustomer}
         setLoyaltySubTab={setLoyaltySubTab}
       />

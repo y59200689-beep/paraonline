@@ -49,10 +49,16 @@ async function upsertInBatches(rows: any[]) {
 }
 
 async function runAtlascomSync() {
-  const wsdlUrl = 'https://paraoficinal.ruijieddnsa.com/WebServiceAtlasCom/atlascomservice.asmx';
-  const codeEmploye = '000051';
-  const password = '000051';
+  const startedAt = Date.now();
+  const wsdlUrl = process.env.ATLASCOM_WSDL_URL
+    || 'https://paraoficinal.ruijieddnsa.com/WebServiceAtlasCom/atlascomservice.asmx';
+  const codeEmploye = process.env.ATLASCOM_EMPLOYEE_CODE;
+  const password = process.env.ATLASCOM_PASSWORD;
   const logs: string[] = [];
+
+  if (!codeEmploye || !password) {
+    throw new Error('Atlascom credentials are not configured.');
+  }
 
   logs.push('Starting Atlascom catalog synchronization.');
 
@@ -203,6 +209,7 @@ async function runAtlascomSync() {
 
   const processed = await upsertInBatches(rowsToUpsert);
   logs.push(`Sync complete. Processed ${processed} rows. Updated ${updated}, inserted ${inserted}.`);
+  logs.push(`Duration ${Math.max(1, Math.round((Date.now() - startedAt) / 1000))}s.`);
 
   await supabase
     .from('code_snippets')
@@ -226,7 +233,7 @@ export async function GET(request: Request) {
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
 
-    if (process.env.NODE_ENV === 'production' && cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    if (process.env.NODE_ENV === 'production' && (!cronSecret || authHeader !== `Bearer ${cronSecret}`)) {
       return NextResponse.json({ success: false, error: 'Non autorisé.' }, { status: 401 });
     }
 

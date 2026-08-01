@@ -562,27 +562,38 @@ export default function SettingsTab() {
   return (
     <div className="flex flex-col gap-6 animate-slide-up">
       
-      {/* Settings submenus (Horizontal Tab Bar) */}
-      <nav className={`p-2 rounded-2xl border flex flex-row overflow-x-auto gap-2 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/40 border-slate-900'}`}>
+      {/* Settings submenus: organised by operational responsibility. */}
+      <div className={`rounded-2xl border overflow-hidden ${adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-sm' : 'bg-slate-900/40 border-slate-900'}`}>
+        <div className={`px-4 py-3 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-1 ${adminTheme === 'light' ? 'border-slate-100' : 'border-slate-800'}`}>
+          <div>
+            <p className={`text-[11px] font-black uppercase tracking-[0.14em] ${adminTheme === 'light' ? 'text-slate-800' : 'text-white'}`}>Configuration de la boutique</p>
+            <p className="mt-0.5 text-[10.5px] text-slate-500">Réglez le commerce, l&apos;expérience client, les intégrations et les accès par domaine.</p>
+          </div>
+          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Les modifications sont sauvegardées par section</span>
+        </div>
+      <nav className="p-2 flex flex-row overflow-x-auto gap-2 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" aria-label="Sections des paramètres">
         {[
-          { id: 'general', label: 'Paramètres Généraux', icon: Sliders },
-          { id: 'homepage', label: 'Mise en Page de l\'Accueil', icon: Layout },
-          { id: 'banners', label: 'Bannières Diaporama', icon: Sliders },
-          { id: 'coupons', label: 'Codes Promo', icon: Percent },
-          { id: 'shipping', label: 'Expéditions / Livreurs', icon: Truck },
-          { id: 'payment', label: 'Configuration Paiements', icon: CreditCard },
-          { id: 'loyalty', label: 'Programme Fidélité', icon: Star },
-          { id: 'faq', label: 'Gestion de la FAQ', icon: HelpCircle },
-          { id: 'logs', label: 'Logs d\'Audit', icon: FileText },
-          { id: 'notifications', label: 'Notifications WhatsApp', icon: Bell },
-          { id: 'security', label: 'Sécurité & 2FA', icon: Lock },
-          ...(currentUser?.role === 'owner' ? [{ id: 'operators', label: 'Gestion des Opérateurs', icon: Users }] : [])
-        ].map(sub => {
+          { id: 'general', label: 'Identité', icon: Sliders, group: 'Boutique' },
+          { id: 'homepage', label: 'Accueil', icon: Layout, group: 'Boutique' },
+          { id: 'banners', label: 'Bannières', icon: Sliders, group: 'Boutique' },
+          { id: 'coupons', label: 'Promotions', icon: Percent, group: 'Commerce' },
+          { id: 'shipping', label: 'Expédition', icon: Truck, group: 'Commerce' },
+          { id: 'payment', label: 'Paiements', icon: CreditCard, group: 'Commerce' },
+          { id: 'loyalty', label: 'Fidélité', icon: Star, group: 'Client' },
+          { id: 'faq', label: 'FAQ', icon: HelpCircle, group: 'Client' },
+          { id: 'notifications', label: 'WhatsApp', icon: Bell, group: 'Client' },
+          { id: 'logs', label: 'Journal', icon: FileText, group: 'Contrôle' },
+          { id: 'security', label: 'Sécurité', icon: Lock, group: 'Contrôle' },
+          ...(currentUser?.role === 'owner' ? [{ id: 'operators', label: 'Équipe', icon: Users, group: 'Contrôle' }] : [])
+        ].map((sub, index, sections) => {
           const Icon = sub.icon;
           const isSubActive = activeSettingsSubTab === sub.id;
           return (
+            <React.Fragment key={sub.id}>
+            {(index === 0 || sections[index - 1].group !== sub.group) && (
+              <span className={`self-center shrink-0 pl-2 text-[9px] font-black uppercase tracking-[0.14em] ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-600'}`}>{sub.group}</span>
+            )}
             <button
-              key={sub.id}
               onClick={() => {
                 setActiveSettingsSubTab(sub.id as any);
                 setIsAddingCoupon(false);
@@ -603,9 +614,11 @@ export default function SettingsTab() {
               <Icon className={`w-4 h-4 shrink-0 transition ${isSubActive ? (adminTheme === 'light' ? 'text-emerald-600' : 'text-emerald-400') : 'text-slate-500'}`} />
               <span>{sub.label}</span>
             </button>
+            </React.Fragment>
           );
         })}
       </nav>
+      </div>
 
       {/* Sub-tab main workspace */}
       <div className="w-full">
