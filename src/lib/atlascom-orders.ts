@@ -26,6 +26,7 @@ function config() {
     employee: process.env.ATLASCOM_EMPLOYEE_CODE || '', password: process.env.ATLASCOM_PASSWORD || '',
     agency: process.env.ATLASCOM_AGENCY_CODE || '000052', commercial: process.env.ATLASCOM_COMMERCIAL_CODE || '000052',
     customer: process.env.ATLASCOM_WEB_CUSTOMER_CODE || '6666',
+    tier: process.env.ATLASCOM_TIER_CODE || '',
     taxRate: Math.max(0, Number(process.env.ATLASCOM_TAX_RATE || 0)),
   };
 }
@@ -78,7 +79,8 @@ function soapForOrder(order: OrderRecord, items: Awaited<ReturnType<typeof resol
   const when = order.created_at ? new Date(order.created_at) : new Date(); const date = Number.isNaN(when.getTime()) ? new Date() : when;
   const orderCode = atlascomOrderCode(order.order_id);
   const syncCode = `${orderCode}${Date.now()}`;
-  const header = `<Commande><Livreur></Livreur><Annule>false</Annule><Livre>false</Livre><Partiel>false</Partiel><codeCommande>${orderCode}</codeCommande><codeTiers>${xml(current.customer)}</codeTiers><codeClient>${xml(current.customer)}</codeClient><dateC>${date.toLocaleDateString('en-GB')}</dateC><date>${date.toISOString()}</date><codeModeP></codeModeP><dateEchu></dateEchu><totalHt>${money(totalHt)}</totalHt><totalTtc>${money(totalTtc)}</totalTtc><totalTva>${money(totalTtc - totalHt)}</totalTva><observation></observation><remarqueDev></remarqueDev><codedeSynchcronisation>${syncCode}</codedeSynchcronisation><remise>0</remise><mtremise>0</mtremise><codeCommerciale>${xml(current.commercial)}</codeCommerciale></Commande>`;
+  const tier = current.tier ? `<codeTiers>${xml(current.tier)}</codeTiers>` : '';
+  const header = `<Commande><Livreur></Livreur><Annule>false</Annule><Livre>false</Livre><Partiel>false</Partiel><codeCommande>${orderCode}</codeCommande>${tier}<codeClient>${xml(current.customer)}</codeClient><dateC>${date.toLocaleDateString('en-GB')}</dateC><date>${date.toISOString()}</date><codeModeP></codeModeP><dateEchu></dateEchu><totalHt>${money(totalHt)}</totalHt><totalTtc>${money(totalTtc)}</totalTtc><totalTva>${money(totalTtc - totalHt)}</totalTva><observation></observation><remarqueDev></remarqueDev><codedeSynchcronisation>${syncCode}</codedeSynchcronisation><remise>0</remise><mtremise>0</mtremise><codeCommerciale>${Number(current.commercial)}</codeCommerciale></Commande>`;
   const lines = items.map((item, index) => {
     const ttc = Number(item.price || 0); const ht = current.taxRate ? ttc / (1 + current.taxRate / 100) : ttc;
     return `<LigneCommande><Tva>${money(current.taxRate)}</Tva><PlafondRM>0</PlafondRM><QteLivre>0</QteLivre><codeLCommande>${index + 1}</codeLCommande><codeArticle>${xml(item.sku)}</codeArticle><qte>${money(item.quantity)}</qte><prixU>${money(ht)}</prixU><prixTTTC>${money(ttc)}</prixTTTC><codeCommande>${orderCode}</codeCommande><nbrPiece>0</nbrPiece><qteCar>0</qteCar><codedeSynchcronisation>${syncCode}</codedeSynchcronisation><puttc>${money(ttc)}</puttc><ptttc>${money(ttc * item.quantity)}</ptttc><ptht>${money(ht * item.quantity)}</ptht><puht>${money(ht)}</puht><remise>0</remise><qteGratuit>0</qteGratuit><codeTva>0</codeTva><ordre>${index + 1}</ordre><codeUnite>0</codeUnite><libelle>${xml(item.title)}</libelle><TypePrix></TypePrix><typeLigne></typeLigne><codesup></codesup><qteG>0</qteG></LigneCommande>`;
@@ -97,19 +99,24 @@ export async function processAtlascomOrderExport(orderId: string) {
   }
   const attempt = Number(job.attempt_count || 0) + 1;
   await updateJob(orderId, { status: 'sending', attempt_count: attempt, last_error: null });
+  let responseSummary = '';
   try {
     const { data: order, error: orderError } = await supabase.from('orders').select('*').eq('order_id', orderId).maybeSingle();
     if (orderError || !order) throw new Error(orderError?.message || 'Commande introuvable.');
     const typedOrder = order as OrderRecord; const items = await resolveItems(typedOrder); const token = await authenticate(current);
     const response = await fetch(current.url, { method: 'POST', headers: { 'Content-Type': 'text/xml; charset=utf-8', SOAPAction: 'http://tempuri.org/setListeCommandes' }, body: soapForOrder(typedOrder, items, token) });
     if (!response.ok) throw new Error(`Envoi Atlascom refusé (HTTP ${response.status}).`);
-    const remoteOrderId = tag(await response.text(), 'setListeCommandesResult');
-    if (!remoteOrderId) throw new Error('Atlascom a retourné une réponse vide pour la commande.');
+    const responseXml = await response.text();
+    const fault = tag(responseXml, 'faultstring') || tag(responseXml, 'Text');
+    if (fault) throw new Error(`Atlascom a refusé la commande : ${fault}`);
+    const remoteOrderId = tag(responseXml, 'setListeCommandesResult');
+    responseSummary = remoteOrderId || (responseXml.includes('setListeCommandesResult') ? 'Résultat Atlascom vide (HTTP 200).' : 'Réponse Atlascom sans résultat identifiable (HTTP 200).');
+    if (!remoteOrderId) throw new Error('Atlascom n’a retourné aucun identifiant de commande. Vérifiez que le client 6666, le commercial 52 et les références produit existent et sont autorisés dans Atlascom.');
     await updateJob(orderId, { status: 'sent', remote_order_id: remoteOrderId, response_summary: remoteOrderId.slice(0, 500), last_error: null, next_retry_at: null, sent_at: new Date().toISOString() });
     await note(orderId, `Commande synchronisée avec Atlascom. ID distant : ${remoteOrderId}`); return { status: 'sent', remoteOrderId };
   } catch (caught: any) {
     const message = caught?.message || 'Erreur inconnue lors de l’envoi Atlascom.';
-    await updateJob(orderId, { status: 'failed', last_error: message.slice(0, 1000), next_retry_at: new Date(Date.now() + RETRY_DELAY_MS).toISOString() });
+    await updateJob(orderId, { status: 'failed', last_error: message.slice(0, 1000), response_summary: responseSummary || null, next_retry_at: new Date(Date.now() + RETRY_DELAY_MS).toISOString() });
     await note(orderId, `Échec de la synchronisation Atlascom (tentative ${attempt}) : ${message}`); return { status: 'failed', error: message };
   }
 }

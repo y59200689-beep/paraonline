@@ -179,6 +179,7 @@ export default function OrdersTab() {
     shippingStats,
     adminTheme,
     currentUser,
+    isDataLoading,
     loadOrders,
     handleUpdateOrderStatus,
     handleBulkUpdateOrderStatus,
@@ -275,6 +276,67 @@ export default function OrdersTab() {
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderPresentation, setOrderPresentation] = useState<'table' | 'board'>('table');
+  const hasRestoredOrderFromUrl = useRef(false);
+  const hasOpenedOrderDetail = useRef(false);
+
+  // Keep the detail view addressable so a browser refresh restores the same order.
+  useEffect(() => {
+    if (hasRestoredOrderFromUrl.current || isDataLoading || orders.length === 0) return;
+
+    const orderId = new URLSearchParams(window.location.search).get('order');
+    if (!orderId) {
+      hasRestoredOrderFromUrl.current = true;
+      return;
+    }
+
+    const order = orders.find(item => item.order_id === orderId);
+    if (!order) return;
+
+    hasRestoredOrderFromUrl.current = true;
+    hasOpenedOrderDetail.current = true;
+    setOrdersSubTab('list');
+    setSelectedOrder(order);
+  }, [isDataLoading, orders, setOrdersSubTab]);
+
+  useEffect(() => {
+    const selectedOrderId = selectedOrder?.order_id;
+    const url = new URL(window.location.href);
+    const orderIdInUrl = url.searchParams.get('order');
+
+    if (selectedOrderId) {
+      hasOpenedOrderDetail.current = true;
+      if (orderIdInUrl !== selectedOrderId) {
+        url.searchParams.set('order', selectedOrderId);
+        window.history.pushState({}, '', url);
+      }
+      return;
+    }
+
+    if (hasOpenedOrderDetail.current && orderIdInUrl) {
+      url.searchParams.delete('order');
+      window.history.pushState({}, '', url);
+    }
+  }, [selectedOrder?.order_id]);
+
+  useEffect(() => {
+    const restoreOrderFromHistory = () => {
+      const orderId = new URLSearchParams(window.location.search).get('order');
+      if (!orderId) {
+        setSelectedOrder(null);
+        return;
+      }
+
+      const order = orders.find(item => item.order_id === orderId);
+      if (order) {
+        hasOpenedOrderDetail.current = true;
+        setOrdersSubTab('list');
+        setSelectedOrder(order);
+      }
+    };
+
+    window.addEventListener('popstate', restoreOrderFromHistory);
+    return () => window.removeEventListener('popstate', restoreOrderFromHistory);
+  }, [orders, setOrdersSubTab]);
 
   const selectedOrderId = selectedOrder?.order_id;
   useEffect(() => {
@@ -2412,76 +2474,80 @@ export default function OrdersTab() {
               return (
                 <section
                   aria-labelledby="atlascom-sync-title"
-                  className="rounded-2xl p-6 space-y-4 transition-all duration-300"
+                  className="rounded-2xl p-5 transition-colors duration-200"
                   style={{
                     background: cardBg,
                     border: borderStyle,
                     boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.35)' : '0 2px 10px rgba(15,30,54,0.04)',
                   }}
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-center gap-3 min-w-0">
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3">
                       <div
-                        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                        className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
                         style={{ background: currentStatus.background, color: currentStatus.color, border: `1px solid ${currentStatus.border}` }}
                       >
-                        <StatusIcon className={`w-4 h-4 ${status === 'sending' || isRetryingAtlascom ? 'animate-spin' : ''}`} />
+                        <StatusIcon className={`h-4 w-4 ${status === 'sending' || isRetryingAtlascom ? 'animate-spin' : ''}`} />
                       </div>
-                      <div className="min-w-0">
-                        <h4 id="atlascom-sync-title" className="text-xs font-black uppercase tracking-wider" style={{ color: textPrimary }}>
+                      <div className="min-w-0 flex-1 pt-0.5">
+                        <h4 id="atlascom-sync-title" className="text-[12px] font-black uppercase leading-5 tracking-[0.08em]" style={{ color: textPrimary }}>
                           Synchronisation Atlascom
                         </h4>
-                        <p className="text-[10.5px] mt-0.5" style={{ color: textMuted }}>
-                          Export ERP de la commande
+                        <p className="mt-0.5 text-[11px] leading-4" style={{ color: textMuted }}>
+                          Transmission de la commande vers l’ERP
                         </p>
                       </div>
                     </div>
+
                     <span
-                      className="shrink-0 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9.5px] font-black"
+                      className="inline-flex max-w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-[10px] font-bold leading-4"
                       style={{ background: currentStatus.background, color: currentStatus.color, border: `1px solid ${currentStatus.border}` }}
                     >
-                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: currentStatus.color }} />
-                      {currentStatus.label}
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: currentStatus.color }} />
+                      <span>{currentStatus.label}</span>
                     </span>
                   </div>
 
-                  <div
-                    className="rounded-xl p-3.5 text-xs"
-                    style={{ background: currentStatus.background, color: currentStatus.color, border: `1px solid ${currentStatus.border}` }}
-                  >
-                    <p className="text-[9px] uppercase font-black tracking-wider opacity-75 mb-1">Dernière note Atlascom</p>
-                    <p className="font-semibold leading-relaxed">{noteText}</p>
+                  <div className="mt-5 border-t pt-4" style={{ borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,30,54,0.08)' }}>
+                    <p className="text-[9px] font-black uppercase tracking-[0.12em]" style={{ color: textMuted }}>Dernière note</p>
+                    <p className="mt-2 break-words text-[11.5px] font-semibold leading-[1.65]" style={{ color: currentStatus.color }}>
+                      {noteText}
+                    </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[10.5px]">
-                    <div>
-                      <span className="block text-[8.5px] uppercase font-black tracking-wider" style={{ color: textMuted }}>Tentatives</span>
-                      <span className="font-mono font-bold" style={{ color: textPrimary }}>{exportJob?.attempt_count || 0}</span>
+                  <div
+                    className="mt-5 grid grid-cols-2 border-y py-3"
+                    style={{ borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,30,54,0.08)' }}
+                  >
+                    <div className="min-w-0 pr-3">
+                      <span className="block text-[8.5px] font-black uppercase tracking-[0.1em]" style={{ color: textMuted }}>Tentatives</span>
+                      <span className="mt-1 block font-mono text-[11px] font-bold" style={{ color: textPrimary }}>{exportJob?.attempt_count || 0}</span>
                     </div>
-                    <div className="text-right">
-                      <span className="block text-[8.5px] uppercase font-black tracking-wider" style={{ color: textMuted }}>Dernière activité</span>
-                      <span className="font-mono font-bold" style={{ color: textPrimary }}>
+                    <div className="min-w-0 border-l pl-3 text-right" style={{ borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,30,54,0.08)' }}>
+                      <span className="block text-[8.5px] font-black uppercase tracking-[0.1em]" style={{ color: textMuted }}>Dernière activité</span>
+                      <span className="mt-1 block font-mono text-[10.5px] font-bold leading-4" style={{ color: textPrimary }}>
                         {lastActivityAt ? new Date(lastActivityAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }) : 'Aucune'}
                       </span>
                     </div>
-                    {exportJob?.remote_order_id && (
-                      <div className="col-span-2 pt-2 border-t" style={{ borderColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(15,30,54,0.07)' }}>
-                        <span className="block text-[8.5px] uppercase font-black tracking-wider" style={{ color: textMuted }}>Identifiant Atlascom</span>
-                        <span className="font-mono font-black text-emerald-600 dark:text-emerald-400">{exportJob.remote_order_id}</span>
-                      </div>
-                    )}
                   </div>
+
+                  {exportJob?.remote_order_id && (
+                    <div className="mt-3 flex items-center justify-between gap-3 text-[10px]">
+                      <span className="font-bold" style={{ color: textMuted }}>Identifiant Atlascom</span>
+                      <span className="min-w-0 truncate font-mono font-black text-emerald-600 dark:text-emerald-400">{exportJob.remote_order_id}</span>
+                    </div>
+                  )}
 
                   {canRetry && (
                     <button
                       type="button"
                       onClick={handleRetryAtlascom}
                       disabled={isRetryingAtlascom}
-                      className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black text-white transition duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                      className="mt-4 flex min-h-10 w-full items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-[11px] font-black text-white transition duration-200 hover:brightness-95 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
                       style={{ background: status === 'failed' ? '#be123c' : '#1d4ed8' }}
                     >
-                      <RefreshCw className={`w-3.5 h-3.5 ${isRetryingAtlascom ? 'animate-spin' : ''}`} />
-                      {isRetryingAtlascom ? 'Synchronisation en cours...' : 'Réessayer la synchronisation'}
+                      <RefreshCw className={`h-3.5 w-3.5 shrink-0 ${isRetryingAtlascom ? 'animate-spin' : ''}`} />
+                      <span>{isRetryingAtlascom ? 'Synchronisation en cours...' : 'Réessayer la synchronisation'}</span>
                     </button>
                   )}
                 </section>
