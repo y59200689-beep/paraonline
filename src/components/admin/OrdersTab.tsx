@@ -56,12 +56,29 @@ const ORDER_STATUS_OPTIONS = [
 
 function OrderStatusPicker({ value, onChange, isDark = false, compact = false }: { value: string; onChange: (value: string) => void; isDark?: boolean; compact?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
+  const triggerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, placement: 'bottom' as 'top' | 'bottom' });
   const current = ORDER_STATUS_OPTIONS.find(option => option.value === value) || ORDER_STATUS_OPTIONS[0];
+
+  const positionMenu = useCallback(() => {
+    const rect = triggerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const menuWidth = 280;
+    const estimatedHeight = 350;
+    const viewportPadding = 12;
+    const openAbove = window.innerHeight - rect.bottom < estimatedHeight && rect.top > estimatedHeight;
+    setMenuPosition({
+      top: openAbove ? Math.max(viewportPadding, rect.top - estimatedHeight - 8) : Math.min(window.innerHeight - estimatedHeight - viewportPadding, rect.bottom + 8),
+      left: Math.max(viewportPadding, Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - viewportPadding)),
+      placement: openAbove ? 'top' : 'bottom',
+    });
+  }, []);
 
   useEffect(() => {
     const closeOnOutsideClick = (event: MouseEvent) => {
-      if (!menuRef.current?.contains(event.target as Node)) setIsOpen(false);
+      const target = event.target as Node;
+      if (!triggerRef.current?.contains(target) && !menuRef.current?.contains(target)) setIsOpen(false);
     };
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setIsOpen(false);
@@ -74,11 +91,25 @@ function OrderStatusPicker({ value, onChange, isDark = false, compact = false }:
     };
   }, []);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    positionMenu();
+    window.addEventListener('resize', positionMenu);
+    window.addEventListener('scroll', positionMenu, true);
+    return () => {
+      window.removeEventListener('resize', positionMenu);
+      window.removeEventListener('scroll', positionMenu, true);
+    };
+  }, [isOpen, positionMenu]);
+
   return (
-    <div ref={menuRef} className="relative inline-flex" onClick={(event) => event.stopPropagation()}>
+    <div ref={triggerRef} className="inline-flex" onClick={(event) => event.stopPropagation()}>
       <button
         type="button"
-        onClick={() => setIsOpen(open => !open)}
+        onClick={() => {
+          if (!isOpen) positionMenu();
+          setIsOpen(open => !open);
+        }}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         className={`inline-flex items-center gap-2 rounded-lg border font-extrabold transition hover:brightness-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/40 ${compact ? 'px-2.5 py-1 text-[10px]' : 'px-3 py-2 text-[11px]'}`}
@@ -89,38 +120,49 @@ function OrderStatusPicker({ value, onChange, isDark = false, compact = false }:
         <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
-      {isOpen && (
+      {isOpen && typeof document !== 'undefined' && createPortal(
         <div
+          ref={menuRef}
           role="listbox"
           aria-label="Choisir le statut de la commande"
-          className="absolute right-0 top-[calc(100%+8px)] z-50 w-64 overflow-hidden rounded-xl border p-1.5 shadow-[0_18px_45px_rgba(15,30,54,0.18)]"
-          style={{ background: isDark ? 'hsl(224,25%,10%)' : '#fdfefe', borderColor: isDark ? 'rgba(255,255,255,0.09)' : 'rgba(15,30,54,0.12)' }}
+          className="fixed z-[100] w-[280px] overflow-hidden rounded-2xl border p-2 shadow-[0_24px_60px_rgba(15,30,54,0.22)]"
+          style={{ top: menuPosition.top, left: menuPosition.left, background: isDark ? 'hsl(224,25%,10%)' : '#fdfefe', borderColor: isDark ? 'rgba(255,255,255,0.09)' : 'rgba(15,30,54,0.14)' }}
         >
-          <p className="px-2.5 pb-1.5 pt-1 text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">Mettre à jour le statut</p>
-          {ORDER_STATUS_OPTIONS.map(option => {
-            const isCurrent = option.value === value;
-            return (
-              <button
-                key={option.value}
-                type="button"
-                role="option"
-                aria-selected={isCurrent}
-                onClick={() => {
-                  if (!isCurrent) onChange(option.value);
-                  setIsOpen(false);
-                }}
-                className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition hover:bg-slate-100 dark:hover:bg-white/5"
-              >
-                <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: option.color }} />
-                <span className="min-w-0 flex-1">
-                  <span className={`block text-[11px] font-extrabold ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>{option.label}</span>
-                  <span className="block truncate text-[9.5px] font-medium text-slate-500">{option.detail}</span>
-                </span>
-                {isCurrent && <Check className="h-3.5 w-3.5 shrink-0" style={{ color: option.color }} />}
-              </button>
-            );
-          })}
-        </div>
+          <div className="flex items-center justify-between px-2.5 pb-2 pt-1">
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">Statut de la commande</p>
+              <p className={`mt-0.5 text-[11px] font-bold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Choisissez la prochaine étape</p>
+            </div>
+            <span className="h-2 w-2 rounded-full" style={{ background: current.color, boxShadow: `0 0 0 4px ${current.tint}` }} />
+          </div>
+          <div className="border-t pt-1" style={{ borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,30,54,0.07)' }}>
+            {ORDER_STATUS_OPTIONS.map(option => {
+              const isCurrent = option.value === value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="option"
+                  aria-selected={isCurrent}
+                  onClick={() => {
+                    if (!isCurrent) onChange(option.value);
+                    setIsOpen(false);
+                  }}
+                  className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left transition hover:bg-slate-100 dark:hover:bg-white/5"
+                  style={isCurrent ? { background: option.tint } : undefined}
+                >
+                  <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: option.color, boxShadow: `0 0 0 4px ${option.tint}` }} />
+                  <span className="min-w-0 flex-1">
+                    <span className={`block text-[11px] font-extrabold ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>{option.label}</span>
+                    <span className="block truncate text-[9.5px] font-medium text-slate-500">{option.detail}</span>
+                  </span>
+                  {isCurrent && <Check className="h-4 w-4 shrink-0" style={{ color: option.color }} />}
+                </button>
+              );
+            })}
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -137,6 +179,7 @@ export default function OrdersTab() {
     shippingStats,
     adminTheme,
     currentUser,
+    loadOrders,
     handleUpdateOrderStatus,
     handleBulkUpdateOrderStatus,
     handleDeleteOrder,
@@ -166,6 +209,7 @@ export default function OrdersTab() {
   const [customGiftInput, setCustomGiftInput] = useState<string>('');
   const [mounted, setMounted] = useState<boolean>(false);
   const [isBatchLabelPrintOpen, setIsBatchLabelPrintOpen] = useState<boolean>(false);
+  const [isRetryingAtlascom, setIsRetryingAtlascom] = useState<boolean>(false);
 
   useEffect(() => {
     setMounted(true);
@@ -231,6 +275,16 @@ export default function OrdersTab() {
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderPresentation, setOrderPresentation] = useState<'table' | 'board'>('table');
+
+  const selectedOrderId = selectedOrder?.order_id;
+  useEffect(() => {
+    if (!selectedOrderId) return;
+    const refreshedOrder = orders.find(order => order.order_id === selectedOrderId);
+    if (!refreshedOrder) return;
+    setSelectedOrder(current => current?.order_id === selectedOrderId && current !== refreshedOrder
+      ? refreshedOrder
+      : current);
+  }, [orders, selectedOrderId]);
 
   useEffect(() => {
     const openOrdersList = () => {
@@ -649,6 +703,31 @@ export default function OrdersTab() {
       console.error(err);
     } finally {
       setIsSyncingCouriers(false);
+    }
+  };
+
+  const handleRetryAtlascom = async () => {
+    if (!selectedOrder || isRetryingAtlascom) return;
+    setIsRetryingAtlascom(true);
+    try {
+      const response = await fetch('/api/admin/orders/atlascom-retry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: selectedOrder.order_id }),
+      });
+      const data = await response.json();
+      await loadOrders();
+
+      if (data.success) {
+        showToast(`Commande ${selectedOrder.order_id} synchronisée avec Atlascom.`, 'success');
+      } else {
+        showToast(data.error || 'La synchronisation Atlascom a échoué.', 'error');
+      }
+    } catch (error) {
+      console.error('Atlascom retry error:', error);
+      showToast('Impossible de relancer Atlascom pour le moment.', 'error');
+    } finally {
+      setIsRetryingAtlascom(false);
     }
   };
 
@@ -1880,30 +1959,7 @@ export default function OrdersTab() {
                   </div>
                 )}
 
-                {/* 3. Atlascom ERP export events */}
-                {(selectedOrder.internal_notes || []).filter(note => note.kind === 'atlascom').map((note) => {
-                  const isFailure = note.body.startsWith('Échec') || note.body.startsWith('Export Atlascom en attente');
-                  return (
-                    <div className="relative" key={note.id}>
-                      <div className={`absolute -left-[31px] top-0.5 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900 shadow-xs ${isFailure ? 'bg-amber-500' : 'bg-emerald-500'}`} />
-                      <div className="space-y-0.5">
-                        <div className="flex items-center justify-between text-xs gap-3">
-                          <span className={`font-extrabold ${isFailure ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                            {isFailure ? 'Synchronisation Atlascom en attente' : 'Commande synchronisée avec Atlascom'}
-                          </span>
-                          <span className="text-[10px] font-mono opacity-60 shrink-0" style={{ color: textMuted }}>
-                            {new Date(note.created_at).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}
-                          </span>
-                        </div>
-                        <p className={`text-[11px] font-semibold p-2 rounded-lg mt-1 border ${isFailure ? 'bg-amber-500/10 text-amber-800 dark:text-amber-200 border-amber-500/20' : 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-200 border-emerald-500/20'}`}>
-                          {note.body}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {/* 4. Shipping Event */}
+                {/* 3. Shipping Event */}
                 {selectedOrder.tracking_number && (
                   <div className="relative">
                     <div className="absolute -left-[31px] top-0.5 w-4 h-4 rounded-full bg-indigo-500 border-2 border-white dark:border-slate-900 shadow-xs" />
@@ -1922,7 +1978,7 @@ export default function OrdersTab() {
                   </div>
                 )}
 
-                {/* 5. Staff Note Log */}
+                {/* 4. Staff Note Log */}
                 {staffNotesMap[selectedOrder.order_id] && (
                   <div className="relative">
                     <div className="absolute -left-[31px] top-0.5 w-4 h-4 rounded-full bg-amber-500 border-2 border-white dark:border-slate-900 shadow-xs" />
@@ -2283,6 +2339,154 @@ export default function OrdersTab() {
                 );
               })()}
             </div>
+
+            {/* Atlascom ERP Synchronization Card */}
+            {(() => {
+              const exportJob = selectedOrder.atlascom_export;
+              const atlascomNotes = (selectedOrder.internal_notes || [])
+                .filter(note => note.kind === 'atlascom')
+                .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+              const latestNote = atlascomNotes[0];
+              const status = exportJob?.status || 'not_started';
+              const isConfirmed = String(selectedOrder.status).toLowerCase() === 'confirmed';
+              const canRetry = isConfirmed && ['failed', 'blocked', 'queued', 'not_started'].includes(status);
+              const lastActivityAt = latestNote?.created_at || exportJob?.sent_at || exportJob?.updated_at;
+
+              const statusConfig = {
+                sent: {
+                  label: 'Synchronisée',
+                  detail: 'La commande est enregistrée dans Atlascom.',
+                  color: isDark ? '#6ee7b7' : '#047857',
+                  background: isDark ? 'rgba(16,185,129,0.12)' : '#ecfdf5',
+                  border: isDark ? 'rgba(16,185,129,0.24)' : '#a7f3d0',
+                  icon: CheckCircle,
+                },
+                failed: {
+                  label: 'Échec de synchronisation',
+                  detail: 'Atlascom a refusé la dernière tentative.',
+                  color: isDark ? '#fda4af' : '#be123c',
+                  background: isDark ? 'rgba(244,63,94,0.11)' : '#fff1f2',
+                  border: isDark ? 'rgba(244,63,94,0.24)' : '#fecdd3',
+                  icon: AlertTriangle,
+                },
+                blocked: {
+                  label: 'Configuration requise',
+                  detail: "L'export est en attente d'un paramétrage valide.",
+                  color: isDark ? '#fcd34d' : '#b45309',
+                  background: isDark ? 'rgba(245,158,11,0.11)' : '#fffbeb',
+                  border: isDark ? 'rgba(245,158,11,0.24)' : '#fde68a',
+                  icon: AlertTriangle,
+                },
+                sending: {
+                  label: 'Envoi en cours',
+                  detail: 'La commande est en cours de transmission.',
+                  color: isDark ? '#a5b4fc' : '#4338ca',
+                  background: isDark ? 'rgba(99,102,241,0.12)' : '#eef2ff',
+                  border: isDark ? 'rgba(99,102,241,0.24)' : '#c7d2fe',
+                  icon: RefreshCw,
+                },
+                queued: {
+                  label: 'Synchronisation planifiée',
+                  detail: "La commande attend son prochain envoi vers l'ERP.",
+                  color: isDark ? '#93c5fd' : '#1d4ed8',
+                  background: isDark ? 'rgba(59,130,246,0.11)' : '#eff6ff',
+                  border: isDark ? 'rgba(59,130,246,0.24)' : '#bfdbfe',
+                  icon: Activity,
+                },
+                not_started: {
+                  label: isConfirmed ? 'Non synchronisée' : 'En attente de confirmation',
+                  detail: isConfirmed
+                    ? "Aucun export Atlascom n'a encore été créé."
+                    : "L'export démarrera après confirmation de la commande.",
+                  color: isDark ? '#cbd5e1' : '#475569',
+                  background: isDark ? 'rgba(148,163,184,0.08)' : '#f8fafc',
+                  border: isDark ? 'rgba(148,163,184,0.18)' : '#e2e8f0',
+                  icon: Activity,
+                },
+              } as const;
+
+              const currentStatus = statusConfig[status as keyof typeof statusConfig] || statusConfig.not_started;
+              const StatusIcon = currentStatus.icon;
+              const noteText = latestNote?.body || exportJob?.last_error || currentStatus.detail;
+
+              return (
+                <section
+                  aria-labelledby="atlascom-sync-title"
+                  className="rounded-2xl p-6 space-y-4 transition-all duration-300"
+                  style={{
+                    background: cardBg,
+                    border: borderStyle,
+                    boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.35)' : '0 2px 10px rgba(15,30,54,0.04)',
+                  }}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                        style={{ background: currentStatus.background, color: currentStatus.color, border: `1px solid ${currentStatus.border}` }}
+                      >
+                        <StatusIcon className={`w-4 h-4 ${status === 'sending' || isRetryingAtlascom ? 'animate-spin' : ''}`} />
+                      </div>
+                      <div className="min-w-0">
+                        <h4 id="atlascom-sync-title" className="text-xs font-black uppercase tracking-wider" style={{ color: textPrimary }}>
+                          Synchronisation Atlascom
+                        </h4>
+                        <p className="text-[10.5px] mt-0.5" style={{ color: textMuted }}>
+                          Export ERP de la commande
+                        </p>
+                      </div>
+                    </div>
+                    <span
+                      className="shrink-0 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[9.5px] font-black"
+                      style={{ background: currentStatus.background, color: currentStatus.color, border: `1px solid ${currentStatus.border}` }}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: currentStatus.color }} />
+                      {currentStatus.label}
+                    </span>
+                  </div>
+
+                  <div
+                    className="rounded-xl p-3.5 text-xs"
+                    style={{ background: currentStatus.background, color: currentStatus.color, border: `1px solid ${currentStatus.border}` }}
+                  >
+                    <p className="text-[9px] uppercase font-black tracking-wider opacity-75 mb-1">Dernière note Atlascom</p>
+                    <p className="font-semibold leading-relaxed">{noteText}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[10.5px]">
+                    <div>
+                      <span className="block text-[8.5px] uppercase font-black tracking-wider" style={{ color: textMuted }}>Tentatives</span>
+                      <span className="font-mono font-bold" style={{ color: textPrimary }}>{exportJob?.attempt_count || 0}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="block text-[8.5px] uppercase font-black tracking-wider" style={{ color: textMuted }}>Dernière activité</span>
+                      <span className="font-mono font-bold" style={{ color: textPrimary }}>
+                        {lastActivityAt ? new Date(lastActivityAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }) : 'Aucune'}
+                      </span>
+                    </div>
+                    {exportJob?.remote_order_id && (
+                      <div className="col-span-2 pt-2 border-t" style={{ borderColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(15,30,54,0.07)' }}>
+                        <span className="block text-[8.5px] uppercase font-black tracking-wider" style={{ color: textMuted }}>Identifiant Atlascom</span>
+                        <span className="font-mono font-black text-emerald-600 dark:text-emerald-400">{exportJob.remote_order_id}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {canRetry && (
+                    <button
+                      type="button"
+                      onClick={handleRetryAtlascom}
+                      disabled={isRetryingAtlascom}
+                      className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black text-white transition duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                      style={{ background: status === 'failed' ? '#be123c' : '#1d4ed8' }}
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${isRetryingAtlascom ? 'animate-spin' : ''}`} />
+                      {isRetryingAtlascom ? 'Synchronisation en cours...' : 'Réessayer la synchronisation'}
+                    </button>
+                  )}
+                </section>
+              );
+            })()}
 
             {/* AI Skin Diagnostic Card */}
             {selectedOrder.skin_diagnostic && (

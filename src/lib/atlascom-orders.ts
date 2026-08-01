@@ -13,6 +13,12 @@ const xml = (value: unknown) => String(value ?? '').replace(/&/g, '&amp;').repla
 const money = (value: unknown) => Number.isFinite(Number(value)) ? Number(value).toFixed(2) : '0.00';
 const tag = (source: string, name: string) => source.match(new RegExp(`<${name}[^>]*>([\\s\\S]*?)<\\/${name}>`, 'i'))?.[1]?.trim() || '';
 
+export function atlascomOrderCode(orderId: string) {
+  const numericCode = String(orderId).replace(/\D/g, '');
+  if (!numericCode) throw new Error(`La référence de commande « ${orderId} » ne contient aucun chiffre.`);
+  return numericCode;
+}
+
 function config() {
   return {
     enabled: process.env.ATLASCOM_ORDER_EXPORT_ENABLED === 'true',
@@ -70,11 +76,12 @@ function soapForOrder(order: OrderRecord, items: Awaited<ReturnType<typeof resol
   if (missing) throw new Error(`Le produit « ${missing.title} » n’a pas de référence Atlascom (SKU).`);
   const totalTtc = Number(order.total || 0); const totalHt = current.taxRate ? totalTtc / (1 + current.taxRate / 100) : totalTtc;
   const when = order.created_at ? new Date(order.created_at) : new Date(); const date = Number.isNaN(when.getTime()) ? new Date() : when;
-  const syncCode = `${order.order_id}-${Date.now()}`;
-  const header = `<Commande><Livreur></Livreur><Annule>false</Annule><Livre>false</Livre><Partiel>false</Partiel><codeCommande>${xml(order.order_id)}</codeCommande><codeTiers>${xml(current.customer)}</codeTiers><codeClient>${xml(current.customer)}</codeClient><dateC>${date.toLocaleDateString('en-GB')}</dateC><date>${date.toISOString()}</date><codeModeP></codeModeP><dateEchu></dateEchu><totalHt>${money(totalHt)}</totalHt><totalTtc>${money(totalTtc)}</totalTtc><totalTva>${money(totalTtc - totalHt)}</totalTva><observation></observation><remarqueDev></remarqueDev><codedeSynchcronisation>${xml(syncCode)}</codedeSynchcronisation><remise>0</remise><mtremise>0</mtremise><codeCommerciale>${xml(current.commercial)}</codeCommerciale></Commande>`;
+  const orderCode = atlascomOrderCode(order.order_id);
+  const syncCode = `${orderCode}${Date.now()}`;
+  const header = `<Commande><Livreur></Livreur><Annule>false</Annule><Livre>false</Livre><Partiel>false</Partiel><codeCommande>${orderCode}</codeCommande><codeTiers>${xml(current.customer)}</codeTiers><codeClient>${xml(current.customer)}</codeClient><dateC>${date.toLocaleDateString('en-GB')}</dateC><date>${date.toISOString()}</date><codeModeP></codeModeP><dateEchu></dateEchu><totalHt>${money(totalHt)}</totalHt><totalTtc>${money(totalTtc)}</totalTtc><totalTva>${money(totalTtc - totalHt)}</totalTva><observation></observation><remarqueDev></remarqueDev><codedeSynchcronisation>${syncCode}</codedeSynchcronisation><remise>0</remise><mtremise>0</mtremise><codeCommerciale>${xml(current.commercial)}</codeCommerciale></Commande>`;
   const lines = items.map((item, index) => {
     const ttc = Number(item.price || 0); const ht = current.taxRate ? ttc / (1 + current.taxRate / 100) : ttc;
-    return `<LigneCommande><Tva>${money(current.taxRate)}</Tva><PlafondRM>0</PlafondRM><QteLivre>0</QteLivre><codeLCommande>${index + 1}</codeLCommande><codeArticle>${xml(item.sku)}</codeArticle><qte>${money(item.quantity)}</qte><prixU>${money(ht)}</prixU><prixTTTC>${money(ttc)}</prixTTTC><codeCommande>${xml(order.order_id)}</codeCommande><nbrPiece>0</nbrPiece><qteCar>0</qteCar><codedeSynchcronisation>${xml(syncCode)}</codedeSynchcronisation><puttc>${money(ttc)}</puttc><ptttc>${money(ttc * item.quantity)}</ptttc><ptht>${money(ht * item.quantity)}</ptht><puht>${money(ht)}</puht><remise>0</remise><qteGratuit>0</qteGratuit><codeTva>0</codeTva><ordre>${index + 1}</ordre><codeUnite>0</codeUnite><libelle>${xml(item.title)}</libelle><TypePrix></TypePrix><typeLigne></typeLigne><codesup></codesup><qteG>0</qteG></LigneCommande>`;
+    return `<LigneCommande><Tva>${money(current.taxRate)}</Tva><PlafondRM>0</PlafondRM><QteLivre>0</QteLivre><codeLCommande>${index + 1}</codeLCommande><codeArticle>${xml(item.sku)}</codeArticle><qte>${money(item.quantity)}</qte><prixU>${money(ht)}</prixU><prixTTTC>${money(ttc)}</prixTTTC><codeCommande>${orderCode}</codeCommande><nbrPiece>0</nbrPiece><qteCar>0</qteCar><codedeSynchcronisation>${syncCode}</codedeSynchcronisation><puttc>${money(ttc)}</puttc><ptttc>${money(ttc * item.quantity)}</ptttc><ptht>${money(ht * item.quantity)}</ptht><puht>${money(ht)}</puht><remise>0</remise><qteGratuit>0</qteGratuit><codeTva>0</codeTva><ordre>${index + 1}</ordre><codeUnite>0</codeUnite><libelle>${xml(item.title)}</libelle><TypePrix></TypePrix><typeLigne></typeLigne><codesup></codesup><qteG>0</qteG></LigneCommande>`;
   }).join('');
   return `<?xml version="1.0"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><setListeCommandes xmlns="http://tempuri.org/"><codeEmploye>${xml(current.employee)}</codeEmploye><codeAgence>${xml(current.agency)}</codeAgence><listeCommandes>${header}</listeCommandes><listeLigneCommandes>${lines}</listeLigneCommandes><token>${xml(token)}</token><codeLangue>FR</codeLangue></setListeCommandes></soap:Body></soap:Envelope>`;
 }

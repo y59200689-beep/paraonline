@@ -431,7 +431,7 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
           >
             <input
               type="text"
-              placeholder={isFR ? 'Ex: Khadija Alami' : 'مثال: خديجة العلمي'}
+              placeholder={isFR ? 'Nom complet' : 'الاسم الكامل'}
               value={formFields.name}
               onChange={(e) => setFormFields(prev => ({ ...prev, name: e.target.value }))}
               className={inputClass(!!formErrors.name)}

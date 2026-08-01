@@ -56,9 +56,12 @@ export interface Order {
   email?: string;
   atlascom_export?: {
     status: 'queued' | 'sending' | 'sent' | 'failed' | 'blocked';
+    attempt_count?: number;
     remote_order_id?: string | null;
     last_error?: string | null;
+    next_retry_at?: string | null;
     sent_at?: string | null;
+    updated_at?: string | null;
   } | null;
   internal_notes?: Array<{ id: string | number; body: string; kind: 'internal' | 'atlascom'; created_at: string }>;
 }
