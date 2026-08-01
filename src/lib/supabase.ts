@@ -899,6 +899,7 @@ const mockSupabaseClient = {
       const order = args?.p_order;
       const items = Array.isArray(order?.items) ? order.items : [];
       const products = globalForMock.mockDb.products || [];
+      const orders = globalForMock.mockDb.orders || [];
 
       for (const item of items) {
         const product = products.find((candidate: any) => Number(candidate.id) === Number(item.id));
@@ -911,10 +912,22 @@ const mockSupabaseClient = {
         const product = products.find((candidate: any) => Number(candidate.id) === Number(item.id));
         product.stock -= Number(item.quantity);
       }
-      globalForMock.mockDb.orders = [...(globalForMock.mockDb.orders || []), order];
+
+      const lastNumericOrderId = orders.reduce((largest: number, existingOrder: any) => {
+        const existingId = String(existingOrder?.order_id || '');
+        return /^\d+$/.test(existingId) ? Math.max(largest, Number(existingId)) : largest;
+      }, 100000);
+      const orderId = String(lastNumericOrderId + 1);
+      const persistedOrder = {
+        ...order,
+        order_id: orderId,
+        created_at: order?.created_at || new Date().toISOString(),
+      };
+
+      globalForMock.mockDb.orders = [...orders, persistedOrder];
       globalForMock.mockDb.products = products;
       saveToDisk();
-      return { data: null, error: null };
+      return { data: orderId, error: null };
     }
     if (fn === 'decrement_product_stock') {
       const { product_id, qty } = args;

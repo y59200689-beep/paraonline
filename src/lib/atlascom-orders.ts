@@ -2,6 +2,7 @@ import { supabaseAdmin as supabase } from '@/lib/supabase';
 
 const DEFAULT_URL = 'https://paraoficinal.ruijieddnsa.com/WebServiceAtlasCom/atlascomservice.asmx';
 const RETRY_DELAY_MS = 5 * 60 * 1000;
+const REQUEST_TIMEOUT_MS = 15_000;
 
 type OrderRecord = {
   order_id: string; customer_name: string; phone_number: string; address: string; city: string;
@@ -12,6 +13,21 @@ type OrderRecord = {
 const xml = (value: unknown) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
 const money = (value: unknown) => Number.isFinite(Number(value)) ? Number(value).toFixed(2) : '0.00';
 const tag = (source: string, name: string) => source.match(new RegExp(`<${name}[^>]*>([\\s\\S]*?)<\\/${name}>`, 'i'))?.[1]?.trim() || '';
+
+async function atlascomFetch(url: string, init: RequestInit) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } catch (error) {
+    if (controller.signal.aborted) {
+      throw new Error('Atlascom n’a pas répondu dans les 15 secondes. Réessayez dans quelques instants.');
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 export function atlascomOrderCode(orderId: string) {
   const numericCode = String(orderId).replace(/\D/g, '');
@@ -50,7 +66,7 @@ export async function queueAtlascomOrderExport(orderId: string) {
 }
 
 async function authenticate(current: ReturnType<typeof config>) {
-  const response = await fetch(current.url, {
+  const response = await atlascomFetch(current.url, {
     method: 'POST', headers: { 'Content-Type': 'text/xml; charset=utf-8', SOAPAction: 'http://tempuri.org/generateTOKEN' },
     body: `<?xml version="1.0"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><generateTOKEN xmlns="http://tempuri.org/"><utilisateur>${xml(current.employee)}</utilisateur><motDePasse>${xml(current.password)}</motDePasse></generateTOKEN></soap:Body></soap:Envelope>`,
   });
@@ -107,7 +123,7 @@ export async function processAtlascomOrderExport(orderId: string) {
     const { data: order, error: orderError } = await supabase.from('orders').select('*').eq('order_id', orderId).maybeSingle();
     if (orderError || !order) throw new Error(orderError?.message || 'Commande introuvable.');
     const typedOrder = order as OrderRecord; const items = await resolveItems(typedOrder); const token = await authenticate(current);
-    const response = await fetch(current.url, { method: 'POST', headers: { 'Content-Type': 'text/xml; charset=utf-8', SOAPAction: '"http://tempuri.org/setListeCommandes"' }, body: soapForOrder(typedOrder, items, token) });
+    const response = await atlascomFetch(current.url, { method: 'POST', headers: { 'Content-Type': 'text/xml; charset=utf-8', SOAPAction: '"http://tempuri.org/setListeCommandes"' }, body: soapForOrder(typedOrder, items, token) });
     const responseXml = await response.text();
     const fault = tag(responseXml, 'faultstring') || tag(responseXml, 'Text');
     if (fault) throw new Error(`Atlascom a refusé la commande : ${fault}`);

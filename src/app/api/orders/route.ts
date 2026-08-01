@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { createOrderTrackingToken, createOrderVerificationToken, verifyOrderToken } from '@/lib/order-security';
@@ -161,15 +160,14 @@ export async function POST(request: Request) {
     const giftRange = Array.isArray(settings.giftRanges)
       ? settings.giftRanges.find((range: any) => subtotal >= Number(range.minAmount) && subtotal <= Number(range.maxAmount))
       : null;
-    const orderId = `PO-${crypto.randomInt(100000, 1000000)}`;
     const isCod = paymentMethod === 'cod';
 
-    // Fail before persisting anything when a required public-order secret is absent.
-    const trackingToken = createOrderTrackingToken(orderId);
-    const verificationToken = isCod ? createOrderVerificationToken(orderId) : '';
+    // Validate required signing secrets before reserving stock or inserting the
+    // order. The final tokens are generated after the database allocates its ID.
+    createOrderTrackingToken('order-reference-preflight');
+    if (isCod) createOrderVerificationToken('order-reference-preflight');
 
     const order = {
-      order_id: orderId,
       customer_name: String(orderData.name).trim().slice(0, 120),
       phone_number: String(orderData.phone).trim().slice(0, 40),
       address: String(orderData.address).trim().slice(0, 500),
@@ -189,13 +187,21 @@ export async function POST(request: Request) {
       payment_status: 'unpaid',
     };
 
-    const { error: createError } = await supabase.rpc('create_order_with_stock', { p_order: order });
+    const { data: createdOrderId, error: createError } = await supabase.rpc('create_order_with_stock', { p_order: order });
     if (createError) {
       if (String(createError.message).includes('INSUFFICIENT_STOCK')) {
         return NextResponse.json({ success: false, error: 'Stock insuffisant pour un ou plusieurs produits.' }, { status: 409 });
       }
       throw createError;
     }
+
+    if (typeof createdOrderId !== 'string' || !createdOrderId) {
+      throw new Error('ORDER_REFERENCE_NOT_CREATED');
+    }
+
+    const orderId = createdOrderId;
+    const trackingToken = createOrderTrackingToken(orderId);
+    const verificationToken = isCod ? createOrderVerificationToken(orderId) : '';
 
     return NextResponse.json({
       success: true,

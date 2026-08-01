@@ -79,6 +79,34 @@ describe('Supabase Mock Client', () => {
     expect(updated.price).toBe(999);
   });
 
+  it('should create sequential numeric order references without changing legacy references', async () => {
+    const { data: availableProducts } = await supabase.from('products').select('*');
+    const product = availableProducts!.find((candidate: any) => Number(candidate.stock) >= 2);
+    expect(product).toBeDefined();
+
+    const order = {
+      customer_name: 'Sequential Test',
+      phone_number: '0600000000',
+      address: 'Test address',
+      city: 'Casablanca',
+      items: [{ id: product.id, title: product.title, quantity: 1, price: product.price }],
+      subtotal: Number(product.price),
+      total: Number(product.price),
+      status: 'Pending',
+      payment_method: 'cod',
+      payment_status: 'unpaid',
+    };
+
+    const first = await supabase.rpc('create_order_with_stock', { p_order: order });
+    const second = await supabase.rpc('create_order_with_stock', { p_order: order });
+
+    expect(first.error).toBeNull();
+    expect(second.error).toBeNull();
+    expect(first.data).toMatch(/^\d+$/);
+    expect(Number(first.data)).toBeGreaterThanOrEqual(100001);
+    expect(Number(second.data)).toBe(Number(first.data) + 1);
+  });
+
   it('should support deferred update chaining with filters', async () => {
     const { data: all } = await supabase.from('products').select('*');
     expect(all).not.toBeNull();

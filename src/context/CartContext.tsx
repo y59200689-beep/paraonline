@@ -459,6 +459,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const data = await res.json();
       
       if (data.success && data.orderId) {
+        // Notify any open admin tab on the same site that a new order is ready.
+        // The storage event is delivered across browser tabs without exposing order data.
+        localStorage.setItem('admin:orders-updated', String(Date.now()));
         if (data.trackingToken) {
           sessionStorage.setItem(`orderTrackingToken:${data.orderId}`, data.trackingToken);
         }

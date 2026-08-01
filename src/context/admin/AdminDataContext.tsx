@@ -173,7 +173,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setCartRecoveryStatus(statusMap);
   };
 
-  const loadOrders = async () => {
+  const loadOrders = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/orders');
       const data = await res.json();
@@ -217,7 +217,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       console.error("Failed to load orders:", e);
       setOrders([]);
     }
-  };
+  }, []);
 
   const loadProducts = async () => {
     setIsProductsLoading(true);
@@ -393,6 +393,24 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const refreshOrdersAfterExternalChange = (event: StorageEvent) => {
+      if (event.key === 'admin:orders-updated') void loadOrders();
+    };
+    const refreshOrdersOnReturn = () => {
+      if (document.visibilityState === 'visible') void loadOrders();
+    };
+
+    window.addEventListener('storage', refreshOrdersAfterExternalChange);
+    document.addEventListener('visibilitychange', refreshOrdersOnReturn);
+    return () => {
+      window.removeEventListener('storage', refreshOrdersAfterExternalChange);
+      document.removeEventListener('visibilitychange', refreshOrdersOnReturn);
+    };
+  }, [isAuthenticated, loadOrders]);
 
   const logAdminAction = async (action: string, details: string) => {
     try {

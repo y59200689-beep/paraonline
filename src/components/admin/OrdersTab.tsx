@@ -349,6 +349,15 @@ export default function OrdersTab() {
   }, [orders, selectedOrderId]);
 
   useEffect(() => {
+    if (selectedOrder?.atlascom_export?.status !== 'sending') return;
+
+    const refreshAtlascomStatus = () => void loadOrders();
+    refreshAtlascomStatus();
+    const interval = window.setInterval(refreshAtlascomStatus, 3_000);
+    return () => window.clearInterval(interval);
+  }, [loadOrders, selectedOrder?.atlascom_export?.status]);
+
+  useEffect(() => {
     const openOrdersList = () => {
       setSelectedOrder(null);
       setOrdersSubTab('list');

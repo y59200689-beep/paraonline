@@ -651,7 +651,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             step={step}
             onCheckout={() => setStep('checkout')}
             t={t}
-            showShipping={step === 'checkout' && formFields.address.trim() !== '' && formFields.city !== ''}
+            showShipping={step === 'checkout' && formFields.city !== ''}
             shippingCity={formFields.city}
             totalSavings={totalSavings}
             deliverySettings={settings?.deliverySettings}
