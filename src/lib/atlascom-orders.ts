@@ -25,6 +25,7 @@ function config() {
     url: process.env.ATLASCOM_WSDL_URL || DEFAULT_URL,
     employee: process.env.ATLASCOM_EMPLOYEE_CODE || '', password: process.env.ATLASCOM_PASSWORD || '',
     agency: process.env.ATLASCOM_AGENCY_CODE || '000052', commercial: process.env.ATLASCOM_COMMERCIAL_CODE || '000052',
+    orderEmployee: process.env.ATLASCOM_ORDER_EMPLOYEE_CODE || process.env.ATLASCOM_COMMERCIAL_CODE || '000052',
     customer: process.env.ATLASCOM_WEB_CUSTOMER_CODE || '6666',
     tier: process.env.ATLASCOM_TIER_CODE || process.env.ATLASCOM_WEB_CUSTOMER_CODE || '6666',
     taxRate: Math.max(0, Number(process.env.ATLASCOM_TAX_RATE || 0)),
@@ -88,7 +89,7 @@ function soapForOrder(order: OrderRecord, items: Awaited<ReturnType<typeof resol
     const lineTax = lineTtc - (ht * Number(item.quantity || 0));
     return `<LigneCommande><Tva>${money(lineTax)}</Tva><PlafondRM>0</PlafondRM><QteLivre>0</QteLivre><codeLCommande>${index + 1}</codeLCommande><codeArticle>${xml(item.sku)}</codeArticle><qte>${money(item.quantity)}</qte><prixU>${money(ttc)}</prixU><prixTTTC>${money(lineTtc)}</prixTTTC><codeCommande>${orderCode}</codeCommande><nbrPiece>0</nbrPiece><qteCar>0</qteCar><codedeSynchcronisation>${syncCode}</codedeSynchcronisation><puttc>${money(ttc)}</puttc><ptttc>${money(lineTtc)}</ptttc><ptht>${money(ht)}</ptht><puht>${money(ht)}</puht><remise>0</remise><qteGratuit>0</qteGratuit><codeTva>0</codeTva><ordre>${index + 1}</ordre><codeUnite>0</codeUnite><libelle>${xml(item.title)}</libelle><TypePrix></TypePrix><typeLigne></typeLigne><codesup></codesup><qteG>0</qteG></LigneCommande>`;
   }).join('');
-  return `<?xml version="1.0"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><setListeCommandes xmlns="http://tempuri.org/"><codeEmploye>${xml(current.employee)}</codeEmploye><codeAgence>${xml(current.agency)}</codeAgence><listeCommandes>${header}</listeCommandes><listeLigneCommandes>${lines}</listeLigneCommandes><token>${xml(token)}</token><codeLangue>FR</codeLangue></setListeCommandes></soap:Body></soap:Envelope>`;
+  return `<?xml version="1.0"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><setListeCommandes xmlns="http://tempuri.org/"><codeEmploye>${xml(current.orderEmployee)}</codeEmploye><codeAgence>${xml(current.agency)}</codeAgence><listeCommandes>${header}</listeCommandes><listeLigneCommandes>${lines}</listeLigneCommandes><token>${xml(token)}</token><codeLangue>FR</codeLangue></setListeCommandes></soap:Body></soap:Envelope>`;
 }
 
 export async function processAtlascomOrderExport(orderId: string) {
