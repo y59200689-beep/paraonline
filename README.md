@@ -104,7 +104,7 @@ npm run cron-runner
 
 ### 6. Atlascom automatic synchronisation
 
-The production deployment schedules `/api/cron/atlascom-sync` every 30 minutes through the project's native Vercel Cron configuration. No separate scheduler or third-party cron website is required.
+The routes `/api/cron/atlascom-sync` and `/api/cron/atlascom-order-retries` are included in the application, but recurring Vercel Cron schedules are not enabled in this repository because the current Vercel plan rejects sub-daily schedules. They can be enabled after upgrading to a plan that supports the required frequency.
 
 Configure the first three environment variables in the production Vercel project before deploying. `ATLASCOM_WSDL_URL` is optional and defaults to the current Atlascom endpoint:
 
@@ -131,4 +131,4 @@ ATLASCOM_WEB_CUSTOMER_CODE=6666
 ATLASCOM_TAX_RATE=0
 ```
 
-`/api/cron/atlascom-order-retries` is scheduled every 5 minutes only for retrying failed exports. The initial export happens immediately after confirmation; the retry route is the safety net. COD is sent with an empty `codeModeP`, as Atlascom does not require a payment-code mapping. Keep `ATLASCOM_ORDER_EXPORT_ENABLED` unset until Atlascom validates the tax value.
+The initial order export happens immediately after confirmation; it does not need a scheduled task. `/api/cron/atlascom-order-retries` is the five-minute retry route once a compatible recurring scheduler is enabled. COD is sent with an empty `codeModeP`, as Atlascom does not require a payment-code mapping. Keep `ATLASCOM_ORDER_EXPORT_ENABLED` unset until Atlascom validates the tax value.
