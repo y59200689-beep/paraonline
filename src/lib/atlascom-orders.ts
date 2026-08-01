@@ -112,7 +112,7 @@ export async function processAtlascomOrderExport(orderId: string) {
     if (!response.ok) throw new Error(`Envoi Atlascom refusé (HTTP ${response.status}).`);
     const remoteOrderId = tag(responseXml, 'setListeCommandesResult');
     responseSummary = remoteOrderId || (responseXml.includes('setListeCommandesResult') ? 'Résultat Atlascom vide (HTTP 200).' : 'Réponse Atlascom sans résultat identifiable (HTTP 200).');
-    if (!remoteOrderId) throw new Error('Atlascom n’a retourné aucun identifiant de commande. Vérifiez que le client 6666, le commercial 52 et les références produit existent et sont autorisés dans Atlascom.');
+    if (!remoteOrderId) throw new Error(`Atlascom n’a retourné aucun identifiant de commande. Vérifiez que le client ${current.customer}, le commercial ${current.commercial} et les références produit existent et sont autorisés dans Atlascom.`);
     await updateJob(orderId, { status: 'sent', remote_order_id: remoteOrderId, response_summary: remoteOrderId.slice(0, 500), last_error: null, next_retry_at: null, sent_at: new Date().toISOString() });
     await note(orderId, `Commande synchronisée avec Atlascom. ID distant : ${remoteOrderId}`); return { status: 'sent', remoteOrderId };
   } catch (caught: any) {
