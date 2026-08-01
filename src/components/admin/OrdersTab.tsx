@@ -371,18 +371,6 @@ export default function OrdersTab() {
   // Search & Filters for abandoned subtab
   const [abandonedSearchQuery, setAbandonedSearchQuery] = useState('');
 
-  // Live Shopper Feed state
-  type LiveFeedEvent = {
-    id: number;
-    type: 'viewing' | 'added_to_cart' | 'checkout' | 'ordered';
-    name: string;
-    product: string;
-    city: string;
-    ago: string;
-  };
-  const [liveShopperFeed, setLiveShopperFeed] = useState<LiveFeedEvent[]>([]);
-  const liveFeedIdRef = useRef(0);
-
   // Bulk WhatsApp Blast state
   const [isBulkBlastModalOpen, setIsBulkBlastModalOpen] = useState(false);
   const [bulkBlastLang, setBulkBlastLang] = useState<'Fr' | 'Ar'>('Fr');
@@ -449,43 +437,6 @@ export default function OrdersTab() {
       );
     });
   }, [abandonedCarts, abandonedSearchQuery]);
-
-  // ── Live Shopper Feed generator ─────────────────────────────────────────────
-  useEffect(() => {
-    const MOROCCAN_CITIES = ['Casablanca', 'Marrakech', 'Rabat', 'Fès', 'Tanger', 'Agadir', 'Meknès', 'Oujda', 'Tétouan', 'Safi', 'El Jadida', 'Béni Mellal'];
-    const MOROCCAN_NAMES = ['Fatima Z.', 'Imane B.', 'Nadia H.', 'Sara M.', 'Khadija E.', 'Leila A.', 'Houda R.', 'Zineb K.', 'Aicha F.', 'Meryem O.', 'Soukaina L.', 'Dounia C.'];
-    const TYPES: Array<LiveFeedEvent['type']> = ['viewing', 'viewing', 'added_to_cart', 'added_to_cart', 'checkout', 'ordered'];
-
-    // Seed products from real data
-    const seedProducts = [
-      ...orders.slice(0, 6).flatMap(o => o.items?.map((i: any) => i.title || i.product?.title || 'Produit') || []),
-      ...abandonedCarts.slice(0, 6).flatMap(c => c.items?.map((i: any) => i.title || i.product?.title || 'Produit') || []),
-      'Niacinamide 10% + Zinc', 'Acide Hyaluronique Sérum', 'SPF 50+ Invisible', 'Crème Hydratante Intense', 'Gel Nettoyant Doux', 'Sérum Vitamine C'
-    ].filter(Boolean);
-
-    const generateEvent = (): LiveFeedEvent => ({
-      id: ++liveFeedIdRef.current,
-      type: TYPES[Math.floor(Math.random() * TYPES.length)],
-      name: MOROCCAN_NAMES[Math.floor(Math.random() * MOROCCAN_NAMES.length)],
-      product: seedProducts[Math.floor(Math.random() * seedProducts.length)] || 'Produit Beauté',
-      city: MOROCCAN_CITIES[Math.floor(Math.random() * MOROCCAN_CITIES.length)],
-      ago: 'À l\'instant',
-    });
-
-    // Initialize with 8 staggered events
-    const initial: LiveFeedEvent[] = Array.from({ length: 8 }, (_, i) => ({
-      ...generateEvent(),
-      ago: i === 0 ? 'À l\'instant' : `Il y a ${i * 20 + 10}s`,
-    }));
-    setLiveShopperFeed(initial);
-
-    const interval = setInterval(() => {
-      const newEvent = generateEvent();
-      setLiveShopperFeed(prev => [newEvent, ...prev].slice(0, 12));
-    }, 3500);
-
-    return () => clearInterval(interval);
-  }, [orders, abandonedCarts]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // CSV exports helpers
   const escapeCsv = (val: any) => {
@@ -3520,67 +3471,6 @@ export default function OrdersTab() {
             document.body
           )}
 
-          {/* ── Live Active Shopper Feed ─────────────────────────────────────── */}
-          <div className={`rounded-2xl border overflow-hidden ${
-            adminTheme === 'light' ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-900/40 border-slate-900'
-          }`}>
-            <div className={`flex items-center justify-between px-4 py-3 border-b ${
-              adminTheme === 'light' ? 'border-slate-100 bg-slate-50/80' : 'border-slate-900 bg-slate-900/60'
-            }`}>
-              <div className="flex items-center gap-2">
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
-                </span>
-                <Activity className={`w-3.5 h-3.5 ${adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'}`} />
-                <span className={`text-[11px] font-black uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>Activité en direct — Boutique</span>
-                <span className="text-[9px] font-mono text-emerald-500 border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">LIVE</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className={`text-[10px] font-mono ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-600'}`}>{liveShopperFeed.length} events</span>
-              </div>
-            </div>
-            <div className="relative overflow-hidden" style={{ height: '148px' }}>
-              <div className="absolute inset-0 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                <div className="divide-y divide-slate-900/50">
-                  {liveShopperFeed.map((event, i) => {
-                    const eventConfig = {
-                      viewing:      { label: 'consulte',        dot: 'bg-slate-400',   text: adminTheme === 'light' ? 'text-slate-500' : 'text-slate-500',   badge: adminTheme === 'light' ? 'bg-slate-100 text-slate-600' : 'bg-slate-800/60 text-slate-400' },
-                      added_to_cart:{ label: 'a ajouté au panier', dot: 'bg-amber-400', text: adminTheme === 'light' ? 'text-amber-700' : 'text-amber-400',   badge: 'bg-amber-500/10 text-amber-400 border border-amber-900/30' },
-                      checkout:     { label: 'est en caisse',   dot: 'bg-blue-400',    text: adminTheme === 'light' ? 'text-blue-700' : 'text-blue-400',     badge: 'bg-blue-500/10 text-blue-400 border border-blue-900/30' },
-                      ordered:      { label: 'a commandé',      dot: 'bg-emerald-400', text: adminTheme === 'light' ? 'text-emerald-700' : 'text-emerald-400', badge: 'bg-emerald-500/10 text-emerald-400 border border-emerald-900/30' },
-                    };
-                    const cfg = eventConfig[event.type];
-                    return (
-                      <div
-                        key={event.id}
-                        className={`flex items-center gap-3 px-4 py-2.5 transition-all duration-500 ${
-                          i === 0 ? 'animate-[fadeInDown_0.4s_ease-out]' : ''
-                        } ${
-                          adminTheme === 'light' ? 'hover:bg-slate-50/60' : 'hover:bg-slate-900/30'
-                        }`}
-                      >
-                        <span className={`w-2 h-2 rounded-full shrink-0 ${cfg.dot} ${i === 0 ? 'animate-pulse' : ''}`} />
-                        <div className="flex-1 min-w-0 flex items-center gap-1.5 flex-wrap">
-                          <span className={`text-[11px] font-bold ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-200'}`}>{event.name}</span>
-                          <span className={`text-[10px] ${cfg.text}`}>de {event.city}</span>
-                          <span className={`text-[10px] ${cfg.text}`}>{cfg.label}</span>
-                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full max-w-[160px] truncate ${cfg.badge}`} title={event.product}>{event.product}</span>
-                        </div>
-                        <span className={`text-[9px] font-mono shrink-0 ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-600'}`}>{event.ago}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-              {/* Fade-out gradient at bottom */}
-              <div className={`absolute bottom-0 left-0 right-0 h-8 pointer-events-none ${
-                adminTheme === 'light'
-                  ? 'bg-gradient-to-t from-white to-transparent'
-                  : 'bg-gradient-to-t from-slate-950 to-transparent'
-              }`} />
-            </div>
-          </div>
           {/* Recovery KPI Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
