@@ -3539,12 +3539,20 @@ export default function OrdersTab() {
               {/* Bulk WhatsApp Blast Button */}
               <button
                 onClick={() => setIsBulkBlastModalOpen(true)}
-                className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-[11px] font-black bg-emerald-500 text-slate-950 hover:bg-emerald-400 transition cursor-pointer shadow-[0_4px_16px_rgba(16,185,129,0.3)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.45)] shrink-0 active:scale-[0.97]"
+                className={`group inline-flex h-10 items-center gap-2 rounded-lg border px-1.5 pr-2.5 text-[11px] font-extrabold transition-all duration-200 cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/35 ${
+                  adminTheme === 'light'
+                    ? 'border-emerald-200 bg-white text-slate-800 shadow-[0_1px_2px_rgba(15,23,42,0.06)] hover:border-emerald-300 hover:bg-emerald-50/60 hover:shadow-[0_6px_18px_rgba(16,185,129,0.12)]'
+                    : 'border-emerald-800/70 bg-emerald-950/30 text-emerald-50 hover:border-emerald-700 hover:bg-emerald-950/55'
+                } active:translate-y-px`}
               >
-                <Zap className="w-3.5 h-3.5" />
-                Blast WhatsApp
-                <span className="px-1.5 py-0.5 rounded-full bg-slate-950/20 font-mono text-[10px]">
-                  {abandonedCarts.filter(c => (cartRecoveryStatus[c.phone] || 'not_contacted') === 'not_contacted').length}
+                <span className="grid h-7 w-7 place-items-center rounded-md bg-emerald-500 text-white shadow-sm transition-transform duration-200 group-hover:scale-[1.04]">
+                  <Zap className="h-3.5 w-3.5" strokeWidth={2.25} />
+                </span>
+                <span>Relancer via WhatsApp</span>
+                <span className={`ml-0.5 rounded-md px-1.5 py-0.5 font-mono text-[10px] leading-none ${
+                  adminTheme === 'light' ? 'bg-emerald-100 text-emerald-800' : 'bg-emerald-900/70 text-emerald-200'
+                }`}>
+                  {abandonedCarts.filter(c => (cartRecoveryStatus[c.phone] || 'not_contacted') === 'not_contacted').length} panier{abandonedCarts.filter(c => (cartRecoveryStatus[c.phone] || 'not_contacted') === 'not_contacted').length > 1 ? 's' : ''}
                 </span>
               </button>
             </div>
