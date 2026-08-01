@@ -143,7 +143,11 @@ export async function GET(request: Request) {
   const vendor = searchParams.get('vendor') || '';
   const vendors = (searchParams.get('vendors') || '').split(',').map(v => v.trim()).filter(Boolean);
   const concern = searchParams.get('concern') || 'all';
-  const ingredient = (searchParams.get('ingredient') || '').trim().slice(0, 100);
+  const requestedIngredient = (searchParams.get('ingredient') || '').trim().slice(0, 100);
+  // Storefront clients send `ingredient=all` for the default view. Treat it as
+  // an unfiltered catalogue request rather than searching for an ingredient
+  // literally named "all".
+  const ingredient = requestedIngredient.toLowerCase() === 'all' ? '' : requestedIngredient;
   const sort = searchParams.get('sort') || 'popular';
   const maxPrice = Number(searchParams.get('maxPrice') || '0');
   const facetsOnly = searchParams.get('facets') === 'true';
@@ -259,7 +263,7 @@ export async function GET(request: Request) {
       if (aliases) {
         query = query.or(aliases.map(value => `ingredients.ilike.%${value}%`).join(','));
       } else {
-        query = query.ilike('ingredients', `%${ingredient.replace(/[%_]/g, '\\$&')}%`);
+        query = query.filter('ingredients', 'ilike', `%${ingredient.replace(/[%_]/g, '\\$&')}%`);
       }
     }
 
