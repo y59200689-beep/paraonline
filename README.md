@@ -127,11 +127,10 @@ Apply the migration `20260801000000_add_atlascom_order_exports.sql`, then config
 ATLASCOM_ORDER_EXPORT_ENABLED=true
 ATLASCOM_AGENCY_CODE=000052
 ATLASCOM_COMMERCIAL_CODE=000052
-ATLASCOM_ORDER_EMPLOYEE_CODE=000052
 ATLASCOM_WEB_CUSTOMER_CODE=6666
 ATLASCOM_TAX_RATE=0
 ```
 
-`ATLASCOM_TIER_CODE` is optional. When it is unset, Atlascom receives `6666` for both `codeTiers` and `codeClient`, allowing Atlascom to resolve the web account as PARA COMPTOIRE; set it when Atlascom provides a distinct tier code. `codeCommerciale` and the top-level order `codeEmploye` are exported as the configured zero-padded codes (for example, `000052`), so Atlascom can assign the order user. No customer delivery data is exported.
+`ATLASCOM_TIER_CODE` is optional. When it is unset, Atlascom receives `6666` for both `codeTiers` and `codeClient`, allowing Atlascom to resolve the web account as PARA COMPTOIRE; set it when Atlascom provides a distinct tier code. Atlascom assigns the order's Utilisateur from `ATLASCOM_EMPLOYEE_CODE`, which is also used to obtain the token. Set both the employee code and its matching password for the intended Atlascom user (for example, `000052` for PARA). `codeCommerciale` remains the commercial code. No customer delivery data is exported.
 
 The initial order export happens immediately after confirmation; it does not need a scheduled task. `/api/cron/atlascom-order-retries` is the five-minute retry route once a compatible recurring scheduler is enabled. COD is sent with an empty `codeModeP`, as Atlascom does not require a payment-code mapping. Keep `ATLASCOM_ORDER_EXPORT_ENABLED` unset until Atlascom validates the tax value.
