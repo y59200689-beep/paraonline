@@ -80,7 +80,7 @@ function soapForOrder(order: OrderRecord, items: Awaited<ReturnType<typeof resol
   const orderCode = atlascomOrderCode(order.order_id);
   const syncCode = `${orderCode}${Date.now()}`;
   const tier = current.tier ? `<codeTiers>${xml(current.tier)}</codeTiers>` : '';
-  const header = `<Commande><Livreur></Livreur><Annule>false</Annule><Livre>false</Livre><Partiel>false</Partiel><codeCommande>${orderCode}</codeCommande>${tier}<codeClient>${xml(current.customer)}</codeClient><dateC>${date.toLocaleDateString('en-GB')}</dateC><date>${date.toISOString()}</date><codeModeP></codeModeP><dateEchu></dateEchu><totalHt>${money(totalHt)}</totalHt><totalTtc>${money(totalTtc)}</totalTtc><totalTva>${money(totalTtc - totalHt)}</totalTva><observation></observation><remarqueDev></remarqueDev><codedeSynchcronisation>${syncCode}</codedeSynchcronisation><remise>0</remise><mtremise>0</mtremise><codeCommerciale>${Number(current.commercial)}</codeCommerciale></Commande>`;
+  const header = `<Commande><Livreur></Livreur><Annule>false</Annule><Livre>false</Livre><Partiel>false</Partiel><codeCommande>${orderCode}</codeCommande>${tier}<codeClient>${xml(current.customer)}</codeClient><dateC>${date.toLocaleDateString('en-GB')}</dateC><date>${date.toISOString()}</date><codeModeP></codeModeP><dateEchu></dateEchu><totalHt>${money(totalHt)}</totalHt><totalTtc>${money(totalTtc)}</totalTtc><totalTva>${money(totalTtc - totalHt)}</totalTva><observation></observation><remarqueDev></remarqueDev><codedeSynchcronisation>${syncCode}</codedeSynchcronisation><remise>0</remise><mtremise>0</mtremise><codeCommerciale>${xml(current.commercial)}</codeCommerciale></Commande>`;
   const lines = items.map((item, index) => {
     const ttc = Number(item.price || 0); const ht = current.taxRate ? ttc / (1 + current.taxRate / 100) : ttc;
     return `<LigneCommande><Tva>${money(current.taxRate)}</Tva><PlafondRM>0</PlafondRM><QteLivre>0</QteLivre><codeLCommande>${index + 1}</codeLCommande><codeArticle>${xml(item.sku)}</codeArticle><qte>${money(item.quantity)}</qte><prixU>${money(ht)}</prixU><prixTTTC>${money(ttc)}</prixTTTC><codeCommande>${orderCode}</codeCommande><nbrPiece>0</nbrPiece><qteCar>0</qteCar><codedeSynchcronisation>${syncCode}</codedeSynchcronisation><puttc>${money(ttc)}</puttc><ptttc>${money(ttc * item.quantity)}</ptttc><ptht>${money(ht * item.quantity)}</ptht><puht>${money(ht)}</puht><remise>0</remise><qteGratuit>0</qteGratuit><codeTva>0</codeTva><ordre>${index + 1}</ordre><codeUnite>0</codeUnite><libelle>${xml(item.title)}</libelle><TypePrix></TypePrix><typeLigne></typeLigne><codesup></codesup><qteG>0</qteG></LigneCommande>`;
@@ -104,11 +104,11 @@ export async function processAtlascomOrderExport(orderId: string) {
     const { data: order, error: orderError } = await supabase.from('orders').select('*').eq('order_id', orderId).maybeSingle();
     if (orderError || !order) throw new Error(orderError?.message || 'Commande introuvable.');
     const typedOrder = order as OrderRecord; const items = await resolveItems(typedOrder); const token = await authenticate(current);
-    const response = await fetch(current.url, { method: 'POST', headers: { 'Content-Type': 'text/xml; charset=utf-8', SOAPAction: 'http://tempuri.org/setListeCommandes' }, body: soapForOrder(typedOrder, items, token) });
-    if (!response.ok) throw new Error(`Envoi Atlascom refusé (HTTP ${response.status}).`);
+    const response = await fetch(current.url, { method: 'POST', headers: { 'Content-Type': 'text/xml; charset=utf-8', SOAPAction: '"http://tempuri.org/setListeCommandes"' }, body: soapForOrder(typedOrder, items, token) });
     const responseXml = await response.text();
     const fault = tag(responseXml, 'faultstring') || tag(responseXml, 'Text');
     if (fault) throw new Error(`Atlascom a refusé la commande : ${fault}`);
+    if (!response.ok) throw new Error(`Envoi Atlascom refusé (HTTP ${response.status}).`);
     const remoteOrderId = tag(responseXml, 'setListeCommandesResult');
     responseSummary = remoteOrderId || (responseXml.includes('setListeCommandesResult') ? 'Résultat Atlascom vide (HTTP 200).' : 'Réponse Atlascom sans résultat identifiable (HTTP 200).');
     if (!remoteOrderId) throw new Error('Atlascom n’a retourné aucun identifiant de commande. Vérifiez que le client 6666, le commercial 52 et les références produit existent et sont autorisés dans Atlascom.');
