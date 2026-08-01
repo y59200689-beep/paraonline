@@ -80,7 +80,7 @@ function soapForOrder(order: OrderRecord, items: Awaited<ReturnType<typeof resol
   const orderCode = atlascomOrderCode(order.order_id);
   const syncCode = `${orderCode}${Date.now()}`;
   // Atlascom's server dereferences codeTiers even when the published WSDL marks it optional.
-  const tier = `<codeTiers>${xml(current.tier || current.customer)}</codeTiers>`;
+  const tier = `<codeTiers>${xml(current.tier || current.agency)}</codeTiers>`;
   const header = `<Commande><Livreur></Livreur><Annule>false</Annule><Livre>false</Livre><Partiel>false</Partiel><codeCommande>${orderCode}</codeCommande>${tier}<codeClient>${xml(current.customer)}</codeClient><dateC>${date.toLocaleDateString('en-GB')}</dateC><date>${date.toISOString()}</date><codeModeP></codeModeP><dateEchu></dateEchu><totalHt>${money(totalHt)}</totalHt><totalTtc>${money(totalTtc)}</totalTtc><totalTva>${money(totalTtc - totalHt)}</totalTva><observation></observation><remarqueDev></remarqueDev><codedeSynchcronisation>${syncCode}</codedeSynchcronisation><remise>0</remise><mtremise>0</mtremise><codeCommerciale>${xml(current.commercial)}</codeCommerciale></Commande>`;
   const lines = items.map((item, index) => {
     const ttc = Number(item.price || 0); const ht = current.taxRate ? ttc / (1 + current.taxRate / 100) : ttc;
