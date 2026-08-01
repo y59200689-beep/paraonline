@@ -26,7 +26,7 @@ function config() {
     employee: process.env.ATLASCOM_EMPLOYEE_CODE || '', password: process.env.ATLASCOM_PASSWORD || '',
     agency: process.env.ATLASCOM_AGENCY_CODE || '000052', commercial: process.env.ATLASCOM_COMMERCIAL_CODE || '000052',
     customer: process.env.ATLASCOM_WEB_CUSTOMER_CODE || '6666',
-    tier: process.env.ATLASCOM_TIER_CODE || '',
+    tier: process.env.ATLASCOM_TIER_CODE || 'CLIENT_WEB',
     taxRate: Math.max(0, Number(process.env.ATLASCOM_TAX_RATE || 0)),
   };
 }
@@ -80,11 +80,13 @@ function soapForOrder(order: OrderRecord, items: Awaited<ReturnType<typeof resol
   const orderCode = atlascomOrderCode(order.order_id);
   const syncCode = `${orderCode}${Date.now()}`;
   // Atlascom's server dereferences codeTiers even when the published WSDL marks it optional.
-  const tier = `<codeTiers>${xml(current.tier || current.agency)}</codeTiers>`;
-  const header = `<Commande><Livreur></Livreur><Annule>false</Annule><Livre>false</Livre><Partiel>false</Partiel><codeCommande>${orderCode}</codeCommande>${tier}<codeClient>${xml(current.customer)}</codeClient><dateC>${date.toLocaleDateString('en-GB')}</dateC><date>${date.toISOString()}</date><codeModeP></codeModeP><dateEchu></dateEchu><totalHt>${money(totalHt)}</totalHt><totalTtc>${money(totalTtc)}</totalTtc><totalTva>${money(totalTtc - totalHt)}</totalTva><observation></observation><remarqueDev></remarqueDev><codedeSynchcronisation>${syncCode}</codedeSynchcronisation><remise>0</remise><mtremise>0</mtremise><codeCommerciale>${xml(current.commercial)}</codeCommerciale></Commande>`;
+  const tier = `<codeTiers>${xml(current.tier)}</codeTiers>`;
+  const header = `<Commande><Livreur></Livreur><Annule>false</Annule><Livre>false</Livre><Partiel>false</Partiel><codeCommande>${orderCode}</codeCommande>${tier}<codeClient>${xml(current.customer)}</codeClient><dateC>${date.toISOString().slice(0, 10)}</dateC><date>${date.toISOString()}</date><codeModeP></codeModeP><dateEchu></dateEchu><totalHt>${money(totalHt)}</totalHt><totalTtc>${money(totalTtc)}</totalTtc><totalTva>${money(totalTtc - totalHt)}</totalTva><observation></observation><remarqueDev></remarqueDev><codedeSynchcronisation>${syncCode}</codedeSynchcronisation><remise>0</remise><mtremise>0</mtremise><codeCommerciale>${xml(current.commercial)}</codeCommerciale></Commande>`;
   const lines = items.map((item, index) => {
     const ttc = Number(item.price || 0); const ht = current.taxRate ? ttc / (1 + current.taxRate / 100) : ttc;
-    return `<LigneCommande><Tva>${money(current.taxRate)}</Tva><PlafondRM>0</PlafondRM><QteLivre>0</QteLivre><codeLCommande>${index + 1}</codeLCommande><codeArticle>${xml(item.sku)}</codeArticle><qte>${money(item.quantity)}</qte><prixU>${money(ht)}</prixU><prixTTTC>${money(ttc)}</prixTTTC><codeCommande>${orderCode}</codeCommande><nbrPiece>0</nbrPiece><qteCar>0</qteCar><codedeSynchcronisation>${syncCode}</codedeSynchcronisation><puttc>${money(ttc)}</puttc><ptttc>${money(ttc * item.quantity)}</ptttc><ptht>${money(ht * item.quantity)}</ptht><puht>${money(ht)}</puht><remise>0</remise><qteGratuit>0</qteGratuit><codeTva>0</codeTva><ordre>${index + 1}</ordre><codeUnite>0</codeUnite><libelle>${xml(item.title)}</libelle><TypePrix></TypePrix><typeLigne></typeLigne><codesup></codesup><qteG>0</qteG></LigneCommande>`;
+    const lineTtc = ttc * Number(item.quantity || 0);
+    const lineTax = lineTtc - (ht * Number(item.quantity || 0));
+    return `<LigneCommande><Tva>${money(lineTax)}</Tva><PlafondRM>0</PlafondRM><QteLivre>0</QteLivre><codeLCommande>${index + 1}</codeLCommande><codeArticle>${xml(item.sku)}</codeArticle><qte>${money(item.quantity)}</qte><prixU>${money(ttc)}</prixU><prixTTTC>${money(lineTtc)}</prixTTTC><codeCommande>${orderCode}</codeCommande><nbrPiece>0</nbrPiece><qteCar>0</qteCar><codedeSynchcronisation>${syncCode}</codedeSynchcronisation><puttc>${money(ttc)}</puttc><ptttc>${money(lineTtc)}</ptttc><ptht>${money(ht)}</ptht><puht>${money(ht)}</puht><remise>0</remise><qteGratuit>0</qteGratuit><codeTva>0</codeTva><ordre>${index + 1}</ordre><codeUnite>0</codeUnite><libelle>${xml(item.title)}</libelle><TypePrix></TypePrix><typeLigne></typeLigne><codesup></codesup><qteG>0</qteG></LigneCommande>`;
   }).join('');
   return `<?xml version="1.0"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><setListeCommandes xmlns="http://tempuri.org/"><codeEmploye>${xml(current.employee)}</codeEmploye><codeAgence>${xml(current.agency)}</codeAgence><listeCommandes>${header}</listeCommandes><listeLigneCommandes>${lines}</listeLigneCommandes><token>${xml(token)}</token><codeLangue>FR</codeLangue></setListeCommandes></soap:Body></soap:Envelope>`;
 }
