@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { createOrderTrackingToken, createOrderVerificationToken, verifyOrderToken } from '@/lib/order-security';
@@ -161,13 +162,16 @@ export async function POST(request: Request) {
       ? settings.giftRanges.find((range: any) => subtotal >= Number(range.minAmount) && subtotal <= Number(range.maxAmount))
       : null;
     const isCod = paymentMethod === 'cod';
+    const fallbackOrderId = `PO-${crypto.randomInt(100000, 1000000)}`;
 
-    // Validate required signing secrets before reserving stock or inserting the
-    // order. The final tokens are generated after the database allocates its ID.
-    createOrderTrackingToken('order-reference-preflight');
-    if (isCod) createOrderVerificationToken('order-reference-preflight');
+    // Validate the signing secrets before reserving stock. Existing production
+    // databases still allocate the supplied reference themselves, while the
+    // newer migration may return a generated reference from the RPC.
+    createOrderTrackingToken(fallbackOrderId);
+    if (isCod) createOrderVerificationToken(fallbackOrderId);
 
     const order = {
+      order_id: fallbackOrderId,
       customer_name: String(orderData.name).trim().slice(0, 120),
       phone_number: String(orderData.phone).trim().slice(0, 40),
       address: String(orderData.address).trim().slice(0, 500),
@@ -195,11 +199,7 @@ export async function POST(request: Request) {
       throw createError;
     }
 
-    if (typeof createdOrderId !== 'string' || !createdOrderId) {
-      throw new Error('ORDER_REFERENCE_NOT_CREATED');
-    }
-
-    const orderId = createdOrderId;
+    const orderId = typeof createdOrderId === 'string' && createdOrderId ? createdOrderId : fallbackOrderId;
     const trackingToken = createOrderTrackingToken(orderId);
     const verificationToken = isCod ? createOrderVerificationToken(orderId) : '';
 
