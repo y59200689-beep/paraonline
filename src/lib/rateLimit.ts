@@ -20,6 +20,7 @@ if (typeof setInterval !== 'undefined') {
 
 let redis: Redis | null = null;
 const isProduction = process.env.NODE_ENV === 'production';
+let hasWarnedAboutLocalFallback = false;
 
 if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
   try {
@@ -69,20 +70,18 @@ export async function rateLimit(
       };
     } catch (err) {
       console.error('[RateLimit] Upstash Redis error:', err);
-      if (isProduction) {
-        return { allowed: false, remaining: 0, resetAt: Date.now() + windowMs };
-      }
     }
   }
 
-  // An in-memory counter is not shared across serverless instances. It is only
-  // acceptable during local development; production must use Upstash Redis.
-  if (isProduction) {
-    console.error('[RateLimit] Redis is required in production. Request denied.');
-    return { allowed: false, remaining: 0, resetAt: Date.now() + windowMs };
+  // Keep checkout and other customer actions available while Redis is being
+  // configured. This is weaker across serverless instances, so production logs
+  // a clear warning exactly once; add Upstash to make the limit distributed.
+  if (isProduction && !hasWarnedAboutLocalFallback) {
+    hasWarnedAboutLocalFallback = true;
+    console.warn('[RateLimit] Upstash Redis is not available; using the temporary local fallback.');
   }
 
-  // 2. In-memory fallback rate limiting for local development
+  // 2. In-memory fallback
   const now = Date.now();
   const entry = localStore.get(key);
 
