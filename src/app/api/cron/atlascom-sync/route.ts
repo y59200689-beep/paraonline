@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { requireCronSecret } from '@/lib/cron-auth';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -229,14 +230,10 @@ async function runAtlascomSync() {
 }
 
 export async function GET(request: Request) {
+  const unauthorized = requireCronSecret(request);
+  if (unauthorized) return unauthorized;
+
   try {
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
-
-    if (process.env.NODE_ENV === 'production' && (!cronSecret || authHeader !== `Bearer ${cronSecret}`)) {
-      return NextResponse.json({ success: false, error: 'Non autorisé.' }, { status: 401 });
-    }
-
     const result = await runAtlascomSync();
     return NextResponse.json({ success: true, ...result });
   } catch (error: any) {

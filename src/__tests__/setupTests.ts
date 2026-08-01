@@ -17,15 +17,17 @@ vi.mock('next/cache', () => ({
 
 // Mock BroadcastChannel (No-op in tests to avoid self-synchronization race conditions)
 class BroadcastChannelMock {
+  static instances: BroadcastChannelMock[] = [];
   name: string;
   onmessage: ((event: any) => void) | null = null;
   closed: boolean = false;
 
   constructor(name: string) {
     this.name = name;
+    BroadcastChannelMock.instances.push(this);
   }
 
-  postMessage(data: any) {
+  postMessage(_data: any) {
     // No-op to avoid message loops within the same test context
   }
 

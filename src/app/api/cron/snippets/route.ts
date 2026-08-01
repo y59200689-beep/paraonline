@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { requireCronSecret } from '@/lib/cron-auth';
+import { runSafeCronAction } from '@/lib/safe-cron-actions';
 
 // Helper to determine if a scheduled snippet is due
 function isSnippetDue(snippet: any): boolean {
@@ -20,15 +22,10 @@ function isSnippetDue(snippet: any): boolean {
 }
 
 export async function GET(request: Request) {
-  try {
-    // Optional Security token check for production Vercel Crons
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
-    
-    if (process.env.NODE_ENV === 'production' && cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ success: false, error: 'Non autorisé.' }, { status: 401 });
-    }
+  const unauthorized = requireCronSecret(request);
+  if (unauthorized) return unauthorized;
 
+  try {
     // Fetch active cron snippets
     const { data: snippets, error: fetchError } = await supabase
       .from('code_snippets')
@@ -45,33 +42,14 @@ export async function GET(request: Request) {
         continue;
       }
 
-      // Execute snippet
       const logs: string[] = [];
-      const customConsole = {
-        log: (...args: any[]) => {
-          logs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' '));
-        },
-        error: (...args: any[]) => {
-          logs.push('[ERROR] ' + args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' '));
-        },
-        warn: (...args: any[]) => {
-          logs.push('[WARN] ' + args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' '));
-        }
-      };
-
       let runStatus: 'success' | 'error' = 'success';
 
       try {
-        const executeFn = new Function('supabase', 'console', 'fetch', `
-          return (async () => {
-            ${snippet.code}
-          })();
-        `);
-        
-        await executeFn(supabase, customConsole, fetch);
+        logs.push(await runSafeCronAction(snippet.safe_action));
       } catch (err: any) {
         runStatus = 'error';
-        customConsole.error(err.message || String(err));
+        logs.push(`[ERROR] ${err.message || String(err)}`);
       }
 
       const logsStr = logs.join('\n') || 'Script exécuté avec succès (aucun log).';

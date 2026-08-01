@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { cleanPhoneNumber, sendWhatsAppMessage } from '@/lib/whatsapp';
+import { requireCronSecret } from '@/lib/cron-auth';
 
 // Helper: Calculate RFM segments server-side for all customers
 function computeCrmCustomers(orders: any[], profiles: any[]) {
@@ -124,6 +125,9 @@ function computeCrmCustomers(orders: any[], profiles: any[]) {
 }
 
 export async function GET(request: Request) {
+  const unauthorized = requireCronSecret(request);
+  if (unauthorized) return unauthorized;
+
   try {
     const { searchParams } = new URL(request.url);
     const forceRunFlowId = searchParams.get('flow_id'); // Allow manual debug run of a specific flow

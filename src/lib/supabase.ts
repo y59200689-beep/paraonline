@@ -9,6 +9,10 @@ const isPlaceholder =
   process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-project-id') || 
   process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder');
 
+if (isPlaceholder && process.env.NODE_ENV === 'production') {
+  throw new Error('Supabase must be configured in production. Refusing to start with the local mock database.');
+}
+
 // --- In-Memory Database Mock for Development/Placeholder environments with File Persistence ---
 const globalForMock = globalThis as unknown as {
   mockDb: {
@@ -243,6 +247,7 @@ const getInitialCodeSnippets = () => {
       active: true,
       trigger_type: "cron",
       cron_expression: "*/5 * * * *",
+      safe_action: "archive_audit_logs",
       last_run: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
       last_run_status: "success",
       last_run_logs: "Début de l'archivage automatique des logs...\nNettoyage des anciens logs d'audit terminé avec succès.",

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
-import { verifyAdminSession, hashPassword } from '@/lib/session';
+import { hashPasswordAsync, verifyAdminSession } from '@/lib/session';
 
 export async function GET(request: Request) {
   try {
@@ -79,7 +79,7 @@ export async function POST(request: Request) {
 
       const { data: op, error } = await supabase
         .from('operators')
-        .update({ password: hashPassword(password) })
+        .update({ password: await hashPasswordAsync(password) })
         .eq('id', userId)
         .select()
         .single();
@@ -117,7 +117,7 @@ export async function POST(request: Request) {
     const newOperator = {
       id: opId,
       username: username.toLowerCase(),
-      password: hashPassword(password),
+      password: await hashPasswordAsync(password),
       name,
       role,
       created_at: new Date().toISOString(),

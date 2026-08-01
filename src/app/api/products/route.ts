@@ -20,6 +20,12 @@ const INGREDIENT_ALIASES: Record<string, string[]> = {
   squalane: ['squalane'],
 };
 
+const PUBLIC_PRODUCT_COLUMNS = [
+  'id', 'title', 'name', 'name_fr', 'vendor', 'image', 'images', 'price',
+  'compare_price', 'category', 'categories', 'tags', 'rating', 'reviews',
+  'description', 'ingredients', 'usage', 'stock', 'sku', 'points',
+].join(',');
+
 const normalizeIngredientKey = (value: string) => value
   .trim()
   .toLowerCase()
@@ -52,9 +58,8 @@ function mapProduct(item: Record<string, unknown>): Product {
     usage: (item.usage as string) || '',
     stock: item.stock !== null && item.stock !== undefined ? Number(item.stock) : 100,
     sku: (item.sku as string) || undefined,
-    buyingCost: item.buying_cost !== null && item.buying_cost !== undefined ? Number(item.buying_cost) : undefined,
     points: item.points !== null && item.points !== undefined ? Number(item.points) : 0,
-    status: ((item.status as string) || 'live') as 'live' | 'draft',
+    status: 'live',
   };
 }
 
@@ -134,6 +139,24 @@ function applySort(query: any, sort: string) {
   return query.order('title', { ascending: true }).order('id', { ascending: true });
 }
 
+function customConcernFilter(concern: { keywords?: string[]; ingredientKeywords?: string[]; productIds?: number[] }) {
+  const escapeValue = (value: string) => value.replace(/[,.()]/g, ' ').trim();
+  const textKeywords = [...(concern.keywords || []), ...(concern.ingredientKeywords || [])]
+    .map(escapeValue)
+    .filter(Boolean)
+    .slice(0, 20);
+  const clauses = textKeywords.flatMap(keyword => [
+    `title.ilike.%${keyword}%`,
+    `name.ilike.%${keyword}%`,
+    `name_fr.ilike.%${keyword}%`,
+    `description.ilike.%${keyword}%`,
+    `ingredients.ilike.%${keyword}%`,
+  ]);
+  const productIds = (concern.productIds || []).filter(Number.isInteger).slice(0, 100);
+  if (productIds.length > 0) clauses.push(`id.in.(${productIds.join(',')})`);
+  return clauses.join(',');
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
@@ -168,7 +191,7 @@ export async function GET(request: Request) {
       const ids = idsStr.split(',').map(Number).filter(Boolean).slice(0, 15);
       const { data, error } = await supabase
         .from('products')
-        .select('*')
+        .select(PUBLIC_PRODUCT_COLUMNS)
         .in('id', ids);
 
       if (error || !data) {
@@ -188,7 +211,7 @@ export async function GET(request: Request) {
       const id = parseInt(idStr);
       const { data, error } = await supabase
         .from('products')
-        .select('*')
+        .select(PUBLIC_PRODUCT_COLUMNS)
         .eq('id', id)
         .single();
         
@@ -208,7 +231,7 @@ export async function GET(request: Request) {
       );
     }
 
-    let query = supabase.from('products').select('*', { count: 'exact' });
+    let query = supabase.from('products').select(PUBLIC_PRODUCT_COLUMNS, { count: 'exact' });
 
     // Filter out drafts on public customer storefront
     query = query.eq('status', 'live');
@@ -268,13 +291,22 @@ export async function GET(request: Request) {
     }
 
     const categoryBackedConcern = catalogCategoryForConcern(concern);
-    const canFilterConcernInDatabase = Boolean(categoryBackedConcern) && category === 'all';
-    if (canFilterConcernInDatabase && categoryBackedConcern) {
-      query = query.or(catalogCategoryFilter(categoryBackedConcern));
+    const customConcerns = concern !== 'all' && !categoryBackedConcern ? await getCatalogConcerns() : [];
+    const selectedCustomConcern = customConcerns.find(item => item.id === concern);
+    const concernFilter = categoryBackedConcern
+      ? catalogCategoryFilter(categoryBackedConcern)
+      : selectedCustomConcern
+        ? customConcernFilter(selectedCustomConcern)
+        : '';
+
+    if (category === 'all' && concernFilter) {
+      query = query.or(concernFilter);
     }
 
-    const needsPostFilter = concern !== 'all' && !canFilterConcernInDatabase;
-    const catalogConcerns = needsPostFilter ? await getCatalogConcerns() : [];
+    // Concerns are translated to database filters above. This keeps pagination
+    // bounded instead of fetching the full catalogue into a serverless worker.
+    const needsPostFilter = false;
+    const catalogConcerns = customConcerns;
     let products: Product[] = [];
     let total = 0;
 
@@ -309,7 +341,7 @@ export async function GET(request: Request) {
       if (!error && isDefaultCatalogRequest && (!data || data.length === 0)) {
         const fallback = await supabase
           .from('products')
-          .select('*', { count: 'exact' })
+          .select(PUBLIC_PRODUCT_COLUMNS, { count: 'exact' })
           .eq('status', 'live')
           .order('title', { ascending: true })
           .range(from, to);

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { verifyAdminSession } from '@/lib/session';
 import { canManageSnippets } from '@/lib/permissions';
+import { runSafeCronAction } from '@/lib/safe-cron-actions';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -30,35 +31,14 @@ export async function POST(request: Request, { params }: Props) {
       return NextResponse.json({ success: false, error: 'Snippet introuvable.' }, { status: 404 });
     }
 
-    // Run the snippet
     const logs: string[] = [];
-    const customConsole = {
-      log: (...args: any[]) => {
-        logs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' '));
-      },
-      error: (...args: any[]) => {
-        logs.push('[ERROR] ' + args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' '));
-      },
-      warn: (...args: any[]) => {
-        logs.push('[WARN] ' + args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' '));
-      }
-    };
-
     let status: 'success' | 'error' = 'success';
     
     try {
-      // Execute the snippet code. We use an async IIFE wrapper.
-      // We pass the actual database clients and fetch to the script context.
-      const executeFn = new Function('supabase', 'console', 'fetch', `
-        return (async () => {
-          ${snippet.code}
-        })();
-      `);
-      
-      await executeFn(supabase, customConsole, fetch);
+      logs.push(await runSafeCronAction(snippet.safe_action));
     } catch (execErr: any) {
       status = 'error';
-      customConsole.error(execErr.message || String(execErr));
+      logs.push(`[ERROR] ${execErr.message || String(execErr)}`);
     }
 
     const logsStr = logs.join('\n') || 'Script exécuté avec succès (aucun log).';

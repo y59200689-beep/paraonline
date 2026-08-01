@@ -114,6 +114,45 @@ describe('Context Hooks Tests', () => {
       expect(result.current.cart[0].quantity).toBe(3);
     });
 
+    it('should ignore a stale empty-cart broadcast from another tab', async () => {
+      const BroadcastChannelClass = global.BroadcastChannel as any;
+      const initialChannelCount = BroadcastChannelClass.instances.length;
+      const { result } = renderHook(() => useCart(), { wrapper: AllProvidersWrapper });
+
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 20));
+      });
+
+      await act(async () => {
+        result.current.addToCart(mockProduct, 1);
+      });
+
+      const cartListener = BroadcastChannelClass.instances
+        .slice(initialChannelCount)
+        .find((channel: any) => channel.name === 'ecom_cart_channel' && channel.onmessage);
+
+      expect(cartListener).toBeDefined();
+      expect(JSON.parse(localStorage.getItem('cartBM') || '[]')).toHaveLength(1);
+
+      await act(async () => {
+        cartListener.onmessage({
+          data: {
+            type: 'SYNC_CART',
+            payload: {
+              cart: [],
+              appliedCoupon: null,
+              dailyGiftCode: null,
+              dailyGiftName: null,
+              shippingCity: '',
+            },
+          },
+        });
+      });
+
+      expect(result.current.cart).toHaveLength(1);
+      expect(result.current.cart[0].product.id).toBe(mockProduct.id);
+    });
+
     it('should respect stock boundaries and block excess quantity additions', async () => {
       const { result } = renderHook(() => useCart(), { wrapper: AllProvidersWrapper });
 

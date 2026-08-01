@@ -163,23 +163,44 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!isLoaded || typeof window === 'undefined') return;
     const channel = new BroadcastChannel('ecom_cart_channel');
     channel.onmessage = (event) => {
-      const { type, payload } = event.data;
+      const { type, payload } = event.data || {};
       if (type === 'SYNC_CART') {
-        const currentCartStr = localStorage.getItem('cartBM') || '[]';
-        const receivedCartStr = JSON.stringify(payload.cart);
-        if (currentCartStr !== receivedCartStr) {
-          setCart(payload.cart);
-        }
-        
-        const currentCouponStr = localStorage.getItem('couponBM') || 'null';
-        const receivedCouponStr = JSON.stringify(payload.appliedCoupon);
-        if (currentCouponStr !== receivedCouponStr) {
-          setAppliedCoupon(payload.appliedCoupon);
+        // localStorage is shared synchronously between tabs and is updated by
+        // every cart mutation before a broadcast is sent. A background tab can
+        // still broadcast stale React state, so never let its payload overwrite
+        // the newer persisted cart.
+        try {
+          const storedCart: CartItem[] = JSON.parse(localStorage.getItem('cartBM') || '[]');
+          setCart((currentCart) =>
+            JSON.stringify(currentCart) === JSON.stringify(storedCart)
+              ? currentCart
+              : storedCart
+          );
+        } catch (error) {
+          console.error('Error syncing cart from storage', error);
         }
 
-        setDailyGiftCode(payload.dailyGiftCode);
-        setDailyGiftName(payload.dailyGiftName);
-        setShippingCity(payload.shippingCity);
+        try {
+          const storedCoupon: Coupon | null = JSON.parse(localStorage.getItem('couponBM') || 'null');
+          setAppliedCoupon((currentCoupon) =>
+            JSON.stringify(currentCoupon) === JSON.stringify(storedCoupon)
+              ? currentCoupon
+              : storedCoupon
+          );
+        } catch (error) {
+          console.error('Error syncing coupon from storage', error);
+        }
+
+        const storedGiftCode = localStorage.getItem('giftCodeBM');
+        const storedGiftName = localStorage.getItem('giftNameBM');
+        setDailyGiftCode((currentCode) => currentCode === storedGiftCode ? currentCode : storedGiftCode);
+        setDailyGiftName((currentName) => currentName === storedGiftName ? currentName : storedGiftName);
+
+        if (typeof payload?.shippingCity === 'string') {
+          setShippingCity((currentCity) =>
+            currentCity === payload.shippingCity ? currentCity : payload.shippingCity
+          );
+        }
       }
     };
     return () => {

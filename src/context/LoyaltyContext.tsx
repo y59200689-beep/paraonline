@@ -241,9 +241,6 @@ export const LoyaltyProvider: React.FC<{ children: React.ReactNode }> = ({ child
         await supabase.from('customer_profiles').insert({
           id: user.id,
           email: user.email,
-          points: 0,
-          total_earned: 0,
-          points_history: [],
           diary_logs: [],
           planner_am_dates: [],
           planner_pm_dates: [],
@@ -279,7 +276,9 @@ export const LoyaltyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
-  // ──────────── Persist to both Supabase & localStorage ────────────
+  // ──────────── Persist local loyalty state ────────────
+  // The database treats balances as server-controlled data. Browser code must
+  // never overwrite a points balance or transaction history directly.
   const saveToStorage = async (newPoints: number, newTotal: number, newHistory: PointsTransaction[]) => {
     try {
       localStorage.setItem('loyalty_points', String(newPoints));
@@ -289,21 +288,6 @@ export const LoyaltyProvider: React.FC<{ children: React.ReactNode }> = ({ child
       console.error('Error saving loyalty data to localStorage:', e);
     }
 
-    if (isSupabaseConfigured() && supabaseUser.current) {
-      try {
-        await supabase
-          .from('customer_profiles')
-          .update({
-            points: newPoints,
-            total_earned: newTotal,
-            points_history: newHistory,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', supabaseUser.current.id);
-      } catch (e) {
-        console.error('Error saving loyalty data to Supabase:', e);
-      }
-    }
   };
 
   // ──────────── Auth Functions ────────────
@@ -341,9 +325,6 @@ export const LoyaltyProvider: React.FC<{ children: React.ReactNode }> = ({ child
           email,
           name,
           phone,
-          points: 0,
-          total_earned: 0,
-          points_history: [],
           diary_logs: [],
           planner_am_dates: [],
           planner_pm_dates: [],

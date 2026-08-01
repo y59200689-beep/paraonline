@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
-import { verifyAdminSession, hashPassword } from '@/lib/session';
+import { hashPasswordAsync, verifyAdminSession, verifyPassword } from '@/lib/session';
 
 export async function POST(request: Request) {
   try {
@@ -26,13 +26,7 @@ export async function POST(request: Request) {
     }
 
     // Check old password
-    let isOldCorrect = false;
-    const isHashed = /^[a-f0-9]{64}$/i.test(operator.password);
-    if (isHashed) {
-      isOldCorrect = operator.password === hashPassword(oldPassword);
-    } else {
-      isOldCorrect = operator.password === oldPassword;
-    }
+    const isOldCorrect = await verifyPassword(oldPassword, operator.password);
 
     if (!isOldCorrect) {
       return NextResponse.json({ success: false, error: 'Ancien mot de passe incorrect' }, { status: 400 });
@@ -41,7 +35,7 @@ export async function POST(request: Request) {
     // Update in database
     const { error: updateErr } = await supabase
       .from('operators')
-      .update({ password: hashPassword(newPassword) })
+      .update({ password: await hashPasswordAsync(newPassword) })
       .eq('id', session.id);
 
     if (updateErr) throw updateErr;

@@ -408,11 +408,9 @@ export const DEFAULT_SETTINGS: Settings = {
       linkValue: "kbeauty"
     }
   ],
-  coupons: [
-    { code: "BEAUTY10", discountPercent: 10, freeShipping: false, discountType: 'percent', discountValue: 10, minPurchase: 0, expiryDate: '2026-12-31', isActive: true },
-    { code: "CLINICAL15", discountPercent: 15, freeShipping: false, discountType: 'percent', discountValue: 15, minPurchase: 0, expiryDate: '2026-12-31', isActive: true },
-    { code: "FREESHIP", discountPercent: 0, freeShipping: true, discountType: 'percent', discountValue: 0, minPurchase: 300, expiryDate: '2026-12-31', isActive: true }
-  ],
+  // Coupon rules are validated by the server. Do not ship all active coupon
+  // definitions in the default storefront settings payload.
+  coupons: [],
   faq: [
     {
       q_fr: "Les produits sont-ils authentiques ?",

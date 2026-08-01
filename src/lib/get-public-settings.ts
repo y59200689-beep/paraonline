@@ -85,7 +85,6 @@ async function fetchPublicSettings(): Promise<PublicSettings> {
       customCategories: settings.customCategories || [],
       customConcerns: settings.customConcerns || [],
       banners,
-      coupons: settings.coupons,
       faq: settings.faq,
       shippingRules: settings.shippingRules,
       loyaltyPointsPerDh: settings.loyaltyPointsPerDh,

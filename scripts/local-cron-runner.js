@@ -2,6 +2,12 @@ const http = require('http');
 
 const URL = 'http://localhost:3000/api/cron/snippets';
 const INTERVAL_MS = 60 * 1000; // 1 minute
+const CRON_SECRET = process.env.CRON_SECRET;
+
+if (!CRON_SECRET || CRON_SECRET.length < 32) {
+  console.error('CRON_SECRET (32+ characters) must be set before starting the local cron runner.');
+  process.exit(1);
+}
 
 console.log('\x1b[36m%s\x1b[0m', '===============================================');
 console.log('\x1b[36m%s\x1b[0m', '   Local Cron Runner for Next.js E-Commerce   ');
@@ -21,7 +27,7 @@ function pingCronEndpoint() {
   const timestamp = new Date().toLocaleTimeString('fr-FR');
   console.log(`[${timestamp}] Pinging cron scheduler endpoint...`);
 
-  const req = http.get(URL, (res) => {
+  const req = http.get(URL, { headers: { Authorization: `Bearer ${CRON_SECRET}` } }, (res) => {
     let data = '';
 
     res.on('data', (chunk) => {
