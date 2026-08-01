@@ -131,6 +131,6 @@ ATLASCOM_WEB_CUSTOMER_CODE=6666
 ATLASCOM_TAX_RATE=0
 ```
 
-`ATLASCOM_TIER_CODE` is optional. Leave it unset unless Atlascom provides a distinct tier code; `codeClient` is sent as `6666` and no customer delivery data is exported.
+`ATLASCOM_TIER_CODE` is optional. When it is unset, Atlascom receives `6666` for both `codeTiers` and `codeClient`; set it only when Atlascom provides a distinct tier code. No customer delivery data is exported.
 
 The initial order export happens immediately after confirmation; it does not need a scheduled task. `/api/cron/atlascom-order-retries` is the five-minute retry route once a compatible recurring scheduler is enabled. COD is sent with an empty `codeModeP`, as Atlascom does not require a payment-code mapping. Keep `ATLASCOM_ORDER_EXPORT_ENABLED` unset until Atlascom validates the tax value.
