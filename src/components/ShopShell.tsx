@@ -6,6 +6,7 @@ import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useUi } from '@/context/UiContext';
 import { useSettings } from '@/context/SettingsContext';
+import { useLoyalty } from '@/context/LoyaltyContext';
 import { usePathname, useRouter } from 'next/navigation';
 import { Product } from '@/lib/data';
 import { useProducts } from '@/context/ProductsContext';
@@ -39,6 +40,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
   const { t, language } = useTranslation();
   const { products } = useProducts();
   const { settings } = useSettings();
+  const { clientUser } = useLoyalty();
   const { cart, isCartOpen, setIsCartOpen } = useCart();
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const pathname = usePathname();
@@ -677,7 +679,12 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
         onClose={() => setWishlistOpen(false)}
         onSelectProduct={(p) => setSelectedProduct(p)}
       />
-      <SkinDiagnostic isOpen={isDiagnosticOpen} onClose={() => setDiagnosticOpen(false)} onOpenCart={() => setIsCartOpen(true)} />
+      <SkinDiagnostic
+        isOpen={isDiagnosticOpen}
+        onClose={() => setDiagnosticOpen(false)}
+        onOpenCart={() => setIsCartOpen(true)}
+        experience={pathname.startsWith('/customer') && clientUser ? 'client' : 'storefront'}
+      />
       <ScratchCard isOpen={isScratchCardOpen} onClose={() => setScratchCardOpen(false)} />
       <QuickViewModal product={selectedProduct} isOpen={selectedProduct !== null} onClose={() => setSelectedProduct(null)} />
       

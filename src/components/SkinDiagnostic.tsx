@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import {
   ArrowLeft,
@@ -43,11 +43,13 @@ import { useSettings } from '@/context/SettingsContext';
 import { Product } from '@/lib/data';
 import { PoButton } from '@/components/ui/PoButton';
 import diagnosticQuestions from '@/data/diagnostic-questions.json';
+import styles from './SkinDiagnostic.module.css';
 
 interface SkinDiagnosticProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenCart?: () => void;
+  experience?: 'client' | 'storefront';
 }
 
 type AnswerField =
@@ -178,7 +180,7 @@ function optionFor(field: AnswerField, value: string) {
   return QUESTIONS.find((question) => question.field === field)?.options.find((option) => option.val === value);
 }
 
-export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose, onOpenCart }) => {
+export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose, onOpenCart, experience = 'storefront' }) => {
   const { language } = useTranslation();
   const { products } = useProducts();
   const { addToCart } = useCart();
@@ -192,8 +194,11 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
   const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
   const [matchedRule, setMatchedRule] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const dialogRef = useRef<HTMLElement>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
 
   const isRTL = language === 'AR';
+  const isClientExperience = experience === 'client';
   const isIntro = questionIndex === -1;
   const isResults = questionIndex === QUESTIONS.length;
   const currentQuestion = !isIntro && !isResults ? QUESTIONS[questionIndex] : null;
@@ -218,11 +223,46 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
 
   useEffect(() => {
     if (!isOpen) return;
+
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') {
+        onClose();
+        return;
+      }
+
+      if (event.key !== 'Tab' || !dialogRef.current) return;
+      const focusable = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((element) => !element.hasAttribute('hidden') && element.getAttribute('aria-hidden') !== 'true');
+
+      if (!focusable.length) {
+        event.preventDefault();
+        dialogRef.current.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
+
+    previouslyFocusedRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    window.requestAnimationFrame(() => {
+      dialogRef.current?.focus();
+    });
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      previouslyFocusedRef.current?.focus();
+    };
   }, [isOpen, onClose]);
 
   useEffect(() => {
@@ -324,41 +364,62 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
   return (
     <div
       data-app-area="diagnostic"
-      className={`t-modal-backdrop fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/55 p-3 backdrop-blur-sm sm:p-6 ${modalState === 'open' ? 'is-open' : modalState === 'closing' ? 'is-closing' : ''}`}
+      className={`t-modal-backdrop fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-3 sm:p-6 ${isClientExperience ? styles.backdropClient : 'bg-slate-950/55 backdrop-blur-sm'} ${modalState === 'open' ? 'is-open' : modalState === 'closing' ? 'is-closing' : ''}`}
       role="presentation"
       onMouseDown={(event) => {
         if (event.currentTarget === event.target) onClose();
       }}
     >
       <section
-        className={`t-modal relative flex max-h-[92dvh] w-full max-w-[980px] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-[#fbfdfc] text-slate-900 shadow-[0_28px_80px_rgba(15,23,42,0.24)] ${modalState === 'open' ? 'is-open' : modalState === 'closing' ? 'is-closing' : ''}`}
+        ref={dialogRef}
+        tabIndex={-1}
+        className={`t-modal relative flex flex-col overflow-hidden ${isClientExperience ? styles.dialogClient : 'max-h-[92dvh] w-full max-w-[980px] rounded-2xl border border-slate-200 bg-[#fbfdfc] text-slate-900 shadow-[0_28px_80px_rgba(15,23,42,0.24)]'} ${modalState === 'open' ? 'is-open' : modalState === 'closing' ? 'is-closing' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="diagnostic-title"
+        aria-describedby="diagnostic-subtitle"
         dir={isRTL ? 'rtl' : 'ltr'}
       >
-        <header className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-200 bg-white px-5 py-4 sm:px-7">
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700">
-              <Sparkles className="h-5 w-5" aria-hidden="true" />
-            </span>
-            <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-700">
-                {isRTL ? 'تقييم شخصي' : 'Évaluation personnalisée'}
-              </p>
-              <h2 id="diagnostic-title" className="truncate text-base font-bold tracking-tight text-slate-950 sm:text-lg">
-                {isRTL ? 'روتين البشرة Para Officinal' : 'Diagnostic routine Para Officinal'}
-              </h2>
+        <header className={`flex shrink-0 items-center justify-between gap-4 ${isClientExperience ? styles.headerClient : 'border-b border-slate-200 bg-white px-5 py-4 sm:px-7'}`}>
+          {isClientExperience ? (
+            <div className="flex min-w-0 items-center gap-3.5">
+              <span className={styles.brandIcon} aria-hidden="true"><Sparkles className="h-6 w-6" /></span>
+              <div className="min-w-0">
+                <h2 id="diagnostic-title" className={styles.brandName}>DERMO•IA</h2>
+                <p id="diagnostic-subtitle" className={styles.brandSubtitle}>
+                  {isRTL ? 'روتين عناية مخصص بالبشرة' : 'Routine skincare personnalisée'}
+                </p>
+              </div>
             </div>
-          </div>
-          <PoButton
-            variant="neutral"
-            size="md"
-            iconOnly
-            leftIcon={<X />}
-            aria-label={isRTL ? 'إغلاق التشخيص' : 'Fermer le diagnostic'}
-            onClick={onClose}
-          />
+          ) : (
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700">
+                <Sparkles className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <div className="min-w-0">
+                <p id="diagnostic-subtitle" className="text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-700">
+                  {isRTL ? 'تقييم شخصي' : 'Évaluation personnalisée'}
+                </p>
+                <h2 id="diagnostic-title" className="truncate text-base font-bold tracking-tight text-slate-950 sm:text-lg">
+                  {isRTL ? 'روتين البشرة Para Officinal' : 'Diagnostic routine Para Officinal'}
+                </h2>
+              </div>
+            </div>
+          )}
+          {isClientExperience ? (
+            <button type="button" className={styles.closeClient} aria-label={isRTL ? 'إغلاق تشخيص البشرة' : 'Fermer le diagnostic de peau'} onClick={onClose}>
+              <X className="h-5 w-5" aria-hidden="true" />
+            </button>
+          ) : (
+            <PoButton
+              variant="neutral"
+              size="md"
+              iconOnly
+              leftIcon={<X />}
+              aria-label={isRTL ? 'إغلاق التشخيص' : 'Fermer le diagnostic'}
+              onClick={onClose}
+            />
+          )}
         </header>
 
         {!isIntro && !isResults && (
@@ -380,6 +441,130 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
 
         <div className="min-h-0 flex-1 overflow-y-auto">
           {isIntro && (
+            isClientExperience ? (
+              <div className={styles.entry}>
+                <section className={styles.visual} aria-labelledby="diagnostic-entry-title">
+                  <Image
+                    src="/images/diagnostic/dermo-research-still-life.png"
+                    alt=""
+                    fill
+                    priority
+                    sizes="(max-width: 767px) 100vw, (max-width: 1099px) 40vw, 520px"
+                    className={styles.visualImage}
+                  />
+                  <span className={styles.visualVeil} aria-hidden="true" />
+                  <div className={styles.visualCopy}>
+                    <h3 id="diagnostic-entry-title" className={styles.visualTitle}>
+                      {isRTL ? (
+                        <>بشرتك تستحق روتيناً <span className={styles.visualTitleAccent}>مناسباً حقاً.</span></>
+                      ) : (
+                        <>
+                          <span className={styles.visualTitleLine}>Votre peau</span>
+                          <span className={styles.visualTitleLine}>mérite une routine</span>
+                          <span className={`${styles.visualTitleLine} ${styles.visualTitleAccent}`}>vraiment adaptée.</span>
+                        </>
+                      )}
+                    </h3>
+                    <p className={styles.visualDescription}>
+                      {isRTL
+                        ? 'أجيبي عن بعض الأسئلة حول بشرتك وعاداتك وأهدافك لنقترح روتيناً مبنياً على مراجع جلدية معترف بها.'
+                        : 'Répondez à quelques questions sur votre peau, vos habitudes et vos objectifs. Notre moteur de recommandation s’appuie sur des références dermatologiques reconnues.'}
+                    </p>
+                  </div>
+                  <div className={styles.researchCard}>
+                    <span className={styles.researchCardIcon} aria-hidden="true"><FlaskConical className="h-5 w-5" /></span>
+                    <div>
+                      <strong>{isRTL ? 'توصيات مبنية على البحث' : 'Recommandations fondées sur la recherche'}</strong>
+                      <p>{isRTL ? 'روتين مبني على إجاباتك ومراجع جلدية معترف بها.' : 'Une routine construite à partir de vos réponses et de références dermatologiques reconnues.'}</p>
+                    </div>
+                  </div>
+                </section>
+
+                <section className={styles.content} aria-label={isRTL ? 'مراحل التقييم' : 'Fonctionnement du diagnostic'}>
+                  <span className={styles.eyebrow}>
+                    <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                    {isRTL ? 'روتينك المخصص في 3 مراحل' : 'VOTRE ROUTINE SUR MESURE EN 3 ÉTAPES'}
+                  </span>
+                  <h3 className={styles.contentHeading}>{isRTL ? 'كيف يعمل التقييم؟' : 'Comment ça fonctionne ?'}</h3>
+                  <p className={styles.contentDescription}>
+                    {isRTL
+                      ? 'ثمانية أسئلة قصيرة تساعدنا على فهم بشرتك وبناء اقتراح تجميلي واضح وقابل للتطبيق.'
+                      : 'Huit questions courtes nous permettent de comprendre votre peau et de construire une recommandation claire, réaliste et personnalisée.'}
+                  </p>
+
+                  <ol className={styles.journey}>
+                    {[
+                      {
+                        number: '01',
+                        icon: ListChecks,
+                        tone: styles.stepMint,
+                        title: isRTL ? 'أجيبي عن الاستبيان' : 'Répondez au questionnaire',
+                        description: isRTL ? 'أسئلة بسيطة حول نوع بشرتك واهتماماتك وروتينك الحالي وأهدافك.' : 'Quelques questions simples sur votre type de peau, vos préoccupations, votre routine actuelle et vos objectifs.',
+                        time: isRTL ? '2–3 دقائق' : '2–3 min',
+                      },
+                      {
+                        number: '02',
+                        icon: FlaskConical,
+                        tone: styles.stepBlue,
+                        title: isRTL ? 'تحليل مخصص' : 'Analyse personnalisée',
+                        description: isRTL ? 'تُحلل إجاباتك وفق معايير جلدية وتوصيات مستمدة من المراجع العلمية.' : 'Vos réponses sont analysées selon des critères dermatologiques et des recommandations issues de la littérature scientifique.',
+                        time: isRTL ? 'بضع ثوانٍ' : 'Quelques secondes',
+                      },
+                      {
+                        number: '03',
+                        icon: Sprout,
+                        tone: styles.stepAmber,
+                        title: isRTL ? 'احصلي على روتينك' : 'Recevez votre routine',
+                        description: isRTL ? 'اكتشفي الخطوات والمكونات والمنتجات الأنسب لاحتياجاتك مع نصائح استعمال واضحة.' : 'Découvrez les étapes, actifs et produits les plus adaptés à vos besoins, avec des conseils d’utilisation clairs.',
+                        time: isRTL ? 'فوري' : 'Immédiat',
+                      },
+                    ].map((step) => {
+                      const StepIcon = step.icon;
+                      return (
+                        <li key={step.number} className={`${styles.step} ${step.tone}`}>
+                          <span className={styles.stepIcon} aria-hidden="true">
+                            <StepIcon className="h-6 w-6" />
+                            <span className={styles.stepNumber}>{step.number}</span>
+                          </span>
+                          <div className={styles.stepCopy}>
+                            <strong>{step.title}</strong>
+                            <p>{step.description}</p>
+                          </div>
+                          <span className={styles.timeBadge}><Clock3 className="h-3.5 w-3.5" aria-hidden="true" />{step.time}</span>
+                        </li>
+                      );
+                    })}
+                  </ol>
+
+                  <button type="button" className={styles.cta} onClick={() => setQuestionIndex(0)}>
+                    <span className={styles.ctaIcon} aria-hidden="true"><Sparkles className="h-5 w-5" /></span>
+                    <span>
+                      <span className={styles.ctaLabel}>{isRTL ? 'ابدئي تشخيص بشرتك' : 'COMMENCER MON DIAGNOSTIC'}</span>
+                      <span className={styles.ctaSubline}>{isRTL ? 'مجاني • بدون صورة • حوالي 3 دقائق' : 'Gratuit • Sans photo • Environ 3 minutes'}</span>
+                    </span>
+                    <span className={styles.ctaArrow} aria-hidden="true">{isRTL ? <ArrowLeft className="h-5 w-5" /> : <ArrowRight className="h-5 w-5" />}</span>
+                  </button>
+                  <p className={styles.privacy}><ShieldCheck className="h-4 w-4" aria-hidden="true" />{isRTL ? 'تبقى إجاباتك سرية وتُستخدم فقط لتخصيص روتينك.' : 'Vos réponses restent confidentielles et servent uniquement à personnaliser votre routine.'}</p>
+                </section>
+
+                <div className={styles.trustStrip} aria-label={isRTL ? 'مزايا التشخيص' : 'Garanties du diagnostic'}>
+                  {[
+                    [CheckCircle2, isRTL ? 'استبيان سريع' : 'Questionnaire rapide', isRTL ? 'بضع دقائق فقط' : 'Quelques minutes seulement'],
+                    [FlaskConical, isRTL ? 'مقاربة قائمة على البحث' : 'Approche fondée sur la recherche', isRTL ? 'مراجع جلدية معترف بها' : 'Références dermatologiques reconnues'],
+                    [Sprout, isRTL ? 'روتين مخصص' : 'Routine personnalisée', isRTL ? 'مناسب لإجاباتك وأهدافك' : 'Adaptée à vos réponses et objectifs'],
+                    [ShieldCheck, isRTL ? 'بيانات سرية' : 'Données confidentielles', isRTL ? 'لا حاجة إلى صورة' : 'Aucune photo requise'],
+                  ].map(([Icon, title, description]) => {
+                    const TrustIcon = Icon as React.ComponentType<{ className?: string; 'aria-hidden'?: boolean }>;
+                    return (
+                      <div key={String(title)} className={styles.trustItem}>
+                        <span className={styles.trustIcon} aria-hidden="true"><TrustIcon className="h-4 w-4" /></span>
+                        <div><strong>{String(title)}</strong><span>{String(description)}</span></div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
             <div className="grid min-h-[610px] lg:grid-cols-[1.08fr_0.92fr]">
               <div className="flex flex-col justify-between bg-slate-950 px-6 py-8 text-slate-100 sm:px-10 sm:py-10">
                 <div>
@@ -442,6 +627,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                 </p>
               </div>
             </div>
+            )
           )}
 
           {currentQuestion && (

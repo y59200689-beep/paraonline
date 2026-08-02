@@ -116,24 +116,24 @@ describe('SkinDiagnostic question-only assessment', () => {
 
   it('opens with the new privacy promise and never requests camera access', async () => {
     await act(async () => {
-      render(<SkinDiagnostic isOpen onClose={vi.fn()} />, { wrapper: AllProvidersWrapper });
+      render(<SkinDiagnostic isOpen onClose={vi.fn()} experience="client" />, { wrapper: AllProvidersWrapper });
     });
 
-    expect(screen.getByText('Sans caméra, sans photo')).toBeDefined();
-    expect(screen.getByText('8', { selector: 'strong' })).toBeDefined();
+    expect(screen.getByText(/Gratuit • Sans photo • Environ 3 minutes/)).toBeDefined();
+    expect(screen.getByText('Questionnaire rapide')).toBeDefined();
     expect(screen.queryByText(/scan|analyser mon visage/i)).toBeNull();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Commencer le diagnostic' }));
+    fireEvent.click(screen.getByRole('button', { name: /COMMENCER MON DIAGNOSTIC/i }));
     expect(screen.getByText('Question 1 sur 8')).toBeDefined();
     expect(getUserMedia).not.toHaveBeenCalled();
   });
 
   it('shows progress through eight answers and produces a relevant routine', async () => {
     await act(async () => {
-      render(<SkinDiagnostic isOpen onClose={vi.fn()} />, { wrapper: AllProvidersWrapper });
+      render(<SkinDiagnostic isOpen onClose={vi.fn()} experience="client" />, { wrapper: AllProvidersWrapper });
     });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Commencer le diagnostic' }));
+    fireEvent.click(screen.getByRole('button', { name: /COMMENCER MON DIAGNOSTIC/i }));
 
     const answerAndContinue = (answer: string) => {
       fireEvent.click(screen.getByRole('radio', { name: new RegExp(answer, 'i') }));
@@ -160,5 +160,42 @@ describe('SkinDiagnostic question-only assessment', () => {
     expect(screen.getByText('Anua Cleansing Foam')).toBeDefined();
     expect(screen.getByText(/ne constitue pas un diagnostic médical/i)).toBeDefined();
     expect(getUserMedia).not.toHaveBeenCalled();
+  });
+
+  it('keeps the premium entry isolated from the storefront experience', async () => {
+    await act(async () => {
+      render(<SkinDiagnostic isOpen onClose={vi.fn()} experience="storefront" />, { wrapper: AllProvidersWrapper });
+    });
+
+    expect(screen.getByText('Une routine plus juste, construite autour de votre peau.')).toBeDefined();
+    expect(screen.queryByText('DERMO•IA')).toBeNull();
+  });
+
+  it('closes with Escape and restores focus to the launcher', async () => {
+    const DiagnosticHarness = () => {
+      const [open, setOpen] = React.useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setOpen(true)}>Ouvrir le diagnostic</button>
+          <SkinDiagnostic isOpen={open} onClose={() => setOpen(false)} experience="client" />
+        </>
+      );
+    };
+
+    await act(async () => {
+      render(<DiagnosticHarness />, { wrapper: AllProvidersWrapper });
+    });
+
+    const launcher = screen.getByRole('button', { name: 'Ouvrir le diagnostic' });
+    launcher.focus();
+    fireEvent.click(launcher);
+
+    await act(async () => {
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    });
+    expect(document.activeElement).toBe(screen.getByRole('dialog'));
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(document.activeElement).toBe(launcher);
   });
 });
