@@ -1,7 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { Product } from '@/lib/data';
+import { Product, PRODUCTS_DB } from '@/lib/data';
+import { supabase } from '@/lib/supabase';
 import { LoyaltyContext } from './LoyaltyContext';
 import { LanguageContext } from './LanguageContext';
 import { Heart, Sparkles, X, ArrowRight } from 'lucide-react';
@@ -33,17 +34,53 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const language = langContext?.language ?? 'FR';
   const storageKey = clientUser ? `${STORAGE_KEY}:${clientUser.id}` : null;
 
-  // Each signed-in customer gets an isolated local wishlist on this device.
+  // Keep a local copy for instant UI and offline fallback, then reconcile with
+  // the account-owned list so favorites follow the customer across devices.
   useEffect(() => {
     setIsLoaded(false);
-    try {
-      const saved = storageKey ? localStorage.getItem(storageKey) : null;
-      setWishlist(saved ? JSON.parse(saved) : []);
-    } catch (e) {
-      console.error('WishlistContext: failed to load from localStorage', e);
-      setWishlist([]);
-    }
-    setIsLoaded(true);
+    const loadWishlist = async () => {
+      let localWishlist: Product[] = [];
+      try {
+        const saved = storageKey ? localStorage.getItem(storageKey) : null;
+        localWishlist = saved ? JSON.parse(saved) : [];
+      } catch (e) {
+        console.error('WishlistContext: failed to load from localStorage', e);
+      }
+
+      if (!clientUser) {
+        setWishlist([]);
+        setIsLoaded(true);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('customer_favorites')
+        .select('product_id')
+        .eq('customer_id', clientUser.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        setWishlist(localWishlist);
+      } else {
+        const productIds = new Set((data || []).map((row: { product_id: number }) => Number(row.product_id)));
+        if (productIds.size) {
+          setWishlist(PRODUCTS_DB.filter((product) => productIds.has(product.id)));
+        } else {
+          // Migrate valid favorites from this browser the first time the
+          // account-backed list is available.
+          const validLocalFavorites = localWishlist.filter((product) => Number.isInteger(product.id));
+          if (validLocalFavorites.length) {
+            void supabase.from('customer_favorites').upsert(
+              validLocalFavorites.map((product) => ({ customer_id: clientUser.id, product_id: product.id })),
+              { onConflict: 'customer_id,product_id' }
+            );
+          }
+          setWishlist(validLocalFavorites);
+        }
+      }
+      setIsLoaded(true);
+    };
+    void loadWishlist();
   }, [storageKey]);
 
   // Listen to cross-tab BroadcastChannel
@@ -97,6 +134,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (prev.some(p => p.id === product.id)) return prev;
       const next = [...prev, product];
       try { if (storageKey) localStorage.setItem(storageKey, JSON.stringify(next)); } catch {}
+      void supabase.from('customer_favorites').upsert({ customer_id: clientUser.id, product_id: product.id }, { onConflict: 'customer_id,product_id' });
       return next;
     });
   }, [clientUser, storageKey]);
@@ -105,9 +143,10 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setWishlist(prev => {
       const next = prev.filter(p => p.id !== productId);
       try { if (storageKey) localStorage.setItem(storageKey, JSON.stringify(next)); } catch {}
+      if (clientUser) void supabase.from('customer_favorites').delete().eq('customer_id', clientUser.id).eq('product_id', productId);
       return next;
     });
-  }, [storageKey]);
+  }, [clientUser, storageKey]);
 
   const toggleWishlist = useCallback((product: Product) => {
     if (!clientUser) {
@@ -118,6 +157,11 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const exists = prev.some(p => p.id === product.id);
       const next = exists ? prev.filter(p => p.id !== product.id) : [...prev, product];
       try { if (storageKey) localStorage.setItem(storageKey, JSON.stringify(next)); } catch {}
+      if (exists) {
+        void supabase.from('customer_favorites').delete().eq('customer_id', clientUser.id).eq('product_id', product.id);
+      } else {
+        void supabase.from('customer_favorites').upsert({ customer_id: clientUser.id, product_id: product.id }, { onConflict: 'customer_id,product_id' });
+      }
       return next;
     });
   }, [clientUser, storageKey]);
@@ -128,7 +172,8 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const clearWishlist = useCallback(() => {
     persist([]);
-  }, [persist]);
+    if (clientUser) void supabase.from('customer_favorites').delete().eq('customer_id', clientUser.id);
+  }, [clientUser, persist]);
 
   return (
     <WishlistContext.Provider

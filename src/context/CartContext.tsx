@@ -7,6 +7,7 @@ import { useSettings } from './SettingsContext';
 import { useTranslation } from './LanguageContext';
 import { useUi } from './UiContext';
 import { useProducts } from './ProductsContext';
+import { supabase } from '@/lib/supabase';
 import {
   calculateSubtotal,
   calculateDiscount,
@@ -451,9 +452,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
       const res = await fetch('/api/orders', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(sessionData.session?.access_token ? { Authorization: `Bearer ${sessionData.session.access_token}` } : {})
+        },
         body: JSON.stringify(payload)
       });
       const data = await res.json();

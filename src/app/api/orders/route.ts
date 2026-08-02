@@ -104,6 +104,12 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
+    const bearerToken = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim();
+    let customerId: string | null = null;
+    if (bearerToken) {
+      const { data: authData } = await supabase.auth.getUser(bearerToken);
+      customerId = authData.user?.id || null;
+    }
     const orderData = body.orderData;
     const requestedItems = Array.isArray(body.items) ? body.items : [];
     const paymentMethod = ['cod', 'stripe', 'cmi'].includes(body.paymentMethod) ? body.paymentMethod : 'cod';
@@ -189,6 +195,7 @@ export async function POST(request: Request) {
       loyalty_tier: null,
       payment_method: paymentMethod,
       payment_status: 'unpaid',
+      customer_id: customerId || '',
     };
 
     const { data: createdOrderId, error: createError } = await supabase.rpc('create_order_with_stock', { p_order: order });

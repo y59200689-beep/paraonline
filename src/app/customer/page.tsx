@@ -89,65 +89,9 @@ interface UserAddress {
   isDefault: boolean;
 }
 
-const SAMPLE_ORDERS_PRESETS: Order[] = [
-  {
-    order_id: 'PO-2026-8942',
-    customer_name: 'Fatima-Zohra Alami',
-    phone_number: '0661234567',
-    address: 'Boulevard Anfa, Résidence Les Fleurs',
-    city: 'Casablanca',
-    subtotal: 780,
-    discount_amount: 78,
-    applied_coupon: 'BEAUTY10',
-    gift_item: 'Masque Hydra-Glow Offert (50ml)',
-    total: 702,
-    status: 'In Transit',
-    carrier: 'Yalidine Express',
-    tracking_number: 'YL-CAS-994821',
-    estimated_delivery: "Aujourd'hui avant 19:00",
-    date: '2026-07-22T14:30:00Z',
-    created_at: '2026-07-22T14:30:00Z',
-    items: [
-      { id: 1, title: 'Sérum Concentré Niacinamide 10% Pure Pureté', quantity: 1, price: 340, image: '/images/hero_serum_dropper.webp' },
-      { id: 2, title: 'Crème Hydratante Réparatrice Cicaplast B5+', quantity: 2, price: 220, image: '/images/cicaplast_hero_packshot.webp' }
-    ]
-  },
-  {
-    order_id: 'PO-2026-4102',
-    customer_name: 'Fatima-Zohra Alami',
-    phone_number: '0661234567',
-    address: 'Avenue Mohammed V, Agdal',
-    city: 'Rabat',
-    subtotal: 540,
-    discount_amount: 0,
-    applied_coupon: null,
-    gift_item: null,
-    total: 540,
-    status: 'Delivered',
-    carrier: 'Cathedis Logistics',
-    tracking_number: 'CT-RBT-881240',
-    estimated_delivery: 'Livré le 20 Juillet',
-    date: '2026-07-20T09:15:00Z',
-    created_at: '2026-07-20T09:15:00Z',
-    items: [
-      { id: 3, title: 'Gel Nettoyant Purifiant Effaclar Duo+ M', quantity: 1, price: 290, image: '/images/effaclar_hero_packshot.webp' },
-      { id: 4, title: 'Fluide Solaire Anti-Taches SPF50+ Ultra-Léger', quantity: 1, price: 250, image: '/images/anthelios_hero_packshot.webp' }
-    ]
-  }
-];
+type CustomerOrdersState = 'idle' | 'loading' | 'ready' | 'error';
 
-const MOCK_DIAGNOSTIC_RESULT = {
-  date: '18 Juillet 2026',
-  score: 88,
-  skinTypeFr: 'Boutons & Taches / Peaux Mixtes à Tendances Acnéiques',
-  skinTypeAr: 'مختلطة مع تصبغات وحبوب خفيفة',
-  metrics: {
-    hydration: 85,
-    elasticity: 90,
-    sebumControl: 74,
-    skinBarrier: 92
-  },
-  concerns: ['Taches d\'hyper-pigmentation', 'Brillance Zone T', 'Déshydratation ponctuelle'],
+const DIAGNOSTIC_ROUTINE_RECOMMENDATIONS = {
   routineAm: [
     { title: 'Gel Nettoyant Doux Purifiant', brand: 'La Roche-Posay', image: '/images/effaclar_hero_packshot.webp', price: 210 },
     { title: 'Sérum Éclat Vitamine C Pure', brand: 'Vichy', image: '/images/hero_serum_dropper.webp', price: 340 },
@@ -159,33 +103,6 @@ const MOCK_DIAGNOSTIC_RESULT = {
     { title: 'Baume Réparateur Intense Cicaplast B5+', brand: 'La Roche-Posay', image: '/images/cicaplast_hero_packshot.webp', price: 220 }
   ]
 };
-
-const AVAILABLE_COUPONS = [
-  {
-    code: 'BEAUTY10',
-    discountFr: '-10% de Réduction Immédiate',
-    discountAr: 'خصم 10% فوري',
-    minSpend: 'Dès 300 MAD',
-    expires: 'Valable encore 14 jours',
-    categoryFr: 'Sur tout le catalogue'
-  },
-  {
-    code: 'FREESHIP',
-    discountFr: 'Livraison Express Gratuite',
-    discountAr: 'توصيل مجاني لكافة المدن',
-    minSpend: 'Dès 250 MAD',
-    expires: 'Offert pour membre VIP',
-    categoryFr: 'Partout au Maroc'
-  },
-  {
-    code: 'VIP15',
-    discountFr: '-15% sur la gamme Anti-Âge & Sérums',
-    discountAr: 'خصم 15% على مستحضرات الشباب',
-    minSpend: 'Dès 500 MAD',
-    expires: 'Offre exclusive membre Gold',
-    categoryFr: 'Sérums & Anti-Âge'
-  }
-];
 
 export default function CustomerDashboard() {
   const { language } = useTranslation();
@@ -227,7 +144,7 @@ export default function CustomerDashboard() {
     updateClientProfile,
     logoutClient,
   } = useLoyalty();
-  const { showToast, setDiagnosticOpen } = useUi();
+  const { showToast, setDiagnosticOpen, diagnostic } = useUi();
 
   const { wishlist, removeFromWishlist } = useWishlist();
   const { addToCart } = useCart();
@@ -307,10 +224,42 @@ export default function CustomerDashboard() {
   };
 
   // Orders State & Search
-  const [orders, setOrders] = useState<Order[]>(SAMPLE_ORDERS_PRESETS);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [ordersState, setOrdersState] = useState<CustomerOrdersState>('idle');
+  const [ordersError, setOrdersError] = useState<string | null>(null);
   const [orderSearchQuery, setOrderSearchQuery] = useState('');
   const [orderFilterStatus, setOrderFilterStatus] = useState<'all' | 'in_transit' | 'delivered'>('all');
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+  const loadCustomerOrders = async () => {
+    if (!clientUser) return;
+    setOrdersState('loading');
+    setOrdersError(null);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) throw new Error('Votre session a expiré. Connectez-vous à nouveau.');
+
+      const response = await fetch('/api/customer/orders', {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store'
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload.success) throw new Error(payload.error || 'Impossible de charger vos commandes.');
+      setOrders(Array.isArray(payload.orders) ? payload.orders : []);
+      setOrdersState('ready');
+    } catch (error) {
+      setOrders([]);
+      setOrdersState('error');
+      setOrdersError(error instanceof Error ? error.message : 'Impossible de charger vos commandes.');
+    }
+  };
+
+  useEffect(() => {
+    void loadCustomerOrders();
+  // The identity is the stable dependency; the loader intentionally uses current session state.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clientUser?.id]);
 
   const copyCouponToClipboard = (code: string) => {
     navigator.clipboard.writeText(code);
@@ -319,47 +268,52 @@ export default function CustomerDashboard() {
     setTimeout(() => setCopiedCode(null), 2500);
   };
 
-  // Reorder 1-click helper
+  const findCatalogProduct = (item: Pick<OrderItem, 'id' | 'title'>) => PRODUCTS_DB.find((product) => {
+    const title = item.title?.trim().toLocaleLowerCase();
+    const productTitle = product.title.toLocaleLowerCase();
+    return product.id === item.id || Boolean(title && (productTitle.includes(title) || title.includes(productTitle)));
+  });
+
+  // Reorder only products that still exist in the live catalog. This avoids
+  // placing legacy or discontinued item snapshots in a customer's basket.
   const handleReorder = (order: Order) => {
+    let unavailableCount = 0;
     order.items.forEach((item) => {
-      const foundInDb = PRODUCTS_DB.find((p) => p.title.toLowerCase().includes(item.title.toLowerCase()) || p.id === item.id);
+      const foundInDb = findCatalogProduct(item);
       if (foundInDb) {
         addToCart(foundInDb, item.quantity);
       } else {
-        // Fallback dummy product
-        addToCart({
-          id: item.id || Math.floor(Math.random() * 100000),
-          title: item.title,
-          name: item.title,
-          price: item.price,
-          image: resolveCustomerProductImage(item),
-          category: 'Visage',
-          description: item.title
-        } as Product, item.quantity);
+        unavailableCount += 1;
       }
     });
-    showToast(isRTL ? 'تمت إضافة جميع منتجات الطلبية إلى السلة!' : 'Tous les soins de la commande ont été ajoutés à votre panier !');
+    if (unavailableCount === order.items.length) {
+      showToast(isRTL ? 'هذه المنتجات لم تعد متاحة.' : 'Ces produits ne sont plus disponibles dans le catalogue.', 'warning');
+      return;
+    }
+    showToast(unavailableCount
+      ? (isRTL ? 'تمت إضافة المنتجات المتاحة فقط إلى السلة.' : 'Les produits encore disponibles ont été ajoutés au panier.')
+      : (isRTL ? 'تمت إضافة جميع منتجات الطلبية إلى السلة!' : 'Tous les soins de la commande ont été ajoutés à votre panier!'));
   };
 
-  // Add Entire Prescribed Routine to Cart
+  const addRoutineProductToCart = (item: { title: string }) => {
+    const product = findCatalogProduct({ id: 0, title: item.title });
+    if (!product) {
+      showToast(isRTL ? 'هذا المنتج غير متاح حاليًا.' : 'Ce produit n’est plus disponible actuellement.', 'warning');
+      return false;
+    }
+    addToCart(product, 1);
+    return true;
+  };
+
+  // Add only live catalog products from the displayed routine.
   const handleAddFullRoutineToCart = () => {
-    [...MOCK_DIAGNOSTIC_RESULT.routineAm, ...MOCK_DIAGNOSTIC_RESULT.routinePm].forEach((item) => {
-      const match = PRODUCTS_DB.find((p) => p.title.toLowerCase().includes(item.title.toLowerCase()));
-      if (match) {
-        addToCart(match, 1);
-      } else {
-        addToCart({
-          id: Math.floor(Math.random() * 100000),
-          title: item.title,
-          name: item.title,
-          price: item.price,
-          image: item.image,
-          category: 'Visage',
-          description: item.title
-        } as Product, 1);
-      }
-    });
-    showToast(isRTL ? 'تمت إضافة الروتين الكامل إلى السلة!' : 'La routine complète a été ajoutée à votre panier !');
+    const routine = [...DIAGNOSTIC_ROUTINE_RECOMMENDATIONS.routineAm, ...DIAGNOSTIC_ROUTINE_RECOMMENDATIONS.routinePm];
+    const addedCount = routine.filter(addRoutineProductToCart).length;
+    if (addedCount) {
+      showToast(addedCount === routine.length
+        ? (isRTL ? 'تمت إضافة الروتين الكامل إلى السلة!' : 'La routine complète a été ajoutée à votre panier!')
+        : (isRTL ? 'تمت إضافة المنتجات المتاحة إلى السلة.' : 'Les produits disponibles ont été ajoutés au panier.'));
+    }
   };
 
   // Filtered Orders calculation
@@ -379,40 +333,36 @@ export default function CustomerDashboard() {
   }, [orders, orderSearchQuery, orderFilterStatus]);
 
   // Profile & Address States
-  const [profileName, setProfileName] = useState(clientUser?.name || 'Fatima-Zohra Alami');
-  const [profilePhone, setProfilePhone] = useState(clientUser?.phone || '0661234567');
-  const [profileEmail, setProfileEmail] = useState(clientUser?.email || 'fatimazohra@exemple.com');
+  const [profileName, setProfileName] = useState(clientUser?.name || '');
+  const [profilePhone, setProfilePhone] = useState(clientUser?.phone || '');
+  const [profileEmail, setProfileEmail] = useState(clientUser?.email || '');
   const [isProfileSaving, setIsProfileSaving] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isPasswordSaving, setIsPasswordSaving] = useState(false);
   const [passwordFeedback, setPasswordFeedback] = useState<{ type: 'error' | 'success'; message: string } | null>(null);
-  const [savedAddresses, setSavedAddresses] = useState<UserAddress[]>([
-    {
-      id: 'addr_1',
-      label: 'Adresse Principale (Domicile)',
-      fullName: 'Fatima-Zohra Alami',
-      phone: '0661234567',
-      city: 'Casablanca',
-      address: 'Boulevard Anfa, Résidence Les Fleurs, Appt 14',
-      isDefault: true
-    },
-    {
-      id: 'addr_2',
-      label: 'Bureau (Travail)',
-      fullName: 'Fatima-Zohra Alami',
-      phone: '0661234567',
-      city: 'Casablanca',
-      address: 'Tour Marina Casablanca, 12ème Étage',
-      isDefault: false
-    }
-  ]);
+  const [savedAddresses, setSavedAddresses] = useState<UserAddress[]>([]);
+  const [isAddressesLoading, setIsAddressesLoading] = useState(false);
   const [showAddAddressModal, setShowAddAddressModal] = useState(false);
   const [newAddrLabel, setNewAddrLabel] = useState('');
   const [newAddrCity, setNewAddrCity] = useState('Casablanca');
   const [newAddrStreet, setNewAddrStreet] = useState('');
 
-  const handleAddAddress = (e: React.FormEvent) => {
+  const persistAddresses = async (nextAddresses: UserAddress[]) => {
+    if (!clientUser) return false;
+    const { error } = await supabase
+      .from('customer_profiles')
+      .update({ delivery_addresses: nextAddresses, updated_at: new Date().toISOString() })
+      .eq('id', clientUser.id);
+    if (error) {
+      showToast(error.message || 'Impossible d’enregistrer vos adresses.', 'error');
+      return false;
+    }
+    setSavedAddresses(nextAddresses);
+    return true;
+  };
+
+  const handleAddAddress = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newAddrStreet.trim()) return;
     const newAddr: UserAddress = {
@@ -424,11 +374,19 @@ export default function CustomerDashboard() {
       address: newAddrStreet,
       isDefault: false
     };
-    setSavedAddresses([...savedAddresses, newAddr]);
+    const saved = await persistAddresses([...savedAddresses, newAddr]);
+    if (!saved) return;
     setShowAddAddressModal(false);
     setNewAddrLabel('');
     setNewAddrStreet('');
     showToast(isRTL ? 'تمت إضافة العنوان الجديد بنجاح' : 'Nouvelle adresse de livraison enregistrée !');
+  };
+
+  const handleSetDefaultAddress = async (addressId: string) => {
+    const nextAddresses = savedAddresses.map((address) => ({ ...address, isDefault: address.id === addressId }));
+    if (await persistAddresses(nextAddresses)) {
+      showToast(isRTL ? 'تم تحديث عنوان التسليم الرئيسي.' : 'Adresse principale mise à jour.');
+    }
   };
 
   useEffect(() => {
@@ -438,6 +396,31 @@ export default function CustomerDashboard() {
     setProfileEmail(clientUser.email || '');
   }, [clientUser]);
 
+  useEffect(() => {
+    const loadSavedAddresses = async () => {
+      if (!clientUser) return;
+      setIsAddressesLoading(true);
+      const { data, error } = await supabase
+        .from('customer_profiles')
+        .select('delivery_addresses')
+        .eq('id', clientUser.id)
+        .maybeSingle();
+      setIsAddressesLoading(false);
+      if (error) return;
+      setSavedAddresses(Array.isArray(data?.delivery_addresses) ? data.delivery_addresses as UserAddress[] : []);
+    };
+    void loadSavedAddresses();
+  }, [clientUser?.id]);
+
+  useEffect(() => {
+    if (!showAddAddressModal) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setShowAddAddressModal(false);
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [showAddAddressModal]);
+
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProfileSaving(true);
@@ -445,6 +428,16 @@ export default function CustomerDashboard() {
     setIsProfileSaving(false);
     if (!result.success) {
       showToast(result.error || (isRTL ? 'تعذر تحديث الملف الشخصي.' : 'Impossible de mettre à jour votre profil.'));
+      return;
+    }
+    if (profileEmail !== clientUser?.email) {
+      const { error: emailError } = await supabase.auth.updateUser({ email: profileEmail.trim() });
+      if (emailError) {
+        showToast(emailError.message || 'Les coordonnées ont été enregistrées, mais l’email n’a pas été modifié.', 'warning');
+        return;
+      }
+      await supabase.from('customer_profiles').update({ email: profileEmail.trim(), updated_at: new Date().toISOString() }).eq('id', clientUser?.id || '');
+      showToast('Vos coordonnées ont été enregistrées. Confirmez votre nouvel email depuis votre boîte de réception.');
       return;
     }
     showToast(isRTL ? 'تم تحديث معلومات الحساب بنجاح' : 'Vos informations personnelles ont été mises à jour.');
@@ -476,10 +469,49 @@ export default function CustomerDashboard() {
     setPasswordFeedback({ type: 'success', message: 'Votre mot de passe a bien été mis à jour.' });
   };
 
+  const handleDownloadPersonalData = () => {
+    if (!clientUser) return;
+    const exportData = {
+      exportedAt: new Date().toISOString(),
+      profile: {
+        name: profileName,
+        email: profileEmail,
+        phone: profilePhone,
+        loyaltyTier: tier,
+        loyaltyPoints: points,
+      },
+      deliveryAddresses: savedAddresses,
+      orders,
+      favorites: wishlist.map(({ id, title, price, image }) => ({ id, title, price, image })),
+    };
+    const file = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(file);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `para-officinal-mes-donnees-${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast('Votre fichier de données a été téléchargé.');
+  };
+
   // Convert points to MAD value
   const walletMadValue = useMemo(() => {
     return Math.floor(points / 10);
   }, [points]);
+
+  const latestOrder = orders[0];
+  const activeOrderCount = orders.filter((order) => /transit|shipped|expédié|confirm/i.test(order.status)).length;
+  const diagnosticDate = diagnostic ? new Intl.DateTimeFormat(language === 'AR' ? 'ar-MA' : 'fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date()) : null;
+  const activeCoupons = useMemo(() => {
+    const now = new Date();
+    return (settings.coupons || []).filter((coupon) => {
+      if (!coupon.code || coupon.isActive === false) return false;
+      const startsAt = coupon.startDate ? new Date(coupon.startDate) : null;
+      const expiresAt = coupon.expiryDate ? new Date(coupon.expiryDate) : null;
+      return (!startsAt || Number.isNaN(startsAt.getTime()) || startsAt <= now)
+        && (!expiresAt || Number.isNaN(expiresAt.getTime()) || expiresAt >= now);
+    });
+  }, [settings.coupons]);
 
   return (
     <ShopShell hideHeader={!clientUser}>
@@ -657,6 +689,7 @@ export default function CustomerDashboard() {
                         <button
                           key={tab.id}
                           id={`customer-tab-${tab.id}`}
+                          aria-controls={`customer-panel-${tab.id}`}
                           type="button"
                           role="tab"
                           aria-selected={isActive}
@@ -701,7 +734,7 @@ export default function CustomerDashboard() {
 
               {/* ──────────────── TAB 1: VUE D'ENSEMBLE (OVERVIEW BENTO GRID) ──────────────── */}
               {activeTab === 'overview' && (
-                <div className="space-y-8 animate-in fade-in duration-300">
+                <div id="customer-panel-overview" role="tabpanel" aria-labelledby="customer-tab-overview" className="space-y-8 animate-in fade-in duration-300">
                   
                   {/* Executive Metric Cards Bento */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -754,10 +787,10 @@ export default function CustomerDashboard() {
 
                       <div>
                         <span className={`text-3xl font-black font-heading ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                          {orders.filter(o => o.status.toLowerCase().includes('transit') || o.status.toLowerCase().includes('shipped')).length || 1} <span className="text-xs font-mono font-bold text-cyan-500">Colis</span>
+                          {activeOrderCount} <span className="text-xs font-mono font-bold text-cyan-500">Colis</span>
                         </span>
                         <p className={`text-xs mt-1 ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                          Dernier colis: <strong className="text-cyan-500 font-bold">PO-2026-8942</strong> (En transit)
+                          {latestOrder ? <>Dernière commande: <strong className="text-cyan-500 font-bold">{latestOrder.order_id}</strong></> : 'Aucune commande en cours'}
                         </p>
                       </div>
 
@@ -778,7 +811,7 @@ export default function CustomerDashboard() {
                     }`}>
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-500">
-                          SCORE CUTANÉ IA
+                          DIAGNOSTIC CUTANÉ
                         </span>
                         <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center">
                           <Sparkles className="w-5 h-5" />
@@ -787,10 +820,10 @@ export default function CustomerDashboard() {
 
                       <div>
                         <span className={`text-3xl font-black font-heading ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                          88 <span className="text-xs font-mono font-bold text-amber-500">/ 100</span>
+                          {diagnostic ? 'Disponible' : 'À faire'}
                         </span>
                         <p className={`text-xs mt-1 ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                          Profil: <strong className="text-amber-500 font-bold">Peau Mixte & Taches</strong>
+                          {diagnostic ? <>Profil: <strong className="text-amber-500 font-bold">{diagnostic.skinType}</strong></> : 'Obtenez une routine adaptée à votre peau.'}
                         </p>
                       </div>
 
@@ -801,7 +834,7 @@ export default function CustomerDashboard() {
                         fullWidth
                         rightIcon={<ChevronRight className={isRTL ? 'rotate-180' : ''} />}
                       >
-                        Voir la routine
+                        {diagnostic ? 'Voir ma routine' : 'Faire le diagnostic'}
                       </PoButton>
                     </div>
 
@@ -820,21 +853,23 @@ export default function CustomerDashboard() {
 
                       <div>
                         <span className={`text-3xl font-black font-heading ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                          3 <span className="text-xs font-mono font-bold text-purple-500">Coupons</span>
+                          {activeCoupons.length} <span className="text-xs font-mono font-bold text-purple-500">{activeCoupons.length > 1 ? 'codes' : 'code'}</span>
                         </span>
                         <p className={`text-xs mt-1 ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                          Code actif: <strong className="text-purple-500 font-mono font-bold">BEAUTY10 (-10%)</strong>
+                          {activeCoupons[0]
+                            ? <>Code actif: <strong className="text-purple-500 font-mono font-bold">{activeCoupons[0].code}</strong></>
+                            : 'Aucune offre active pour le moment.'}
                         </p>
                       </div>
 
                       <PoButton
-                        onClick={() => copyCouponToClipboard('BEAUTY10')}
+                        onClick={() => activeCoupons[0] ? copyCouponToClipboard(activeCoupons[0].code) : setActiveTab('cagnotte')}
                         variant="neutral"
                         size="md"
                         fullWidth
-                        leftIcon={<Copy />}
+                        leftIcon={activeCoupons[0] ? <Copy /> : <Ticket />}
                       >
-                        Copier le code BEAUTY10
+                        {activeCoupons[0] ? `Copier le code ${activeCoupons[0].code}` : 'Voir les offres'}
                       </PoButton>
                     </div>
 
@@ -842,7 +877,7 @@ export default function CustomerDashboard() {
 
 
                   {/* Recent Order Live Card */}
-                  <div className={`p-6 sm:p-8 rounded-3xl border shadow-xl relative overflow-hidden ${
+                  {latestOrder ? <div className={`p-6 sm:p-8 rounded-3xl border shadow-xl relative overflow-hidden ${
                     themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
                   }`}>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
@@ -852,17 +887,17 @@ export default function CustomerDashboard() {
                             DERNIÈRE EXPÉDITION
                           </span>
                           <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-                            En Transit Express
+                            {latestOrder.status}
                           </span>
                         </div>
                         <h3 className={`text-xl font-black font-heading ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                          Commande N° PO-2026-8942
+                          Commande N° {latestOrder.order_id}
                         </h3>
                       </div>
 
                       <div className="flex items-center gap-2">
                       <PoButton
-                        onClick={() => handleReorder(SAMPLE_ORDERS_PRESETS[0])}
+                        onClick={() => handleReorder(latestOrder)}
                         variant="primary"
                         size="md"
                         leftIcon={<RefreshCw />}
@@ -879,7 +914,7 @@ export default function CustomerDashboard() {
                           Articles inclus dans cette expédition:
                         </p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {SAMPLE_ORDERS_PRESETS[0].items.map((item, idx) => (
+                          {latestOrder.items.map((item, idx) => (
                             <div key={idx} className={`p-3 rounded-2xl border flex items-center gap-3 ${
                               themeMode === 'dark' ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-slate-200/80'
                             }`}>
@@ -904,15 +939,19 @@ export default function CustomerDashboard() {
                       }`}>
                         <div className="space-y-1">
                           <span className="text-[10px] font-mono font-bold text-slate-400 uppercase">Livraison Estimée</span>
-                          <p className="text-sm font-bold text-cyan-400">Aujourd'hui avant 19:00</p>
+                          <p className="text-sm font-bold text-cyan-400">{latestOrder.estimated_delivery || 'Délai communiqué par le transporteur'}</p>
                         </div>
                         <div className="space-y-1">
                           <span className="text-[10px] font-mono font-bold text-slate-400 uppercase">Transporteur</span>
-                          <p className={`text-xs font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>Yalidine Express (N° YL-CAS-994821)</p>
+                          <p className={`text-xs font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>{latestOrder.carrier || 'Transporteur à confirmer'}{latestOrder.tracking_number ? ` (N° ${latestOrder.tracking_number})` : ''}</p>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </div> : <section className={`p-8 sm:p-10 rounded-3xl border text-center ${themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'}`}>
+                    <Box className="w-8 h-8 mx-auto mb-4 text-emerald-500" aria-hidden="true" />
+                    <h3 className={`text-lg font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>Votre historique de commandes apparaîtra ici</h3>
+                    <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">Vos commandes liées à ce compte sont affichées de façon privée et sécurisée.</p>
+                  </section>}
 
                 </div>
               )}
@@ -920,7 +959,7 @@ export default function CustomerDashboard() {
 
               {/* ──────────────── TAB 2: MES COMMANDES & SUIVI ──────────────── */}
               {activeTab === 'commandes' && (
-                <div className="space-y-6 animate-in fade-in duration-300">
+                <div id="customer-panel-commandes" role="tabpanel" aria-labelledby="customer-tab-commandes" className="space-y-6 animate-in fade-in duration-300">
                   
                   {/* Filter & Search Bar */}
                   <div className={`p-4 rounded-3xl border shadow-md flex flex-col sm:flex-row items-center justify-between gap-4 ${
@@ -977,7 +1016,27 @@ export default function CustomerDashboard() {
 
                   {/* Orders Deck */}
                   <div className="space-y-6">
-                    {filteredOrders.map((order) => (
+                    {ordersState === 'loading' && (
+                      <div className={`rounded-3xl border p-10 text-center ${themeMode === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`} role="status">
+                        <RefreshCw className="mx-auto mb-3 h-6 w-6 animate-spin text-emerald-500" aria-hidden="true" />
+                        <p className="text-sm font-semibold">Chargement sécurisé de vos commandes...</p>
+                      </div>
+                    )}
+                    {ordersState === 'error' && (
+                      <div className={`rounded-3xl border p-8 text-center ${themeMode === 'dark' ? 'bg-slate-900 border-rose-900/50' : 'bg-white border-rose-200'}`} role="alert">
+                        <AlertCircle className="mx-auto mb-3 h-6 w-6 text-rose-500" aria-hidden="true" />
+                        <p className="text-sm font-semibold">{ordersError}</p>
+                        <PoButton onClick={() => void loadCustomerOrders()} variant="secondary" size="md" className="mt-4" leftIcon={<RefreshCw />}>Réessayer</PoButton>
+                      </div>
+                    )}
+                    {ordersState === 'ready' && filteredOrders.length === 0 && (
+                      <div className={`rounded-3xl border p-10 text-center ${themeMode === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+                        <Box className="mx-auto mb-3 h-7 w-7 text-emerald-500" aria-hidden="true" />
+                        <h3 className="text-base font-bold">{orderSearchQuery || orderFilterStatus !== 'all' ? 'Aucune commande ne correspond à ce filtre.' : 'Aucune commande liée à ce compte.'}</h3>
+                        <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">Les commandes futures passées pendant votre connexion apparaîtront ici automatiquement.</p>
+                      </div>
+                    )}
+                    {ordersState === 'ready' && filteredOrders.map((order) => (
                       <div
                         key={order.order_id}
                         className={`p-6 sm:p-8 rounded-3xl border shadow-xl space-y-6 relative overflow-hidden transition ${
@@ -1084,9 +1143,16 @@ export default function CustomerDashboard() {
 
               {/* ──────────────── TAB 3: DIAGNOSTIC IA & ROUTINE ──────────────── */}
               {activeTab === 'diagnostic' && (
-                <div className="space-y-8 animate-in fade-in duration-300">
-                  
-                  {/* Clinical Score Master Card */}
+                <div id="customer-panel-diagnostic" role="tabpanel" aria-labelledby="customer-tab-diagnostic" className="space-y-8 animate-in fade-in duration-300">
+                  {!diagnostic ? (
+                    <section className={`rounded-3xl border p-8 sm:p-12 text-center ${themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'}`}>
+                      <Sparkles className="mx-auto mb-4 h-9 w-9 text-emerald-500" aria-hidden="true" />
+                      <h2 className={`text-2xl font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>Votre diagnostic commence ici</h2>
+                      <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-slate-500">Répondez à quelques questions pour enregistrer votre profil de peau et découvrir une sélection de soins adaptée.</p>
+                      <PoButton onClick={() => setDiagnosticOpen(true)} variant="primary" size="lg" className="mt-6" leftIcon={<Sparkles />}>Lancer le diagnostic</PoButton>
+                    </section>
+                  ) : <>
+                  {/* Diagnostic Summary */}
                   <div className={`p-6 sm:p-10 rounded-3xl border shadow-xl relative overflow-hidden ${
                     themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
                   }`}>
@@ -1097,17 +1163,17 @@ export default function CustomerDashboard() {
                           <div className="absolute inset-0 rounded-full border-8 border-slate-800 border-t-emerald-500 border-r-teal-500 animate-spin-slow" style={{ animationDuration: '15s' }} />
                           <div className="text-center space-y-0.5">
                             <span className="text-4xl font-black font-heading text-emerald-500">
-                              {MOCK_DIAGNOSTIC_RESULT.score}
+                              Profil
                             </span>
-                            <span className="text-xs font-mono font-bold text-slate-400 block">/ 100 SCORE</span>
+                            <span className="text-xs font-mono font-bold text-slate-400 block">enregistré</span>
                           </div>
                         </div>
                         <div className="space-y-1">
                           <span className="text-[10px] font-mono font-bold text-emerald-500 uppercase tracking-widest">
-                            DIAGNOSTIC DU {MOCK_DIAGNOSTIC_RESULT.date}
+                            DIAGNOSTIC DU {diagnosticDate}
                           </span>
                           <h3 className={`text-sm font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                            {language === 'AR' ? MOCK_DIAGNOSTIC_RESULT.skinTypeAr : MOCK_DIAGNOSTIC_RESULT.skinTypeFr}
+                            {diagnostic.skinType}
                           </h3>
                         </div>
                       </div>
@@ -1115,26 +1181,19 @@ export default function CustomerDashboard() {
                       {/* Detailed Metric Gauges */}
                       <div className="lg:col-span-8 space-y-4">
                         <h4 className={`text-xs font-mono font-bold uppercase tracking-widest ${themeMode === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
-                          Bilan Dermatologique Détaillé
+                          Préférences enregistrées
                         </h4>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {[
-                            { label: 'Hydratation Cutanée', val: MOCK_DIAGNOSTIC_RESULT.metrics.hydration, color: 'bg-emerald-500' },
-                            { label: 'Élasticité & Fermeté', val: MOCK_DIAGNOSTIC_RESULT.metrics.elasticity, color: 'bg-teal-500' },
-                            { label: 'Régulation Sébum Zone T', val: MOCK_DIAGNOSTIC_RESULT.metrics.sebumControl, color: 'bg-amber-500' },
-                            { label: 'Résistance Barrière Cutanée', val: MOCK_DIAGNOSTIC_RESULT.metrics.skinBarrier, color: 'bg-cyan-500' }
+                            { label: 'Préoccupation principale', value: diagnostic.concern, color: 'border-emerald-500/25' },
+                            { label: 'Exposition au soleil', value: diagnostic.sunExposure, color: 'border-cyan-500/25' }
                           ].map((m, idx) => (
-                            <div key={idx} className={`p-4 rounded-2xl border space-y-2 ${
+                            <div key={idx} className={`p-4 rounded-2xl border ${m.color} space-y-2 ${
                               themeMode === 'dark' ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-slate-200/80'
                             }`}>
-                              <div className="flex items-center justify-between text-xs font-bold">
-                                <span className={themeMode === 'dark' ? 'text-slate-200' : 'text-slate-800'}>{m.label}</span>
-                                <span className="font-mono font-bold text-emerald-500">{m.val}%</span>
-                              </div>
-                              <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
-                                <div className={`h-full ${m.color} rounded-full transition-all duration-1000`} style={{ width: `${m.val}%` }} />
-                              </div>
+                              <span className="block text-[11px] font-semibold text-slate-500">{m.label}</span>
+                              <span className={themeMode === 'dark' ? 'text-slate-100' : 'text-slate-800'}>{m.value || 'Non renseignée'}</span>
                             </div>
                           ))}
                         </div>
@@ -1157,7 +1216,7 @@ export default function CustomerDashboard() {
                           </span>
                         </div>
                         <h3 className={`text-xl font-black font-heading ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                          Routine recommandée selon vos préférences
+                          Sélection de soins à explorer
                         </h3>
                       </div>
 
@@ -1180,7 +1239,7 @@ export default function CustomerDashboard() {
                         </h4>
 
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                          {MOCK_DIAGNOSTIC_RESULT.routineAm.map((prod, idx) => (
+                          {DIAGNOSTIC_ROUTINE_RECOMMENDATIONS.routineAm.map((prod, idx) => (
                             <div key={idx} className={`p-4 rounded-2xl border space-y-3 flex flex-col justify-between ${
                               themeMode === 'dark' ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-slate-200/80'
                             }`}>
@@ -1199,8 +1258,7 @@ export default function CustomerDashboard() {
                                 <span className={`text-xs font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>{prod.price} MAD</span>
                                 <PoButton
                                   onClick={() => {
-                                    addToCart({ id: Math.floor(Math.random() * 100000), title: prod.title, name: prod.title, price: prod.price, image: prod.image, category: 'Visage', description: prod.title } as Product, 1);
-                                    showToast(`${prod.title} ajouté au panier !`);
+                                    if (addRoutineProductToCart(prod)) showToast(`${prod.title} ajouté au panier!`);
                                   }}
                                   variant="primary"
                                   size="sm"
@@ -1222,7 +1280,7 @@ export default function CustomerDashboard() {
                         </h4>
 
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                          {MOCK_DIAGNOSTIC_RESULT.routinePm.map((prod, idx) => (
+                          {DIAGNOSTIC_ROUTINE_RECOMMENDATIONS.routinePm.map((prod, idx) => (
                             <div key={idx} className={`p-4 rounded-2xl border space-y-3 flex flex-col justify-between ${
                               themeMode === 'dark' ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-slate-200/80'
                             }`}>
@@ -1241,8 +1299,7 @@ export default function CustomerDashboard() {
                                 <span className={`text-xs font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>{prod.price} MAD</span>
                                 <PoButton
                                   onClick={() => {
-                                    addToCart({ id: Math.floor(Math.random() * 100000), title: prod.title, name: prod.title, price: prod.price, image: prod.image, category: 'Visage', description: prod.title } as Product, 1);
-                                    showToast(`${prod.title} ajouté au panier !`);
+                                    if (addRoutineProductToCart(prod)) showToast(`${prod.title} ajouté au panier!`);
                                   }}
                                   variant="primary"
                                   size="sm"
@@ -1258,6 +1315,7 @@ export default function CustomerDashboard() {
 
                     </div>
                   </div>
+                  </>}
 
                 </div>
               )}
@@ -1265,7 +1323,7 @@ export default function CustomerDashboard() {
 
               {/* ──────────────── TAB 4: CAGNOTTE VIP & COUPONS ──────────────── */}
               {activeTab === 'cagnotte' && (
-                <div className="space-y-8 animate-in fade-in duration-300">
+                <div id="customer-panel-cagnotte" role="tabpanel" aria-labelledby="customer-tab-cagnotte" className="space-y-8 animate-in fade-in duration-300">
                   
                   {/* VIP Tier Progress Card */}
                   <div className={`p-6 sm:p-8 rounded-3xl border shadow-xl relative overflow-hidden ${
@@ -1317,9 +1375,26 @@ export default function CustomerDashboard() {
                       </h3>
                     </div>
 
+                    {activeCoupons.length === 0 ? (
+                      <div className={`rounded-2xl border border-dashed p-8 text-center ${themeMode === 'dark' ? 'border-slate-700 bg-slate-950/50' : 'border-slate-300 bg-slate-50'}`}>
+                        <Ticket className="mx-auto mb-3 h-7 w-7 text-slate-400" aria-hidden="true" />
+                        <p className={`font-semibold ${themeMode === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>Aucun code promotionnel disponible</p>
+                        <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">Les offres actives de la boutique apparaîtront ici. Les conditions et les dates de validité sont vérifiées avant l’affichage.</p>
+                      </div>
+                    ) : (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {AVAILABLE_COUPONS.map((coupon, idx) => (
-                        <div key={idx} className={`p-5 rounded-2xl border space-y-4 flex flex-col justify-between relative overflow-hidden ${
+                      {activeCoupons.map((coupon) => {
+                        const discount = coupon.freeShipping
+                          ? 'Livraison offerte'
+                          : coupon.discountType === 'fixed'
+                            ? `-${coupon.discountValue ?? coupon.discountPercent} MAD`
+                            : `-${coupon.discountValue ?? coupon.discountPercent}%`;
+                        const minimum = coupon.minPurchase ? `Dès ${coupon.minPurchase} MAD` : 'Sans minimum d’achat';
+                        const expiry = coupon.expiryDate
+                          ? `Valable jusqu’au ${new Intl.DateTimeFormat('fr-MA', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(coupon.expiryDate))}`
+                          : 'Valable dans la limite des conditions de l’offre';
+                        return (
+                        <div key={coupon.code} className={`p-5 rounded-2xl border space-y-4 flex flex-col justify-between relative overflow-hidden ${
                           themeMode === 'dark' ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-slate-200/80'
                         }`}>
                           <div className="space-y-2">
@@ -1327,12 +1402,12 @@ export default function CustomerDashboard() {
                               <span className="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20">
                                 {coupon.code}
                               </span>
-                              <span className="text-[10px] text-slate-400 font-mono">{coupon.minSpend}</span>
+                              <span className="text-[10px] text-slate-400 font-mono">{minimum}</span>
                             </div>
                             <h4 className={`text-sm font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                              {language === 'AR' ? coupon.discountAr : coupon.discountFr}
+                              {discount}
                             </h4>
-                            <p className="text-[11px] text-slate-400">{coupon.expires}</p>
+                            <p className="text-[11px] text-slate-400">{expiry}</p>
                           </div>
 
                           <PoButton
@@ -1345,8 +1420,10 @@ export default function CustomerDashboard() {
                             {copiedCode === coupon.code ? 'Code Copié !' : 'Copier le code'}
                           </PoButton>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
+                    )}
                   </div>
 
                 </div>
@@ -1355,7 +1432,7 @@ export default function CustomerDashboard() {
 
               {/* ──────────────── TAB 5: MES FAVORIS ──────────────── */}
               {activeTab === 'favoris' && (
-                <div className="space-y-6 animate-in fade-in duration-300">
+                <div id="customer-panel-favoris" role="tabpanel" aria-labelledby="customer-tab-favoris" className="space-y-6 animate-in fade-in duration-300">
                   <div className={`p-6 rounded-3xl border shadow-xl flex items-center justify-between gap-4 ${
                     themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
                   }`}>
@@ -1455,7 +1532,7 @@ export default function CustomerDashboard() {
 
               {/* ──────────────── TAB 6: PROFIL & ADRESSES ──────────────── */}
               {activeTab === 'profil' && (
-                <div className="space-y-8 animate-in fade-in duration-300">
+                <div id="customer-panel-profil" role="tabpanel" aria-labelledby="customer-tab-profil" className="space-y-8 animate-in fade-in duration-300">
                   
                   {/* Personal Information Form */}
                   <div className={`p-6 sm:p-8 rounded-3xl border shadow-xl space-y-6 ${
@@ -1467,7 +1544,7 @@ export default function CustomerDashboard() {
                           INFORMATIONS PERSONNELLES
                         </span>
                         <h3 className={`text-xl font-black font-heading ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                          Gérer mon Profil Officinal
+                          Mes coordonnées
                         </h3>
                       </div>
                     </div>
@@ -1475,10 +1552,11 @@ export default function CustomerDashboard() {
                     <form onSubmit={handleSaveProfile} className="space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <label className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                          <label htmlFor="customer-profile-name" className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400">
                             Nom Complet
                           </label>
                           <input
+                            id="customer-profile-name"
                             type="text"
                             value={profileName}
                             onChange={(e) => setProfileName(e.target.value)}
@@ -1490,10 +1568,11 @@ export default function CustomerDashboard() {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                          <label htmlFor="customer-profile-phone" className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400">
                             Téléphone
                           </label>
                           <input
+                            id="customer-profile-phone"
                             type="tel"
                             value={profilePhone}
                             onChange={(e) => setProfilePhone(e.target.value)}
@@ -1506,10 +1585,11 @@ export default function CustomerDashboard() {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                        <label htmlFor="customer-profile-email" className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400">
                           Adresse Email
                         </label>
                         <input
+                          id="customer-profile-email"
                           type="email"
                           value={profileEmail}
                           onChange={(e) => setProfileEmail(e.target.value)}
@@ -1518,6 +1598,7 @@ export default function CustomerDashboard() {
                             themeMode === 'dark' ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
                           }`}
                         />
+                        <p className="text-xs leading-5 text-slate-500">Toute modification de l’adresse email doit être confirmée depuis votre boîte de réception.</p>
                       </div>
 
                       <PoButton
@@ -1550,6 +1631,15 @@ export default function CustomerDashboard() {
                         </h3>
                         <p className="text-xs leading-relaxed text-slate-400">Choisissez un mot de passe d'au moins 8 caractères, unique à votre compte.</p>
                       </div>
+                      <PoButton
+                        onClick={handleDownloadPersonalData}
+                        variant="neutral"
+                        size="sm"
+                        leftIcon={<FileText />}
+                        className="ml-auto shrink-0"
+                      >
+                        Mes données
+                      </PoButton>
                     </div>
 
                     <form onSubmit={handleChangePassword} className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_auto] gap-4 items-end">
@@ -1631,6 +1721,8 @@ export default function CustomerDashboard() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {isAddressesLoading && <p className="text-sm text-slate-500">Chargement de vos adresses...</p>}
+                      {!isAddressesLoading && savedAddresses.length === 0 && <p className="text-sm text-slate-500">Aucune adresse enregistrée. Ajoutez-en une pour accélérer votre prochaine commande.</p>}
                       {savedAddresses.map((addr) => (
                         <div key={addr.id} className={`p-5 rounded-2xl border space-y-3 relative ${
                           themeMode === 'dark' ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-slate-200/80'
@@ -1639,7 +1731,7 @@ export default function CustomerDashboard() {
                             <span className="text-xs font-bold text-emerald-500">{addr.label}</span>
                             {addr.isDefault && (
                               <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                DÉFAULT
+                                PRINCIPALE
                               </span>
                             )}
                           </div>
@@ -1649,6 +1741,7 @@ export default function CustomerDashboard() {
                           <p className="text-xs text-slate-400">
                             {addr.address}, {addr.city}
                           </p>
+                          {!addr.isDefault && <PoButton onClick={() => void handleSetDefaultAddress(addr.id)} variant="neutral" size="sm">Définir comme principale</PoButton>}
                         </div>
                       ))}
                     </div>
@@ -1665,12 +1758,12 @@ export default function CustomerDashboard() {
 
       {/* Add New Address Modal */}
       {showAddAddressModal && (
-        <div data-app-area="client" className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className={`w-full max-w-md p-6 sm:p-8 rounded-3xl border shadow-2xl space-y-6 ${
+        <div data-app-area="client" className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowAddAddressModal(false); }}>
+          <div role="dialog" aria-modal="true" aria-labelledby="new-address-title" className={`w-full max-w-md p-6 sm:p-8 rounded-3xl border shadow-2xl space-y-6 ${
             themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'
           }`}>
             <div className="flex items-center justify-between border-b pb-4 border-slate-800">
-              <h3 className="text-base font-bold font-heading">Ajouter une Adresse de Livraison</h3>
+              <h3 id="new-address-title" className="text-base font-bold font-heading">Ajouter une Adresse de Livraison</h3>
               <PoButton
                 onClick={() => setShowAddAddressModal(false)}
                 variant="neutral"
@@ -1683,8 +1776,9 @@ export default function CustomerDashboard() {
 
             <form onSubmit={handleAddAddress} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-[11px] font-mono uppercase tracking-wider text-slate-400">Nom de l'adresse (ex: Domicile, Bureau)</label>
+                <label htmlFor="new-address-label" className="text-[11px] font-mono uppercase tracking-wider text-slate-400">Nom de l'adresse (ex: Domicile, Bureau)</label>
                 <input
+                  id="new-address-label"
                   type="text"
                   required
                   value={newAddrLabel}
@@ -1697,8 +1791,9 @@ export default function CustomerDashboard() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-mono uppercase tracking-wider text-slate-400">Ville</label>
+                <label htmlFor="new-address-city" className="text-[11px] font-mono uppercase tracking-wider text-slate-400">Ville</label>
                 <select
+                  id="new-address-city"
                   value={newAddrCity}
                   onChange={(e) => setNewAddrCity(e.target.value)}
                   className={`w-full px-4 py-3 rounded-xl text-xs font-sans border ${
@@ -1712,8 +1807,9 @@ export default function CustomerDashboard() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-mono uppercase tracking-wider text-slate-400">Adresse Complète</label>
+                <label htmlFor="new-address-street" className="text-[11px] font-mono uppercase tracking-wider text-slate-400">Adresse Complète</label>
                 <textarea
+                  id="new-address-street"
                   required
                   rows={3}
                   value={newAddrStreet}
