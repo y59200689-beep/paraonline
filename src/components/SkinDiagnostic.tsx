@@ -41,6 +41,12 @@ import { useProducts } from '@/context/ProductsContext';
 import { useUi } from '@/context/UiContext';
 import { useSettings } from '@/context/SettingsContext';
 import { Product } from '@/lib/data';
+import {
+  buildDiagnosticRoutine,
+  ROUTINE_STEP_LABELS,
+  type DiagnosticAnswers,
+  type RoutineRecommendation,
+} from '@/lib/diagnostic-routine';
 import { PoButton } from '@/components/ui/PoButton';
 import diagnosticQuestions from '@/data/diagnostic-questions.json';
 import styles from './SkinDiagnostic.module.css';
@@ -61,8 +67,6 @@ type AnswerField =
   | 'spfHabit'
   | 'activeTolerance'
   | 'routineDepth';
-
-type DiagnosticAnswers = Record<AnswerField, string>;
 
 type DiagnosticOption = {
   val: string;
@@ -125,57 +129,6 @@ const ICONS: Record<string, React.ComponentType<{ className?: string; 'aria-hidd
   wind: Wind,
 };
 
-const CONCERN_KEYWORDS: Record<string, string[]> = {
-  acne: ['acné', 'acne', 'imperfection', 'bouton', 'pore', 'sébum', 'sebum', 'salicylic', 'niacinamide', 'cleansing', 'nettoyant', 'foam', 'gel'],
-  spots: ['tache', 'pigment', 'éclat', 'bright', 'vitamin c', 'vitamine c', 'niacinamide', 'serum', 'sérum'],
-  wrinkles: ['ride', 'anti-age', 'anti âge', 'fermeté', 'retinol', 'rétinol', 'peptide', 'collagen'],
-  dryness: ['hydrat', 'sec', 'dry', 'ceramide', 'céramide', 'hyaluronic', 'baume', 'cream', 'crème', 'lotion'],
-  redness: ['rougeur', 'sensible', 'sensitive', 'apais', 'calm', 'centella', 'cica', 'barrière', 'barrier'],
-};
-
-const SKIN_TYPE_KEYWORDS: Record<string, string[]> = {
-  oily: ['oil control', 'matifiant', 'sébum', 'sebum', 'pore', 'gel', 'foam'],
-  dry: ['hydrat', 'nourri', 'baume', 'cream', 'crème', 'ceramide', 'céramide'],
-  mixed: ['équilibr', 'balance', 'niacinamide', 'lotion', 'gel'],
-  normal: ['daily', 'quotidien', 'gentle', 'doux', 'hydrate'],
-};
-
-function productSearchText(product: Product) {
-  return [
-    product.title,
-    product.nameFr,
-    product.description,
-    product.ingredients,
-    product.category,
-    product.vendor,
-    ...(product.tags || []),
-  ]
-    .filter(Boolean)
-    .join(' ')
-    .toLowerCase();
-}
-
-function scoreProduct(product: Product, answers: DiagnosticAnswers) {
-  const text = productSearchText(product);
-  let score = 0;
-
-  for (const keyword of CONCERN_KEYWORDS[answers.concern] || []) {
-    if (text.includes(keyword)) score += 7;
-  }
-  for (const keyword of SKIN_TYPE_KEYWORDS[answers.skinType] || []) {
-    if (text.includes(keyword)) score += 3;
-  }
-
-  if (answers.breakoutFrequency === 'frequent' && /salicylic|niacinamide|zinc|gel|foam/.test(text)) score += 4;
-  if (answers.sensitivity === 'high' && /centella|cica|apais|gentle|doux|barrier|barrière|ceramide|céramide/.test(text)) score += 7;
-  if (answers.sensitivity === 'high' && /peel|aha|bha|retinol|rétinol|glycolic/.test(text)) score -= 8;
-  if (answers.activeTolerance === 'beginner' && /peel|aha|bha|retinol|rétinol/.test(text)) score -= 5;
-  if (answers.activeTolerance === 'advanced' && /vitamin c|vitamine c|retinol|rétinol|peptide|acid|acide/.test(text)) score += 3;
-  if ((answers.spfHabit !== 'daily' || answers.sunExposure === 'intense') && /spf|solaire|sunscreen|sun cream/.test(text)) score += 10;
-
-  return score;
-}
-
 function optionFor(field: AnswerField, value: string) {
   return QUESTIONS.find((question) => question.field === field)?.options.find((option) => option.val === value);
 }
@@ -192,6 +145,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
   const [questionIndex, setQuestionIndex] = useState(-1);
   const [answers, setAnswers] = useState<DiagnosticAnswers>(EMPTY_ANSWERS);
   const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
+  const [recommendedRoutine, setRecommendedRoutine] = useState<RoutineRecommendation[]>([]);
   const [matchedRule, setMatchedRule] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const dialogRef = useRef<HTMLElement>(null);
@@ -271,6 +225,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
       setQuestionIndex(-1);
       setAnswers(EMPTY_ANSWERS);
       setRecommendedProducts([]);
+      setRecommendedRoutine([]);
       setMatchedRule(null);
       setIsGenerating(false);
     }
@@ -307,19 +262,12 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
     const configuredIds: number[] = bestRule?.productIds?.length
       ? bestRule.productIds
       : customConcern?.productIds || [];
-    const configured = configuredIds
-      .map((id) => products.find((product) => product.id === id))
-      .filter(Boolean) as Product[];
-    const configuredSet = new Set(configured.map((product) => product.id));
-    const ranked = products
-      .filter((product) => !configuredSet.has(product.id))
-      .map((product) => ({ product, score: scoreProduct(product, answers) }))
-      .filter((item) => item.score > 0)
-      .sort((a, b) => b.score - a.score || b.product.rating - a.product.rating)
-      .map((item) => item.product);
-    const routineSize = answers.routineDepth === 'essential' ? 3 : answers.routineDepth === 'complete' ? 5 : 4;
-    const recommendations = [...configured, ...ranked].slice(0, routineSize);
-    setRecommendedProducts(recommendations.length ? recommendations : products.slice(0, routineSize));
+    const routine = buildDiagnosticRoutine(products, answers, {
+      configuredProductIds: configuredIds,
+      extraKeywords: [...(customConcern?.keywords || []), ...(customConcern?.ingredientKeywords || [])],
+    });
+    setRecommendedRoutine(routine);
+    setRecommendedProducts(routine.map((recommendation) => recommendation.product));
 
     fetch('/api/diagnostics', {
       method: 'POST',
@@ -350,6 +298,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
     setQuestionIndex(-1);
     setAnswers(EMPTY_ANSWERS);
     setRecommendedProducts([]);
+    setRecommendedRoutine([]);
     setMatchedRule(null);
   };
 
@@ -825,13 +774,21 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                     </div>
                   </div>
                   <div className="mt-4 divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white">
-                    {recommendedProducts.map((product, index) => (
+                    {recommendedProducts.map((product, index) => {
+                      const routineStep = recommendedRoutine[index]?.step;
+                      const stepLabel = routineStep ? ROUTINE_STEP_LABELS[routineStep] : null;
+                      return (
                       <article key={product.id} className="flex items-center gap-3 p-3.5 sm:gap-4 sm:p-4">
                         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-950 font-mono text-xs font-bold text-white">{index + 1}</span>
                         <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 p-1">
                           <Image src={product.image} alt={product.title} width={56} height={56} unoptimized className="h-full w-full object-contain" />
                         </div>
                         <div className="min-w-0 flex-1">
+                          {stepLabel && (
+                            <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-700">
+                              {isRTL ? stepLabel.ar : stepLabel.fr}
+                            </span>
+                          )}
                           <p className="truncate text-sm font-semibold text-slate-900">{product.title}</p>
                           <p className="mt-1 text-xs text-slate-500">{product.vendor || product.category}</p>
                         </div>
@@ -840,7 +797,8 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                           <span className="text-[11px] text-slate-400 line-through">{product.price} DH</span>
                         </div>
                       </article>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>

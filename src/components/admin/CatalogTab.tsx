@@ -46,10 +46,79 @@ import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 import { useAdminUI } from '@/app/admin/AdminUIContext';
 import { StatusBadge, EmptyState } from '@/components/admin/ui';
+import {
+  ACTIVE_STRENGTH_OPTIONS,
+  CONCERN_OPTIONS,
+  ROUTINE_ROLE_OPTIONS,
+  SENSITIVITY_OPTIONS,
+  SKIN_TYPE_OPTIONS,
+  TIME_OF_DAY_OPTIONS,
+  formatMetadataForSheet,
+  normalizeRecommendationMetadata,
+} from '@/lib/product-recommendation-metadata';
 
 interface CatalogTabProps {
   catalogStockFilter?: boolean;
   setCatalogStockFilter?: (filter: boolean) => void;
+}
+
+type MetadataOption = readonly [string, string];
+
+function MetadataChoiceGroup({
+  label,
+  hint,
+  options,
+  values,
+  onChange,
+  adminTheme,
+}: {
+  label: string;
+  hint: string;
+  options: readonly MetadataOption[];
+  values: readonly string[];
+  onChange: (values: string[]) => void;
+  adminTheme: 'light' | 'dark';
+}) {
+  const selected = new Set(values);
+  return (
+    <fieldset className={`rounded-2xl border p-4 ${adminTheme === 'light' ? 'border-slate-200 bg-white' : 'border-slate-800 bg-slate-950/35'}`}>
+      <legend className="sr-only">{label}</legend>
+      <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-700 dark:text-slate-200">{label}</p>
+          <p className="mt-1 text-[11px] leading-relaxed text-slate-400">{hint}</p>
+        </div>
+        <span className="rounded-full bg-slate-100 px-2 py-1 text-[9px] font-black uppercase tracking-wide text-slate-500 dark:bg-slate-800">
+          {selected.size} sélection{selected.size > 1 ? 's' : ''}
+        </span>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {options.map(([value, optionLabel]) => {
+          const active = selected.has(value);
+          return (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={active}
+              onClick={() => onChange(active ? values.filter(item => item !== value) : [...values, value])}
+              className={`inline-flex min-h-9 items-center gap-1.5 rounded-xl border px-3 py-2 text-[11px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 ${
+                active
+                  ? 'border-emerald-500 bg-emerald-600 text-white shadow-sm shadow-emerald-600/15'
+                  : adminTheme === 'light'
+                    ? 'border-slate-200 bg-slate-50 text-slate-600 hover:border-emerald-300 hover:bg-emerald-50/50 hover:text-emerald-700'
+                    : 'border-slate-700 bg-slate-900 text-slate-300 hover:border-emerald-700 hover:text-emerald-300'
+              }`}
+            >
+              <span className={`flex h-4 w-4 items-center justify-center rounded-md border ${active ? 'border-white/35 bg-white/15' : 'border-slate-300 dark:border-slate-600'}`}>
+                {active && <Check className="h-3 w-3" />}
+              </span>
+              {optionLabel}
+            </button>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
 }
 
 interface SearchableDropdownProps {
@@ -829,9 +898,9 @@ export default function CatalogTab({
 
   // New/Edit product modal/drawer state
   const [isNewProductModalOpen, setIsNewProductModalOpen] = useState(false);
-  const [modalTab, setModalTab] = useState<'general' | 'pricing' | 'variants' | 'seo'>('general');
+  const [modalTab, setModalTab] = useState<'general' | 'pricing' | 'variants' | 'diagnostic' | 'seo'>('general');
   const [productForm, setProductForm] = useState<Partial<Product>>({
-    title: '', vendor: '', price: 0, comparePrice: 0, category: 'visage', categories: ['visage'], tags: [], stock: 100, description: '', ingredients: '', usage: '', image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop', sku: '', buyingCost: 0, status: 'live'
+    title: '', vendor: '', price: 0, comparePrice: 0, category: 'visage', categories: ['visage'], tags: [], stock: 100, description: '', ingredients: '', usage: '', image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop', sku: '', buyingCost: 0, status: 'live', routineRoles: [], suitableSkinTypes: [], suitableConcerns: [], sensitivityLevels: [], activeStrength: 'none', timeOfDay: []
   });
   const [isUploading, setIsUploading] = useState(false);
   const [isSavingProduct, setIsSavingProduct] = useState(false);
@@ -1381,6 +1450,13 @@ export default function CatalogTab({
         }
       }
 
+      // 10. Validate recommendation metadata against the same vocabulary used
+      // by the admin form, API and database constraints.
+      const { errors: recommendationErrors } = normalizeRecommendationMetadata(mappedProduct);
+      Object.entries(recommendationErrors).forEach(([field, message]) => {
+        errors[field] = message;
+      });
+
       validations.push({
         rowIdx,
         errors,
@@ -1438,7 +1514,9 @@ export default function CatalogTab({
       const headers = [
         'ID', 'Titre', 'Marque', 'Prix (DH)', 'Prix Comparaison (DH)', 
         'Stock', 'SKU', 'Cout Achat (DH)', 'Categorie', 'Description', 
-        'Ingredients', 'Conseils Utilisation', 'Image URL', 'Tags'
+        'Ingredients', 'Conseils Utilisation', 'Image URL', 'Tags',
+        'Routine Roles', 'Suitable Skin Types', 'Suitable Concerns',
+        'Sensitivity Levels', 'Active Strength', 'Time Of Day'
       ];
 
       const rows = itemsToExport.map((p: any) => [
@@ -1455,7 +1533,13 @@ export default function CatalogTab({
         p.ingredients || '',
         p.usage || '',
         p.image || '',
-        Array.isArray(p.tags) ? p.tags.join(', ') : ''
+        Array.isArray(p.tags) ? p.tags.join(', ') : '',
+        formatMetadataForSheet(p.routineRoles),
+        formatMetadataForSheet(p.suitableSkinTypes),
+        formatMetadataForSheet(p.suitableConcerns),
+        formatMetadataForSheet(p.sensitivityLevels),
+        p.activeStrength || 'none',
+        formatMetadataForSheet(p.timeOfDay),
       ]);
 
       const csvContent = "\uFEFF" + [headers, ...rows].map(row => row.map(escapeCsv).join(',')).join('\n');
@@ -1493,6 +1577,12 @@ export default function CatalogTab({
     if (h === 'usage' || h === 'utilisation' || h === 'conseilsdutilisation') return 'usage';
     if (h === 'image' || h === 'urlimage' || h === 'photo' || h === 'img') return 'image';
     if (h === 'tags' || h === 'motscles') return 'tags';
+    if (['routineroles', 'rolesroutine', 'rolesdelaroutine', 'routine_role'].includes(h)) return 'routineRoles';
+    if (['suitableskintypes', 'typesdepeauadaptes', 'typespeau', 'skintypes'].includes(h)) return 'suitableSkinTypes';
+    if (['suitableconcerns', 'preoccupationsadaptees', 'preoccupations', 'concerns'].includes(h)) return 'suitableConcerns';
+    if (['sensitivitylevels', 'niveauxdesensibilite', 'sensibilite', 'sensitivity'].includes(h)) return 'sensitivityLevels';
+    if (['activestrength', 'puissancedesactifs', 'forceactif', 'strength'].includes(h)) return 'activeStrength';
+    if (['timeofday', 'momentdutilisation', 'periodedutilisation', 'usageperiod'].includes(h)) return 'timeOfDay';
     return '';
   };
 
@@ -1565,14 +1655,45 @@ export default function CatalogTab({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 25 * 1024 * 1024) {
+        setImportFile(null);
+        setImportError('Le fichier dépasse la taille maximale de 25 Mo.');
+        e.target.value = '';
+        return;
+      }
       setImportFile(file);
       setImportError('');
     }
   };
 
-  const handleContinueToMapping = () => {
+  const handleContinueToMapping = async () => {
     if (!importFile) return;
-    
+    const spreadsheet = importFile.name.toLowerCase().endsWith('.xlsx');
+
+    if (spreadsheet) {
+      try {
+        const { readSheet } = await import('read-excel-file/browser');
+        const sheetRows = await readSheet(importFile);
+        const lines = sheetRows
+          .map(row => row.map(value => value instanceof Date ? value.toISOString() : String(value ?? '').trim()))
+          .filter(row => row.some(Boolean));
+        if (lines.length < 2) {
+          setImportError("Le fichier doit contenir une ligne d'en-tête et au moins une ligne de données.");
+          return;
+        }
+        const headers = lines[0].map(String);
+        setCsvHeaders(headers);
+        setCsvPreviewRow(lines[1]);
+        setCsvAllRows(lines.slice(1));
+        setColumnMappings(Object.fromEntries(headers.map(header => [header, guessMapping(header)])));
+        setImportStep(2);
+      } catch (error) {
+        console.error('Excel parsing error:', error);
+        setImportError("Impossible de lire ce fichier Excel. Enregistrez-le au format .xlsx puis réessayez.");
+      }
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (event) => {
       const text = event.target?.result as string;
@@ -1642,6 +1763,13 @@ export default function CatalogTab({
       if (product.tags && typeof product.tags === 'string') {
         product.tags = product.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t !== '');
       }
+      const { metadata } = normalizeRecommendationMetadata(product);
+      product.routineRoles = metadata.routineRoles;
+      product.suitableSkinTypes = metadata.suitableSkinTypes;
+      product.suitableConcerns = metadata.suitableConcerns;
+      product.sensitivityLevels = metadata.sensitivityLevels;
+      product.activeStrength = metadata.activeStrength;
+      product.timeOfDay = metadata.timeOfDay;
       const categoryValues = [
         product.category,
         ...(Array.isArray(product.categories) ? product.categories : [product.categories]),
@@ -2072,7 +2200,7 @@ export default function CatalogTab({
           showToast('Produit mis à jour avec succès !', 'success');
           setIsNewProductModalOpen(false);
           setProductForm({
-            title: '', vendor: '', price: 0, comparePrice: 0, category: 'visage', categories: ['visage'], tags: [], stock: 100, description: '', ingredients: '', usage: '', image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop', sku: '', buyingCost: 0, status: 'live'
+            title: '', vendor: '', price: 0, comparePrice: 0, category: 'visage', categories: ['visage'], tags: [], stock: 100, description: '', ingredients: '', usage: '', image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop', sku: '', buyingCost: 0, status: 'live', routineRoles: [], suitableSkinTypes: [], suitableConcerns: [], sensitivityLevels: [], activeStrength: 'none', timeOfDay: []
           });
           await loadProducts();
           await fetchPaginatedProducts();
@@ -2084,7 +2212,7 @@ export default function CatalogTab({
         if (success) {
           setIsNewProductModalOpen(false);
           setProductForm({
-            title: '', vendor: '', price: 0, comparePrice: 0, category: 'visage', categories: ['visage'], tags: [], stock: 100, description: '', ingredients: '', usage: '', image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop', sku: '', buyingCost: 0, status: 'live'
+            title: '', vendor: '', price: 0, comparePrice: 0, category: 'visage', categories: ['visage'], tags: [], stock: 100, description: '', ingredients: '', usage: '', image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop', sku: '', buyingCost: 0, status: 'live', routineRoles: [], suitableSkinTypes: [], suitableConcerns: [], sensitivityLevels: [], activeStrength: 'none', timeOfDay: []
           });
           await loadProducts();
           await fetchPaginatedProducts();
@@ -3571,7 +3699,7 @@ export default function CatalogTab({
             setIsNewProductModalOpen(false);
             setModalTab('general');
             setProductForm({
-              title: '', vendor: '', price: 0, comparePrice: 0, category: 'visage', categories: ['visage'], tags: [], stock: 100, description: '', ingredients: '', usage: '', image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop', sku: '', buyingCost: 0, status: 'live'
+              title: '', vendor: '', price: 0, comparePrice: 0, category: 'visage', categories: ['visage'], tags: [], stock: 100, description: '', ingredients: '', usage: '', image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=320&auto=format&fit=crop', sku: '', buyingCost: 0, status: 'live', routineRoles: [], suitableSkinTypes: [], suitableConcerns: [], sensitivityLevels: [], activeStrength: 'none', timeOfDay: []
             });
           }}
         >
@@ -3623,6 +3751,7 @@ export default function CatalogTab({
                   { id: 'general', label: 'Général & Médias', icon: Edit3 },
                   { id: 'pricing', label: 'Tarifs & Marge', icon: Coins },
                   { id: 'variants', label: 'Variantes', icon: Layers },
+                  { id: 'diagnostic', label: 'Diagnostic IA', icon: Sparkles },
                   { id: 'seo', label: 'Google SEO', icon: Globe },
                 ].map(({ id, label, icon: Icon }) => {
                   const active = modalTab === id;
@@ -3967,6 +4096,85 @@ export default function CatalogTab({
                   </div>
                 )}
 
+                {modalTab === 'diagnostic' && (
+                  <div className="space-y-4 animate-in fade-in duration-200">
+                    <div className={`flex items-start gap-3 rounded-2xl border p-4 ${
+                      adminTheme === 'light'
+                        ? 'border-emerald-200 bg-emerald-50/70'
+                        : 'border-emerald-900/70 bg-emerald-950/25'
+                    }`}>
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-sm shadow-emerald-600/20">
+                        <Sparkles className="h-5 w-5" />
+                      </span>
+                      <div>
+                        <p className="text-sm font-black text-slate-900 dark:text-white">Profil de recommandation</p>
+                        <p className="mt-1 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+                          Ces données sont réservées à l’administration. Elles guident le diagnostic pour choisir un produit adapté par étape, sans doublons dans la routine.
+                        </p>
+                      </div>
+                    </div>
+
+                    <MetadataChoiceGroup
+                      label="Rôles dans la routine"
+                      hint="Sélectionnez toutes les étapes que ce produit peut réellement remplir."
+                      options={ROUTINE_ROLE_OPTIONS}
+                      values={productForm.routineRoles || []}
+                      onChange={(routineRoles) => setProductForm({ ...productForm, routineRoles: routineRoles as Product['routineRoles'] })}
+                      adminTheme={adminTheme}
+                    />
+                    <MetadataChoiceGroup
+                      label="Types de peau adaptés"
+                      hint="Laissez vide uniquement si le produit convient réellement à tous les types de peau."
+                      options={SKIN_TYPE_OPTIONS}
+                      values={productForm.suitableSkinTypes || []}
+                      onChange={(suitableSkinTypes) => setProductForm({ ...productForm, suitableSkinTypes: suitableSkinTypes as Product['suitableSkinTypes'] })}
+                      adminTheme={adminTheme}
+                    />
+                    <MetadataChoiceGroup
+                      label="Préoccupations ciblées"
+                      hint="Choisissez les besoins auxquels la formule apporte une réponse pertinente."
+                      options={CONCERN_OPTIONS}
+                      values={productForm.suitableConcerns || []}
+                      onChange={(suitableConcerns) => setProductForm({ ...productForm, suitableConcerns: suitableConcerns as Product['suitableConcerns'] })}
+                      adminTheme={adminTheme}
+                    />
+                    <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                      <MetadataChoiceGroup
+                        label="Niveaux de sensibilité"
+                        hint="Peaux capables de tolérer ce produit."
+                        options={SENSITIVITY_OPTIONS}
+                        values={productForm.sensitivityLevels || []}
+                        onChange={(sensitivityLevels) => setProductForm({ ...productForm, sensitivityLevels: sensitivityLevels as Product['sensitivityLevels'] })}
+                        adminTheme={adminTheme}
+                      />
+                      <MetadataChoiceGroup
+                        label="Moment d’utilisation"
+                        hint="Périodes recommandées dans la routine."
+                        options={TIME_OF_DAY_OPTIONS}
+                        values={productForm.timeOfDay || []}
+                        onChange={(timeOfDay) => setProductForm({ ...productForm, timeOfDay: timeOfDay as Product['timeOfDay'] })}
+                        adminTheme={adminTheme}
+                      />
+                    </div>
+                    <div className={`rounded-2xl border p-4 ${adminTheme === 'light' ? 'border-slate-200 bg-white' : 'border-slate-800 bg-slate-950/35'}`}>
+                      <label htmlFor="active-strength" className="text-xs font-black uppercase tracking-[0.12em] text-slate-700 dark:text-slate-200">
+                        Puissance des actifs
+                      </label>
+                      <p className="mb-3 mt-1 text-[11px] text-slate-400">Un seul niveau, basé sur l’actif le plus irritant de la formule.</p>
+                      <select
+                        id="active-strength"
+                        value={productForm.activeStrength || 'none'}
+                        onChange={(event) => setProductForm({ ...productForm, activeStrength: event.target.value as Product['activeStrength'] })}
+                        className={`h-11 w-full rounded-xl border px-3 text-xs font-bold outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 ${
+                          adminTheme === 'light' ? 'border-slate-200 bg-slate-50 text-slate-700' : 'border-slate-700 bg-slate-900 text-slate-200'
+                        }`}
+                      >
+                        {ACTIVE_STRENGTH_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                )}
+
                 {modalTab === 'seo' && (
                   <div className="space-y-6 animate-in fade-in duration-200">
                     {/* Google SERP Live Preview Card */}
@@ -4144,7 +4352,7 @@ export default function CatalogTab({
             <h3 className={`text-xs font-black uppercase tracking-wider ${
               adminTheme === 'light' ? 'text-emerald-700' : 'text-emerald-400'
             }`}>
-              Importer des Produits depuis un fichier CSV / TXT
+              Importer des produits depuis CSV ou Excel
             </h3>
             <button
               onClick={() => {
@@ -4204,8 +4412,8 @@ export default function CatalogTab({
             {importStep === 1 && (
               <div className="space-y-5 text-xs">
                 <div className="text-center space-y-1">
-                  <h4 className="text-sm font-extrabold">Importer des produits à partir d&apos;un fichier CSV</h4>
-                  <p className="text-slate-500 font-light leading-relaxed">Cet outil vous permet d&apos;importer ou fusionner les données produit de votre boutique à partir d&apos;un fichier CSV ou TXT.</p>
+                  <h4 className="text-sm font-extrabold">Importer ou mettre à jour le catalogue</h4>
+                  <p className="text-slate-500 font-light leading-relaxed">Formats acceptés : Excel (.xlsx), CSV et TXT. Les colonnes du diagnostic IA peuvent être associées comme les autres données produit.</p>
                 </div>
 
                 {importError && (
@@ -4224,15 +4432,15 @@ export default function CatalogTab({
                     <input
                       type="file"
                       id="csv-file-upload"
-                      accept=".csv,.txt"
+                      accept=".csv,.txt,.xlsx"
                       className="hidden"
                       onChange={handleFileChange}
                     />
                     <label htmlFor="csv-file-upload" className="cursor-pointer space-y-3 block">
                       <Upload className="w-8 h-8 text-slate-500 mx-auto" />
                       <div className="space-y-1">
-                        <p className="font-bold">{importFile ? importFile.name : 'Choisir un fichier CSV depuis votre ordinateur'}</p>
-                        <p className="text-slate-500 font-light text-[10px]">Taille maximale : 2 Go</p>
+                        <p className="font-bold">{importFile ? importFile.name : 'Choisir un fichier Excel ou CSV'}</p>
+                        <p className="text-slate-500 font-light text-[10px]">.xlsx, .csv ou .txt · 25 Mo maximum</p>
                       </div>
                       {importFile && (
                         <span className="inline-block px-3 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-mono text-[9px] font-bold">
@@ -4319,8 +4527,8 @@ export default function CatalogTab({
             {importStep === 2 && (
               <div className="space-y-4 text-xs animate-fade-in">
                 <div className="text-center space-y-1">
-                  <h4 className="text-sm font-extrabold font-sans">Map CSV fields to products</h4>
-                  <p className="text-slate-500 font-light">Select fields from your CSV file to map against products fields, or to ignore during import.</p>
+                  <h4 className="text-sm font-extrabold font-sans">Associer les colonnes aux produits</h4>
+                  <p className="text-slate-500 font-light">Vérifiez la détection automatique et ignorez les colonnes qui ne doivent pas être importées.</p>
                 </div>
 
                 {/* Profiles Bar */}
@@ -4392,8 +4600,8 @@ export default function CatalogTab({
                       <tr className={`text-[9px] uppercase tracking-wider font-extrabold border-b ${
                         adminTheme === 'light' ? 'bg-slate-50 text-slate-600 border-slate-100' : 'bg-slate-950 text-slate-400 border-slate-800'
                       }`}>
-                        <th className="p-3 w-1/2">Column name</th>
-                        <th className="p-3 w-1/2">Map to field</th>
+                        <th className="p-3 w-1/2">Colonne du fichier</th>
+                        <th className="p-3 w-1/2">Champ produit</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800/10">
@@ -4406,7 +4614,7 @@ export default function CatalogTab({
                               <span className="font-bold block">{header}</span>
                               {previewVal && (
                                 <span className="text-[10px] text-slate-500 font-mono block">
-                                  Sample: {previewVal.length > 50 ? `${previewVal.slice(0, 50)}...` : previewVal}
+                                  Exemple : {previewVal.length > 50 ? `${previewVal.slice(0, 50)}...` : previewVal}
                                 </span>
                               )}
                             </td>
@@ -4420,7 +4628,7 @@ export default function CatalogTab({
                                     : 'bg-slate-950 border-slate-800 text-slate-200'
                                 }`}
                               >
-                                <option value="ignore">Ignore</option>
+                                <option value="ignore">Ignorer</option>
                                 <option value="id">ID</option>
                                 <option value="title">Titre Français</option>
                                 <option value="vendor">Marque / Fournisseur</option>
@@ -4436,6 +4644,12 @@ export default function CatalogTab({
                                 <option value="usage">Conseils d&apos;utilisation</option>
                                 <option value="image">Image URL</option>
                                 <option value="tags">Tags</option>
+                                <option value="routineRoles">Rôles dans la routine</option>
+                                <option value="suitableSkinTypes">Types de peau adaptés</option>
+                                <option value="suitableConcerns">Préoccupations ciblées</option>
+                                <option value="sensitivityLevels">Niveaux de sensibilité</option>
+                                <option value="activeStrength">Puissance des actifs</option>
+                                <option value="timeOfDay">Moment d&apos;utilisation</option>
                               </select>
                             </td>
                           </tr>

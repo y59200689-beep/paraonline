@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SkinDiagnostic } from '../components/SkinDiagnostic';
 import { SettingsProvider } from '../context/SettingsContext';
@@ -91,6 +91,40 @@ const mockProducts = [
     ingredients: 'Vitamin C',
     usage: 'Matin',
   },
+  {
+    id: 30,
+    title: 'Sérum Niacinamide Anti-Imperfections',
+    nameFr: 'Sérum Niacinamide Anti-Imperfections',
+    vendor: 'Dermolab',
+    image: '/images/niacinamide.webp',
+    images: ['/images/niacinamide.webp'],
+    price: 150,
+    comparePrice: 170,
+    category: 'acné',
+    tags: ['imperfections', 'peau grasse'],
+    rating: 4.9,
+    reviews: 31,
+    description: 'Sérum ciblé contre les imperfections et les pores',
+    ingredients: 'Niacinamide, Zinc, Centella',
+    usage: 'Après le nettoyage',
+  },
+  {
+    id: 31,
+    title: 'Anthelios Fluide Invisible SPF50+',
+    nameFr: 'Anthelios Fluide Invisible SPF50+',
+    vendor: 'La Roche-Posay',
+    image: '/images/anthelios.webp',
+    images: ['/images/anthelios.webp'],
+    price: 190,
+    comparePrice: 210,
+    category: 'solaire',
+    tags: ['spf50', 'visage'],
+    rating: 4.9,
+    reviews: 80,
+    description: 'Protection solaire visage non comédogène',
+    ingredients: '',
+    usage: 'Chaque matin',
+  },
 ];
 
 describe('SkinDiagnostic question-only assessment', () => {
@@ -133,6 +167,10 @@ describe('SkinDiagnostic question-only assessment', () => {
       render(<SkinDiagnostic isOpen onClose={vi.fn()} experience="client" />, { wrapper: AllProvidersWrapper });
     });
 
+    await waitFor(() => {
+      expect(vi.mocked(global.fetch).mock.calls.some(([input]) => String(input).includes('/api/products'))).toBe(true);
+    });
+
     fireEvent.click(screen.getByRole('button', { name: /COMMENCER MON DIAGNOSTIC/i }));
 
     const answerAndContinue = (answer: string) => {
@@ -156,8 +194,7 @@ describe('SkinDiagnostic question-only assessment', () => {
     });
 
     expect(screen.getByText('Votre profil est prêt')).toBeDefined();
-    expect(screen.getByText('Anua Cleansing Oil')).toBeDefined();
-    expect(screen.getByText('Anua Cleansing Foam')).toBeDefined();
+    expect(screen.getAllByText('Nettoyer')).toHaveLength(1);
     expect(screen.getByText(/ne constitue pas un diagnostic médical/i)).toBeDefined();
     expect(getUserMedia).not.toHaveBeenCalled();
   });

@@ -4,6 +4,7 @@ import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { verifyAdminSession } from '@/lib/session';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/catalog-cache';
+import { normalizeRecommendationMetadata } from '@/lib/product-recommendation-metadata';
 
 function normalizeCategories(categories: unknown, primaryCategory: unknown): string[] {
   const primary = typeof primaryCategory === 'string' && primaryCategory.trim()
@@ -299,7 +300,13 @@ export async function GET(request: Request) {
       sku: item.sku || undefined,
       buyingCost: item.buying_cost !== null && item.buying_cost !== undefined ? Number(item.buying_cost) : undefined,
       points: item.points !== null && item.points !== undefined ? Number(item.points) : 0,
-      status: item.status || 'live'
+      status: item.status || 'live',
+      routineRoles: Array.isArray(item.routine_roles) ? item.routine_roles : [],
+      suitableSkinTypes: Array.isArray(item.suitable_skin_types) ? item.suitable_skin_types : [],
+      suitableConcerns: Array.isArray(item.suitable_concerns) ? item.suitable_concerns : [],
+      sensitivityLevels: Array.isArray(item.sensitivity_levels) ? item.sensitivity_levels : [],
+      activeStrength: item.active_strength || 'none',
+      timeOfDay: Array.isArray(item.time_of_day) ? item.time_of_day : [],
     }));
 
     const statusCounts = await countProductsByStatus({
@@ -346,6 +353,10 @@ export async function POST(request: Request) {
     const newId = maxIdData ? maxIdData.id + 1 : 1001;
 
     const categories = normalizeCategories(productData.categories, productData.category);
+    const { metadata, errors: metadataErrors } = normalizeRecommendationMetadata(productData);
+    if (Object.keys(metadataErrors).length > 0) {
+      return NextResponse.json({ success: false, error: 'Métadonnées diagnostic invalides.', fields: metadataErrors }, { status: 400 });
+    }
     const newProduct = {
       id: newId,
       title: productData.title,
@@ -368,7 +379,13 @@ export async function POST(request: Request) {
       sku: productData.sku || '',
       buying_cost: Number(productData.buyingCost) || 0,
       points: Number(productData.points) || 0,
-      status: productData.status || 'live'
+      status: productData.status || 'live',
+      routine_roles: metadata.routineRoles,
+      suitable_skin_types: metadata.suitableSkinTypes,
+      suitable_concerns: metadata.suitableConcerns,
+      sensitivity_levels: metadata.sensitivityLevels,
+      active_strength: metadata.activeStrength,
+      time_of_day: metadata.timeOfDay,
     };
 
     const { error } = await supabase
@@ -411,6 +428,10 @@ export async function PUT(request: Request) {
     const productId = Number(productData.id);
 
     const categories = normalizeCategories(productData.categories, productData.category);
+    const { metadata, errors: metadataErrors } = normalizeRecommendationMetadata(productData);
+    if (Object.keys(metadataErrors).length > 0) {
+      return NextResponse.json({ success: false, error: 'Métadonnées diagnostic invalides.', fields: metadataErrors }, { status: 400 });
+    }
     const updatedProduct = {
       title: productData.title,
       name: productData.name || productData.title,
@@ -432,7 +453,13 @@ export async function PUT(request: Request) {
       sku: productData.sku,
       buying_cost: Number(productData.buyingCost) || 0,
       points: Number(productData.points) || 0,
-      status: productData.status || 'live'
+      status: productData.status || 'live',
+      routine_roles: metadata.routineRoles,
+      suitable_skin_types: metadata.suitableSkinTypes,
+      suitable_concerns: metadata.suitableConcerns,
+      sensitivity_levels: metadata.sensitivityLevels,
+      active_strength: metadata.activeStrength,
+      time_of_day: metadata.timeOfDay,
     };
 
     const { error } = await supabase

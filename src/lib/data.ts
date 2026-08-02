@@ -2,6 +2,14 @@ import ingredientsData from '@/data/ingredients.json';
 import faqData from '@/data/faq.json';
 import testimonialsData from '@/data/testimonials.json';
 import citiesData from '@/data/cities.json';
+import type {
+  ActiveStrength,
+  RoutineRole,
+  SensitivityLevel,
+  SuitableConcern,
+  SuitableSkinType,
+  TimeOfDay,
+} from '@/lib/product-recommendation-metadata';
 
 export interface ProductVariant {
   id: string;
@@ -36,6 +44,13 @@ export interface Product {
   sku?: string;
   buyingCost?: number;
   status?: 'draft' | 'live';
+  /** Admin-maintained metadata used to build safe, non-duplicated skincare routines. */
+  routineRoles?: RoutineRole[];
+  suitableSkinTypes?: SuitableSkinType[];
+  suitableConcerns?: SuitableConcern[];
+  sensitivityLevels?: SensitivityLevel[];
+  activeStrength?: ActiveStrength;
+  timeOfDay?: TimeOfDay[];
   // SEO fields
   slug?: string;
   metaTitle?: string;

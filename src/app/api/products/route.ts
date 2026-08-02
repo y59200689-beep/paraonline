@@ -24,6 +24,8 @@ const PUBLIC_PRODUCT_COLUMNS = [
   'id', 'title', 'name', 'name_fr', 'vendor', 'image', 'images', 'price',
   'compare_price', 'category', 'categories', 'tags', 'rating', 'reviews',
   'description', 'ingredients', 'usage', 'stock', 'sku', 'points',
+  'routine_roles', 'suitable_skin_types', 'suitable_concerns',
+  'sensitivity_levels', 'active_strength', 'time_of_day',
 ].join(',');
 
 const normalizeIngredientKey = (value: string) => value
@@ -60,6 +62,12 @@ function mapProduct(item: Record<string, unknown>): Product {
     sku: (item.sku as string) || undefined,
     points: item.points !== null && item.points !== undefined ? Number(item.points) : 0,
     status: 'live',
+    routineRoles: Array.isArray(item.routine_roles) ? item.routine_roles as Product['routineRoles'] : [],
+    suitableSkinTypes: Array.isArray(item.suitable_skin_types) ? item.suitable_skin_types as Product['suitableSkinTypes'] : [],
+    suitableConcerns: Array.isArray(item.suitable_concerns) ? item.suitable_concerns as Product['suitableConcerns'] : [],
+    sensitivityLevels: Array.isArray(item.sensitivity_levels) ? item.sensitivity_levels as Product['sensitivityLevels'] : [],
+    activeStrength: (item.active_strength as Product['activeStrength']) || 'none',
+    timeOfDay: Array.isArray(item.time_of_day) ? item.time_of_day as Product['timeOfDay'] : [],
   };
 }
 

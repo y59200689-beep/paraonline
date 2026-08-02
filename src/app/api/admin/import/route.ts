@@ -4,6 +4,7 @@ import { verifyAdminSession } from '@/lib/session';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { PUBLIC_SETTINGS_CACHE_TAG } from '@/lib/get-public-settings';
 import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/catalog-cache';
+import { normalizeRecommendationMetadata } from '@/lib/product-recommendation-metadata';
 
 function normalizeImportedCategories(categories: unknown, primaryCategory: unknown): string[] {
   const rawValues = Array.isArray(categories)
@@ -78,6 +79,22 @@ function buildExistingProductUpdate(imported: any, existing: any) {
   if (hasValue(imported.buyingCost)) updateData.buying_cost = Number(imported.buyingCost);
   if (hasValue(imported.status)) updateData.status = imported.status;
 
+  const hasRecommendationMetadata = [
+    'routineRoles', 'routine_roles', 'suitableSkinTypes', 'suitable_skin_types',
+    'suitableConcerns', 'suitable_concerns', 'sensitivityLevels', 'sensitivity_levels',
+    'activeStrength', 'active_strength', 'timeOfDay', 'time_of_day',
+  ].some(field => imported[field] !== undefined);
+  if (hasRecommendationMetadata) {
+    const { metadata, errors } = normalizeRecommendationMetadata(imported);
+    if (Object.keys(errors).length > 0) throw new Error(Object.values(errors).join(' '));
+    if (imported.routineRoles !== undefined || imported.routine_roles !== undefined) updateData.routine_roles = metadata.routineRoles;
+    if (imported.suitableSkinTypes !== undefined || imported.suitable_skin_types !== undefined) updateData.suitable_skin_types = metadata.suitableSkinTypes;
+    if (imported.suitableConcerns !== undefined || imported.suitable_concerns !== undefined) updateData.suitable_concerns = metadata.suitableConcerns;
+    if (imported.sensitivityLevels !== undefined || imported.sensitivity_levels !== undefined) updateData.sensitivity_levels = metadata.sensitivityLevels;
+    if (imported.activeStrength !== undefined || imported.active_strength !== undefined) updateData.active_strength = metadata.activeStrength;
+    if (imported.timeOfDay !== undefined || imported.time_of_day !== undefined) updateData.time_of_day = metadata.timeOfDay;
+  }
+
   const hasCategoryValue = hasValue(imported.category)
     || (Array.isArray(imported.categories) && imported.categories.some(hasValue))
     || (typeof imported.categories === 'string' && hasValue(imported.categories));
@@ -96,6 +113,8 @@ function buildExistingProductUpdate(imported: any, existing: any) {
 
 function buildNewProduct(imported: any) {
   const categories = normalizeImportedCategories(imported.categories, imported.category);
+  const { metadata, errors } = normalizeRecommendationMetadata(imported);
+  if (Object.keys(errors).length > 0) throw new Error(Object.values(errors).join(' '));
 
   return {
     ...(imported.id ? { id: Number(imported.id) } : {}),
@@ -118,7 +137,13 @@ function buildNewProduct(imported: any) {
     stock: imported.stock !== undefined ? Number(imported.stock) : 100,
     sku: imported.sku || null,
     buying_cost: imported.buyingCost !== undefined && imported.buyingCost !== null ? Number(imported.buyingCost) : null,
-    status: imported.status || 'live'
+    status: imported.status || 'live',
+    routine_roles: metadata.routineRoles,
+    suitable_skin_types: metadata.suitableSkinTypes,
+    suitable_concerns: metadata.suitableConcerns,
+    sensitivity_levels: metadata.sensitivityLevels,
+    active_strength: metadata.activeStrength,
+    time_of_day: metadata.timeOfDay,
   };
 }
 

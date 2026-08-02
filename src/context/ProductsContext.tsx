@@ -45,6 +45,12 @@ function rowToProduct(item: Record<string, unknown>): Product {
     sku: (item.sku as string) || undefined,
     buyingCost: item.buying_cost != null ? Number(item.buying_cost) : undefined,
     points: item.points != null ? Number(item.points) : 0,
+    routineRoles: Array.isArray(item.routine_roles) ? item.routine_roles as Product['routineRoles'] : [],
+    suitableSkinTypes: Array.isArray(item.suitable_skin_types) ? item.suitable_skin_types as Product['suitableSkinTypes'] : [],
+    suitableConcerns: Array.isArray(item.suitable_concerns) ? item.suitable_concerns as Product['suitableConcerns'] : [],
+    sensitivityLevels: Array.isArray(item.sensitivity_levels) ? item.sensitivity_levels as Product['sensitivityLevels'] : [],
+    activeStrength: (item.active_strength as Product['activeStrength']) || 'none',
+    timeOfDay: Array.isArray(item.time_of_day) ? item.time_of_day as Product['timeOfDay'] : [],
   };
 }
 
