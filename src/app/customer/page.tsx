@@ -7,8 +7,8 @@ import { useSettings } from '@/context/SettingsContext';
 import { supabase } from '@/lib/supabase';
 import { 
   Search, ShoppingBag, ArrowLeft, ArrowRight, Clock, MapPin, 
-  Award, Coins, Ticket, Check, Copy, Calendar, Plus, 
-  Smile, Meh, Frown, Sparkles, BookOpen, Camera, X,
+  Award, Coins, Ticket, Copy, Calendar, Plus,
+  Smile, Meh, Frown, Sparkles, Camera, X,
   Image as ImageIcon, Heart, Trash2, Sun, Moon, ShieldCheck,
   User, Settings, FileText, Printer, Truck, MessageCircle,
   ExternalLink, Activity, RefreshCw, ChevronRight, Zap, Gift,
@@ -31,6 +31,33 @@ interface OrderItem {
   image?: string;
 }
 
+type CustomerProductImage = Pick<OrderItem, 'title' | 'image'> & { id?: number };
+
+const CUSTOMER_PRODUCT_IMAGE_FALLBACK = '/images/categories/visage.webp';
+
+function resolveCustomerProductImage(item: CustomerProductImage): string {
+  const image = item.image?.trim();
+  if (image) {
+    // Product packshots were migrated to WebP. Preserve external image URLs while
+    // keeping older order snapshots pointing at their current local asset.
+    if (image.startsWith('/images/')) return image.replace(/\.png$/i, '.webp');
+    return image;
+  }
+
+  const matchingProduct = PRODUCTS_DB.find((product) =>
+    product.id === item.id || product.title.toLowerCase() === item.title?.toLowerCase()
+  );
+
+  return matchingProduct?.image || CUSTOMER_PRODUCT_IMAGE_FALLBACK;
+}
+
+function applyCustomerImageFallback(event: React.SyntheticEvent<HTMLImageElement>) {
+  const image = event.currentTarget;
+  if (image.dataset.fallbackApplied) return;
+  image.dataset.fallbackApplied = 'true';
+  image.src = CUSTOMER_PRODUCT_IMAGE_FALLBACK;
+}
+
 interface Order {
   order_id: string;
   customer_name: string;
@@ -50,14 +77,6 @@ interface Order {
   estimated_delivery?: string;
   date?: string;
   created_at?: string;
-}
-
-interface DiaryLog {
-  id: string;
-  date: string;
-  emoji: string;
-  note: string;
-  image?: string;
 }
 
 interface UserAddress {
@@ -89,8 +108,8 @@ const SAMPLE_ORDERS_PRESETS: Order[] = [
     date: '2026-07-22T14:30:00Z',
     created_at: '2026-07-22T14:30:00Z',
     items: [
-      { id: 1, title: 'Sérum Concentré Niacinamide 10% Pure Pureté', quantity: 1, price: 340, image: '/images/hero_serum_dropper.png' },
-      { id: 2, title: 'Crème Hydratante Réparatrice Cicaplast B5+', quantity: 2, price: 220, image: '/images/cicaplast_hero_packshot.png' }
+      { id: 1, title: 'Sérum Concentré Niacinamide 10% Pure Pureté', quantity: 1, price: 340, image: '/images/hero_serum_dropper.webp' },
+      { id: 2, title: 'Crème Hydratante Réparatrice Cicaplast B5+', quantity: 2, price: 220, image: '/images/cicaplast_hero_packshot.webp' }
     ]
   },
   {
@@ -111,8 +130,8 @@ const SAMPLE_ORDERS_PRESETS: Order[] = [
     date: '2026-07-20T09:15:00Z',
     created_at: '2026-07-20T09:15:00Z',
     items: [
-      { id: 3, title: 'Gel Nettoyant Purifiant Effaclar Duo+ M', quantity: 1, price: 290, image: '/images/effaclar_hero_packshot.png' },
-      { id: 4, title: 'Fluide Solaire Anti-Taches SPF50+ Ultra-Léger', quantity: 1, price: 250, image: '/images/anthelios_hero_packshot.png' }
+      { id: 3, title: 'Gel Nettoyant Purifiant Effaclar Duo+ M', quantity: 1, price: 290, image: '/images/effaclar_hero_packshot.webp' },
+      { id: 4, title: 'Fluide Solaire Anti-Taches SPF50+ Ultra-Léger', quantity: 1, price: 250, image: '/images/anthelios_hero_packshot.webp' }
     ]
   }
 ];
@@ -130,14 +149,14 @@ const MOCK_DIAGNOSTIC_RESULT = {
   },
   concerns: ['Taches d\'hyper-pigmentation', 'Brillance Zone T', 'Déshydratation ponctuelle'],
   routineAm: [
-    { title: 'Gel Nettoyant Doux Purifiant', brand: 'La Roche-Posay', image: '/images/effaclar_hero_packshot.png', price: 210 },
-    { title: 'Sérum Éclat Vitamine C Pure', brand: 'Vichy', image: '/images/hero_serum_dropper.png', price: 340 },
-    { title: 'Fluide Solaire Invisible SPF50+', brand: 'La Roche-Posay', image: '/images/anthelios_hero_packshot.png', price: 250 }
+    { title: 'Gel Nettoyant Doux Purifiant', brand: 'La Roche-Posay', image: '/images/effaclar_hero_packshot.webp', price: 210 },
+    { title: 'Sérum Éclat Vitamine C Pure', brand: 'Vichy', image: '/images/hero_serum_dropper.webp', price: 340 },
+    { title: 'Fluide Solaire Invisible SPF50+', brand: 'La Roche-Posay', image: '/images/anthelios_hero_packshot.webp', price: 250 }
   ],
   routinePm: [
-    { title: 'Huile Démaquillante Solide', brand: 'CeraVe', image: '/images/categories/visage.png', price: 190 },
-    { title: 'Sérum Concentré Niacinamide 10%', brand: 'La Roche-Posay', image: '/images/hero_serum_dropper.png', price: 320 },
-    { title: 'Baume Réparateur Intense Cicaplast B5+', brand: 'La Roche-Posay', image: '/images/cicaplast_hero_packshot.png', price: 220 }
+    { title: 'Huile Démaquillante Solide', brand: 'CeraVe', image: '/images/categories/visage.webp', price: 190 },
+    { title: 'Sérum Concentré Niacinamide 10%', brand: 'La Roche-Posay', image: '/images/hero_serum_dropper.webp', price: 320 },
+    { title: 'Baume Réparateur Intense Cicaplast B5+', brand: 'La Roche-Posay', image: '/images/cicaplast_hero_packshot.webp', price: 220 }
   ]
 };
 
@@ -201,24 +220,19 @@ export default function CustomerDashboard() {
     redeemReward,
     tierMultiplier,
     pointsToNextTier,
-    earnPoints,
     clientUser,
     isLoadingAuth,
     loginClient,
     signUpClient,
     logoutClient,
-    syncDiaryLogs,
-    syncPlannerDates,
-    fetchDiaryLogs,
-    fetchPlannerDates,
   } = useLoyalty();
   const { showToast, setDiagnosticOpen } = useUi();
 
   const { wishlist, removeFromWishlist } = useWishlist();
   const { addToCart } = useCart();
 
-  // Tab State: 7 Flagship Tabs
-  type TabType = 'overview' | 'commandes' | 'diagnostic' | 'cagnotte' | 'favoris' | 'journal' | 'profil';
+  // Tab State: 6 Flagship Tabs
+  type TabType = 'overview' | 'commandes' | 'diagnostic' | 'cagnotte' | 'favoris' | 'profil';
   const [activeTab, setActiveTab] = useState<TabType>('overview');
 
   useEffect(() => {
@@ -229,7 +243,6 @@ export default function CustomerDashboard() {
       else if (tabParam === 'commandes' || tabParam === 'suivi') setActiveTab('commandes');
       else if (tabParam === 'diagnostic') setActiveTab('diagnostic');
       else if (tabParam === 'cagnotte' || tabParam === 'club') setActiveTab('cagnotte');
-      else if (tabParam === 'journal') setActiveTab('journal');
       else if (tabParam === 'profil') setActiveTab('profil');
       else if (tabParam === 'overview' || tabParam === 'vue') setActiveTab('overview');
     }
@@ -259,24 +272,51 @@ export default function CustomerDashboard() {
   const [authName, setAuthName] = useState('');
   const [authPhone, setAuthPhone] = useState('');
   const [authError, setAuthError] = useState<string | null>(null);
+  const [authNotice, setAuthNotice] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(false);
+  const authSubmissionInFlight = useRef(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (authSubmissionInFlight.current) return;
+    authSubmissionInFlight.current = true;
     setAuthLoading(true);
     setAuthError(null);
-    const res = await loginClient(authEmail, authPassword);
-    setAuthLoading(false);
-    if (!res.success) setAuthError(res.error || 'Erreur de connexion.');
+    setAuthNotice(null);
+    try {
+      const res = await loginClient(authEmail, authPassword);
+      if (!res.success) setAuthError(res.error || 'Erreur de connexion.');
+    } finally {
+      authSubmissionInFlight.current = false;
+      setAuthLoading(false);
+    }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (authSubmissionInFlight.current) return;
+    authSubmissionInFlight.current = true;
     setAuthLoading(true);
     setAuthError(null);
-    const res = await signUpClient(authEmail, authPassword, authName, authPhone);
-    setAuthLoading(false);
-    if (!res.success) setAuthError(res.error || 'Erreur de création de compte.');
+    setAuthNotice(null);
+    try {
+      const res = await signUpClient(authEmail, authPassword, authName, authPhone);
+      if (!res.success) {
+        setAuthError(res.error || 'Erreur de création de compte.');
+        return;
+      }
+
+      if (res.emailConfirmationRequired) {
+        setAuthPassword('');
+        setAuthNotice(isRTL
+          ? 'تم إنشاء حسابك وإرسال رسالة تأكيد إلى بريدك الإلكتروني. افتحي الرسالة واضغطي على الرابط، ثم سجّلي الدخول.'
+          : 'Votre compte a été créé. Un email de confirmation vient de vous être envoyé : ouvrez-le, cliquez sur le lien, puis connectez-vous.');
+        setAuthView('login');
+      }
+    } finally {
+      authSubmissionInFlight.current = false;
+      setAuthLoading(false);
+    }
   };
 
   // Orders State & Search
@@ -305,7 +345,7 @@ export default function CustomerDashboard() {
           title: item.title,
           name: item.title,
           price: item.price,
-          image: item.image || '/images/categories/visage.png',
+          image: resolveCustomerProductImage(item),
           category: 'Visage',
           description: item.title
         } as Product, item.quantity);
@@ -350,63 +390,6 @@ export default function CustomerDashboard() {
       return matchesSearch && matchesStatus;
     });
   }, [orders, orderSearchQuery, orderFilterStatus]);
-
-  // Skincare Diary & Habit Tracker States
-  const [amChecks, setAmChecks] = useState({ cleanse: false, treat: false, hydrate: false, protect: false });
-  const [pmChecks, setPmChecks] = useState({ cleanse: false, treat: false, hydrate: false });
-  const [amDoneDates, setAmDoneDates] = useState<string[]>([]);
-  const [pmDoneDates, setPmDoneDates] = useState<string[]>([]);
-  const [diaryNote, setDiaryNote] = useState('');
-  const [diaryEmoji, setDiaryEmoji] = useState('🙂');
-  const [diaryLogs, setDiaryLogs] = useState<DiaryLog[]>([]);
-  const [diaryImage, setDiaryImage] = useState<string | null>(null);
-
-  const todayStr = new Date().toISOString().split('T')[0];
-  const isAmTodayCompleted = amDoneDates.includes(todayStr);
-  const isPmTodayCompleted = pmDoneDates.includes(todayStr);
-
-  const handleToggleAmStep = (key: keyof typeof amChecks) => {
-    setAmChecks((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
-
-  const handleTogglePmStep = (key: keyof typeof pmChecks) => {
-    setPmChecks((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
-
-  const handleConfirmAmRoutine = () => {
-    if (!isAmTodayCompleted) {
-      const updated = [...amDoneDates, todayStr];
-      setAmDoneDates(updated);
-      earnPoints(5, 'Rituel du Matin accompli', 'إكمال روتين الصباح');
-      showToast(isRTL ? 'تهانينا! تمت إضافة +5 نقاط إلى محفظتكِ.' : 'Félicitations ! +5 Points ajoutés à votre cagnotte.');
-    }
-  };
-
-  const handleConfirmPmRoutine = () => {
-    if (!isPmTodayCompleted) {
-      const updated = [...pmDoneDates, todayStr];
-      setPmDoneDates(updated);
-      earnPoints(5, 'Rituel du Soir accompli', 'إكمال روتين المساء');
-      showToast(isRTL ? 'تهانينا! تمت إضافة +5 نقاط إلى محفظتكِ.' : 'Félicitations ! +5 Points ajoutés à votre cagnotte.');
-    }
-  };
-
-  const handleSaveDiaryLog = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!diaryNote.trim() && !diaryImage) return;
-    const newLog: DiaryLog = {
-      id: 'log_' + Date.now(),
-      date: new Date().toLocaleDateString(language === 'AR' ? 'ar-MA' : 'fr-FR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
-      emoji: diaryEmoji,
-      note: diaryNote,
-      image: diaryImage || undefined
-    };
-    const updated = [newLog, ...diaryLogs];
-    setDiaryLogs(updated);
-    setDiaryNote('');
-    setDiaryImage(null);
-    showToast(isRTL ? 'تم حفظ ملاحظة البشرة بنجاح' : 'Mise à jour enregistrée dans votre journal.');
-  };
 
   // Profile & Address States
   const [profileName, setProfileName] = useState(clientUser?.name || 'Fatima-Zohra Alami');
@@ -499,6 +482,7 @@ export default function CustomerDashboard() {
               authPhone={authPhone}
               setAuthPhone={setAuthPhone}
               authError={authError}
+              authNotice={authNotice}
               authLoading={authLoading}
               handleLogin={handleLogin}
               handleSignup={handleSignup}
@@ -630,7 +614,6 @@ export default function CustomerDashboard() {
                   { id: 'diagnostic', labelFr: 'Diagnostic IA', labelAr: 'تشخيص البشرة', icon: Sparkles },
                   { id: 'cagnotte', labelFr: 'Cagnotte & VIP', labelAr: 'المحفظة والكوبونات', icon: Ticket },
                   { id: 'favoris', labelFr: 'Mes Favoris', labelAr: 'المفضلة', icon: Heart },
-                  { id: 'journal', labelFr: 'Agenda & Soins', labelAr: 'المفكرة اليومية', icon: BookOpen },
                   { id: 'profil', labelFr: 'Profil & Adresses', labelAr: 'الملف والعناوين', icon: User }
                 ].map((tab) => {
                   const isActive = activeTab === tab.id;
@@ -832,7 +815,7 @@ export default function CustomerDashboard() {
                               themeMode === 'dark' ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-slate-200/80'
                             }`}>
                               <div className="w-12 h-12 rounded-xl bg-white p-1 border border-slate-200 shrink-0">
-                                <img src={item.image} alt={item.title} className="w-full h-full object-contain" />
+                                <img src={resolveCustomerProductImage(item)} onError={applyCustomerImageFallback} alt={item.title} className="w-full h-full object-contain" />
                               </div>
                               <div className="min-w-0 flex-1 text-left">
                                 <h4 className={`text-xs font-bold truncate ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
@@ -993,7 +976,7 @@ export default function CustomerDashboard() {
                               themeMode === 'dark' ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-slate-200/80'
                             }`}>
                               <div className="w-14 h-14 rounded-xl bg-white p-1 border border-slate-200 shrink-0">
-                                <img src={item.image || '/images/categories/visage.png'} alt={item.title} className="w-full h-full object-contain" />
+                                <img src={resolveCustomerProductImage(item)} onError={applyCustomerImageFallback} alt={item.title} className="w-full h-full object-contain" />
                               </div>
                               <div className="min-w-0 flex-1 text-left">
                                 <h4 className={`text-xs font-bold truncate ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
@@ -1135,7 +1118,7 @@ export default function CustomerDashboard() {
                             }`}>
                               <div className="space-y-3">
                                 <div className="w-full h-32 rounded-xl bg-white p-2 border border-slate-200 relative overflow-hidden">
-                                  <img src={prod.image} alt={prod.title} className="w-full h-full object-contain" />
+                                  <img src={resolveCustomerProductImage(prod)} onError={applyCustomerImageFallback} alt={prod.title} className="w-full h-full object-contain" />
                                 </div>
                                 <div>
                                   <span className="text-[9px] font-mono font-bold text-emerald-500 uppercase">{prod.brand}</span>
@@ -1175,7 +1158,7 @@ export default function CustomerDashboard() {
                             }`}>
                               <div className="space-y-3">
                                 <div className="w-full h-32 rounded-xl bg-white p-2 border border-slate-200 relative overflow-hidden">
-                                  <img src={prod.image} alt={prod.title} className="w-full h-full object-contain" />
+                                  <img src={resolveCustomerProductImage(prod)} onError={applyCustomerImageFallback} alt={prod.title} className="w-full h-full object-contain" />
                                 </div>
                                 <div>
                                   <span className="text-[9px] font-mono font-bold text-cyan-400 uppercase">{prod.brand}</span>
@@ -1392,159 +1375,7 @@ export default function CustomerDashboard() {
                 </div>
               )}
 
-
-              {/* ──────────────── TAB 6: AGENDA & JOURNAL DE SOINS ──────────────── */}
-              {activeTab === 'journal' && (
-                <div className="space-y-6 animate-in fade-in duration-300">
-                  
-                  {/* Streak & Points Info Card */}
-                  <div className={`p-6 rounded-3xl border shadow-lg space-y-4 ${
-                    themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
-                  }`}>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <Sparkles className="w-4 h-4 text-emerald-500 animate-pulse" />
-                          <span className="text-xs font-mono font-bold text-emerald-500 uppercase tracking-widest">
-                            SUIVI DES HABITUDES CUTANÉES
-                          </span>
-                        </div>
-                        <h3 className={`text-xl font-black font-heading ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                          Gagnez +5 Points par Rituel quotidien validé
-                        </h3>
-                      </div>
-
-                      <div className="px-4 py-2 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 font-mono text-xs font-bold flex items-center gap-2">
-                        <span>🔥 Streak Actif: 7 Jours d'affilée</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Checklist Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 select-none">
-                    
-                    {/* AM Skincare Planner */}
-                    <div className={`rounded-3xl p-6 shadow-lg flex flex-col justify-between gap-5 text-left border ${
-                      themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
-                    }`}>
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                          <h3 className={`text-xs font-black font-heading uppercase tracking-wide flex items-center gap-2 ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                            <Sun className="w-4 h-4 text-amber-400" />
-                            <span>Rituel du Matin (AM)</span>
-                          </h3>
-                          {isAmTodayCompleted && (
-                            <span className="px-2.5 py-1 bg-emerald-500/20 text-emerald-400 rounded-md text-[10px] font-black uppercase">
-                              Validé Aujourd'hui
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="space-y-2.5">
-                          {[
-                            { key: 'cleanse', label: 'Nettoyer (Gel/Eau micellaire)' },
-                            { key: 'treat', label: 'Traiter (Sérum Vitamine C)' },
-                            { key: 'hydrate', label: 'Hydrater (Crème de jour)' },
-                            { key: 'protect', label: 'Protéger (Écran Solaire SPF)' }
-                          ].map((step) => (
-                            <label
-                              key={step.key}
-                              onClick={() => handleToggleAmStep(step.key as any)}
-                              className={`p-3 rounded-xl border flex items-center gap-3 cursor-pointer transition ${
-                                amChecks[step.key as keyof typeof amChecks]
-                                  ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400'
-                                  : themeMode === 'dark' ? 'bg-slate-950 border-slate-800 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'
-                              }`}
-                            >
-                              <input type="checkbox" checked={amChecks[step.key as keyof typeof amChecks]} readOnly className="sr-only" />
-                              <div className={`w-5 h-5 rounded-md border flex items-center justify-center ${
-                                amChecks[step.key as keyof typeof amChecks] ? 'bg-emerald-500 border-emerald-500 text-slate-950' : 'border-slate-600'
-                              }`}>
-                                {amChecks[step.key as keyof typeof amChecks] && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                              </div>
-                              <span className="text-xs font-bold">{step.label}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={handleConfirmAmRoutine}
-                        disabled={isAmTodayCompleted}
-                        className={`w-full py-3 rounded-xl font-black text-xs uppercase tracking-wider transition border-0 cursor-pointer ${
-                          isAmTodayCompleted
-                            ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                            : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md'
-                        }`}
-                      >
-                        {isAmTodayCompleted ? 'Rituel Matin Confirmé (+5 Pts)' : 'Valider mon Rituel Matin (+5 Pts)'}
-                      </button>
-                    </div>
-
-                    {/* PM Skincare Planner */}
-                    <div className={`rounded-3xl p-6 shadow-lg flex flex-col justify-between gap-5 text-left border ${
-                      themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
-                    }`}>
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                          <h3 className={`text-xs font-black font-heading uppercase tracking-wide flex items-center gap-2 ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                            <Moon className="w-4 h-4 text-indigo-400" />
-                            <span>Rituel du Soir (PM)</span>
-                          </h3>
-                          {isPmTodayCompleted && (
-                            <span className="px-2.5 py-1 bg-emerald-500/20 text-emerald-400 rounded-md text-[10px] font-black uppercase">
-                              Validé Aujourd'hui
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="space-y-2.5">
-                          {[
-                            { key: 'cleanse', label: 'Double Nettoyage (Huile + Gel)' },
-                            { key: 'treat', label: 'Traiter (Sérum Niacinamide/Rétinol)' },
-                            { key: 'hydrate', label: 'Hydrater (Crème riche Cicaplast)' }
-                          ].map((step) => (
-                            <label
-                              key={step.key}
-                              onClick={() => handleTogglePmStep(step.key as any)}
-                              className={`p-3 rounded-xl border flex items-center gap-3 cursor-pointer transition ${
-                                pmChecks[step.key as keyof typeof pmChecks]
-                                  ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400'
-                                  : themeMode === 'dark' ? 'bg-slate-950 border-slate-800 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'
-                              }`}
-                            >
-                              <input type="checkbox" checked={pmChecks[step.key as keyof typeof pmChecks]} readOnly className="sr-only" />
-                              <div className={`w-5 h-5 rounded-md border flex items-center justify-center ${
-                                pmChecks[step.key as keyof typeof pmChecks] ? 'bg-emerald-500 border-emerald-500 text-slate-950' : 'border-slate-600'
-                              }`}>
-                                {pmChecks[step.key as keyof typeof pmChecks] && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                              </div>
-                              <span className="text-xs font-bold">{step.label}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={handleConfirmPmRoutine}
-                        disabled={isPmTodayCompleted}
-                        className={`w-full py-3 rounded-xl font-black text-xs uppercase tracking-wider transition border-0 cursor-pointer ${
-                          isPmTodayCompleted
-                            ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                            : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md'
-                        }`}
-                      >
-                        {isPmTodayCompleted ? 'Rituel Soir Confirmé (+5 Pts)' : 'Valider mon Rituel Soir (+5 Pts)'}
-                      </button>
-                    </div>
-
-                  </div>
-
-                </div>
-              )}
-
-
-              {/* ──────────────── TAB 7: PROFIL & ADRESSES ──────────────── */}
+              {/* ──────────────── TAB 6: PROFIL & ADRESSES ──────────────── */}
               {activeTab === 'profil' && (
                 <div className="space-y-8 animate-in fade-in duration-300">
                   

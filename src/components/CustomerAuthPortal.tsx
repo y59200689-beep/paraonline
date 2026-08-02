@@ -20,6 +20,7 @@ interface CustomerAuthPortalProps {
   authPhone: string;
   setAuthPhone: (phone: string) => void;
   authError: string | null;
+  authNotice?: string | null;
   authLoading: boolean;
   handleLogin: (e: React.FormEvent) => void;
   handleSignup: (e: React.FormEvent) => void;
@@ -41,6 +42,7 @@ export const CustomerAuthPortal: React.FC<CustomerAuthPortalProps> = ({
   authPhone,
   setAuthPhone,
   authError,
+  authNotice,
   authLoading,
   handleLogin,
   handleSignup,
@@ -334,9 +336,16 @@ export const CustomerAuthPortal: React.FC<CustomerAuthPortalProps> = ({
 
             {/* Error Banner */}
             {authError && (
-              <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs font-semibold flex items-center gap-3">
+              <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs font-semibold flex items-center gap-3" role="alert">
                 <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
                 <span>{authError}</span>
+              </div>
+            )}
+
+            {authNotice && (
+              <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-700 dark:text-emerald-300 text-xs font-semibold flex items-start gap-3" role="status" aria-live="polite">
+                <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-500 mt-0.5" />
+                <span>{authNotice}</span>
               </div>
             )}
 

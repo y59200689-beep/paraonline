@@ -16,9 +16,22 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-public-anon-key-placeholder
 # Service Role Key — Server-Side API routes ONLY (bypasses RLS for admin tasks/secure orders)
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-placeholder
 
-# Site URL for redirects (auth)
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
+# Site URL for redirects (auth). Use your live domain in Vercel Production.
+NEXT_PUBLIC_SITE_URL=https://paraonline-weld.vercel.app
 ```
+
+### Supabase email confirmation redirects
+
+In **Supabase Dashboard → Authentication → URL Configuration**, set **Site URL** to
+`https://paraonline-weld.vercel.app` and add these entries to **Redirect URLs**:
+
+```txt
+https://paraonline-weld.vercel.app/customer
+http://localhost:3000/customer
+```
+
+The application sends confirmation links back to the current site origin, so production
+users are returned to the deployed customer portal while local development remains supported.
 
 ---
 

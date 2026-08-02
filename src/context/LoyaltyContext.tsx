@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useSettings } from './SettingsContext';
 import { supabase } from '@/lib/supabase';
+import { customerAuthErrorMessage } from '@/lib/customer-auth';
 import type { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
 import {
   getActiveTier,
@@ -41,7 +42,7 @@ interface LoyaltyContextProps {
   clientUser: ClientUser | null;
   isLoadingAuth: boolean;
   loginClient: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signUpClient: (email: string, password: string, name: string, phone: string) => Promise<{ success: boolean; error?: string }>;
+  signUpClient: (email: string, password: string, name: string, phone: string) => Promise<{ success: boolean; error?: string; emailConfirmationRequired?: boolean }>;
   logoutClient: () => Promise<void>;
   syncDiaryLogs: (logs: any[]) => Promise<void>;
   syncPlannerDates: (amDates: string[], pmDates: string[]) => Promise<void>;
@@ -74,6 +75,7 @@ export const LoyaltyProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [clientUser, setClientUser] = useState<ClientUser | null>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const supabaseUser = useRef<User | null>(null);
+  const signUpInFlight = useRef(false);
 
   // Listen to cross-tab BroadcastChannel
   useEffect(() => {
@@ -238,14 +240,25 @@ export const LoyaltyProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       if (error && error.code === 'PGRST116') {
         // Profile not yet created — create it
-        await supabase.from('customer_profiles').insert({
+        const { error: insertError } = await supabase.from('customer_profiles').insert({
           id: user.id,
           email: user.email,
+          name: user.user_metadata?.name ?? null,
+          phone: user.user_metadata?.phone ?? null,
           diary_logs: [],
           planner_am_dates: [],
           planner_pm_dates: [],
         });
-        setClientUser({ id: user.id, email: user.email ?? '' });
+        if (insertError) throw insertError;
+
+        const newUser = {
+          id: user.id,
+          email: user.email ?? '',
+          name: user.user_metadata?.name ?? undefined,
+          phone: user.user_metadata?.phone ?? undefined,
+        };
+        setClientUser(newUser);
+        try { localStorage.setItem('customer_client_user', JSON.stringify(newUser)); } catch {}
         setPoints(0);
         setTotalEarned(0);
         setPointsHistory([]);
@@ -297,11 +310,11 @@ export const LoyaltyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) return { success: false, error: error.message };
+      if (error) return { success: false, error: customerAuthErrorMessage(error.message) };
       if (data.user) await fetchAndApplyProfile(data.user);
       return { success: true };
     } catch (e: any) {
-      return { success: false, error: e.message || 'Login failed.' };
+      return { success: false, error: customerAuthErrorMessage(e.message || 'Login failed.') };
     }
   };
 
@@ -310,34 +323,54 @@ export const LoyaltyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     password: string,
     name: string,
     phone: string
-  ): Promise<{ success: boolean; error?: string }> => {
+  ): Promise<{ success: boolean; error?: string; emailConfirmationRequired?: boolean }> => {
     if (!isSupabaseConfigured()) {
       return { success: false, error: 'Supabase not configured.' };
     }
-    try {
-      const { data, error } = await supabase.auth.signUp({ email, password });
-      if (error) return { success: false, error: error.message };
+    if (signUpInFlight.current) {
+      return { success: false, error: 'La création du compte est déjà en cours.' };
+    }
 
-      if (data.user) {
-        // Upsert profile with personal info
-        await supabase.from('customer_profiles').upsert({
-          id: data.user.id,
-          email,
-          name,
-          phone,
-          diary_logs: [],
-          planner_am_dates: [],
-          planner_pm_dates: [],
-        });
-        setClientUser({ id: data.user.id, email, name, phone });
-        supabaseUser.current = data.user;
-        setPoints(0);
-        setTotalEarned(0);
-        setPointsHistory([]);
+    signUpInFlight.current = true;
+    try {
+      const normalizedEmail = email.trim().toLowerCase();
+      const normalizedName = name.trim();
+      const normalizedPhone = phone.trim();
+      const siteUrl = typeof window === 'undefined'
+        ? process.env.NEXT_PUBLIC_SITE_URL
+        : window.location.origin;
+      const emailRedirectTo = `${(siteUrl || 'https://paraonline-weld.vercel.app').replace(/\/$/, '')}/customer`;
+      const { data, error } = await supabase.auth.signUp({
+        email: normalizedEmail,
+        password,
+        options: {
+          emailRedirectTo,
+          data: { name: normalizedName, phone: normalizedPhone },
+        },
+      });
+      if (error) return { success: false, error: customerAuthErrorMessage(error.message) };
+
+      if (!data.user) {
+        return { success: false, error: 'Impossible de créer le compte. Veuillez réessayer.' };
       }
-      return { success: true };
+
+      if (Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+        return {
+          success: false,
+          error: 'Cette adresse email possède déjà un compte. Utilisez plutôt « Se connecter ».',
+        };
+      }
+
+      if (data.session) {
+        supabaseUser.current = data.user;
+        await fetchAndApplyProfile(data.user);
+      }
+
+      return { success: true, emailConfirmationRequired: !data.session };
     } catch (e: any) {
-      return { success: false, error: e.message || 'Sign-up failed.' };
+      return { success: false, error: customerAuthErrorMessage(e.message || 'Sign-up failed.') };
+    } finally {
+      signUpInFlight.current = false;
     }
   };
 
