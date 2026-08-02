@@ -14,6 +14,7 @@ interface DesktopActionsProps {
   isJiggling: boolean;
   wishlistCount: number;
   points: number;
+  accountName?: string;
   ratesLoading: boolean;
   convertPrice: (price: number) => string;
   onCartOpen: () => void;
@@ -30,6 +31,7 @@ export const DesktopActions: React.FC<DesktopActionsProps> = ({
   isJiggling,
   wishlistCount,
   points,
+  accountName,
   ratesLoading,
   convertPrice,
   onCartOpen,
@@ -51,7 +53,7 @@ export const DesktopActions: React.FC<DesktopActionsProps> = ({
             {language === 'FR' ? 'Bienvenue' : 'مرحباً'}
           </span>
           <span className="text-[12px] font-bold text-slate-700 group-hover:text-primary transition-colors mt-0.5">
-            {language === 'FR' ? 'Mon Compte' : 'حسابي'}
+            {accountName || (language === 'FR' ? 'Mon Compte' : 'حسابي')}
           </span>
         </div>
       </Link>

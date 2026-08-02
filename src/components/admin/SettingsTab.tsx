@@ -715,7 +715,7 @@ export default function SettingsTab() {
             <div className={`pt-4 border-t flex justify-end ${adminTheme === 'light' ? 'border-slate-100' : 'border-slate-900'}`}>
               <button
                 type="submit"
-                className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 hover:shadow-lg hover:shadow-emerald-500/20 transition-all duration-200 cursor-pointer shadow-md shadow-emerald-500/10"
+                className="premium-green-cta px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 hover:shadow-lg hover:shadow-emerald-500/20 transition-all duration-200 cursor-pointer shadow-md shadow-emerald-500/10"
               >
                 Enregistrer les paramètres
               </button>
@@ -1735,7 +1735,7 @@ export default function SettingsTab() {
                                   <button
                                     type="button"
                                     onClick={onSaveBannerSubmit}
-                                    className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl text-[10px] uppercase font-black"
+                                    className="premium-green-cta px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl text-[10px] uppercase font-black"
                                   >
                                     Enregistrer la Diapo
                                   </button>
@@ -1759,7 +1759,7 @@ export default function SettingsTab() {
                               <button
                                 type="button"
                                 onClick={() => setIsAddingFaq(!isAddingFaq)}
-                                className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-[10px] uppercase tracking-wider rounded-xl transition cursor-pointer"
+                                className="premium-green-cta px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-[10px] uppercase tracking-wider rounded-xl transition cursor-pointer"
                               >
                                 {isAddingFaq ? 'Annuler' : 'Ajouter'}
                               </button>
@@ -1817,7 +1817,7 @@ export default function SettingsTab() {
                                 <div className="flex justify-end gap-2 pt-2 border-t border-slate-200/50 dark:border-slate-800/40">
                                   <button
                                     type="submit"
-                                    className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl text-[10px] uppercase font-black"
+                                    className="premium-green-cta px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl text-[10px] uppercase font-black"
                                   >
                                     Ajouter la Question
                                   </button>
@@ -1955,7 +1955,7 @@ export default function SettingsTab() {
                                       brands: [...currentBrands, { name: 'Nouvelle Marque', domain: 'example.com' }]
                                     });
                                   }}
-                                  className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[10px] uppercase tracking-wider rounded-lg transition"
+                                  className="premium-green-cta px-2.5 py-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[10px] uppercase tracking-wider rounded-lg transition"
                                 >
                                   Ajouter
                                 </button>
@@ -2592,7 +2592,7 @@ export default function SettingsTab() {
                                     ]
                                   });
                                 }}
-                                className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[10px] uppercase tracking-wider rounded-lg transition"
+                                className="premium-green-cta px-2.5 py-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[10px] uppercase tracking-wider rounded-lg transition"
                               >
                                 Ajouter un Avis
                               </button>
@@ -3023,7 +3023,7 @@ export default function SettingsTab() {
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 hover:shadow-lg hover:shadow-emerald-500/20 transition-all duration-200 cursor-pointer shadow-md shadow-emerald-500/10"
+                    className="premium-green-cta px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 hover:shadow-lg hover:shadow-emerald-500/20 transition-all duration-200 cursor-pointer shadow-md shadow-emerald-500/10"
                   >
                     Enregistrer la Diapositive
                   </button>
@@ -3048,7 +3048,7 @@ export default function SettingsTab() {
               </span>
               <button
                 onClick={() => setIsAddingCoupon(!isAddingCoupon)}
-                className="px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-200 cursor-pointer"
+                className="premium-green-cta px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-200 cursor-pointer"
               >
                 {isAddingCoupon ? 'Fermer le formulaire' : 'Créer un Code Promo'}
               </button>
@@ -3199,7 +3199,7 @@ export default function SettingsTab() {
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-200 cursor-pointer"
+                    className="premium-green-cta px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-200 cursor-pointer"
                   >
                     Sauvegarder le Coupon
                   </button>
@@ -3422,7 +3422,7 @@ export default function SettingsTab() {
             <div className={`pt-4 border-t flex justify-end ${adminTheme === 'light' ? 'border-slate-100' : 'border-slate-900'}`}>
               <button
                 type="submit"
-                className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-200 cursor-pointer"
+                className="premium-green-cta px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-200 cursor-pointer"
               >
                 Enregistrer Configuration
               </button>
@@ -3782,7 +3782,7 @@ export default function SettingsTab() {
               <button
                 type="submit"
                 disabled={currentUser?.role !== 'owner'}
-                className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 hover:shadow-lg hover:shadow-emerald-500/20 transition-all duration-200 cursor-pointer shadow-md shadow-emerald-500/10 disabled:opacity-50"
+                className="premium-green-cta px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 hover:shadow-lg hover:shadow-emerald-500/20 transition-all duration-200 cursor-pointer shadow-md shadow-emerald-500/10 disabled:opacity-50"
               >
                 Enregistrer la configuration de paiement
               </button>
@@ -3854,7 +3854,7 @@ export default function SettingsTab() {
             <div className={`pt-4 border-t flex justify-end ${adminTheme === 'light' ? 'border-slate-100' : 'border-slate-900'}`}>
               <button
                 type="submit"
-                className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-200 cursor-pointer"
+                className="premium-green-cta px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-200 cursor-pointer"
               >
                 Enregistrer les règles fidélité
               </button>
@@ -3876,7 +3876,7 @@ export default function SettingsTab() {
               </span>
               <button
                 onClick={() => setIsAddingFaq(!isAddingFaq)}
-                className="px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-200 cursor-pointer"
+                className="premium-green-cta px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-200 cursor-pointer"
               >
                 {isAddingFaq ? 'Fermer le formulaire' : 'Créer une entrée FAQ'}
               </button>
@@ -3983,7 +3983,7 @@ export default function SettingsTab() {
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-200 cursor-pointer"
+                    className="premium-green-cta px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-200 cursor-pointer"
                   >
                     Ajouter la Question
                   </button>
@@ -4479,7 +4479,7 @@ export default function SettingsTab() {
               <button
                 type="submit"
                 disabled={isSavingNotifTemplates}
-                className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-200 cursor-pointer disabled:opacity-50"
+                className="premium-green-cta px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-200 cursor-pointer disabled:opacity-50"
               >
                 {isSavingNotifTemplates ? 'Enregistrement...' : 'Enregistrer les modèles'}
               </button>
@@ -4706,7 +4706,7 @@ export default function SettingsTab() {
               </div>
               <button
                 onClick={() => setIsAddingOperator(!isAddingOperator)}
-                className="px-3.5 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-[10px] uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 transition"
+                className="premium-green-cta px-3.5 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-[10px] uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 transition"
               >
                 {isAddingOperator ? 'Fermer' : 'Ajouter un Opérateur'}
               </button>
@@ -4805,7 +4805,7 @@ export default function SettingsTab() {
                             className={`px-3 py-1.5 rounded-xl text-[9px] font-extrabold uppercase tracking-wider transition cursor-pointer ${
                               op.isActive
                                 ? 'text-rose-400 border border-rose-900/40 bg-rose-950/20 hover:bg-rose-900/20'
-                                : 'bg-emerald-500 text-slate-950 hover:bg-emerald-400 font-black shadow-md shadow-emerald-500/20'
+                                : 'premium-green-cta bg-emerald-500 text-slate-950 hover:bg-emerald-400 font-black shadow-md shadow-emerald-500/20'
                             }`}
                           >
                             {op.isActive ? 'Révoquer l\'accès' : 'Approuver l\'accès'}
@@ -4885,7 +4885,7 @@ export default function SettingsTab() {
                       if (data.success) { setMfaSecret(data.secret); setMfaQrCode(data.qrCodeUrl); }
                       else { setMfaError(data.error || 'Erreur lors de la génération.'); setIsMfaSetupOpen(false); }
                     }}
-                    className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 rounded-xl hover:opacity-90 transition shrink-0"
+                    className="premium-green-cta px-3 py-1.5 text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 rounded-xl hover:opacity-90 transition shrink-0"
                   >
                     Activer le MFA
                   </button>
@@ -4938,7 +4938,7 @@ export default function SettingsTab() {
                           setMfaSuccess('MFA activé avec succès. Votre compte est maintenant protégé.');
                         } else { setMfaError(data.error || 'Code incorrect. Réessayez.'); }
                       }}
-                      className="px-4 py-2 bg-emerald-500 text-slate-950 font-bold text-xs rounded-xl hover:bg-emerald-400 transition disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                      className="premium-green-cta px-4 py-2 bg-emerald-500 text-slate-950 font-bold text-xs rounded-xl hover:bg-emerald-400 transition disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
                     >
                       Confirmer
                     </button>
@@ -5003,7 +5003,7 @@ export default function SettingsTab() {
                       setOldPassword(''); setNewPassword(''); setConfirmPassword('');
                     } else { setPasswordError(data.error || 'Erreur lors de la modification.'); }
                   }}
-                  className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold text-xs uppercase tracking-wider rounded-xl hover:opacity-90 transition"
+                  className="premium-green-cta px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold text-xs uppercase tracking-wider rounded-xl hover:opacity-90 transition"
                 >
                   Modifier le Mot de Passe
                 </button>
@@ -5117,7 +5117,7 @@ export default function SettingsTab() {
                             setResettingOperatorId(null); setOwnerResetPasswordVal('');
                           } else { setOwnerResetError(data.error || 'Erreur.'); }
                         }}
-                        className="px-4 py-2 bg-emerald-500 text-slate-950 font-bold text-xs rounded-xl hover:bg-emerald-400 transition disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                        className="premium-green-cta px-4 py-2 bg-emerald-500 text-slate-950 font-bold text-xs rounded-xl hover:bg-emerald-400 transition disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
                       >
                         Confirmer
                       </button>

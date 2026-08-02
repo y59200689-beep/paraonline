@@ -31,19 +31,20 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const clientUser = loyaltyContext?.clientUser ?? null;
   const langContext = useContext(LanguageContext);
   const language = langContext?.language ?? 'FR';
+  const storageKey = clientUser ? `${STORAGE_KEY}:${clientUser.id}` : null;
 
-  // Hydrate from localStorage on mount
+  // Each signed-in customer gets an isolated local wishlist on this device.
   useEffect(() => {
+    setIsLoaded(false);
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        setWishlist(JSON.parse(saved));
-      }
+      const saved = storageKey ? localStorage.getItem(storageKey) : null;
+      setWishlist(saved ? JSON.parse(saved) : []);
     } catch (e) {
       console.error('WishlistContext: failed to load from localStorage', e);
+      setWishlist([]);
     }
     setIsLoaded(true);
-  }, []);
+  }, [storageKey]);
 
   // Listen to cross-tab BroadcastChannel
   useEffect(() => {
@@ -51,8 +52,8 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const channel = new BroadcastChannel('ecom_wishlist_channel');
     channel.onmessage = (event) => {
       const { type, payload } = event.data;
-      if (type === 'SYNC_WISHLIST') {
-        const currentStr = localStorage.getItem(STORAGE_KEY) || '[]';
+      if (type === 'SYNC_WISHLIST' && payload.accountId === clientUser?.id) {
+        const currentStr = storageKey ? localStorage.getItem(storageKey) || '[]' : '[]';
         const receivedStr = JSON.stringify(payload.wishlist);
         if (currentStr !== receivedStr) {
           setWishlist(payload.wishlist);
@@ -62,7 +63,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return () => {
       channel.close();
     };
-  }, [isLoaded]);
+  }, [clientUser?.id, isLoaded, storageKey]);
 
   // Broadcast local changes
   useEffect(() => {
@@ -70,22 +71,22 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const channel = new BroadcastChannel('ecom_wishlist_channel');
     channel.postMessage({
       type: 'SYNC_WISHLIST',
-      payload: { wishlist }
+      payload: { wishlist, accountId: clientUser?.id }
     });
     return () => {
       channel.close();
     };
-  }, [wishlist, isLoaded]);
+  }, [clientUser?.id, wishlist, isLoaded]);
 
   // Persist to localStorage whenever wishlist changes
   const persist = useCallback((newList: Product[]) => {
     setWishlist(newList);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newList));
+      if (storageKey) localStorage.setItem(storageKey, JSON.stringify(newList));
     } catch (e) {
       console.error('WishlistContext: failed to save to localStorage', e);
     }
-  }, []);
+  }, [storageKey]);
 
   const addToWishlist = useCallback((product: Product) => {
     if (!clientUser) {
@@ -95,18 +96,18 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setWishlist(prev => {
       if (prev.some(p => p.id === product.id)) return prev;
       const next = [...prev, product];
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch {}
+      try { if (storageKey) localStorage.setItem(storageKey, JSON.stringify(next)); } catch {}
       return next;
     });
-  }, [clientUser]);
+  }, [clientUser, storageKey]);
 
   const removeFromWishlist = useCallback((productId: number) => {
     setWishlist(prev => {
       const next = prev.filter(p => p.id !== productId);
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch {}
+      try { if (storageKey) localStorage.setItem(storageKey, JSON.stringify(next)); } catch {}
       return next;
     });
-  }, []);
+  }, [storageKey]);
 
   const toggleWishlist = useCallback((product: Product) => {
     if (!clientUser) {
@@ -116,10 +117,10 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setWishlist(prev => {
       const exists = prev.some(p => p.id === product.id);
       const next = exists ? prev.filter(p => p.id !== product.id) : [...prev, product];
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch {}
+      try { if (storageKey) localStorage.setItem(storageKey, JSON.stringify(next)); } catch {}
       return next;
     });
-  }, [clientUser]);
+  }, [clientUser, storageKey]);
 
   const isInWishlist = useCallback((productId: number) => {
     return wishlist.some(p => p.id === productId);

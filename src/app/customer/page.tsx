@@ -13,7 +13,7 @@ import {
   User, Settings, FileText, Printer, Truck, MessageCircle,
   ExternalLink, Activity, RefreshCw, ChevronRight, Zap, Gift,
   Percent, Compass, Droplet, Star, CheckCircle2, AlertCircle,
-  Box, CreditCard, ChevronDown, SlidersHorizontal, Edit3, Save, Layers
+  Box, CreditCard, ChevronDown, SlidersHorizontal, Edit3, Save, Layers, KeyRound
 } from 'lucide-react';
 import { Product, PRODUCTS_DB } from '@/lib/data';
 import Link from 'next/link';
@@ -224,6 +224,7 @@ export default function CustomerDashboard() {
     isLoadingAuth,
     loginClient,
     signUpClient,
+    updateClientProfile,
     logoutClient,
   } = useLoyalty();
   const { showToast, setDiagnosticOpen } = useUi();
@@ -231,7 +232,7 @@ export default function CustomerDashboard() {
   const { wishlist, removeFromWishlist } = useWishlist();
   const { addToCart } = useCart();
 
-  // Tab State: 6 Flagship Tabs
+  // Customer portal sections
   type TabType = 'overview' | 'commandes' | 'diagnostic' | 'cagnotte' | 'favoris' | 'profil';
   const [activeTab, setActiveTab] = useState<TabType>('overview');
 
@@ -248,21 +249,7 @@ export default function CustomerDashboard() {
     }
   }, []);
 
-  // Sliding tab indicator pill style
-  const [pillStyle, setPillStyle] = useState<{ transform: string; width: string }>({ transform: 'translateX(0)', width: '0px' });
   const tabsRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (tabsRef.current) {
-      const activeEl = tabsRef.current.querySelector('[aria-selected="true"]') as HTMLElement;
-      if (activeEl) {
-        setPillStyle({
-          transform: `translateX(${activeEl.offsetLeft}px)`,
-          width: `${activeEl.offsetWidth}px`
-        });
-      }
-    }
-  }, [activeTab, language]);
 
   // Auth form states
   const [showAuthPanel, setShowAuthPanel] = useState(false);
@@ -395,6 +382,11 @@ export default function CustomerDashboard() {
   const [profileName, setProfileName] = useState(clientUser?.name || 'Fatima-Zohra Alami');
   const [profilePhone, setProfilePhone] = useState(clientUser?.phone || '0661234567');
   const [profileEmail, setProfileEmail] = useState(clientUser?.email || 'fatimazohra@exemple.com');
+  const [isProfileSaving, setIsProfileSaving] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isPasswordSaving, setIsPasswordSaving] = useState(false);
+  const [passwordFeedback, setPasswordFeedback] = useState<{ type: 'error' | 'success'; message: string } | null>(null);
   const [savedAddresses, setSavedAddresses] = useState<UserAddress[]>([
     {
       id: 'addr_1',
@@ -439,9 +431,49 @@ export default function CustomerDashboard() {
     showToast(isRTL ? 'تمت إضافة العنوان الجديد بنجاح' : 'Nouvelle adresse de livraison enregistrée !');
   };
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!clientUser) return;
+    setProfileName(clientUser.name || '');
+    setProfilePhone(clientUser.phone || '');
+    setProfileEmail(clientUser.email || '');
+  }, [clientUser]);
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsProfileSaving(true);
+    const result = await updateClientProfile({ name: profileName, phone: profilePhone });
+    setIsProfileSaving(false);
+    if (!result.success) {
+      showToast(result.error || (isRTL ? 'تعذر تحديث الملف الشخصي.' : 'Impossible de mettre à jour votre profil.'));
+      return;
+    }
     showToast(isRTL ? 'تم تحديث معلومات الحساب بنجاح' : 'Vos informations personnelles ont été mises à jour.');
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordFeedback(null);
+
+    if (newPassword.length < 8) {
+      setPasswordFeedback({ type: 'error', message: 'Utilisez au moins 8 caractères pour votre nouveau mot de passe.' });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordFeedback({ type: 'error', message: 'Les deux mots de passe ne correspondent pas.' });
+      return;
+    }
+
+    setIsPasswordSaving(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setIsPasswordSaving(false);
+    if (error) {
+      setPasswordFeedback({ type: 'error', message: error.message || 'Impossible de modifier votre mot de passe.' });
+      return;
+    }
+
+    setNewPassword('');
+    setConfirmPassword('');
+    setPasswordFeedback({ type: 'success', message: 'Votre mot de passe a bien été mis à jour.' });
   };
 
   // Convert points to MAD value
@@ -492,152 +524,187 @@ export default function CustomerDashboard() {
           ) : (
             /* ── LOGGED IN: FLAGSHIP SHOPIFY-PLUS DASHBOARD ── */
             <>
-              {/* ──────────────── 1. EXECUTIVE HEADER BANNER ──────────────── */}
-              <div className={`rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden backdrop-blur-xl transition-all duration-300 border ${
-                themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800 text-slate-100' : 'bg-white border-slate-200/90 text-slate-900'
+              {/* ──────────────── 1. ACCOUNT WORKSPACE HEADER ──────────────── */}
+              <section className={`rounded-2xl border p-5 sm:p-6 transition-colors duration-200 ${
+                themeMode === 'dark'
+                  ? 'border-slate-800 bg-slate-900 text-slate-100'
+                  : 'border-slate-200 bg-slate-50/70 text-slate-900'
               }`}>
-                {/* Decorative Metallic Radial Background */}
-                <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-emerald-500/10 via-cyan-500/5 to-transparent blur-3xl pointer-events-none" />
-                
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
-                  
-                  {/* User Profile Identity Info */}
-                  <div className="flex items-center gap-4 sm:gap-5 min-w-0" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                    <div className="relative">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 text-slate-950 flex items-center justify-center text-xl sm:text-2xl font-black font-heading shrink-0 select-none shadow-xl shadow-emerald-500/20 ring-4 ring-emerald-500/20">
-                        {(clientUser.name || clientUser.email || 'C').charAt(0).toUpperCase()}
-                      </div>
-                      <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center shadow-md">
-                        <Sparkles className="w-3.5 h-3.5" />
+                <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+                  <div className="flex min-w-0 items-center gap-4" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                    <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-lg font-bold text-white shadow-sm">
+                      {(clientUser.name || clientUser.email || 'C').charAt(0).toUpperCase()}
+                      <span className={`absolute -bottom-1 ${isRTL ? '-left-1' : '-right-1'} flex h-5 w-5 items-center justify-center rounded-full border-2 ${themeMode === 'dark' ? 'border-slate-900 bg-emerald-400 text-slate-950' : 'border-slate-50 bg-emerald-500 text-white'}`}>
+                        <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
                       </span>
                     </div>
 
-                    <div className="min-w-0 space-y-1" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h2 className={`text-xl sm:text-2xl font-black font-heading tracking-tight ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                          {clientUser.name || clientUser.email}
-                        </h2>
-                        
-                        {/* Metallic VIP Tier Badge */}
-                        <span className={`px-3 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-widest flex items-center gap-1 shadow-sm border ${
-                          tier === 'Platinum'
-                            ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-300 border-purple-500/40'
-                            : tier === 'Gold'
-                            ? 'bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-300 border-amber-500/40'
-                            : tier === 'Silver'
-                            ? 'bg-gradient-to-r from-slate-400/20 to-slate-200/20 text-slate-200 border-slate-400/40'
-                            : 'bg-gradient-to-r from-amber-700/20 to-amber-600/20 text-amber-400 border-amber-700/40'
+                    <div className="min-w-0" style={{ textAlign: isRTL ? 'right' : 'left' }}>
+                      <div className="mb-1 flex flex-wrap items-center gap-2" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                        <p className={`text-[11px] font-semibold uppercase tracking-[0.12em] ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                          {isRTL ? 'مساحتي الشخصية' : 'Espace personnel'}
+                        </p>
+                        <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] ${
+                          themeMode === 'dark'
+                            ? 'border-amber-400/30 bg-amber-400/10 text-amber-300'
+                            : 'border-amber-600/25 bg-amber-50 text-amber-800'
                         }`}>
-                          <Award className="w-3 h-3 text-amber-400" />
-                          <span>MEMBRE {tier} VIP</span>
+                          <Award className="h-3 w-3" aria-hidden="true" />
+                          {isRTL ? `${tier} عضو` : `Membre ${tier}`}
                         </span>
                       </div>
-
-                      <p className={`text-xs font-medium ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
-                        {clientUser.email} • {isRTL ? 'عضوية معتمدة' : 'Compte Officinal Vérifié'}
-                      </p>
-
-                      <div className="flex items-center gap-2 pt-1" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                        <span className="relative flex h-2 w-2 shrink-0">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                      <h2 className={`truncate text-xl font-bold tracking-tight sm:text-2xl ${themeMode === 'dark' ? 'text-white' : 'text-slate-950'}`}>
+                        {clientUser.name?.trim() || clientUser.email.split('@')[0]}
+                      </h2>
+                      <div className={`mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-600'}`} style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                        <span className="truncate">{clientUser.email}</span>
+                        <span aria-hidden="true" className="hidden sm:inline">•</span>
+                        <span className={`inline-flex items-center gap-1.5 whitespace-nowrap ${themeMode === 'dark' ? 'text-emerald-400' : 'text-emerald-700'}`}>
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                          {isRTL ? 'حساب نشط وآمن' : 'Compte actif et sécurisé'}
                         </span>
-                        <p className="text-[11px] font-mono font-bold text-emerald-500 tracking-wider">
-                          {isRTL ? 'متصل بنظام الصيدلية المباشر' : 'CONNECTÉ EN TEMPS RÉEL (OFFICINE)'}
-                        </p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Header Action Pills & Theme Switcher */}
-                  <div className="flex flex-wrap items-center gap-2.5">
+                  <div className="flex flex-wrap items-center gap-2" style={{ justifyContent: isRTL ? 'flex-start' : 'flex-end' }}>
                     <button
                       onClick={() => setDiagnosticOpen(true)}
-                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center gap-2 transition shadow-lg shadow-emerald-500/20 cursor-pointer border-0"
+                      className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-emerald-600 px-4 text-xs font-bold text-white transition-colors hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 cursor-pointer"
                     >
-                      <Sparkles className="w-4 h-4 fill-slate-950" />
-                      <span>{isRTL ? 'تشخيص IA جديد' : 'Diagnostic IA'}</span>
+                      <Sparkles className="h-4 w-4" aria-hidden="true" />
+                      <span>{isRTL ? 'بدء تشخيص البشرة' : 'Diagnostic peau'}</span>
                     </button>
 
                     <a
                       href="https://wa.me/212660808080"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`px-4 py-2.5 rounded-xl border text-xs font-bold transition flex items-center gap-2 ${
+                      className={`inline-flex min-h-10 items-center gap-2 rounded-lg border px-3.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${
                         themeMode === 'dark'
-                          ? 'bg-slate-950 border-slate-800 text-emerald-400 hover:bg-slate-850'
-                          : 'bg-emerald-50 border-emerald-200 text-emerald-800 hover:bg-emerald-100'
+                          ? 'border-slate-700 bg-slate-950 text-slate-200 hover:bg-slate-800'
+                          : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
                       }`}
                     >
-                      <MessageCircle className="w-4 h-4 text-emerald-500" />
-                      <span>{isRTL ? 'دعم الواتساب 24/7' : 'Support 24/7'}</span>
+                      <MessageCircle className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+                      <span>{isRTL ? 'الدعم' : 'Support'}</span>
                     </a>
 
                     <button
                       onClick={toggleThemeMode}
-                      className={`p-2.5 rounded-xl border text-xs font-mono font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                      aria-label={themeMode === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'}
+                      title={themeMode === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'}
+                      className={`inline-flex h-10 w-10 items-center justify-center rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 cursor-pointer ${
                         themeMode === 'dark'
-                          ? 'bg-slate-950 border-slate-800 text-amber-400 hover:bg-slate-850'
-                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100 shadow-sm'
+                          ? 'border-slate-700 bg-slate-950 text-amber-300 hover:bg-slate-800'
+                          : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-100'
                       }`}
-                      title={themeMode === 'dark' ? 'Passer en Mode Clair' : 'Passer en Mode Sombre'}
                     >
-                      {themeMode === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
+                      {themeMode === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                     </button>
 
                     <button
                       onClick={logoutClient}
-                      className={`px-3.5 py-2.5 rounded-xl border text-xs font-bold transition cursor-pointer ${
+                      className={`min-h-10 rounded-lg border px-3.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 cursor-pointer ${
                         themeMode === 'dark'
-                          ? 'bg-slate-950 border-slate-800 text-rose-400 hover:bg-rose-500/10'
-                          : 'bg-white border-slate-200 text-rose-600 hover:bg-rose-50 shadow-sm'
+                          ? 'border-slate-700 bg-slate-950 text-slate-300 hover:border-rose-400/50 hover:text-rose-300'
+                          : 'border-slate-300 bg-white text-slate-600 hover:border-rose-300 hover:text-rose-700'
                       }`}
                     >
                       {isRTL ? 'خروج' : 'Déconnexion'}
                     </button>
                   </div>
-
                 </div>
-              </div>
+              </section>
 
 
-              {/* ──────────────── 2. SHOPIFY-PLUS 7-TAB NAVIGATION DECK ──────────────── */}
-              <div 
-                ref={tabsRef} 
-                className={`w-full rounded-2xl p-1.5 select-none relative transition-all duration-300 shadow-md border grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-1 ${
-                  themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
+              {/* ──────────────── CUSTOMER PORTAL NAVIGATION ──────────────── */}
+              <nav
+                aria-label={isRTL ? 'أقسام حساب العميل' : 'Sections de votre espace client'}
+                className={`w-full rounded-[1.35rem] border p-1.5 shadow-[0_16px_40px_-30px_oklch(0.22_0.03_180/0.45)] ${
+                  themeMode === 'dark'
+                    ? 'border-slate-800 bg-slate-900/95'
+                    : 'border-[oklch(0.91_0.012_175)] bg-[oklch(0.985_0.006_175)]'
                 }`}
               >
-                {[
-                  { id: 'overview', labelFr: 'Vue d\'Ensemble', labelAr: 'ملخص الحساب', icon: LayoutGridIcon },
-                  { id: 'commandes', labelFr: 'Mes Commandes', labelAr: 'طلباتي والشحن', icon: Box },
-                  { id: 'diagnostic', labelFr: 'Diagnostic IA', labelAr: 'تشخيص البشرة', icon: Sparkles },
-                  { id: 'cagnotte', labelFr: 'Cagnotte & VIP', labelAr: 'المحفظة والكوبونات', icon: Ticket },
-                  { id: 'favoris', labelFr: 'Mes Favoris', labelAr: 'المفضلة', icon: Heart },
-                  { id: 'profil', labelFr: 'Profil & Adresses', labelAr: 'الملف والعناوين', icon: User }
-                ].map((tab) => {
-                  const isActive = activeTab === tab.id;
-                  const TabIcon = tab.icon;
+                <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  <div
+                    ref={tabsRef}
+                    role="tablist"
+                    aria-orientation="horizontal"
+                    className="grid min-w-max grid-flow-col auto-cols-[minmax(9.5rem,1fr)] gap-1 lg:min-w-0 lg:grid-flow-row lg:grid-cols-6 lg:auto-cols-auto"
+                  >
+                    {[
+                      { id: 'overview', labelFr: 'Vue d\'ensemble', labelAr: 'ملخص الحساب', icon: LayoutGridIcon },
+                      { id: 'commandes', labelFr: 'Mes commandes', labelAr: 'طلباتي والشحن', icon: Box },
+                      { id: 'diagnostic', labelFr: 'Diagnostic IA', labelAr: 'تشخيص البشرة', icon: Sparkles },
+                      { id: 'cagnotte', labelFr: 'Cagnotte & VIP', labelAr: 'المحفظة والكوبونات', icon: Ticket },
+                      { id: 'favoris', labelFr: 'Mes favoris', labelAr: 'المفضلة', icon: Heart },
+                      { id: 'profil', labelFr: 'Profil & adresses', labelAr: 'الملف والعناوين', icon: User }
+                    ].map((tab, index, allTabs) => {
+                      const isActive = activeTab === tab.id;
+                      const TabIcon = tab.icon;
 
-                  return (
-                    <button
-                      key={tab.id}
-                      aria-selected={isActive}
-                      onClick={() => setActiveTab(tab.id as TabType)}
-                      className={`py-3 px-2 rounded-xl text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer border-0 ${
-                        isActive
-                          ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-black shadow-md'
-                          : themeMode === 'dark'
-                          ? 'text-slate-400 hover:text-white hover:bg-slate-800/60 bg-transparent'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 bg-transparent'
-                      }`}
-                    >
-                      <TabIcon className={`w-3.5 h-3.5 ${isActive ? 'text-slate-950' : 'text-slate-400'}`} />
-                      <span className="truncate">{language === 'AR' ? tab.labelAr : tab.labelFr}</span>
-                    </button>
-                  );
-                })}
-              </div>
+                      const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+                        const direction = isRTL ? -1 : 1;
+                        let nextIndex: number | null = null;
+
+                        if (event.key === 'ArrowRight') nextIndex = (index + direction + allTabs.length) % allTabs.length;
+                        if (event.key === 'ArrowLeft') nextIndex = (index - direction + allTabs.length) % allTabs.length;
+                        if (event.key === 'Home') nextIndex = 0;
+                        if (event.key === 'End') nextIndex = allTabs.length - 1;
+                        if (nextIndex === null) return;
+
+                        event.preventDefault();
+                        setActiveTab(allTabs[nextIndex].id as TabType);
+                        const buttons = tabsRef.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+                        buttons?.[nextIndex]?.focus();
+                      };
+
+                      return (
+                        <button
+                          key={tab.id}
+                          id={`customer-tab-${tab.id}`}
+                          type="button"
+                          role="tab"
+                          aria-selected={isActive}
+                          tabIndex={isActive ? 0 : -1}
+                          onKeyDown={handleKeyDown}
+                          onClick={() => setActiveTab(tab.id as TabType)}
+                          className={`group relative min-h-14 rounded-[1rem] px-3.5 py-3 text-[0.78rem] font-semibold tracking-[-0.01em] outline-none transition-[background-color,color,box-shadow,transform] duration-200 ease-out motion-reduce:transition-none flex items-center justify-center gap-2.5 cursor-pointer border-0 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 active:translate-y-px ${
+                            isActive
+                              ? themeMode === 'dark'
+                                ? 'bg-slate-800 text-slate-50 shadow-[0_8px_20px_-14px_oklch(0.2_0.02_175/0.8)]'
+                                : 'bg-[oklch(0.955_0.022_175)] text-[oklch(0.28_0.055_175)] shadow-[0_8px_22px_-16px_oklch(0.42_0.07_175/0.45)]'
+                              : themeMode === 'dark'
+                                ? 'bg-transparent text-slate-400 hover:bg-slate-800/60 hover:text-slate-100'
+                                : 'bg-transparent text-slate-600 hover:bg-[oklch(0.965_0.008_175)] hover:text-slate-900'
+                          }`}
+                        >
+                          <TabIcon
+                            aria-hidden="true"
+                            strokeWidth={isActive ? 2.25 : 1.8}
+                            className={`h-[1.05rem] w-[1.05rem] shrink-0 transition-colors duration-200 motion-reduce:transition-none ${
+                              isActive
+                                ? 'text-emerald-600'
+                                : themeMode === 'dark'
+                                  ? 'text-slate-500 group-hover:text-slate-300'
+                                  : 'text-slate-400 group-hover:text-slate-600'
+                            }`}
+                          />
+                          <span className="whitespace-nowrap">{language === 'AR' ? tab.labelAr : tab.labelFr}</span>
+                          <span
+                            aria-hidden="true"
+                            className={`absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-emerald-500 transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none ${
+                              isActive ? 'scale-x-100 opacity-100' : 'scale-x-50 opacity-0'
+                            }`}
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </nav>
 
 
               {/* ──────────────── TAB 1: VUE D'ENSEMBLE (OVERVIEW BENTO GRID) ──────────────── */}
@@ -796,7 +863,7 @@ export default function CustomerDashboard() {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleReorder(SAMPLE_ORDERS_PRESETS[0])}
-                          className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider transition shadow-md cursor-pointer border-0 flex items-center gap-1.5"
+                          className="premium-green-cta px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider transition shadow-md cursor-pointer border-0 flex items-center gap-1.5"
                         >
                           <RefreshCw className="w-3.5 h-3.5" />
                           <span>Re-commander en 1 clic</span>
@@ -937,7 +1004,7 @@ export default function CustomerDashboard() {
                           <div className="flex flex-wrap items-center gap-2">
                             <button
                               onClick={() => handleReorder(order)}
-                              className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider transition shadow-md cursor-pointer border-0 flex items-center gap-1.5"
+                              className="premium-green-cta px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider transition shadow-md cursor-pointer border-0 flex items-center gap-1.5"
                             >
                               <RefreshCw className="w-3.5 h-3.5" />
                               <span>Re-commander</span>
@@ -1444,14 +1511,84 @@ export default function CustomerDashboard() {
 
                       <button
                         type="submit"
+                        disabled={isProfileSaving}
                         className="px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider transition shadow-md cursor-pointer border-0 flex items-center gap-2"
                       >
                         <Save className="w-4 h-4" />
-                        <span>Enregistrer les modifications</span>
+                        <span>{isProfileSaving ? 'Enregistrement...' : 'Enregistrer les modifications'}</span>
                       </button>
                     </form>
                   </div>
 
+                  {/* Password & Account Security */}
+                  <div className={`p-6 sm:p-8 rounded-3xl border shadow-xl space-y-6 ${
+                    themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
+                  }`}>
+                    <div className="flex items-start gap-4 border-b border-slate-800/80 pb-5">
+                      <div className="w-11 h-11 shrink-0 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-500">
+                        <KeyRound className="w-5 h-5" />
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-xs font-mono font-bold text-indigo-500 uppercase tracking-widest">
+                          SÉCURITÉ DU COMPTE
+                        </span>
+                        <h3 className={`text-xl font-black font-heading ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                          Mettre à jour mon mot de passe
+                        </h3>
+                        <p className="text-xs leading-relaxed text-slate-400">Choisissez un mot de passe d'au moins 8 caractères, unique à votre compte.</p>
+                      </div>
+                    </div>
+
+                    <form onSubmit={handleChangePassword} className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_auto] gap-4 items-end">
+                      <div className="space-y-1.5">
+                        <label htmlFor="new-password" className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400">Nouveau mot de passe</label>
+                        <input
+                          id="new-password"
+                          type="password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          minLength={8}
+                          autoComplete="new-password"
+                          required
+                          className={`w-full px-4 py-3 rounded-xl text-sm border transition focus:outline-none focus:ring-2 focus:ring-indigo-500/30 ${
+                            themeMode === 'dark' ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                          }`}
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label htmlFor="confirm-password" className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400">Confirmer le mot de passe</label>
+                        <input
+                          id="confirm-password"
+                          type="password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          minLength={8}
+                          autoComplete="new-password"
+                          required
+                          className={`w-full px-4 py-3 rounded-xl text-sm border transition focus:outline-none focus:ring-2 focus:ring-indigo-500/30 ${
+                            themeMode === 'dark' ? 'bg-slate-950 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
+                          }`}
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={isPasswordSaving}
+                        className="min-h-[46px] px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white font-black text-xs uppercase tracking-wider transition shadow-[0_8px_18px_rgba(79,70,229,0.2)] cursor-pointer border-0 whitespace-nowrap"
+                      >
+                        {isPasswordSaving ? 'Mise à jour...' : 'Modifier le mot de passe'}
+                      </button>
+                    </form>
+
+                    {passwordFeedback && (
+                      <p className={`rounded-xl px-4 py-3 text-xs font-semibold border ${
+                        passwordFeedback.type === 'success'
+                          ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600'
+                          : 'bg-rose-500/10 border-rose-500/20 text-rose-600'
+                      }`} role="status">
+                        {passwordFeedback.message}
+                      </p>
+                    )}
+                  </div>
 
                   {/* Saved Delivery Addresses Deck */}
                   <div className={`p-6 sm:p-8 rounded-3xl border shadow-xl space-y-6 ${

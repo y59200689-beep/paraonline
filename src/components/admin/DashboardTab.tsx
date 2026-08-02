@@ -708,7 +708,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                   {atlasRetryMessage && <p className={`mt-1 text-[10px] font-semibold ${atlasRetryMessage.includes('Échec') || atlasRetryMessage.includes('configuré') ? 'text-rose-500' : 'text-emerald-600'}`}>{atlasRetryMessage}</p>}
                 </div>
               </div>
-              <button type="button" onClick={() => void retryAtlasSync()} disabled={isRetryingAtlas} className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-[10px] font-black text-white transition hover:bg-slate-700 disabled:cursor-wait disabled:opacity-60 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400">
+              <button type="button" onClick={() => void retryAtlasSync()} disabled={isRetryingAtlas} className="premium-green-cta inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-[10px] font-black text-white transition hover:bg-slate-700 disabled:cursor-wait disabled:opacity-60 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400">
                 <RefreshCw className={`h-3.5 w-3.5 ${isRetryingAtlas ? 'animate-spin' : ''}`} />
                 {isRetryingAtlas ? 'Synchronisation...' : 'Relancer'}
               </button>

@@ -43,6 +43,7 @@ interface LoyaltyContextProps {
   isLoadingAuth: boolean;
   loginClient: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signUpClient: (email: string, password: string, name: string, phone: string) => Promise<{ success: boolean; error?: string; emailConfirmationRequired?: boolean }>;
+  updateClientProfile: (updates: Pick<ClientUser, 'name' | 'phone'>) => Promise<{ success: boolean; error?: string }>;
   logoutClient: () => Promise<void>;
   syncDiaryLogs: (logs: any[]) => Promise<void>;
   syncPlannerDates: (amDates: string[], pmDates: string[]) => Promise<void>;
@@ -384,6 +385,35 @@ export const LoyaltyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     loadFromLocalStorage();
   };
 
+  const updateClientProfile = async (updates: Pick<ClientUser, 'name' | 'phone'>) => {
+    if (!clientUser || !isSupabaseConfigured()) {
+      return { success: false, error: 'Votre session a expiré. Veuillez vous reconnecter.' };
+    }
+
+    const name = updates.name?.trim() || undefined;
+    const phone = updates.phone?.trim() || undefined;
+
+    try {
+      const { error: authError } = await supabase.auth.updateUser({
+        data: { name, phone },
+      });
+      if (authError) return { success: false, error: customerAuthErrorMessage(authError.message) };
+
+      const { error: profileError } = await supabase
+        .from('customer_profiles')
+        .update({ name: name ?? null, phone: phone ?? null, updated_at: new Date().toISOString() })
+        .eq('id', clientUser.id);
+      if (profileError) return { success: false, error: profileError.message };
+
+      const updatedUser = { ...clientUser, name, phone };
+      setClientUser(updatedUser);
+      try { localStorage.setItem('customer_client_user', JSON.stringify(updatedUser)); } catch {}
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: customerAuthErrorMessage(error?.message || 'Impossible de mettre à jour le profil.') };
+    }
+  };
+
   // ──────────── Diary & Planner Sync ────────────
   const syncDiaryLogs = async (logs: any[]) => {
     localStorage.setItem('skin_diary_logs', JSON.stringify(logs));
@@ -527,6 +557,7 @@ export const LoyaltyProvider: React.FC<{ children: React.ReactNode }> = ({ child
         isLoadingAuth,
         loginClient,
         signUpClient,
+        updateClientProfile,
         logoutClient,
         syncDiaryLogs,
         syncPlannerDates,
