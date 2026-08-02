@@ -14,14 +14,21 @@ export async function GET(request: Request) {
 
   const { data, error } = await supabase
     .from('orders')
-    .select('order_id, customer_name, phone_number, address, city, notes, items, subtotal, discount_amount, applied_coupon, gift_item, total, status, carrier, tracking_number, estimated_delivery, created_at')
+    .select('order_id, city, items, subtotal, discount_amount, applied_coupon, gift_item, total, status, carrier, tracking_number, estimated_delivery, created_at')
     .eq('customer_id', authData.user.id)
     .order('created_at', { ascending: false })
     .limit(50);
 
   if (error) {
     console.error('Customer orders error:', error);
-    return NextResponse.json({ success: false, error: 'Impossible de charger vos commandes.' }, { status: 500 });
+    const migrationRequired = error.code === '42703' || /customer_id/i.test(error.message || '');
+    return NextResponse.json({
+      success: false,
+      code: migrationRequired ? 'CUSTOMER_ORDERS_SETUP_REQUIRED' : 'CUSTOMER_ORDERS_UNAVAILABLE',
+      error: migrationRequired
+        ? 'L’historique des commandes est en cours d’activation.'
+        : 'Impossible de charger vos commandes.',
+    }, { status: migrationRequired ? 503 : 500 });
   }
 
   return NextResponse.json({ success: true, orders: data || [] });

@@ -6,6 +6,30 @@ ALTER TABLE public.orders
 CREATE INDEX IF NOT EXISTS orders_customer_id_created_at_idx
   ON public.orders (customer_id, created_at DESC);
 
+-- Let an authenticated customer read only their own order history directly.
+-- This removes an avoidable Vercel-to-Supabase round trip from the account area
+-- while keeping every other customer's orders inaccessible.
+DROP POLICY IF EXISTS "orders_customer_read" ON public.orders;
+CREATE POLICY "orders_customer_read" ON public.orders
+  FOR SELECT TO authenticated
+  USING (auth.uid() = customer_id);
+
+GRANT SELECT (
+  order_id,
+  city,
+  items,
+  subtotal,
+  discount_amount,
+  applied_coupon,
+  gift_item,
+  total,
+  status,
+  carrier,
+  tracking_number,
+  estimated_delivery,
+  created_at
+) ON public.orders TO authenticated;
+
 ALTER TABLE public.customer_profiles
   ADD COLUMN IF NOT EXISTS delivery_addresses JSONB NOT NULL DEFAULT '[]'::JSONB;
 

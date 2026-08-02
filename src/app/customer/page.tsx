@@ -60,10 +60,10 @@ function applyCustomerImageFallback(event: React.SyntheticEvent<HTMLImageElement
 
 interface Order {
   order_id: string;
-  customer_name: string;
-  phone_number: string;
-  address: string;
-  city: string;
+  customer_name?: string;
+  phone_number?: string;
+  address?: string;
+  city?: string;
   notes?: string;
   items: OrderItem[];
   subtotal: number;
@@ -230,47 +230,69 @@ export default function CustomerDashboard() {
   const [orderSearchQuery, setOrderSearchQuery] = useState('');
   const [orderFilterStatus, setOrderFilterStatus] = useState<'all' | 'in_transit' | 'delivered'>('all');
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
-  const ordersRequestRef = useRef<AbortController | null>(null);
+  const ordersRequestRef = useRef(0);
 
   const loadCustomerOrders = async () => {
     if (!clientUser) return;
-    ordersRequestRef.current?.abort();
-    const controller = new AbortController();
-    ordersRequestRef.current = controller;
-    const timeoutId = window.setTimeout(() => controller.abort(), 8_000);
-    setOrdersState('loading');
+    const requestId = ordersRequestRef.current + 1;
+    ordersRequestRef.current = requestId;
+    const cacheKey = `paraonline:customer-orders:${clientUser.id}`;
+    let hasCachedOrders = false;
+    let timeoutId: number | undefined;
+
+    try {
+      const cachedOrders = window.sessionStorage.getItem(cacheKey);
+      if (cachedOrders) {
+        const parsedOrders = JSON.parse(cachedOrders);
+        if (Array.isArray(parsedOrders)) {
+          hasCachedOrders = true;
+          setOrders(parsedOrders);
+          setOrdersState('ready');
+        }
+      }
+    } catch {
+      // Storage is an optional speed-up only; a fresh database read still works.
+    }
+
+    if (!hasCachedOrders) setOrdersState('loading');
     setOrdersError(null);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
-      if (!token) throw new Error('Votre session a expiré. Connectez-vous à nouveau.');
-
-      const response = await fetch('/api/customer/orders', {
-        headers: { Authorization: `Bearer ${token}` },
-        cache: 'no-store',
-        signal: controller.signal,
+      const orderQuery = supabase
+        .from('orders')
+        .select('order_id, city, items, subtotal, discount_amount, applied_coupon, gift_item, total, status, carrier, tracking_number, estimated_delivery, created_at')
+        .eq('customer_id', clientUser.id)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      const timeout = new Promise<never>((_, reject) => {
+        timeoutId = window.setTimeout(() => reject(new Error('Le chargement prend plus de temps que prévu.')), 8_000);
       });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok || !payload.success) throw new Error(payload.error || 'Impossible de charger vos commandes.');
-      if (ordersRequestRef.current !== controller) return;
-      setOrders(Array.isArray(payload.orders) ? payload.orders : []);
+      const { data, error } = await Promise.race([orderQuery, timeout]);
+      if (error) throw error;
+      if (ordersRequestRef.current !== requestId) return;
+
+      const nextOrders = Array.isArray(data) ? data as Order[] : [];
+      setOrders(nextOrders);
       setOrdersState('ready');
+      try {
+        window.sessionStorage.setItem(cacheKey, JSON.stringify(nextOrders));
+      } catch {
+        // A blocked or full session store should never prevent showing orders.
+      }
     } catch (error) {
-      if (ordersRequestRef.current !== controller) return;
-      setOrders([]);
-      setOrdersState('error');
-      setOrdersError(error instanceof DOMException && error.name === 'AbortError'
-        ? 'Le chargement prend plus de temps que prévu. Vérifiez votre connexion puis réessayez.'
-        : error instanceof Error ? error.message : 'Impossible de charger vos commandes.');
+      if (ordersRequestRef.current !== requestId) return;
+      if (!hasCachedOrders) {
+        setOrders([]);
+        setOrdersState('error');
+        setOrdersError(error instanceof Error ? error.message : 'Impossible de charger vos commandes.');
+      }
     } finally {
-      window.clearTimeout(timeoutId);
-      if (ordersRequestRef.current === controller) ordersRequestRef.current = null;
+      if (timeoutId) window.clearTimeout(timeoutId);
     }
   };
 
   useEffect(() => {
     void loadCustomerOrders();
-    return () => ordersRequestRef.current?.abort();
+    return () => { ordersRequestRef.current += 1; };
   // The identity is the stable dependency; the loader intentionally uses current session state.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientUser?.id]);
