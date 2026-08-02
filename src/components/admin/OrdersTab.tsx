@@ -3518,143 +3518,146 @@ export default function OrdersTab() {
             ))}
           </div>
 
-          {/* Search + table */}
-          <div className={`border rounded-2xl overflow-hidden ${adminTheme === 'light' ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-900/30 border-slate-900'}`}>
-            <div className={`flex items-center gap-3 p-4 border-b ${adminTheme === 'light' ? 'border-slate-100' : 'border-slate-900'}`}>
-              <div className="relative flex-1 max-w-sm">
-                <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Rechercher par nom ou téléphone..."
-                  value={abandonedSearchQuery}
-                  onChange={e => setAbandonedSearchQuery(e.target.value)}
-                  className={`w-full text-xs outline-none focus:border-emerald-500/50 transition rounded-xl pl-9 pr-4 py-2 border ${
-                    adminTheme === 'light'
-                      ? 'bg-slate-50 border-slate-200 text-slate-800 focus:bg-white'
-                      : 'bg-slate-950 border-slate-800 text-slate-100'
-                  }`}
-                />
-              </div>
-              <span className={`text-[10px] font-mono shrink-0 ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-500'}`}>{filteredAbandonedCarts.length} résultats</span>
-              {/* Bulk WhatsApp Blast Button */}
-              <button
-                onClick={() => setIsBulkBlastModalOpen(true)}
-                className={`group inline-flex h-10 items-center gap-2 rounded-lg border px-1.5 pr-2.5 text-[11px] font-extrabold transition-all duration-200 cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/35 ${
-                  adminTheme === 'light'
-                    ? 'border-emerald-200 bg-white text-slate-800 shadow-[0_1px_2px_rgba(15,23,42,0.06)] hover:border-emerald-300 hover:bg-emerald-50/60 hover:shadow-[0_6px_18px_rgba(16,185,129,0.12)]'
-                    : 'border-emerald-800/70 bg-emerald-950/30 text-emerald-50 hover:border-emerald-700 hover:bg-emerald-950/55'
-                } active:translate-y-px`}
-              >
-                <span className="grid h-7 w-7 place-items-center rounded-md bg-emerald-500 text-white shadow-sm transition-transform duration-200 group-hover:scale-[1.04]">
-                  <Zap className="h-3.5 w-3.5" strokeWidth={2.25} />
-                </span>
-                <span>Relancer via WhatsApp</span>
-                <span className={`ml-0.5 rounded-md px-1.5 py-0.5 font-mono text-[10px] leading-none ${
-                  adminTheme === 'light' ? 'bg-emerald-100 text-emerald-800' : 'bg-emerald-900/70 text-emerald-200'
-                }`}>
-                  {abandonedCarts.filter(c => (cartRecoveryStatus[c.phone] || 'not_contacted') === 'not_contacted').length} panier{abandonedCarts.filter(c => (cartRecoveryStatus[c.phone] || 'not_contacted') === 'not_contacted').length > 1 ? 's' : ''}
-                </span>
-              </button>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left">
-                <thead>
-              <tr
-                  style={{ borderBottom: '1px solid var(--admin-border)', background: 'var(--admin-surface-2)' }}
+          {/* Unified recovery list - uses the same operational data surface as the orders list. */}
+          <div
+            className="rounded-2xl overflow-hidden transition-all duration-300"
+            style={{
+              background: adminTheme === 'light' ? '#ffffff' : 'hsl(224,25%,9%)',
+              border: `1px solid ${adminTheme === 'light' ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.06)'}`,
+              boxShadow: adminTheme === 'light' ? '0 4px 20px -4px rgba(15,23,42,0.05)' : '0 4px 24px rgba(0,0,0,0.35)',
+            }}
+          >
+            <div className="p-4 space-y-3 border-b" style={{ borderColor: adminTheme === 'light' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)' }}>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                <div className="relative flex-1 max-w-lg">
+                  <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: adminTheme === 'light' ? '#94a3b8' : '#64748b' }} />
+                  <input
+                    type="text"
+                    placeholder="Rechercher par client ou téléphone..."
+                    value={abandonedSearchQuery}
+                    onChange={e => setAbandonedSearchQuery(e.target.value)}
+                    className="w-full text-xs font-medium rounded-xl pl-10 pr-4 py-2.5 outline-none transition duration-200"
+                    style={{
+                      background: adminTheme === 'light' ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.04)',
+                      border: `1px solid ${adminTheme === 'light' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)'}`,
+                      color: adminTheme === 'light' ? '#0f172a' : '#f1f5f9',
+                    }}
+                  />
+                </div>
+                <button
+                  onClick={() => setIsBulkBlastModalOpen(true)}
+                  className="group inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-3.5 py-2.5 text-[11px] font-black text-white shadow-[0_2px_8px_rgba(15,23,42,0.18)] transition hover:bg-slate-700 active:scale-[0.98] dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
                 >
-                  {['Client', 'Téléphone', 'Articles', 'Total', 'Date', 'Statut', ''].map((h, i) => (
-                    <th
-                      key={i}
-                      className={`p-4 font-bold uppercase tracking-widest ${i === 6 ? 'text-right' : ''}`}
-                      style={{ fontSize: 'var(--admin-text-2xs)', color: 'var(--admin-text-faint)' }}
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
+                  <Zap className="h-3.5 w-3.5 text-emerald-300 dark:text-slate-950" />
+                  Relancer via WhatsApp
+                  <span className="rounded-md bg-white/15 px-1.5 py-0.5 font-mono text-[10px] leading-none text-white dark:bg-slate-950/15 dark:text-slate-950">
+                    {abandonedCarts.filter(c => (cartRecoveryStatus[c.phone] || 'not_contacted') === 'not_contacted').length}
+                  </span>
+                </button>
+              </div>
+              <div className="flex items-center justify-between gap-3 text-[10px] font-mono" style={{ color: adminTheme === 'light' ? '#64748b' : '#94a3b8' }}>
+                <span>{filteredAbandonedCarts.length} panier{filteredAbandonedCarts.length !== 1 ? 's' : ''} affiché{filteredAbandonedCarts.length !== 1 ? 's' : ''}</span>
+                <span>Relance client et suivi de récupération</span>
+              </div>
+            </div>
+            <div className="overflow-x-auto" data-admin-scroll>
+              <table className="w-full min-w-[1080px] text-left border-collapse">
+                <thead>
+                  <tr
+                    className="border-b text-[10px] font-black uppercase tracking-widest"
+                    style={{
+                      background: adminTheme === 'light' ? 'rgba(0,0,0,0.01)' : 'rgba(255,255,255,0.01)',
+                      borderColor: adminTheme === 'light' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)',
+                      color: adminTheme === 'light' ? '#94a3b8' : '#64748b',
+                    }}
+                  >
+                    <th className="py-3.5 px-4 whitespace-nowrap">Client</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Panier</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Date & heure</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">Relance</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap text-right">Total</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap text-right">Actions</th>
+                  </tr>
                 </thead>
-                <tbody className={`divide-y text-xs ${adminTheme === 'light' ? 'divide-slate-100 text-slate-700' : 'divide-slate-900 text-slate-300'}`}>
+                <tbody className="divide-y text-[11.5px] font-medium" style={{ borderColor: adminTheme === 'light' ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.04)' }}>
                   {filteredAbandonedCarts.map((cart, idx) => {
                     const status = cartRecoveryStatus[cart.phone] || 'not_contacted';
                     const statusConfig = {
-                      not_contacted: { label: 'Non contacté', cls: adminTheme === 'light' ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-slate-800/60 text-slate-400 border-slate-700' },
-                      contacted: { label: 'Contacté', cls: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
-                      recovered: { label: 'Récupéré', cls: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
+                      not_contacted: { label: 'À relancer', color: '#64748b', tint: 'rgba(100,116,139,0.10)', border: 'rgba(100,116,139,0.20)' },
+                      contacted: { label: 'Contacté', color: '#d97706', tint: 'rgba(245,158,11,0.10)', border: 'rgba(245,158,11,0.24)' },
+                      recovered: { label: 'Récupéré', color: '#059669', tint: 'rgba(5,150,105,0.10)', border: 'rgba(5,150,105,0.24)' },
                     };
-                    const sc = statusConfig[status];
-                    const detailsStr = cart.items?.map((item: any) => {
-                      const title = item.title || item.product?.title || 'Produit';
-                      const qty = item.quantity || 1;
-                      const price = item.price || item.product?.price;
-                      const priceStr = price ? ` (${price} DH)` : '';
-                      return `${qty}x ${title}${priceStr}`;
-                    }).join(', ') || '—';
-                    const dateStr = cart.date ? new Date(cart.date).toLocaleDateString('fr-FR') : '—';
+                    const recovery = statusConfig[status];
+                    const dateObj = new Date(cart.created_at || cart.date || Date.now());
+                    const avatarGradients = [
+                      'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)',
+                      'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)',
+                      'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
+                      'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
+                    ];
                     return (
-                      <tr key={idx} className={`transition-colors admin-row-enter ${adminTheme === 'light' ? 'hover:bg-slate-50/40' : 'hover:bg-slate-900/10'}`}>
-                        <td className="p-4 font-bold">
-                          <div className="flex flex-col gap-0.5">
-                            <span>{cart.name || 'Anonyme'}</span>
-                            <span className="text-[9.5px] text-slate-500 font-semibold select-none leading-none normal-case">
-                              Compte : <span className={cart.clientProfileName ? 'text-indigo-500 font-bold' : 'text-rose-500 italic font-bold'}>{cart.clientProfileName || 'unavailable'}</span>
-                            </span>
+                      <tr
+                        key={`${cart.phone}-${cart.created_at || cart.date || idx}`}
+                        className="group transition-colors duration-150"
+                        style={{ borderBottom: `1px solid ${adminTheme === 'light' ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.04)'}` }}
+                      >
+                        <td className="py-4 px-4 whitespace-nowrap min-w-[240px]">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-2xl flex items-center justify-center font-black text-white text-xs shrink-0 shadow-xs" style={{ background: avatarGradients[idx % avatarGradients.length] }}>
+                              {(cart.name || 'CL').slice(0, 2).toUpperCase()}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-extrabold text-xs truncate group-hover:text-emerald-500 transition-colors" style={{ color: adminTheme === 'light' ? '#0f172a' : '#f1f5f9' }}>{cart.name || 'Client non identifié'}</p>
+                              <div className="flex items-center gap-2 text-[11px] font-mono opacity-70">
+                                <span>{cart.phone}</span>
+                                {cart.clientProfileName && <><span>•</span><span className="font-sans">{cart.clientProfileName}</span></>}
+                              </div>
+                            </div>
                           </div>
                         </td>
-                        <td className="p-4 font-mono text-[10px]">{cart.phone}</td>
-                        <td className="p-4 italic text-[10px] max-w-[200px] truncate" title={detailsStr}>{detailsStr}</td>
-                        <td className="p-4 font-extrabold font-mono">{cart.total} DH</td>
-                        <td className="p-4 font-mono text-[10px]">{dateStr}</td>
-                        <td className="p-4">
+                        <td className="py-4 px-4 whitespace-nowrap max-w-[280px]">
+                          <div className="flex items-center gap-1">
+                            {cart.items?.slice(0, 2).map((item: any, itemIndex: number) => {
+                              const title = item.title || item.product?.title || 'Produit';
+                              return (
+                                <span key={itemIndex} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold truncate max-w-[170px]" style={{ background: adminTheme === 'light' ? '#f1f5f9' : 'rgba(255,255,255,0.06)', color: adminTheme === 'light' ? '#334155' : '#cbd5e1', border: `1px solid ${adminTheme === 'light' ? '#e2e8f0' : 'rgba(255,255,255,0.08)'}` }}>
+                                  <span className="truncate">{title}</span>
+                                  <span className="px-1.5 py-0.5 rounded-md font-mono font-black text-[10px] bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">x{item.quantity || 1}</span>
+                                </span>
+                              );
+                            })}
+                            {(cart.items?.length || 0) > 2 && <span className="px-2 py-1 rounded-lg text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600">+{cart.items.length - 2}</span>}
+                          </div>
+                        </td>
+                        <td className="py-4 px-4 whitespace-nowrap font-mono text-[11px]">
+                          <div className="flex flex-col">
+                            <span className="font-bold" style={{ color: adminTheme === 'light' ? '#0f172a' : '#f1f5f9' }}>{dateObj.toLocaleDateString('fr-FR')}</span>
+                            <span className="text-[10px] opacity-60 font-medium">{dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          </div>
+                        </td>
+                        <td className="py-4 px-4 whitespace-nowrap">
                           <select
                             value={status}
-                            onChange={e => handleUpdateCartRecovery(cart.phone, e.target.value as any)}
-                            onClick={e => e.stopPropagation()}
-                            className={`text-[9px] font-black uppercase tracking-wider border rounded-full px-2 py-1 bg-transparent outline-none cursor-pointer transition ${sc.cls}`}
+                            onChange={event => handleUpdateCartRecovery(cart.phone, event.target.value as 'not_contacted' | 'contacted' | 'recovered')}
+                            className="rounded-xl px-3 py-1.5 text-[10px] font-black outline-none cursor-pointer transition"
+                            style={{ color: recovery.color, background: recovery.tint, border: `1px solid ${recovery.border}` }}
                           >
-                            <option value="not_contacted">Non contacté</option>
+                            <option value="not_contacted">À relancer</option>
                             <option value="contacted">Contacté</option>
                             <option value="recovered">Récupéré</option>
                           </select>
                         </td>
-                        <td className="p-4 text-right">
-                          <div className="flex gap-1.5 justify-end">
-                            <a
-                              href={buildCartRecoveryLink(cart, 'Fr')}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={() => handleUpdateCartRecovery(cart.phone, 'contacted')}
-                              title="Envoyer rappel WhatsApp (FR)"
-                              className="inline-flex items-center gap-1 text-[9px] font-black uppercase bg-emerald-950/40 text-emerald-400 border border-emerald-900/40 px-2 py-1.5 rounded-lg hover:bg-emerald-900/30 transition"
-                            >
-                              <MessageSquare className="w-3 h-3" /> FR
-                            </a>
-                            <a
-                              href={buildCartRecoveryLink(cart, 'Ar')}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={() => handleUpdateCartRecovery(cart.phone, 'contacted')}
-                              title="Envoyer rappel WhatsApp (AR)"
-                              className="inline-flex items-center gap-1 text-[9px] font-black uppercase bg-blue-950/40 text-blue-400 border border-blue-900/40 px-2 py-1.5 rounded-lg hover:bg-blue-900/30 transition"
-                            >
-                              <MessageSquare className="w-3 h-3" /> AR
-                            </a>
-                            {status !== 'recovered' && (
-                              <button
-                                onClick={() => handleUpdateCartRecovery(cart.phone, 'recovered')}
-                                title="Marquer comme récupéré"
-                                className="inline-flex items-center gap-1 text-[9px] font-black uppercase bg-violet-950/40 text-violet-400 border border-violet-900/40 px-2 py-1.5 rounded-lg hover:bg-violet-900/30 transition cursor-pointer"
-                              >
-                                Récupéré
-                              </button>
-                            )}
+                        <td className="py-4 px-4 text-right whitespace-nowrap font-mono font-black text-sm text-emerald-600 dark:text-emerald-400">{Number(cart.total || 0).toFixed(2)} <span className="text-xs font-sans font-bold">DH</span></td>
+                        <td className="py-4 px-4 text-right whitespace-nowrap">
+                          <div className="flex justify-end gap-2">
+                            <a href={buildCartRecoveryLink(cart, 'Fr')} target="_blank" rel="noopener noreferrer" onClick={() => handleUpdateCartRecovery(cart.phone, 'contacted')} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[10px] font-extrabold transition active:scale-95" style={{ background: adminTheme === 'light' ? '#ecfdf5' : 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.22)', color: '#059669' }}><MessageSquare className="w-3.5 h-3.5" /> WhatsApp</a>
+                            {status !== 'recovered' && <button type="button" onClick={() => handleUpdateCartRecovery(cart.phone, 'recovered')} className="rounded-xl px-3 py-1.5 text-[10px] font-extrabold transition active:scale-95 cursor-pointer" style={{ background: adminTheme === 'light' ? '#f1f5f9' : 'rgba(255,255,255,0.06)', border: `1px solid ${adminTheme === 'light' ? '#e2e8f0' : 'rgba(255,255,255,0.08)'}`, color: adminTheme === 'light' ? '#334155' : '#cbd5e1' }}>Récupéré</button>}
                           </div>
                         </td>
                       </tr>
                     );
                   })}
-                  {filteredAbandonedCarts.length === 0 && (
-                    <tr><td colSpan={7} className="p-8 text-center text-slate-500 italic">Aucun panier abandonné trouvé.</td></tr>
-                  )}
+                  {filteredAbandonedCarts.length === 0 && <tr><td colSpan={6} className="py-12 text-center text-xs italic opacity-70">Aucun panier abandonné ne correspond à ces critères.</td></tr>}
                 </tbody>
               </table>
             </div>
