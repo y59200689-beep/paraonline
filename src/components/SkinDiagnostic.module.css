@@ -472,6 +472,163 @@
   .trustItem:nth-child(4) { border-top: 1px solid var(--skin-border); }
 }
 
+/* Laptop-height mode: preserve the complete entry view without an inner scrollbar. */
+@media (min-width: 768px) and (max-height: 950px) {
+  .dialogClient {
+    max-height: calc(100dvh - 24px);
+  }
+
+  .headerClient {
+    min-height: 68px;
+    padding-block: 9px;
+  }
+
+  .brandIcon {
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+  }
+
+  .brandName { font-size: 17px; }
+  .brandSubtitle { margin-top: 3px; font-size: 9px; }
+  .closeClient { width: 44px; height: 44px; }
+
+  .entry,
+  .visual {
+    min-height: 0;
+  }
+
+  .entry {
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .visualCopy {
+    padding: 30px 32px 0;
+  }
+
+  .visualTitle {
+    font-size: clamp(34px, 2.7vw, 42px);
+  }
+
+  .visualDescription {
+    margin-top: 14px;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+
+  .researchCard {
+    right: 20px;
+    bottom: 18px;
+    left: 20px;
+    padding: 12px;
+    border-radius: 15px;
+  }
+
+  .researchCardIcon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+  }
+
+  .researchCard strong { font-size: 11px; }
+  .researchCard p { margin-top: 2px; font-size: 9px; line-height: 1.4; }
+
+  .content {
+    justify-content: flex-start;
+    padding: 20px 26px 14px;
+  }
+
+  .eyebrow {
+    padding: 5px 10px;
+    font-size: 9px;
+  }
+
+  .contentHeading {
+    margin-top: 10px;
+    font-size: 27px;
+  }
+
+  .contentDescription {
+    margin-top: 6px;
+    font-size: 11px;
+    line-height: 1.45;
+  }
+
+  .journey {
+    gap: 8px;
+    margin-top: 13px;
+  }
+
+  .journey::before {
+    top: 50px;
+    bottom: 50px;
+    left: 34px;
+  }
+
+  .step {
+    grid-template-columns: 58px minmax(0, 1fr) auto;
+    min-height: 78px;
+    gap: 12px;
+    padding: 9px 13px 9px 9px;
+    border-radius: 15px;
+  }
+
+  .stepIcon {
+    width: 50px;
+    height: 50px;
+    border-radius: 13px;
+  }
+
+  .stepNumber {
+    top: 5px;
+    right: 4px;
+    width: 21px;
+    height: 21px;
+    font-size: 8px;
+  }
+
+  .stepCopy strong { font-size: 13px; }
+  .stepCopy p { margin-top: 2px; font-size: 9px; line-height: 1.4; }
+  .timeBadge { padding: 6px 8px; font-size: 9px; }
+
+  .cta {
+    min-height: 58px;
+    grid-template-columns: 38px minmax(0, 1fr) 38px;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 7px 9px 7px 11px;
+    border-radius: 15px;
+  }
+
+  .ctaIcon,
+  .ctaArrow {
+    width: 38px;
+    height: 38px;
+  }
+
+  .ctaLabel { font-size: 12px; }
+  .ctaSubline { margin-top: 1px; font-size: 9px; }
+  .privacy { margin-top: 7px; font-size: 9px; }
+
+  .trustStrip {
+    margin: 0 24px 14px;
+    border-radius: 14px;
+  }
+
+  .trustItem {
+    gap: 8px;
+    padding: 8px 11px;
+  }
+
+  .trustIcon {
+    width: 29px;
+    height: 29px;
+  }
+
+  .trustItem strong { font-size: 9px; }
+  .trustItem span { margin-top: 1px; font-size: 8px; }
+}
+
 @media (max-width: 767px) {
   .dialogClient {
     width: min(100% - 20px, 620px);
