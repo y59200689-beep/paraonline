@@ -202,6 +202,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
   const isIntro = questionIndex === -1;
   const isResults = questionIndex === QUESTIONS.length;
   const currentQuestion = !isIntro && !isResults ? QUESTIONS[questionIndex] : null;
+  const QuestionIcon = currentQuestion ? (ICONS[currentQuestion.options[0]?.icon] || Sparkles) : Sparkles;
   const progress = isIntro ? 0 : isResults ? 100 : Math.round(((questionIndex + 1) / QUESTIONS.length) * 100);
 
   useEffect(() => {
@@ -423,16 +424,16 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
         </header>
 
         {!isIntro && !isResults && (
-          <div className="shrink-0 border-b border-slate-200 bg-white px-5 py-3 sm:px-7">
+          <div className={isClientExperience ? styles.progressHeader : 'shrink-0 border-b border-slate-200 bg-white px-5 py-3 sm:px-7'}>
             <div className="mb-2 flex items-center justify-between gap-3 text-xs font-semibold">
               <span className="text-slate-600">
                 {isRTL ? `السؤال ${questionIndex + 1} من ${QUESTIONS.length}` : `Question ${questionIndex + 1} sur ${QUESTIONS.length}`}
               </span>
               <span className="font-mono text-emerald-700 tabular-nums">{progress}%</span>
             </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-slate-100" aria-hidden="true">
+            <div className={isClientExperience ? styles.progressTrack : 'h-1.5 overflow-hidden rounded-full bg-slate-100'} aria-hidden="true">
               <div
-                className="h-full rounded-full bg-emerald-600 transition-[width] duration-300 ease-out"
+                className={isClientExperience ? styles.progressValue : 'h-full rounded-full bg-emerald-600 transition-[width] duration-300 ease-out'}
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -630,7 +631,87 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
             )
           )}
 
-          {currentQuestion && (
+          {currentQuestion && (isClientExperience ? (
+            <div className={styles.questionStage}>
+              <nav className={styles.questionRail} aria-label={isRTL ? 'تقدم التشخيص' : 'Progression du diagnostic'}>
+                <ol>
+                  {QUESTIONS.map((question, index) => {
+                    const complete = index < questionIndex;
+                    const active = index === questionIndex;
+                    return (
+                      <li
+                        key={question.field}
+                        className={`${styles.railItem} ${active ? styles.railItemActive : ''} ${complete ? styles.railItemComplete : ''}`}
+                        aria-current={active ? 'step' : undefined}
+                      >
+                        <span className={styles.railDot} aria-hidden="true">
+                          {complete ? <Check className="h-3 w-3" /> : String(index + 1).padStart(2, '0')}
+                        </span>
+                        <span className={styles.railLabel}>{isRTL ? question.eyebrowAr : question.eyebrowFr}</span>
+                      </li>
+                    );
+                  })}
+                </ol>
+              </nav>
+
+              <div className={styles.questionLayout}>
+                <section className={styles.questionPrompt} aria-labelledby={`question-${currentQuestion.field}`}>
+                  <span className={styles.promptGlow} aria-hidden="true" />
+                  <span className={styles.questionPromptIcon} aria-hidden="true"><QuestionIcon className="h-7 w-7" /></span>
+                  <p className={styles.questionKicker}>
+                    {isRTL ? `السؤال ${String(questionIndex + 1).padStart(2, '0')}` : `QUESTION ${String(questionIndex + 1).padStart(2, '0')}`}
+                  </p>
+                  <h3 id={`question-${currentQuestion.field}`} className={styles.questionTitle}>
+                    {isRTL ? currentQuestion.questionAr : currentQuestion.questionFr}
+                  </h3>
+                  <p className={styles.questionHelper}>
+                    {isRTL ? currentQuestion.helperAr : currentQuestion.helperFr}
+                  </p>
+                  <div className={styles.questionHint}>
+                    <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                    <span>{isRTL ? 'اختاري الإجابة الأقرب إلى بشرتك.' : 'Choisissez la réponse la plus proche de votre réalité.'}</span>
+                  </div>
+                </section>
+
+                <main key={currentQuestion.field} className={styles.answersPanel}>
+                  <div className={styles.answersHeading}>
+                    <div>
+                      <span>{isRTL ? currentQuestion.eyebrowAr : currentQuestion.eyebrowFr}</span>
+                      <strong>{isRTL ? 'إجابة واحدة' : 'Une seule réponse'}</strong>
+                    </div>
+                    <span className={styles.answerCount}>{currentQuestion.options.length} {isRTL ? 'خيارات' : 'choix'}</span>
+                  </div>
+                  <div className={styles.answersGrid} role="radiogroup" aria-label={isRTL ? currentQuestion.questionAr : currentQuestion.questionFr}>
+                    {currentQuestion.options.map((option) => {
+                      const selected = answers[currentQuestion.field] === option.val;
+                      const OptionIcon = ICONS[option.icon] || Sparkles;
+                      return (
+                        <button
+                          key={option.val}
+                          type="button"
+                          role="radio"
+                          aria-checked={selected}
+                          onClick={() => setAnswers((current) => ({ ...current, [currentQuestion.field]: option.val }))}
+                          className={`${styles.answerCard} ${selected ? styles.answerCardSelected : ''}`}
+                        >
+                          <span className={`${styles.answerIcon} ${selected ? styles.answerIconSelected : ''}`}>
+                            <OptionIcon className="h-5 w-5" aria-hidden />
+                          </span>
+                          <span className={styles.answerCopy}>
+                            <strong>{isRTL ? option.labelAr : option.labelFr}</strong>
+                            <span>{isRTL ? option.descAr : option.descFr}</span>
+                          </span>
+                          <span className={`${styles.answerCheck} ${selected ? styles.answerCheckSelected : ''}`} aria-hidden="true">
+                            <Check className="h-3.5 w-3.5" />
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </main>
+              </div>
+            </div>
+          ) : (
             <div className="grid min-h-[570px] lg:grid-cols-[250px_1fr]">
               <aside className="hidden border-e border-slate-200 bg-slate-50/80 p-6 lg:block">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
@@ -692,7 +773,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                 </div>
               </main>
             </div>
-          )}
+          ))}
 
           {isResults && (
             <div className="px-5 py-7 sm:px-8 sm:py-9">
@@ -768,7 +849,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
         </div>
 
         {!isIntro && (
-          <footer className="flex shrink-0 flex-col-reverse gap-2 border-t border-slate-200 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7">
+          <footer className={`flex shrink-0 flex-col-reverse gap-2 border-t border-slate-200 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7 ${isClientExperience && currentQuestion ? styles.questionFooter : ''}`}>
             <PoButton
               variant="neutral"
               size="md"
