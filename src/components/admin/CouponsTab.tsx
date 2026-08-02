@@ -124,7 +124,7 @@ export default function CouponsTab() {
         </div>
         <button
           onClick={() => setIsAddingCoupon(!isAddingCoupon)}
-          className="premium-green-cta flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-200 cursor-pointer"
+          className="po-ui-button po-ui-button--primary po-ui-button--md flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-200 cursor-pointer"
         >
           <Plus className="w-3.5 h-3.5" />
           {isAddingCoupon ? 'Fermer' : 'Nouveau Code Promo'}
@@ -273,7 +273,7 @@ export default function CouponsTab() {
             </button>
             <button
               type="submit"
-              className="premium-green-cta flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 shadow-md shadow-emerald-500/20 transition-all duration-200 cursor-pointer"
+              className="po-ui-button po-ui-button--primary po-ui-button--md flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 shadow-md shadow-emerald-500/20 transition-all duration-200 cursor-pointer"
             >
               <CheckCircle className="w-3.5 h-3.5" />
               Sauvegarder le Coupon

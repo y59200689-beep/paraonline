@@ -702,7 +702,7 @@ export default function LoyaltyTab() {
                   <button 
                     type="submit" 
                     disabled={isAdjustingPoints}
-                    className="premium-green-cta w-full py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black rounded-xl text-xs uppercase tracking-wider shadow-md shadow-emerald-500/10 hover:shadow-lg hover:shadow-emerald-500/20 transition-all duration-200 cursor-pointer"
+                    className="po-ui-button po-ui-button--primary po-ui-button--md w-full py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black rounded-xl text-xs uppercase tracking-wider shadow-md shadow-emerald-500/10 hover:shadow-lg hover:shadow-emerald-500/20 transition-all duration-200 cursor-pointer"
                   >
                     {isAdjustingPoints ? 'Ajustement...' : 'Valider l\'Ajustement'}
                   </button>

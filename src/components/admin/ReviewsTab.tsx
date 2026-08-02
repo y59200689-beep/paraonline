@@ -1101,7 +1101,7 @@ export default function ReviewsTab() {
                         </button>
                         <button
                           type="submit"
-                          className="premium-green-cta px-4 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-[10px] uppercase tracking-wider shadow-md transition"
+                          className="po-ui-button po-ui-button--primary po-ui-button--md px-4 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-[10px] uppercase tracking-wider shadow-md transition"
                         >
                           Enregistrer la réponse
                         </button>
@@ -1131,7 +1131,7 @@ export default function ReviewsTab() {
                     {isPending && (
                       <button
                         onClick={() => handleUpdateReviewStatus(rev.id, 'approved')}
-                        className="premium-green-cta inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider bg-emerald-500 text-slate-950 hover:bg-emerald-400 shadow-md transition cursor-pointer"
+                        className="po-ui-button po-ui-button--primary po-ui-button--md inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider bg-emerald-500 text-slate-950 hover:bg-emerald-400 shadow-md transition cursor-pointer"
                       >
                         <CheckCircle className="w-3.5 h-3.5" />
                         Approuver

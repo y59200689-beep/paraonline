@@ -469,7 +469,7 @@ export default function AdminAdvicePage() {
         {isOwner ? (
           <button
             onClick={handleOpenCreate}
-            className="premium-green-cta w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-emerald-500/10 transition active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer text-xs"
+            className="po-ui-button po-ui-button--primary po-ui-button--md w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-emerald-500/10 transition active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer text-xs"
           >
             <Plus className="w-4 h-4 text-slate-950 stroke-[2.5]" />
             <span>Rédiger un Article</span>
@@ -859,7 +859,7 @@ export default function AdminAdvicePage() {
                   </button>
                   <button
                     type="submit"
-                    className="premium-green-cta px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-emerald-500/10 cursor-pointer text-xs active:scale-[0.98] transition"
+                    className="po-ui-button po-ui-button--primary po-ui-button--md px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-emerald-500/10 cursor-pointer text-xs active:scale-[0.98] transition"
                   >
                     {editingId ? "Enregistrer les modifications" : "Publier l'article"}
                   </button>

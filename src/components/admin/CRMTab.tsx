@@ -331,7 +331,7 @@ export default function CRMTab() {
   // CSV Helpers
   const escapeCsv = (val: any) => {
     if (val === null || val === undefined) return '';
-    let str = String(val).replace(/"/g, '""');
+    const str = String(val).replace(/"/g, '""');
     if (str.includes(',') || str.includes('\n') || str.includes('"')) {
       return `"${str}"`;
     }
@@ -825,7 +825,7 @@ export default function CRMTab() {
                                   setCrmSearchQuery(c.cityName);
                                   setCrmSubTab('clients');
                                 }}
-                                className="premium-green-cta inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_14px_rgba(16,185,129,0.35)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.5)] transition-all duration-200 cursor-pointer active:scale-95 whitespace-nowrap"
+                                className="po-ui-button po-ui-button--primary po-ui-button--md inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_14px_rgba(16,185,129,0.35)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.5)] transition-all duration-200 cursor-pointer active:scale-95 whitespace-nowrap"
                               >
                                 Voir Clients →
                               </button>
@@ -2098,7 +2098,7 @@ export default function CRMTab() {
                     href={`https://wa.me/${waPhone}?text=${waMsg}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="premium-green-cta flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_12px_rgba(16,185,129,0.3)] transition cursor-pointer active:scale-[0.97]"
+                    className="po-ui-button po-ui-button--primary po-ui-button--md flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_12px_rgba(16,185,129,0.3)] transition cursor-pointer active:scale-[0.97]"
                   >
                     {waSvg}
                     WhatsApp
@@ -2476,7 +2476,7 @@ export default function CRMTab() {
                           href={`https://wa.me/${cPhone}?text=${encodeURIComponent(`Bonjour ${selectedCustomer.name}, votre rituel de soin Para Officinal touche probablement à sa fin ! Profitez de -10% sur votre réassort aujourd'hui avec le code REASSORT10 : https://paraofficinal.ma`)}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="premium-green-cta flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md transition active:scale-95 cursor-pointer shrink-0"
+                          className="po-ui-button po-ui-button--primary po-ui-button--md flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md transition active:scale-95 cursor-pointer shrink-0"
                         >
                           💬 Envoyer Relance WhatsApp (-10%)
                         </a>
@@ -2984,7 +2984,7 @@ export default function CRMTab() {
                           href={`https://wa.me/${cPhone}?text=${encodeURIComponent(`Bonjour ${selectedCustomer.name}, effectuez gratuitement votre diagnostic peau personnalisé ici : https://paraofficinal.ma/skin-diagnostic`)}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="premium-green-cta flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_12px_rgba(16,185,129,0.25)] transition active:scale-95 cursor-pointer"
+                          className="po-ui-button po-ui-button--primary po-ui-button--md flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_12px_rgba(16,185,129,0.25)] transition active:scale-95 cursor-pointer"
                         >
                           💬 Envoyer test diagnostic via WhatsApp
                         </a>
@@ -3074,7 +3074,7 @@ export default function CRMTab() {
                             href={`https://wa.me/${cPhone}?text=${encodeURIComponent(`Bonjour ${selectedCustomer.name}, effectuez gratuitement votre diagnostic peau personnalisé sur Para Officinal pour recevoir votre routine sur mesure : https://paraofficinal.ma/skin-diagnostic`)}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="premium-green-cta inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_12px_rgba(16,185,129,0.25)] transition active:scale-95 cursor-pointer"
+                            className="po-ui-button po-ui-button--primary po-ui-button--md inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_12px_rgba(16,185,129,0.25)] transition active:scale-95 cursor-pointer"
                           >
                             💬 Envoyer le lien de diagnostic gratuit via WhatsApp
                           </a>
@@ -3399,7 +3399,7 @@ export default function CRMTab() {
                       <button
                         type="submit"
                         disabled={isAdjustingPoints}
-                        className="premium-green-cta w-full py-3 rounded-xl text-xs font-black uppercase tracking-wider bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition cursor-pointer active:scale-[0.98] disabled:opacity-60"
+                        className="po-ui-button po-ui-button--primary po-ui-button--md w-full py-3 rounded-xl text-xs font-black uppercase tracking-wider bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition cursor-pointer active:scale-[0.98] disabled:opacity-60"
                       >
                         {isAdjustingPoints ? '⏳ Traitement...' : "✓ Valider l'Ajustement"}
                       </button>
@@ -3426,7 +3426,7 @@ export default function CRMTab() {
                         href={`https://wa.me/${waPhone}?text=${waMsg}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="premium-green-cta w-full flex items-center justify-center gap-2.5 py-3 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_12px_rgba(16,185,129,0.25)] transition cursor-pointer active:scale-[0.97]"
+                        className="po-ui-button po-ui-button--primary po-ui-button--md w-full flex items-center justify-center gap-2.5 py-3 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_12px_rgba(16,185,129,0.25)] transition cursor-pointer active:scale-[0.97]"
                       >
                         {waSvg}
                         Envoyer un message WhatsApp
@@ -4027,7 +4027,7 @@ export default function CRMTab() {
                                   href={`https://wa.me/${waPhone}?text=${encodeURIComponent(waMessage)}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="premium-green-cta inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-sm transition active:scale-95 whitespace-nowrap"
+                                  className="po-ui-button po-ui-button--primary po-ui-button--md inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-sm transition active:scale-95 whitespace-nowrap"
                                 >
                                   Envoyer WhatsApp →
                                 </a>
@@ -4228,7 +4228,7 @@ export default function CRMTab() {
                       href={`https://wa.me/${waPhone}?text=${waMsg}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="premium-green-cta flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_12px_rgba(16,185,129,0.3)] transition active:scale-95 cursor-pointer"
+                      className="po-ui-button po-ui-button--primary po-ui-button--md flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_12px_rgba(16,185,129,0.3)] transition active:scale-95 cursor-pointer"
                     >
                       <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                       Contacter client
@@ -4632,7 +4632,7 @@ export default function CRMTab() {
                       setIsGeneratingPromo(false);
                     }
                   }}
-                  className="premium-green-cta flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-wider bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition cursor-pointer active:scale-[0.98] disabled:opacity-50"
+                  className="po-ui-button po-ui-button--primary po-ui-button--md flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-wider bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_16px_rgba(16,185,129,0.3)] transition cursor-pointer active:scale-[0.98] disabled:opacity-50"
                 >
                   {isGeneratingPromo ? 'Enregistrement...' : '🚀 Créer & Envoyer'}
                 </button>

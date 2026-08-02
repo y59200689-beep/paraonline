@@ -122,7 +122,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const isDark = adminTheme === 'dark';
 
   return (
-    <main className={`h-screen overflow-hidden font-sans flex flex-col md:flex-row relative transition-colors duration-300 ${
+    <main data-app-area="admin" className={`h-screen overflow-hidden font-sans flex flex-col md:flex-row relative transition-colors duration-300 ${
       isDark ? 'text-slate-100 admin-dark admin-page-bg-dark' : 'text-slate-900 admin-light admin-page-bg'
     }`}>
       

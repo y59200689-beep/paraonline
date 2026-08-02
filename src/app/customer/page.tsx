@@ -16,12 +16,12 @@ import {
   Box, CreditCard, ChevronDown, SlidersHorizontal, Edit3, Save, Layers, KeyRound
 } from 'lucide-react';
 import { Product, PRODUCTS_DB } from '@/lib/data';
-import Link from 'next/link';
 import { useUi } from '@/context/UiContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCart } from '@/context/CartContext';
 import { CustomerAuthPortal } from '@/components/CustomerAuthPortal';
 import { ShopShell } from '@/components/ShopShell';
+import { PoButton } from '@/components/ui/PoButton';
 
 interface OrderItem {
   id: number;
@@ -483,7 +483,8 @@ export default function CustomerDashboard() {
 
   return (
     <ShopShell hideHeader={!clientUser}>
-      <div 
+      <div
+        data-app-area={clientUser ? 'client' : undefined}
         className={`min-h-screen relative overflow-hidden transition-colors ${
           themeMode === 'dark' 
             ? 'bg-slate-950 text-slate-100 selection:bg-emerald-500 selection:text-slate-950' 
@@ -568,51 +569,42 @@ export default function CustomerDashboard() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2" style={{ justifyContent: isRTL ? 'flex-start' : 'flex-end' }}>
-                    <button
+                    <PoButton
                       onClick={() => setDiagnosticOpen(true)}
-                      className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-emerald-600 px-4 text-xs font-bold text-white transition-colors hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 cursor-pointer"
+                      variant="primary"
+                      size="md"
+                      leftIcon={<Sparkles />}
                     >
-                      <Sparkles className="h-4 w-4" aria-hidden="true" />
-                      <span>{isRTL ? 'بدء تشخيص البشرة' : 'Diagnostic peau'}</span>
-                    </button>
+                      {isRTL ? 'بدء تشخيص البشرة' : 'Diagnostic peau'}
+                    </PoButton>
 
-                    <a
+                    <PoButton
                       href="https://wa.me/212660808080"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`inline-flex min-h-10 items-center gap-2 rounded-lg border px-3.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${
-                        themeMode === 'dark'
-                          ? 'border-slate-700 bg-slate-950 text-slate-200 hover:bg-slate-800'
-                          : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
-                      }`}
+                      variant="secondary"
+                      size="md"
+                      leftIcon={<MessageCircle />}
                     >
-                      <MessageCircle className="h-4 w-4 text-emerald-600" aria-hidden="true" />
-                      <span>{isRTL ? 'الدعم' : 'Support'}</span>
-                    </a>
+                      {isRTL ? 'الدعم' : 'Support'}
+                    </PoButton>
 
-                    <button
+                    <PoButton
                       onClick={toggleThemeMode}
                       aria-label={themeMode === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'}
-                      title={themeMode === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'}
-                      className={`inline-flex h-10 w-10 items-center justify-center rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 cursor-pointer ${
-                        themeMode === 'dark'
-                          ? 'border-slate-700 bg-slate-950 text-amber-300 hover:bg-slate-800'
-                          : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-100'
-                      }`}
-                    >
-                      {themeMode === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                    </button>
+                      variant="neutral"
+                      size="md"
+                      iconOnly
+                      leftIcon={themeMode === 'dark' ? <Sun /> : <Moon />}
+                    />
 
-                    <button
+                    <PoButton
                       onClick={logoutClient}
-                      className={`min-h-10 rounded-lg border px-3.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 cursor-pointer ${
-                        themeMode === 'dark'
-                          ? 'border-slate-700 bg-slate-950 text-slate-300 hover:border-rose-400/50 hover:text-rose-300'
-                          : 'border-slate-300 bg-white text-slate-600 hover:border-rose-300 hover:text-rose-700'
-                      }`}
+                      variant="dangerSoft"
+                      size="md"
                     >
                       {isRTL ? 'خروج' : 'Déconnexion'}
-                    </button>
+                    </PoButton>
                   </div>
                 </div>
               </section>
@@ -736,13 +728,15 @@ export default function CustomerDashboard() {
                         </p>
                       </div>
 
-                      <button
+                      <PoButton
                         onClick={() => setActiveTab('cagnotte')}
-                        className="w-full py-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 font-bold text-xs flex items-center justify-center gap-1.5 border border-emerald-500/20 transition cursor-pointer"
+                        variant="accentSoft"
+                        size="md"
+                        fullWidth
+                        rightIcon={<ChevronRight className={isRTL ? 'rotate-180' : ''} />}
                       >
-                        <span>Convertir mes points</span>
-                        <ChevronRight className={`w-3.5 h-3.5 ${isRTL ? 'rotate-180' : ''}`} />
-                      </button>
+                        Convertir mes points
+                      </PoButton>
                     </div>
 
                     {/* Bento 2: Active Orders */}
@@ -767,13 +761,15 @@ export default function CustomerDashboard() {
                         </p>
                       </div>
 
-                      <button
+                      <PoButton
                         onClick={() => setActiveTab('commandes')}
-                        className="w-full py-2.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 font-bold text-xs flex items-center justify-center gap-1.5 border border-cyan-500/20 transition cursor-pointer"
+                        variant="secondary"
+                        size="md"
+                        fullWidth
+                        rightIcon={<ChevronRight className={isRTL ? 'rotate-180' : ''} />}
                       >
-                        <span>Suivre la livraison</span>
-                        <ChevronRight className={`w-3.5 h-3.5 ${isRTL ? 'rotate-180' : ''}`} />
-                      </button>
+                        Suivre la livraison
+                      </PoButton>
                     </div>
 
                     {/* Bento 3: AI Skin Score */}
@@ -798,13 +794,15 @@ export default function CustomerDashboard() {
                         </p>
                       </div>
 
-                      <button
+                      <PoButton
                         onClick={() => setActiveTab('diagnostic')}
-                        className="w-full py-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 font-bold text-xs flex items-center justify-center gap-1.5 border border-amber-500/20 transition cursor-pointer"
+                        variant="neutral"
+                        size="md"
+                        fullWidth
+                        rightIcon={<ChevronRight className={isRTL ? 'rotate-180' : ''} />}
                       >
-                        <span>Voir la routine</span>
-                        <ChevronRight className={`w-3.5 h-3.5 ${isRTL ? 'rotate-180' : ''}`} />
-                      </button>
+                        Voir la routine
+                      </PoButton>
                     </div>
 
                     {/* Bento 4: Available Coupons */}
@@ -829,13 +827,15 @@ export default function CustomerDashboard() {
                         </p>
                       </div>
 
-                      <button
+                      <PoButton
                         onClick={() => copyCouponToClipboard('BEAUTY10')}
-                        className="w-full py-2.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-500 font-bold text-xs flex items-center justify-center gap-1.5 border border-purple-500/20 transition cursor-pointer"
+                        variant="neutral"
+                        size="md"
+                        fullWidth
+                        leftIcon={<Copy />}
                       >
-                        <Copy className="w-3.5 h-3.5" />
-                        <span>Copier le code BEAUTY10</span>
-                      </button>
+                        Copier le code BEAUTY10
+                      </PoButton>
                     </div>
 
                   </div>
@@ -861,13 +861,15 @@ export default function CustomerDashboard() {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleReorder(SAMPLE_ORDERS_PRESETS[0])}
-                          className="premium-green-cta px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider transition shadow-md cursor-pointer border-0 flex items-center gap-1.5"
-                        >
-                          <RefreshCw className="w-3.5 h-3.5" />
-                          <span>Re-commander en 1 clic</span>
-                        </button>
+                      <PoButton
+                        onClick={() => handleReorder(SAMPLE_ORDERS_PRESETS[0])}
+                        variant="primary"
+                        size="md"
+                        leftIcon={<RefreshCw />}
+                        rightIcon={<ArrowRight />}
+                      >
+                        Re-commander en 1 clic
+                      </PoButton>
                       </div>
                     </div>
 
@@ -1002,37 +1004,35 @@ export default function CustomerDashboard() {
                           </div>
 
                           <div className="flex flex-wrap items-center gap-2">
-                            <button
+                            <PoButton
                               onClick={() => handleReorder(order)}
-                              className="premium-green-cta px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider transition shadow-md cursor-pointer border-0 flex items-center gap-1.5"
+                              variant="primary"
+                              size="md"
+                              leftIcon={<RefreshCw />}
+                              rightIcon={<ArrowRight />}
                             >
-                              <RefreshCw className="w-3.5 h-3.5" />
-                              <span>Re-commander</span>
-                            </button>
+                              Re-commander
+                            </PoButton>
 
-                            <Link
+                            <PoButton
                               href={`/suivi-commande?order=${order.order_id}`}
-                              className={`px-4 py-2.5 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 ${
-                                themeMode === 'dark'
-                                  ? 'bg-slate-950 border-slate-800 text-cyan-400 hover:bg-slate-850'
-                                  : 'bg-slate-50 border-slate-200 text-cyan-700 hover:bg-slate-100'
-                              }`}
+                              variant="secondary"
+                              size="md"
+                              leftIcon={<Truck />}
                             >
-                              <Truck className="w-3.5 h-3.5" />
-                              <span>Suivre la livraison</span>
-                            </Link>
+                              Suivre la livraison
+                            </PoButton>
 
-                            <a
+                            <PoButton
                               href={`https://wa.me/212660808080?text=Bonjour,%20question%20sur%20ma%20commande%20N%C2%B0%20${order.order_id}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className={`p-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-center ${
-                                themeMode === 'dark' ? 'bg-slate-950 border-slate-800 text-emerald-400' : 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                              }`}
-                              title="Assistance WhatsApp"
-                            >
-                              <MessageCircle className="w-4 h-4 text-emerald-500" />
-                            </a>
+                              variant="accentSoft"
+                              size="md"
+                              iconOnly
+                              leftIcon={<MessageCircle />}
+                              aria-label="Assistance WhatsApp"
+                            />
                           </div>
                         </div>
 
@@ -1161,13 +1161,14 @@ export default function CustomerDashboard() {
                         </h3>
                       </div>
 
-                      <button
+                      <PoButton
                         onClick={handleAddFullRoutineToCart}
-                        className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xs uppercase tracking-wider transition shadow-lg cursor-pointer border-0 flex items-center justify-center gap-2"
+                        variant="primary"
+                        size="lg"
+                        leftIcon={<ShoppingBag />}
                       >
-                        <ShoppingBag className="w-4 h-4" />
-                        <span>Ajouter toute la routine au panier</span>
-                      </button>
+                        Ajouter toute la routine au panier
+                      </PoButton>
                     </div>
 
                     <div className="space-y-6">
@@ -1196,15 +1197,17 @@ export default function CustomerDashboard() {
                               </div>
                               <div className="flex items-center justify-between pt-2 border-t border-slate-800/60">
                                 <span className={`text-xs font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>{prod.price} MAD</span>
-                                <button
+                                <PoButton
                                   onClick={() => {
                                     addToCart({ id: Math.floor(Math.random() * 100000), title: prod.title, name: prod.title, price: prod.price, image: prod.image, category: 'Visage', description: prod.title } as Product, 1);
                                     showToast(`${prod.title} ajouté au panier !`);
                                   }}
-                                  className="px-3 py-1.5 bg-emerald-500 text-slate-950 rounded-lg text-[10px] font-black uppercase cursor-pointer border-0"
+                                  variant="primary"
+                                  size="sm"
+                                  leftIcon={<Plus />}
                                 >
-                                  + Ajouter
-                                </button>
+                                  Ajouter
+                                </PoButton>
                               </div>
                             </div>
                           ))}
@@ -1236,15 +1239,17 @@ export default function CustomerDashboard() {
                               </div>
                               <div className="flex items-center justify-between pt-2 border-t border-slate-800/60">
                                 <span className={`text-xs font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>{prod.price} MAD</span>
-                                <button
+                                <PoButton
                                   onClick={() => {
                                     addToCart({ id: Math.floor(Math.random() * 100000), title: prod.title, name: prod.title, price: prod.price, image: prod.image, category: 'Visage', description: prod.title } as Product, 1);
                                     showToast(`${prod.title} ajouté au panier !`);
                                   }}
-                                  className="px-3 py-1.5 bg-emerald-500 text-slate-950 rounded-lg text-[10px] font-black uppercase cursor-pointer border-0"
+                                  variant="primary"
+                                  size="sm"
+                                  leftIcon={<Plus />}
                                 >
-                                  + Ajouter
-                                </button>
+                                  Ajouter
+                                </PoButton>
                               </div>
                             </div>
                           ))}
@@ -1330,13 +1335,15 @@ export default function CustomerDashboard() {
                             <p className="text-[11px] text-slate-400">{coupon.expires}</p>
                           </div>
 
-                          <button
+                          <PoButton
                             onClick={() => copyCouponToClipboard(coupon.code)}
-                            className="w-full py-2.5 rounded-xl bg-purple-500 hover:bg-purple-400 text-slate-950 font-black text-xs uppercase tracking-wider transition shadow-md cursor-pointer border-0 flex items-center justify-center gap-1.5"
+                            variant="secondary"
+                            size="md"
+                            fullWidth
+                            leftIcon={<Copy />}
                           >
-                            <Copy className="w-3.5 h-3.5" />
-                            <span>{copiedCode === coupon.code ? 'Code Copié !' : 'Copier le code'}</span>
-                          </button>
+                            {copiedCode === coupon.code ? 'Code Copié !' : 'Copier le code'}
+                          </PoButton>
                         </div>
                       ))}
                     </div>
@@ -1380,13 +1387,14 @@ export default function CustomerDashboard() {
                             : 'تصفحي منتجاتنا واضغطي على رمز القلب في أي منتج لحفظه هنا.'}
                         </p>
                       </div>
-                      <Link
+                      <PoButton
                         href="/products"
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xs uppercase tracking-widest rounded-xl transition shadow-md cursor-pointer border-0"
+                        variant="primary"
+                        size="lg"
+                        rightIcon={<ArrowRight className={isRTL ? 'rotate-180' : ''} />}
                       >
-                        <span>{language === 'FR' ? 'Découvrir nos soins' : 'استكشاف المنتجات'}</span>
-                        <ArrowRight className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
-                      </Link>
+                        {language === 'FR' ? 'Découvrir nos soins' : 'استكشاف المنتجات'}
+                      </PoButton>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1394,13 +1402,15 @@ export default function CustomerDashboard() {
                         <div key={product.id} className={`border rounded-2xl p-4 flex flex-col justify-between space-y-4 relative group transition shadow-md ${
                           themeMode === 'dark' ? 'bg-slate-900 border-slate-800 hover:border-slate-700 text-white' : 'bg-white border-slate-200/90 hover:border-slate-300 text-slate-900'
                         }`}>
-                          <button
+                          <PoButton
                             onClick={() => removeFromWishlist(product.id)}
-                            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-slate-950/80 text-slate-400 hover:text-rose-400 border border-slate-800 flex items-center justify-center transition z-10 cursor-pointer"
-                            title={language === 'FR' ? 'Retirer' : 'حذف'}
-                          >
-                            <Trash2 className="w-4 h-4 text-slate-400 hover:text-rose-400" />
-                          </button>
+                            className="absolute top-3 right-3 z-10"
+                            variant="dangerSoft"
+                            size="sm"
+                            iconOnly
+                            leftIcon={<Trash2 />}
+                            aria-label={language === 'FR' ? 'Retirer des favoris' : 'حذف من المفضلة'}
+                          />
 
                           <div className="space-y-3">
                             <div className="relative w-full h-44 rounded-xl overflow-hidden bg-white p-2 border border-slate-200">
@@ -1424,16 +1434,17 @@ export default function CustomerDashboard() {
                             <span className={`text-sm font-black ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
                               {product.price} MAD
                             </span>
-                            <button
+                            <PoButton
                               onClick={() => {
                                 addToCart(product, 1);
                                 showToast(`${product.name} ajouté au panier !`);
                               }}
-                              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-[10px] font-black uppercase tracking-wider rounded-xl transition flex items-center gap-1.5 cursor-pointer border-0 shadow-sm"
+                              variant="primary"
+                              size="sm"
+                              leftIcon={<ShoppingBag />}
                             >
-                              <ShoppingBag className="w-3.5 h-3.5" />
-                              <span>{language === 'FR' ? 'Ajouter' : 'إضافة'}</span>
-                            </button>
+                              {language === 'FR' ? 'Ajouter' : 'إضافة'}
+                            </PoButton>
                           </div>
                         </div>
                       ))}
@@ -1509,14 +1520,16 @@ export default function CustomerDashboard() {
                         />
                       </div>
 
-                      <button
+                      <PoButton
                         type="submit"
-                        disabled={isProfileSaving}
-                        className="px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider transition shadow-md cursor-pointer border-0 flex items-center gap-2"
+                        loading={isProfileSaving}
+                        loadingText="Enregistrement..."
+                        variant="primary"
+                        size="lg"
+                        leftIcon={<Save />}
                       >
-                        <Save className="w-4 h-4" />
-                        <span>{isProfileSaving ? 'Enregistrement...' : 'Enregistrer les modifications'}</span>
-                      </button>
+                        Enregistrer les modifications
+                      </PoButton>
                     </form>
                   </div>
 
@@ -1570,13 +1583,16 @@ export default function CustomerDashboard() {
                           }`}
                         />
                       </div>
-                      <button
+                      <PoButton
                         type="submit"
-                        disabled={isPasswordSaving}
-                        className="min-h-[46px] px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white font-black text-xs uppercase tracking-wider transition shadow-[0_8px_18px_rgba(79,70,229,0.2)] cursor-pointer border-0 whitespace-nowrap"
+                        loading={isPasswordSaving}
+                        loadingText="Mise à jour..."
+                        variant="secondary"
+                        size="lg"
+                        leftIcon={<KeyRound />}
                       >
-                        {isPasswordSaving ? 'Mise à jour...' : 'Modifier le mot de passe'}
-                      </button>
+                        Modifier le mot de passe
+                      </PoButton>
                     </form>
 
                     {passwordFeedback && (
@@ -1604,13 +1620,14 @@ export default function CustomerDashboard() {
                         </h3>
                       </div>
 
-                      <button
+                      <PoButton
                         onClick={() => setShowAddAddressModal(true)}
-                        className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 cursor-pointer border-0 shadow-sm"
+                        variant="secondary"
+                        size="md"
+                        leftIcon={<Plus />}
                       >
-                        <Plus className="w-4 h-4" />
-                        <span>Nouvelle Adresse</span>
-                      </button>
+                        Nouvelle adresse
+                      </PoButton>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1648,15 +1665,20 @@ export default function CustomerDashboard() {
 
       {/* Add New Address Modal */}
       {showAddAddressModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div data-app-area="client" className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className={`w-full max-w-md p-6 sm:p-8 rounded-3xl border shadow-2xl space-y-6 ${
             themeMode === 'dark' ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'
           }`}>
             <div className="flex items-center justify-between border-b pb-4 border-slate-800">
               <h3 className="text-base font-bold font-heading">Ajouter une Adresse de Livraison</h3>
-              <button onClick={() => setShowAddAddressModal(false)} className="p-1 hover:text-rose-400 cursor-pointer bg-transparent border-0">
-                <X className="w-5 h-5" />
-              </button>
+              <PoButton
+                onClick={() => setShowAddAddressModal(false)}
+                variant="neutral"
+                size="sm"
+                iconOnly
+                leftIcon={<X />}
+                aria-label="Fermer"
+              />
             </div>
 
             <form onSubmit={handleAddAddress} className="space-y-4">
@@ -1703,12 +1725,15 @@ export default function CustomerDashboard() {
                 />
               </div>
 
-              <button
+              <PoButton
                 type="submit"
-                className="w-full py-3.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs uppercase tracking-wider transition shadow-md cursor-pointer border-0"
+                variant="primary"
+                size="lg"
+                fullWidth
+                leftIcon={<Save />}
               >
                 Enregistrer l'adresse
-              </button>
+              </PoButton>
             </form>
           </div>
         </div>

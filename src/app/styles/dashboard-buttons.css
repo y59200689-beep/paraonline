@@ -1,0 +1,299 @@
+/* Authenticated CTA system. Every selector is gated by an explicit app-area wrapper. */
+:where([data-app-area="admin"], [data-app-area="client"]) {
+  /* Primitive tokens */
+  --po-btn-green-500: #16b879;
+  --po-btn-green-600: #0aa46a;
+  --po-btn-green-700: #078e5d;
+  --po-btn-green-800: #06734d;
+  --po-btn-blue-50: #f3f8fe;
+  --po-btn-blue-200: #c8d8ea;
+  --po-btn-blue-600: #2563eb;
+  --po-btn-blue-800: #244a73;
+  --po-btn-slate-50: #f8fafc;
+  --po-btn-slate-100: #f1f5f9;
+  --po-btn-slate-200: #dce5ee;
+  --po-btn-slate-600: #475569;
+  --po-btn-slate-800: #1e293b;
+  --po-btn-red-50: #fff5f5;
+  --po-btn-red-200: #fecaca;
+  --po-btn-red-500: #ef4444;
+  --po-btn-red-600: #dc2626;
+
+  /* Semantic tokens */
+  --po-btn-accent: var(--po-btn-green-600);
+  --po-btn-accent-hover: var(--po-btn-green-500);
+  --po-btn-accent-active: var(--po-btn-green-700);
+  --po-btn-focus: rgba(16, 185, 129, 0.22);
+  --po-btn-surface: #fbfdff;
+  --po-btn-text: var(--po-btn-slate-800);
+  --po-btn-muted: var(--po-btn-slate-600);
+
+  /* Component tokens */
+  --po-button-font: var(--font-geist-sans), Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --po-button-radius-sm: 8px;
+  --po-button-radius-md: 10px;
+  --po-button-radius-lg: 12px;
+  --po-button-duration: 160ms;
+  --po-button-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button {
+  --po-button-height: 40px;
+  --po-button-padding-x: 16px;
+  --po-button-font-size: 13px;
+  --po-button-icon-size: 16px;
+  --po-button-gap: 8px;
+  --po-button-radius: var(--po-button-radius-md);
+
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+  height: var(--po-button-height) !important;
+  min-height: var(--po-button-height) !important;
+  align-items: center;
+  justify-content: center;
+  gap: var(--po-button-gap) !important;
+  padding: 0 var(--po-button-padding-x) !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--po-button-radius) !important;
+  font-family: var(--po-button-font) !important;
+  font-size: var(--po-button-font-size) !important;
+  font-weight: 650 !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1 !important;
+  text-decoration: none !important;
+  text-transform: none !important;
+  white-space: nowrap;
+  cursor: pointer;
+  transform: translateY(0);
+  transition:
+    background-color var(--po-button-duration) ease,
+    border-color var(--po-button-duration) ease,
+    color var(--po-button-duration) ease,
+    box-shadow var(--po-button-duration) ease,
+    transform var(--po-button-duration) var(--po-button-ease),
+    opacity var(--po-button-duration) ease !important;
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button:hover:not(:disabled):not([aria-disabled="true"]) {
+  transform: translateY(-1px);
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button:active:not(:disabled):not([aria-disabled="true"]) {
+  transform: translateY(0) !important;
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button:focus-visible {
+  outline: 0 !important;
+  box-shadow: 0 0 0 3px var(--po-btn-focus), 0 0 0 1px rgba(5, 150, 105, 0.58) !important;
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button:disabled,
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button[aria-disabled="true"] {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  pointer-events: none;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button--primary {
+  border-color: rgba(4, 120, 87, 0.55) !important;
+  background: linear-gradient(180deg, var(--po-btn-green-500) 0%, var(--po-btn-green-600) 52%, var(--po-btn-green-700) 100%) !important;
+  color: #f8fffb !important;
+  box-shadow: 0 4px 10px rgba(5, 150, 105, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button--primary:hover:not(:disabled):not([aria-disabled="true"]) {
+  border-color: rgba(4, 120, 87, 0.68) !important;
+  background: linear-gradient(180deg, #20c986 0%, #0eae71 52%, #078e5d 100%) !important;
+  box-shadow: 0 6px 14px rgba(5, 150, 105, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button--primary:active:not(:disabled):not([aria-disabled="true"]) {
+  background: linear-gradient(180deg, var(--po-btn-green-600), var(--po-btn-green-700)) !important;
+  box-shadow: 0 2px 5px rgba(5, 150, 105, 0.14), inset 0 1px 2px rgba(2, 84, 58, 0.22) !important;
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button--secondary {
+  border-color: var(--po-btn-blue-200) !important;
+  background: var(--po-btn-surface) !important;
+  color: var(--po-btn-blue-800) !important;
+  box-shadow: 0 1px 2px rgba(30, 64, 100, 0.04) !important;
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button--secondary:hover:not(:disabled):not([aria-disabled="true"]) {
+  border-color: #9fc1e5 !important;
+  background: var(--po-btn-blue-50) !important;
+  color: var(--po-btn-blue-600) !important;
+  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.09) !important;
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button--secondary:focus-visible {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18), 0 0 0 1px rgba(37, 99, 235, 0.48) !important;
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button--neutral {
+  border-color: var(--po-btn-slate-200) !important;
+  background: var(--po-btn-surface) !important;
+  color: var(--po-btn-muted) !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button--neutral:hover:not(:disabled):not([aria-disabled="true"]) {
+  border-color: #c4d0dc !important;
+  background: var(--po-btn-slate-50) !important;
+  color: var(--po-btn-text) !important;
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button--danger {
+  border-color: var(--po-btn-red-600) !important;
+  background: linear-gradient(180deg, #f65353, var(--po-btn-red-600)) !important;
+  color: #fffafa !important;
+  box-shadow: 0 3px 8px rgba(220, 38, 38, 0.15) !important;
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button--danger:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: linear-gradient(180deg, #fb5c5c, #c92525) !important;
+  box-shadow: 0 5px 11px rgba(220, 38, 38, 0.2) !important;
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button--danger-soft {
+  border-color: var(--po-btn-red-200) !important;
+  background: var(--po-btn-red-50) !important;
+  color: #be123c !important;
+  box-shadow: none !important;
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button--danger-soft:hover:not(:disabled):not([aria-disabled="true"]) {
+  border-color: #fda4af !important;
+  background: #fff0f2 !important;
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button--text {
+  height: auto !important;
+  min-height: 32px !important;
+  padding: 0 8px !important;
+  border-color: transparent !important;
+  background: transparent !important;
+  color: var(--po-btn-blue-600) !important;
+  box-shadow: none !important;
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button--text:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: rgba(37, 99, 235, 0.07) !important;
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button--accent-soft {
+  border-color: rgba(5, 150, 105, 0.2) !important;
+  background: rgba(16, 185, 129, 0.09) !important;
+  color: var(--po-btn-green-800) !important;
+  box-shadow: none !important;
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button--accent-soft:hover:not(:disabled):not([aria-disabled="true"]) {
+  border-color: rgba(5, 150, 105, 0.32) !important;
+  background: rgba(16, 185, 129, 0.14) !important;
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button--sm {
+  --po-button-height: 32px;
+  --po-button-padding-x: 12px;
+  --po-button-font-size: 12px;
+  --po-button-icon-size: 14px;
+  --po-button-gap: 6px;
+  --po-button-radius: var(--po-button-radius-sm);
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button--lg {
+  --po-button-height: 46px;
+  --po-button-padding-x: 20px;
+  --po-button-font-size: 14px;
+  --po-button-icon-size: 18px;
+  --po-button-gap: 9px;
+  --po-button-radius: var(--po-button-radius-lg);
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button--icon-only {
+  width: max(40px, var(--po-button-height)) !important;
+  min-width: max(40px, var(--po-button-height)) !important;
+  padding: 0 !important;
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button--full-width {
+  width: 100% !important;
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button__icon,
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button__spinner {
+  display: inline-flex;
+  width: var(--po-button-icon-size) !important;
+  height: var(--po-button-icon-size) !important;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button__icon > svg,
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button > svg,
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button__spinner {
+  width: var(--po-button-icon-size) !important;
+  height: var(--po-button-icon-size) !important;
+  stroke-width: 1.9;
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button__spinner {
+  animation: po-button-spin 700ms linear infinite;
+}
+
+:where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+[data-app-area="admin"] .po-ui-button {
+  --po-button-padding-x: 14px;
+}
+
+:where([data-app-area="admin"].admin-dark, [data-app-area="client"].bg-slate-950) {
+  --po-btn-surface: #121b2a;
+  --po-btn-text: #e7edf5;
+  --po-btn-muted: #c7d2df;
+  --po-btn-blue-50: #17253a;
+  --po-btn-blue-200: #35506f;
+  --po-btn-blue-800: #9bc8ff;
+  --po-btn-slate-50: #172131;
+  --po-btn-slate-200: #334155;
+}
+
+@keyframes po-button-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 640px) {
+  :where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button-group {
+    align-items: stretch;
+  }
+
+  :where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button--mobile-full {
+    width: 100% !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button,
+  :where([data-app-area="admin"], [data-app-area="client"]) .po-ui-button * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

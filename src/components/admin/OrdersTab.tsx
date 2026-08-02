@@ -2626,7 +2626,7 @@ export default function OrdersTab() {
                     <button 
                       type="button" 
                       onClick={() => window.print()}
-                      className="premium-green-cta px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 transition flex items-center gap-1.5 shadow-lg cursor-pointer"
+                      className="po-ui-button po-ui-button--primary po-ui-button--md px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 transition flex items-center gap-1.5 shadow-lg cursor-pointer"
                     >
                       <Printer className="w-4 h-4 text-slate-950" /> Imprimer l&apos;étiquette A6
                     </button>
@@ -2882,7 +2882,7 @@ export default function OrdersTab() {
                         <button
                           type="button"
                           onClick={() => window.print()}
-                          className="premium-green-cta px-6 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition flex items-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer active:scale-95"
+                          className="po-ui-button po-ui-button--primary po-ui-button--md px-6 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition flex items-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer active:scale-95"
                         >
                           <Printer className="w-4 h-4" /> Lancer L'Impression Thermal A6
                         </button>
@@ -3460,7 +3460,7 @@ export default function OrdersTab() {
                       setIsBulkBlastModalOpen(false);
                       showToast(`${uncontacted.length} messages WhatsApp ouverts ✓`, 'success');
                     }}
-                    className="premium-green-cta flex-1 py-3 rounded-xl text-xs font-black bg-emerald-500 text-slate-950 hover:bg-emerald-400 transition cursor-pointer shadow-[0_4px_16px_rgba(16,185,129,0.35)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.45)]"
+                    className="po-ui-button po-ui-button--primary po-ui-button--md flex-1 py-3 rounded-xl text-xs font-black bg-emerald-500 text-slate-950 hover:bg-emerald-400 transition cursor-pointer shadow-[0_4px_16px_rgba(16,185,129,0.35)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.45)]"
                   >
                     <Send className="w-3.5 h-3.5 inline mr-1.5" />
                     Envoyer le Blast ({abandonedCarts.filter(c => (cartRecoveryStatus[c.phone] || 'not_contacted') === 'not_contacted').length} carts)
@@ -3546,7 +3546,7 @@ export default function OrdersTab() {
                 </div>
                 <button
                   onClick={() => setIsBulkBlastModalOpen(true)}
-                  className="premium-green-cta group inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-3.5 py-2.5 text-[11px] font-black text-white shadow-[0_2px_8px_rgba(15,23,42,0.18)] transition hover:bg-slate-700 active:scale-[0.98] dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
+                  className="po-ui-button po-ui-button--primary po-ui-button--md group inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-3.5 py-2.5 text-[11px] font-black text-white shadow-[0_2px_8px_rgba(15,23,42,0.18)] transition hover:bg-slate-700 active:scale-[0.98] dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
                 >
                   <Zap className="h-3.5 w-3.5 text-emerald-300 dark:text-slate-950" />
                   Relancer via WhatsApp
@@ -3686,7 +3686,7 @@ export default function OrdersTab() {
               <button
                 type="button"
                 onClick={() => handleExportOrdersToCsv(filteredOrders)}
-                className="premium-green-cta inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3.5 py-2 text-[11px] font-black text-white shadow-[0_2px_8px_rgba(15,23,42,0.18)] transition hover:bg-slate-700 active:scale-[0.98] dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
+                className="po-ui-button po-ui-button--primary po-ui-button--md inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3.5 py-2 text-[11px] font-black text-white shadow-[0_2px_8px_rgba(15,23,42,0.18)] transition hover:bg-slate-700 active:scale-[0.98] dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
               >
                 <FileText className="h-3.5 w-3.5" /> Exporter
               </button>
@@ -4207,7 +4207,7 @@ export default function OrdersTab() {
             <button
               onClick={handleSyncCourierStatusesSubmit}
               disabled={isSyncingCouriers}
-              className="premium-green-cta flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 active:scale-[0.98] transition disabled:opacity-50 text-slate-950 font-bold rounded-xl text-xs shadow-lg shadow-emerald-500/10 cursor-pointer"
+              className="po-ui-button po-ui-button--primary po-ui-button--md flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 active:scale-[0.98] transition disabled:opacity-50 text-slate-950 font-bold rounded-xl text-xs shadow-lg shadow-emerald-500/10 cursor-pointer"
             >
               <RefreshCw className={`w-4 h-4 ${isSyncingCouriers ? 'animate-spin' : ''}`} />
               <span>{isSyncingCouriers ? 'Synchronisation...' : 'Synchroniser les Statuts'}</span>
@@ -5430,7 +5430,7 @@ export default function OrdersTab() {
               <button 
                 type="submit" 
                 disabled={isRegisteringShipping}
-                className="premium-green-cta px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 shadow-md shadow-emerald-500/10 hover:shadow-lg hover:shadow-emerald-500/20 transition-all duration-200 cursor-pointer"
+                className="po-ui-button po-ui-button--primary po-ui-button--md px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl hover:from-emerald-400 hover:to-teal-400 shadow-md shadow-emerald-500/10 hover:shadow-lg hover:shadow-emerald-500/20 transition-all duration-200 cursor-pointer"
               >
                 {isRegisteringShipping ? 'Enregistrement...' : 'Générer Bordereau & Colis'}
               </button>

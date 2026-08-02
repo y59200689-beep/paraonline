@@ -2912,7 +2912,7 @@ export default function CatalogTab({
                 <button
                   onClick={handleSaveBulkChanges}
                   disabled={isSavingBulk}
-                  className="premium-green-cta px-4 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black rounded-lg text-xs uppercase tracking-wide transition flex items-center gap-1 shadow-md shadow-emerald-500/10 cursor-pointer"
+                  className="po-ui-button po-ui-button--primary po-ui-button--md px-4 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black rounded-lg text-xs uppercase tracking-wide transition flex items-center gap-1 shadow-md shadow-emerald-500/10 cursor-pointer"
                 >
                   {isSavingBulk ? 'Enregistrement...' : 'Enregistrer tout'}
                 </button>
