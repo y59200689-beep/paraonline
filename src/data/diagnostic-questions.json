@@ -1,107 +1,118 @@
 {
   "questions": [
     {
-      "step": 1,
       "field": "skinType",
-      "translationKey": "q1_text",
-      "stepLabelFr": "Étape 1 : Typologie Cutanée",
-      "stepLabelAr": "الخطوة 1: تصنيف طبيعة البشرة",
+      "eyebrowFr": "Votre peau au quotidien",
+      "eyebrowAr": "بشرتك يومياً",
+      "questionFr": "Comment votre peau se comporte-t-elle en fin de journée ?",
+      "questionAr": "كيف تبدو بشرتك في نهاية اليوم؟",
+      "helperFr": "Choisissez la description qui vous ressemble le plus.",
+      "helperAr": "اختاري الوصف الأقرب إلى بشرتك.",
       "options": [
-        {
-          "val": "oily",
-          "labelKey": "q1_o1",
-          "emoji": "✨",
-          "descFr": "Brillance, pores dilatés",
-          "descAr": "مسام واسعة، لمعان مستمر"
-        },
-        {
-          "val": "dry",
-          "labelKey": "q1_o2",
-          "emoji": "🌵",
-          "descFr": "Tiraillements, sécheresse",
-          "descAr": "جفاف، شد جلدي وقشور"
-        },
-        {
-          "val": "mixed",
-          "labelKey": "q1_o3",
-          "emoji": "⚖️",
-          "descFr": "Zone T grasse, joues sèches",
-          "descAr": "منطقة T دهنية، وخدان جافان"
-        },
-        {
-          "val": "sensitive",
-          "labelKey": "q1_o4",
-          "emoji": "🌸",
-          "descFr": "Rougeurs, inconfort",
-          "descAr": "احمرار، تهيج وحساسية"
-        }
+        { "val": "oily", "labelFr": "Grasse", "labelAr": "دهنية", "descFr": "Brillance diffuse et pores visibles", "descAr": "لمعان واضح ومسام ظاهرة", "icon": "droplets" },
+        { "val": "dry", "labelFr": "Sèche", "labelAr": "جافة", "descFr": "Tiraillements ou zones qui desquament", "descAr": "شد أو تقشر في بعض المناطق", "icon": "wind" },
+        { "val": "mixed", "labelFr": "Mixte", "labelAr": "مختلطة", "descFr": "Zone T brillante, joues plus sèches", "descAr": "منطقة T دهنية والخدان أكثر جفافاً", "icon": "split" },
+        { "val": "normal", "labelFr": "Équilibrée", "labelAr": "متوازنة", "descFr": "Confortable avec peu de variations", "descAr": "مريحة مع تغيرات قليلة", "icon": "sparkles" }
       ]
     },
     {
-      "step": 2,
       "field": "concern",
-      "translationKey": "q2_text",
-      "stepLabelFr": "Étape 2 : Préoccupation Épidermique",
-      "stepLabelAr": "الخطوة 2: الخلل الجلدي المستهدف",
+      "eyebrowFr": "Votre priorité",
+      "eyebrowAr": "أولويتك",
+      "questionFr": "Quel résultat souhaitez-vous cibler en premier ?",
+      "questionAr": "ما النتيجة التي ترغبين في استهدافها أولاً؟",
+      "helperFr": "La routine sera organisée autour de cette priorité.",
+      "helperAr": "سيتم تنظيم الروتين حول هذه الأولوية.",
       "options": [
-        {
-          "val": "acne",
-          "labelKey": "q2_o1",
-          "emoji": "🌿",
-          "descFr": "Boutons, imperfections",
-          "descAr": "بثور، رؤوس سوداء وشوائب"
-        },
-        {
-          "val": "spots",
-          "labelKey": "q2_o2",
-          "emoji": "🔆",
-          "descFr": "Hyperpigmentation, taches",
-          "descAr": "تصبغات، كلف وبقع داكنة"
-        },
-        {
-          "val": "wrinkles",
-          "labelKey": "q2_o3",
-          "emoji": "⏳",
-          "descFr": "Rides, ridules, relâchement",
-          "descAr": "تجاعيد، خطوط دقيقة وترهل"
-        },
-        {
-          "val": "dryness",
-          "labelKey": "q2_o4",
-          "emoji": "💧",
-          "descFr": "Déshydratation intense",
-          "descAr": "جفاف شديد، نقص رطوبة شديد"
-        }
+        { "val": "acne", "labelFr": "Imperfections", "labelAr": "الشوائب", "descFr": "Boutons, points noirs ou pores obstrués", "descAr": "حبوب أو رؤوس سوداء أو مسام مسدودة", "icon": "target" },
+        { "val": "spots", "labelFr": "Taches et éclat", "labelAr": "البقع والإشراقة", "descFr": "Teint irrégulier ou marques persistantes", "descAr": "تفاوت اللون أو آثار مستمرة", "icon": "sun" },
+        { "val": "wrinkles", "labelFr": "Premiers signes de l’âge", "labelAr": "علامات التقدم في السن", "descFr": "Ridules, fermeté ou texture", "descAr": "خطوط رفيعة أو تماسك أو ملمس", "icon": "clock" },
+        { "val": "dryness", "labelFr": "Hydratation et confort", "labelAr": "الترطيب والراحة", "descFr": "Déshydratation, inconfort ou manque de souplesse", "descAr": "جفاف أو انزعاج أو نقص المرونة", "icon": "droplet" },
+        { "val": "redness", "labelFr": "Rougeurs", "labelAr": "الاحمرار", "descFr": "Réactivité visible et besoin d’apaisement", "descAr": "تفاعل واضح وحاجة للتهدئة", "icon": "heart" }
       ]
     },
     {
-      "step": 3,
-      "field": "sunExposure",
-      "translationKey": "q3_text",
-      "stepLabelFr": "Étape 3 : Niveau d'Exposition aux UV",
-      "stepLabelAr": "الخطوة 3: التعرض للأشعة فوق البنفسجية",
+      "field": "sensitivity",
+      "eyebrowFr": "Tolérance cutanée",
+      "eyebrowAr": "تحمل البشرة",
+      "questionFr": "Votre peau réagit-elle facilement aux nouveaux soins ?",
+      "questionAr": "هل تتفاعل بشرتك بسهولة مع المنتجات الجديدة؟",
+      "helperFr": "Cela nous aide à doser les actifs et à privilégier la douceur.",
+      "helperAr": "يساعدنا ذلك على اختيار تركيز المكونات والعناية اللطيفة.",
       "options": [
-        {
-          "val": "intense",
-          "labelKey": "q3_o1",
-          "emoji": "☀️",
-          "descFr": "Exposition quotidienne directe importante",
-          "descAr": "تعرض يومي مباشر وشديد لأشعة الشمس"
-        },
-        {
-          "val": "moderate",
-          "labelKey": "q3_o2",
-          "emoji": "⛅",
-          "descFr": "Exposition modérée (Sorties, transports)",
-          "descAr": "تعرض معتدل (خروج مؤقت، مواصلات)"
-        },
-        {
-          "val": "low",
-          "labelKey": "q3_o3",
-          "emoji": "🏠",
-          "descFr": "Intérieur majoritairement (Bureau, maison)",
-          "descAr": "معظم الوقت داخل البيت أو المكتب المغلق"
-        }
+        { "val": "high", "labelFr": "Très facilement", "labelAr": "بسهولة كبيرة", "descFr": "Picotements, rougeurs ou inconfort fréquents", "descAr": "وخز أو احمرار أو انزعاج متكرر", "icon": "shield-alert" },
+        { "val": "medium", "labelFr": "Parfois", "labelAr": "أحياناً", "descFr": "Réaction à certains parfums ou actifs", "descAr": "تفاعل مع بعض العطور أو المكونات", "icon": "shield" },
+        { "val": "low", "labelFr": "Rarement", "labelAr": "نادراً", "descFr": "Bonne tolérance générale", "descAr": "تحمل جيد بشكل عام", "icon": "shield-check" }
+      ]
+    },
+    {
+      "field": "breakoutFrequency",
+      "eyebrowFr": "Fréquence des imperfections",
+      "eyebrowAr": "تكرار الشوائب",
+      "questionFr": "À quelle fréquence voyez-vous apparaître des imperfections ?",
+      "questionAr": "كم مرة تظهر لديك الشوائب؟",
+      "helperFr": "Même une peau sèche peut présenter des imperfections occasionnelles.",
+      "helperAr": "حتى البشرة الجافة قد تظهر عليها شوائب أحياناً.",
+      "options": [
+        { "val": "frequent", "labelFr": "Souvent", "labelAr": "غالباً", "descFr": "Chaque semaine ou de façon persistante", "descAr": "كل أسبوع أو بشكل مستمر", "icon": "calendar-days" },
+        { "val": "occasional", "labelFr": "Occasionnellement", "labelAr": "أحياناً", "descFr": "Selon le cycle, le stress ou la saison", "descAr": "حسب الدورة أو التوتر أو الموسم", "icon": "calendar" },
+        { "val": "rare", "labelFr": "Rarement", "labelAr": "نادراً", "descFr": "Peu ou pas d’imperfections", "descAr": "قليل أو بدون شوائب", "icon": "check" }
+      ]
+    },
+    {
+      "field": "sunExposure",
+      "eyebrowFr": "Exposition quotidienne",
+      "eyebrowAr": "التعرض اليومي",
+      "questionFr": "Combien de temps passez-vous au soleil la plupart des jours ?",
+      "questionAr": "كم من الوقت تقضين تحت الشمس في معظم الأيام؟",
+      "helperFr": "Pensez aux trajets, aux fenêtres et aux activités extérieures.",
+      "helperAr": "فكري في التنقل والنوافذ والأنشطة الخارجية.",
+      "options": [
+        { "val": "intense", "labelFr": "Exposition importante", "labelAr": "تعرض مرتفع", "descFr": "Plus de deux heures ou soleil direct", "descAr": "أكثر من ساعتين أو شمس مباشرة", "icon": "sun" },
+        { "val": "moderate", "labelFr": "Exposition modérée", "labelAr": "تعرض متوسط", "descFr": "Trajets et sorties quotidiennes", "descAr": "تنقل وخروج يومي", "icon": "cloud-sun" },
+        { "val": "low", "labelFr": "Faible exposition", "labelAr": "تعرض منخفض", "descFr": "Principalement à l’intérieur", "descAr": "غالباً داخل المنزل أو المكتب", "icon": "house" }
+      ]
+    },
+    {
+      "field": "spfHabit",
+      "eyebrowFr": "Protection solaire",
+      "eyebrowAr": "الحماية من الشمس",
+      "questionFr": "À quelle fréquence appliquez-vous une protection SPF ?",
+      "questionAr": "كم مرة تستخدمين واقي الشمس؟",
+      "helperFr": "Une protection régulière influence l’ordre de priorité de la routine.",
+      "helperAr": "الاستعمال المنتظم يؤثر على ترتيب أولويات الروتين.",
+      "options": [
+        { "val": "daily", "labelFr": "Tous les jours", "labelAr": "يومياً", "descFr": "SPF 30 ou plus chaque matin", "descAr": "عامل حماية 30 أو أكثر كل صباح", "icon": "badge-check" },
+        { "val": "sometimes", "labelFr": "Quand j’y pense", "labelAr": "عندما أتذكر", "descFr": "Surtout en été ou lors des sorties", "descAr": "خاصة في الصيف أو عند الخروج", "icon": "circle-dashed" },
+        { "val": "never", "labelFr": "Rarement ou jamais", "labelAr": "نادراً أو أبداً", "descFr": "Je souhaite intégrer ce geste", "descAr": "أرغب في إضافة هذه الخطوة", "icon": "plus" }
+      ]
+    },
+    {
+      "field": "activeTolerance",
+      "eyebrowFr": "Expérience des actifs",
+      "eyebrowAr": "خبرتك مع المكونات الفعالة",
+      "questionFr": "Quel est votre niveau avec les actifs concentrés ?",
+      "questionAr": "ما مستوى خبرتك مع المكونات الفعالة المركزة؟",
+      "helperFr": "Par exemple les acides exfoliants, la vitamine C ou le rétinol.",
+      "helperAr": "مثل أحماض التقشير أو فيتامين C أو الريتينول.",
+      "options": [
+        { "val": "beginner", "labelFr": "Je débute", "labelAr": "مبتدئة", "descFr": "Je préfère une introduction progressive", "descAr": "أفضل البدء تدريجياً", "icon": "sprout" },
+        { "val": "intermediate", "labelFr": "J’en utilise déjà", "labelAr": "أستخدمها بالفعل", "descFr": "Ma peau tolère quelques actifs", "descAr": "بشرتي تتحمل بعض المكونات", "icon": "flask" },
+        { "val": "advanced", "labelFr": "Je suis habitué(e)", "labelAr": "لدي خبرة", "descFr": "Je connais mes concentrations et associations", "descAr": "أعرف التركيزات والتركيبات المناسبة", "icon": "layers" }
+      ]
+    },
+    {
+      "field": "routineDepth",
+      "eyebrowFr": "Votre rythme idéal",
+      "eyebrowAr": "روتينك المثالي",
+      "questionFr": "Quel format de routine pourrez-vous suivre régulièrement ?",
+      "questionAr": "ما نوع الروتين الذي يمكنك الالتزام به بانتظام؟",
+      "helperFr": "La meilleure routine reste celle que vous utilisez avec constance.",
+      "helperAr": "أفضل روتين هو الذي يمكنك الالتزام به باستمرار.",
+      "options": [
+        { "val": "essential", "labelFr": "L’essentiel", "labelAr": "الأساسيات", "descFr": "3 étapes, simple et rapide", "descAr": "3 خطوات بسيطة وسريعة", "icon": "list" },
+        { "val": "balanced", "labelFr": "Équilibrée", "labelAr": "متوازن", "descFr": "4 étapes ciblées au quotidien", "descAr": "4 خطوات يومية موجهة", "icon": "layout" },
+        { "val": "complete", "labelFr": "Complète", "labelAr": "كامل", "descFr": "Jusqu’à 5 étapes pour un rituel détaillé", "descAr": "حتى 5 خطوات لروتين مفصل", "icon": "rows" }
       ]
     }
   ]

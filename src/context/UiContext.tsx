@@ -8,6 +8,11 @@ export interface SkinDiagnosticResults {
   skinType: string;
   concern: string;
   sunExposure: string;
+  sensitivity?: string;
+  breakoutFrequency?: string;
+  spfHabit?: string;
+  activeTolerance?: string;
+  routineDepth?: string;
 }
 
 interface FlyToCartTarget {

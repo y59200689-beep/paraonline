@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SkinDiagnostic } from '../components/SkinDiagnostic';
 import { SettingsProvider } from '../context/SettingsContext';
 import { UiProvider } from '../context/UiContext';
@@ -15,184 +15,150 @@ import { AmPmProvider } from '../context/AmPmContext';
 import { CompareProvider } from '../context/CompareContext';
 import { WishlistProvider } from '../context/WishlistContext';
 
-// Helper to wrap all required contexts
-const AllProvidersWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return (
-    <SettingsProvider>
-      <UiProvider>
-        <LanguageProvider>
-          <LoyaltyProvider>
-            <ThemeProvider>
-              <ProductsProvider>
-                <CartProvider>
-                  <CurrencyProvider>
-                    <AmPmProvider>
-                      <CompareProvider>
-                        <WishlistProvider>
-                          {children}
-                        </WishlistProvider>
-                      </CompareProvider>
-                    </AmPmProvider>
-                  </CurrencyProvider>
-                </CartProvider>
-              </ProductsProvider>
-            </ThemeProvider>
-          </LoyaltyProvider>
-        </LanguageProvider>
-      </UiProvider>
-    </SettingsProvider>
-  );
-};
+const AllProvidersWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <SettingsProvider>
+    <UiProvider>
+      <LanguageProvider>
+        <LoyaltyProvider>
+          <ThemeProvider>
+            <ProductsProvider>
+              <CartProvider>
+                <CurrencyProvider>
+                  <AmPmProvider>
+                    <CompareProvider>
+                      <WishlistProvider>{children}</WishlistProvider>
+                    </CompareProvider>
+                  </AmPmProvider>
+                </CurrencyProvider>
+              </CartProvider>
+            </ProductsProvider>
+          </ThemeProvider>
+        </LoyaltyProvider>
+      </LanguageProvider>
+    </UiProvider>
+  </SettingsProvider>
+);
 
-describe('SkinDiagnostic Component & WebRTC Camera Tests', () => {
-  const mockTrackStop = vi.fn();
-  const mockStream = {
-    getTracks: () => [
-      {
-        stop: mockTrackStop,
-      },
-    ],
-  };
+const mockProducts = [
+  {
+    id: 15,
+    title: 'Anua Cleansing Oil',
+    nameFr: 'Huile Nettoyante Anua',
+    vendor: 'Anua',
+    image: '/images/anua.webp',
+    images: ['/images/anua.webp'],
+    price: 180,
+    comparePrice: 200,
+    category: 'visage',
+    tags: ['visage'],
+    rating: 5,
+    reviews: 12,
+    description: 'Nettoyant doux pour les pores et les imperfections',
+    ingredients: 'Centella',
+    usage: 'Nettoyer',
+  },
+  {
+    id: 22,
+    title: 'Anua Cleansing Foam',
+    nameFr: 'Mousse Nettoyante Anua',
+    vendor: 'Anua',
+    image: '/images/anua-foam.webp',
+    images: ['/images/anua-foam.webp'],
+    price: 140,
+    comparePrice: 160,
+    category: 'visage',
+    tags: ['visage'],
+    rating: 5,
+    reviews: 9,
+    description: 'Mousse pour peau grasse et imperfections',
+    ingredients: 'Salicylic Acid',
+    usage: 'Nettoyer',
+  },
+  {
+    id: 3,
+    title: 'Garnier Vitamin C Serum',
+    nameFr: 'Sérum Vitamine C Garnier',
+    vendor: 'Garnier',
+    image: '/images/vitamin-c.webp',
+    images: ['/images/vitamin-c.webp'],
+    price: 90,
+    comparePrice: 100,
+    category: 'visage',
+    tags: ['visage'],
+    rating: 4.8,
+    reviews: 45,
+    description: 'Sérum éclat',
+    ingredients: 'Vitamin C',
+    usage: 'Matin',
+  },
+];
+
+describe('SkinDiagnostic question-only assessment', () => {
+  const getUserMedia = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
-
-    // Mock global fetch to return mock products and diagnostics response
-    const mockProducts = [
-      { id: 15, title: 'Anua Cleansing Oil', nameFr: 'Huile Nettoyante Anua', vendor: 'Anua', price: 180, comparePrice: 200, category: 'visage', tags: ['visage'], rating: 5, reviews: 12, description: 'Cleanser', ingredients: 'Centella', usage: 'Cleanse' },
-      { id: 22, title: 'Anua Cleansing Foam', nameFr: 'Mousse Nettoyante Anua', vendor: 'Anua', price: 140, comparePrice: 160, category: 'visage', tags: ['visage'], rating: 5, reviews: 9, description: 'Foam', ingredients: 'Salicylic Acid', usage: 'Cleanse' },
-      { id: 3, title: 'Garnier Vitamin C Serum', nameFr: 'Sérum Vitamine C Garnier', vendor: 'Garnier', price: 90, comparePrice: 100, category: 'visage', tags: ['visage'], rating: 4.8, reviews: 45, description: 'Brightening', ingredients: 'Vitamin C', usage: 'Apply morning' }
-    ];
-
-    vi.spyOn(global, 'fetch').mockImplementation((url) => {
-      const urlStr = typeof url === 'string' ? url : (url instanceof URL ? url.toString() : '');
-      if (urlStr.includes('/api/products')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({ success: true, products: mockProducts }),
-        } as Response);
-      }
-      return Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ success: true }),
-      } as Response);
-    });
-
-    // Mock HTMLVideoElement methods
-    HTMLVideoElement.prototype.play = vi.fn().mockResolvedValue(undefined);
-
-    // Mock Canvas 2D Context
-    HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue({
-      translate: vi.fn(),
-      scale: vi.fn(),
-      drawImage: vi.fn(),
-      setTransform: vi.fn(),
-      getImageData: vi.fn().mockReturnValue({
-        data: new Uint8ClampedArray(4 * 640 * 480),
-      }),
-      putImageData: vi.fn(),
-      strokeRect: vi.fn(),
-      fillText: vi.fn(),
-      beginPath: vi.fn(),
-      moveTo: vi.fn(),
-      lineTo: vi.fn(),
-      stroke: vi.fn(),
-    } as any);
-
-    HTMLCanvasElement.prototype.toDataURL = vi.fn().mockReturnValue('data:image/jpeg;base64,mockBlueprintDataUrl');
-
-    // Mock WebRTC MediaDevices API
     Object.defineProperty(global.navigator, 'mediaDevices', {
-      value: {
-        getUserMedia: vi.fn().mockResolvedValue(mockStream),
-      },
+      value: { getUserMedia },
       writable: true,
       configurable: true,
     });
+
+    vi.spyOn(global, 'fetch').mockImplementation((input) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+      if (url.includes('/api/products')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ success: true, products: mockProducts }) } as Response);
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({ success: true }) } as Response);
+    });
   });
 
-  it('should render the diagnostic modal welcome screen when open', async () => {
-    const handleClose = vi.fn();
+  it('opens with the new privacy promise and never requests camera access', async () => {
     await act(async () => {
-      render(<SkinDiagnostic isOpen={true} onClose={handleClose} />, { wrapper: AllProvidersWrapper });
+      render(<SkinDiagnostic isOpen onClose={vi.fn()} />, { wrapper: AllProvidersWrapper });
     });
 
-    expect(screen.getByText(/Dermo-IA Diagnostic/i)).toBeDefined();
-    expect(screen.getByText(/Commencer l'analyse/i)).toBeDefined();
+    expect(screen.getByText('Sans caméra, sans photo')).toBeDefined();
+    expect(screen.getByText('8', { selector: 'strong' })).toBeDefined();
+    expect(screen.queryByText(/scan|analyser mon visage/i)).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Commencer le diagnostic' }));
+    expect(screen.getByText('Question 1 sur 8')).toBeDefined();
+    expect(getUserMedia).not.toHaveBeenCalled();
   });
 
-  it('should flow through the questionnaire steps correctly and render products', async () => {
-    const handleClose = vi.fn();
+  it('shows progress through eight answers and produces a relevant routine', async () => {
     await act(async () => {
-      render(<SkinDiagnostic isOpen={true} onClose={handleClose} />, { wrapper: AllProvidersWrapper });
+      render(<SkinDiagnostic isOpen onClose={vi.fn()} />, { wrapper: AllProvidersWrapper });
     });
 
-    // Step 0 -> Step 1
-    const startBtn = screen.getByText(/Commencer l'analyse/i);
-    fireEvent.click(startBtn);
+    fireEvent.click(screen.getByRole('button', { name: 'Commencer le diagnostic' }));
 
-    // Wait 350ms for questionnaire transition
+    const answerAndContinue = (answer: string) => {
+      fireEvent.click(screen.getByRole('radio', { name: new RegExp(answer, 'i') }));
+      fireEvent.click(screen.getByRole('button', { name: /Continuer|Voir ma routine/i }));
+    };
+
+    answerAndContinue('Grasse');
+    answerAndContinue('Imperfections');
+    answerAndContinue('Très facilement');
+    answerAndContinue('Souvent');
+    answerAndContinue('Exposition modérée');
+    answerAndContinue('Rarement ou jamais');
+    answerAndContinue('Je débute');
+
+    expect(screen.getByText('Question 8 sur 8')).toBeDefined();
+    answerAndContinue('L’essentiel');
+
     await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 350));
+      await new Promise((resolve) => setTimeout(resolve, 420));
     });
 
-    // Wait for step 1: skin type question.
-    expect(screen.getByText(/Quel est votre type de peau/i)).toBeDefined();
-
-    // Select oily skin.
-    const oilyOption = screen.getByText(/Peau grasse/i);
-    fireEvent.click(oilyOption);
-
-    // Wait 350ms for transition
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 350));
-    });
-
-    // Auto-advance to Step 2: main concern.
-    expect(screen.getByText(/Quelle est votre priorité/i)).toBeDefined();
-
-    // Select imperfections.
-    const acneOption = screen.getByText(/Imperfections et pores obstrués/i);
-    fireEvent.click(acneOption);
-
-    // Wait 350ms for transition
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 350));
-    });
-
-    // Auto-advance to Step 3: sun exposure.
-    expect(screen.getByText(/À quelle fréquence vous exposez-vous au soleil/i)).toBeDefined();
-
-    // Select moderate sun exposure.
-    const sunOption = screen.getByText(/Modérément/i);
-    fireEvent.click(sunOption);
-
-    // Wait 350ms for transition
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 350));
-    });
-
-    // Auto-advance to Step 4: Camera Scan View
-    expect(screen.getByText(/Analyse Spectrale en Direct/i)).toBeDefined();
-
-    // Wait for async getUserMedia promise to resolve in useEffect
-    const skipBtn = await screen.findByText(/Ignorer le scan et voir les résultats/i);
-    expect(skipBtn).toBeDefined();
-
-    // Click skip to trigger results and recommendations
-    fireEvent.click(skipBtn);
-
-    // Wait 100ms for state update to complete
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 100));
-    });
-
-    // Verify results page is rendered
-    expect(screen.getByText(/Routine Anti-Imperfections & Pureté/i)).toBeDefined();
-    
-    // Verify recommended products matching "acne" concern (Anua Cleansing Oil / Foam) are recommended
-    expect(screen.getByText(/Anua Cleansing Oil/i)).toBeDefined();
-    expect(screen.getByText(/Anua Cleansing Foam/i)).toBeDefined();
+    expect(screen.getByText('Votre profil est prêt')).toBeDefined();
+    expect(screen.getByText('Anua Cleansing Oil')).toBeDefined();
+    expect(screen.getByText('Anua Cleansing Foam')).toBeDefined();
+    expect(screen.getByText(/ne constitue pas un diagnostic médical/i)).toBeDefined();
+    expect(getUserMedia).not.toHaveBeenCalled();
   });
 });

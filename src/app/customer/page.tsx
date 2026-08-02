@@ -238,7 +238,6 @@ export default function CustomerDashboard() {
     ordersRequestRef.current = requestId;
     const cacheKey = `paraonline:customer-orders:${clientUser.id}`;
     let hasCachedOrders = false;
-    let timeoutId: number | undefined;
 
     try {
       const cachedOrders = window.sessionStorage.getItem(cacheKey);
@@ -256,21 +255,23 @@ export default function CustomerDashboard() {
 
     if (!hasCachedOrders) setOrdersState('loading');
     setOrdersError(null);
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 8_000);
     try {
-      const orderQuery = supabase
-        .from('orders')
-        .select('order_id, city, items, subtotal, discount_amount, applied_coupon, gift_item, total, status, carrier, tracking_number, estimated_delivery, created_at')
-        .eq('customer_id', clientUser.id)
-        .order('created_at', { ascending: false })
-        .limit(50);
-      const timeout = new Promise<never>((_, reject) => {
-        timeoutId = window.setTimeout(() => reject(new Error('Le chargement prend plus de temps que prévu.')), 8_000);
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error('Votre session a expiré. Connectez-vous de nouveau.');
+
+      const response = await fetch('/api/customer/orders', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        cache: 'no-store',
+        signal: controller.signal,
       });
-      const { data, error } = await Promise.race([orderQuery, timeout]);
-      if (error) throw error;
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || 'Impossible de charger vos commandes.');
       if (ordersRequestRef.current !== requestId) return;
 
-      const nextOrders = Array.isArray(data) ? data as Order[] : [];
+      const nextOrders = Array.isArray(result.orders) ? result.orders as Order[] : [];
       setOrders(nextOrders);
       setOrdersState('ready');
       try {
@@ -283,10 +284,12 @@ export default function CustomerDashboard() {
       if (!hasCachedOrders) {
         setOrders([]);
         setOrdersState('error');
-        setOrdersError(error instanceof Error ? error.message : 'Impossible de charger vos commandes.');
+        setOrdersError(error instanceof DOMException && error.name === 'AbortError'
+          ? 'Le chargement de vos commandes a pris trop de temps.'
+          : error instanceof Error ? error.message : 'Impossible de charger vos commandes.');
       }
     } finally {
-      if (timeoutId) window.clearTimeout(timeoutId);
+      window.clearTimeout(timeoutId);
     }
   };
 
@@ -379,6 +382,7 @@ export default function CustomerDashboard() {
   const [passwordFeedback, setPasswordFeedback] = useState<{ type: 'error' | 'success'; message: string } | null>(null);
   const [savedAddresses, setSavedAddresses] = useState<UserAddress[]>([]);
   const [isAddressesLoading, setIsAddressesLoading] = useState(false);
+  const [addressesError, setAddressesError] = useState<string | null>(null);
   const [showAddAddressModal, setShowAddAddressModal] = useState(false);
   const [newAddrLabel, setNewAddrLabel] = useState('');
   const [newAddrCity, setNewAddrCity] = useState('Casablanca');
@@ -386,16 +390,31 @@ export default function CustomerDashboard() {
 
   const persistAddresses = async (nextAddresses: UserAddress[]) => {
     if (!clientUser) return false;
-    const { error } = await supabase
-      .from('customer_profiles')
-      .update({ delivery_addresses: nextAddresses, updated_at: new Date().toISOString() })
-      .eq('id', clientUser.id);
-    if (error) {
-      showToast(error.message || 'Impossible d’enregistrer vos adresses.', 'error');
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+    if (!accessToken) {
+      showToast('Votre session a expiré. Connectez-vous de nouveau pour enregistrer cette adresse.', 'error');
       return false;
     }
-    setSavedAddresses(nextAddresses);
-    return true;
+
+    try {
+      const response = await fetch('/api/customer/profile', {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ addresses: nextAddresses }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || 'Impossible d’enregistrer vos adresses.');
+      setSavedAddresses(Array.isArray(result.addresses) ? result.addresses as UserAddress[] : nextAddresses);
+      setAddressesError(null);
+      return true;
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Impossible d’enregistrer vos adresses.', 'error');
+      return false;
+    }
   };
 
   const handleAddAddress = async (e: React.FormEvent) => {
@@ -432,20 +451,41 @@ export default function CustomerDashboard() {
     setProfileEmail(clientUser.email || '');
   }, [clientUser]);
 
-  useEffect(() => {
-    const loadSavedAddresses = async () => {
-      if (!clientUser) return;
-      setIsAddressesLoading(true);
-      const { data, error } = await supabase
-        .from('customer_profiles')
-        .select('delivery_addresses')
-        .eq('id', clientUser.id)
-        .maybeSingle();
+  const loadSavedAddresses = async () => {
+    if (!clientUser) return;
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 8_000);
+    setIsAddressesLoading(true);
+    setAddressesError(null);
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error('Votre session a expiré. Connectez-vous de nouveau.');
+
+      const response = await fetch('/api/customer/profile', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        cache: 'no-store',
+        signal: controller.signal,
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || 'Impossible de charger vos adresses.');
+      setSavedAddresses(Array.isArray(result.addresses) ? result.addresses as UserAddress[] : []);
+    } catch (error) {
+      setSavedAddresses([]);
+      setAddressesError(error instanceof DOMException && error.name === 'AbortError'
+        ? 'Le chargement de vos adresses a pris trop de temps.'
+        : error instanceof Error ? error.message : 'Impossible de charger vos adresses.');
+    } finally {
+      window.clearTimeout(timeoutId);
       setIsAddressesLoading(false);
-      if (error) return;
-      setSavedAddresses(Array.isArray(data?.delivery_addresses) ? data.delivery_addresses as UserAddress[] : []);
-    };
+    }
+  };
+
+  useEffect(() => {
     void loadSavedAddresses();
+  // The stable account ID defines which secure profile is loaded.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientUser?.id]);
 
   useEffect(() => {
@@ -1068,8 +1108,8 @@ export default function CustomerDashboard() {
                     {ordersState === 'ready' && filteredOrders.length === 0 && (
                       <div className={`rounded-3xl border p-10 text-center ${themeMode === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
                         <Box className="mx-auto mb-3 h-7 w-7 text-emerald-500" aria-hidden="true" />
-                        <h3 className="text-base font-bold">{orderSearchQuery || orderFilterStatus !== 'all' ? 'Aucune commande ne correspond à ce filtre.' : 'Aucune commande liée à ce compte.'}</h3>
-                        <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">Les commandes futures passées pendant votre connexion apparaîtront ici automatiquement.</p>
+                        <h3 className="text-base font-bold">{orderSearchQuery || orderFilterStatus !== 'all' ? 'Aucune commande ne correspond à ce filtre.' : 'Vous n’avez encore aucune commande.'}</h3>
+                        <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">Vos prochaines commandes passées avec ce compte apparaîtront ici automatiquement.</p>
                       </div>
                     )}
                     {ordersState === 'ready' && filteredOrders.map((order) => (
@@ -1758,7 +1798,17 @@ export default function CustomerDashboard() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {isAddressesLoading && <p className="text-sm text-slate-500">Chargement de vos adresses...</p>}
-                      {!isAddressesLoading && savedAddresses.length === 0 && <p className="text-sm text-slate-500">Aucune adresse enregistrée. Ajoutez-en une pour accélérer votre prochaine commande.</p>}
+                      {!isAddressesLoading && addressesError && (
+                        <div className="md:col-span-2 rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4" role="alert">
+                          <p className="text-sm font-semibold text-rose-500">{addressesError}</p>
+                          <PoButton onClick={() => void loadSavedAddresses()} variant="secondary" size="sm" className="mt-3" leftIcon={<RefreshCw />}>Réessayer</PoButton>
+                        </div>
+                      )}
+                      {!isAddressesLoading && !addressesError && savedAddresses.length === 0 && (
+                        <div className="md:col-span-2 rounded-2xl border border-dashed border-slate-300/80 p-5 text-sm text-slate-500 dark:border-slate-700">
+                          Aucune adresse enregistrée pour le moment. Ajoutez-en une pour accélérer votre prochaine commande.
+                        </div>
+                      )}
                       {savedAddresses.map((addr) => (
                         <div key={addr.id} className={`p-5 rounded-2xl border space-y-3 relative ${
                           themeMode === 'dark' ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-slate-200/80'
