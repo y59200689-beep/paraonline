@@ -517,7 +517,7 @@ export default function GalleryPage() {
   // Fetch manifest
   useEffect(() => {
     setLoading(true);
-    fetch('/api/admin/gallery')
+    fetch('/api/admin/gallery', { cache: 'no-store' })
       .then(r => r.json())
       .then(data => {
         if (data.success) {

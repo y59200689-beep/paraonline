@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAdmin } from '@/context/AdminContext';
+import { useUi } from '@/context/UiContext';
 import { 
   Plus, 
   Edit2, 
@@ -37,6 +38,7 @@ interface Snippet {
 
 export default function CronTab() {
   const { adminTheme, currentUser } = useAdmin();
+  const { showToast } = useUi();
   const [snippets, setSnippets] = useState<Snippet[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -119,10 +121,10 @@ export default function CronTab() {
           prev.map(s => s.id === id ? { ...s, active: !currentStatus } : s)
         );
       } else {
-        alert(data.error || 'Impossible de mettre à jour le statut.');
+        showToast(data.error || 'Impossible de mettre à jour le statut.', 'error');
       }
     } catch (err) {
-      alert('Erreur réseau.');
+      showToast('Erreur réseau.', 'error');
     }
   };
 
@@ -148,10 +150,10 @@ export default function CronTab() {
           }
         }
       } else {
-        alert(data.error || 'Échec de l\'exécution.');
+        showToast(data.error || 'Échec de l\'exécution.', 'error');
       }
     } catch (err) {
-      alert('Erreur réseau lors de l\'exécution.');
+      showToast('Erreur réseau lors de l\'exécution.', 'error');
     } finally {
       setRunningId(null);
     }
@@ -221,10 +223,10 @@ export default function CronTab() {
         setSnippets(prev => prev.filter(s => s.id !== id));
         setDeletingId(null);
       } else {
-        alert(data.error || 'Erreur lors de la suppression.');
+        showToast(data.error || 'Erreur lors de la suppression.', 'error');
       }
     } catch (err) {
-      alert('Erreur réseau.');
+      showToast('Erreur réseau.', 'error');
     }
   };
 

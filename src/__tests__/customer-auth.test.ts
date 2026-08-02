@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { customerAuthErrorMessage } from '@/lib/customer-auth';
+import { customerAuthErrorMessage, resolveCustomerIdentity } from '@/lib/customer-auth';
 
 describe('customerAuthErrorMessage', () => {
   it('turns the Supabase signup cooldown into useful French guidance', () => {
@@ -13,5 +13,37 @@ describe('customerAuthErrorMessage', () => {
 
   it('preserves unknown provider errors', () => {
     expect(customerAuthErrorMessage('Unexpected provider error')).toBe('Unexpected provider error');
+  });
+});
+
+describe('resolveCustomerIdentity', () => {
+  it('uses auth metadata when an existing profile has no customer name', () => {
+    expect(resolveCustomerIdentity(
+      {
+        id: 'customer-1',
+        email: 'youssef@example.com',
+        user_metadata: { name: '  Youssef Mahir  ' },
+      },
+      { name: null, phone: null },
+    )).toMatchObject({ name: 'Youssef Mahir', email: 'youssef@example.com' });
+  });
+
+  it('supports full_name metadata used by external identity providers', () => {
+    expect(resolveCustomerIdentity({
+      id: 'customer-2',
+      email: 'client@example.com',
+      user_metadata: { full_name: 'Client Para' },
+    }).name).toBe('Client Para');
+  });
+
+  it('keeps a non-empty profile name as the authoritative display name', () => {
+    expect(resolveCustomerIdentity(
+      {
+        id: 'customer-3',
+        email: 'client@example.com',
+        user_metadata: { name: 'Metadata Name' },
+      },
+      { name: 'Profile Name' },
+    ).name).toBe('Profile Name');
   });
 });

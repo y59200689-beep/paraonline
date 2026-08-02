@@ -149,7 +149,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Accès refusé. Propriétaire uniquement.' }, { status: 403 });
     }
 
-    const { products, updateExisting, fileName, validationErrorCount = 0 } = await request.json();
+    const { products, updateExisting, fileName, validationErrorCount = 0, validationErrors = [] } = await request.json();
     if (!products || !Array.isArray(products)) {
       return NextResponse.json({ success: false, error: 'Invalid products array' }, { status: 400 });
     }
@@ -205,12 +205,24 @@ export async function POST(request: Request) {
       const message = updateExisting
         ? 'Aucun produit correspondant trouvé pour la mise à jour.'
         : 'Tous les produits existent déjà. Activez "Mettre à jour les existants" pour les modifier.';
-      await supabase.from('audit_logs').insert({
+      await Promise.all([
+        supabase.from('audit_logs').insert({
         id: `log_import_${Date.now()}`,
         action: 'Import catalogue',
         details: `${session.name} a importé ${fileName || 'un fichier'} : 0 créé, 0 mis à jour, ${skippedCount} ignoré, ${Number(validationErrorCount) || 0} erreur(s) de validation. ${message}`,
         date: new Date().toISOString(),
-      });
+        }),
+        supabase.from('admin_import_runs').insert({
+          id: `import_${Date.now()}`,
+          file_name: fileName || null,
+          created_count: 0,
+          updated_count: 0,
+          skipped_count: skippedCount,
+          validation_error_count: Number(validationErrorCount) || 0,
+          validation_errors: Array.isArray(validationErrors) ? validationErrors.slice(0, 500) : [],
+          created_by: session.name || session.username || 'Administrateur',
+        }),
+      ]);
       return NextResponse.json({ 
         success: true, 
         count: 0, 
@@ -233,12 +245,24 @@ export async function POST(request: Request) {
     // new sheet categories are immediately available in the editor.
     if (importedCategories.size > 0) await syncImportedCategories(importedCategories);
 
-    await supabase.from('audit_logs').insert({
+    await Promise.all([
+      supabase.from('audit_logs').insert({
       id: `log_import_${Date.now()}`,
       action: 'Import catalogue',
       details: `${session.name} a importé ${fileName || 'un fichier'} : ${createdCount} créé(s), ${updatedCount} mis à jour, ${skippedCount} ignoré(s), ${Number(validationErrorCount) || 0} erreur(s) de validation.`,
       date: new Date().toISOString(),
-    });
+      }),
+      supabase.from('admin_import_runs').insert({
+        id: `import_${Date.now()}`,
+        file_name: fileName || null,
+        created_count: createdCount,
+        updated_count: updatedCount,
+        skipped_count: skippedCount,
+        validation_error_count: Number(validationErrorCount) || 0,
+        validation_errors: Array.isArray(validationErrors) ? validationErrors.slice(0, 500) : [],
+        created_by: session.name || session.username || 'Administrateur',
+      }),
+    ]);
 
     return NextResponse.json({
       success: true,

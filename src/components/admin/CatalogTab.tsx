@@ -854,7 +854,7 @@ export default function CatalogTab({
   const [importError, setImportError] = useState('');
   const [importMessage, setImportMessage] = useState('');
   const [importResult, setImportResult] = useState<{ created: number; updated: number; skipped: number; validationErrors: number } | null>(null);
-  const [importHistory, setImportHistory] = useState<Array<{ id: string; date: string; details: string }>>([]);
+  const [importHistory, setImportHistory] = useState<Array<{ id: string; date: string; details: string; errors?: Array<{ row: number; errors: Record<string, string>; raw: Record<string, unknown> }> }>>([]);
 
   // Saved mapping profiles
   const [savedProfiles, setSavedProfiles] = useState<Record<string, Record<string, string>>>({});
@@ -896,6 +896,20 @@ export default function CatalogTab({
     URL.revokeObjectURL(url);
   };
 
+  const downloadHistoricalImportErrors = (errors: Array<{ row: number; errors: Record<string, string>; raw: Record<string, unknown> }>) => {
+    const escape = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+    const csv = [
+      ['Ligne', 'Erreurs', 'Données source'],
+      ...errors.map(error => [error.row, Object.values(error.errors || {}).join(' | '), JSON.stringify(error.raw || {})]),
+    ].map(row => row.map(escape).join(',')).join('\n');
+    const url = URL.createObjectURL(new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `rapport_validation_import_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   const applySavedView = (view: { search: string; category: string; vendor: string; status: string; special: string }) => {
     setProductSearchQuery(view.search);
     setFilterCategory(view.category);
@@ -906,17 +920,26 @@ export default function CatalogTab({
     setIsSavedViewsOpen(false);
   };
 
-  const saveCurrentView = () => {
+  const saveCurrentView = async () => {
     const name = savedViewName.trim();
     if (!name) {
       showToast('Donnez un nom à cette vue.', 'error');
       return;
     }
-    const next = [{ id: `view_${Date.now()}`, name, search: productSearchQuery, category: filterCategory, vendor: filterVendor, status: filterStatus, special: filterSpecial }, ...savedViews].slice(0, 12);
-    setSavedViews(next);
-    localStorage.setItem('admin_catalog_saved_views', JSON.stringify(next));
-    setSavedViewName('');
-    showToast(`Vue « ${name} » enregistrée.`, 'success');
+    try {
+      const response = await fetch('/api/admin/operational-records?resource=saved-views&scope=catalog', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, scope: 'catalog', configuration: { search: productSearchQuery, category: filterCategory, vendor: filterVendor, status: filterStatus, special: filterSpecial } }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || 'Impossible d’enregistrer cette vue.');
+      setSavedViews(current => [{ id: data.record.id, name: data.record.name, ...data.record.configuration }, ...current].slice(0, 12));
+      setSavedViewName('');
+      showToast(`Vue « ${name} » enregistrée pour l’équipe.`, 'success');
+    } catch (error: any) {
+      showToast(error.message || 'Impossible d’enregistrer cette vue.', 'error');
+    }
   };
 
   // Reusable confirmation modal state
@@ -1040,23 +1063,21 @@ export default function CatalogTab({
 
   useEffect(() => {
     if (!isImportModalOpen) return;
-    void fetch('/api/admin/audit-logs', { cache: 'no-store' })
+    void fetch('/api/admin/operational-records?resource=import-runs', { cache: 'no-store' })
       .then(response => response.json())
       .then(data => {
-        if (data?.success) {
-          setImportHistory((data.logs || []).filter((log: any) => log.action === 'Import catalogue').slice(0, 5));
-        }
+        if (data?.success) setImportHistory((data.records || []).slice(0, 5).map((run: any) => ({ id: run.id, date: run.created_at, details: `${run.created_count || 0} créés · ${run.updated_count || 0} mis à jour · ${run.skipped_count || 0} ignorés`, errors: run.validation_errors || [] })));
       })
       .catch(() => setImportHistory([]));
   }, [isImportModalOpen]);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('admin_catalog_saved_views');
-      if (stored) setSavedViews(JSON.parse(stored));
-    } catch {
-      setSavedViews([]);
-    }
+    void fetch('/api/admin/operational-records?resource=saved-views&scope=catalog', { cache: 'no-store' })
+      .then(response => response.json())
+      .then(data => {
+        if (data?.success) setSavedViews((data.records || []).map((view: any) => ({ id: view.id, name: view.name, ...view.configuration })));
+      })
+      .catch(() => setSavedViews([]));
   }, []);
 
   // Escape key listener for confirmation modal
@@ -1655,6 +1676,9 @@ export default function CatalogTab({
       const result = await handleImportProducts(importedProducts, importUpdateExisting, {
         fileName: importFile?.name,
         validationErrorCount,
+        validationErrors: rowValidations
+          .filter(validation => Object.keys(validation.errors).length > 0)
+          .map(validation => ({ row: validation.rowIndex + 1, errors: validation.errors, raw: validation.raw })),
       });
       setImportProgress(85);
       
@@ -2705,7 +2729,7 @@ export default function CatalogTab({
                     {savedViews.length === 0 ? <p className="px-1 py-2 text-xs text-slate-400">Aucune vue enregistrée.</p> : savedViews.map(view => (
                       <div key={view.id} className="group flex items-center gap-1 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900">
                         <button type="button" onClick={() => applySavedView(view)} className="min-w-0 flex-1 truncate px-2.5 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200">{view.name}</button>
-                        <button type="button" onClick={() => { const next = savedViews.filter(item => item.id !== view.id); setSavedViews(next); localStorage.setItem('admin_catalog_saved_views', JSON.stringify(next)); }} className="p-2 text-slate-400 hover:text-rose-500" title="Supprimer la vue"><X className="h-3.5 w-3.5" /></button>
+                        <button type="button" onClick={() => { void fetch(`/api/admin/operational-records?resource=saved-views&id=${encodeURIComponent(view.id)}`, { method: 'DELETE' }).then(() => setSavedViews(current => current.filter(item => item.id !== view.id))); }} className="p-2 text-slate-400 hover:text-rose-500" title="Supprimer la vue"><X className="h-3.5 w-3.5" /></button>
                       </div>
                     ))}
                   </div>
@@ -4278,7 +4302,10 @@ export default function CatalogTab({
                         {importHistory.map(item => (
                           <div key={item.id} className="flex items-start justify-between gap-3 text-[10px]">
                             <p className="min-w-0 flex-1 leading-relaxed text-slate-500">{item.details}</p>
-                            <time className="shrink-0 font-mono text-slate-400">{new Date(item.date).toLocaleDateString('fr-FR')}</time>
+                            <div className="flex shrink-0 items-center gap-1.5">
+                              {item.errors && item.errors.length > 0 && <button type="button" onClick={() => downloadHistoricalImportErrors(item.errors || [])} className="rounded-md px-1.5 py-1 font-bold text-amber-700 hover:bg-amber-100 dark:text-amber-300" title="Télécharger le rapport d’erreurs">Erreurs ({item.errors.length})</button>}
+                              <time className="font-mono text-slate-400">{new Date(item.date).toLocaleDateString('fr-FR')}</time>
+                            </div>
                           </div>
                         ))}
                       </div>

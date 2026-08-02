@@ -270,24 +270,24 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
 
   const { rangeOrders, rangeAbandoned } = getFilteredData();
 
-  const visits = Math.max(120, Math.round((rangeOrders.length + rangeAbandoned.length) * 12 + 55));
-  const addtoCart = Math.max(18, Math.round((rangeOrders.length + rangeAbandoned.length) * 1.8 + 12));
-  const checkoutStarts = Math.max(6, rangeOrders.length + rangeAbandoned.length);
-  const paidOrders = rangeOrders.filter(o => o.status !== 'Cancelled').length;
+  // Do not fabricate traffic or conversion data. Until a first-party analytics
+  // provider is connected, only show the operational checkout activity we own.
+  const checkoutStarts = rangeOrders.length + rangeAbandoned.length;
+  const confirmedOrders = rangeOrders.filter(order => !['Cancelled', 'Refunded'].includes(order.status)).length;
+  const abandonedCheckouts = rangeAbandoned.length;
 
   const funnelSteps = [
-    { label: 'Visites', count: visits, pctOfVisits: 100, pctOfPrev: 100, desc: 'Sessions sur la boutique' },
-    { label: 'Ajouts au panier', count: addtoCart, pctOfVisits: Math.round((addtoCart / Math.max(1, visits)) * 100), pctOfPrev: Math.round((addtoCart / Math.max(1, visits)) * 100), desc: 'Intention d\'achat' },
-    { label: 'Débuts de commande', count: checkoutStarts, pctOfVisits: Math.round((checkoutStarts / Math.max(1, visits)) * 100), pctOfPrev: addtoCart > 0 ? Math.round((checkoutStarts / addtoCart) * 100) : 0, desc: 'Saisie coordonnées' },
-    { label: 'Commandes payées', count: paidOrders, pctOfVisits: Math.round((paidOrders / Math.max(1, visits)) * 100), pctOfPrev: checkoutStarts > 0 ? Math.round((paidOrders / checkoutStarts) * 100) : 0, desc: 'Conversions réussies' },
+    { label: 'Commandes initiées', count: checkoutStarts, pctOfStarts: 100, pctOfPrev: 100, desc: 'Commandes créées ou paniers abandonnés' },
+    { label: 'Commandes confirmées', count: confirmedOrders, pctOfStarts: Math.round((confirmedOrders / Math.max(1, checkoutStarts)) * 100), pctOfPrev: Math.round((confirmedOrders / Math.max(1, checkoutStarts)) * 100), desc: 'Hors annulations et remboursements' },
+    { label: 'Paniers à récupérer', count: abandonedCheckouts, pctOfStarts: Math.round((abandonedCheckouts / Math.max(1, checkoutStarts)) * 100), pctOfPrev: Math.round((abandonedCheckouts / Math.max(1, checkoutStarts)) * 100), desc: 'Relance commerciale possible' },
   ];
 
   const cx = 300;
   const funnelInnerW = 320;
   const w0 = funnelInnerW;
-  const w1 = Math.max(40, (funnelSteps[1].pctOfVisits / 100) * funnelInnerW);
-  const w2 = Math.max(30, (funnelSteps[2].pctOfVisits / 100) * funnelInnerW);
-  const w3 = Math.max(20, (funnelSteps[3].pctOfVisits / 100) * funnelInnerW);
+  const w1 = Math.max(40, (funnelSteps[1].pctOfStarts / 100) * funnelInnerW);
+  const w2 = Math.max(30, (funnelSteps[2].pctOfStarts / 100) * funnelInnerW);
+  const w3 = Math.max(20, (funnelSteps[2].pctOfStarts / 100) * funnelInnerW);
 
   const x_start_0 = cx - w0 / 2;
   const x_end_0 = cx + w0 / 2;
@@ -399,6 +399,13 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
           ))}
         </div>
       </section>
+
+      <div className={`flex items-start gap-3 rounded-xl border px-4 py-3 ${adminTheme === 'light' ? 'border-sky-200 bg-sky-50/70 text-sky-900' : 'border-sky-900/70 bg-sky-950/30 text-sky-100'}`}>
+        <BarChart2 className="mt-0.5 h-4 w-4 shrink-0 text-sky-600" aria-hidden="true" />
+        <p className="text-[11px] leading-5">
+          <span className="font-black">Données de trafic :</span> les visites et le taux de conversion ne sont pas affichés tant qu&apos;un outil d&apos;analytics n&apos;est pas connecté. Les chiffres ci-dessous proviennent uniquement des commandes et paniers enregistrés.
+        </p>
+      </div>
 
       {/* 2-Tier Executive KPI Cards Grid */}
       <div className="space-y-4">

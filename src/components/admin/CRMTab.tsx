@@ -96,40 +96,47 @@ export default function CRMTab() {
     author: string;
   }[]>>({});
 
-  React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const savedPointsLogs = localStorage.getItem('admin_points_logs');
-        if (savedPointsLogs) setPointsLogs(JSON.parse(savedPointsLogs));
-      } catch (e) {
-        console.error('Error loading points logs:', e);
-      }
+  const loadSharedCustomerRecords = React.useCallback(async () => {
+    try {
+      const resources = ['customer-tags', 'customer-notes', 'customer-samples', 'points-adjustments'];
+      const responses = await Promise.all(resources.map(resource =>
+        fetch(`/api/admin/operational-records?resource=${resource}`, { cache: 'no-store' }).then(response => response.json())
+      ));
+      const [tags, notes, samples, adjustments] = responses.map(response => response?.success ? response.records || [] : []);
+      setCustomerTags(tags.reduce((groups: Record<string, string[]>, item: any) => ({ ...groups, [item.phone]: [...(groups[item.phone] || []), item.tag] }), {}));
+      setCustomerNotes(notes.reduce((groups: Record<string, { id: string; text: string; date: string; author: string }[]>, item: any) => ({ ...groups, [item.phone]: [...(groups[item.phone] || []), { id: item.id, text: item.text, date: new Date(item.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }), author: item.created_by }] }), {}));
+      setCustomerSamples(samples.reduce((groups: Record<string, { id: string; sampleName: string; category: string; dateSent: string }[]>, item: any) => ({ ...groups, [item.phone]: [...(groups[item.phone] || []), { id: item.id, sampleName: item.sample_name, category: item.category, dateSent: new Date(item.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) }] }), {}));
+      setPointsLogs(adjustments.reduce((groups: Record<string, { id: string; points: number; reason: string; date: string; author: string }[]>, item: any) => ({ ...groups, [item.phone]: [...(groups[item.phone] || []), { id: item.id, points: Number(item.points), reason: item.reason, date: new Date(item.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }), author: item.created_by }] }), {}));
+    } catch {
+      showToast('Les données CRM partagées sont momentanément indisponibles.', 'error');
     }
-  }, []);
+  }, [showToast]);
 
-  const handleAddPointsAdjustment = (phone: string, pts: number, reason: string) => {
+  React.useEffect(() => { void loadSharedCustomerRecords(); }, [loadSharedCustomerRecords]);
+
+  const createSharedRecord = async (resource: string, record: Record<string, unknown>) => {
+    const response = await fetch('/api/admin/operational-records', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ resource, record }) });
+    const data = await response.json();
+    if (!response.ok || !data.success) throw new Error(data.error || 'Operation impossible.');
+    return data.record;
+  };
+
+  const deleteSharedRecord = async (resource: string, id: string) => {
+    const response = await fetch(`/api/admin/operational-records?resource=${resource}&id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+    const data = await response.json();
+    if (!response.ok || !data.success) throw new Error(data.error || 'Suppression impossible.');
+  };
+
+  const handleAddPointsAdjustment = async (phone: string, pts: number, reason: string) => {
     if (!pts || isNaN(pts)) return;
-    const current = pointsLogs[phone] || [];
-    const newLog = {
-      id: 'pts_' + Date.now(),
-      points: pts,
-      reason: reason || (pts > 0 ? 'Bonus Admin' : 'Ajustement Admin'),
-      date: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-      author: 'Admin'
-    };
-    const updated = { ...pointsLogs, [phone]: [newLog, ...current] };
-    setPointsLogs(updated);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('admin_points_logs', JSON.stringify(updated));
+    try {
+      await createSharedRecord('points-adjustments', { phone, points: pts, reason: reason || (pts > 0 ? 'Bonus Admin' : 'Ajustement Admin') });
+      await loadSharedCustomerRecords();
+    } catch (error: any) {
+      showToast(error.message || 'Impossible d’enregistrer l’ajustement.', 'error');
+      return;
     }
-
-    if (selectedCustomer) {
-      setSelectedCustomer({
-        ...selectedCustomer,
-        points: Math.max(0, (selectedCustomer.points || 0) + pts),
-        pointsOverrideReason: reason
-      });
-    }
+    if (selectedCustomer) setSelectedCustomer({ ...selectedCustomer, points: Math.max(0, (selectedCustomer.points || 0) + pts), pointsOverrideReason: reason });
     setLoyaltyPointsAdjustment(0);
     setLoyaltyAdjustmentReason('');
   };
@@ -137,100 +144,49 @@ export default function CRMTab() {
     'Bonjour {firstname}, il est temps de renouveler votre soin préféré ({favorite_product}) ! Profitez de -{discount_pct}% avec votre code promo personnel : {custom_code}. ✨'
   );
 
-  React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const savedSamples = localStorage.getItem('admin_customer_samples');
-        if (savedSamples) setCustomerSamples(JSON.parse(savedSamples));
-      } catch (e) {
-        console.error('Error loading customer samples:', e);
-      }
-    }
-  }, []);
-
-  const handleAddSample = (phone: string, sampleName: string, category: string) => {
+  const handleAddSample = async (phone: string, sampleName: string, category: string) => {
     if (!sampleName.trim()) return;
-    const current = customerSamples[phone] || [];
-    const newEntry = {
-      id: 'sample_' + Date.now(),
-      sampleName: sampleName.trim(),
-      category: category || 'K-Beauty Sample',
-      dateSent: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
-    };
-    const updated = { ...customerSamples, [phone]: [newEntry, ...current] };
-    setCustomerSamples(updated);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('admin_customer_samples', JSON.stringify(updated));
-    }
-    setNewSampleName('');
-  };
-
-  const handleDeleteSample = (phone: string, sampleId: string) => {
-    const current = customerSamples[phone] || [];
-    const updated = { ...customerSamples, [phone]: current.filter(s => s.id !== sampleId) };
-    setCustomerSamples(updated);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('admin_customer_samples', JSON.stringify(updated));
+    try {
+      await createSharedRecord('customer-samples', { phone, sample_name: sampleName.trim(), category: category || 'Echantillon' });
+      setNewSampleName('');
+      await loadSharedCustomerRecords();
+    } catch (error: any) {
+      showToast(error.message || 'Impossible d’enregistrer l’échantillon.', 'error');
     }
   };
 
-  React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const savedTags = localStorage.getItem('admin_customer_tags');
-        if (savedTags) setCustomerTags(JSON.parse(savedTags));
-        const savedNotes = localStorage.getItem('admin_customer_notes');
-        if (savedNotes) setCustomerNotes(JSON.parse(savedNotes));
-      } catch (e) {
-        console.error('Error loading CRM tags/notes:', e);
-      }
-    }
-  }, []);
+  const handleDeleteSample = async (_phone: string, sampleId: string) => {
+    try { await deleteSharedRecord('customer-samples', sampleId); await loadSharedCustomerRecords(); }
+    catch (error: any) { showToast(error.message || 'Impossible de supprimer l’échantillon.', 'error'); }
+  };
 
-  const handleAddTag = (phone: string, tag: string) => {
+  const handleAddTag = async (phone: string, tag: string) => {
     if (!tag.trim()) return;
-    const current = customerTags[phone] || [];
-    if (current.includes(tag.trim())) return;
-    const updated = { ...customerTags, [phone]: [...current, tag.trim()] };
-    setCustomerTags(updated);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('admin_customer_tags', JSON.stringify(updated));
-    }
+    if ((customerTags[phone] || []).includes(tag.trim())) return;
+    try { await createSharedRecord('customer-tags', { phone, tag: tag.trim() }); await loadSharedCustomerRecords(); }
+    catch (error: any) { showToast(error.message || 'Impossible d’ajouter l’étiquette.', 'error'); }
   };
 
-  const handleRemoveTag = (phone: string, tagToRemove: string) => {
-    const current = customerTags[phone] || [];
-    const updated = { ...customerTags, [phone]: current.filter(t => t !== tagToRemove) };
-    setCustomerTags(updated);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('admin_customer_tags', JSON.stringify(updated));
-    }
+  const handleRemoveTag = async (phone: string, tagToRemove: string) => {
+    try {
+      const response = await fetch(`/api/admin/operational-records?resource=customer-tags&phone=${encodeURIComponent(phone)}`, { cache: 'no-store' });
+      const data = await response.json();
+      const record = (data.records || []).find((item: any) => item.tag === tagToRemove);
+      if (!record) return;
+      await deleteSharedRecord('customer-tags', record.id);
+      await loadSharedCustomerRecords();
+    } catch (error: any) { showToast(error.message || 'Impossible de supprimer l’étiquette.', 'error'); }
   };
 
-  const handleAddNote = (phone: string, text: string) => {
+  const handleAddNote = async (phone: string, text: string) => {
     if (!text.trim()) return;
-    const current = customerNotes[phone] || [];
-    const newNote = {
-      id: 'note_' + Date.now(),
-      text: text.trim(),
-      date: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }),
-      author: 'Admin'
-    };
-    const updated = { ...customerNotes, [phone]: [newNote, ...current] };
-    setCustomerNotes(updated);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('admin_customer_notes', JSON.stringify(updated));
-    }
-    setNewNoteText('');
+    try { await createSharedRecord('customer-notes', { phone, text: text.trim() }); setNewNoteText(''); await loadSharedCustomerRecords(); }
+    catch (error: any) { showToast(error.message || 'Impossible d’enregistrer la note.', 'error'); }
   };
 
-  const handleDeleteNote = (phone: string, noteId: string) => {
-    const current = customerNotes[phone] || [];
-    const updated = { ...customerNotes, [phone]: current.filter(n => n.id !== noteId) };
-    setCustomerNotes(updated);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('admin_customer_notes', JSON.stringify(updated));
-    }
+  const handleDeleteNote = async (_phone: string, noteId: string) => {
+    try { await deleteSharedRecord('customer-notes', noteId); await loadSharedCustomerRecords(); }
+    catch (error: any) { showToast(error.message || 'Impossible de supprimer la note.', 'error'); }
   };
 
   const getTagBadgeStyle = (tag: string, theme: string) => {

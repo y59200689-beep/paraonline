@@ -283,7 +283,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
   const [chartHoverIdx, setChartHoverIdx] = useState<number | null>(null);
   const [lowStockCount, setLowStockCount] = useState<number | null>(null);
-  const [atlasSync, setAtlasSync] = useState<{ lastRun: string; status: string; logs: string }>({ lastRun: '', status: '', logs: '' });
+  const [atlasSync, setAtlasSync] = useState<{ lastRun: string; status: string; durationMs: number; inserted: number; updated: number; skipped: number; error: string }>({ lastRun: '', status: '', durationMs: 0, inserted: 0, updated: 0, skipped: 0, error: '' });
   const [isRetryingAtlas, setIsRetryingAtlas] = useState(false);
   const [atlasRetryMessage, setAtlasRetryMessage] = useState('');
   const lowStockThreshold = settings.lowStockThreshold ?? 5;
@@ -314,17 +314,18 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
   const loadOperationalHealth = React.useCallback(async () => {
     try {
-      const snippetsResponse = await fetch('/api/admin/snippets', { cache: 'no-store' });
-      const snippetsData = await snippetsResponse.json().catch(() => null);
-
-      if (snippetsResponse.ok && snippetsData?.success) {
-        const atlasSnippet = (snippetsData.snippets || []).find((snippet: any) => snippet.id === 'cron_1782133436889');
-        setAtlasSync(atlasSnippet ? {
-          lastRun: atlasSnippet.last_run || '',
-          status: atlasSnippet.last_run_status || '',
-          logs: atlasSnippet.last_run_logs || '',
-        } : { lastRun: '', status: '', logs: '' });
-      }
+      const response = await fetch('/api/admin/operational-records?resource=sync-runs', { cache: 'no-store' });
+      const data = await response.json().catch(() => null);
+      const latestAtlasRun = data?.success ? (data.records || []).find((run: any) => run.source === 'atlascom') : null;
+      setAtlasSync(latestAtlasRun ? {
+        lastRun: latestAtlasRun.completed_at || latestAtlasRun.created_at || '',
+        status: latestAtlasRun.status || '',
+        durationMs: Number(latestAtlasRun.duration_ms) || 0,
+        inserted: Number(latestAtlasRun.inserted_count) || 0,
+        updated: Number(latestAtlasRun.updated_count) || 0,
+        skipped: Number(latestAtlasRun.skipped_count) || 0,
+        error: latestAtlasRun.error || '',
+      } : { lastRun: '', status: '', durationMs: 0, inserted: 0, updated: 0, skipped: 0, error: '' });
     } catch (error) {
       console.error('Failed to load supplier sync health:', error);
     }
@@ -685,26 +686,28 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
       {/* ── Supplier synchronization health ───────────────────────────────── */}
       {(() => {
-        const changed = atlasSync.logs.match(/Updated\s+(\d+), inserted\s+(\d+)/i);
-        const duration = atlasSync.logs.match(/Duration\s+(\d+s)/i);
         const hasRecentSuccess = atlasSync.status === 'success';
+        const isSyncRunning = atlasSync.status === 'running';
+        const healthTone = hasRecentSuccess ? 'emerald' : isSyncRunning ? 'sky' : 'rose';
+        const healthLabel = hasRecentSuccess ? 'Synchronisé' : isSyncRunning ? 'Synchronisation en cours' : 'À vérifier';
         return (
           <section className="rounded-lg px-4 py-3.5" style={{ background: cardBg, border: borderStyle, boxShadow: isDark ? 'none' : '0 1px 2px rgba(15,30,54,0.03)' }}>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex min-w-0 items-center gap-3">
-                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${hasRecentSuccess ? 'bg-emerald-500/10' : 'bg-rose-500/10'}`}>
-                  <Workflow className={`h-4 w-4 ${hasRecentSuccess ? 'text-emerald-500' : 'text-rose-500'}`} />
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${healthTone === 'emerald' ? 'bg-emerald-500/10' : healthTone === 'sky' ? 'bg-sky-500/10' : 'bg-rose-500/10'}`}>
+                  <Workflow className={`h-4 w-4 ${healthTone === 'emerald' ? 'text-emerald-500' : healthTone === 'sky' ? 'text-sky-500' : 'text-rose-500'}`} />
                 </div>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="text-[12px] font-black" style={{ color: textPrimary }}>Santé Atlascom / WooCommerce</h2>
-                    <span className={`rounded-full px-2 py-0.5 text-[9px] font-black uppercase ${hasRecentSuccess ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-500'}`}>{hasRecentSuccess ? 'Synchronisé' : 'À vérifier'}</span>
+                    <span className={`rounded-full px-2 py-0.5 text-[9px] font-black uppercase ${healthTone === 'emerald' ? 'bg-emerald-500/10 text-emerald-600' : healthTone === 'sky' ? 'bg-sky-500/10 text-sky-600' : 'bg-rose-500/10 text-rose-500'}`}>{healthLabel}</span>
                   </div>
                   <p className="mt-0.5 text-[10px] font-medium" style={{ color: textMuted }}>
                     {atlasSync.lastRun ? `Dernière exécution : ${new Date(atlasSync.lastRun).toLocaleString('fr-FR')}` : 'Aucune exécution enregistrée'}
-                    {changed ? ` · ${Number(changed[1]) + Number(changed[2])} produits modifiés` : ''}
-                    {duration ? ` · ${duration[1]}` : ''}
+                    {(atlasSync.updated + atlasSync.inserted) > 0 ? ` · ${atlasSync.updated + atlasSync.inserted} produits modifiés` : ''}
+                    {atlasSync.durationMs > 0 ? ` · ${(atlasSync.durationMs / 1000).toFixed(1)} s` : ''}
                   </p>
+                  {atlasSync.error && <p className="mt-1 text-[10px] font-semibold text-rose-500">{atlasSync.error}</p>}
                   {atlasRetryMessage && <p className={`mt-1 text-[10px] font-semibold ${atlasRetryMessage.includes('Échec') || atlasRetryMessage.includes('configuré') ? 'text-rose-500' : 'text-emerald-600'}`}>{atlasRetryMessage}</p>}
                 </div>
               </div>

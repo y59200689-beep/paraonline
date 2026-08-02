@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useSettings } from './SettingsContext';
 import { supabase } from '@/lib/supabase';
-import { customerAuthErrorMessage } from '@/lib/customer-auth';
+import { customerAuthErrorMessage, resolveCustomerIdentity } from '@/lib/customer-auth';
 import type { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
 import {
   getActiveTier,
@@ -232,6 +232,14 @@ export const LoyaltyProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // ──────────── Fetch and Apply Profile from Supabase ────────────
   const fetchAndApplyProfile = async (user: User) => {
+    // Auth metadata is available immediately after login. Keep it as a fallback
+    // when an older customer_profiles row has an empty name or profile loading fails.
+    setClientUser((current) => {
+      const identity = resolveCustomerIdentity(user, null, current);
+      try { localStorage.setItem('customer_client_user', JSON.stringify(identity)); } catch {}
+      return identity;
+    });
+
     try {
       const { data, error } = await supabase
         .from('customer_profiles')
@@ -252,12 +260,7 @@ export const LoyaltyProvider: React.FC<{ children: React.ReactNode }> = ({ child
         });
         if (insertError) throw insertError;
 
-        const newUser = {
-          id: user.id,
-          email: user.email ?? '',
-          name: user.user_metadata?.name ?? undefined,
-          phone: user.user_metadata?.phone ?? undefined,
-        };
+        const newUser = resolveCustomerIdentity(user);
         setClientUser(newUser);
         try { localStorage.setItem('customer_client_user', JSON.stringify(newUser)); } catch {}
         setPoints(0);
@@ -267,14 +270,11 @@ export const LoyaltyProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
 
       if (data) {
-        const u = {
-          id: user.id,
-          email: data.email ?? user.email ?? '',
-          name: data.name ?? undefined,
-          phone: data.phone ?? undefined,
-        };
-        setClientUser(u);
-        try { localStorage.setItem('customer_client_user', JSON.stringify(u)); } catch {}
+        setClientUser((current) => {
+          const identity = resolveCustomerIdentity(user, data, current);
+          try { localStorage.setItem('customer_client_user', JSON.stringify(identity)); } catch {}
+          return identity;
+        });
         setPoints(data.points ?? 0);
         setTotalEarned(data.total_earned ?? 0);
         setPointsHistory(data.points_history ?? []);

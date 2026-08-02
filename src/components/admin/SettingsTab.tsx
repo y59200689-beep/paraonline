@@ -45,6 +45,7 @@ import { useSettings, HeroCardConfig } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 import { useAdminUI } from '@/app/admin/AdminUIContext';
 import { useProducts } from '@/context/ProductsContext';
+import { ConfirmDialog } from '@/components/admin/ui';
 
 export default function SettingsTab() {
   const { settings, saveSettings } = useSettings();
@@ -129,6 +130,13 @@ export default function SettingsTab() {
   const [ownerResetPasswordVal, setOwnerResetPasswordVal] = useState('');
   const [ownerResetError, setOwnerResetError] = useState('');
   const [ownerResetSuccess, setOwnerResetSuccess] = useState('');
+  const [pendingConfirmation, setPendingConfirmation] = useState<{
+    title: string;
+    description: string;
+    confirmLabel: string;
+    action: () => Promise<void>;
+  } | null>(null);
+  const [isConfirmingAction, setIsConfirmingAction] = useState(false);
 
   // Sync settings and products for homepage sections
   useEffect(() => {
@@ -508,14 +516,16 @@ export default function SettingsTab() {
     }
   };
 
-  const onDeleteCouponClick = async (code: string) => {
-    if (!confirm(`Voulez-vous supprimer le code promo ${code} ?`)) return;
-    const success = await handleDeleteCoupon(code);
-    if (success) {
-      showToast("Coupon supprimé.", 'success');
-    } else {
-      showToast("Erreur lors de la suppression.", 'error');
-    }
+  const onDeleteCouponClick = (code: string) => {
+    setPendingConfirmation({
+      title: 'Supprimer ce code promo ?',
+      description: `Le code ${code} ne sera plus disponible au moment du paiement. Cette action ne peut pas être annulée.`,
+      confirmLabel: 'Supprimer le code',
+      action: async () => {
+        const success = await handleDeleteCoupon(code);
+        showToast(success ? 'Coupon supprimé.' : 'Erreur lors de la suppression.', success ? 'success' : 'error');
+      },
+    });
   };
 
   const onAddFaqSubmit = async (e: React.FormEvent) => {
@@ -530,14 +540,16 @@ export default function SettingsTab() {
     }
   };
 
-  const onDeleteFaqClick = async (index: number) => {
-    if (!confirm("Voulez-vous supprimer cette question de FAQ ?")) return;
-    const success = await handleDeleteFaq(index);
-    if (success) {
-      showToast("Question FAQ supprimée.", 'success');
-    } else {
-      showToast("Erreur lors de la suppression.", 'error');
-    }
+  const onDeleteFaqClick = (index: number) => {
+    setPendingConfirmation({
+      title: 'Supprimer cette question FAQ ?',
+      description: 'Cette question et sa réponse ne seront plus visibles dans la boutique. Cette action ne peut pas être annulée.',
+      confirmLabel: 'Supprimer la question',
+      action: async () => {
+        const success = await handleDeleteFaq(index);
+        showToast(success ? 'Question FAQ supprimée.' : 'Erreur lors de la suppression.', success ? 'success' : 'error');
+      },
+    });
   };
 
   const onCreateOperatorSubmit = async (e: React.FormEvent) => {
@@ -560,6 +572,7 @@ export default function SettingsTab() {
   };
 
   return (
+    <>
     <div className="flex flex-col gap-6 animate-slide-up">
       
       {/* Settings submenus: organised by operational responsibility. */}
@@ -3658,10 +3671,10 @@ export default function SettingsTab() {
                           type="button"
                           onClick={() => {
                             if (!paymentForm.stripePublishableKey || !paymentForm.stripeSecretKey) {
-                              alert("Veuillez renseigner les clés Stripe.");
+                              showToast("Renseignez les clés Stripe avant de lancer une validation.", 'warning');
                               return;
                             }
-                            alert("Connexion Stripe validée ! (Simulation d'appel API réussie)");
+                            showToast("Clés Stripe enregistrées. Effectuez un paiement de test dans Stripe pour valider la passerelle de bout en bout.", 'info');
                           }}
                           className={`px-3 py-1.5 border rounded-xl text-[10px] font-bold uppercase cursor-pointer transition ${
                             adminTheme === 'light' ? 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 shadow-sm' : 'bg-slate-900 text-slate-300 border-slate-800 hover:bg-slate-800'
@@ -3760,10 +3773,10 @@ export default function SettingsTab() {
                           type="button"
                           onClick={() => {
                             if (!paymentForm.cmiMerchantId || !paymentForm.cmiStoreKey || !paymentForm.cmiApiUrl) {
-                              alert("Veuillez renseigner tous les champs CMI.");
+                              showToast("Renseignez tous les champs CMI avant de lancer une validation.", 'warning');
                               return;
                             }
-                            alert("Connexion CMI validée ! (Simulation d'appel API réussie)");
+                            showToast("Configuration CMI enregistrée. Lancez une transaction de test CMI pour confirmer la connexion réelle.", 'info');
                           }}
                           className={`px-3 py-1.5 border rounded-xl text-[10px] font-bold uppercase cursor-pointer transition ${
                             adminTheme === 'light' ? 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 shadow-sm' : 'bg-slate-900 text-slate-300 border-slate-800 hover:bg-slate-800'
@@ -4609,7 +4622,7 @@ export default function SettingsTab() {
                             <button
                               onClick={() => {
                                 setAutomationQueue(prev => prev.filter(q => q.id !== item.id));
-                                alert("Notification WhatsApp expédiée immédiatement via l'API !");
+                                showToast("Notification WhatsApp ajoutée à la file d'envoi.", 'success');
                               }}
                               className="px-2 py-1 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded-md text-[9px] font-bold uppercase transition cursor-pointer"
                             >
@@ -5141,5 +5154,26 @@ export default function SettingsTab() {
 
       </div>
     </div>
+      <ConfirmDialog
+        open={pendingConfirmation !== null}
+        title={pendingConfirmation?.title ?? ''}
+        description={pendingConfirmation?.description ?? ''}
+        confirmLabel={pendingConfirmation?.confirmLabel}
+        busy={isConfirmingAction}
+        onClose={() => {
+          if (!isConfirmingAction) setPendingConfirmation(null);
+        }}
+        onConfirm={async () => {
+          if (!pendingConfirmation) return;
+          setIsConfirmingAction(true);
+          try {
+            await pendingConfirmation.action();
+            setPendingConfirmation(null);
+          } finally {
+            setIsConfirmingAction(false);
+          }
+        }}
+      />
+    </>
   );
 }

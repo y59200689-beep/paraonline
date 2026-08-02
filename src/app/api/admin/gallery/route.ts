@@ -364,7 +364,10 @@ export async function GET() {
     console.warn('[gallery] Failed to scan public/uploads:', e);
   }
 
-  return NextResponse.json({ success: true, images: [...manifestImages, ...uploadImages] });
+  return NextResponse.json(
+    { success: true, images: [...manifestImages, ...uploadImages] },
+    { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+  );
 }
 
 // ─── POST — replace a file by key with automatic WebP conversion & dimension extraction ───

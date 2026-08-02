@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAdmin } from '@/context/AdminContext';
+import { useUi } from '@/context/UiContext';
 import { 
   Plus, 
   Edit2, 
@@ -132,6 +133,7 @@ function CodeEditor({ value, onChange, adminTheme }: CodeEditorProps) {
 
 export default function SnippetsTab() {
   const { adminTheme, currentUser } = useAdmin();
+  const { showToast } = useUi();
   const [snippets, setSnippets] = useState<Snippet[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -207,10 +209,10 @@ export default function SnippetsTab() {
           prev.map(s => s.id === id ? { ...s, active: !currentStatus } : s)
         );
       } else {
-        alert(data.error || 'Impossible de mettre à jour le statut.');
+        showToast(data.error || 'Impossible de mettre à jour le statut.', 'error');
       }
     } catch (err) {
-      alert('Erreur réseau lors de la mise à jour.');
+      showToast('Erreur réseau lors de la mise à jour.', 'error');
     }
   };
 
@@ -297,10 +299,10 @@ export default function SnippetsTab() {
         setSnippets(prev => prev.filter(s => s.id !== id));
         setDeletingId(null);
       } else {
-        alert(data.error || 'Erreur lors de la suppression.');
+        showToast(data.error || 'Erreur lors de la suppression.', 'error');
       }
     } catch (err) {
-      alert('Erreur réseau lors de la suppression.');
+      showToast('Erreur réseau lors de la suppression.', 'error');
     }
   };
 
