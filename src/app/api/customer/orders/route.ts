@@ -16,7 +16,8 @@ export async function GET(request: Request) {
     .from('orders')
     .select('order_id, customer_name, phone_number, address, city, notes, items, subtotal, discount_amount, applied_coupon, gift_item, total, status, carrier, tracking_number, estimated_delivery, created_at')
     .eq('customer_id', authData.user.id)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(50);
 
   if (error) {
     console.error('Customer orders error:', error);

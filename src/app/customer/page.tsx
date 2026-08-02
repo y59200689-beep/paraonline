@@ -230,9 +230,14 @@ export default function CustomerDashboard() {
   const [orderSearchQuery, setOrderSearchQuery] = useState('');
   const [orderFilterStatus, setOrderFilterStatus] = useState<'all' | 'in_transit' | 'delivered'>('all');
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const ordersRequestRef = useRef<AbortController | null>(null);
 
   const loadCustomerOrders = async () => {
     if (!clientUser) return;
+    ordersRequestRef.current?.abort();
+    const controller = new AbortController();
+    ordersRequestRef.current = controller;
+    const timeoutId = window.setTimeout(() => controller.abort(), 8_000);
     setOrdersState('loading');
     setOrdersError(null);
     try {
@@ -242,21 +247,30 @@ export default function CustomerDashboard() {
 
       const response = await fetch('/api/customer/orders', {
         headers: { Authorization: `Bearer ${token}` },
-        cache: 'no-store'
+        cache: 'no-store',
+        signal: controller.signal,
       });
-      const payload = await response.json();
+      const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.success) throw new Error(payload.error || 'Impossible de charger vos commandes.');
+      if (ordersRequestRef.current !== controller) return;
       setOrders(Array.isArray(payload.orders) ? payload.orders : []);
       setOrdersState('ready');
     } catch (error) {
+      if (ordersRequestRef.current !== controller) return;
       setOrders([]);
       setOrdersState('error');
-      setOrdersError(error instanceof Error ? error.message : 'Impossible de charger vos commandes.');
+      setOrdersError(error instanceof DOMException && error.name === 'AbortError'
+        ? 'Le chargement prend plus de temps que prévu. Vérifiez votre connexion puis réessayez.'
+        : error instanceof Error ? error.message : 'Impossible de charger vos commandes.');
+    } finally {
+      window.clearTimeout(timeoutId);
+      if (ordersRequestRef.current === controller) ordersRequestRef.current = null;
     }
   };
 
   useEffect(() => {
     void loadCustomerOrders();
+    return () => ordersRequestRef.current?.abort();
   // The identity is the stable dependency; the loader intentionally uses current session state.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientUser?.id]);
