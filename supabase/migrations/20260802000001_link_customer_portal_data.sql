@@ -1,7 +1,12 @@
 -- Keep customer-facing data bound to the authenticated account rather than to
 -- mutable contact details such as a name or phone number.
 ALTER TABLE public.orders
-  ADD COLUMN IF NOT EXISTS customer_id UUID REFERENCES auth.users(id) ON DELETE SET NULL;
+  ADD COLUMN IF NOT EXISTS customer_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS carrier TEXT,
+  ADD COLUMN IF NOT EXISTS tracking_number TEXT,
+  ADD COLUMN IF NOT EXISTS estimated_delivery TEXT,
+  ADD COLUMN IF NOT EXISTS package_weight TEXT,
+  ADD COLUMN IF NOT EXISTS logs JSONB NOT NULL DEFAULT '[]'::JSONB;
 
 CREATE INDEX IF NOT EXISTS orders_customer_id_created_at_idx
   ON public.orders (customer_id, created_at DESC);
