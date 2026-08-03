@@ -20,6 +20,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     ? 'Découvrez les gammes La Roche-Posay par préoccupation et trouvez les soins disponibles chez Para Officinal au Maroc.'
     : slug === 'vichy'
       ? 'Découvrez les soins Vichy par catégorie : Normaderm, Dercos, Capital Soleil, Liftactiv, Pureté Thermale et Vichy Homme, disponibles au Maroc.'
+      : slug === 'cerave'
+        ? 'Découvrez les soins CeraVe par catégorie : hydratation, nettoyage, imperfections, rugosités, protection solaire et soins ciblés, disponibles au Maroc.'
+      : slug === 'avene'
+        ? 'Découvrez les soins Avène par catégorie : Cleanance, Hydrance, Cicalfate, XeraCalm, Tolérance et protection solaire, disponibles au Maroc.'
+      : slug === 'bioderma'
+        ? 'Découvrez les soins Bioderma par besoin : Sensibio, Sebium, Atoderm, Photoderm, Hydrabio et Cicabio, disponibles au Maroc.'
+      : slug === 'eucerin'
+        ? 'Découvrez les soins Eucerin par besoin : UreaRepair, DermoPure, Anti-Pigment, Hyaluron-Filler, Aquaphor et protection solaire, disponibles au Maroc.'
       : brand?.descriptionFr || `Découvrez les produits ${name} disponibles chez Para Officinal.`;
 
   return {
@@ -27,12 +35,20 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     description,
     alternates: { canonical: `/brand/${slug}` },
     openGraph: {
-      title: `${name} — soins disponibles au Maroc`,
+      title: `${name} - soins disponibles au Maroc`,
       description,
       images: slug === 'la-roche-posay'
         ? ['/images/larochposay_brand_showcase.webp']
         : slug === 'vichy'
           ? ['/images/vichy_brand_showcase.webp']
+          : slug === 'cerave'
+            ? ['/images/cerave_showcase_banner.webp']
+          : slug === 'avene'
+            ? ['/images/avene_brand_showcase.webp']
+          : slug === 'bioderma'
+            ? ['/images/bioderma_brand_showcase.webp']
+            : slug === 'eucerin'
+              ? ['/images/eucerin_brand_showcase.webp']
           : undefined,
     },
   };
@@ -47,6 +63,18 @@ export default async function BrandPage({ params }: { params: Promise<{ slug: st
   }
   if (slug === 'vichy') {
     return <LaRochePosayCustomPage brand="vichy" />;
+  }
+  if (slug === 'cerave') {
+    return <LaRochePosayCustomPage brand="cerave" />;
+  }
+  if (slug === 'avene') {
+    return <LaRochePosayCustomPage brand="avene" />;
+  }
+  if (slug === 'bioderma') {
+    return <LaRochePosayCustomPage brand="bioderma" />;
+  }
+  if (slug === 'eucerin') {
+    return <LaRochePosayCustomPage brand="eucerin" />;
   }
 
   // ── Generic brand page ────────────────────────────────────────────────

@@ -46,7 +46,7 @@ const RANGES = [
     overlayColor: 'rgba(30,58,138,0.72)',
     keywords: ['effaclar','acné','acne','imperfection','sébum'],
     Icon: Zap,
-    /* Real product photo served via API — used as card bg, fallback to gradient */
+    /* Real product photo served via API, used as card bg with a gradient fallback. */
     bgStyle: { background: 'linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%)' },
   },
   {
@@ -219,6 +219,239 @@ const VICHY_RANGES = [
   },
 ];
 
+const CERAVE_RANGES = [
+  {
+    id: 'hydratation',
+    name: 'HYDRATATION',
+    label: 'Hydratation\nvisage & corps',
+    tagline: 'Restaurer le confort des peaux normales à très sèches.',
+    description: 'Les baumes, laits et crèmes CeraVe hydratent durablement et aident à renforcer la barrière protectrice du visage, du corps et des mains.',
+    molecules: ['3 céramides', 'Acide hyaluronique', 'Technologie MVE'],
+    accent: '#1677a5',
+    lightBg: '#edf8fc',
+    gradient: 'from-[#0d5277] to-[#1677a5]',
+    overlayColor: 'rgba(13,82,119,0.68)',
+    keywords: ['baume hydratant', 'lait hydratant', 'creme hydratante visage', 'crème hydratante visage', 'creme mains', 'crème mains'],
+    Icon: Droplets,
+    bgStyle: { background: 'linear-gradient(135deg,#0d5277 0%,#39a6c9 100%)' },
+  },
+  {
+    id: 'nettoyage',
+    name: 'NETTOYAGE',
+    label: 'Nettoyage\ndoux & efficace',
+    tagline: 'Nettoyer sans compromettre la barrière cutanée.',
+    description: 'Gels, crèmes, huiles et eau micellaire retirent les impuretés avec des textures adaptées aux peaux normales, sèches, mixtes ou grasses.',
+    molecules: ['3 céramides', 'Niacinamide', 'Acide hyaluronique'],
+    accent: '#188f9d',
+    lightBg: '#edfafa',
+    gradient: 'from-[#0d626d] to-[#188f9d]',
+    overlayColor: 'rgba(13,98,109,0.68)',
+    keywords: ['gel moussant', 'creme lavante', 'crème lavante', 'creme moussante', 'crème moussante', 'huile nettoyante', 'eau micellaire'],
+    Icon: FlaskConical,
+    bgStyle: { background: 'linear-gradient(135deg,#0d626d 0%,#48b9bd 100%)' },
+  },
+  {
+    id: 'imperfections',
+    name: 'ANTI-IMPERFECTIONS',
+    label: 'Imperfections\n& excès de sébum',
+    tagline: 'Purifier, lisser et limiter la brillance au quotidien.',
+    description: 'Les soins anti-imperfections CeraVe ciblent les pores, les marques post-imperfections et l’excès de sébum avec une routine progressive.',
+    molecules: ['Acide salicylique', 'Niacinamide', 'Rétinol'],
+    accent: '#2c76b5',
+    lightBg: '#eff6fd',
+    gradient: 'from-[#184d7d] to-[#2c76b5]',
+    overlayColor: 'rgba(24,77,125,0.68)',
+    keywords: ['anti imperfection', 'anti-imperfection', 'oil control', 'anti marque', 'anti-marque', 'soin concentré', 'soin concentre'],
+    Icon: Zap,
+    bgStyle: { background: 'linear-gradient(135deg,#184d7d 0%,#5a9bd2 100%)' },
+  },
+  {
+    id: 'rugosites',
+    name: 'SA ANTI-RUGOSITÉS',
+    label: 'Rugosités\n& grain de peau',
+    tagline: 'Exfolier en douceur les zones sèches et rugueuses.',
+    description: 'La sélection SA associe nettoyage et hydratation pour lisser les rugosités du corps et des pieds sans négliger la barrière cutanée.',
+    molecules: ['Acide salicylique', 'Urée', '3 céramides'],
+    accent: '#7357a6',
+    lightBg: '#f5f2fb',
+    gradient: 'from-[#493479] to-[#7357a6]',
+    overlayColor: 'rgba(73,52,121,0.68)',
+    keywords: ['sa creme', 'sa crème', 'sa gel', 'anti rugosite', 'anti rugosité', 'anti-rugosite', 'anti-rugosité', 'pieds regenerante', 'pieds régénérante'],
+    Icon: Sparkles,
+    bgStyle: { background: 'linear-gradient(135deg,#493479 0%,#9a82c6 100%)' },
+  },
+  {
+    id: 'solaire',
+    name: 'PROTECTION SOLAIRE',
+    label: 'Protection\nsolaire SPF50+',
+    tagline: 'Hydrater et protéger le visage et le corps des UV.',
+    description: 'Fluides et laits solaires CeraVe associent haute protection, textures confortables et céramides pour une utilisation quotidienne.',
+    molecules: ['SPF 50+', 'Céramides', 'Filtres UV'],
+    accent: '#db8129',
+    lightBg: '#fff7ed',
+    gradient: 'from-[#975018] to-[#db8129]',
+    overlayColor: 'rgba(151,80,24,0.66)',
+    keywords: ['solaire', 'spf50', 'spf 50', 'spf30', 'spf 30'],
+    Icon: Sun,
+    bgStyle: { background: 'linear-gradient(135deg,#975018 0%,#efa95f 100%)' },
+  },
+  {
+    id: 'soins-cibles',
+    name: 'SOINS CIBLÉS',
+    label: 'Visage\n& zones ciblées',
+    tagline: 'Compléter la routine avec un soin précis.',
+    description: 'Contour des yeux, soin de nuit et sérum au rétinol complètent la routine selon la zone, le moment d’utilisation et la tolérance de la peau.',
+    molecules: ['Rétinol', 'Acide hyaluronique', 'Céramides'],
+    accent: '#245f92',
+    lightBg: '#f0f6fb',
+    gradient: 'from-[#173e64] to-[#245f92]',
+    overlayColor: 'rgba(23,62,100,0.7)',
+    keywords: ['contour yeux', 'visage nuit', 'serum retinol', 'sérum rétinol'],
+    Icon: Heart,
+    bgStyle: { background: 'linear-gradient(135deg,#173e64 0%,#4d88b7 100%)' },
+  },
+];
+
+const AVENE_RANGES = [
+  {
+    id: 'cleanance', name: 'CLEANANCE', label: 'Imperfections\n& brillance', tagline: 'Nettoyer, corriger et matifier les peaux à imperfections.',
+    description: 'Cleanance réunit des nettoyants et des soins ciblés pour les peaux mixtes à grasses, les pores visibles, les marques et l’excès de sébum.',
+    molecules: ['Comedoclastin', 'AHA', 'Eau thermale'], accent: '#4f8f78', lightBg: '#eff8f4', gradient: 'from-[#315f50] to-[#4f8f78]', overlayColor: 'rgba(49,95,80,0.68)',
+    keywords: ['cleanance', 'cleance', 'triacneal'], Icon: Zap,
+    bgStyle: { background: 'linear-gradient(135deg,#315f50 0%,#78b49f 100%)' },
+  },
+  {
+    id: 'hydratation', name: 'HYDRATATION & ÉCLAT', label: 'Hydratation\n& signes de l’âge', tagline: 'Réhydrater, repulper et soutenir l’éclat du visage.',
+    description: 'Hydrance, Hyaluron Activ B3 et les soins ciblés accompagnent la déshydratation, les ridules et la perte d’éclat avec des textures quotidiennes.',
+    molecules: ['Acide hyaluronique', 'Niacinamide', 'Vitamine C'], accent: '#c36f62', lightBg: '#fff4f1', gradient: 'from-[#85483f] to-[#c36f62]', overlayColor: 'rgba(133,72,63,0.68)',
+    keywords: ['hydrance', 'hyaluron', 'aquagel', 'vitamine active', 'physiolift', 'masque apaisant hydratant'], Icon: Sparkles,
+    bgStyle: { background: 'linear-gradient(135deg,#85483f 0%,#dd9c91 100%)' },
+  },
+  {
+    id: 'cicalfate', name: 'CICALFATE+', label: 'Réparation\n& peau fragilisée', tagline: 'Apaiser, réparer et protéger les zones fragilisées.',
+    description: 'Cicalfate+ propose des soins réparateurs pour les irritations superficielles, les suites d’actes et les zones qui nécessitent une protection renforcée.',
+    molecules: ['C+-Restore', 'Cuivre-Zinc', 'Eau thermale'], accent: '#9a7658', lightBg: '#faf5ef', gradient: 'from-[#674b36] to-[#9a7658]', overlayColor: 'rgba(103,75,54,0.68)',
+    keywords: ['cicalfate'], Icon: ShieldCheck,
+    bgStyle: { background: 'linear-gradient(135deg,#674b36 0%,#bea084 100%)' },
+  },
+  {
+    id: 'secheresse', name: 'XERACALM & TRIXERA', label: 'Sécheresse\n& inconfort', tagline: 'Nettoyer et nourrir les peaux sèches à très sèches.',
+    description: 'XeraCalm, Trixera et Cold Cream regroupent des textures nettoyantes et relipidantes pour le corps, les mains et les lèvres.',
+    molecules: ['I-modulia', 'Lipides', 'Cold Cream'], accent: '#84679b', lightBg: '#f7f3fa', gradient: 'from-[#554366] to-[#84679b]', overlayColor: 'rgba(85,67,102,0.68)',
+    keywords: ['xeracalm', 'trixera', 'cold cream', 'cold creme'], Icon: Droplets,
+    bgStyle: { background: 'linear-gradient(135deg,#554366 0%,#aa91bb 100%)' },
+  },
+  {
+    id: 'solaire', name: 'PROTECTION SOLAIRE', label: 'Protection\nsolaire SPF50+', tagline: 'Protéger les peaux sensibles du visage et du corps.',
+    description: 'Les crèmes, fluides et sprays Avène couvrent différents usages, types de peau et niveaux d’exposition avec une haute protection quotidienne.',
+    molecules: ['SPF 50+', 'TriAsorB', 'Filtres UV'], accent: '#df7b36', lightBg: '#fff6ed', gradient: 'from-[#9a4e1c] to-[#df7b36]', overlayColor: 'rgba(154,78,28,0.66)',
+    keywords: ['ecran', 'écran', 'solaire', 'spf', 'sunsimed', 'b-protect'], Icon: Sun,
+    bgStyle: { background: 'linear-gradient(135deg,#9a4e1c 0%,#efa15f 100%)' },
+  },
+  {
+    id: 'sensibilite', name: 'TOLÉRANCE', label: 'Sensibilité\n& rougeurs', tagline: 'Apaiser les peaux sensibles, réactives ou sujettes aux rougeurs.',
+    description: 'Tolérance, Antirougeurs et l’Eau Thermale d’Avène accompagnent les peaux sensibles avec des textures simples et apaisantes.',
+    molecules: ['Eau thermale', 'D-Sensinose', 'Haute tolérance'], accent: '#b95f67', lightBg: '#fff3f4', gradient: 'from-[#7c3e45] to-[#b95f67]', overlayColor: 'rgba(124,62,69,0.68)',
+    keywords: ['tolerance', 'tolérance', 'antirougeurs', 'eau thermale', 'eau micellaire'], Icon: Heart,
+    bgStyle: { background: 'linear-gradient(135deg,#7c3e45 0%,#d58b91 100%)' },
+  },
+];
+
+const isAveneCatalogProduct = (product: Product) => {
+  const title = (product.title || product.nameFr || product.name || '').trim();
+  return /^(?:AV |AVENE |SUPP AV |SUPP AVENE |SUPP PROMO AV |SUPP PROMO AVENE )/i.test(title);
+};
+
+const BIODERMA_RANGES = [
+  {
+    id: 'sensibio', name: 'SENSIBIO', label: 'Peaux sensibles\n& réactives', tagline: 'Nettoyer, apaiser et respecter les peaux sensibles.',
+    description: 'Sensibio accompagne les peaux sensibles, réactives ou sujettes aux rougeurs avec des soins de nettoyage et de confort au quotidien.',
+    molecules: ['Micellaire', 'Actifs apaisants', 'Haute tolérance'], accent: '#d94f72', lightBg: '#fff3f6', gradient: 'from-[#8f2747] to-[#d94f72]', overlayColor: 'rgba(143,39,71,0.68)',
+    keywords: ['sensibio', 'sensible', 'réactive', 'reactive', 'rougeur', 'micellaire'], Icon: Heart,
+    bgStyle: { background: 'linear-gradient(135deg,#8f2747 0%,#ef8aa2 100%)' },
+  },
+  {
+    id: 'sebium', name: 'SEBIUM', label: 'Imperfections\n& brillance', tagline: 'Des soins ciblés pour purifier sans décaper.',
+    description: 'Sebium rassemble les soins conçus pour les peaux mixtes à grasses, les imperfections, les pores visibles et l’excès de sébum.',
+    molecules: ['Acide salicylique', 'Zinc', 'Niacinamide'], accent: '#60a33b', lightBg: '#f2faed', gradient: 'from-[#356a24] to-[#60a33b]', overlayColor: 'rgba(53,106,36,0.68)',
+    keywords: ['sebium', 'sébium', 'imperfection', 'acné', 'acne', 'purifiant', 'matifiant'], Icon: Zap,
+    bgStyle: { background: 'linear-gradient(135deg,#356a24 0%,#7bc85a 100%)' },
+  },
+  {
+    id: 'atoderm', name: 'ATODERM', label: 'Sécheresse\n& inconfort', tagline: 'Nourrir et protéger les peaux sèches à très sèches.',
+    description: 'Atoderm aide à restaurer le confort des peaux sèches, fragilisées ou à tendance atopique avec des textures nettoyantes et nourrissantes.',
+    molecules: ['Glycérine', 'Lipides', 'Vitamine PP'], accent: '#2076aa', lightBg: '#eef8ff', gradient: 'from-[#15527e] to-[#2076aa]', overlayColor: 'rgba(21,82,126,0.68)',
+    keywords: ['atoderm', 'sèche', 'seche', 'atopique', 'intensive', 'baume', 'huile de douche'], Icon: Droplets,
+    bgStyle: { background: 'linear-gradient(135deg,#15527e 0%,#4b9ed0 100%)' },
+  },
+  {
+    id: 'photoderm', name: 'PHOTODERM', label: 'Protection\nsolaire', tagline: 'Des textures adaptées pour protéger chaque type de peau.',
+    description: 'Photoderm regroupe les protections solaires BIODERMA pour le visage et le corps, avec des formules adaptées aux usages quotidiens.',
+    molecules: ['SPF 50+', 'Filtres UV', 'Cellular Bioprotection'], accent: '#e28a20', lightBg: '#fff8ea', gradient: 'from-[#9b5712] to-[#e28a20]', overlayColor: 'rgba(155,87,18,0.66)',
+    keywords: ['photoderm', 'solaire', 'spf', 'uv', 'sun'], Icon: Sun,
+    bgStyle: { background: 'linear-gradient(135deg,#9b5712 0%,#f1b14e 100%)' },
+  },
+  {
+    id: 'hydrabio', name: 'HYDRABIO', label: 'Hydratation\n& éclat', tagline: 'Réhydrater durablement les peaux déshydratées.',
+    description: 'Hydrabio propose des soins hydratants pensés pour soutenir le confort et l’éclat des peaux déshydratées.',
+    molecules: ['Aquagenium', 'Acide hyaluronique', 'Glycérine'], accent: '#1e9fbd', lightBg: '#edfafd', gradient: 'from-[#126b82] to-[#1e9fbd]', overlayColor: 'rgba(18,107,130,0.68)',
+    keywords: ['hydrabio', 'hydrat', 'déshydrat', 'deshydrat'], Icon: Sparkles,
+    bgStyle: { background: 'linear-gradient(135deg,#126b82 0%,#4ac1dc 100%)' },
+  },
+  {
+    id: 'cicabio', name: 'CICABIO', label: 'Réparation\ncutanée', tagline: 'Accompagner les peaux fragilisées et inconfortables.',
+    description: 'Cicabio rassemble les soins réparateurs conçus pour aider à apaiser et protéger les peaux fragilisées.',
+    molecules: ['Resvératrol', 'Cuivre', 'Centella asiatica'], accent: '#875da6', lightBg: '#f8f2fc', gradient: 'from-[#563774] to-[#875da6]', overlayColor: 'rgba(86,55,116,0.68)',
+    keywords: ['cicabio', 'cicatri', 'répar', 'repar', 'irrit'], Icon: ShieldCheck,
+    bgStyle: { background: 'linear-gradient(135deg,#563774 0%,#aa84c8 100%)' },
+  },
+];
+
+const EUCERIN_RANGES = [
+  {
+    id: 'aquaphor', name: 'AQUAPHOR', label: 'Réparation\n& confort', tagline: 'Apaiser et protéger les zones très sèches ou fragilisées.',
+    description: 'Aquaphor rassemble des soins protecteurs destinés aux zones très sèches, fragilisées ou soumises à des agressions quotidiennes.',
+    molecules: ['Panthénol', 'Glycérine', 'Bisabolol'], accent: '#b94a54', lightBg: '#fff3f2', gradient: 'from-[#7b2932] to-[#b94a54]', overlayColor: 'rgba(123,41,50,0.68)',
+    keywords: ['aquaphor', 'répar', 'repar', 'baume reparateur', 'baume réparateur', 'crevasse'], Icon: ShieldCheck,
+    bgStyle: { background: 'linear-gradient(135deg,#7b2932 0%,#dc7780 100%)' },
+  },
+  {
+    id: 'urearepair', name: 'UREAREPAIR', label: 'Sécheresse\n& rugosités', tagline: 'Réhydrater les peaux sèches à très sèches.',
+    description: 'UreaRepair accompagne les peaux sèches, rugueuses ou tiraillées avec des soins corps et pieds riches en urée.',
+    molecules: ['Urée', 'Céramides', 'NMF'], accent: '#2d6ba1', lightBg: '#eef7ff', gradient: 'from-[#184a78] to-[#2d6ba1]', overlayColor: 'rgba(24,74,120,0.68)',
+    keywords: ['urearepair', 'urea repair', 'urée', 'uree', 'rugos', 'peau sèche', 'peau seche'], Icon: Droplets,
+    bgStyle: { background: 'linear-gradient(135deg,#184a78 0%,#5d9ccc 100%)' },
+  },
+  {
+    id: 'dermopure', name: 'DERMOPURE', label: 'Imperfections\n& brillance', tagline: 'Purifier les peaux à imperfections sans les dessécher.',
+    description: 'DermoPure cible les imperfections, les marques post-acné, les pores visibles et l’excès de sébum avec des soins dédiés.',
+    molecules: ['Acide salicylique', 'Thiamidol', 'Licochalcone A'], accent: '#4f8e6e', lightBg: '#eff9f3', gradient: 'from-[#2f664c] to-[#4f8e6e]', overlayColor: 'rgba(47,102,76,0.68)',
+    keywords: ['dermopure', 'dermo pure', 'imperfection', 'acné', 'acne', 'oil control', 'anti marque', 'anti-marque'], Icon: Zap,
+    bgStyle: { background: 'linear-gradient(135deg,#2f664c 0%,#7bbe9a 100%)' },
+  },
+  {
+    id: 'sun', name: 'SUN PROTECTION', label: 'Protection\nsolaire', tagline: 'Une haute protection conçue pour les usages quotidiens.',
+    description: 'Les soins solaires EUCERIN proposent une protection UV élevée avec des textures adaptées au visage, au corps et aux besoins ciblés.',
+    molecules: ['SPF 50+', 'Filtres UVA/UVB', 'Licochalcone A'], accent: '#d47b21', lightBg: '#fff7ec', gradient: 'from-[#975116] to-[#d47b21]', overlayColor: 'rgba(151,81,22,0.66)',
+    keywords: ['sun protection', 'sun fluid', 'oil control sun', 'solaire', 'spf', 'uv'], Icon: Sun,
+    bgStyle: { background: 'linear-gradient(135deg,#975116 0%,#ecab57 100%)' },
+  },
+  {
+    id: 'anti-pigment', name: 'ANTI-PIGMENT', label: 'Taches\n& éclat', tagline: 'Cibler les taches pigmentaires et l’irrégularité du teint.',
+    description: 'Anti-Pigment réunit des soins dédiés aux taches brunes et à l’uniformité du teint, à intégrer à une routine avec protection solaire.',
+    molecules: ['Thiamidol', 'Acide hyaluronique', 'SPF 30'], accent: '#8a5e9f', lightBg: '#f8f2fb', gradient: 'from-[#58366e] to-[#8a5e9f]', overlayColor: 'rgba(88,54,110,0.68)',
+    keywords: ['anti pigment', 'anti-pigment', 'thiamidol', 'taches', 'tâches', 'pigment'], Icon: Sparkles,
+    bgStyle: { background: 'linear-gradient(135deg,#58366e 0%,#b38ac5 100%)' },
+  },
+  {
+    id: 'hyalu-filler', name: 'HYALURON-FILLER', label: 'Rides\n& fermeté', tagline: 'Prévenir et corriger les signes visibles de l’âge.',
+    description: 'Hyaluron-Filler accompagne les routines anti-âge avec des soins hydratants et repulpants adaptés aux besoins de fermeté.',
+    molecules: ['Acide hyaluronique', 'Arctiine', 'Saponine'], accent: '#ba6270', lightBg: '#fff3f5', gradient: 'from-[#7e3543] to-[#ba6270]', overlayColor: 'rgba(126,53,67,0.68)',
+    keywords: ['hyaluron filler', 'hyaluron-filler', 'anti age', 'anti-âge', 'rides', 'fermeté', 'fermete'], Icon: Heart,
+    bgStyle: { background: 'linear-gradient(135deg,#7e3543 0%,#de8d99 100%)' },
+  },
+];
+
 /* ─── Trust claims ───────────────────────────────────────────────── */
 const TRUST_CLAIMS = [
   {
@@ -264,6 +497,66 @@ const VICHY_TRUST_CLAIMS = [
     title: 'Routine lisible',
     body: 'Chaque fiche produit permet de vérifier le format, le prix, la disponibilité et les informations utiles avant l’achat.',
   },
+];
+
+const CERAVE_TRUST_CLAIMS = [
+  {
+    num: '01', Icon: ShieldCheck,
+    title: '3 céramides essentiels',
+    body: 'Les formules CeraVe associent trois céramides essentiels pour aider à maintenir et restaurer la barrière protectrice de la peau.',
+  },
+  {
+    num: '02', Icon: Microscope,
+    title: 'Développé avec des dermatologues',
+    body: 'La sélection est organisée par besoin et type de texture pour construire une routine quotidienne plus facile à comprendre.',
+  },
+  {
+    num: '03', Icon: Droplets,
+    title: 'Hydratation prolongée',
+    body: 'La technologie MVE diffuse progressivement les actifs hydratants afin d’accompagner le confort de la peau au fil de la journée.',
+  },
+  {
+    num: '04', Icon: Package,
+    title: 'Visage et corps',
+    body: 'Nettoyants, hydratants et soins ciblés couvrent les principales étapes d’une routine pour le visage, le corps et les mains.',
+  },
+];
+
+const AVENE_TRUST_CLAIMS = [
+  {
+    num: '01', Icon: Droplets,
+    title: 'Eau thermale apaisante',
+    body: 'L’Eau Thermale d’Avène constitue l’actif signature de la marque et accompagne de nombreux soins destinés aux peaux sensibles.',
+  },
+  {
+    num: '02', Icon: ShieldCheck,
+    title: 'Peaux sensibles au centre',
+    body: 'Les catégories couvrent la sensibilité, les rougeurs, la sécheresse, les imperfections et la protection solaire quotidienne.',
+  },
+  {
+    num: '03', Icon: FlaskConical,
+    title: 'Textures selon le besoin',
+    body: 'Crème, fluide, baume, huile, gel ou spray permettent de choisir une texture adaptée à la zone et au confort recherché.',
+  },
+  {
+    num: '04', Icon: Package,
+    title: 'Routine lisible',
+    body: 'Chaque fiche permet de vérifier le format, le mode d’utilisation, la disponibilité et les informations utiles avant l’achat.',
+  },
+];
+
+const BIODERMA_TRUST_CLAIMS = [
+  { num: '01', Icon: Microscope, title: 'Approche écobiologique', body: 'Bioderma développe des soins qui prennent en compte l’équilibre naturel de la peau et ses besoins spécifiques.' },
+  { num: '02', Icon: ShieldCheck, title: 'Tolérance au quotidien', body: 'Les gammes sont organisées par type de peau et par préoccupation pour choisir une formule plus facilement.' },
+  { num: '03', Icon: FlaskConical, title: 'Actifs selon le besoin', body: 'Hydratation, imperfections, sensibilité, réparation et protection solaire sont traitées par des gammes dédiées.' },
+  { num: '04', Icon: Package, title: 'Routine plus claire', body: 'Chaque fiche produit permet de vérifier le format, l’usage et les informations essentielles avant l’achat.' },
+];
+
+const EUCERIN_TRUST_CLAIMS = [
+  { num: '01', Icon: Microscope, title: 'Recherche dermatologique', body: 'EUCERIN organise ses soins autour de besoins cutanés précis, des imperfections aux taches pigmentaires.' },
+  { num: '02', Icon: ShieldCheck, title: 'Tolérance au quotidien', body: 'Les gammes sont pensées pour intégrer facilement des routines pour le visage, le corps et les zones fragilisées.' },
+  { num: '03', Icon: FlaskConical, title: 'Actifs ciblés', body: 'Urée, Thiamidol, acide hyaluronique ou actifs purifiants sont associés à des usages clairement identifiés.' },
+  { num: '04', Icon: Package, title: 'Routine lisible', body: 'Chaque fiche permet de vérifier le format, l’usage, le prix et la disponibilité avant de finaliser votre sélection.' },
 ];
 
 const LRP_CONFIG = {
@@ -360,6 +653,183 @@ const VICHY_CONFIG = {
   trustClaims: VICHY_TRUST_CLAIMS,
 };
 
+const CERAVE_CONFIG = {
+  name: 'CeraVe',
+  vendorToken: 'cerave',
+  apiVendor: 'CeraVe',
+  logo: '/images/brands/cerave.svg',
+  logoAlt: 'Logo CeraVe',
+  eyebrow: 'Développé avec des dermatologues',
+  origin: 'Soins pour le visage et le corps',
+  headline: 'Une barrière renforcée, une peau mieux hydratée.',
+  introduction: 'Nettoyez, hydratez et protégez votre peau avec des soins CeraVe classés par besoin et disponibles chez Para Officinal.',
+  metrics: [
+    ['3 céramides', 'essentiels dans les formules'],
+    ['6 catégories', 'organisées par besoin'],
+    ['Visage & corps', 'une routine complète'],
+  ],
+  heroImage: '/images/cerave_showcase_banner.webp',
+  heroAlt: 'Sélection de soins hydratants CeraVe dans un décor aquatique bleu',
+  heroCaption: 'Choisissez votre besoin, puis composez une routine CeraVe claire et cohérente.',
+  heroHighlights: [
+    { id: 'hydratation', range: 'Hydratation', detail: 'Visage & corps', image: '', accent: '#1677a5' },
+    { id: 'nettoyage', range: 'Nettoyage', detail: 'Toutes les peaux', image: '', accent: '#188f9d' },
+    { id: 'imperfections', range: 'Anti-imperfections', detail: 'Pores & brillance', image: '', accent: '#2c76b5' },
+  ],
+  footnote: 'Sélection et disponibilité mises à jour depuis le catalogue Para Officinal.',
+  rangeHeading: 'Une catégorie CeraVe pour chaque besoin essentiel.',
+  rangeIntro: 'Choisissez votre priorité pour afficher immédiatement les soins CeraVe correspondants disponibles en boutique.',
+  rangeImageDefaults: {} as Record<string, string>,
+  fallbackImage: '/images/cerave_showcase_banner.webp',
+  methodImage: '/images/cerave_showcase_banner.webp',
+  methodImageAlt: 'Sélection de soins hydratants CeraVe',
+  methodKicker: 'La méthode CeraVe',
+  methodHeading: 'Nettoyer, hydrater et protéger la barrière cutanée.',
+  methodCopy: 'Cette page classe le catalogue CeraVe par usage réel. Consultez chaque fiche pour vérifier la texture, les actifs, la fréquence d’utilisation et la compatibilité avec votre peau.',
+  methodCards: [
+    { icon: ShieldCheck, title: 'Barrière cutanée', body: 'Trois céramides essentiels au cœur des formules.' },
+    { icon: Droplets, title: 'Hydratation MVE', body: 'Une diffusion progressive pour prolonger le confort.' },
+    { icon: FlaskConical, title: 'Routine guidée', body: 'Des catégories claires pour associer les bons gestes.' },
+  ],
+  principlesCopy: 'Quatre repères pour parcourir l’offre CeraVe avec plus de clarté. Pour une affection persistante ou une peau très réactive, demandez conseil à un professionnel de santé.',
+  catalogLabel: 'Catalogue CeraVe',
+  ranges: CERAVE_RANGES,
+  trustClaims: CERAVE_TRUST_CLAIMS,
+};
+
+const AVENE_CONFIG = {
+  name: 'Avène',
+  vendorToken: 'avene',
+  apiVendor: 'Avene',
+  logo: '',
+  logoAlt: 'Logo Eau Thermale Avène',
+  eyebrow: 'Eau thermale, soins dermatologiques',
+  origin: 'Avène, France',
+  headline: 'Apaiser la peau, renforcer son équilibre.',
+  introduction: 'Explorez les soins Avène par besoin : imperfections, hydratation, réparation, sécheresse, sensibilité et protection solaire chez Para Officinal.',
+  metrics: [
+    ['Eau thermale', 'actif signature Avène'],
+    ['6 catégories', 'organisées par besoin'],
+    ['Visage & corps', 'une sélection complète'],
+  ],
+  heroImage: '/images/avene_brand_showcase.webp',
+  heroAlt: 'Sélection de soins Eau Thermale Avène dans un décor minéral apaisant',
+  heroCaption: 'Identifiez votre priorité, puis composez une routine Avène claire et adaptée.',
+  heroHighlights: [
+    { id: 'cleanance', range: 'Cleanance', detail: 'Imperfections', image: '', accent: '#4f8f78' },
+    { id: 'hydratation', range: 'Hydratation', detail: 'Confort & éclat', image: '', accent: '#c36f62' },
+    { id: 'cicalfate', range: 'Cicalfate+', detail: 'Réparation', image: '', accent: '#9a7658' },
+  ],
+  footnote: 'Sélection et disponibilité mises à jour depuis le catalogue Para Officinal.',
+  rangeHeading: 'Une catégorie Avène pour chaque priorité cutanée.',
+  rangeIntro: 'Choisissez votre besoin pour afficher immédiatement les soins Avène correspondants disponibles en boutique.',
+  rangeImageDefaults: {} as Record<string, string>,
+  fallbackImage: '/images/avene_brand_showcase.webp',
+  methodImage: '/images/avene_brand_showcase.webp',
+  methodImageAlt: 'Sélection de soins Eau Thermale Avène',
+  methodKicker: 'La méthode Avène',
+  methodHeading: 'Apaiser, protéger et accompagner les peaux sensibles.',
+  methodCopy: 'Cette page classe le catalogue Avène par besoin réel. Consultez chaque fiche pour vérifier la texture, la fréquence d’utilisation et les précautions adaptées à votre peau.',
+  methodCards: [
+    { icon: Droplets, title: 'Eau thermale', body: 'L’actif apaisant qui signe l’identité Avène.' },
+    { icon: ShieldCheck, title: 'Tolérance ciblée', body: 'Des textures organisées selon la sensibilité et la zone.' },
+    { icon: FlaskConical, title: 'Routine guidée', body: 'Six catégories pour associer les bons gestes.' },
+  ],
+  principlesCopy: 'Quatre repères pour parcourir l’offre Avène avec plus de clarté. Pour une affection persistante ou une peau très réactive, demandez conseil à un professionnel de santé.',
+  catalogLabel: 'Catalogue Avène',
+  ranges: AVENE_RANGES,
+  trustClaims: AVENE_TRUST_CLAIMS,
+  productFilter: isAveneCatalogProduct,
+};
+
+const BIODERMA_CONFIG = {
+  name: 'Bioderma',
+  vendorToken: 'bioderma',
+  apiVendor: 'Bioderma',
+  logo: '',
+  logoAlt: 'Bioderma',
+  eyebrow: 'Laboratoire dermatologique',
+  origin: 'Bioderma · France',
+  headline: 'Respecter la peau, accompagner ses besoins.',
+  introduction: 'Explorez la sélection BIODERMA par besoin cutané : peaux sensibles, imperfections, sécheresse, hydratation, réparation et protection solaire.',
+  metrics: [
+    ['6 gammes', 'classées par besoin'],
+    ['Peaux sensibles', 'au cœur de la sélection'],
+    ['Soins ciblés', 'visage & corps'],
+  ],
+  heroImage: '/images/bioderma_brand_showcase.webp',
+  heroAlt: 'Sélection de soins Bioderma dans un univers doux et lumineux',
+  heroCaption: 'Composez une routine BIODERMA cohérente, selon la priorité de votre peau.',
+  heroHighlights: [
+    { id: 'sensibio', range: 'Sensibio', detail: 'Peaux sensibles', image: '', accent: '#d94f72' },
+    { id: 'sebium', range: 'Sebium', detail: 'Imperfections', image: '', accent: '#60a33b' },
+    { id: 'atoderm', range: 'Atoderm', detail: 'Peaux sèches', image: '', accent: '#2076aa' },
+  ],
+  footnote: 'Sélection et disponibilité mises à jour depuis le catalogue Para Officinal.',
+  rangeHeading: 'Une gamme BIODERMA pour chaque priorité cutanée.',
+  rangeIntro: 'Choisissez votre besoin pour afficher immédiatement les soins BIODERMA correspondants disponibles en boutique.',
+  rangeImageDefaults: {} as Record<string, string>,
+  fallbackImage: '/images/bioderma_brand_showcase.webp',
+  methodImage: '/images/bioderma_brand_showcase.webp',
+  methodImageAlt: 'Sélection de soins Bioderma',
+  methodKicker: 'La méthode BIODERMA',
+  methodHeading: 'Des soins pensés autour de l’équilibre de la peau.',
+  methodCopy: 'Cette page organise le catalogue BIODERMA par besoin concret. Consultez chaque fiche pour vérifier la formule, la fréquence d’utilisation et les précautions adaptées à votre peau.',
+  methodCards: [
+    { icon: Microscope, title: 'Écobiologie', body: 'Une approche qui respecte l’écosystème cutané.' },
+    { icon: FlaskConical, title: 'Actifs ciblés', body: 'Des gammes dédiées à chaque priorité de peau.' },
+    { icon: ShieldCheck, title: 'Routine guidée', body: 'Une navigation par besoin pour mieux choisir.' },
+  ],
+  principlesCopy: 'Quatre repères pour parcourir l’offre BIODERMA avec clarté. Pour une affection persistante ou une peau très réactive, demandez conseil à un professionnel de santé.',
+  catalogLabel: 'Catalogue BIODERMA',
+  ranges: BIODERMA_RANGES,
+  trustClaims: BIODERMA_TRUST_CLAIMS,
+};
+
+const EUCERIN_CONFIG = {
+  name: 'Eucerin',
+  vendorToken: 'eucerin',
+  apiVendor: 'Eucerin',
+  logo: '',
+  logoAlt: 'Eucerin',
+  eyebrow: 'Expertise dermatologique',
+  origin: 'Eucerin · Allemagne',
+  headline: 'Des soins ciblés pour chaque besoin de peau.',
+  introduction: 'Explorez la sélection EUCERIN par besoin : sécheresse, imperfections, taches pigmentaires, signes de l’âge, réparation et protection solaire.',
+  metrics: [
+    ['6 gammes', 'classées par besoin'],
+    ['Peaux sensibles', 'au cœur de la sélection'],
+    ['Visage & corps', 'des routines ciblées'],
+  ],
+  heroImage: '/images/eucerin_brand_showcase.webp',
+  heroAlt: 'Sélection de soins Eucerin dans un univers dermatologique lumineux',
+  heroCaption: 'Choisissez une priorité, puis construisez une routine EUCERIN adaptée à votre peau.',
+  heroHighlights: [
+    { id: 'urearepair', range: 'UreaRepair', detail: 'Sécheresse intense', image: '', accent: '#2d6ba1' },
+    { id: 'dermopure', range: 'DermoPure', detail: 'Imperfections', image: '', accent: '#4f8e6e' },
+    { id: 'sun', range: 'Sun Protection', detail: 'Protection SPF', image: '', accent: '#d47b21' },
+  ],
+  footnote: 'Sélection et disponibilité mises à jour depuis le catalogue Para Officinal.',
+  rangeHeading: 'Une gamme EUCERIN pour chaque priorité cutanée.',
+  rangeIntro: 'Choisissez votre besoin pour afficher immédiatement les soins EUCERIN correspondants disponibles en boutique.',
+  rangeImageDefaults: {} as Record<string, string>,
+  fallbackImage: '/images/eucerin_brand_showcase.webp',
+  methodImage: '/images/eucerin_brand_showcase.webp',
+  methodImageAlt: 'Sélection de soins Eucerin',
+  methodKicker: 'La méthode EUCERIN',
+  methodHeading: 'Des soins dermatologiques organisés par besoin réel.',
+  methodCopy: 'Cette page organise le catalogue EUCERIN selon les principaux besoins de peau. Consultez chaque fiche pour vérifier les actifs, la texture, le mode d’emploi et les précautions adaptées.',
+  methodCards: [
+    { icon: Microscope, title: 'Recherche clinique', body: 'Des gammes structurées autour de besoins cutanés identifiés.' },
+    { icon: FlaskConical, title: 'Actifs précis', body: 'Des actifs ciblés selon la sécheresse, les taches ou les imperfections.' },
+    { icon: ShieldCheck, title: 'Routine guidée', body: 'Une navigation par besoin pour faire un choix plus clair.' },
+  ],
+  principlesCopy: 'Quatre repères pour parcourir l’offre EUCERIN avec clarté. Pour une affection persistante ou une peau très réactive, demandez conseil à un professionnel de santé.',
+  catalogLabel: 'Catalogue EUCERIN',
+  ranges: EUCERIN_RANGES,
+  trustClaims: EUCERIN_TRUST_CLAIMS,
+};
+
 const SORT_OPTIONS = [
   { value: 'popular',   label: 'Popularité'      },
   { value: 'price-asc', label: 'Prix croissant'   },
@@ -387,15 +857,30 @@ const firstImage = (p: Product): string => {
 };
 
 /* ─── Component ──────────────────────────────────────────────────── */
-export default function LaRochePosayCustomPage({ brand = 'la-roche-posay' }: { brand?: 'la-roche-posay' | 'vichy' }) {
+export default function LaRochePosayCustomPage({ brand = 'la-roche-posay' }: { brand?: 'la-roche-posay' | 'vichy' | 'cerave' | 'avene' | 'bioderma' | 'eucerin' }) {
   const { setDiagnosticOpen } = useUi();
-  const brandConfig = brand === 'vichy' ? VICHY_CONFIG : LRP_CONFIG;
+  const brandConfig = brand === 'eucerin'
+    ? EUCERIN_CONFIG
+    : brand === 'avene'
+      ? AVENE_CONFIG
+    : brand === 'bioderma'
+      ? BIODERMA_CONFIG
+      : brand === 'cerave'
+        ? CERAVE_CONFIG
+        : brand === 'vichy'
+          ? VICHY_CONFIG
+          : LRP_CONFIG;
   const ranges = brandConfig.ranges;
+  const brandProductFilter: ((product: Product) => boolean) | null = (
+    'productFilter' in brandConfig && typeof brandConfig.productFilter === 'function'
+      ? brandConfig.productFilter as (product: Product) => boolean
+      : null
+  );
 
   const seedProducts = useMemo(() => PRODUCTS_DB.filter((product) => {
     const vendor = product.vendor.toLocaleLowerCase().replace(/[^a-z0-9]/g, '');
-    return vendor.includes(brandConfig.vendorToken);
-  }), [brandConfig.vendorToken]);
+    return vendor.includes(brandConfig.vendorToken) && (!brandProductFilter || brandProductFilter(product));
+  }), [brandConfig.vendorToken, brandProductFilter]);
   const [products, setProducts]         = useState<Product[]>(seedProducts);
   const [loading, setLoading]           = useState(true);
   const [loadError, setLoadError]       = useState(false);
@@ -412,8 +897,15 @@ export default function LaRochePosayCustomPage({ brand = 'la-roche-posay' }: { b
       .then(d => {
         if (dead) return;
         if (d.success && Array.isArray(d.products) && d.products.length > 0) {
-          setProducts(d.products);
-          setLoadError(false);
+          const liveProducts = brandProductFilter
+            ? d.products.filter((product: Product) => brandProductFilter(product))
+            : d.products;
+          if (liveProducts.length > 0) {
+            setProducts(liveProducts);
+            setLoadError(false);
+          } else {
+            setLoadError(true);
+          }
         } else {
           setLoadError(true);
         }
@@ -421,7 +913,7 @@ export default function LaRochePosayCustomPage({ brand = 'la-roche-posay' }: { b
       .catch(() => { if (!dead) setLoadError(true); })
       .finally(() => { if (!dead) setLoading(false); });
     return () => { dead = true; };
-  }, [brandConfig.apiVendor]);
+  }, [brandConfig.apiVendor, brandProductFilter]);
 
   useEffect(() => {
     if (!mobileFilterOpen) return;
@@ -483,8 +975,12 @@ export default function LaRochePosayCustomPage({ brand = 'la-roche-posay' }: { b
             <div className="grid items-stretch gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:gap-10">
               <div className="flex flex-col justify-center py-4 lg:py-10">
                 <div className="mb-7 flex items-center gap-4">
-                  <span className="flex h-16 w-16 items-center justify-center border border-slate-200 bg-white shadow-[0_12px_34px_rgba(15,39,68,0.09)]">
-                    <Image src={brandConfig.logo} alt={brandConfig.logoAlt} width={52} height={52} className="h-12 w-12 object-contain" preload />
+                  <span className="flex h-16 w-16 items-center justify-center border border-slate-200 bg-white px-1 shadow-[0_12px_34px_rgba(15,39,68,0.09)]">
+                    {brandConfig.logo ? (
+                      <Image src={brandConfig.logo} alt={brandConfig.logoAlt} width={52} height={52} className="h-12 w-12 object-contain" preload />
+                    ) : (
+                      <span className="text-center text-[11px] font-black leading-none tracking-[-0.06em] text-[#3f4248]">{brandConfig.name}</span>
+                    )}
                   </span>
                   <div>
                     <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-[#0b75b9]">{brandConfig.eyebrow}</p>
@@ -556,7 +1052,7 @@ export default function LaRochePosayCustomPage({ brand = 'la-roche-posay' }: { b
         </section>
 
         {/* ══════════════════════════════════════════════════════════
-            §2. RANGES — NOS GAMMES PAR PRÉOCCUPATION (main upgrade)
+            §2. RANGES - NOS GAMMES PAR PRÉOCCUPATION (main upgrade)
         ══════════════════════════════════════════════════════════ */}
         <section id="ranges" className="relative overflow-hidden border-b border-[#dce9f1] bg-[#f4f8fb] py-20 lg:py-24">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_8%,rgba(14,165,233,0.09),transparent_28%),radial-gradient(circle_at_88%_34%,rgba(255,255,255,0.95),transparent_30%)]" />
@@ -697,7 +1193,7 @@ export default function LaRochePosayCustomPage({ brand = 'la-roche-posay' }: { b
               })}
             </div>
 
-            {/* Range detail panel — slides in when a range is selected */}
+            {/* Range detail panel, shown when a range is selected. */}
             {activeRangeObj && (
               <div
                 className="mt-4 rounded-2xl p-6 lg:p-8 flex flex-col sm:flex-row gap-6 items-start"
@@ -830,7 +1326,7 @@ export default function LaRochePosayCustomPage({ brand = 'la-roche-posay' }: { b
                 <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#0c79b8]">{brandConfig.catalogLabel}</p>
                 <h2 className="mt-3 text-balance text-3xl font-black tracking-[-0.035em] text-[#0d2442] sm:text-4xl">
                   {activeRangeObj ? activeRangeObj.name : 'Tous les soins'}
-                  {activeRangeObj && <span className="ml-2 font-medium" style={{ color: activeRangeObj.accent }}>— {activeRangeObj.label.replace('\n',' ')}</span>}
+                  {activeRangeObj && <span className="ml-2 font-medium" style={{ color: activeRangeObj.accent }}>- {activeRangeObj.label.replace('\n',' ')}</span>}
                 </h2>
                 <p className="mt-2 text-sm font-medium text-slate-500">{loading ? 'Mise à jour de la sélection…' : `${catalogProducts.length} produits disponibles`}</p>
                 {loadError && <p className="mt-2 text-xs font-semibold text-amber-700">Le catalogue en direct est momentanément indisponible. La sélection enregistrée reste consultable.</p>}

@@ -2,10 +2,10 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useTranslation } from '@/context/LanguageContext';
 import { ChevronLeft, ChevronRight, Award } from 'lucide-react';
 import { ProductCard } from './ProductCard';
-import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { useGalleryOverrides } from '@/lib/useGalleryOverrides';
 
 /* ─── Brand config ──────────────────────────────────────────────── */
@@ -175,7 +175,7 @@ function BrandRow({ brand, isAR }: { brand: (typeof BRANDS)[number]; isAR: boole
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [brand.vendorQuery]);
+  }, [brand.vendorQuery, brand.filterFn]);
 
   const scroll = (dir: 'left' | 'right') =>
     scrollRef.current?.scrollBy({ left: dir === 'left' ? -320 : 320, behavior: 'smooth' });
@@ -184,7 +184,11 @@ function BrandRow({ brand, isAR }: { brand: (typeof BRANDS)[number]; isAR: boole
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-10 items-stretch">
 
       {/* Brand card */}
-      <div className="relative overflow-hidden rounded-[28px] border border-slate-200/50 dark:border-white/10 shadow-xl min-h-[460px] lg:min-h-full group">
+      <Link
+        href={brand.href}
+        aria-label={isAR ? `اكتشف مجموعة ${brand.nameAr}` : `Découvrir la gamme ${brand.nameFr}`}
+        className="group relative block min-h-[460px] cursor-pointer overflow-hidden rounded-[28px] border border-slate-200/50 shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-500 dark:border-white/10 lg:min-h-full"
+      >
         <Image
           src={getDisplayImage(brand.image, `${brand.id}_showcase`, brand.image)}
           alt={isAR ? brand.nameAr : brand.nameFr}
@@ -204,16 +208,13 @@ function BrandRow({ brand, isAR }: { brand: (typeof BRANDS)[number]; isAR: boole
               {isAR ? brand.descAr : brand.descFr}
             </p>
             <div className="pt-2">
-              <a
-                href={brand.href}
-                className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-white text-slate-950 rounded-full text-xs font-bold shadow-md hover:bg-slate-100 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer"
-              >
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-5 py-2.5 text-xs font-bold text-slate-950 shadow-md transition-all duration-200 group-hover:scale-105 group-hover:bg-slate-100 group-active:scale-95">
                 {isAR ? 'اكتشف المجموعة' : 'Découvrir la gamme'}
-              </a>
+              </span>
             </div>
           </div>
         </div>
-      </div>
+      </Link>
 
       {/* Product carousel */}
       <div className="lg:col-span-2 flex flex-col">
