@@ -126,6 +126,99 @@ const RANGES = [
   },
 ];
 
+const VICHY_RANGES = [
+  {
+    id: 'normaderm',
+    name: 'NORMADERM',
+    label: 'Imperfections\n& Brillance',
+    tagline: 'Soins ciblés pour peaux grasses et à imperfections',
+    description: 'Normaderm réunit des soins nettoyants, hydratants et correcteurs pensés pour les imperfections, les pores visibles et l’excès de sébum.',
+    molecules: ['Acide Salicylique', 'BHA', 'Niacinamide'],
+    accent: '#2d8f78',
+    lightBg: '#edf8f5',
+    gradient: 'from-[#155e54] to-[#2d8f78]',
+    overlayColor: 'rgba(21,94,84,0.68)',
+    keywords: ['normaderm', 'anti acne', 'anti-acne'],
+    Icon: Zap,
+    bgStyle: { background: 'linear-gradient(135deg,#155e54 0%,#2d8f78 100%)' },
+  },
+  {
+    id: 'dercos',
+    name: 'DERCOS',
+    label: 'Cheveux\n& Cuir chevelu',
+    tagline: 'Protocoles ciblés contre la chute et les pellicules',
+    description: 'Dercos propose des protocoles capillaires ciblés pour la chute, les pellicules, le cuir chevelu sensible et la perte de densité.',
+    molecules: ['Aminexil', 'Sélénium DS', 'Niacinamide'],
+    accent: '#6d55a8',
+    lightBg: '#f4f1fb',
+    gradient: 'from-[#443475] to-[#7560ad]',
+    overlayColor: 'rgba(68,52,117,0.7)',
+    keywords: ['dercos', 'aminexil', 'neogenic', 'densi solution', 'densisol', 'kera solution'],
+    Icon: Leaf,
+    bgStyle: { background: 'linear-gradient(135deg,#443475 0%,#7560ad 100%)' },
+  },
+  {
+    id: 'solaire',
+    name: 'CAPITAL SOLEIL',
+    label: 'Protection\nSolaire',
+    tagline: 'Haute protection quotidienne visage et corps',
+    description: 'Capital Soleil rassemble des protections SPF élevées, des textures invisibles et des soins après-soleil pour différents usages.',
+    molecules: ['SPF 50+', 'Niacinamide', 'Filtres UV'],
+    accent: '#d98537',
+    lightBg: '#fff7ed',
+    gradient: 'from-[#9a4f16] to-[#d98537]',
+    overlayColor: 'rgba(154,79,22,0.66)',
+    keywords: ['ecran', 'écran', 'solaire', 'spf', 'capital soleil', 'uv age', 'apres soleil', 'après soleil'],
+    Icon: Sun,
+    bgStyle: { background: 'linear-gradient(135deg,#9a4f16 0%,#d98537 100%)' },
+  },
+  {
+    id: 'liftactiv',
+    name: 'LIFTACTIV',
+    label: 'Rides\n& Fermeté',
+    tagline: 'Correction des signes de l’âge et de la perte de fermeté',
+    description: 'Liftactiv cible les rides, la fermeté et l’éclat avec des actifs dermatologiques intégrés à une routine anti-âge progressive.',
+    molecules: ['Rétinol', 'Vitamine C', 'Peptides'],
+    accent: '#b64d61',
+    lightBg: '#fff1f4',
+    gradient: 'from-[#7f3042] to-[#b64d61]',
+    overlayColor: 'rgba(127,48,66,0.68)',
+    keywords: ['liftactiv', 'retinol', 'rétinol'],
+    Icon: Sparkles,
+    bgStyle: { background: 'linear-gradient(135deg,#7f3042 0%,#b64d61 100%)' },
+  },
+  {
+    id: 'purete',
+    name: 'PURETÉ THERMALE',
+    label: 'Nettoyage\n& Fraîcheur',
+    tagline: 'Démaquillage et nettoyage doux du visage',
+    description: 'Pureté Thermale accompagne le nettoyage quotidien avec des eaux micellaires, démaquillants et gels frais adaptés au visage.',
+    molecules: ['Eau volcanique', 'Glycérine', 'Minéraux'],
+    accent: '#2e8aa0',
+    lightBg: '#edf8fa',
+    gradient: 'from-[#145b6c] to-[#2e8aa0]',
+    overlayColor: 'rgba(20,91,108,0.68)',
+    keywords: ['demaquillant', 'démaquillant', 'micellaire', 'gel nettoyant fresh', 'gel nettoyant frais', 'eau thermale'],
+    Icon: Droplets,
+    bgStyle: { background: 'linear-gradient(135deg,#145b6c 0%,#2e8aa0 100%)' },
+  },
+  {
+    id: 'homme',
+    name: 'VICHY HOMME',
+    label: 'Soins\npour Homme',
+    tagline: 'Rasage, hydratation et protection au quotidien',
+    description: 'Vichy Homme regroupe des soins de rasage, d’hydratation et des déodorants conçus pour les besoins quotidiens de la peau masculine.',
+    molecules: ['Magnésium', 'Vitamine C', 'Minéraux'],
+    accent: '#315c7d',
+    lightBg: '#eef4f8',
+    gradient: 'from-[#1d3d56] to-[#315c7d]',
+    overlayColor: 'rgba(29,61,86,0.7)',
+    keywords: ['vichy homme', 'homme', 'rasage', 'deo ', 'déodorant'],
+    Icon: ShieldCheck,
+    bgStyle: { background: 'linear-gradient(135deg,#1d3d56 0%,#315c7d 100%)' },
+  },
+];
+
 /* ─── Trust claims ───────────────────────────────────────────────── */
 const TRUST_CLAIMS = [
   {
@@ -149,6 +242,123 @@ const TRUST_CLAIMS = [
     body: 'Les conseils d’application, la fréquence et les précautions restent accessibles sur chaque fiche pour aider à construire une routine cohérente.',
   },
 ];
+
+const VICHY_TRUST_CLAIMS = [
+  {
+    num: '01', Icon: Droplets,
+    title: 'Eau volcanique minéralisante',
+    body: 'L’eau volcanique de Vichy constitue la signature historique de la marque et accompagne plusieurs de ses formules de soin.',
+  },
+  {
+    num: '02', Icon: Microscope,
+    title: 'Approche dermatologique',
+    body: 'Les catégories sont organisées par besoin : imperfections, photoprotection, cuir chevelu, âge, nettoyage et soins pour homme.',
+  },
+  {
+    num: '03', Icon: FlaskConical,
+    title: 'Actifs ciblés',
+    body: 'Aminexil, BHA, rétinol, niacinamide ou filtres UV sont associés à des usages et des précautions spécifiques.',
+  },
+  {
+    num: '04', Icon: Package,
+    title: 'Routine lisible',
+    body: 'Chaque fiche produit permet de vérifier le format, le prix, la disponibilité et les informations utiles avant l’achat.',
+  },
+];
+
+const LRP_CONFIG = {
+  name: 'La Roche-Posay',
+  vendorToken: 'larocheposay',
+  apiVendor: 'La Roche-Posay',
+  logo: '/images/brands/laroche.svg',
+  logoAlt: 'Logo La Roche-Posay',
+  eyebrow: 'Laboratoire dermatologique',
+  origin: 'La Roche-Posay · France',
+  headline: 'Le soin précis pour chaque peau sensible.',
+  introduction: 'Explorez des routines ciblées pour les imperfections, la protection solaire, la réparation et l’hydratation, avec une sélection disponible chez Para Officinal.',
+  metrics: [
+    ['90 000+', 'dermatologues interrogés*'],
+    ['6 gammes', 'classées par besoin'],
+    ['Peaux sensibles', 'au cœur de la sélection'],
+  ],
+  heroImage: '/images/larochposay_brand_showcase.webp',
+  heroAlt: 'Sélection de soins La Roche-Posay présentée dans un décor clinique lumineux',
+  heroCaption: 'Construisez une routine simple, cohérente et adaptée à votre priorité.',
+  heroHighlights: [
+    { id: 'acne', range: 'Effaclar', detail: 'Imperfections', image: '/images/effaclar_hero_packshot.webp', accent: '#1688c6' },
+    { id: 'solaire', range: 'Anthelios', detail: 'Protection SPF50+', image: '/images/anthelios_hero_packshot.webp', accent: '#e77716' },
+    { id: 'cicatrisation', range: 'Cicaplast', detail: 'Réparation cutanée', image: '/images/cicaplast_hero_packshot.webp', accent: '#1889b7' },
+  ],
+  footnote: '*Étude déclarative internationale de recommandation dermatologique communiquée par la marque.',
+  rangeHeading: 'Une gamme claire pour chaque priorité cutanée.',
+  rangeIntro: 'Sélectionnez votre préoccupation pour filtrer immédiatement les soins adaptés disponibles en boutique.',
+  rangeImageDefaults: {
+    acne: '/images/effaclar_hero_packshot.webp',
+    solaire: '/images/anthelios_banner_card.webp',
+    cicatrisation: '/images/cicaplast_bundle.webp',
+  } as Record<string, string>,
+  fallbackImage: '/images/larochposay_brand_showcase.webp',
+  methodImage: '/images/effaclar_hero_packshot.webp',
+  methodImageAlt: 'Effaclar Duo+M La Roche-Posay',
+  methodKicker: 'La méthode La Roche-Posay',
+  methodHeading: 'Des formules ciblées, une routine lisible.',
+  methodCopy: 'Cette page organise la sélection par préoccupation et par gamme. Consultez la fiche de chaque produit pour vérifier la formule, le mode d’emploi et sa compatibilité avec votre peau.',
+  methodCards: [
+    { icon: FlaskConical, title: 'Actifs ciblés', body: 'Des formules organisées par besoin cutané.' },
+    { icon: ShieldCheck, title: 'Haute tolérance', body: 'Une sélection pensée pour les peaux sensibles.' },
+    { icon: Droplets, title: 'Eau thermale', body: 'L’actif signature au cœur de la marque.' },
+  ],
+  principlesCopy: 'Quatre principes pour naviguer plus facilement dans l’offre La Roche-Posay. Pour une affection persistante ou une peau très réactive, demandez conseil à un professionnel de santé.',
+  catalogLabel: 'Catalogue La Roche-Posay',
+  ranges: RANGES,
+  trustClaims: TRUST_CLAIMS,
+};
+
+const VICHY_CONFIG = {
+  name: 'Vichy',
+  vendorToken: 'vichy',
+  apiVendor: 'Vichy',
+  logo: '/images/brands/vichy.webp',
+  logoAlt: 'Logo Vichy Laboratoires',
+  eyebrow: 'Laboratoires dermatologiques',
+  origin: 'Vichy · France',
+  headline: 'La force des minéraux au service de votre peau.',
+  introduction: 'Explorez les soins Vichy par besoin : imperfections, cuir chevelu, protection solaire, signes de l’âge, nettoyage et soins pour homme.',
+  metrics: [
+    ['62 soins', 'dans le catalogue actuel'],
+    ['6 catégories', 'organisées par besoin'],
+    ['Eau volcanique', 'signature minérale Vichy'],
+  ],
+  heroImage: '/images/vichy_brand_showcase.webp',
+  heroAlt: 'Sélection de soins Vichy dans un univers minéral lumineux',
+  heroCaption: 'Choisissez une catégorie claire, puis composez une routine adaptée à votre besoin.',
+  heroHighlights: [
+    { id: 'normaderm', range: 'Normaderm', detail: 'Imperfections', image: '', accent: '#2d8f78' },
+    { id: 'dercos', range: 'Dercos', detail: 'Cheveux & cuir chevelu', image: '', accent: '#6d55a8' },
+    { id: 'solaire', range: 'Capital Soleil', detail: 'Protection SPF', image: '/images/vichy_sunscreen_bundle.webp', accent: '#d98537' },
+  ],
+  footnote: 'Sélection et disponibilité mises à jour depuis le catalogue Para Officinal.',
+  rangeHeading: 'Une catégorie Vichy pour chaque besoin essentiel.',
+  rangeIntro: 'Choisissez votre priorité pour afficher immédiatement les soins Vichy correspondants disponibles en boutique.',
+  rangeImageDefaults: {
+    solaire: '/images/vichy_sunscreen_bundle.webp',
+  } as Record<string, string>,
+  fallbackImage: '/images/vichy_brand_showcase.webp',
+  methodImage: '/images/vichy_sunscreen_bundle.webp',
+  methodImageAlt: 'Sélection Capital Soleil Vichy',
+  methodKicker: 'La méthode Vichy',
+  methodHeading: 'Des actifs ciblés, des catégories faciles à comprendre.',
+  methodCopy: 'Cette page classe le catalogue Vichy par usage réel. Consultez chaque fiche pour vérifier la formule, la fréquence d’utilisation et les précautions adaptées à votre peau ou à votre cuir chevelu.',
+  methodCards: [
+    { icon: Droplets, title: 'Source minérale', body: 'L’eau volcanique minéralisante au cœur de l’identité Vichy.' },
+    { icon: FlaskConical, title: 'Actifs précis', body: 'Des actifs associés à une préoccupation clairement identifiée.' },
+    { icon: ShieldCheck, title: 'Routine guidée', body: 'Une navigation par besoin pour éviter les associations incohérentes.' },
+  ],
+  principlesCopy: 'Quatre repères pour parcourir l’offre Vichy avec plus de clarté. Pour une affection persistante, une chute importante ou une peau très réactive, demandez conseil à un professionnel de santé.',
+  catalogLabel: 'Catalogue Vichy',
+  ranges: VICHY_RANGES,
+  trustClaims: VICHY_TRUST_CLAIMS,
+};
 
 const SORT_OPTIONS = [
   { value: 'popular',   label: 'Popularité'      },
@@ -177,13 +387,15 @@ const firstImage = (p: Product): string => {
 };
 
 /* ─── Component ──────────────────────────────────────────────────── */
-export default function LaRochePosayCustomPage() {
+export default function LaRochePosayCustomPage({ brand = 'la-roche-posay' }: { brand?: 'la-roche-posay' | 'vichy' }) {
   const { setDiagnosticOpen } = useUi();
+  const brandConfig = brand === 'vichy' ? VICHY_CONFIG : LRP_CONFIG;
+  const ranges = brandConfig.ranges;
 
   const seedProducts = useMemo(() => PRODUCTS_DB.filter((product) => {
     const vendor = product.vendor.toLocaleLowerCase().replace(/[^a-z0-9]/g, '');
-    return vendor.includes('larocheposay');
-  }), []);
+    return vendor.includes(brandConfig.vendorToken);
+  }), [brandConfig.vendorToken]);
   const [products, setProducts]         = useState<Product[]>(seedProducts);
   const [loading, setLoading]           = useState(true);
   const [loadError, setLoadError]       = useState(false);
@@ -192,10 +404,10 @@ export default function LaRochePosayCustomPage() {
   const [sortOption, setSortOption]     = useState('popular');
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
-  /* Fetch all LRP products */
+  /* Fetch the complete live catalogue for the selected brand. */
   useEffect(() => {
     let dead = false;
-    fetch('/api/products?vendor=La+Roche-Posay&limit=500')
+    fetch(`/api/products?vendor=${encodeURIComponent(brandConfig.apiVendor)}&limit=500`)
       .then(r => r.json())
       .then(d => {
         if (dead) return;
@@ -209,7 +421,7 @@ export default function LaRochePosayCustomPage() {
       .catch(() => { if (!dead) setLoadError(true); })
       .finally(() => { if (!dead) setLoading(false); });
     return () => { dead = true; };
-  }, []);
+  }, [brandConfig.apiVendor]);
 
   useEffect(() => {
     if (!mobileFilterOpen) return;
@@ -225,30 +437,26 @@ export default function LaRochePosayCustomPage() {
     };
   }, [mobileFilterOpen]);
 
-  /* Range card image — custom banner for Anthelios, fallback to first product image */
+  /* Category visuals use curated assets first, then the first matching live product. */
   const rangeImages = useMemo(() => {
-    const map: Record<string, string> = {
-      acne: '/images/effaclar_hero_packshot.webp',
-      solaire: '/images/anthelios_banner_card.webp',
-      cicatrisation: '/images/cicaplast_bundle.webp',
-    };
-    RANGES.forEach(rng => {
+    const map: Record<string, string> = { ...brandConfig.rangeImageDefaults };
+    ranges.forEach(rng => {
       if (!map[rng.id]) {
         const p = products.find(pr => matchByKeywords(pr, rng.keywords));
         if (p) map[rng.id] = firstImage(p);
       }
     });
     return map;
-  }, [products]);
+  }, [brandConfig.rangeImageDefaults, products, ranges]);
 
   /* Catalog (range-filtered or all) */
   const catalogProducts = useMemo(() => {
     let list = activeRange
-      ? products.filter(p => matchByKeywords(p, RANGES.find(r => r.id === activeRange)!.keywords))
+      ? products.filter(p => matchByKeywords(p, ranges.find(r => r.id === activeRange)!.keywords))
       : products;
     list = list.filter(p => p.price <= maxPrice);
     return sortProducts(list, sortOption);
-  }, [products, activeRange, maxPrice, sortOption]);
+  }, [products, activeRange, maxPrice, sortOption, ranges]);
 
   const selectRange = (id: string) => {
     const next = activeRange === id ? null : id;
@@ -256,7 +464,7 @@ export default function LaRochePosayCustomPage() {
     setTimeout(() => document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
   };
 
-  const activeRangeObj = RANGES.find(r => r.id === activeRange);
+  const activeRangeObj = ranges.find(r => r.id === activeRange);
 
   /* ── render ─────────────────────────────────────────────────── */
   return (
@@ -269,31 +477,31 @@ export default function LaRochePosayCustomPage() {
             <nav aria-label="Fil d’Ariane" className="mb-8 flex items-center gap-2 text-xs font-semibold text-slate-500">
               <Link href="/" className="rounded-sm transition-colors hover:text-[#0b75b9] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky-500">Accueil</Link>
               <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
-              <span className="text-slate-800">La Roche-Posay</span>
+              <span className="text-slate-800">{brandConfig.name}</span>
             </nav>
 
             <div className="grid items-stretch gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:gap-10">
               <div className="flex flex-col justify-center py-4 lg:py-10">
                 <div className="mb-7 flex items-center gap-4">
                   <span className="flex h-16 w-16 items-center justify-center border border-slate-200 bg-white shadow-[0_12px_34px_rgba(15,39,68,0.09)]">
-                    <Image src="/images/brands/laroche.svg" alt="Logo La Roche-Posay" width={52} height={52} className="h-12 w-12 object-contain" priority />
+                    <Image src={brandConfig.logo} alt={brandConfig.logoAlt} width={52} height={52} className="h-12 w-12 object-contain" preload />
                   </span>
                   <div>
-                    <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-[#0b75b9]">Laboratoire dermatologique</p>
-                    <p className="mt-1 text-sm font-medium text-slate-500">La Roche-Posay · France</p>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-[#0b75b9]">{brandConfig.eyebrow}</p>
+                    <p className="mt-1 text-sm font-medium text-slate-500">{brandConfig.origin}</p>
                   </div>
                 </div>
 
                 <h1 className="max-w-[720px] text-balance text-[clamp(2.65rem,6vw,5.4rem)] font-black leading-[0.94] tracking-[-0.055em] text-[#0d2442]">
-                  Le soin précis pour chaque peau sensible.
+                  {brandConfig.headline}
                 </h1>
                 <p className="mt-7 max-w-[58ch] text-pretty text-base font-medium leading-7 text-slate-600 sm:text-lg">
-                  Explorez des routines ciblées pour les imperfections, la protection solaire, la réparation et l’hydratation, avec une sélection disponible chez Para Officinal.
+                  {brandConfig.introduction}
                 </p>
 
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
                   <Link href="#ranges" className="group inline-flex min-h-14 items-center justify-between gap-6 rounded-[18px] bg-[#0c79b8] px-6 text-sm font-bold text-white shadow-[0_16px_30px_rgba(12,121,184,0.24)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#09689f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0c79b8] active:translate-y-0">
-                    Explorer les gammes
+                    Explorer les catégories
                     <span className="flex h-9 w-9 items-center justify-center rounded-full border border-white/25 bg-white/10 transition-transform duration-300 group-hover:translate-x-1">
                       <ArrowRight className="h-4 w-4" aria-hidden="true" />
                     </span>
@@ -305,29 +513,23 @@ export default function LaRochePosayCustomPage() {
                 </div>
 
                 <dl className="mt-9 grid max-w-xl grid-cols-3 border-y border-[#cfdfe9] py-5">
-                  <div className="pr-4">
-                    <dt className="text-xl font-black tabular-nums text-[#0d2442]">90 000+</dt>
-                    <dd className="mt-1 text-[11px] font-semibold leading-4 text-slate-500">dermatologues interrogés*</dd>
-                  </div>
-                  <div className="border-l border-[#cfdfe9] px-4">
-                    <dt className="text-xl font-black text-[#0d2442]">6 gammes</dt>
-                    <dd className="mt-1 text-[11px] font-semibold leading-4 text-slate-500">classées par besoin</dd>
-                  </div>
-                  <div className="border-l border-[#cfdfe9] pl-4">
-                    <dt className="text-xl font-black text-[#0d2442]">Peaux sensibles</dt>
-                    <dd className="mt-1 text-[11px] font-semibold leading-4 text-slate-500">au cœur de la sélection</dd>
-                  </div>
+                  {brandConfig.metrics.map(([value, label], index) => (
+                    <div key={value} className={index === 0 ? 'pr-4' : index === 1 ? 'border-l border-[#cfdfe9] px-4' : 'border-l border-[#cfdfe9] pl-4'}>
+                      <dt className="text-xl font-black tabular-nums text-[#0d2442]">{value}</dt>
+                      <dd className="mt-1 text-[11px] font-semibold leading-4 text-slate-500">{label}</dd>
+                    </div>
+                  ))}
                 </dl>
               </div>
 
               <div className="relative min-h-[480px] overflow-hidden rounded-[34px] bg-[#e8eef0] shadow-[0_30px_70px_rgba(15,39,68,0.16)] lg:min-h-[650px]">
-                <Image src="/images/larochposay_brand_showcase.webp" alt="Sélection de soins La Roche-Posay présentée dans un décor clinique lumineux" fill priority sizes="(max-width: 1024px) 100vw, 55vw" className="object-cover" />
+                <Image src={brandConfig.heroImage} alt={brandConfig.heroAlt} fill preload sizes="(max-width: 1024px) 100vw, 55vw" className="object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0b2742]/70 via-transparent to-white/5" />
                 <div className="absolute inset-x-5 bottom-5 rounded-[24px] border border-white/25 bg-[#0b2742]/78 p-5 text-white shadow-2xl backdrop-blur-xl sm:inset-x-7 sm:bottom-7 sm:p-6">
                   <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-sky-200">Sélection experte</p>
-                      <p className="mt-2 max-w-md text-xl font-bold leading-tight">Construisez une routine simple, cohérente et adaptée à votre priorité.</p>
+                      <p className="mt-2 max-w-md text-xl font-bold leading-tight">{brandConfig.heroCaption}</p>
                     </div>
                     <span className="inline-flex shrink-0 items-center gap-2 text-xs font-semibold text-slate-200"><ShieldCheck className="h-4 w-4 text-sky-300" /> Produits authentiques</span>
                   </div>
@@ -336,14 +538,10 @@ export default function LaRochePosayCustomPage() {
             </div>
 
             <div className="relative z-10 mt-7 grid gap-3 sm:grid-cols-3">
-              {[
-                { id: 'acne', range: 'Effaclar', detail: 'Imperfections', image: '/images/effaclar_hero_packshot.webp', accent: '#1688c6' },
-                { id: 'solaire', range: 'Anthelios', detail: 'Protection SPF50+', image: '/images/anthelios_hero_packshot.webp', accent: '#e77716' },
-                { id: 'cicatrisation', range: 'Cicaplast', detail: 'Réparation cutanée', image: '/images/cicaplast_hero_packshot.webp', accent: '#1889b7' },
-              ].map((item) => (
+              {brandConfig.heroHighlights.map((item) => (
                 <button key={item.id} type="button" onClick={() => selectRange(item.id)} className="group grid min-h-28 grid-cols-[76px_1fr_auto] items-center gap-4 rounded-[22px] border border-[#d7e4ec] bg-white p-3 text-left shadow-[0_12px_28px_rgba(15,39,68,0.07)] transition duration-300 hover:-translate-y-1 hover:border-[#94c7e2] hover:shadow-[0_18px_36px_rgba(15,39,68,0.12)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0c79b8] active:translate-y-0">
                   <span className="relative h-[76px] overflow-hidden rounded-[16px] bg-slate-50">
-                    <Image src={item.image} alt={`Produit ${item.range}`} fill sizes="76px" className="object-contain p-1 transition-transform duration-500 group-hover:scale-105" />
+                    <Image src={item.image || rangeImages[item.id] || brandConfig.fallbackImage} alt={`Produit ${item.range}`} fill sizes="76px" className="object-cover transition-transform duration-500 group-hover:scale-105" />
                   </span>
                   <span>
                     <span className="block text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: item.accent }}>{item.range}</span>
@@ -353,7 +551,7 @@ export default function LaRochePosayCustomPage() {
                 </button>
               ))}
             </div>
-            <p className="mt-4 text-[10px] leading-4 text-slate-400">*Étude déclarative internationale de recommandation dermatologique communiquée par la marque.</p>
+            <p className="mt-4 text-[10px] leading-4 text-slate-400">{brandConfig.footnote}</p>
           </div>
         </section>
 
@@ -368,9 +566,9 @@ export default function LaRochePosayCustomPage() {
               <div className="max-w-2xl">
                 <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#0c79b8]">Choisir selon votre besoin</p>
                 <h2 className="text-balance text-3xl font-black leading-tight tracking-[-0.035em] text-[#0d2442] lg:text-5xl">
-                  Une gamme claire pour chaque priorité cutanée.
+                  {brandConfig.rangeHeading}
                 </h2>
-                <p className="mt-4 max-w-[58ch] text-sm font-medium leading-6 text-slate-500 sm:text-base">Sélectionnez votre préoccupation pour filtrer immédiatement les soins adaptés disponibles en boutique.</p>
+                <p className="mt-4 max-w-[58ch] text-sm font-medium leading-6 text-slate-500 sm:text-base">{brandConfig.rangeIntro}</p>
               </div>
               {activeRange && (
                 <button onClick={() => setActiveRange(null)}
@@ -381,7 +579,7 @@ export default function LaRochePosayCustomPage() {
             </div>
 
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-12 lg:gap-6">
-              {RANGES.map((rng, index) => {
+              {ranges.map((rng, index) => {
                 const img = rangeImages[rng.id];
                 const isActive = activeRange === rng.id;
                 const count = products.filter(p => matchByKeywords(p, rng.keywords)).length;
@@ -397,7 +595,7 @@ export default function LaRochePosayCustomPage() {
                     key={rng.id}
                     onClick={() => selectRange(rng.id)}
                     aria-pressed={isActive}
-                    aria-label={`${isActive ? 'Retirer le filtre' : 'Filtrer par la gamme'} ${rng.name}`}
+                    aria-label={`${isActive ? 'Retirer le filtre' : 'Filtrer par la catégorie'} ${rng.name}`}
                     className={`group relative isolate flex min-h-[390px] flex-col overflow-hidden rounded-[30px] border p-0 text-left shadow-[0_18px_45px_rgba(21,60,91,0.08)] transition-[transform,box-shadow,border-color] duration-500 ease-out hover:-translate-y-1.5 hover:shadow-[0_30px_70px_rgba(21,60,91,0.17)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0c79b8] active:translate-y-0 sm:min-h-[420px] ${spanClass}`}
                     style={{
                       borderColor: isActive ? rng.accent : 'rgba(187, 208, 220, 0.72)',
@@ -457,7 +655,7 @@ export default function LaRochePosayCustomPage() {
                           alt={rng.label}
                           fill
                           sizes={isFeature ? '(max-width: 1024px) 100vw, 52vw' : '(max-width: 1024px) 50vw, 25vw'}
-                          onError={(event) => { event.currentTarget.src = '/images/larochposay_brand_showcase.webp'; }}
+                          onError={(event) => { event.currentTarget.src = brandConfig.fallbackImage; }}
                           className="h-full w-full object-cover object-center transition duration-700 ease-out group-hover:scale-[1.06]"
                         />
                       ) : (
@@ -543,21 +741,17 @@ export default function LaRochePosayCustomPage() {
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(14,165,233,0.18),transparent_30%),radial-gradient(circle_at_85%_80%,rgba(42,106,153,0.2),transparent_32%)]" />
           <div className="relative mx-auto grid max-w-[1360px] gap-8 px-5 sm:px-8 lg:grid-cols-[0.8fr_1.2fr] lg:px-12">
             <div className="relative min-h-[420px] overflow-hidden rounded-[30px] bg-white">
-              <Image src="/images/effaclar_hero_packshot.webp" alt="Effaclar Duo+M La Roche-Posay" fill sizes="(max-width: 1024px) 100vw, 40vw" className="object-contain p-10" />
+              <Image src={brandConfig.methodImage} alt={brandConfig.methodImageAlt} fill sizes="(max-width: 1024px) 100vw, 40vw" className="object-contain p-10" />
               <span className="absolute left-5 top-5 border border-sky-200 bg-sky-50 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[#0c79b8]">Soin emblématique</span>
             </div>
 
             <div className="flex flex-col justify-center">
-              <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] text-sky-300"><Microscope className="h-4 w-4" /> La méthode La Roche-Posay</p>
-              <h2 className="mt-4 max-w-2xl text-balance text-3xl font-black leading-tight tracking-[-0.04em] sm:text-5xl">Des formules ciblées, une routine lisible.</h2>
-              <p className="mt-5 max-w-[62ch] text-sm font-medium leading-7 text-slate-300 sm:text-base">Cette page organise la sélection par préoccupation et par gamme. Consultez la fiche de chaque produit pour vérifier la formule, le mode d’emploi et sa compatibilité avec votre peau.</p>
+              <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] text-sky-300"><Microscope className="h-4 w-4" /> {brandConfig.methodKicker}</p>
+              <h2 className="mt-4 max-w-2xl text-balance text-3xl font-black leading-tight tracking-[-0.04em] sm:text-5xl">{brandConfig.methodHeading}</h2>
+              <p className="mt-5 max-w-[62ch] text-sm font-medium leading-7 text-slate-300 sm:text-base">{brandConfig.methodCopy}</p>
 
               <div className="mt-9 grid gap-px overflow-hidden rounded-[24px] border border-white/10 bg-white/10 sm:grid-cols-3">
-                {[
-                  { icon: FlaskConical, title: 'Actifs ciblés', body: 'Des formules organisées par besoin cutané.' },
-                  { icon: ShieldCheck, title: 'Haute tolérance', body: 'Une sélection pensée pour les peaux sensibles.' },
-                  { icon: Droplets, title: 'Eau thermale', body: 'L’actif signature au cœur de la marque.' },
-                ].map((item) => {
+                {brandConfig.methodCards.map((item) => {
                   const Icon = item.icon;
                   return (
                     <article key={item.title} className="bg-[#0e2946] p-5 transition-colors duration-300 hover:bg-[#123452]">
@@ -589,12 +783,12 @@ export default function LaRochePosayCustomPage() {
                 </h2>
               </div>
               <p className="max-w-[68ch] text-sm font-medium leading-7 text-slate-500 lg:justify-self-end">
-                Quatre principes pour naviguer plus facilement dans l’offre La Roche-Posay. Pour une affection persistante ou une peau très réactive, demandez conseil à un professionnel de santé.
+                {brandConfig.principlesCopy}
               </p>
             </div>
 
             <div className="grid grid-cols-1 overflow-hidden rounded-[28px] border border-[#dce7ed] bg-[#dce7ed] gap-px sm:grid-cols-2 lg:grid-cols-4">
-              {TRUST_CLAIMS.map((c, i) => {
+              {brandConfig.trustClaims.map((c, i) => {
                 const Icon = c.Icon;
                 return (
                   <article
@@ -633,7 +827,7 @@ export default function LaRochePosayCustomPage() {
           <div className="mx-auto max-w-[1360px] px-5 sm:px-8 lg:px-12">
             <div className="mb-9 flex flex-col gap-5 border-b border-slate-200 pb-7 sm:flex-row sm:items-end sm:justify-between">
               <div className="max-w-2xl">
-                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#0c79b8]">Catalogue La Roche-Posay</p>
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#0c79b8]">{brandConfig.catalogLabel}</p>
                 <h2 className="mt-3 text-balance text-3xl font-black tracking-[-0.035em] text-[#0d2442] sm:text-4xl">
                   {activeRangeObj ? activeRangeObj.name : 'Tous les soins'}
                   {activeRangeObj && <span className="ml-2 font-medium" style={{ color: activeRangeObj.accent }}>— {activeRangeObj.label.replace('\n',' ')}</span>}
@@ -680,7 +874,7 @@ export default function LaRochePosayCustomPage() {
                     <span>Toutes</span>
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-400">{products.length}</span>
                   </button>
-                  {RANGES.map(rng => {
+                  {ranges.map(rng => {
                     const cnt = products.filter(p => matchByKeywords(p, rng.keywords)).length;
                     if (!cnt) return null;
                     const isA = activeRange === rng.id;
@@ -753,7 +947,7 @@ export default function LaRochePosayCustomPage() {
                 <div className="space-y-1.5">
                   <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Catégories</h3>
                   {[{ id: null as string | null, name: 'Toutes', count: products.length },
-                    ...RANGES.map(r => ({ id: r.id, name: r.name, count: products.filter(p => matchByKeywords(p, r.keywords)).length }))
+                    ...ranges.map(r => ({ id: r.id, name: r.name, count: products.filter(p => matchByKeywords(p, r.keywords)).length }))
                   ].filter(x => x.count > 0).map(item => (
                     <button key={String(item.id)}
                       onClick={() => { setActiveRange(item.id); setMobileFilterOpen(false); }}

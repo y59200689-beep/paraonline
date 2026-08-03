@@ -18,7 +18,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const name = brand?.name || slug.split('-').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
   const description = slug === 'la-roche-posay'
     ? 'Découvrez les gammes La Roche-Posay par préoccupation et trouvez les soins disponibles chez Para Officinal au Maroc.'
-    : brand?.descriptionFr || `Découvrez les produits ${name} disponibles chez Para Officinal.`;
+    : slug === 'vichy'
+      ? 'Découvrez les soins Vichy par catégorie : Normaderm, Dercos, Capital Soleil, Liftactiv, Pureté Thermale et Vichy Homme, disponibles au Maroc.'
+      : brand?.descriptionFr || `Découvrez les produits ${name} disponibles chez Para Officinal.`;
 
   return {
     title: name,
@@ -27,7 +29,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     openGraph: {
       title: `${name} — soins disponibles au Maroc`,
       description,
-      images: slug === 'la-roche-posay' ? ['/images/larochposay_brand_showcase.webp'] : undefined,
+      images: slug === 'la-roche-posay'
+        ? ['/images/larochposay_brand_showcase.webp']
+        : slug === 'vichy'
+          ? ['/images/vichy_brand_showcase.webp']
+          : undefined,
     },
   };
 }
@@ -38,6 +44,9 @@ export default async function BrandPage({ params }: { params: Promise<{ slug: st
   // ── Custom branded pages ──────────────────────────────────────────────
   if (slug === 'la-roche-posay') {
     return <LaRochePosayCustomPage />;
+  }
+  if (slug === 'vichy') {
+    return <LaRochePosayCustomPage brand="vichy" />;
   }
 
   // ── Generic brand page ────────────────────────────────────────────────
