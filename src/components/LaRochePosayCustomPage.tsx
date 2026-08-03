@@ -360,9 +360,11 @@ export default function LaRochePosayCustomPage() {
         {/* ══════════════════════════════════════════════════════════
             §2. RANGES — NOS GAMMES PAR PRÉOCCUPATION (main upgrade)
         ══════════════════════════════════════════════════════════ */}
-        <section id="ranges" className="border-b border-slate-100 bg-white py-20">
-          <div className="mx-auto max-w-[1360px] px-5 sm:px-8 lg:px-12">
-            <div className="mb-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+        <section id="ranges" className="relative overflow-hidden border-b border-[#dce9f1] bg-[#f4f8fb] py-20 lg:py-24">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_8%,rgba(14,165,233,0.09),transparent_28%),radial-gradient(circle_at_88%_34%,rgba(255,255,255,0.95),transparent_30%)]" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#9acde7] to-transparent" />
+          <div className="relative mx-auto max-w-[1360px] px-5 sm:px-8 lg:px-12">
+            <div className="mb-12 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between lg:mb-14">
               <div className="max-w-2xl">
                 <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#0c79b8]">Choisir selon votre besoin</p>
                 <h2 className="text-balance text-3xl font-black leading-tight tracking-[-0.035em] text-[#0d2442] lg:text-5xl">
@@ -378,93 +380,120 @@ export default function LaRochePosayCustomPage() {
               )}
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-12">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-12 lg:gap-6">
               {RANGES.map((rng, index) => {
                 const img = rangeImages[rng.id];
                 const isActive = activeRange === rng.id;
                 const count = products.filter(p => matchByKeywords(p, rng.keywords)).length;
                 const RngIcon = rng.Icon;
+                const isFeature = index < 2;
+                const spanClass = index === 0
+                  ? 'lg:col-span-7'
+                  : index === 1
+                    ? 'lg:col-span-5'
+                    : 'lg:col-span-3';
                 return (
                   <button
                     key={rng.id}
                     onClick={() => selectRange(rng.id)}
-                    className={`group relative flex min-h-[380px] flex-col justify-between overflow-hidden rounded-[26px] border bg-[#f8fafb] p-5 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_50px_rgba(15,39,68,0.12)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0c79b8] active:translate-y-0 ${index < 2 ? 'lg:col-span-6' : 'lg:col-span-3'}`}
+                    aria-pressed={isActive}
+                    aria-label={`${isActive ? 'Retirer le filtre' : 'Filtrer par la gamme'} ${rng.name}`}
+                    className={`group relative isolate flex min-h-[390px] flex-col overflow-hidden rounded-[30px] border p-0 text-left shadow-[0_18px_45px_rgba(21,60,91,0.08)] transition-[transform,box-shadow,border-color] duration-500 ease-out hover:-translate-y-1.5 hover:shadow-[0_30px_70px_rgba(21,60,91,0.17)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0c79b8] active:translate-y-0 sm:min-h-[420px] ${spanClass}`}
                     style={{
-                      borderColor: isActive ? rng.accent : '#e2e8f0',
-                      boxShadow: isActive ? `0 10px 30px ${rng.accent}20` : undefined,
+                      borderColor: isActive ? rng.accent : 'rgba(187, 208, 220, 0.72)',
+                      background: `linear-gradient(145deg, #ffffff 0%, ${rng.lightBg} 100%)`,
+                      boxShadow: isActive
+                        ? `0 26px 60px ${rng.accent}26, inset 0 0 0 1px ${rng.accent}38`
+                        : undefined,
                     }}
                   >
-                    {/* Top Header Row */}
-                    <div className="flex items-center justify-between mb-3 w-full">
+                    <span
+                      className="absolute inset-x-0 top-0 z-20 h-1 origin-left scale-x-0 transition-transform duration-500 group-hover:scale-x-100"
+                      style={{ background: rng.accent }}
+                    />
+                    <span
+                      className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full opacity-30 blur-3xl transition duration-700 group-hover:scale-125 group-hover:opacity-45"
+                      style={{ background: rng.accent }}
+                    />
+                    <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.68),transparent_42%,rgba(255,255,255,0.18))]" />
+                    <span
+                      className="pointer-events-none absolute -right-2 top-14 select-none text-[5.2rem] font-black leading-none tracking-[-0.08em] opacity-[0.035] transition-transform duration-700 group-hover:-translate-x-2 sm:text-[6.5rem]"
+                      style={{ color: rng.accent }}
+                      aria-hidden="true"
+                    >
+                      {rng.name}
+                    </span>
+
+                    <div className="relative z-10 flex w-full items-center justify-between px-5 pb-2 pt-5 sm:px-6 sm:pt-6">
                       <span
-                        className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border"
+                        className="inline-flex items-center gap-2 rounded-full border bg-white/75 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] shadow-[0_8px_24px_rgba(15,39,68,0.06)] backdrop-blur-md"
                         style={{
-                          background: `${rng.accent}12`,
                           color: rng.accent,
                           borderColor: `${rng.accent}30`,
                         }}
                       >
-                        <RngIcon className="w-3.5 h-3.5" />
+                        <RngIcon className="h-3.5 w-3.5" aria-hidden="true" />
                         {rng.name}
                       </span>
-                      
+
                       {isActive ? (
-                        <span className="w-6 h-6 rounded-full flex items-center justify-center text-white" style={{ background: rng.accent }}>
-                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        <span className="flex h-9 items-center gap-2 rounded-full px-3 text-[10px] font-black uppercase tracking-[0.12em] text-white shadow-lg" style={{ background: rng.accent }}>
+                          <Check className="h-3.5 w-3.5 stroke-[3]" aria-hidden="true" />
+                          Sélectionnée
                         </span>
                       ) : (
-                        <span className="text-[10px] font-mono font-bold text-slate-400">
-                          {count} produits
+                        <span className="font-mono text-[10px] font-bold tabular-nums text-slate-500">
+                          {String(count).padStart(2, '0')} soins
                         </span>
                       )}
                     </div>
 
-                    {/* Centered Product Image Container with 4-directional Margins */}
-                    <div className={`relative my-3 flex w-full items-center justify-center overflow-hidden rounded-[20px] border border-white bg-white p-3 shadow-[inset_0_0_0_1px_rgba(148,163,184,0.08)] transition-colors duration-300 ${index < 2 ? 'h-56' : 'h-48'}`}>
+                    <div className={`relative z-[1] mx-5 mt-2 overflow-hidden rounded-[24px] border border-white/80 bg-white/58 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_18px_45px_rgba(20,66,96,0.08)] backdrop-blur-sm sm:mx-6 ${isFeature ? 'h-[210px] sm:h-[230px]' : 'h-[205px]'}`}>
+                      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(255,255,255,0.98),rgba(255,255,255,0.2)_62%,transparent_80%)]" />
+                      <span className="pointer-events-none absolute bottom-4 left-1/2 h-5 w-32 -translate-x-1/2 rounded-full bg-slate-700/10 blur-xl transition duration-500 group-hover:w-40" />
                       {img ? (
                         <Image
                           src={img}
                           alt={rng.label}
                           fill
-                          sizes={index < 2 ? '(max-width: 1024px) 100vw, 50vw' : '(max-width: 1024px) 50vw, 25vw'}
+                          sizes={isFeature ? '(max-width: 1024px) 100vw, 52vw' : '(max-width: 1024px) 50vw, 25vw'}
                           onError={(event) => { event.currentTarget.src = '/images/larochposay_brand_showcase.webp'; }}
                           className={rng.id === 'solaire'
-                            ? "h-full w-full rounded-xl object-cover transition-transform duration-500 group-hover:scale-105"
-                            : "object-contain p-6 drop-shadow-md transition-transform duration-500 group-hover:scale-105"}
+                            ? "h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.06]"
+                            : "object-contain p-5 drop-shadow-[0_22px_18px_rgba(15,39,68,0.18)] transition duration-700 ease-out group-hover:-translate-y-2 group-hover:scale-[1.07] sm:p-6"}
                         />
                       ) : (
-                        <div className="w-20 h-28 rounded-xl flex items-center justify-center" style={{ background: rng.accent }}>
-                          <span className="text-[9px] font-black text-white text-center">{rng.name}</span>
+                        <div className="absolute left-1/2 top-1/2 flex h-32 w-24 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-2xl shadow-xl" style={{ background: rng.accent }}>
+                          <span className="text-center text-[9px] font-black text-white">{rng.name}</span>
                         </div>
                       )}
                     </div>
 
-                    {/* Bottom Details (Dark readable typography on White) */}
-                    <div className="mt-2 space-y-2">
-                      <h3 className="whitespace-pre-line text-xl font-black leading-tight tracking-[-0.025em] text-[#0d2442] transition-colors group-hover:text-[#0c79b8]">
-                        {rng.label}
-                      </h3>
-                      
-                      <p className="line-clamp-2 text-xs font-medium leading-relaxed text-slate-500">
-                        {rng.tagline}
-                      </p>
-
-                      {/* Molecule Badges */}
-                      <div className="flex items-center justify-between pt-1">
-                        <div className="flex gap-1.5 flex-wrap">
-                          {rng.molecules.slice(0, 2).map(m => (
-                            <span
-                              key={m}
-                              className="text-[9px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/60"
-                            >
-                              {m}
-                            </span>
-                          ))}
+                    <div className="relative z-10 flex flex-1 flex-col px-5 pb-5 pt-5 sm:px-6 sm:pb-6">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Priorité cutanée</p>
+                          <h3 className={`whitespace-pre-line font-black leading-[1.02] tracking-[-0.035em] text-[#0d2442] transition-colors duration-300 group-hover:text-[#0c79b8] ${isFeature ? 'text-2xl sm:text-[1.7rem]' : 'text-[1.35rem]'}`}>
+                            {rng.label}
+                          </h3>
                         </div>
-
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-[#0c79b8] shadow-sm transition group-hover:bg-[#0c79b8] group-hover:text-white">
-                          <ArrowRight className="h-3.5 w-3.5" />
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white bg-white/85 text-[#0d2442] shadow-[0_10px_24px_rgba(15,39,68,0.1)] transition duration-500 group-hover:translate-x-1 group-hover:bg-[#0c79b8] group-hover:text-white">
+                          <ArrowRight className="h-4 w-4 transition-transform duration-500 group-hover:translate-x-0.5" aria-hidden="true" />
                         </span>
+                      </div>
+
+                      <p className="mt-3 line-clamp-2 text-xs font-medium leading-relaxed text-slate-500">{rng.tagline}</p>
+
+                      <div className="mt-auto flex flex-wrap gap-1.5 pt-4">
+                        {rng.molecules.slice(0, isFeature ? 3 : 2).map((m, moleculeIndex) => (
+                          <span
+                            key={m}
+                            className="rounded-full border border-white/90 bg-white/70 px-2.5 py-1 text-[9px] font-bold text-slate-600 shadow-[0_4px_14px_rgba(15,39,68,0.05)] backdrop-blur-sm transition duration-300 group-hover:-translate-y-0.5"
+                            style={{ transitionDelay: `${moleculeIndex * 45}ms` }}
+                          >
+                            {m}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   </button>
