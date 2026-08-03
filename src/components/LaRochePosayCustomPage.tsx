@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ShopShell } from '@/components/ShopShell';
 import { ProductCard } from '@/components/ProductCard';
-import { Product } from '@/lib/data';
+import { Product, PRODUCTS_DB } from '@/lib/data';
 import { useUi } from '@/context/UiContext';
 import {
   Search,
@@ -16,10 +17,8 @@ import {
   FlaskConical,
   Microscope,
   Package,
-  Loader2,
   Check,
-  Star,
-  ChevronLeft,
+  ArrowRight,
   Sparkles,
   Droplets,
   Sun,
@@ -31,8 +30,6 @@ import {
 /* ─── Brand palette ───────────────────────────────────────────────── */
 const LRP_BLUE  = '#0ea5e9';
 const LRP_DARK  = '#1a2744';
-const LRP_NAVY  = '#0f172a';
-const LRP_CREAM = '#fdf8f2';
 
 /* ─── Sub-category definitions (the main upgrade) ───────────────── */
 const RANGES = [
@@ -129,72 +126,28 @@ const RANGES = [
   },
 ];
 
-/* ─── Active ingredients (new section) ──────────────────────────── */
-const ACTIFS = [
-  {
-    id: 'niacinamide',
-    name: 'Niacinamide',
-    desc: 'Réduit les pores dilatés, unifie le teint et régule la production de sébum. Cet actif polyvalent agit sur les taches brunes et l\'éclat.',
-    keywords: ['niacinamide','mela','effaclar','toleriane'],
-  },
-  {
-    id: 'salicylic',
-    name: 'Ac. Salicylique',
-    desc: 'Exfoliant BHA qui pénètre dans les pores pour les désobstruer, éliminer les comédons et prévenir les récidives d\'imperfections.',
-    keywords: ['effaclar','salicylique','acide','imperfection'],
-  },
-  {
-    id: 'hyaluronic',
-    name: 'Ac. Hyaluronique',
-    desc: 'Hydratant puissant qui attire et retient l\'eau dans les couches profondes de la peau, pour un effet repulpant et lissant immédiat.',
-    keywords: ['hydraphase','hyalu','sérum','hydra'],
-  },
-  {
-    id: 'vitaminC',
-    name: 'Vitamine C Pure',
-    desc: 'Antioxydant clinique qui neutralise les radicaux libres, stimule le collagène et révèle un éclat naturel dès les premières applications.',
-    keywords: ['pure vitamin','vitamine c','sérum','redermic'],
-  },
-  {
-    id: 'retinol',
-    name: 'Rétinol',
-    desc: 'Dérivé de vitamine A qui accélère le renouvellement cellulaire, lisse les rides profondes et améliore la texture de la peau.',
-    keywords: ['retinol','redermic','anti-age','sérum'],
-  },
-];
-
 /* ─── Trust claims ───────────────────────────────────────────────── */
 const TRUST_CLAIMS = [
   {
     num: '01', Icon: ShieldCheck,
-    title: 'TOUS LES PRODUITS SONT HYPOALLERGÉNIQUES.',
-    body: 'Nos formules sont élaborées sans conservateurs ou parfums allergisants potentiels. Chaque produit fait l\'objet de tests dermatologiques rigoureux pour garantir une tolérance maximale.',
+    title: 'Tolérance au centre',
+    body: 'La marque développe des soins destinés notamment aux peaux sensibles et réactives. Vérifiez toujours les indications de la fiche produit.',
   },
   {
     num: '02', Icon: Microscope,
-    title: 'TESTÉS SUR DES PEAUX TRÈS SENSIBLES.',
-    body: 'Les produits font l\'objet d\'essais cliniques approfondis sur un panel de sujets ayant une peau sensible, réactive ou atopique pour confirmer leur efficacité.',
+    title: 'Évaluation dermatologique',
+    body: 'Les formules sont développées dans une démarche dermatologique avec des protocoles adaptés à leur usage et à leur population cible.',
   },
   {
     num: '03', Icon: FlaskConical,
-    title: 'À LA JUSTE DOSE ACTIVE.',
-    body: 'Nous nous engageons à n\'utiliser que les concentrations optimales d\'actifs dermatologiques, dosées pour maximiser l\'efficacité tout en évitant les risques d\'irritation.',
+    title: 'Actifs sélectionnés',
+    body: 'Chaque gamme associe des actifs à une préoccupation précise : imperfections, taches, sécheresse, sensibilité ou protection solaire.',
   },
   {
     num: '04', Icon: Package,
-    title: 'PROTECTION DE LA FORMULE JUSQU\'AU BOUT.',
-    body: 'L\'emballage est rigoureusement étudié pour assurer l\'intégrité de la formule. Un système airless empêche toute contamination et garantit la pureté des actifs.',
+    title: 'Usage bien expliqué',
+    body: 'Les conseils d’application, la fréquence et les précautions restent accessibles sur chaque fiche pour aider à construire une routine cohérente.',
   },
-];
-
-const SKIN_TABS = [
-  { id: 'all',       label: 'Toutes les gammes' },
-  { id: 'acne',      label: 'Acné'              },
-  { id: 'solaire',   label: 'Protection solaire' },
-  { id: 'taches',    label: 'Anti-taches'       },
-  { id: 'antiage',   label: 'Anti-âge & Sérums' },
-  { id: 'secheresse',label: 'Sécheresse'        },
-  { id: 'sensibles', label: 'Peaux sensibles'   },
 ];
 
 const SORT_OPTIONS = [
@@ -206,14 +159,8 @@ const SORT_OPTIONS = [
 
 /* ─── Helpers ────────────────────────────────────────────────────── */
 const matchByKeywords = (p: Product, kwds: string[]) => {
-  const text = `${p.title ?? ''} ${(p.tags ?? []).join(' ')} ${p.category ?? ''}`.toLowerCase();
+  const text = `${p.title ?? ''} ${p.description ?? ''} ${p.ingredients ?? ''} ${(p.tags ?? []).join(' ')} ${p.category ?? ''}`.toLowerCase();
   return kwds.some(k => text.includes(k));
-};
-
-const matchTab = (p: Product, tabId: string) => {
-  if (tabId === 'all') return true;
-  const range = RANGES.find(r => r.id === tabId);
-  return range ? matchByKeywords(p, range.keywords) : true;
 };
 
 const sortProducts = (list: Product[], opt: string) => {
@@ -225,40 +172,65 @@ const sortProducts = (list: Product[], opt: string) => {
 };
 
 const firstImage = (p: Product): string => {
-  const imgs = (p as any).images || (p as any).imageUrls || [];
-  if (imgs.length) return imgs[0];
-  return (p as any).image || (p as any).imageUrl || '';
+  if (p.images?.length) return p.images[0];
+  return p.image || '';
 };
 
 /* ─── Component ──────────────────────────────────────────────────── */
 export default function LaRochePosayCustomPage() {
   const { setDiagnosticOpen } = useUi();
 
-  const [products, setProducts]         = useState<Product[]>([]);
+  const seedProducts = useMemo(() => PRODUCTS_DB.filter((product) => {
+    const vendor = product.vendor.toLocaleLowerCase().replace(/[^a-z0-9]/g, '');
+    return vendor.includes('larocheposay');
+  }), []);
+  const [products, setProducts]         = useState<Product[]>(seedProducts);
   const [loading, setLoading]           = useState(true);
+  const [loadError, setLoadError]       = useState(false);
   const [activeRange, setActiveRange]   = useState<string | null>(null);
-  const [activeTab, setActiveTab]       = useState('all');
-  const [activeActif, setActiveActif]   = useState('niacinamide');
   const [maxPrice, setMaxPrice]         = useState(1500);
   const [sortOption, setSortOption]     = useState('popular');
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
-  const carouselRef = useRef<HTMLDivElement>(null);
 
   /* Fetch all LRP products */
   useEffect(() => {
     let dead = false;
     fetch('/api/products?vendor=La+Roche-Posay&limit=500')
       .then(r => r.json())
-      .then(d => { if (!dead && d.success) setProducts(d.products ?? []); })
-      .catch(() => {})
+      .then(d => {
+        if (dead) return;
+        if (d.success && Array.isArray(d.products) && d.products.length > 0) {
+          setProducts(d.products);
+          setLoadError(false);
+        } else {
+          setLoadError(true);
+        }
+      })
+      .catch(() => { if (!dead) setLoadError(true); })
       .finally(() => { if (!dead) setLoading(false); });
     return () => { dead = true; };
   }, []);
 
+  useEffect(() => {
+    if (!mobileFilterOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMobileFilterOpen(false);
+    };
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [mobileFilterOpen]);
+
   /* Range card image — custom banner for Anthelios, fallback to first product image */
   const rangeImages = useMemo(() => {
     const map: Record<string, string> = {
-      solaire: '/images/anthelios_banner_card.png',
+      acne: '/images/effaclar_hero_packshot.webp',
+      solaire: '/images/anthelios_banner_card.webp',
+      cicatrisation: '/images/cicaplast_bundle.webp',
     };
     RANGES.forEach(rng => {
       if (!map[rng.id]) {
@@ -269,24 +241,6 @@ export default function LaRochePosayCustomPage() {
     return map;
   }, [products]);
 
-  /* Actif products */
-  const actifProducts = useMemo(() => {
-    const actif = ACTIFS.find(a => a.id === activeActif) || ACTIFS[0];
-    return sortProducts(products.filter(p => matchByKeywords(p, actif.keywords)), 'popular').slice(0, 4);
-  }, [products, activeActif]);
-
-  /* Essentials carousel (tab-filtered) */
-  const essentialProducts = useMemo(() =>
-    sortProducts(products.filter(p => matchTab(p, activeTab)), 'popular').slice(0, 10),
-    [products, activeTab]
-  );
-
-  /* Effaclar hero product */
-  const effaclarProduct = useMemo(() =>
-    products.find(p => (p.title ?? '').toLowerCase().includes('effaclar duo')),
-    [products]
-  );
-
   /* Catalog (range-filtered or all) */
   const catalogProducts = useMemo(() => {
     let list = activeRange
@@ -296,230 +250,136 @@ export default function LaRochePosayCustomPage() {
     return sortProducts(list, sortOption);
   }, [products, activeRange, maxPrice, sortOption]);
 
-  const scrollCarousel = (dir: 'left' | 'right') => {
-    carouselRef.current?.scrollBy({ left: dir === 'left' ? -300 : 300, behavior: 'smooth' });
-  };
-
   const selectRange = (id: string) => {
     const next = activeRange === id ? null : id;
     setActiveRange(next);
-    setActiveTab(next || 'all');
     setTimeout(() => document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
   };
 
   const activeRangeObj = RANGES.find(r => r.id === activeRange);
-  const activeActifObj = ACTIFS.find(a => a.id === activeActif) || ACTIFS[0];
 
   /* ── render ─────────────────────────────────────────────────── */
   return (
     <ShopShell>
-      <main style={{ fontFamily: "'Inter','Helvetica Neue',sans-serif", background: '#fff' }}>
+      <main className="bg-white text-slate-900 [scroll-behavior:smooth]">
 
-        {/* ══════════════════════════════════════════════════════════
-            §1. HERO
-        ══════════════════════════════════════════════════════════ */}
-        {/* ══════════════════════════════════════════════════════════
-            §1. HERO (CINEMATIC BRAND FLAGSHIP HERO)
-        ══════════════════════════════════════════════════════════ */}
-        <section className="relative bg-[#091727] py-12 lg:py-20 overflow-hidden border-b border-slate-800">
-          {/* Background Thermal Water Splash Graphic Overlay */}
-          <div
-            className="absolute inset-0 z-0 opacity-40 mix-blend-screen pointer-events-none bg-cover bg-center"
-            style={{
-              backgroundImage: `url('https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=1920&q=80')`,
-            }}
-          />
-          {/* Dark Navy Radial & Linear Gradients for 100% Readable White Text */}
-          <div className="absolute inset-0 z-0 bg-gradient-to-r from-[#071220] via-[#091b30]/95 to-sky-950/40 pointer-events-none" />
-          <div className="absolute top-0 right-1/4 w-96 h-96 bg-sky-500/15 rounded-full blur-3xl pointer-events-none" />
+        <section className="relative overflow-hidden border-b border-[#d9e7f0] bg-[#f4f9fc]">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_22%_18%,rgba(14,165,233,0.11),transparent_34%),radial-gradient(circle_at_82%_15%,rgba(255,255,255,0.95),transparent_40%)]" />
+          <div className="relative mx-auto max-w-[1360px] px-5 pb-10 pt-6 sm:px-8 lg:px-12 lg:pb-14">
+            <nav aria-label="Fil d’Ariane" className="mb-8 flex items-center gap-2 text-xs font-semibold text-slate-500">
+              <Link href="/" className="rounded-sm transition-colors hover:text-[#0b75b9] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky-500">Accueil</Link>
+              <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+              <span className="text-slate-800">La Roche-Posay</span>
+            </nav>
 
-          <div className="max-w-[1280px] mx-auto px-5 lg:px-10 relative z-10">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+            <div className="grid items-stretch gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:gap-10">
+              <div className="flex flex-col justify-center py-4 lg:py-10">
+                <div className="mb-7 flex items-center gap-4">
+                  <span className="flex h-16 w-16 items-center justify-center border border-slate-200 bg-white shadow-[0_12px_34px_rgba(15,39,68,0.09)]">
+                    <Image src="/images/brands/laroche.svg" alt="Logo La Roche-Posay" width={52} height={52} className="h-12 w-12 object-contain" priority />
+                  </span>
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-[#0b75b9]">Laboratoire dermatologique</p>
+                    <p className="mt-1 text-sm font-medium text-slate-500">La Roche-Posay · France</p>
+                  </div>
+                </div>
 
-              {/* Left Column: Dark Mode High-Impact Copy */}
-              <div className="lg:col-span-6 space-y-6">
-                <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] bg-sky-500/20 text-sky-300 border border-sky-400/30">
-                  <Sparkles className="w-3.5 h-3.5" /> LABORATOIRE DERMATOLOGIQUE · FRANCE
-                </span>
-
-                <h1 className="text-4xl sm:text-5xl lg:text-[3.6rem] font-black leading-[1.05] tracking-tight text-white">
-                  CHANGER LA VIE<br />
-                  DE TOUTES LES<br />
-                  <span className="bg-gradient-to-r from-sky-400 via-cyan-300 to-blue-400 bg-clip-text text-transparent">PEAUX</span>
+                <h1 className="max-w-[720px] text-balance text-[clamp(2.65rem,6vw,5.4rem)] font-black leading-[0.94] tracking-[-0.055em] text-[#0d2442]">
+                  Le soin précis pour chaque peau sensible.
                 </h1>
-
-                <p className="text-sm lg:text-base text-slate-300 font-medium leading-relaxed max-w-lg">
-                  Le soin dermatologique N°1 recommandé par plus de 90 000 dermatologues dans le monde. Formules d'exception enrichies à l'eau thermale apaisante de La Roche-Posay.
+                <p className="mt-7 max-w-[58ch] text-pretty text-base font-medium leading-7 text-slate-600 sm:text-lg">
+                  Explorez des routines ciblées pour les imperfections, la protection solaire, la réparation et l’hydratation, avec une sélection disponible chez Para Officinal.
                 </p>
 
-                {/* Authority Row: Red N°1 Seal + Primary Sky-Blue Button */}
-                <div className="flex flex-wrap items-center gap-5 pt-2">
-                  <div className="flex items-center gap-3 bg-white/10 border border-white/15 px-4 py-2.5 rounded-2xl backdrop-blur-md">
-                    <span className="text-3xl font-black text-red-500 leading-none">N°1</span>
-                    <div className="text-left">
-                      <p className="text-[11px] font-black text-white uppercase leading-none">MARQUE DERMATOLOGIQUE</p>
-                      <p className="text-[9px] font-bold text-sky-300 mt-0.5">MONDIALE</p>
-                    </div>
-                  </div>
-
-                  <Link
-                    href="#ranges"
-                    className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl text-sm font-black text-white bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 shadow-lg shadow-sky-500/30 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
-                  >
-                    DÉCOUVRIR LES GAMMES <ChevronRight className="w-4 h-4" />
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <Link href="#ranges" className="group inline-flex min-h-14 items-center justify-between gap-6 rounded-[18px] bg-[#0c79b8] px-6 text-sm font-bold text-white shadow-[0_16px_30px_rgba(12,121,184,0.24)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#09689f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0c79b8] active:translate-y-0">
+                    Explorer les gammes
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full border border-white/25 bg-white/10 transition-transform duration-300 group-hover:translate-x-1">
+                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                    </span>
                   </Link>
+                  <button type="button" onClick={() => setDiagnosticOpen(true)} className="inline-flex min-h-14 items-center justify-center gap-2 rounded-[18px] border border-[#bed7e7] bg-white px-6 text-sm font-bold text-[#0d4165] transition duration-300 hover:border-[#79b9dd] hover:bg-[#eaf6fc] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0c79b8] active:scale-[0.98]">
+                    <Sparkles className="h-4 w-4 text-[#0c79b8]" aria-hidden="true" />
+                    Trouver ma routine
+                  </button>
                 </div>
 
-                {/* Clinical Trust Claims */}
-                <div className="pt-6 border-t border-white/10 flex flex-wrap gap-y-2.5 gap-x-6 text-xs font-bold text-slate-300">
-                  <span className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-sky-400 stroke-[3]" /> 100% Hypoallergénique
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-sky-400 stroke-[3]" /> Eau Thermale de La Roche-Posay
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-sky-400 stroke-[3]" /> Testé Peaux Sensibles
-                  </span>
-                </div>
-
-                <p className="text-[9px] text-slate-400">*Source: IQVIA survey, 90,000 dermatologists worldwide, 2023</p>
+                <dl className="mt-9 grid max-w-xl grid-cols-3 border-y border-[#cfdfe9] py-5">
+                  <div className="pr-4">
+                    <dt className="text-xl font-black tabular-nums text-[#0d2442]">90 000+</dt>
+                    <dd className="mt-1 text-[11px] font-semibold leading-4 text-slate-500">dermatologues interrogés*</dd>
+                  </div>
+                  <div className="border-l border-[#cfdfe9] px-4">
+                    <dt className="text-xl font-black text-[#0d2442]">6 gammes</dt>
+                    <dd className="mt-1 text-[11px] font-semibold leading-4 text-slate-500">classées par besoin</dd>
+                  </div>
+                  <div className="border-l border-[#cfdfe9] pl-4">
+                    <dt className="text-xl font-black text-[#0d2442]">Peaux sensibles</dt>
+                    <dd className="mt-1 text-[11px] font-semibold leading-4 text-slate-500">au cœur de la sélection</dd>
+                  </div>
+                </dl>
               </div>
 
-              {/* Right Column: Cinematic Thermal Water Splash & Flagship Renders */}
-              <div className="lg:col-span-6 relative">
-                <div className="relative flex flex-col items-center">
-                  
-                  {/* Floating 3 Pristine White Flagship Product Cards */}
-                  <div className="grid grid-cols-3 gap-3.5 sm:gap-4 w-full items-stretch justify-center py-2">
-                    {[
-                      {
-                        range: 'EFFACLAR',
-                        title: 'DUO+M',
-                        tag: 'Acné & Imperfections',
-                        accent: '#2563eb',
-                        bg: '#eff6ff',
-                        border: '#bfdbfe',
-                        prod: products.find(p => (p.title ?? '').toLowerCase().includes('effaclar duo + m 40 ml') || (p.title ?? '').toLowerCase().includes('effaclar duo')),
-                        overrideImg: '/images/effaclar_hero_packshot.png',
-                      },
-                      {
-                        range: 'ANTHELIOS',
-                        title: 'UVMUNE 400',
-                        tag: 'Protection SPF50+',
-                        accent: '#ea580c',
-                        bg: '#fff7ed',
-                        border: '#fed7aa',
-                        prod: products.find(p => (p.title ?? '').toLowerCase().includes('anthelios ecran spf 50+ gel') || (p.title ?? '').toLowerCase().includes('anthelios')),
-                        overrideImg: '/images/anthelios_hero_packshot.png',
-                      },
-                      {
-                        range: 'CICAPLAST',
-                        title: 'BAUME B5+',
-                        tag: 'Réparation Cutanée',
-                        accent: '#16a34a',
-                        bg: '#f0fdf4',
-                        border: '#bbf7d0',
-                        prod: products.find(p => (p.title ?? '').toLowerCase().includes('cicaplast b5 baume gm 100 ml') || (p.title ?? '').toLowerCase().includes('cicaplast b5 baume mm 40 ml')),
-                        overrideImg: '/images/cicaplast_hero_packshot.png',
-                      },
-                    ].map((item, idx) => {
-                      const imgUrl = item.overrideImg || (item.prod ? firstImage(item.prod) : '');
-                      return (
-                        <div
-                          key={idx}
-                          onClick={() => selectRange(RANGES[idx]?.id || 'acne')}
-                          className="group relative bg-white border border-slate-200/80 rounded-3xl p-4 flex flex-col justify-between items-center text-center cursor-pointer shadow-2xl shadow-sky-950/40 transition-all duration-300 hover:-translate-y-2 hover:shadow-sky-500/20 hover:border-sky-300"
-                        >
-                          {/* Top Range Badge */}
-                          <span
-                            className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border mb-2"
-                            style={{ background: item.bg, color: item.accent, borderColor: item.border }}
-                          >
-                            {item.range}
-                          </span>
-
-                          {/* Pure White Product Image Frame with Ample Margins */}
-                          <div className="w-full h-36 sm:h-40 flex items-center justify-center p-1 relative my-1">
-                            {imgUrl ? (
-                              <img
-                                src={imgUrl}
-                                alt={item.range}
-                                className="max-h-32 sm:max-h-36 max-w-[90%] object-contain drop-shadow-md group-hover:scale-110 transition-transform duration-500"
-                              />
-                            ) : (
-                              <div className="w-16 h-28 rounded-xl flex items-center justify-center text-white text-[9px] font-bold" style={{ background: item.accent }}>
-                                {item.range}
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Product Label & Concern */}
-                          <div className="w-full my-1">
-                            <p className="text-[11px] font-black text-slate-900 leading-tight">
-                              {item.title}
-                            </p>
-                            <p className="text-[9px] font-semibold text-slate-500 mt-0.5 line-clamp-1">
-                              {item.tag}
-                            </p>
-                          </div>
-
-                          {/* Sky-Blue Price Pill Tag at Bottom */}
-                          {item.prod && (
-                            <div className="mt-2 px-3.5 py-1 rounded-full bg-sky-500 text-white font-mono font-bold text-[10px] shadow-sm shadow-sky-500/30 group-hover:bg-sky-600 transition-colors">
-                              {item.prod.price} DH
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+              <div className="relative min-h-[480px] overflow-hidden rounded-[34px] bg-[#e8eef0] shadow-[0_30px_70px_rgba(15,39,68,0.16)] lg:min-h-[650px]">
+                <Image src="/images/larochposay_brand_showcase.webp" alt="Sélection de soins La Roche-Posay présentée dans un décor clinique lumineux" fill priority sizes="(max-width: 1024px) 100vw, 55vw" className="object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0b2742]/70 via-transparent to-white/5" />
+                <div className="absolute inset-x-5 bottom-5 rounded-[24px] border border-white/25 bg-[#0b2742]/78 p-5 text-white shadow-2xl backdrop-blur-xl sm:inset-x-7 sm:bottom-7 sm:p-6">
+                  <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-sky-200">Sélection experte</p>
+                      <p className="mt-2 max-w-md text-xl font-bold leading-tight">Construisez une routine simple, cohérente et adaptée à votre priorité.</p>
+                    </div>
+                    <span className="inline-flex shrink-0 items-center gap-2 text-xs font-semibold text-slate-200"><ShieldCheck className="h-4 w-4 text-sky-300" /> Produits authentiques</span>
                   </div>
-
-                  {/* Range Chips Bar */}
-                  <div className="mt-4 flex flex-wrap gap-1.5 justify-center w-full pt-4 border-t border-white/10">
-                    {RANGES.map(r => (
-                      <button
-                        key={r.id}
-                        onClick={() => selectRange(r.id)}
-                        className="text-[10px] font-extrabold px-3 py-1 rounded-full border border-white/15 bg-white/5 text-slate-300 cursor-pointer transition-all hover:bg-sky-500 hover:text-white hover:border-sky-500"
-                        style={activeRange === r.id ? { background: r.accent, color: 'white', borderColor: r.accent } : undefined}
-                      >
-                        {r.name}
-                      </button>
-                    ))}
-                  </div>
-
                 </div>
               </div>
-
             </div>
+
+            <div className="relative z-10 mt-7 grid gap-3 sm:grid-cols-3">
+              {[
+                { id: 'acne', range: 'Effaclar', detail: 'Imperfections', image: '/images/effaclar_hero_packshot.webp', accent: '#1688c6' },
+                { id: 'solaire', range: 'Anthelios', detail: 'Protection SPF50+', image: '/images/anthelios_hero_packshot.webp', accent: '#e77716' },
+                { id: 'cicatrisation', range: 'Cicaplast', detail: 'Réparation cutanée', image: '/images/cicaplast_hero_packshot.webp', accent: '#1889b7' },
+              ].map((item) => (
+                <button key={item.id} type="button" onClick={() => selectRange(item.id)} className="group grid min-h-28 grid-cols-[76px_1fr_auto] items-center gap-4 rounded-[22px] border border-[#d7e4ec] bg-white p-3 text-left shadow-[0_12px_28px_rgba(15,39,68,0.07)] transition duration-300 hover:-translate-y-1 hover:border-[#94c7e2] hover:shadow-[0_18px_36px_rgba(15,39,68,0.12)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0c79b8] active:translate-y-0">
+                  <span className="relative h-[76px] overflow-hidden rounded-[16px] bg-slate-50">
+                    <Image src={item.image} alt={`Produit ${item.range}`} fill sizes="76px" className="object-contain p-1 transition-transform duration-500 group-hover:scale-105" />
+                  </span>
+                  <span>
+                    <span className="block text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: item.accent }}>{item.range}</span>
+                    <span className="mt-1 block text-sm font-bold text-[#0d2442]">{item.detail}</span>
+                  </span>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#eef7fb] text-[#0c79b8] transition duration-300 group-hover:bg-[#0c79b8] group-hover:text-white"><ArrowRight className="h-4 w-4" /></span>
+                </button>
+              ))}
+            </div>
+            <p className="mt-4 text-[10px] leading-4 text-slate-400">*Étude déclarative internationale de recommandation dermatologique communiquée par la marque.</p>
           </div>
         </section>
 
         {/* ══════════════════════════════════════════════════════════
             §2. RANGES — NOS GAMMES PAR PRÉOCCUPATION (main upgrade)
         ══════════════════════════════════════════════════════════ */}
-        <section id="ranges" className="py-14 bg-white border-b border-slate-100">
-          <div className="max-w-[1280px] mx-auto px-5 lg:px-10">
-            <div className="flex items-end justify-between mb-8">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.22em] mb-2" style={{ color: LRP_BLUE }}>Dermatologie clinique</p>
-                <h2 className="text-2xl lg:text-3xl font-black leading-tight" style={{ color: LRP_DARK }}>
-                  NOS GAMMES PAR PRÉOCCUPATION
+        <section id="ranges" className="border-b border-slate-100 bg-white py-20">
+          <div className="mx-auto max-w-[1360px] px-5 sm:px-8 lg:px-12">
+            <div className="mb-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+              <div className="max-w-2xl">
+                <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#0c79b8]">Choisir selon votre besoin</p>
+                <h2 className="text-balance text-3xl font-black leading-tight tracking-[-0.035em] text-[#0d2442] lg:text-5xl">
+                  Une gamme claire pour chaque priorité cutanée.
                 </h2>
+                <p className="mt-4 max-w-[58ch] text-sm font-medium leading-6 text-slate-500 sm:text-base">Sélectionnez votre préoccupation pour filtrer immédiatement les soins adaptés disponibles en boutique.</p>
               </div>
               {activeRange && (
-                <button onClick={() => { setActiveRange(null); setActiveTab('all'); }}
-                  className="text-xs font-bold px-3 py-1.5 rounded-full border cursor-pointer hover:bg-red-50 transition"
-                  style={{ borderColor: '#dc2626', color: '#dc2626' }}>
-                  × Effacer le filtre
+                <button onClick={() => setActiveRange(null)}
+                  className="min-h-11 shrink-0 rounded-xl border border-slate-300 bg-white px-4 text-xs font-bold text-slate-600 transition hover:border-slate-400 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0c79b8]">
+                  Effacer le filtre
                 </button>
               )}
             </div>
 
-            {/* 3×2 bento grid — White Cards with Centered Product Images */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {RANGES.map(rng => {
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-12">
+              {RANGES.map((rng, index) => {
                 const img = rangeImages[rng.id];
                 const isActive = activeRange === rng.id;
                 const count = products.filter(p => matchByKeywords(p, rng.keywords)).length;
@@ -528,7 +388,7 @@ export default function LaRochePosayCustomPage() {
                   <button
                     key={rng.id}
                     onClick={() => selectRange(rng.id)}
-                    className="group relative bg-white border rounded-3xl p-5 text-left transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col justify-between overflow-hidden cursor-pointer"
+                    className={`group relative flex min-h-[380px] flex-col justify-between overflow-hidden rounded-[26px] border bg-[#f8fafb] p-5 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_50px_rgba(15,39,68,0.12)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0c79b8] active:translate-y-0 ${index < 2 ? 'lg:col-span-6' : 'lg:col-span-3'}`}
                     style={{
                       borderColor: isActive ? rng.accent : '#e2e8f0',
                       boxShadow: isActive ? `0 10px 30px ${rng.accent}20` : undefined,
@@ -554,20 +414,23 @@ export default function LaRochePosayCustomPage() {
                         </span>
                       ) : (
                         <span className="text-[10px] font-mono font-bold text-slate-400">
-                          {count} prods
+                          {count} produits
                         </span>
                       )}
                     </div>
 
                     {/* Centered Product Image Container with 4-directional Margins */}
-                    <div className="w-full bg-slate-50/80 border border-slate-100 rounded-2xl p-3 flex items-center justify-center h-48 my-2 relative overflow-hidden group-hover:bg-slate-100/60 transition-colors duration-300">
+                    <div className={`relative my-3 flex w-full items-center justify-center overflow-hidden rounded-[20px] border border-white bg-white p-3 shadow-[inset_0_0_0_1px_rgba(148,163,184,0.08)] transition-colors duration-300 ${index < 2 ? 'h-56' : 'h-48'}`}>
                       {img ? (
-                        <img
+                        <Image
                           src={img}
                           alt={rng.label}
+                          fill
+                          sizes={index < 2 ? '(max-width: 1024px) 100vw, 50vw' : '(max-width: 1024px) 50vw, 25vw'}
+                          onError={(event) => { event.currentTarget.src = '/images/larochposay_brand_showcase.webp'; }}
                           className={rng.id === 'solaire'
-                            ? "w-full h-full object-cover rounded-xl shadow-xs group-hover:scale-105 transition-transform duration-500"
-                            : "max-h-36 max-w-[80%] object-contain drop-shadow-md group-hover:scale-110 transition-transform duration-500"}
+                            ? "h-full w-full rounded-xl object-cover transition-transform duration-500 group-hover:scale-105"
+                            : "object-contain p-6 drop-shadow-md transition-transform duration-500 group-hover:scale-105"}
                         />
                       ) : (
                         <div className="w-20 h-28 rounded-xl flex items-center justify-center" style={{ background: rng.accent }}>
@@ -578,11 +441,11 @@ export default function LaRochePosayCustomPage() {
 
                     {/* Bottom Details (Dark readable typography on White) */}
                     <div className="mt-2 space-y-2">
-                      <h3 className="text-base font-black text-slate-900 leading-snug whitespace-pre-line tracking-tight group-hover:text-sky-600 transition-colors">
+                      <h3 className="whitespace-pre-line text-xl font-black leading-tight tracking-[-0.025em] text-[#0d2442] transition-colors group-hover:text-[#0c79b8]">
                         {rng.label}
                       </h3>
                       
-                      <p className="text-xs text-slate-500 font-medium line-clamp-1 leading-relaxed">
+                      <p className="line-clamp-2 text-xs font-medium leading-relaxed text-slate-500">
                         {rng.tagline}
                       </p>
 
@@ -599,8 +462,8 @@ export default function LaRochePosayCustomPage() {
                           ))}
                         </div>
 
-                        <span className="text-[10px] font-black text-sky-600 group-hover:translate-x-0.5 transition-transform">
-                          Voir →
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-[#0c79b8] shadow-sm transition group-hover:bg-[#0c79b8] group-hover:text-white">
+                          <ArrowRight className="h-3.5 w-3.5" />
                         </span>
                       </div>
                     </div>
@@ -649,134 +512,34 @@ export default function LaRochePosayCustomPage() {
         {/* ══════════════════════════════════════════════════════════
             §6. STATS BANNER (REDESIGNED)
         ══════════════════════════════════════════════════════════ */}
-        <section className="py-16 bg-[#0f172a] border-y border-slate-800 relative overflow-hidden">
-          {/* Subtle background glow circles */}
-          <div className="absolute top-1/2 left-10 -translate-y-1/2 w-80 h-80 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute top-1/2 right-10 -translate-y-1/2 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="max-w-[1280px] mx-auto px-5 lg:px-10 relative z-10">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-10 pb-6 border-b border-slate-800">
-              <div>
-                <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] bg-sky-500/15 text-sky-400 border border-sky-400/30 mb-2">
-                  <Microscope className="w-3.5 h-3.5" /> RÉSULTATS CLINIQUES PROUVÉS
-                </span>
-                <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                  EFFICACITÉ DERMATOLOGIQUE MESURÉE
-                </h2>
-              </div>
-              <p className="text-xs text-slate-400 max-w-xs leading-relaxed">
-                Études cliniques menées sous contrôle dermatologique strict sur des sujets à peau sensible.
-              </p>
+        <section className="relative overflow-hidden border-y border-[#173b5d] bg-[#0b223b] py-20 text-white">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(14,165,233,0.18),transparent_30%),radial-gradient(circle_at_85%_80%,rgba(42,106,153,0.2),transparent_32%)]" />
+          <div className="relative mx-auto grid max-w-[1360px] gap-8 px-5 sm:px-8 lg:grid-cols-[0.8fr_1.2fr] lg:px-12">
+            <div className="relative min-h-[420px] overflow-hidden rounded-[30px] bg-white">
+              <Image src="/images/effaclar_hero_packshot.webp" alt="Effaclar Duo+M La Roche-Posay" fill sizes="(max-width: 1024px) 100vw, 40vw" className="object-contain p-10" />
+              <span className="absolute left-5 top-5 border border-sky-200 bg-sky-50 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[#0c79b8]">Soin emblématique</span>
             </div>
 
-            {/* Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-              {/* Product Spotlight Card (4 cols) */}
-              <div className="lg:col-span-4 bg-gradient-to-b from-white/10 to-white/5 border border-white/10 rounded-3xl p-6 flex flex-col items-center justify-center relative group overflow-hidden backdrop-blur-md">
-                <div className="absolute inset-0 bg-sky-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl pointer-events-none" />
-                
-                {effaclarProduct && firstImage(effaclarProduct) ? (
-                  <img
-                    src={firstImage(effaclarProduct)}
-                    alt="Effaclar"
-                    className="h-36 lg:h-40 object-contain drop-shadow-[0_20px_30px_rgba(56,189,248,0.25)] group-hover:scale-105 transition-transform duration-500"
-                  />
-                ) : (
-                  <div className="w-24 h-32 bg-white/10 rounded-2xl border border-sky-400/30 flex items-center justify-center p-3 text-center">
-                    <span className="text-xs font-black text-sky-300">EFFACLAR DUO+M</span>
-                  </div>
-                )}
-                
-                <div className="mt-3 text-center">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-sky-400 bg-sky-400/10 px-3 py-1 rounded-full border border-sky-400/20">
-                    Soin Référence
-                  </span>
-                  <p className="text-xs font-extrabold text-white mt-1.5">EFFACLAR DUO+M</p>
-                  <p className="text-[10px] text-slate-400 mt-0.5">Soin Triple Correction Anti-Imperfections</p>
-                </div>
-              </div>
+            <div className="flex flex-col justify-center">
+              <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] text-sky-300"><Microscope className="h-4 w-4" /> La méthode La Roche-Posay</p>
+              <h2 className="mt-4 max-w-2xl text-balance text-3xl font-black leading-tight tracking-[-0.04em] sm:text-5xl">Des formules ciblées, une routine lisible.</h2>
+              <p className="mt-5 max-w-[62ch] text-sm font-medium leading-7 text-slate-300 sm:text-base">Cette page organise la sélection par préoccupation et par gamme. Consultez la fiche de chaque produit pour vérifier la formule, le mode d’emploi et sa compatibilité avec votre peau.</p>
 
-              {/* 3 Metric Cards (8 cols) */}
-              <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-5">
+              <div className="mt-9 grid gap-px overflow-hidden rounded-[24px] border border-white/10 bg-white/10 sm:grid-cols-3">
                 {[
-                  {
-                    num: '100%',
-                    percent: 100,
-                    label: 'PÉNÉTRATION DES BOUTONS',
-                    desc: 'Formule à pénétration profonde testée sous contrôle dermatologique.',
-                    tag: 'Action Rapide',
-                    bullets: ['Élimine les comédons', 'Agit au cœur des pores'],
-                  },
-                  {
-                    num: '-38%',
-                    percent: 38,
-                    label: 'RÉDUCTION DES IMPERFECTIONS',
-                    desc: 'Diminution visible des lésions rétentionnelles et inflammatoires dès 7 jours.',
-                    tag: 'Résultat 7 Jours',
-                    bullets: ['Réduit les marques', 'Prévient les récidives'],
-                  },
-                  {
-                    num: '-25%',
-                    percent: 25,
-                    label: 'TOLÉRANCE MAXIMALE',
-                    desc: 'Réduction significative des irritations et rougeurs sur peaux très réactives.',
-                    tag: 'Haute Tolérance',
-                    bullets: ['0% alcool / parfum', 'Hypoallergénique'],
-                  },
-                ].map((stat, i) => (
-                  <div
-                    key={i}
-                    className="bg-white/5 border border-white/10 hover:border-sky-400/40 rounded-3xl p-5 flex flex-col justify-start gap-3.5 hover:bg-white/[0.08] transition-all duration-300 group"
-                  >
-                    {/* Top Tag & Indicator */}
-                    <div className="flex items-center justify-between">
-                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 bg-white/5 px-2.5 py-1 rounded-md border border-white/5 group-hover:border-sky-400/30 group-hover:text-sky-300 transition-colors">
-                        {stat.tag}
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        <span className="text-[9px] font-mono text-emerald-400 font-bold">ACTIF</span>
-                      </div>
-                    </div>
-
-                    {/* Metric gradient number */}
-                    <div>
-                      <p className="text-4xl lg:text-5xl font-black bg-gradient-to-r from-sky-400 via-cyan-300 to-blue-400 bg-clip-text text-transparent leading-none mb-2">
-                        {stat.num}
-                      </p>
-
-                      <h3 className="text-xs font-black text-white leading-snug tracking-tight">
-                        {stat.label}
-                      </h3>
-                    </div>
-
-                    {/* Glowing Progress Bar */}
-                    <div className="space-y-1">
-                      <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-sky-400 to-blue-500 rounded-full transition-all duration-1000 group-hover:shadow-[0_0_12px_rgba(56,189,248,0.8)]"
-                          style={{ width: `${stat.percent}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Description (directly below, no huge gap) */}
-                    <p className="text-[11px] text-slate-300 leading-relaxed">
-                      {stat.desc}
-                    </p>
-
-                    {/* Clinical Feature Bullets */}
-                    <div className="pt-3 border-t border-white/5 space-y-1.5">
-                      {stat.bullets.map((b, bi) => (
-                        <div key={bi} className="flex items-center gap-2 text-[10px] text-slate-400">
-                          <Check className="w-3 h-3 text-sky-400 shrink-0" />
-                          <span>{b}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+                  { icon: FlaskConical, title: 'Actifs ciblés', body: 'Des formules organisées par besoin cutané.' },
+                  { icon: ShieldCheck, title: 'Haute tolérance', body: 'Une sélection pensée pour les peaux sensibles.' },
+                  { icon: Droplets, title: 'Eau thermale', body: 'L’actif signature au cœur de la marque.' },
+                ].map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <article key={item.title} className="bg-[#0e2946] p-5 transition-colors duration-300 hover:bg-[#123452]">
+                      <Icon className="h-5 w-5 text-sky-300" aria-hidden="true" />
+                      <h3 className="mt-4 text-sm font-bold">{item.title}</h3>
+                      <p className="mt-2 text-xs leading-5 text-slate-400">{item.body}</p>
+                    </article>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -787,59 +550,49 @@ export default function LaRochePosayCustomPage() {
         {/* ══════════════════════════════════════════════════════════
             §9. BRAND TRUST CLAIMS (REDESIGNED)
         ══════════════════════════════════════════════════════════ */}
-        <section className="py-20 bg-slate-50/70 border-t border-slate-100 relative overflow-hidden">
-          {/* Subtle background blur accent circles */}
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-sky-200/20 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-200/20 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="max-w-[1280px] mx-auto px-5 lg:px-10 relative z-10">
-            {/* Header */}
-            <div className="text-center max-w-2xl mx-auto mb-14 space-y-3">
-              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] bg-sky-100/80 text-sky-600 border border-sky-200/50">
-                <ShieldCheck className="w-3.5 h-3.5" /> CHARTE DE SÉCURITÉ DERMATOLOGIQUE
-              </span>
-              <h2 className="text-3xl sm:text-4xl font-black tracking-tight" style={{ color: LRP_DARK }}>
-                NOS 4 ENGAGEMENTS FONDAMENTAUX
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
-                Chaque formule La Roche-Posay répond à des exigences cliniques très strictes pour garantir une tolérance et une efficacité optimales.
+        <section className="relative overflow-hidden border-t border-slate-100 bg-[#f5f8fa] py-20">
+          <div className="relative mx-auto max-w-[1360px] px-5 sm:px-8 lg:px-12">
+            <div className="mb-12 grid gap-5 lg:grid-cols-[0.75fr_1.25fr] lg:items-end">
+              <div>
+                <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#0c79b8]">
+                  <ShieldCheck className="h-4 w-4" /> Repères de formulation
+                </span>
+                <h2 className="mt-4 text-balance text-3xl font-black tracking-[-0.04em] text-[#0d2442] sm:text-5xl">
+                  Comprendre avant de choisir.
+                </h2>
+              </div>
+              <p className="max-w-[68ch] text-sm font-medium leading-7 text-slate-500 lg:justify-self-end">
+                Quatre principes pour naviguer plus facilement dans l’offre La Roche-Posay. Pour une affection persistante ou une peau très réactive, demandez conseil à un professionnel de santé.
               </p>
             </div>
 
-            {/* 4 Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 overflow-hidden rounded-[28px] border border-[#dce7ed] bg-[#dce7ed] gap-px sm:grid-cols-2 lg:grid-cols-4">
               {TRUST_CLAIMS.map((c, i) => {
                 const Icon = c.Icon;
                 return (
-                  <div
+                  <article
                     key={i}
-                    className="group relative bg-white border border-slate-100 rounded-3xl p-7 shadow-lg shadow-slate-100/80 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-sky-500/10 hover:border-sky-300/60 flex flex-col justify-between overflow-hidden"
+                    className="group relative flex min-h-72 flex-col justify-between overflow-hidden bg-white p-7 transition-colors duration-300 hover:bg-[#f0f8fc]"
                   >
                     <div>
-                      {/* Top row: Icon + Ghost number */}
                       <div className="flex items-center justify-between mb-6">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-white shadow-md shadow-sky-400/30 group-hover:scale-110 transition-transform duration-300">
-                          <Icon className="w-6 h-6 stroke-[2.2]" />
+                        <div className="flex h-12 w-12 items-center justify-center rounded-[15px] bg-[#e6f4fb] text-[#0c79b8] transition-colors duration-300 group-hover:bg-[#0c79b8] group-hover:text-white">
+                          <Icon className="h-5 w-5" />
                         </div>
-                        <span className="text-3xl font-black font-mono text-slate-200 group-hover:text-sky-300 transition-colors duration-300">
+                        <span className="font-mono text-2xl font-black text-slate-200 transition-colors duration-300 group-hover:text-sky-300">
                           {c.num}
                         </span>
                       </div>
 
-                      {/* Content */}
-                      <h3 className="text-base font-black leading-snug mb-3 tracking-tight group-hover:text-sky-600 transition-colors duration-300" style={{ color: LRP_DARK }}>
+                      <h3 className="mb-3 text-base font-black leading-snug tracking-tight text-[#0d2442] transition-colors duration-300 group-hover:text-[#0c79b8]">
                         {c.title}
                       </h3>
-                      <p className="text-xs leading-relaxed text-slate-500 font-normal">
+                      <p className="text-xs font-medium leading-6 text-slate-500">
                         {c.body}
                       </p>
                     </div>
-
-                    {/* Bottom accent glow bar */}
-                    <div className="mt-6 pt-2">
-                      <div className="h-1 w-full bg-gradient-to-r from-sky-400 to-blue-600 rounded-full opacity-30 group-hover:opacity-100 transition-opacity duration-300" />
-                    </div>
-                  </div>
+                    <span className="mt-8 h-0.5 w-10 bg-[#8cc9e7] transition-all duration-300 group-hover:w-20 group-hover:bg-[#0c79b8]" />
+                  </article>
                 );
               })}
             </div>
@@ -849,27 +602,28 @@ export default function LaRochePosayCustomPage() {
         {/* ══════════════════════════════════════════════════════════
             §10. FULL CATALOG
         ══════════════════════════════════════════════════════════ */}
-        <section id="catalog" className="py-12 bg-white border-t border-slate-100">
-          <div className="max-w-[1280px] mx-auto px-5 lg:px-10">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-              <div>
-                <h2 className="text-xl font-black" style={{ color: LRP_DARK }}>
-                  {activeRangeObj ? activeRangeObj.name : 'TOUS LES PRODUITS'}
-                  <span className="text-lg ml-2 font-normal" style={{ color: activeRangeObj ? activeRangeObj.accent : LRP_BLUE }}>
-                    {activeRangeObj ? `— ${activeRangeObj.label.replace('\n',' ')}` : 'La Roche-Posay'}
-                  </span>
+        <section id="catalog" className="scroll-mt-24 border-t border-slate-100 bg-white py-20">
+          <div className="mx-auto max-w-[1360px] px-5 sm:px-8 lg:px-12">
+            <div className="mb-9 flex flex-col gap-5 border-b border-slate-200 pb-7 sm:flex-row sm:items-end sm:justify-between">
+              <div className="max-w-2xl">
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#0c79b8]">Catalogue La Roche-Posay</p>
+                <h2 className="mt-3 text-balance text-3xl font-black tracking-[-0.035em] text-[#0d2442] sm:text-4xl">
+                  {activeRangeObj ? activeRangeObj.name : 'Tous les soins'}
+                  {activeRangeObj && <span className="ml-2 font-medium" style={{ color: activeRangeObj.accent }}>— {activeRangeObj.label.replace('\n',' ')}</span>}
                 </h2>
-                <p className="text-sm text-gray-400 mt-0.5">{loading ? 'Chargement…' : `${catalogProducts.length} produits trouvés`}</p>
+                <p className="mt-2 text-sm font-medium text-slate-500">{loading ? 'Mise à jour de la sélection…' : `${catalogProducts.length} produits disponibles`}</p>
+                {loadError && <p className="mt-2 text-xs font-semibold text-amber-700">Le catalogue en direct est momentanément indisponible. La sélection enregistrée reste consultable.</p>}
               </div>
               <div className="flex items-center gap-3">
                 <button onClick={() => setMobileFilterOpen(true)}
-                  className="flex lg:hidden items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-bold cursor-pointer bg-white hover:bg-slate-50 transition"
+                  className="flex min-h-11 items-center gap-2 rounded-xl border px-4 text-xs font-bold transition hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0c79b8] lg:hidden"
                   style={{ borderColor: '#e2e8f0', color: '#374151' }}>
                   <SlidersHorizontal className="w-4 h-4" style={{ color: LRP_BLUE }} /> Filtres
                 </button>
                 <div className="relative">
                   <select value={sortOption} onChange={e => setSortOption(e.target.value)}
-                    className="w-48 px-3.5 py-2.5 text-xs font-bold bg-white border rounded-xl outline-none cursor-pointer appearance-none pr-8"
+                    aria-label="Trier les produits"
+                    className="min-h-11 w-48 appearance-none rounded-xl border bg-white px-3.5 pr-8 text-xs font-bold outline-none transition focus:border-[#0c79b8] focus:ring-2 focus:ring-sky-100"
                     style={{ borderColor: '#e2e8f0', color: '#374151' }}>
                     {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
@@ -878,9 +632,9 @@ export default function LaRochePosayCustomPage() {
               </div>
             </div>
 
-            <div className="flex gap-8 items-start">
+            <div className="flex items-start gap-8">
               {/* Desktop sidebar */}
-              <aside className="hidden lg:block w-52 shrink-0 sticky top-6 space-y-6">
+              <aside aria-label="Filtres catalogue" className="sticky top-6 hidden w-60 shrink-0 space-y-7 rounded-[22px] border border-slate-200 bg-[#f8fafb] p-5 lg:block">
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Prix max</h3>
@@ -918,7 +672,7 @@ export default function LaRochePosayCustomPage() {
               {/* Product grid */}
               <div className="flex-1 min-w-0">
                 {loading ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">
+                  <div className="grid grid-cols-1 gap-5 min-[520px]:grid-cols-2 xl:grid-cols-3">
                     {Array.from({ length: 9 }).map((_,i) => (
                       <div key={i} className="animate-pulse">
                         <div className="bg-slate-100 rounded-2xl h-60 mb-3" />
@@ -928,7 +682,7 @@ export default function LaRochePosayCustomPage() {
                     ))}
                   </div>
                 ) : catalogProducts.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">
+                  <div className="grid grid-cols-1 gap-5 min-[520px]:grid-cols-2 xl:grid-cols-3">
                     {catalogProducts.map(p => <ProductCard key={p.id} product={p} />)}
                   </div>
                 ) : (
@@ -947,7 +701,7 @@ export default function LaRochePosayCustomPage() {
 
         {/* ── Mobile Filter Drawer ───────────────────────────────── */}
         {mobileFilterOpen && (
-          <div className="fixed inset-0 z-50 lg:hidden flex justify-end">
+          <div className="fixed inset-0 z-50 flex justify-end lg:hidden" role="dialog" aria-modal="true" aria-label="Filtres du catalogue">
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setMobileFilterOpen(false)} />
             <div className="relative w-80 max-w-[90vw] h-full bg-white shadow-2xl flex flex-col overflow-y-auto z-50">
               <div className="flex justify-between items-center px-6 py-5 border-b border-slate-100">
