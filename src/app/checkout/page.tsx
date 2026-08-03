@@ -10,6 +10,7 @@ import { useUi } from '@/context/UiContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { CheckoutForm } from '@/components/cart/CheckoutForm';
 import { ShopShell } from '@/components/ShopShell';
+import { isValidMoroccanPhone } from '@/lib/moroccan-phone';
 import { loadStripe } from '@stripe/stripe-js';
 import { 
   ShoppingBag, 
@@ -89,8 +90,8 @@ function CheckoutPageContent() {
     const errors: Record<string, string> = {};
     if (!formFields.name.trim())
       errors.name = language === 'FR' ? 'Nom complet requis' : 'الاسم الكامل مطلوب';
-    if (!formFields.phone.trim() || formFields.phone.length < 8)
-      errors.phone = language === 'FR' ? 'Téléphone WhatsApp valide requis' : 'رقم واتساب صحيح مطلوب';
+    if (!isValidMoroccanPhone(formFields.phone))
+      errors.phone = language === 'FR' ? 'Saisissez un numéro marocain de 9 à 10 chiffres.' : 'أدخل رقم هاتف مغربي من 9 إلى 10 أرقام.';
     if (Object.keys(errors).length > 0) { setFormErrors(errors); return; }
 
     // Capture abandoned cart

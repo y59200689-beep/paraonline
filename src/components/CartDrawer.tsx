@@ -11,6 +11,7 @@ import {
   Truck, ArrowLeft, AlertTriangle, CreditCard, Sparkles, Gift
 } from 'lucide-react';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
+import { isValidMoroccanPhone } from '@/lib/moroccan-phone';
 import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 import Image from 'next/image';
@@ -155,8 +156,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     // Validate all fields in one pass
     if (!formFields.name.trim())
       errors.name = language === 'FR' ? 'Nom complet requis' : 'الاسم الكامل مطلوب';
-    if (!formFields.phone.trim() || formFields.phone.length < 8)
-      errors.phone = language === 'FR' ? 'Téléphone WhatsApp valide requis' : 'رقم واتساب صحيح مطلوب';
+    if (!isValidMoroccanPhone(formFields.phone))
+      errors.phone = language === 'FR' ? 'Saisissez un numéro marocain de 9 à 10 chiffres.' : 'أدخل رقم هاتف مغربي من 9 إلى 10 أرقام.';
     if (!formFields.city)
       errors.city = language === 'FR' ? 'Veuillez choisir votre ville' : 'يرجى اختيار مدينتكِ';
     if (!formFields.address.trim())

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { Elements } from '@stripe/react-stripe-js';
 import { MOROCCAN_CITIES } from '@/lib/data';
+import { MOROCCAN_PHONE_MAX_DIGITS, MOROCCAN_PHONE_MIN_DIGITS, normalizeMoroccanPhoneInput } from '@/lib/moroccan-phone';
 import { StripeCheckoutForm } from './StripeCheckoutForm';
 
 interface FormFields {
@@ -459,9 +460,13 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
                 type="tel"
                 placeholder="0661234567"
                 value={formFields.phone}
-                onChange={(e) => setFormFields(prev => ({ ...prev, phone: e.target.value }))}
+                onChange={(e) => setFormFields(prev => ({ ...prev, phone: normalizeMoroccanPhoneInput(e.target.value) }))}
                 className={`${inputClass(!!formErrors.phone)} pl-[90px]`}
                 autoComplete="tel"
+                inputMode="numeric"
+                minLength={MOROCCAN_PHONE_MIN_DIGITS}
+                maxLength={MOROCCAN_PHONE_MAX_DIGITS}
+                pattern="[0-9]{9,10}"
                 dir="ltr"
               />
             </div>

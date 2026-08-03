@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { createOrderTrackingToken, createOrderVerificationToken, verifyOrderToken } from '@/lib/order-security';
 import { rateLimit, getClientIp } from '@/lib/rateLimit';
+import { isValidMoroccanPhone, normalizeMoroccanPhoneInput } from '@/lib/moroccan-phone';
 
 type ProductRecord = {
   id: number;
@@ -118,6 +119,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Informations de commande invalides' }, { status: 400 });
     }
 
+    if (!isValidMoroccanPhone(String(orderData.phone))) {
+      return NextResponse.json({ success: false, error: 'Le numéro de téléphone marocain doit contenir entre 9 et 10 chiffres.' }, { status: 400 });
+    }
+
     const quantities = new Map<number, number>();
     for (const item of requestedItems) {
       const id = Number(item?.id);
@@ -179,7 +184,7 @@ export async function POST(request: Request) {
     const order = {
       order_id: fallbackOrderId,
       customer_name: String(orderData.name).trim().slice(0, 120),
-      phone_number: String(orderData.phone).trim().slice(0, 40),
+      phone_number: normalizeMoroccanPhoneInput(String(orderData.phone)),
       address: String(orderData.address).trim().slice(0, 500),
       city: String(orderData.city).trim().slice(0, 120),
       notes: String(orderData.note || '').trim().slice(0, 1000),

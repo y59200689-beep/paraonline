@@ -7,6 +7,7 @@ import { MessageSquare, X, Send, Sparkles, ShieldAlert, CheckCircle, HelpCircle 
 import { useProducts } from '@/context/ProductsContext';
 import { useUi } from '@/context/UiContext';
 import { useCart } from '@/context/CartContext';
+import { isValidMoroccanPhone, MOROCCAN_PHONE_MAX_DIGITS, normalizeMoroccanPhoneInput } from '@/lib/moroccan-phone';
 
 interface Message {
   sender: 'user' | 'ai';
@@ -94,6 +95,10 @@ export const AiAssistant: React.FC = () => {
 
   const handlePlaceAiOrder = async (form: typeof activeOrderForm) => {
     if (!form || form.items.length === 0) return;
+    if (!isValidMoroccanPhone(form.phone)) {
+      showToast(language === 'FR' ? 'Saisissez un numéro marocain de 9 à 10 chiffres.' : 'أدخل رقم هاتف مغربي من 9 إلى 10 أرقام.', 'error');
+      return;
+    }
     setIsOrderSubmitting(true);
     try {
       const orderItems = form.items.map((item) => {
@@ -565,11 +570,13 @@ export const AiAssistant: React.FC = () => {
                             className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-[11px] font-semibold focus:outline-none focus:border-primary-dark"
                           />
                           <input
-                            type="text"
+                            type="tel"
                             placeholder={language === 'FR' ? "Numéro de Téléphone" : "رقم الهاتف"}
                             value={activeOrderForm.phone}
-                            onChange={(e) => setActiveOrderForm(prev => prev ? { ...prev, phone: e.target.value } : null)}
+                            onChange={(e) => setActiveOrderForm(prev => prev ? { ...prev, phone: normalizeMoroccanPhoneInput(e.target.value) } : null)}
                             className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-[11px] font-semibold focus:outline-none focus:border-primary-dark"
+                            inputMode="numeric"
+                            maxLength={MOROCCAN_PHONE_MAX_DIGITS}
                           />
                           <input
                             type="text"
@@ -590,7 +597,7 @@ export const AiAssistant: React.FC = () => {
                         {/* Action buttons */}
                         <button
                           type="button"
-                          disabled={isOrderSubmitting || !activeOrderForm.customerName || !activeOrderForm.phone || !activeOrderForm.address || !activeOrderForm.city || activeOrderForm.items.length === 0}
+                          disabled={isOrderSubmitting || !activeOrderForm.customerName || !isValidMoroccanPhone(activeOrderForm.phone) || !activeOrderForm.address || !activeOrderForm.city || activeOrderForm.items.length === 0}
                           onClick={() => handlePlaceAiOrder(activeOrderForm)}
                           className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold text-[10px] uppercase tracking-wider rounded-lg shadow-sm hover:shadow-md transition active:scale-95 border-0 outline-none text-center"
                         >
