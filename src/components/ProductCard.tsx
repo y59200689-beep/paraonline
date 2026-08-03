@@ -7,6 +7,7 @@ import { useTranslation } from '@/context/LanguageContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { Star, ShoppingCart, Eye, Heart, Sparkles } from 'lucide-react';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
+import { useGalleryOverrides } from '@/lib/useGalleryOverrides';
 import { useAmPm } from '@/context/AmPmContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useSettings } from '@/context/SettingsContext';
@@ -25,6 +26,7 @@ interface ProductCardProps {
   singleImage?: boolean;
   priority?: boolean;
   compact?: boolean;
+  galleryKeyPrefix?: string;
 }
 
 const placeholderSvg = "data:image/svg+xml;utf8," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300' width='100%' height='100%'><rect width='100%' height='100%' fill='#f1f5f9'/><path d='M150 100a40 40 0 1 0 40 40 40 40 0 0 0-40-40zm0 60a20 20 0 1 1 20-20 20 20 0 0 1-20 20z' fill='#94a3b8'/><path d='M180 180h-60a10 10 0 0 0-10 10v10h80v-10a10 10 0 0 0-10-10z' fill='#94a3b8'/><text x='150' y='230' font-family='sans-serif' font-size='12' font-weight='bold' fill='#64748b' text-anchor='middle'>Image Indisponible</text></svg>");
@@ -64,12 +66,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   searchQuery,
   singleImage = false,
   priority = false,
-  compact = false
+  compact = false,
+  galleryKeyPrefix,
 }) => {
   const { addToCart } = useCart();
   const { language } = useTranslation();
   const { convertPrice } = useCurrency();
   const { settings } = useSettings();
+  const { getDisplayImage } = useGalleryOverrides();
   const lowStockThreshold = settings.lowStockThreshold || 5;
   const { toggleWishlist, isInWishlist } = useWishlist();
   const isFavorite = isInWishlist(product.id);
@@ -318,7 +322,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         <div className="bezel-inner absolute inset-2 bg-white rounded-xl border-0 flex items-center justify-center overflow-hidden z-0 transition-transform duration-500 ease-out group-hover/img:scale-[1.02]">
           <Image
-            src={(!product.image || imgError) ? placeholderSvg : getOptimizedImageUrl(product.image)}
+            src={(!product.image || imgError)
+              ? placeholderSvg
+              : galleryKeyPrefix
+                ? getDisplayImage(product.image, `${galleryKeyPrefix}_catalog_${product.id}_primary`)
+                : getOptimizedImageUrl(product.image)}
             alt={product.nameFr || product.name || product.title}
             width={300}
             height={300}
@@ -330,7 +338,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           />
           {!singleImage && product.images && product.images.length > 1 && (
             <Image
-              src={(!product.images[1] || altImgError) ? placeholderSvg : getOptimizedImageUrl(product.images[1])}
+              src={(!product.images[1] || altImgError)
+                ? placeholderSvg
+                : galleryKeyPrefix
+                  ? getDisplayImage(product.images[1], `${galleryKeyPrefix}_catalog_${product.id}_secondary`)
+                  : getOptimizedImageUrl(product.images[1])}
               alt={`${product.nameFr || product.name || product.title} Alternate`}
               width={300}
               height={300}

@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { ShopShell } from '@/components/ShopShell';
 import { ProductCard } from '@/components/ProductCard';
 import { Product, PRODUCTS_DB } from '@/lib/data';
+import { useGalleryOverrides } from '@/lib/useGalleryOverrides';
 import { useUi } from '@/context/UiContext';
 import {
   Search,
@@ -859,6 +860,9 @@ const firstImage = (p: Product): string => {
 /* ─── Component ──────────────────────────────────────────────────── */
 export default function LaRochePosayCustomPage({ brand = 'la-roche-posay' }: { brand?: 'la-roche-posay' | 'vichy' | 'cerave' | 'avene' | 'bioderma' | 'eucerin' }) {
   const { setDiagnosticOpen } = useUi();
+  const { getDisplayImage } = useGalleryOverrides();
+  const galleryPrefix = `brand_page_${brand.replace(/-/g, '_')}`;
+  const galleryImage = (src: string, placement: string) => getDisplayImage(src, `${galleryPrefix}_${placement}`);
   const brandConfig = brand === 'eucerin'
     ? EUCERIN_CONFIG
     : brand === 'avene'
@@ -977,7 +981,7 @@ export default function LaRochePosayCustomPage({ brand = 'la-roche-posay' }: { b
                 <div className="mb-7 flex items-center gap-4">
                   <span className="flex h-16 w-16 items-center justify-center border border-slate-200 bg-white px-1 shadow-[0_12px_34px_rgba(15,39,68,0.09)]">
                     {brandConfig.logo ? (
-                      <Image src={brandConfig.logo} alt={brandConfig.logoAlt} width={52} height={52} className="h-12 w-12 object-contain" preload />
+                      <Image src={galleryImage(brandConfig.logo, 'logo')} alt={brandConfig.logoAlt} width={52} height={52} className="h-12 w-12 object-contain" preload />
                     ) : (
                       <span className="text-center text-[11px] font-black leading-none tracking-[-0.06em] text-[#3f4248]">{brandConfig.name}</span>
                     )}
@@ -1019,7 +1023,7 @@ export default function LaRochePosayCustomPage({ brand = 'la-roche-posay' }: { b
               </div>
 
               <div className="relative min-h-[480px] overflow-hidden rounded-[34px] bg-[#e8eef0] shadow-[0_30px_70px_rgba(15,39,68,0.16)] lg:min-h-[650px]">
-                <Image src={brandConfig.heroImage} alt={brandConfig.heroAlt} fill preload sizes="(max-width: 1024px) 100vw, 55vw" className="object-cover" />
+                <Image src={galleryImage(brandConfig.heroImage, 'hero')} alt={brandConfig.heroAlt} fill preload sizes="(max-width: 1024px) 100vw, 55vw" className="object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0b2742]/70 via-transparent to-white/5" />
                 <div className="absolute inset-x-5 bottom-5 rounded-[24px] border border-white/25 bg-[#0b2742]/78 p-5 text-white shadow-2xl backdrop-blur-xl sm:inset-x-7 sm:bottom-7 sm:p-6">
                   <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
@@ -1037,7 +1041,7 @@ export default function LaRochePosayCustomPage({ brand = 'la-roche-posay' }: { b
               {brandConfig.heroHighlights.map((item) => (
                 <button key={item.id} type="button" onClick={() => selectRange(item.id)} className="group grid min-h-28 grid-cols-[76px_1fr_auto] items-center gap-4 rounded-[22px] border border-[#d7e4ec] bg-white p-3 text-left shadow-[0_12px_28px_rgba(15,39,68,0.07)] transition duration-300 hover:-translate-y-1 hover:border-[#94c7e2] hover:shadow-[0_18px_36px_rgba(15,39,68,0.12)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0c79b8] active:translate-y-0">
                   <span className="relative h-[76px] overflow-hidden rounded-[16px] bg-slate-50">
-                    <Image src={item.image || rangeImages[item.id] || brandConfig.fallbackImage} alt={`Produit ${item.range}`} fill sizes="76px" className="object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <Image src={galleryImage(item.image || rangeImages[item.id] || brandConfig.fallbackImage, `highlight_${item.id}`)} alt={`Produit ${item.range}`} fill sizes="76px" className="object-cover transition-transform duration-500 group-hover:scale-105" />
                   </span>
                   <span>
                     <span className="block text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: item.accent }}>{item.range}</span>
@@ -1147,7 +1151,7 @@ export default function LaRochePosayCustomPage({ brand = 'la-roche-posay' }: { b
                       <span className="pointer-events-none absolute bottom-4 left-1/2 h-5 w-32 -translate-x-1/2 rounded-full bg-slate-700/10 blur-xl transition duration-500 group-hover:w-40" />
                       {img ? (
                         <Image
-                          src={img}
+                          src={galleryImage(img, `range_${rng.id}`)}
                           alt={rng.label}
                           fill
                           sizes={isFeature ? '(max-width: 1024px) 100vw, 52vw' : '(max-width: 1024px) 50vw, 25vw'}
@@ -1237,7 +1241,7 @@ export default function LaRochePosayCustomPage({ brand = 'la-roche-posay' }: { b
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(14,165,233,0.18),transparent_30%),radial-gradient(circle_at_85%_80%,rgba(42,106,153,0.2),transparent_32%)]" />
           <div className="relative mx-auto grid max-w-[1360px] gap-8 px-5 sm:px-8 lg:grid-cols-[0.8fr_1.2fr] lg:px-12">
             <div className="relative min-h-[420px] overflow-hidden rounded-[30px] bg-white">
-              <Image src={brandConfig.methodImage} alt={brandConfig.methodImageAlt} fill sizes="(max-width: 1024px) 100vw, 40vw" className="object-cover object-center" />
+              <Image src={galleryImage(brandConfig.methodImage, 'method')} alt={brandConfig.methodImageAlt} fill sizes="(max-width: 1024px) 100vw, 40vw" className="object-cover object-center" />
               <span className="absolute left-5 top-5 border border-sky-200 bg-sky-50 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[#0c79b8]">Soin emblématique</span>
             </div>
 
@@ -1400,7 +1404,7 @@ export default function LaRochePosayCustomPage({ brand = 'la-roche-posay' }: { b
                   </div>
                 ) : catalogProducts.length > 0 ? (
                   <div className="grid grid-cols-1 gap-5 min-[520px]:grid-cols-2 xl:grid-cols-3">
-                    {catalogProducts.map(p => <ProductCard key={p.id} product={p} />)}
+                    {catalogProducts.map(p => <ProductCard key={p.id} product={p} galleryKeyPrefix={galleryPrefix} />)}
                   </div>
                 ) : (
                   <div className="flex flex-col items-center py-20 gap-4 text-slate-400">

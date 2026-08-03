@@ -15,7 +15,7 @@ import { randomUUID } from 'crypto';
 export interface GalleryImage {
   key: string;
   label: string;
-  group: 'heroes' | 'concerns' | 'brands' | 'categories' | 'bundles' | 'promo' | 'logo' | 'products';
+  group: 'heroes' | 'concerns' | 'brands' | 'brand-pages' | 'categories' | 'bundles' | 'promo' | 'logo' | 'products';
   /** Path relative to /public */
   filePath: string;
   /** URL path served by Next.js */
@@ -25,6 +25,92 @@ export interface GalleryImage {
   height?: number;
   dimensions?: string;
 }
+
+interface BrandPageGalleryDefinition {
+  key: string;
+  name: string;
+  logo?: string;
+  hero: string;
+  method: string;
+  highlights: Array<{ id: string; label: string; image: string }>;
+  ranges: Array<{ id: string; label: string; image: string }>;
+}
+
+const brandPageDefinitions: BrandPageGalleryDefinition[] = [
+  {
+    key: 'la_roche_posay', name: 'La Roche-Posay', logo: '/images/brands/laroche.svg',
+    hero: '/images/larochposay_brand_showcase.webp', method: '/images/effaclar_hero_packshot.webp',
+    highlights: [
+      { id: 'acne', label: 'Mise en avant Effaclar', image: '/images/effaclar_hero_packshot.webp' },
+      { id: 'solaire', label: 'Mise en avant Anthelios', image: '/images/anthelios_hero_packshot.webp' },
+      { id: 'cicatrisation', label: 'Mise en avant Cicaplast', image: '/images/cicaplast_hero_packshot.webp' },
+    ],
+    ranges: [
+      { id: 'acne', label: 'Catégorie Effaclar', image: '/images/effaclar_hero_packshot.webp' },
+      { id: 'solaire', label: 'Catégorie Anthelios', image: '/images/anthelios_banner_card.webp' },
+      { id: 'cicatrisation', label: 'Catégorie Cicaplast', image: '/images/cicaplast_bundle.webp' },
+      { id: 'taches', label: 'Catégorie Mela B3', image: '/images/larochposay_brand_showcase.webp' },
+      { id: 'secheresse', label: 'Catégorie Lipikar', image: '/images/larochposay_brand_showcase.webp' },
+      { id: 'sensibles', label: 'Catégorie Toleriane', image: '/images/larochposay_brand_showcase.webp' },
+    ],
+  },
+  {
+    key: 'vichy', name: 'Vichy', logo: '/images/brands/vichy.webp',
+    hero: '/images/vichy_brand_showcase.webp', method: '/images/vichy_sunscreen_bundle.webp',
+    highlights: [
+      { id: 'normaderm', label: 'Mise en avant Normaderm', image: '/images/vichy_brand_showcase.webp' },
+      { id: 'dercos', label: 'Mise en avant Dercos', image: '/images/vichy_brand_showcase.webp' },
+      { id: 'solaire', label: 'Mise en avant Capital Soleil', image: '/images/vichy_sunscreen_bundle.webp' },
+    ],
+    ranges: ['normaderm', 'dercos', 'solaire', 'liftactiv', 'purete', 'homme'].map((id) => ({
+      id,
+      label: `Catégorie ${id}`,
+      image: id === 'solaire' ? '/images/vichy_sunscreen_bundle.webp' : '/images/vichy_brand_showcase.webp',
+    })),
+  },
+  {
+    key: 'cerave', name: 'CeraVe', logo: '/images/brands/cerave.svg',
+    hero: '/images/cerave_showcase_banner.webp', method: '/images/cerave_showcase_banner.webp',
+    highlights: ['hydratation', 'nettoyage', 'imperfections'].map((id) => ({ id, label: `Mise en avant ${id}`, image: '/images/cerave_showcase_banner.webp' })),
+    ranges: ['hydratation', 'nettoyage', 'imperfections', 'rugosites', 'solaire', 'soins-cibles'].map((id) => ({ id, label: `Catégorie ${id}`, image: '/images/cerave_showcase_banner.webp' })),
+  },
+  {
+    key: 'avene', name: 'Avène', hero: '/images/avene_brand_showcase.webp', method: '/images/avene_brand_showcase.webp',
+    highlights: ['cleanance', 'hydratation', 'cicalfate'].map((id) => ({ id, label: `Mise en avant ${id}`, image: '/images/avene_brand_showcase.webp' })),
+    ranges: ['cleanance', 'hydratation', 'cicalfate', 'secheresse', 'solaire', 'sensibilite'].map((id) => ({ id, label: `Catégorie ${id}`, image: '/images/avene_brand_showcase.webp' })),
+  },
+  {
+    key: 'bioderma', name: 'Bioderma', hero: '/images/bioderma_brand_showcase.webp', method: '/images/bioderma_brand_showcase.webp',
+    highlights: ['sensibio', 'sebium', 'atoderm'].map((id) => ({ id, label: `Mise en avant ${id}`, image: '/images/bioderma_brand_showcase.webp' })),
+    ranges: ['sensibio', 'sebium', 'atoderm', 'photoderm', 'hydrabio', 'cicabio'].map((id) => ({ id, label: `Catégorie ${id}`, image: '/images/bioderma_brand_showcase.webp' })),
+  },
+  {
+    key: 'eucerin', name: 'Eucerin', hero: '/images/eucerin_brand_showcase.webp', method: '/images/eucerin_brand_showcase.webp',
+    highlights: ['urearepair', 'dermopure', 'sun'].map((id) => ({ id, label: `Mise en avant ${id}`, image: '/images/eucerin_brand_showcase.webp' })),
+    ranges: ['aquaphor', 'urearepair', 'dermopure', 'sun', 'anti-pigment', 'hyalu-filler'].map((id) => ({ id, label: `Catégorie ${id}`, image: '/images/eucerin_brand_showcase.webp' })),
+  },
+];
+
+const brandPageSlot = (brand: BrandPageGalleryDefinition, placement: string, label: string, url: string): GalleryImage => {
+  const key = `brand_page_${brand.key}_${placement}`;
+  return {
+    key,
+    label: `Page ${brand.name} — ${label}`,
+    group: 'brand-pages',
+    // Each placement owns a distinct replacement path, even when its default
+    // artwork is reused elsewhere on the same page.
+    filePath: `images/gallery/brand-pages/${key}.webp`,
+    url,
+  };
+};
+
+const BRAND_PAGE_IMAGE_SLOTS: GalleryImage[] = brandPageDefinitions.flatMap((brand) => [
+  ...(brand.logo ? [brandPageSlot(brand, 'logo', 'Logo', brand.logo)] : []),
+  brandPageSlot(brand, 'hero', 'Hero principal', brand.hero),
+  ...brand.highlights.map((item) => brandPageSlot(brand, `highlight_${item.id}`, item.label, item.image)),
+  ...brand.ranges.map((item) => brandPageSlot(brand, `range_${item.id}`, item.label, item.image)),
+  brandPageSlot(brand, 'method', 'Soin emblématique', brand.method),
+]);
 
 export const IMAGE_MANIFEST: GalleryImage[] = [
   // ── Heroes ──────────────────────────────────────────────────────────────
@@ -51,6 +137,10 @@ export const IMAGE_MANIFEST: GalleryImage[] = [
   { key: 'vichy_showcase',         label: 'Marque — Vichy Showcase',     group: 'brands',     filePath: 'images/vichy_brand_showcase.webp',     url: '/images/vichy_brand_showcase.webp' },
   { key: 'brand_laroche_logo',     label: 'Marque — La Roche-Posay Logo', group: 'brands',    filePath: 'images/brands/laroche.webp',           url: '/images/brands/laroche.webp' },
   { key: 'brand_vichy_logo',       label: 'Marque — Vichy Logo',         group: 'brands',     filePath: 'images/brands/vichy.webp',             url: '/images/brands/vichy.webp' },
+
+  // ── Brand page placements ────────────────────────────────────────────────
+  // Do not deduplicate these entries: each card maps to one visible section.
+  ...BRAND_PAGE_IMAGE_SLOTS,
 
   // ── Categories ───────────────────────────────────────────────────────────
   { key: 'cat_all',                 label: 'Catégorie — Grandes Réductions', group: 'categories', filePath: 'images/categories/all.webp',       url: '/images/categories/all.webp' },
@@ -137,6 +227,69 @@ async function getImageFileInfo(filePath: string): Promise<ImageFileInfo> {
   } catch {
     return { sizeKb: 0, width: 0, height: 0, dimensions: '0 × 0 px' };
   }
+}
+
+const brandPageVendorKey = (vendor: unknown): string | null => {
+  const normalized = String(vendor || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+
+  if (normalized.includes('larocheposay')) return 'la_roche_posay';
+  if (normalized.includes('vichy')) return 'vichy';
+  if (normalized.includes('cerave')) return 'cerave';
+  if (normalized.includes('avene')) return 'avene';
+  if (normalized.includes('bioderma')) return 'bioderma';
+  if (normalized.includes('eucerin')) return 'eucerin';
+  return null;
+};
+
+const asImageList = (value: unknown): string[] => {
+  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === 'string' && item.length > 0);
+  if (typeof value !== 'string' || !value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string' && item.length > 0) : [];
+  } catch {
+    return [];
+  }
+};
+
+async function getBrandPageCatalogImages(): Promise<GalleryImage[]> {
+  const { data, error } = await supabase
+    .from('products')
+    .select('id, title, vendor, image, images')
+    .or('vendor.ilike.%la roche%,vendor.ilike.%laroche%,vendor.ilike.%vichy%,vendor.ilike.%cerave%,vendor.ilike.%avene%,vendor.ilike.%avène%,vendor.ilike.%bioderma%,vendor.ilike.%eucerin%')
+    .limit(1000);
+
+  if (error) throw error;
+
+  return (data || []).flatMap((product: { id: number | string; title?: string; vendor?: string; image?: string; images?: unknown }) => {
+    const brandKey = brandPageVendorKey(product.vendor);
+    if (!brandKey) return [];
+
+    const primary = typeof product.image === 'string' ? product.image : '';
+    const secondary = asImageList(product.images)[1] || '';
+    const productLabel = product.title || `Produit #${product.id}`;
+    const slots: Array<{ placement: 'primary' | 'secondary'; url: string; label: string }> = [
+      { placement: 'primary', url: primary, label: 'Image principale' },
+      ...(secondary ? [{ placement: 'secondary' as const, url: secondary, label: 'Image secondaire' }] : []),
+    ];
+
+    return slots
+      .filter((slot) => Boolean(slot.url))
+      .map((slot) => {
+        const key = `brand_page_${brandKey}_catalog_${product.id}_${slot.placement}`;
+        return {
+          key,
+          label: `Page ${product.vendor} — Catalogue — ${productLabel} (${slot.label})`,
+          group: 'brand-pages' as const,
+          filePath: `images/gallery/brand-pages/${key}.webp`,
+          url: slot.url,
+        };
+      });
+  });
 }
 
 const isProduction = process.env.NODE_ENV === 'production';
@@ -364,8 +517,17 @@ export async function GET() {
     console.warn('[gallery] Failed to scan public/uploads:', e);
   }
 
+  let brandPageCatalogImages: GalleryImage[] = [];
+  try {
+    brandPageCatalogImages = await getBrandPageCatalogImages();
+  } catch (e) {
+    // The static section slots remain available even if the catalog cannot be
+    // queried temporarily.
+    console.warn('[gallery] Failed to load brand page catalog images:', e);
+  }
+
   return NextResponse.json(
-    { success: true, images: [...manifestImages, ...uploadImages] },
+    { success: true, images: [...manifestImages, ...uploadImages, ...brandPageCatalogImages] },
     { headers: { 'Cache-Control': 'no-store, max-age=0' } }
   );
 }
@@ -399,6 +561,16 @@ export async function POST(request: Request) {
         group: 'products',
         filePath: relPath,
         url: `/${relPath}`,
+      };
+    }
+
+    if (!entry && /^brand_page_(?:la_roche_posay|vichy|cerave|avene|bioderma|eucerin)_catalog_\d+_(?:primary|secondary)$/.test(key)) {
+      entry = {
+        key,
+        label: 'Page marque — image catalogue',
+        group: 'brand-pages',
+        filePath: `images/gallery/brand-pages/${key}.webp`,
+        url: '',
       };
     }
 

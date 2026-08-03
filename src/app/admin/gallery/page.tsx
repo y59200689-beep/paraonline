@@ -18,7 +18,7 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Group = 'all' | 'heroes' | 'concerns' | 'brands' | 'categories' | 'bundles' | 'promo' | 'logo' | 'products';
+type Group = 'all' | 'heroes' | 'concerns' | 'brands' | 'brand-pages' | 'categories' | 'bundles' | 'promo' | 'logo' | 'products';
 
 interface GalleryImage {
   key: string;
@@ -50,6 +50,7 @@ const GROUP_LABELS: Record<Group, string> = {
   heroes: 'Heroes',
   concerns: 'Problèmes',
   brands: 'Marques',
+  'brand-pages': 'Pages marques',
   categories: 'Catégories',
   bundles: 'Bundles',
   promo: 'Promotions',
@@ -61,6 +62,7 @@ const GROUP_COLORS: Record<Exclude<Group, 'all'>, string> = {
   heroes: '#6366f1',
   concerns: '#f59e0b',
   brands: '#10b981',
+  'brand-pages': '#0ea5e9',
   categories: '#3b82f6',
   bundles: '#ec4899',
   promo: '#f43f5e',
@@ -491,7 +493,7 @@ export default function GalleryPage() {
     const groupParam = params.get('group') as Group | null;
     const storedGroup = localStorage.getItem('admin_gallery_group') as Group | null;
     
-    const validGroups: Group[] = ['all', 'heroes', 'concerns', 'brands', 'categories', 'bundles', 'promo', 'logo', 'products'];
+    const validGroups: Group[] = ['all', 'heroes', 'concerns', 'brands', 'brand-pages', 'categories', 'bundles', 'promo', 'logo', 'products'];
     
     if (groupParam && validGroups.includes(groupParam)) {
       setActiveGroup(groupParam);
@@ -650,7 +652,7 @@ export default function GalleryPage() {
   const textPrimary = isDark ? 'hsl(214,35%,95%)' : 'hsl(222,47%,10%)';
   const textMuted = isDark ? 'hsl(215,22%,46%)' : 'hsl(215,18%,46%)';
 
-  const groups: Group[] = ['all', 'heroes', 'concerns', 'brands', 'categories', 'bundles', 'promo', 'logo', 'products'];
+  const groups: Group[] = ['all', 'heroes', 'concerns', 'brands', 'brand-pages', 'categories', 'bundles', 'promo', 'logo', 'products'];
 
   return (
     <>
