@@ -7,7 +7,7 @@ import { useSettings } from './SettingsContext';
 import { useTranslation } from './LanguageContext';
 import { useUi } from './UiContext';
 import { useProducts } from './ProductsContext';
-import { supabase } from '@/lib/supabase';
+import { getCustomerAccessToken } from '@/lib/customer-session';
 import {
   calculateSubtotal,
   calculateDiscount,
@@ -99,6 +99,20 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Load cart from localStorage
   useEffect(() => {
+    // Older checkouts stored their signed tracking proof in this tab only.
+    // Preserve those proofs across tabs so the authenticated customer portal
+    // can securely attach the corresponding orders after this upgrade.
+    try {
+      for (let index = 0; index < sessionStorage.length; index += 1) {
+        const key = sessionStorage.key(index);
+        if (!key?.startsWith('orderTrackingToken:')) continue;
+        const token = sessionStorage.getItem(key);
+        if (token && !localStorage.getItem(key)) localStorage.setItem(key, token);
+      }
+    } catch {
+      // Storage can be blocked by browser privacy settings; checkout still works.
+    }
+
     const savedCart = localStorage.getItem('cartBM');
     if (savedCart) {
       try {
@@ -452,12 +466,19 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
+      let accessToken: string | null = null;
+      try {
+        accessToken = await getCustomerAccessToken();
+      } catch (sessionError) {
+        // Checkout must remain available as a guest if browser auth recovery is
+        // temporarily unavailable. The signed tracking token can claim it later.
+        console.warn('Customer session unavailable during checkout:', sessionError);
+      }
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(sessionData.session?.access_token ? { Authorization: `Bearer ${sessionData.session.access_token}` } : {})
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
         },
         body: JSON.stringify(payload)
       });
@@ -469,6 +490,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('admin:orders-updated', String(Date.now()));
         if (data.trackingToken) {
           sessionStorage.setItem(`orderTrackingToken:${data.orderId}`, data.trackingToken);
+          // Keep the limited tracking proof across tabs so the customer portal
+          // can securely attach this order to the signed-in account.
+          localStorage.setItem(`orderTrackingToken:${data.orderId}`, data.trackingToken);
         }
         // Clear abandoned cart since the user checked out successfully
         try {

@@ -22,6 +22,7 @@ import { useCart } from '@/context/CartContext';
 import { CustomerAuthPortal } from '@/components/CustomerAuthPortal';
 import { ShopShell } from '@/components/ShopShell';
 import { PoButton } from '@/components/ui/PoButton';
+import { getCustomerAccessToken, getLocallyTrackedOrderClaims } from '@/lib/customer-session';
 
 interface OrderItem {
   id: number;
@@ -258,9 +259,25 @@ export default function CustomerDashboard() {
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => controller.abort(), 8_000);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const accessToken = sessionData.session?.access_token;
+      const accessToken = await getCustomerAccessToken();
       if (!accessToken) throw new Error('Votre session a expiré. Connectez-vous de nouveau.');
+
+      // Orders placed earlier in this browser have a signed tracking proof.
+      // Claim them into the authenticated account before loading its history.
+      const claims = getLocallyTrackedOrderClaims(window.sessionStorage, window.localStorage);
+      if (claims.length > 0) {
+        const claimResponse = await fetch('/api/customer/orders', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ claims }),
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+        if (claimResponse.status === 401) throw new Error('Votre session a expiré. Connectez-vous de nouveau.');
+      }
 
       const response = await fetch('/api/customer/orders', {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -390,14 +407,12 @@ export default function CustomerDashboard() {
 
   const persistAddresses = async (nextAddresses: UserAddress[]) => {
     if (!clientUser) return false;
-    const { data: sessionData } = await supabase.auth.getSession();
-    const accessToken = sessionData.session?.access_token;
-    if (!accessToken) {
-      showToast('Votre session a expiré. Connectez-vous de nouveau pour enregistrer cette adresse.', 'error');
-      return false;
-    }
-
     try {
+      const accessToken = await getCustomerAccessToken();
+      if (!accessToken) {
+        showToast('Votre session a expiré. Connectez-vous de nouveau pour enregistrer cette adresse.', 'error');
+        return false;
+      }
       const response = await fetch('/api/customer/profile', {
         method: 'PUT',
         headers: {
@@ -459,8 +474,7 @@ export default function CustomerDashboard() {
     setAddressesError(null);
 
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const accessToken = sessionData.session?.access_token;
+      const accessToken = await getCustomerAccessToken();
       if (!accessToken) throw new Error('Votre session a expiré. Connectez-vous de nouveau.');
 
       const response = await fetch('/api/customer/profile', {

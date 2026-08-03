@@ -144,7 +144,9 @@ export default function SuiviCommandeClient() {
 
   useEffect(() => {
     const savedToken = initialQuery && typeof window !== 'undefined'
-      ? sessionStorage.getItem(`orderTrackingToken:${initialQuery}`) || ''
+      ? sessionStorage.getItem(`orderTrackingToken:${initialQuery}`)
+        || localStorage.getItem(`orderTrackingToken:${initialQuery}`)
+        || ''
       : '';
     const token = initialToken || savedToken;
     if (initialQuery && token) {

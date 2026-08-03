@@ -2227,24 +2227,6 @@ export default function CatalogTab({
 
   return (
     <div className="space-y-4 admin-tab-enter">
-      <section className={`rounded-2xl border p-4 ${adminTheme === 'light' ? 'bg-white border-slate-200 shadow-[0_3px_16px_rgba(15,23,42,0.04)]' : 'bg-slate-900/60 border-slate-800'}`} aria-label="Qualité du catalogue">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <p className={`text-[11px] font-black uppercase tracking-[0.14em] ${adminTheme === 'light' ? 'text-slate-800' : 'text-white'}`}>Qualité du catalogue</p>
-            <p className="mt-1 text-[10.5px] text-slate-500">Repérez les fiches qui empêchent une publication propre avant de travailler la sélection.</p>
-          </div>
-          <button type="button" onClick={() => { setFilterSpecial('needs_review'); setCurrentPage(1); }} className="self-start sm:self-auto rounded-xl px-3 py-2 text-[10px] font-black text-amber-700 bg-amber-50 border border-amber-200 hover:bg-amber-100 transition">Voir les fiches à compléter</button>
-        </div>
-        <div className="mt-4 grid grid-cols-2 sm:grid-cols-5 gap-2">
-          {[
-            { label: 'À compléter', value: specialFilterCounts.needsReview, action: 'needs_review', color: '#f59e0b' },
-            { label: 'Sans image', value: specialFilterCounts.noImage, action: 'no_image', color: '#f43f5e' },
-            { label: 'Sans prix', value: specialFilterCounts.noPrice, action: 'needs_review', color: '#8b5cf6' },
-            { label: 'Sans catégorie', value: specialFilterCounts.noCategory, action: 'needs_review', color: '#3b82f6' },
-            { label: 'Sans ingrédients', value: specialFilterCounts.noIngredients, action: 'needs_review', color: '#10b981' },
-          ].map(item => <button key={item.label} type="button" onClick={() => { setFilterSpecial(item.action); setCurrentPage(1); }} className={`rounded-xl border px-3 py-2.5 text-left transition hover:-translate-y-0.5 ${adminTheme === 'light' ? 'bg-slate-50 border-slate-200 hover:bg-white' : 'bg-slate-950/50 border-slate-800'}`}><span className="block text-[9px] font-bold text-slate-500">{item.label}</span><span className="mt-1 block text-lg font-black font-mono" style={{ color: item.color }}>{item.value}</span></button>)}
-        </div>
-      </section>
       {/* Search/Filters & Operations Toolbar */}
       <div className={`flex flex-col gap-4 p-3 rounded-2xl border transition-all duration-200 ${
         adminTheme === 'light'

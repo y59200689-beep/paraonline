@@ -35,7 +35,8 @@ export async function GET(request: Request) {
     .from('customer_profiles')
     .select('delivery_addresses')
     .eq('id', auth.user.id)
-    .maybeSingle();
+    .maybeSingle()
+    .abortSignal(AbortSignal.timeout(7_000));
 
   if (error) {
     console.error('Customer delivery addresses error:', error);
@@ -75,8 +76,13 @@ export async function PUT(request: Request) {
 
   const { error } = await supabase
     .from('customer_profiles')
-    .update({ delivery_addresses: addresses, updated_at: new Date().toISOString() })
-    .eq('id', auth.user.id);
+    .upsert({
+      id: auth.user.id,
+      email: auth.user.email || null,
+      delivery_addresses: addresses,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'id' })
+    .abortSignal(AbortSignal.timeout(7_000));
 
   if (error) {
     console.error('Customer delivery address update error:', error);

@@ -142,10 +142,20 @@ export const LoyaltyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }, 300);
 
     // Listen to auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: AuthChangeEvent, session: Session | null) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
       supabaseUser.current = session?.user ?? null;
       if (session?.user) {
-        await fetchAndApplyProfile(session.user);
+        // Supabase holds an internal auth lock while this callback runs. Do not
+        // await database work here or concurrent getSession() calls can hang.
+        const user = session.user;
+        setClientUser((current) => {
+          const identity = resolveCustomerIdentity(user, null, current);
+          try { localStorage.setItem('customer_client_user', JSON.stringify(identity)); } catch {}
+          return identity;
+        });
+        setTimeout(() => {
+          if (supabaseUser.current?.id === user.id) void fetchAndApplyProfile(user);
+        }, 0);
       } else {
         setClientUser(null);
         try { localStorage.removeItem('customer_client_user'); } catch {}
