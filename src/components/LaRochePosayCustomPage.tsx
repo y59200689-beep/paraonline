@@ -458,9 +458,7 @@ export default function LaRochePosayCustomPage() {
                           fill
                           sizes={isFeature ? '(max-width: 1024px) 100vw, 52vw' : '(max-width: 1024px) 50vw, 25vw'}
                           onError={(event) => { event.currentTarget.src = '/images/larochposay_brand_showcase.webp'; }}
-                          className={rng.id === 'solaire'
-                            ? "h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.06]"
-                            : "object-contain p-5 drop-shadow-[0_22px_18px_rgba(15,39,68,0.18)] transition duration-700 ease-out group-hover:-translate-y-2 group-hover:scale-[1.07] sm:p-6"}
+                          className="h-full w-full object-cover object-center transition duration-700 ease-out group-hover:scale-[1.06]"
                         />
                       ) : (
                         <div className="absolute left-1/2 top-1/2 flex h-32 w-24 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-2xl shadow-xl" style={{ background: rng.accent }}>
@@ -675,7 +673,7 @@ export default function LaRochePosayCustomPage() {
                     style={{ accentColor: LRP_BLUE }} />
                 </div>
                 <div className="space-y-1.5">
-                  <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Gamme</h3>
+                  <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Catégories</h3>
                   <button onClick={() => setActiveRange(null)}
                     className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer transition"
                     style={activeRange === null ? { background: '#eff6ff', color: LRP_BLUE } : { color: '#64748b' }}>
@@ -753,7 +751,7 @@ export default function LaRochePosayCustomPage() {
                     style={{ accentColor: LRP_BLUE }} />
                 </div>
                 <div className="space-y-1.5">
-                  <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Gamme</h3>
+                  <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Catégories</h3>
                   {[{ id: null as string | null, name: 'Toutes', count: products.length },
                     ...RANGES.map(r => ({ id: r.id, name: r.name, count: products.filter(p => matchByKeywords(p, r.keywords)).length }))
                   ].filter(x => x.count > 0).map(item => (
