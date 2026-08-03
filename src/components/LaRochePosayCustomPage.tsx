@@ -1237,7 +1237,7 @@ export default function LaRochePosayCustomPage({ brand = 'la-roche-posay' }: { b
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(14,165,233,0.18),transparent_30%),radial-gradient(circle_at_85%_80%,rgba(42,106,153,0.2),transparent_32%)]" />
           <div className="relative mx-auto grid max-w-[1360px] gap-8 px-5 sm:px-8 lg:grid-cols-[0.8fr_1.2fr] lg:px-12">
             <div className="relative min-h-[420px] overflow-hidden rounded-[30px] bg-white">
-              <Image src={brandConfig.methodImage} alt={brandConfig.methodImageAlt} fill sizes="(max-width: 1024px) 100vw, 40vw" className="object-contain p-10" />
+              <Image src={brandConfig.methodImage} alt={brandConfig.methodImageAlt} fill sizes="(max-width: 1024px) 100vw, 40vw" className="object-cover object-center" />
               <span className="absolute left-5 top-5 border border-sky-200 bg-sky-50 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[#0c79b8]">Soin emblématique</span>
             </div>
 
