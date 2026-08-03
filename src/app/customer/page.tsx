@@ -291,6 +291,9 @@ export default function CustomerDashboard() {
       const nextOrders = Array.isArray(result.orders) ? result.orders as Order[] : [];
       setOrders(nextOrders);
       setOrdersState('ready');
+      // A locally tracked order may have just been linked to this account.
+      // Refresh the address book so its delivery address appears immediately.
+      void loadSavedAddresses();
       try {
         window.sessionStorage.setItem(cacheKey, JSON.stringify(nextOrders));
       } catch {
