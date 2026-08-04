@@ -82,6 +82,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   const [imgError, setImgError] = useState(false);
   const [altImgError, setAltImgError] = useState(false);
+  const [shouldLoadAlternateImage, setShouldLoadAlternateImage] = useState(false);
 
   const [isAdding, setIsAdding] = useState(false);
   const [ripples, setRipples] = useState<{ id: number; x: number; y: number; size: number }[]>([]);
@@ -292,6 +293,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     >
       <a
         href={`/products/${product.id}`}
+        onMouseEnter={() => setShouldLoadAlternateImage(true)}
+        onFocus={() => setShouldLoadAlternateImage(true)}
         className={`bezel-outer bg-[#f8fafc]/90 border border-slate-100/60 block ${compact ? 'm-2 !p-1 w-[calc(100%-16px)] rounded-xl' : 'm-3 !p-2 w-[calc(100%-24px)] rounded-2xl'} aspect-square relative shrink-0 overflow-hidden cursor-pointer group/img`}
       >
         
@@ -332,11 +335,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             height={300}
             priority={priority}
             className={`w-full h-full object-cover scale-[1.04] filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.03)] transition-all duration-700 ease-in-out ${
-              !singleImage && product.images && product.images.length > 1 ? 'group-hover:opacity-0 group-hover:blur-[1.5px]' : ''
+              shouldLoadAlternateImage && !singleImage && product.images && product.images.length > 1 ? 'group-hover:opacity-0 group-hover:blur-[1.5px]' : ''
             }`}
             onError={() => setImgError(true)}
           />
-          {!singleImage && product.images && product.images.length > 1 && (
+          {shouldLoadAlternateImage && !singleImage && product.images && product.images.length > 1 && (
             <Image
               src={(!product.images[1] || altImgError)
                 ? placeholderSvg

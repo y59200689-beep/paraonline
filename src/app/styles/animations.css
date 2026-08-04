@@ -210,15 +210,17 @@
    JS IntersectionObserver adds .active on viewport enter.
    ---------------------------------------------------------- */
 .reveal-on-scroll {
-  opacity: 0;
-  transform: translateY(16px);
-  transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: opacity, transform;
+  /* Homepage content must be ready as the customer reaches it. Keeping every
+     section hidden until JavaScript observes it made scrolling feel like the
+     page was still loading, especially on mobile devices. */
+  opacity: 1;
+  transform: none;
+  transition: none;
+  will-change: auto;
 }
 .reveal-on-scroll.active {
   opacity: 1;
-  transform: translateY(0);
+  transform: none;
   will-change: auto;
 }
 .reveal-delay-1 { transition-delay: 80ms  !important; }
@@ -1619,6 +1621,5 @@
   .save-btn__spinner { animation: none !important; }
   .save-btn__check   { animation: none !important; }
 }
-
 
 

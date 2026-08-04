@@ -69,7 +69,7 @@ function DeferredHomepageSection({ children }: { children: React.ReactNode }) {
           observer.disconnect();
         }
       },
-      { rootMargin: '1400px 0px' }
+      { rootMargin: '1800px 0px' }
     );
 
     observer.observe(node);

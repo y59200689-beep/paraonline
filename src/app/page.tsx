@@ -54,7 +54,6 @@ const websiteJsonLd = {
 
 // Component Imports
 import { ShopShell } from '@/components/ShopShell';
-import { ScrollRevealInit } from '@/components/ScrollRevealInit';
 import { DynamicSectionRenderer } from '@/components/DynamicSectionRenderer';
 import { HomepageSectionItem } from '@/context/SettingsContext';
 import { getPublicSettings } from '@/lib/get-public-settings';
@@ -178,9 +177,6 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
       />
-      {/* Scroll Reveal Animation Observer */}
-      <ScrollRevealInit />
-
       {/* Render Dynamic Homepage Sections */}
       <DynamicSectionRenderer sections={sectionsList} />
     </ShopShell>

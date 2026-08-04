@@ -1,4 +1,4 @@
-import React, { type CSSProperties } from 'react';
+import React from 'react';
 import { BrandLogoCard } from './BrandLogoCard';
 import { useSettings } from '@/context/SettingsContext';
 
@@ -7,23 +7,6 @@ interface BrandPartnersProps {
 }
 
 type Brand = { name: string; domain: string; logoUrl?: string };
-
-const MINIMUM_ROW_CARDS = 18;
-
-function buildSeamlessTrack(row: Brand[]): Brand[] {
-  if (row.length === 0) return [];
-
-  // Make one segment longer than any viewport before duplicating it. This
-  // prevents a visible empty edge when a merchant only has a few brands.
-  const repeats = Math.ceil(MINIMUM_ROW_CARDS / row.length);
-  const segment = Array.from({ length: repeats }, () => row).flat();
-  return [...segment, ...segment];
-}
-
-function marqueeDuration(row: Brand[], speedFactor = 1): string {
-  const segmentLength = Math.max(MINIMUM_ROW_CARDS, row.length);
-  return `${Math.max(34, Math.round(segmentLength * 2.25 * speedFactor))}s`;
-}
 
 export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands }) => {
   const { settings } = useSettings();
@@ -62,71 +45,27 @@ export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands }) => {
   allBrands.forEach((brand, index) => rows[index % rows.length].push(brand));
   const [row1, row2, row3] = rows;
 
-  const row1Items = buildSeamlessTrack(row1);
-  const row2Items = buildSeamlessTrack(row2);
-  const row3Items = buildSeamlessTrack(row3);
-
   return (
     <section 
       className="aurora-bg border-b border-slate-200/40 relative overflow-hidden py-8 md:py-12 reveal-on-scroll"
     >
       <style>{`
-        @keyframes marqueeL {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        @keyframes marqueeR {
-          0% { transform: translateX(-50%); }
-          100% { transform: translateX(0); }
-        }
-        .brand-marquee-l-1 {
+        .brand-partner-row {
           display: flex;
           gap: 0.75rem;
-          width: max-content;
-          animation: marqueeL var(--marquee-duration) linear infinite;
-          will-change: transform;
-          transform: translate3d(0, 0, 0);
+          overflow-x: auto;
+          scrollbar-width: none;
+          padding-bottom: 0.25rem;
         }
-        .brand-marquee-r {
-          display: flex;
-          gap: 0.75rem;
-          width: max-content;
-          animation: marqueeR var(--marquee-duration) linear infinite;
-          will-change: transform;
-          transform: translate3d(0, 0, 0);
-        }
-        .brand-marquee-l-2 {
-          display: flex;
-          gap: 0.75rem;
-          width: max-content;
-          animation: marqueeL var(--marquee-duration) linear infinite;
-          will-change: transform;
-          transform: translate3d(0, 0, 0);
-        }
+        .brand-partner-row::-webkit-scrollbar { display: none; }
         @media (min-width: 640px) {
-          .brand-marquee-l-1 {
+          .brand-partner-row {
             gap: 1rem;
           }
         }
-        /* Pause animation on hover so users can click reliably */
-        .brand-marquee-l-1:hover,
-        .brand-marquee-r:hover,
-        .brand-marquee-l-2:hover {
-          animation-play-state: paused;
-        }
-        /* Ensure card links inside marquee are fully interactive */
-        .brand-marquee-l-1 a,
-        .brand-marquee-r a,
-        .brand-marquee-l-2 a {
+        .brand-partner-row a {
           pointer-events: auto;
           cursor: pointer;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .brand-marquee-l-1,
-          .brand-marquee-r,
-          .brand-marquee-l-2 {
-            animation: none;
-          }
         }
       `}</style>
 
@@ -151,43 +90,32 @@ export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands }) => {
             </h2>
           </div>
 
-          {/* Infinite Scrolling Marquee — pointer-events enabled on cards */}
+          {/* Static, touch-scrollable rows avoid animating duplicate logo cards
+              while the customer scrolls the rest of the storefront. */}
           <div className="relative overflow-hidden w-full py-2 flex flex-col gap-4">
             
             {/* Fade Overlays — pointer-events-none so they don't block clicks */}
             <div className="absolute top-0 bottom-0 left-0 w-12 sm:w-20 bg-gradient-to-r from-white via-white/80 to-transparent z-10 pointer-events-none" />
             <div className="absolute top-0 bottom-0 right-0 w-12 sm:w-20 bg-gradient-to-l from-white via-white/80 to-transparent z-10 pointer-events-none" />
             
-            {/* Ticker Row 1 (Left) */}
-            <div
-              className="brand-marquee-l-1"
-              style={{ '--marquee-duration': marqueeDuration(row1, 1) } as CSSProperties}
-            >
-              {row1Items.map((brand, i) => (
+            <div className="brand-partner-row">
+              {row1.map((brand, i) => (
                 <div key={brand.name + '-r1-' + i} className="w-[72px] sm:w-[150px] shrink-0">
                   <BrandLogoCard brand={brand} />
                 </div>
               ))}
             </div>
 
-            {/* Ticker Row 2 (Right) */}
-            <div
-              className="brand-marquee-r"
-              style={{ '--marquee-duration': marqueeDuration(row2, 0.88), animationDelay: '-11s' } as CSSProperties}
-            >
-              {row2Items.map((brand, i) => (
+            <div className="brand-partner-row">
+              {row2.map((brand, i) => (
                 <div key={brand.name + '-r2-' + i} className="w-[72px] sm:w-[150px] shrink-0">
                   <BrandLogoCard brand={brand} />
                 </div>
               ))}
             </div>
 
-            {/* Ticker Row 3 (Left slower) */}
-            <div
-              className="brand-marquee-l-2"
-              style={{ '--marquee-duration': marqueeDuration(row3, 1.12), animationDelay: '-19s' } as CSSProperties}
-            >
-              {row3Items.map((brand, i) => (
+            <div className="brand-partner-row">
+              {row3.map((brand, i) => (
                 <div key={brand.name + '-r3-' + i} className="w-[72px] sm:w-[150px] shrink-0">
                   <BrandLogoCard brand={brand} />
                 </div>
