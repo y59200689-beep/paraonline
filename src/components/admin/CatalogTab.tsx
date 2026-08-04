@@ -23,7 +23,6 @@ import {
   ChevronUp,
   ChevronDown,
   ChevronsUpDown,
-  RefreshCw,
   Filter,
   ImageOff,
   TrendingDown,
@@ -929,7 +928,6 @@ export default function CatalogTab({
   const [savedProfiles, setSavedProfiles] = useState<Record<string, Record<string, string>>>({});
   const [profileNameInput, setProfileNameInput] = useState('');
 
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Advanced Filters State
   const [filterSpecial, setFilterSpecial] = useState<string>('all');
@@ -1236,19 +1234,6 @@ export default function CatalogTab({
       needsReview
     };
   }, [products, deadProductIds, lowStockThreshold]);
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    try {
-      await loadProducts();
-      await fetchPaginatedProducts();
-      showToast("Catalogue mis à jour.", "success");
-    } catch (e) {
-      showToast("Erreur lors de la mise à jour.", "error");
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
 
   // Validations
   const [rowValidations, setRowValidations] = useState<any[]>([]);
@@ -2363,7 +2348,7 @@ export default function CatalogTab({
         </div>
 
         {/* Catalog controls: one predictable action rail, scrollable only when the viewport is narrow. */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 xl:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="flex items-center gap-2 shrink-0">
             {/* Category Dropdown Filter */}
             {!isCatalogBulkMode && (
@@ -2400,11 +2385,11 @@ export default function CatalogTab({
             )}
 
             {/* Filtres Spéciaux */}
-            <div ref={specialDropdownRef} className="relative">
+            <div ref={specialDropdownRef} className="relative w-[232px] shrink-0">
               <button
                 type="button"
                 onClick={() => setIsSpecialOpen(!isSpecialOpen)}
-                className={`px-3 h-9 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition cursor-pointer select-none ${
+                className={`w-full px-3 h-9 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition cursor-pointer select-none ${
                   filterSpecial !== 'all'
                     ? (adminTheme === 'light'
                         ? 'bg-emerald-50 text-emerald-700 border-emerald-300 shadow-sm hover:bg-emerald-100/80 font-bold'
@@ -2415,20 +2400,18 @@ export default function CatalogTab({
                 }`}
               >
                 <Filter className={`w-3.5 h-3.5 ${filterSpecial !== 'all' ? 'text-emerald-500 font-bold' : 'text-slate-500'}`} />
-                <span>
-                  {filterSpecial === 'all' && 'Filtres Spéciaux'}
-                  {filterSpecial === 'no_image' && 'Sans image'}
-                  {filterSpecial === 'negative_stock' && 'Stock négatif'}
-                  {filterSpecial === 'positive_stock' && 'Stock positif (> 0)'}
-                  {filterSpecial === 'positive_stock_no_vendor' && 'Stock positif sans marque'}
-                  {filterSpecial === 'positive_stock_no_desc' && 'Stock positif sans description'}
-                  {filterSpecial === 'dead_products' && 'Produits morts (30j)'}
-                  {filterSpecial === 'low_margin' && 'Marge faible/nég.'}
-                  {filterSpecial === 'no_desc' && 'Sans description'}
-                  {filterSpecial === 'out_of_stock' && 'En rupture'}
-                  {filterSpecial === 'low_stock' && 'Stock critique'}
-                  {filterSpecial === 'on_sale' && 'En promotion'}
-                  {filterSpecial === 'needs_review' && 'À compléter'}
+                <span className="min-w-0 flex-1 truncate">
+                  {(() => {
+                    if (filterSpecial === 'all') return 'Filtres Spéciaux';
+                    const labels: Record<string, string> = {
+                      no_image: 'Sans image', negative_stock: 'Stock négatif', positive_stock: 'Stock positif',
+                      positive_stock_no_vendor: 'Stock sans marque', positive_stock_no_desc: 'Stock sans description',
+                      dead_products: 'Produits morts', low_margin: 'Marge faible', no_desc: 'Sans description',
+                      out_of_stock: 'En rupture', low_stock: 'Stock critique', on_sale: 'En promotion', needs_review: 'À compléter',
+                    };
+                    const activeLabels = filterSpecial.split(',').map(value => labels[value]).filter(Boolean);
+                    return activeLabels.length > 1 ? `${activeLabels.length} filtres actifs` : activeLabels[0] || 'Filtres Spéciaux';
+                  })()}
                 </span>
                 {filterSpecial !== 'all' && (
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
@@ -2794,21 +2777,6 @@ export default function CatalogTab({
             >
               <Download className="w-3.5 h-3.5 text-sky-500" />
               <span>Exporter</span>
-            </button>
-
-            {/* Rafraîchir */}
-            <button
-              type="button"
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-              className={`px-3 h-9 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition cursor-pointer ${
-                adminTheme === 'light'
-                  ? 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200 hover:text-slate-900 shadow-sm font-medium'
-                  : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700 hover:bg-slate-800/50'
-              }`}
-            >
-              <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${isRefreshing ? 'animate-spin text-emerald-500 font-bold' : ''}`} />
-              <span>Rafraîchir</span>
             </button>
 
             {/* Nouveau Produit CTA */}
