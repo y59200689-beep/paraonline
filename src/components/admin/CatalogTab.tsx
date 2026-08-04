@@ -165,7 +165,7 @@ function SearchableDropdown({
   }, [value, label]);
 
   return (
-    <div ref={dropdownRef} className={`relative min-w-[164px] ${compact ? 'w-[178px] shrink-0' : 'flex-1'}`}>
+    <div ref={dropdownRef} className={`relative min-w-0 ${compact ? 'w-[176px] shrink-0' : 'flex-1'}`}>
       <button
         type="button"
         onClick={() => {
@@ -2347,13 +2347,9 @@ export default function CatalogTab({
           )}
         </div>
 
-        {/* Filters and catalogue actions stay distinct, but share one calm control rail. */}
-        <div className={`flex items-center gap-2 rounded-2xl border p-2.5 overflow-x-auto xl:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${adminTheme === 'light' ? 'border-slate-100 bg-slate-50/70' : 'border-slate-800 bg-slate-950/30'}`}>
-          <div className="flex items-center gap-2 shrink-0">
-            <div className={`flex h-10 items-center gap-2 border-r pr-3 text-[10px] font-black uppercase tracking-[0.14em] ${adminTheme === 'light' ? 'border-slate-200 text-slate-500' : 'border-slate-800 text-slate-400'}`}>
-              <Filter className="h-3.5 w-3.5 text-emerald-500" />
-              <span>Filtres</span>
-            </div>
+        {/* Catalogue controls: filters yield space before the primary action, never forcing a horizontal scroll. */}
+        <div className={`flex flex-col gap-2 rounded-2xl border p-2.5 xl:flex-row xl:items-center ${adminTheme === 'light' ? 'border-slate-100 bg-slate-50/70' : 'border-slate-800 bg-slate-950/30'}`}>
+          <div className="flex min-w-0 flex-1 items-center gap-2">
             {/* Category Dropdown Filter */}
             {!isCatalogBulkMode && (
               <SearchableDropdown
@@ -2389,7 +2385,7 @@ export default function CatalogTab({
             )}
 
             {/* Filtres Spéciaux */}
-            <div ref={specialDropdownRef} className="relative w-[210px] shrink-0">
+            <div ref={specialDropdownRef} className="relative w-[190px] shrink-0">
               <button
                 type="button"
                 onClick={() => setIsSpecialOpen(!isSpecialOpen)}
@@ -2753,8 +2749,7 @@ export default function CatalogTab({
             </div>
           </div>
 
-          <div className="ml-auto flex items-center gap-2 shrink-0 border-l border-slate-200/80 pl-3 dark:border-slate-800">
-            <span className={`hidden 2xl:inline text-[10px] font-black uppercase tracking-[0.14em] ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>Actions</span>
+          <div className="flex items-center gap-2 shrink-0 xl:ml-auto xl:border-l xl:border-slate-200/80 xl:pl-3 dark:xl:border-slate-800">
 
             {/* Importer */}
             <button
