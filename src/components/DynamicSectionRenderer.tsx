@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useUi } from '@/context/UiContext';
 import { useTranslation } from '@/context/LanguageContext';
 
@@ -41,6 +41,44 @@ interface DynamicSectionRendererProps {
   sections: HomepageSectionItem[];
 }
 
+/**
+ * Delays a below-the-fold section until it is comfortably close to view.
+ *
+ * Rendering every dynamic component at hydration starts all of their network
+ * requests together, which competes with the hero and catalogue on a first
+ * visit. A small sentinel lets the next section begin loading well before the
+ * customer reaches it, without making the initial page compete for bandwidth.
+ */
+function DeferredHomepageSection({ children }: { children: React.ReactNode }) {
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const [shouldRender, setShouldRender] = useState(false);
+
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!node) return;
+
+    if (!('IntersectionObserver' in window)) {
+      setShouldRender(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setShouldRender(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '1400px 0px' }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  return <div ref={sentinelRef}>{shouldRender ? children : null}</div>;
+}
+
 export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps) {
   const {
     activeCategory,
@@ -59,6 +97,10 @@ export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps
   };
 
   const seenTypes = new Set<string>();
+
+  const deferred = (key: string, content: React.ReactNode) => (
+    <DeferredHomepageSection key={key}>{content}</DeferredHomepageSection>
+  );
 
   return (
     <>
@@ -105,62 +147,62 @@ export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps
             );
 
           case 'brandPartners':
-            return <BrandPartners key={section.id} brands={section.settings?.brands} />;
+            return deferred(section.id, <BrandPartners brands={section.settings?.brands} />);
 
           case 'diagnosticBanner':
-            return <DiagnosticBanner key={section.id} />;
+            return deferred(section.id, <DiagnosticBanner />);
 
           case 'summerSale':
-            return <SummerSalePromo key={section.id} />;
+            return deferred(section.id, <SummerSalePromo />);
 
           case 'skinConcerns':
-            return <SkinConcernsSelector key={section.id} />;
+            return deferred(section.id, <SkinConcernsSelector />);
 
           case 'horizontalPromo':
-            return <HorizontalPromoBanner key={section.id} settings={section.settings} />;
+            return deferred(section.id, <HorizontalPromoBanner settings={section.settings} />);
 
           case 'trustBar':
-            return <MoroccoTrustBar key={section.id} />;
+            return deferred(section.id, <MoroccoTrustBar />);
 
           case 'customerReviews':
-            return <CustomerReviews key={section.id} />;
+            return deferred(section.id, <CustomerReviews />);
 
           case 'triplePromo':
-            return <TriplePromoBanners key={section.id} cards={section.settings?.promoCards} />;
+            return deferred(section.id, <TriplePromoBanners cards={section.settings?.promoCards} />);
 
           case 'topRated':
-            return <TopRatedAsymmetricGrid key={section.id} />;
+            return deferred(section.id, <TopRatedAsymmetricGrid />);
 
           case 'bestSellers':
           case 'weeklySales':
-            return <BestSellersDualGrid key={section.id} />;
+            return deferred(section.id, <BestSellersDualGrid />);
 
           case 'routineVisualizer':
-            return <RoutineVisualizer key={section.id} />;
+            return deferred(section.id, <RoutineVisualizer />);
 
           case 'skincareRoutineSteps':
-            return <SkincareRoutineSteps key={section.id} />;
+            return deferred(section.id, <SkincareRoutineSteps />);
 
           case 'featuredIngredient':
-            return <FeaturedIngredientSection key={section.id} />;
+            return deferred(section.id, <FeaturedIngredientSection />);
 
           case 'laRochePosay':
-            return <LaRochePosaySSection key={section.id} />;
+            return deferred(section.id, <LaRochePosaySSection />);
 
           case 'ingredientDictionary':
-            return <IngredientDictionary key={section.id} />;
+            return deferred(section.id, <IngredientDictionary />);
 
           case 'dermoCorner':
-            return <DermoCorner key={section.id} />;
+            return deferred(section.id, <DermoCorner />);
 
           case 'activeIngredients':
-            return <ActiveIngredients key={section.id} />;
+            return deferred(section.id, <ActiveIngredients />);
 
           case 'officialDistributor':
-            return <OfficialDistributorBadge key={section.id} />;
+            return deferred(section.id, <OfficialDistributorBadge />);
 
           case 'faq':
-            return <InteractiveFaqWrapper key={section.id} />;
+            return deferred(section.id, <InteractiveFaqWrapper />);
 
           case 'customHtml':
             if (!section.settings?.html?.trim()) return null;

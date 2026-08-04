@@ -25,6 +25,18 @@ const geistMono = Geist_Mono({
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://paraofficinal.ma';
 const SITE_NAME = 'Para Officinal S.A';
 
+const CSS_COLOR_VALUE = /^(?:#[0-9a-f]{3,8}|(?:rgb|hsl|oklch|oklab)\([0-9a-z\s,./%+-]+\)|transparent|currentcolor)$/i;
+
+function getServerThemeVariables(themeColors: unknown) {
+  if (!themeColors || typeof themeColors !== 'object') return '';
+
+  const declarations = Object.entries(themeColors as Record<string, unknown>)
+    .filter(([key, value]) => /^[a-z][a-zA-Z0-9]*$/.test(key) && typeof value === 'string' && CSS_COLOR_VALUE.test(value.trim()))
+    .map(([key, value]) => `--color-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}:${value!.trim()};`);
+
+  return declarations.length ? `:root{${declarations.join('')}}` : '';
+}
+
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
@@ -98,10 +110,13 @@ export default async function RootLayout({
   // the browser receives already has the correct images baked in —
   // no flash, no delay, no localStorage dependency, works on every browser.
   const initialSettings = await getPublicSettings();
+  const serverThemeVariables = getServerThemeVariables(initialSettings.themeColors);
 
   return (
     <html lang="fr" dir="ltr" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
-      <head />
+      <head>
+        {serverThemeVariables ? <style id="server-theme-variables">{serverThemeVariables}</style> : null}
+      </head>
       <body className="antialiased selection:bg-primary/30 selection:text-primary-dark" suppressHydrationWarning>
         <ThemeScript />
         <AppProviders initialSettings={initialSettings}>

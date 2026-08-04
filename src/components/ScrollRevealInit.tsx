@@ -5,18 +5,6 @@ import { useEffect } from 'react';
 export function ScrollRevealInit() {
   useEffect(() => {
     const observedElements = new WeakSet<Element>();
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('active');
-          }
-        });
-      },
-      { threshold: 0.05, rootMargin: '50px 0px 50px 0px' }
-    );
-
     const selectors = [
       '.reveal-on-scroll',
       '.anim-section-header',
@@ -31,22 +19,44 @@ export function ScrollRevealInit() {
       '.stagger-children',
     ].join(', ');
 
-    const observeNewElements = () => {
-      const revealElements = document.querySelectorAll(selectors);
-      revealElements.forEach((el) => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('active');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      // Start the short reveal before a section reaches the viewport. This
+      // keeps scrolling fluid instead of making every section appear late.
+      { threshold: 0.01, rootMargin: '420px 0px 420px 0px' }
+    );
+
+    const observeElement = (el: Element) => {
         if (!observedElements.has(el)) {
           observedElements.add(el);
           observer.observe(el);
         }
-      });
+    };
+
+    const observeWithin = (node: Node) => {
+      if (!(node instanceof Element)) return;
+      if (node.matches(selectors)) observeElement(node);
+      node.querySelectorAll(selectors).forEach(observeElement);
+    };
+
+    const observeInitialElements = () => {
+      document.querySelectorAll(selectors).forEach(observeElement);
     };
 
     // Initial scan
-    observeNewElements();
+    observeInitialElements();
 
-    // Observe DOM mutations so dynamic imports / delayed context state components get observed as soon as they mount
-    const mutationObserver = new MutationObserver(() => {
-      observeNewElements();
+    // Only inspect newly inserted subtrees. Re-querying document.body after
+    // every React update was expensive on the catalogue and caused scroll jank.
+    const mutationObserver = new MutationObserver((records) => {
+      records.forEach((record) => record.addedNodes.forEach(observeWithin));
     });
 
     mutationObserver.observe(document.body, {
@@ -62,4 +72,3 @@ export function ScrollRevealInit() {
 
   return null;
 }
-

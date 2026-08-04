@@ -80,18 +80,26 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
 
   useEffect(() => {
+    let cancelled = false;
     const fetchRecentActivity = async () => {
       try {
         const res = await fetch('/api/orders/recent-activity');
         const data = await res.json();
-        if (data.success && data.orders && data.orders.length > 0) {
+        if (!cancelled && data.success && data.orders && data.orders.length > 0) {
           setRecentOrders(data.orders);
         }
       } catch (err) {
         console.error("Failed to load recent activity:", err);
       }
     };
-    fetchRecentActivity();
+
+    // This powers an optional notification, not the shopping flow. Let the
+    // header and first products win the network on a cold page visit.
+    const timer = window.setTimeout(fetchRecentActivity, 1800);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
   }, []);
 
   // Pre-unlock AudioContext on first user gesture

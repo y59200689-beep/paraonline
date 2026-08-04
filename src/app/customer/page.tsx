@@ -110,23 +110,20 @@ export default function CustomerDashboard() {
   const { settings } = useSettings();
   const isRTL = language === 'AR';
 
-  const [themeMode, setThemeMode] = useState<'light' | 'dark'>('light');
+  // The customer portal has one canonical visual theme. Saving this choice in
+  // localStorage made the same signed-in customer see a different palette in
+  // Safari, Chrome, or a fresh browser profile.
+  const [themeMode, setThemeMode] = useState<'light' | 'dark'>('dark');
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('customer_portal_theme');
-      if (saved === 'dark' || saved === 'light') {
-        setThemeMode(saved);
-      }
+      localStorage.removeItem('customer_portal_theme');
     } catch (e) {}
   }, []);
 
   const toggleThemeMode = () => {
     const next = themeMode === 'dark' ? 'light' : 'dark';
     setThemeMode(next);
-    try {
-      localStorage.setItem('customer_portal_theme', next);
-    } catch (e) {}
   };
 
   // Loyalty states

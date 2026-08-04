@@ -211,14 +211,15 @@
    ---------------------------------------------------------- */
 .reveal-on-scroll {
   opacity: 0;
-  transform: translateY(40px) scale(0.985);
-  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(16px);
+  transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity, transform;
 }
 .reveal-on-scroll.active {
   opacity: 1;
-  transform: translateY(0) scale(1);
+  transform: translateY(0);
+  will-change: auto;
 }
 .reveal-delay-1 { transition-delay: 80ms  !important; }
 .reveal-delay-2 { transition-delay: 160ms !important; }
@@ -1618,7 +1619,6 @@
   .save-btn__spinner { animation: none !important; }
   .save-btn__check   { animation: none !important; }
 }
-
 
 
 
