@@ -165,16 +165,16 @@ function SearchableDropdown({
   }, [value, label]);
 
   return (
-    <div ref={dropdownRef} className={`relative min-w-[164px] ${compact ? 'w-[198px] shrink-0' : 'flex-1'}`}>
+    <div ref={dropdownRef} className={`relative min-w-[164px] ${compact ? 'w-[178px] shrink-0' : 'flex-1'}`}>
       <button
         type="button"
         onClick={() => {
           setIsOpen(!isOpen);
           setSearchQuery('');
         }}
-        className={`w-full text-left text-xs h-9 rounded-xl px-3 border cursor-pointer transition flex items-center justify-between gap-1.5 select-none ${
+        className={`w-full text-left text-xs h-10 rounded-xl px-3 border cursor-pointer transition flex items-center justify-between gap-2 select-none ${
           adminTheme === 'light'
-            ? 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200/80 hover:text-slate-900 shadow-sm font-medium'
+            ? 'bg-white border-slate-200/90 text-slate-700 hover:border-slate-300 hover:bg-white hover:text-slate-900 shadow-[0_1px_2px_rgba(15,23,42,0.04)] font-semibold'
             : 'bg-slate-950 border-slate-800 text-slate-300 hover:bg-slate-900'
         }`}
       >
@@ -2165,15 +2165,15 @@ export default function CatalogTab({
   return (
     <div className="space-y-4 admin-tab-enter">
       {/* Search/Filters & Operations Toolbar */}
-      <div className={`flex flex-col gap-4 p-3 rounded-2xl border transition-all duration-200 ${
+      <div className={`flex flex-col gap-3 p-3.5 rounded-[20px] border transition-all duration-200 ${
         adminTheme === 'light'
-          ? 'bg-white border-slate-200/80 shadow-sm'
+          ? 'bg-white border-slate-200/80 shadow-[0_12px_32px_rgba(15,23,42,0.05)]'
           : 'bg-slate-900/30 border-slate-900'
       }`}>
-        {/* ROW 1: Filters & View Switcher */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/80">
+        {/* Search, status and layout form one compact workspace header. */}
+        <div className={`flex flex-col lg:flex-row lg:items-center gap-3 rounded-2xl border p-2.5 ${adminTheme === 'light' ? 'border-slate-100 bg-slate-50/70' : 'border-slate-800 bg-slate-950/30'}`}>
           {/* Search bar */}
-          <div className="relative flex-1 w-full">
+          <div className="relative flex-1 min-w-0 w-full">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
@@ -2347,9 +2347,13 @@ export default function CatalogTab({
           )}
         </div>
 
-        {/* Catalog controls: one predictable action rail, scrollable only when the viewport is narrow. */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 xl:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {/* Filters and catalogue actions stay distinct, but share one calm control rail. */}
+        <div className={`flex items-center gap-2 rounded-2xl border p-2.5 overflow-x-auto xl:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${adminTheme === 'light' ? 'border-slate-100 bg-slate-50/70' : 'border-slate-800 bg-slate-950/30'}`}>
           <div className="flex items-center gap-2 shrink-0">
+            <div className={`flex h-10 items-center gap-2 border-r pr-3 text-[10px] font-black uppercase tracking-[0.14em] ${adminTheme === 'light' ? 'border-slate-200 text-slate-500' : 'border-slate-800 text-slate-400'}`}>
+              <Filter className="h-3.5 w-3.5 text-emerald-500" />
+              <span>Filtres</span>
+            </div>
             {/* Category Dropdown Filter */}
             {!isCatalogBulkMode && (
               <SearchableDropdown
@@ -2385,11 +2389,11 @@ export default function CatalogTab({
             )}
 
             {/* Filtres Spéciaux */}
-            <div ref={specialDropdownRef} className="relative w-[232px] shrink-0">
+            <div ref={specialDropdownRef} className="relative w-[210px] shrink-0">
               <button
                 type="button"
                 onClick={() => setIsSpecialOpen(!isSpecialOpen)}
-                className={`w-full px-3 h-9 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition cursor-pointer select-none ${
+                className={`w-full px-3 h-10 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition cursor-pointer select-none ${
                   filterSpecial !== 'all'
                     ? (adminTheme === 'light'
                         ? 'bg-emerald-50 text-emerald-700 border-emerald-300 shadow-sm hover:bg-emerald-100/80 font-bold'
@@ -2749,15 +2753,16 @@ export default function CatalogTab({
             </div>
           </div>
 
-          <div className="ml-auto flex items-center gap-2 shrink-0 border-l border-slate-200/80 pl-2 dark:border-slate-800">
+          <div className="ml-auto flex items-center gap-2 shrink-0 border-l border-slate-200/80 pl-3 dark:border-slate-800">
+            <span className={`hidden 2xl:inline text-[10px] font-black uppercase tracking-[0.14em] ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>Actions</span>
 
             {/* Importer */}
             <button
               type="button"
               onClick={() => { setImportResult(null); setIsImportModalOpen(true); }}
-              className={`px-3 h-9 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition cursor-pointer ${
+              className={`px-3.5 h-10 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition cursor-pointer ${
                 adminTheme === 'light'
-                  ? 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-emerald-50/50 hover:border-emerald-200 hover:text-emerald-700 shadow-sm font-medium'
+                  ? 'bg-white border-slate-200/90 text-slate-700 hover:bg-emerald-50/50 hover:border-emerald-200 hover:text-emerald-700 shadow-[0_1px_2px_rgba(15,23,42,0.04)] font-semibold'
                   : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700 hover:bg-slate-800/50'
               }`}
             >
@@ -2769,9 +2774,9 @@ export default function CatalogTab({
             <button
               type="button"
               onClick={handleExportCatalogToCsv}
-              className={`px-3 h-9 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition cursor-pointer ${
+              className={`px-3.5 h-10 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition cursor-pointer ${
                 adminTheme === 'light'
-                  ? 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-sky-50/50 hover:border-sky-200 hover:text-sky-700 shadow-sm font-medium'
+                  ? 'bg-white border-slate-200/90 text-slate-700 hover:bg-sky-50/50 hover:border-sky-200 hover:text-sky-700 shadow-[0_1px_2px_rgba(15,23,42,0.04)] font-semibold'
                   : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700 hover:bg-slate-800/50'
               }`}
             >
@@ -2783,7 +2788,7 @@ export default function CatalogTab({
             <button
               type="button"
               onClick={() => setIsNewProductModalOpen(true)}
-              className="px-4 h-9 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/10 hover:shadow-emerald-600/20 hover:from-emerald-500 hover:to-teal-500 transition-all duration-200 cursor-pointer flex items-center gap-1.5"
+              className="px-4 h-10 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/15 hover:shadow-emerald-600/25 hover:from-emerald-500 hover:to-teal-500 transition-all duration-200 cursor-pointer flex items-center gap-1.5"
             >
               <Plus className="w-3.5 h-3.5 text-white" />
               <span>Produit</span>
