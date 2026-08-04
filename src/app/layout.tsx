@@ -27,12 +27,18 @@ const SITE_NAME = 'Para Officinal S.A';
 
 const CSS_COLOR_VALUE = /^(?:#[0-9a-f]{3,8}|(?:rgb|hsl|oklch|oklab)\([0-9a-z\s,./%+-]+\)|transparent|currentcolor)$/i;
 
+function isSafeCssColor(value: unknown): value is string {
+  return typeof value === 'string' && CSS_COLOR_VALUE.test(value.trim());
+}
+
 function getServerThemeVariables(themeColors: unknown) {
   if (!themeColors || typeof themeColors !== 'object') return '';
 
   const declarations = Object.entries(themeColors as Record<string, unknown>)
-    .filter(([key, value]) => /^[a-z][a-zA-Z0-9]*$/.test(key) && typeof value === 'string' && CSS_COLOR_VALUE.test(value.trim()))
-    .map(([key, value]) => `--color-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}:${value!.trim()};`);
+    .flatMap(([key, value]) => {
+      if (!/^[a-z][a-zA-Z0-9]*$/.test(key) || !isSafeCssColor(value)) return [];
+      return `--color-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}:${value.trim()};`;
+    });
 
   return declarations.length ? `:root{${declarations.join('')}}` : '';
 }
