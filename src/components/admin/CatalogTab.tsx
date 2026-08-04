@@ -35,8 +35,6 @@ import {
   Trash2,
   FolderPlus,
   CheckCircle2,
-  Eye,
-  EyeOff,
   Sparkles,
   ChevronRight
 } from 'lucide-react';
@@ -129,6 +127,7 @@ interface SearchableDropdownProps {
   placeholder: string;
   emptyMessage: string;
   adminTheme: 'light' | 'dark';
+  compact?: boolean;
 }
 
 function SearchableDropdown({
@@ -138,7 +137,8 @@ function SearchableDropdown({
   options,
   placeholder,
   emptyMessage,
-  adminTheme
+  adminTheme,
+  compact = false,
 }: SearchableDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -166,7 +166,7 @@ function SearchableDropdown({
   }, [value, label]);
 
   return (
-    <div ref={dropdownRef} className="relative flex-1 min-w-[140px]">
+    <div ref={dropdownRef} className={`relative min-w-[164px] ${compact ? 'w-[198px] shrink-0' : 'flex-1'}`}>
       <button
         type="button"
         onClick={() => {
@@ -935,10 +935,6 @@ export default function CatalogTab({
   const [filterSpecial, setFilterSpecial] = useState<string>('all');
   const [isSpecialOpen, setIsSpecialOpen] = useState(false);
   const specialDropdownRef = React.useRef<HTMLDivElement>(null);
-  const [isSavedViewsOpen, setIsSavedViewsOpen] = useState(false);
-  const [savedViewName, setSavedViewName] = useState('');
-  const [savedViews, setSavedViews] = useState<Array<{ id: string; name: string; search: string; category: string; vendor: string; status: string; special: string }>>([]);
-  const savedViewsRef = React.useRef<HTMLDivElement>(null);
 
   const downloadImportErrors = () => {
     const errorRows = rowValidations.filter(validation => Object.keys(validation.errors).length > 0 || Object.keys(validation.warnings).length > 0);
@@ -977,38 +973,6 @@ export default function CatalogTab({
     link.download = `rapport_validation_import_${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
     URL.revokeObjectURL(url);
-  };
-
-  const applySavedView = (view: { search: string; category: string; vendor: string; status: string; special: string }) => {
-    setProductSearchQuery(view.search);
-    setFilterCategory(view.category);
-    setFilterVendor(view.vendor);
-    setFilterStatus(view.status as 'all' | 'live' | 'draft');
-    setFilterSpecial(view.special);
-    setCurrentPage(1);
-    setIsSavedViewsOpen(false);
-  };
-
-  const saveCurrentView = async () => {
-    const name = savedViewName.trim();
-    if (!name) {
-      showToast('Donnez un nom à cette vue.', 'error');
-      return;
-    }
-    try {
-      const response = await fetch('/api/admin/operational-records?resource=saved-views&scope=catalog', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, scope: 'catalog', configuration: { search: productSearchQuery, category: filterCategory, vendor: filterVendor, status: filterStatus, special: filterSpecial } }),
-      });
-      const data = await response.json();
-      if (!response.ok || !data.success) throw new Error(data.error || 'Impossible d’enregistrer cette vue.');
-      setSavedViews(current => [{ id: data.record.id, name: data.record.name, ...data.record.configuration }, ...current].slice(0, 12));
-      setSavedViewName('');
-      showToast(`Vue « ${name} » enregistrée pour l’équipe.`, 'success');
-    } catch (error: any) {
-      showToast(error.message || 'Impossible d’enregistrer cette vue.', 'error');
-    }
   };
 
   // Reusable confirmation modal state
@@ -1122,9 +1086,6 @@ export default function CatalogTab({
       if (specialDropdownRef.current && !specialDropdownRef.current.contains(event.target as Node)) {
         setIsSpecialOpen(false);
       }
-      if (savedViewsRef.current && !savedViewsRef.current.contains(event.target as Node)) {
-        setIsSavedViewsOpen(false);
-      }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -1139,15 +1100,6 @@ export default function CatalogTab({
       })
       .catch(() => setImportHistory([]));
   }, [isImportModalOpen]);
-
-  useEffect(() => {
-    void fetch('/api/admin/operational-records?resource=saved-views&scope=catalog', { cache: 'no-store' })
-      .then(response => response.json())
-      .then(data => {
-        if (data?.success) setSavedViews((data.records || []).map((view: any) => ({ id: view.id, name: view.name, ...view.configuration })));
-      })
-      .catch(() => setSavedViews([]));
-  }, []);
 
   // Escape key listener for confirmation modal
   useEffect(() => {
@@ -2410,10 +2362,9 @@ export default function CatalogTab({
           )}
         </div>
 
-        {/* ROW 2: CTAs & Filters & Bulk Actions */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
-          {/* Left Side: Filters */}
-          <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
+        {/* Catalog controls: one predictable action rail, scrollable only when the viewport is narrow. */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex items-center gap-2 shrink-0">
             {/* Category Dropdown Filter */}
             {!isCatalogBulkMode && (
               <SearchableDropdown
@@ -2427,6 +2378,7 @@ export default function CatalogTab({
                 placeholder="Rechercher une catégorie..."
                 emptyMessage="Aucune catégorie trouvée"
                 adminTheme={adminTheme}
+                compact
               />
             )}
 
@@ -2443,6 +2395,7 @@ export default function CatalogTab({
                 placeholder="Rechercher une marque..."
                 emptyMessage="Aucune marque trouvée"
                 adminTheme={adminTheme}
+                compact
               />
             )}
 
@@ -2813,39 +2766,7 @@ export default function CatalogTab({
             </div>
           </div>
 
-          {/* Right Side: Action Buttons */}
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <div ref={savedViewsRef} className="relative">
-              <button
-                type="button"
-                onClick={() => setIsSavedViewsOpen(value => !value)}
-                className={`px-3 h-9 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition cursor-pointer ${
-                  adminTheme === 'light'
-                    ? 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-violet-50 hover:border-violet-200 hover:text-violet-700 shadow-sm'
-                    : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700 hover:bg-slate-800/50'
-                }`}
-              >
-                <Eye className="w-3.5 h-3.5 text-violet-500" />
-                <span>Vues</span>
-              </button>
-              {isSavedViewsOpen && (
-                <div className={`absolute right-0 mt-2 z-50 w-72 rounded-2xl border p-3 shadow-2xl ${adminTheme === 'light' ? 'bg-white border-slate-200' : 'bg-slate-950 border-slate-800'}`}>
-                  <p className="text-[10px] uppercase tracking-wider font-black text-slate-400 mb-2">Enregistrer cette vue</p>
-                  <div className="flex gap-2">
-                    <input value={savedViewName} onChange={(event) => setSavedViewName(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') saveCurrentView(); }} placeholder="Ex. Stock faible" className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs text-slate-700 outline-none focus:border-violet-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
-                    <button type="button" onClick={saveCurrentView} className="rounded-lg bg-violet-600 px-3 text-xs font-bold text-white hover:bg-violet-500">Sauver</button>
-                  </div>
-                  <div className="mt-3 max-h-52 space-y-1 overflow-y-auto">
-                    {savedViews.length === 0 ? <p className="px-1 py-2 text-xs text-slate-400">Aucune vue enregistrée.</p> : savedViews.map(view => (
-                      <div key={view.id} className="group flex items-center gap-1 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900">
-                        <button type="button" onClick={() => applySavedView(view)} className="min-w-0 flex-1 truncate px-2.5 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200">{view.name}</button>
-                        <button type="button" onClick={() => { void fetch(`/api/admin/operational-records?resource=saved-views&id=${encodeURIComponent(view.id)}`, { method: 'DELETE' }).then(() => setSavedViews(current => current.filter(item => item.id !== view.id))); }} className="p-2 text-slate-400 hover:text-rose-500" title="Supprimer la vue"><X className="h-3.5 w-3.5" /></button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+          <div className="ml-auto flex items-center gap-2 shrink-0 border-l border-slate-200/80 pl-2 dark:border-slate-800">
 
             {/* Importer */}
             <button
