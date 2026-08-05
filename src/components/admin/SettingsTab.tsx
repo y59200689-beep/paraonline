@@ -142,6 +142,8 @@ export default function SettingsTab() {
   // creation endpoint resolve the exact same qualifying gift.
   const [giftRangesDraft, setGiftRangesDraft] = useState<GiftRange[]>([]);
   const [isSavingGiftRanges, setIsSavingGiftRanges] = useState(false);
+  const [openGiftPickerIndex, setOpenGiftPickerIndex] = useState<number | null>(null);
+  const [giftProductQueries, setGiftProductQueries] = useState<Record<number, string>>({});
 
   useEffect(() => {
     setGiftRangesDraft(settings.giftRanges || []);
@@ -152,10 +154,16 @@ export default function SettingsTab() {
     return String(product?.title || product?.nameFr || product?.name || '').trim();
   };
 
+  const getGiftProductImage = (product: any) => String(product?.image || product?.image_url || product?.thumbnail || '').trim();
+  const getGiftProductStock = (product: any) => Math.max(0, Number(product?.stock || 0));
+  const eligibleGiftProducts = products
+    .filter((product: any) => product?.status !== 'draft' && getGiftProductStock(product) > 0)
+    .sort((left: any, right: any) => String(left.title || left.nameFr || left.name || '').localeCompare(String(right.title || right.nameFr || right.name || ''), 'fr'));
+
   const addGiftRange = () => {
-    const availableProduct = products.find((product: any) => product.status !== 'draft') || products[0];
+    const availableProduct = eligibleGiftProducts[0];
     if (!availableProduct) {
-      showToast('Ajoutez d’abord un produit au catalogue pour créer une offre cadeau.', 'error');
+      showToast('Ajoutez d’abord un produit en stock au catalogue pour créer une offre cadeau.', 'error');
       return;
     }
 
@@ -212,6 +220,15 @@ export default function SettingsTab() {
     ));
     if (hasOverlap) {
       showToast('Les paliers cadeau ne doivent pas se chevaucher.', 'error');
+      return;
+    }
+
+    const unavailableGift = normalized.find((range) => {
+      const product = products.find((item: any) => Number(item.id) === range.productId);
+      return !product || product.status === 'draft' || getGiftProductStock(product) <= 0;
+    });
+    if (unavailableGift) {
+      showToast('Chaque cadeau doit être un produit publié et actuellement en stock.', 'error');
       return;
     }
 
@@ -673,7 +690,7 @@ export default function SettingsTab() {
           </div>
           <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Les modifications sont sauvegardées par section</span>
         </div>
-      <nav className="p-2 flex flex-row overflow-x-auto gap-2 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" aria-label="Sections des paramètres">
+      <nav className={`m-2 flex flex-row gap-1.5 overflow-x-auto rounded-2xl p-1.5 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${adminTheme === 'light' ? 'bg-slate-50/90' : 'bg-slate-950/40'}`} aria-label="Sections des paramètres">
         {[
           { id: 'general', label: 'Identité', icon: Sliders, group: 'Boutique' },
           { id: 'homepage', label: 'Accueil', icon: Layout, group: 'Boutique' },
@@ -688,36 +705,35 @@ export default function SettingsTab() {
           { id: 'logs', label: 'Journal', icon: FileText, group: 'Contrôle' },
           { id: 'security', label: 'Sécurité', icon: Lock, group: 'Contrôle' },
           ...(currentUser?.role === 'owner' ? [{ id: 'operators', label: 'Équipe', icon: Users, group: 'Contrôle' }] : [])
-        ].map((sub, index, sections) => {
+        ].map((sub) => {
           const Icon = sub.icon;
           const isSubActive = activeSettingsSubTab === sub.id;
           return (
-            <React.Fragment key={sub.id}>
-            {(index === 0 || sections[index - 1].group !== sub.group) && (
-              <span className={`self-center shrink-0 pl-2 text-[9px] font-black uppercase tracking-[0.14em] ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-600'}`}>{sub.group}</span>
-            )}
             <button
+              key={sub.id}
               onClick={() => {
                 setActiveSettingsSubTab(sub.id as any);
                 setIsAddingCoupon(false);
                 setSelectedBannerIndex(null);
                 setIsAddingFaq(false);
               }}
-              className={`shrink-0 flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-semibold uppercase tracking-widest border transition-all duration-200 ${
+              aria-current={isSubActive ? 'page' : undefined}
+              className={`shrink-0 flex min-h-11 items-center gap-2 rounded-xl border px-3.5 py-2.5 font-semibold uppercase tracking-widest transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 ${
                 isSubActive
                   ? (adminTheme === 'light'
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200/40 shadow-sm'
-                      : 'bg-slate-950 text-emerald-400 border-slate-800 shadow-sm')
+                      ? 'border-emerald-200/80 bg-white text-emerald-700 shadow-[0_6px_16px_rgba(15,118,110,0.10)]'
+                      : 'border-emerald-500/25 bg-slate-900 text-emerald-300 shadow-sm')
                   : (adminTheme === 'light'
-                      ? 'text-slate-600 border-transparent hover:text-slate-900 hover:bg-slate-50'
-                      : 'text-slate-400 border-transparent hover:text-slate-200 hover:bg-slate-900/20')
+                      ? 'border-transparent text-slate-500 hover:border-slate-200 hover:bg-white hover:text-slate-800'
+                      : 'border-transparent text-slate-400 hover:border-slate-800 hover:bg-slate-900/60 hover:text-slate-100')
               }`}
               style={{ fontSize: 'var(--admin-text-xs)' }}
             >
-              <Icon className={`w-4 h-4 shrink-0 transition ${isSubActive ? (adminTheme === 'light' ? 'text-emerald-600' : 'text-emerald-400') : 'text-slate-500'}`} />
+              <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg transition-colors ${isSubActive ? (adminTheme === 'light' ? 'bg-emerald-50 text-emerald-600' : 'bg-emerald-500/15 text-emerald-300') : (adminTheme === 'light' ? 'text-slate-400' : 'text-slate-500')}`}>
+                <Icon className="h-4 w-4" aria-hidden="true" />
+              </span>
               <span>{sub.label}</span>
             </button>
-            </React.Fragment>
           );
         })}
       </nav>
@@ -3192,13 +3208,89 @@ export default function SettingsTab() {
                         <span className="md:hidden">Jusqu’à</span>
                         <span className="relative block"><input type="number" min="0" step="1" value={range.maxAmount} onChange={(event) => updateGiftRange(index, { maxAmount: Number(event.target.value) })} className={`w-full rounded-xl border px-3 py-2 pr-10 text-right text-sm font-bold outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 ${adminTheme === 'light' ? 'border-slate-200 bg-white text-slate-800' : 'border-slate-700 bg-slate-950 text-slate-100'}`} /><span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[10px] font-bold text-slate-400">DH</span></span>
                       </label>
-                      <label className="grid gap-1 text-[10px] font-bold uppercase tracking-wide text-slate-500 md:block">
+                      <div className="relative grid gap-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">
                         <span className="md:hidden">Produit offert</span>
-                        <select value={range.productId} onChange={(event) => updateGiftRange(index, { productId: Number(event.target.value) })} className={`w-full rounded-xl border px-3 py-2 text-sm font-semibold outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 ${adminTheme === 'light' ? 'border-slate-200 bg-white text-slate-800' : 'border-slate-700 bg-slate-950 text-slate-100'}`}>
-                          <option value="">Choisir un produit</option>
-                          {products.map((product: any) => <option key={product.id} value={product.id}>{product.title || product.nameFr || product.name || `Produit #${product.id}`}</option>)}
-                        </select>
-                      </label>
+                        {(() => {
+                          const selectedProduct = products.find((product: any) => Number(product.id) === Number(range.productId));
+                          const selectedName = selectedProduct ? getGiftProductName(Number(selectedProduct.id)) : range.productName;
+                          const selectedStock = selectedProduct ? getGiftProductStock(selectedProduct) : 0;
+                          const query = giftProductQueries[index] || '';
+                          const normalizedQuery = query.trim().toLocaleLowerCase('fr');
+                          const matchingProducts = eligibleGiftProducts.filter((product: any) => {
+                            const searchable = `${product.title || product.nameFr || product.name || ''} ${product.sku || ''} ${product.brand || product.vendor || ''}`.toLocaleLowerCase('fr');
+                            return !normalizedQuery || searchable.includes(normalizedQuery);
+                          }).slice(0, 40);
+
+                          return <>
+                            <button
+                              type="button"
+                              aria-haspopup="listbox"
+                              aria-expanded={openGiftPickerIndex === index}
+                              onClick={() => {
+                                setOpenGiftPickerIndex((current) => current === index ? null : index);
+                                setGiftProductQueries((current) => ({ ...current, [index]: '' }));
+                              }}
+                              className={`flex min-h-12 w-full items-center gap-3 rounded-xl border px-3 py-2 text-left transition focus:outline-none focus:ring-2 focus:ring-emerald-500/25 ${adminTheme === 'light' ? 'border-slate-200 bg-white hover:border-emerald-300' : 'border-slate-700 bg-slate-950 hover:border-emerald-500/60'} ${selectedStock <= 0 ? 'border-rose-300' : ''}`}
+                            >
+                              <span className={`relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border ${adminTheme === 'light' ? 'border-slate-100 bg-slate-50' : 'border-slate-800 bg-slate-900'}`}>
+                                {getGiftProductImage(selectedProduct) ? <img src={getGiftProductImage(selectedProduct)} alt="" className="h-full w-full object-cover" /> : <Gift className="h-4 w-4 text-emerald-500" aria-hidden="true" />}
+                              </span>
+                              <span className="min-w-0 flex-1">
+                                <span className={`block truncate text-sm font-bold normal-case ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-100'}`}>{selectedName || 'Choisir un produit en stock'}</span>
+                                {selectedProduct && <span className={`mt-0.5 block text-[10px] font-semibold normal-case ${selectedStock > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>{selectedStock > 0 ? `${selectedStock} en stock` : 'Rupture de stock, choisissez un autre produit'}</span>}
+                              </span>
+                              <ChevronDown className={`h-4 w-4 shrink-0 transition ${openGiftPickerIndex === index ? 'rotate-180 text-emerald-600' : 'text-slate-400'}`} aria-hidden="true" />
+                            </button>
+
+                            {openGiftPickerIndex === index && (
+                              <div className={`absolute z-30 mt-[58px] w-full overflow-hidden rounded-xl border shadow-xl ${adminTheme === 'light' ? 'border-slate-200 bg-white shadow-slate-900/10' : 'border-slate-700 bg-slate-950 shadow-black/40'}`}>
+                                <div className={`border-b p-2.5 ${adminTheme === 'light' ? 'border-slate-100 bg-slate-50/80' : 'border-slate-800 bg-slate-900/40'}`}>
+                                  <label className="relative block">
+                                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+                                    <input
+                                      autoFocus
+                                      type="search"
+                                      value={query}
+                                      onChange={(event) => setGiftProductQueries((current) => ({ ...current, [index]: event.target.value }))}
+                                      placeholder="Rechercher par nom, marque ou SKU..."
+                                      className={`w-full rounded-lg border py-2 pl-9 pr-3 text-xs font-medium normal-case outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 ${adminTheme === 'light' ? 'border-slate-200 bg-white text-slate-800' : 'border-slate-700 bg-slate-950 text-slate-100'}`}
+                                    />
+                                  </label>
+                                  <p className="mt-2 text-[10px] font-semibold normal-case text-slate-500">Produits publiés avec du stock uniquement.</p>
+                                </div>
+                                <div role="listbox" aria-label="Produits cadeaux disponibles" className="max-h-72 overflow-y-auto p-1.5">
+                                  {matchingProducts.length > 0 ? matchingProducts.map((product: any) => {
+                                    const productName = getGiftProductName(Number(product.id));
+                                    const isSelected = Number(product.id) === Number(range.productId);
+                                    return <button
+                                      type="button"
+                                      role="option"
+                                      aria-selected={isSelected}
+                                      key={product.id}
+                                      onClick={() => {
+                                        updateGiftRange(index, { productId: Number(product.id) });
+                                        setGiftProductQueries((current) => ({ ...current, [index]: '' }));
+                                        setOpenGiftPickerIndex(null);
+                                      }}
+                                      className={`flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left transition ${isSelected ? (adminTheme === 'light' ? 'bg-emerald-50 text-emerald-900' : 'bg-emerald-500/15 text-emerald-100') : (adminTheme === 'light' ? 'text-slate-700 hover:bg-slate-50' : 'text-slate-200 hover:bg-slate-900')}`}
+                                    >
+                                      <span className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border ${adminTheme === 'light' ? 'border-slate-100 bg-slate-50' : 'border-slate-800 bg-slate-900'}`}>
+                                        {getGiftProductImage(product) ? <img src={getGiftProductImage(product)} alt="" className="h-full w-full object-cover" /> : <Gift className="h-4 w-4 text-emerald-500" aria-hidden="true" />}
+                                      </span>
+                                      <span className="min-w-0 flex-1 normal-case">
+                                        <span className="block truncate text-xs font-bold">{productName || `Produit #${product.id}`}</span>
+                                        <span className="mt-0.5 block truncate text-[10px] font-medium text-slate-500">{product.brand || product.vendor || 'Catalogue'}{product.sku ? ` · SKU ${product.sku}` : ''}</span>
+                                      </span>
+                                      <span className="shrink-0 rounded-md bg-emerald-50 px-2 py-1 text-[10px] font-black normal-case text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">{getGiftProductStock(product)} en stock</span>
+                                      {isSelected && <Check className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />}
+                                    </button>;
+                                  }) : <div className="px-4 py-8 text-center text-xs font-medium normal-case text-slate-500">Aucun produit en stock ne correspond à votre recherche.</div>}
+                                </div>
+                              </div>
+                            )}
+                          </>;
+                        })()}
+                      </div>
                       <button type="button" onClick={() => setGiftRangesDraft((current) => current.filter((_, rangeIndex) => rangeIndex !== index))} className={`inline-flex min-h-10 items-center justify-center gap-1 rounded-xl border px-3 text-xs font-bold transition ${adminTheme === 'light' ? 'border-rose-100 text-rose-600 hover:bg-rose-50' : 'border-rose-500/20 text-rose-300 hover:bg-rose-500/10'}`} aria-label={`Supprimer le palier ${index + 1}`}>
                         <Trash2 className="h-4 w-4" aria-hidden="true" /><span className="md:sr-only">Supprimer</span>
                       </button>
