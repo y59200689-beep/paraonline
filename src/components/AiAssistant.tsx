@@ -3,11 +3,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from '@/context/LanguageContext';
 import { usePathname } from 'next/navigation';
-import { MessageSquare, X, Send, Sparkles, ShieldAlert, CheckCircle, HelpCircle } from 'lucide-react';
+import { MessageSquare, X, Send, Sparkles, ShieldAlert, CheckCircle, HelpCircle, Search, ShoppingBag, Plus, Minus, MapPin } from 'lucide-react';
 import { useProducts } from '@/context/ProductsContext';
 import { useUi } from '@/context/UiContext';
 import { useCart } from '@/context/CartContext';
 import { isValidMoroccanPhone, MOROCCAN_PHONE_MAX_DIGITS, normalizeMoroccanPhoneInput } from '@/lib/moroccan-phone';
+import { getCustomerAccessToken } from '@/lib/customer-session';
 
 interface Message {
   sender: 'user' | 'ai';
@@ -58,6 +59,20 @@ export const AiAssistant: React.FC = () => {
   const [isOrderSubmitting, setIsOrderSubmitting] = useState(false);
   const [lastPlacedOrderId, setLastPlacedOrderId] = useState<string | null>(null);
   const [verificationToken, setVerificationToken] = useState<string>('');
+  const [activeOrderMessageIndex, setActiveOrderMessageIndex] = useState<number | null>(null);
+  const [orderSearch, setOrderSearch] = useState('');
+  const normalizedOrderSearch = orderSearch.trim().toLocaleLowerCase('fr');
+  const orderSearchResults = products
+    .filter(product => product.status !== 'draft' && Number(product.stock ?? 100) > 0)
+    .filter(product => !normalizedOrderSearch || [product.title, product.nameFr, product.vendor, product.sku]
+      .filter(Boolean)
+      .some(value => String(value).toLocaleLowerCase('fr').includes(normalizedOrderSearch)))
+    .slice(0, 5);
+  const orderSubtotal = activeOrderForm?.items.reduce((total, item) => {
+    const product = products.find(candidate => candidate.id === item.productId);
+    return total + (product ? product.price * item.quantity : 0);
+  }, 0) || 0;
+  const orderShippingEstimate = orderSubtotal >= 600 ? 0 : 35;
 
   const [isOpen, setIsOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -91,6 +106,44 @@ export const AiAssistant: React.FC = () => {
       return item;
     });
     setActiveOrderForm(prev => prev ? { ...prev, items: updatedItems } : null);
+  };
+
+  const handleRemoveOrderItem = (productId: number) => {
+    setActiveOrderForm(prev => prev
+      ? { ...prev, items: prev.items.filter(item => item.productId !== productId) }
+      : null
+    );
+  };
+
+  const startChatOrder = () => {
+    setActiveOrderForm({ customerName: '', phone: '', address: '', city: '', items: [] });
+    setOrderSearch('');
+    setLastPlacedOrderId(null);
+    setVerificationToken('');
+    setActiveOrderMessageIndex(messages.length);
+    setMessages(prev => [...prev, {
+      sender: 'ai',
+      textFr: 'Je vous accompagne pour finaliser votre commande ici, en toute simplicité. Recherchez vos produits, puis renseignez votre livraison.',
+      textAr: 'سأرافقكِ لإتمام طلبكِ هنا بكل سهولة. ابحثي عن منتجاتكِ ثم أضيفي بيانات التوصيل.',
+      type: 'order_collect',
+      orderData: { items: [] }
+    }]);
+  };
+
+  const addOrderProduct = (productId: number) => {
+    setActiveOrderForm(prev => {
+      if (!prev) return prev;
+      const existing = prev.items.find(item => item.productId === productId);
+      if (existing) {
+        return {
+          ...prev,
+          items: prev.items.map(item => item.productId === productId
+            ? { ...item, quantity: item.quantity + 1 }
+            : item),
+        };
+      }
+      return { ...prev, items: [...prev.items, { productId, quantity: 1 }] };
+    });
   };
 
   const handlePlaceAiOrder = async (form: typeof activeOrderForm) => {
@@ -131,10 +184,18 @@ export const AiAssistant: React.FC = () => {
         paymentStatus: 'unpaid'
       };
 
+      let accessToken: string | null = null;
+      try {
+        accessToken = await getCustomerAccessToken();
+      } catch (sessionError) {
+        console.warn('Customer session unavailable during AI order:', sessionError);
+      }
+
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
         },
         body: JSON.stringify(body)
       });
@@ -150,6 +211,12 @@ export const AiAssistant: React.FC = () => {
         setLastPlacedOrderId(data.orderId);
         setVerificationToken(data.verificationToken || '');
         setActiveOrderForm(null);
+        setActiveOrderMessageIndex(null);
+        if (data.trackingToken) {
+          sessionStorage.setItem(`orderTrackingToken:${data.orderId}`, data.trackingToken);
+          localStorage.setItem(`orderTrackingToken:${data.orderId}`, data.trackingToken);
+        }
+        localStorage.setItem('admin:orders-updated', String(Date.now()));
         showToast("Commande enregistrée !", 'success');
       } else {
         showToast(data.error || "Erreur lors de la validation", 'error');
@@ -332,6 +399,7 @@ export const AiAssistant: React.FC = () => {
 
     const queryText = inputText.trim();
     setInputText('');
+    const nextAssistantMessageIndex = messages.length + 1;
 
     const userMsg: Message = {
       sender: 'user',
@@ -371,6 +439,7 @@ export const AiAssistant: React.FC = () => {
               items: currentItems
             };
           });
+          setActiveOrderMessageIndex(nextAssistantMessageIndex);
         }
 
         setMessages(prev => [...prev, {
@@ -399,7 +468,7 @@ export const AiAssistant: React.FC = () => {
       {/* ─── CHAT PANEL ─── */}
       {isOpen && (
         <div 
-          className={`w-[360px] sm:w-[380px] h-[520px] rounded-3xl bg-white/95 backdrop-blur-xl border border-slate-200/50 shadow-2xl flex flex-col overflow-hidden mb-4 transition-all duration-300 origin-bottom-right scale-100 ${
+          className={`w-[calc(100vw-2rem)] sm:w-[400px] h-[min(720px,calc(100dvh-7rem))] rounded-3xl bg-white/95 backdrop-blur-xl border border-slate-200/50 shadow-2xl flex flex-col overflow-hidden mb-4 transition-all duration-300 origin-bottom-right scale-100 ${
             isRTL ? 'text-right' : 'text-left'
           }`}
           style={{ 
@@ -523,14 +592,34 @@ export const AiAssistant: React.FC = () => {
                     )}
 
                     {/* Conversational Ordering Form */}
-                    {(msg.type === 'order_collect' || msg.type === 'order_confirm') && activeOrderForm && (
-                      <div className="mt-4 pt-3 border-t border-slate-100 flex flex-col gap-3">
-                        <span className="text-[10px] font-black uppercase text-accent tracking-wider block">
-                          {language === 'FR' ? 'Formulaire de Commande Express' : 'استمارة الطلب السريع'}
-                        </span>
+                    {(msg.type === 'order_collect' || msg.type === 'order_confirm') && activeOrderForm && activeOrderMessageIndex === idx && (
+                      <section className="mt-4 overflow-hidden rounded-2xl border border-emerald-100 bg-white shadow-[0_12px_28px_rgba(15,118,110,0.08)]">
+                        <div className="flex items-center justify-between gap-3 border-b border-emerald-100 bg-emerald-50/80 px-3.5 py-2.5">
+                          <div className="flex items-center gap-2 text-emerald-900">
+                            <ShoppingBag className="h-4 w-4" />
+                            <span className="text-[10px] font-black uppercase tracking-[0.12em]">{language === 'FR' ? 'Commande via le chat' : 'الطلب عبر المحادثة'}</span>
+                          </div>
+                          <span className="rounded-full bg-white px-2 py-1 text-[9px] font-bold text-emerald-700 ring-1 ring-emerald-100">{language === 'FR' ? 'Paiement à la livraison' : 'الدفع عند الاستلام'}</span>
+                        </div>
+                        <div className="flex flex-col gap-3 p-3.5">
+                          <span className="text-[10px] font-black uppercase text-accent tracking-wider block">{language === 'FR' ? '1. Choisissez vos produits' : '١. اختاري منتجاتكِ'}</span>
+                          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2 focus-within:border-emerald-400 focus-within:bg-white">
+                            <Search className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                            <input type="search" value={orderSearch} onChange={(event) => setOrderSearch(event.target.value)} placeholder={language === 'FR' ? 'Produit ou marque' : 'منتج أو علامة'} className="min-w-0 flex-1 bg-transparent text-[11px] font-semibold text-slate-700 outline-none placeholder:text-slate-400" />
+                          </div>
+                          <div className="max-h-40 space-y-1 overflow-y-auto pr-1">
+                            {orderSearchResults.map(product => (
+                              <div key={product.id} className="flex items-center gap-2 rounded-xl border border-slate-100 bg-white p-2">
+                                <div className="h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-slate-50">{product.image ? <img src={product.image} alt="" className="h-full w-full object-contain p-0.5" loading="lazy" /> : null}</div>
+                                <div className="min-w-0 flex-1"><p className="truncate text-[10px] font-bold text-slate-800">{product.title}</p><p className="mt-0.5 text-[9px] font-semibold text-slate-400">{product.vendor} · {product.price.toFixed(2)} DH</p></div>
+                                <button type="button" onClick={() => addOrderProduct(product.id)} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-emerald-300 hover:text-emerald-700" aria-label={language === 'FR' ? `Ajouter ${product.title}` : `إضافة ${product.title}`}><Plus className="h-3.5 w-3.5" /></button>
+                              </div>
+                            ))}
+                          </div>
+                          {activeOrderForm.items.length > 0 && <span className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-500">{language === 'FR' ? '2. Votre sélection et livraison' : '٢. اختياركِ والتوصيل'}</span>}
                         
                         {/* Products summary */}
-                        <div className="space-y-1.5 bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-xl border border-slate-100">
+                        {activeOrderForm.items.length > 0 && <div className="space-y-1.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                           {activeOrderForm.items.map((item, itemIdx) => {
                             const prod = products.find(p => p.id === item.productId);
                             if (!prod) return null;
@@ -540,7 +629,7 @@ export const AiAssistant: React.FC = () => {
                                 <div className="flex items-center gap-1.5 shrink-0">
                                   <button
                                     type="button"
-                                    onClick={() => handleUpdateQty(item.productId, -1)}
+                                  onClick={() => item.quantity === 1 ? handleRemoveOrderItem(item.productId) : handleUpdateQty(item.productId, -1)}
                                     className="w-4 h-4 rounded bg-slate-200 hover:bg-slate-300 flex items-center justify-center font-bold border-0 outline-none text-[10px] cursor-pointer"
                                   >
                                     -
@@ -558,10 +647,10 @@ export const AiAssistant: React.FC = () => {
                               </div>
                             );
                           })}
-                        </div>
+                        </div>}
 
                         {/* Customer Form Inputs */}
-                        <div className="space-y-2">
+                        {activeOrderForm.items.length > 0 && <div className="space-y-2">
                           <input
                             type="text"
                             placeholder={language === 'FR' ? "Nom Complet" : "الاسم الكامل"}
@@ -592,20 +681,25 @@ export const AiAssistant: React.FC = () => {
                             onChange={(e) => setActiveOrderForm(prev => prev ? { ...prev, city: e.target.value } : null)}
                             className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-[11px] font-semibold focus:outline-none focus:border-primary-dark"
                           />
-                        </div>
+                        </div>}
 
                         {/* Action buttons */}
+                        {activeOrderForm.items.length > 0 && <>
+                        <div className="rounded-xl bg-slate-950 px-3 py-2.5 text-white"><div className="flex items-center justify-between text-[10px] font-semibold text-white/70"><span>{language === 'FR' ? 'Livraison estimée' : 'تقدير التوصيل'}</span><span>{orderShippingEstimate === 0 ? (language === 'FR' ? 'Offerte' : 'مجانية') : `${orderShippingEstimate.toFixed(2)} DH`}</span></div><div className="mt-1 flex items-center justify-between text-xs font-black"><span>{language === 'FR' ? 'Total estimé' : 'المجموع التقديري'}</span><span>{(orderSubtotal + orderShippingEstimate).toFixed(2)} DH</span></div></div>
                         <button
                           type="button"
                           disabled={isOrderSubmitting || !activeOrderForm.customerName || !isValidMoroccanPhone(activeOrderForm.phone) || !activeOrderForm.address || !activeOrderForm.city || activeOrderForm.items.length === 0}
                           onClick={() => handlePlaceAiOrder(activeOrderForm)}
-                          className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold text-[10px] uppercase tracking-wider rounded-lg shadow-sm hover:shadow-md transition active:scale-95 border-0 outline-none text-center"
+                          className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-black text-[10px] uppercase tracking-[0.1em] rounded-xl shadow-[0_10px_20px_rgba(5,150,105,0.22)] transition active:scale-95 border-0 outline-none text-center"
                         >
                           {isOrderSubmitting
                             ? (language === 'FR' ? 'Enregistrement...' : 'جاري تسجيل الطلب...')
                             : (language === 'FR' ? 'Confirmer ma Commande' : 'تأكيد الطلب الآن')}
                         </button>
-                      </div>
+                        <p className="flex items-start gap-1.5 text-[9px] leading-relaxed text-slate-400"><MapPin className="mt-0.5 h-3 w-3 shrink-0" />{language === 'FR' ? 'Le stock, les frais et le total final sont vérifiés en temps réel avant la création.' : 'يتم التحقق من المخزون ورسوم الشحن والمجموع النهائي مباشرةً قبل إنشاء الطلب.'}</p>
+                        </>}
+                        </div>
+                      </section>
                     )}
                   </div>
                 </div>
@@ -634,6 +728,15 @@ export const AiAssistant: React.FC = () => {
               {language === 'FR' ? 'Consultations Fréquentes :' : 'الاستشارات الشائعة :'}
             </span>
             <div className="flex flex-wrap gap-2 justify-start max-h-[110px] overflow-y-auto no-scrollbar">
+              <button
+                type="button"
+                onClick={startChatOrder}
+                disabled={isTyping}
+                className="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 border border-emerald-600 rounded-lg text-[10.5px] font-extrabold text-white transition-all cursor-pointer leading-tight active:scale-[0.98] outline-none shrink-0"
+              >
+                <ShoppingBag className="h-3.5 w-3.5" />
+                {language === 'FR' ? 'Commander par le chat' : 'الطلب عبر المحادثة'}
+              </button>
               {PRESETS.map((preset) => (
                 <button
                   key={preset.id}
