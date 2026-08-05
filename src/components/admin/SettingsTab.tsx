@@ -3198,7 +3198,7 @@ export default function SettingsTab() {
                 </div>
                 <div className="divide-y divide-slate-100 dark:divide-slate-800">
                   {giftRangesDraft.map((range, index) => (
-                    <div key={`${range.productId}-${index}`} className="grid gap-3 px-4 py-4 md:grid-cols-[auto_minmax(128px,0.7fr)_minmax(128px,0.7fr)_minmax(240px,2fr)_auto] md:items-center md:px-5">
+                    <div key={`${range.productId}-${index}`} className="grid gap-3 px-4 py-4 md:grid-cols-[auto_minmax(128px,0.7fr)_minmax(128px,0.7fr)_minmax(240px,2fr)_auto] md:items-start md:px-5">
                       <span className={`inline-flex h-8 w-8 items-center justify-center rounded-lg text-xs font-black ${adminTheme === 'light' ? 'bg-slate-100 text-slate-700' : 'bg-slate-800 text-slate-200'}`}>{index + 1}</span>
                       <label className="grid gap-1 text-[10px] font-bold uppercase tracking-wide text-slate-500 md:block">
                         <span className="md:hidden">À partir de</span>
@@ -3243,7 +3243,7 @@ export default function SettingsTab() {
                             </button>
 
                             {openGiftPickerIndex === index && (
-                              <div className={`absolute z-30 mt-[58px] w-full overflow-hidden rounded-xl border shadow-xl ${adminTheme === 'light' ? 'border-slate-200 bg-white shadow-slate-900/10' : 'border-slate-700 bg-slate-950 shadow-black/40'}`}>
+                              <div className={`relative mt-2 w-full overflow-hidden rounded-xl border shadow-lg ${adminTheme === 'light' ? 'border-slate-200 bg-white shadow-slate-900/10' : 'border-slate-700 bg-slate-950 shadow-black/40'}`}>
                                 <div className={`border-b p-2.5 ${adminTheme === 'light' ? 'border-slate-100 bg-slate-50/80' : 'border-slate-800 bg-slate-900/40'}`}>
                                   <label className="relative block">
                                     <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
