@@ -41,7 +41,7 @@ import {
   FlaskConical
 } from 'lucide-react';
 import { useAdmin } from '@/context/AdminContext';
-import { useSettings, HeroCardConfig } from '@/context/SettingsContext';
+import { useSettings, GiftRange, HeroCardConfig } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 import { useAdminUI } from '@/app/admin/AdminUIContext';
 import { useProducts } from '@/context/ProductsContext';
@@ -137,6 +137,95 @@ export default function SettingsTab() {
     action: () => Promise<void>;
   } | null>(null);
   const [isConfirmingAction, setIsConfirmingAction] = useState(false);
+
+  // Gift tiers are stored with the public shop settings so the cart and order
+  // creation endpoint resolve the exact same qualifying gift.
+  const [giftRangesDraft, setGiftRangesDraft] = useState<GiftRange[]>([]);
+  const [isSavingGiftRanges, setIsSavingGiftRanges] = useState(false);
+
+  useEffect(() => {
+    setGiftRangesDraft(settings.giftRanges || []);
+  }, [settings.giftRanges]);
+
+  const getGiftProductName = (productId: number) => {
+    const product = products.find((item: any) => Number(item.id) === Number(productId));
+    return String(product?.title || product?.nameFr || product?.name || '').trim();
+  };
+
+  const addGiftRange = () => {
+    const availableProduct = products.find((product: any) => product.status !== 'draft') || products[0];
+    if (!availableProduct) {
+      showToast('Ajoutez d’abord un produit au catalogue pour créer une offre cadeau.', 'error');
+      return;
+    }
+
+    const lastRange = giftRangesDraft[giftRangesDraft.length - 1];
+    const minAmount = lastRange ? Number(lastRange.maxAmount) + 1 : 400;
+    setGiftRangesDraft((current) => [
+      ...current,
+      {
+        minAmount,
+        maxAmount: minAmount + 199,
+        productId: Number(availableProduct.id),
+        productName: String(availableProduct.title || availableProduct.nameFr || availableProduct.name || 'Cadeau offert'),
+      },
+    ]);
+  };
+
+  const updateGiftRange = (index: number, changes: Partial<GiftRange>) => {
+    setGiftRangesDraft((current) => current.map((range, rangeIndex) => {
+      if (rangeIndex !== index) return range;
+      const nextRange = { ...range, ...changes };
+      if (changes.productId !== undefined) {
+        nextRange.productName = getGiftProductName(Number(changes.productId)) || range.productName;
+      }
+      return nextRange;
+    }));
+  };
+
+  const saveGiftRanges = async () => {
+    const normalized = giftRangesDraft
+      .map((range) => ({
+        minAmount: Number(range.minAmount),
+        maxAmount: Number(range.maxAmount),
+        productId: Number(range.productId),
+        productName: getGiftProductName(Number(range.productId)) || String(range.productName || '').trim(),
+      }))
+      .sort((a, b) => a.minAmount - b.minAmount);
+
+    const invalidRange = normalized.find((range) => (
+      !Number.isFinite(range.minAmount) ||
+      !Number.isFinite(range.maxAmount) ||
+      range.minAmount < 0 ||
+      range.maxAmount < range.minAmount ||
+      !range.productId ||
+      !range.productName
+    ));
+
+    if (invalidRange) {
+      showToast('Vérifiez les montants et le produit de chaque palier.', 'error');
+      return;
+    }
+
+    const hasOverlap = normalized.some((range, index) => (
+      index > 0 && range.minAmount <= normalized[index - 1].maxAmount
+    ));
+    if (hasOverlap) {
+      showToast('Les paliers cadeau ne doivent pas se chevaucher.', 'error');
+      return;
+    }
+
+    setIsSavingGiftRanges(true);
+    const saved = await saveSettings({ ...settings, giftRanges: normalized });
+    setIsSavingGiftRanges(false);
+
+    if (saved) {
+      setGiftRangesDraft(normalized);
+      showToast('Paliers cadeaux enregistrés.', 'success');
+    } else {
+      showToast('Impossible d’enregistrer les paliers cadeaux.', 'error');
+    }
+  };
 
   // Sync settings and products for homepage sections
   useEffect(() => {
@@ -590,6 +679,7 @@ export default function SettingsTab() {
           { id: 'homepage', label: 'Accueil', icon: Layout, group: 'Boutique' },
           { id: 'banners', label: 'Bannières', icon: Sliders, group: 'Boutique' },
           { id: 'coupons', label: 'Promotions', icon: Percent, group: 'Commerce' },
+          { id: 'gifts', label: 'Cadeaux', icon: Gift, group: 'Commerce' },
           { id: 'shipping', label: 'Expédition', icon: Truck, group: 'Commerce' },
           { id: 'payment', label: 'Paiements', icon: CreditCard, group: 'Commerce' },
           { id: 'loyalty', label: 'Fidélité', icon: Star, group: 'Client' },
@@ -3046,7 +3136,90 @@ export default function SettingsTab() {
           </div>
         )}
 
-        {/* C. VISUAL DISCOUNT & COUPONS MANAGER */}
+        {/* C. SPEND-BASED GIFT TIERS */}
+        {activeSettingsSubTab === 'gifts' && (
+          <section className="space-y-5" aria-labelledby="gift-tiers-heading">
+            <div className={`rounded-2xl border p-5 sm:p-6 ${
+              adminTheme === 'light'
+                ? 'border-emerald-100 bg-emerald-50/50 text-slate-800'
+                : 'border-emerald-500/20 bg-emerald-950/10 text-slate-100'
+            }`}>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex gap-3">
+                  <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${adminTheme === 'light' ? 'bg-emerald-600 text-white' : 'bg-emerald-500/20 text-emerald-300'}`}>
+                    <Gift className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <div>
+                    <h2 id="gift-tiers-heading" className="text-sm font-black uppercase tracking-[0.12em]">Cadeaux selon le montant du panier</h2>
+                    <p className={`mt-1 max-w-2xl text-xs leading-5 ${adminTheme === 'light' ? 'text-slate-600' : 'text-slate-300'}`}>
+                      Le cadeau sélectionné est ajouté automatiquement à la commande lorsque le sous-total du panier correspond à un palier.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={addGiftRange}
+                  className="po-ui-button po-ui-button--secondary po-ui-button--md shrink-0 px-3.5 py-2 text-xs font-black uppercase tracking-wider"
+                >
+                  <Plus className="h-4 w-4" aria-hidden="true" /> Ajouter un palier
+                </button>
+              </div>
+            </div>
+
+            {giftRangesDraft.length === 0 ? (
+              <div className={`rounded-2xl border border-dashed px-6 py-12 text-center ${adminTheme === 'light' ? 'border-slate-200 bg-white text-slate-600' : 'border-slate-800 bg-slate-900/30 text-slate-400'}`}>
+                <Gift className="mx-auto mb-3 h-7 w-7 text-emerald-500" aria-hidden="true" />
+                <p className="text-sm font-bold">Aucun cadeau automatique n’est configuré.</p>
+                <p className="mx-auto mt-1 max-w-md text-xs leading-5">Créez par exemple un cadeau de 400 à 599 DH, puis un autre cadeau à partir de 600 DH.</p>
+                <button type="button" onClick={addGiftRange} className="po-ui-button po-ui-button--primary po-ui-button--md mt-5 px-4 py-2 text-xs font-black uppercase tracking-wider">
+                  <Plus className="h-4 w-4" aria-hidden="true" /> Créer le premier palier
+                </button>
+              </div>
+            ) : (
+              <div className={`overflow-hidden rounded-2xl border ${adminTheme === 'light' ? 'border-slate-200 bg-white' : 'border-slate-800 bg-slate-900/30'}`}>
+                <div className={`hidden grid-cols-[auto_minmax(128px,0.7fr)_minmax(128px,0.7fr)_minmax(240px,2fr)_auto] items-center gap-3 border-b px-5 py-3 text-[10px] font-black uppercase tracking-[0.12em] md:grid ${adminTheme === 'light' ? 'border-slate-100 bg-slate-50 text-slate-500' : 'border-slate-800 bg-slate-950/40 text-slate-400'}`}>
+                  <span>Palier</span><span>À partir de</span><span>Jusqu’à</span><span>Produit offert</span><span>Action</span>
+                </div>
+                <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {giftRangesDraft.map((range, index) => (
+                    <div key={`${range.productId}-${index}`} className="grid gap-3 px-4 py-4 md:grid-cols-[auto_minmax(128px,0.7fr)_minmax(128px,0.7fr)_minmax(240px,2fr)_auto] md:items-center md:px-5">
+                      <span className={`inline-flex h-8 w-8 items-center justify-center rounded-lg text-xs font-black ${adminTheme === 'light' ? 'bg-slate-100 text-slate-700' : 'bg-slate-800 text-slate-200'}`}>{index + 1}</span>
+                      <label className="grid gap-1 text-[10px] font-bold uppercase tracking-wide text-slate-500 md:block">
+                        <span className="md:hidden">À partir de</span>
+                        <span className="relative block"><input type="number" min="0" step="1" value={range.minAmount} onChange={(event) => updateGiftRange(index, { minAmount: Number(event.target.value) })} className={`w-full rounded-xl border px-3 py-2 pr-10 text-right text-sm font-bold outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 ${adminTheme === 'light' ? 'border-slate-200 bg-white text-slate-800' : 'border-slate-700 bg-slate-950 text-slate-100'}`} /><span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[10px] font-bold text-slate-400">DH</span></span>
+                      </label>
+                      <label className="grid gap-1 text-[10px] font-bold uppercase tracking-wide text-slate-500 md:block">
+                        <span className="md:hidden">Jusqu’à</span>
+                        <span className="relative block"><input type="number" min="0" step="1" value={range.maxAmount} onChange={(event) => updateGiftRange(index, { maxAmount: Number(event.target.value) })} className={`w-full rounded-xl border px-3 py-2 pr-10 text-right text-sm font-bold outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 ${adminTheme === 'light' ? 'border-slate-200 bg-white text-slate-800' : 'border-slate-700 bg-slate-950 text-slate-100'}`} /><span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[10px] font-bold text-slate-400">DH</span></span>
+                      </label>
+                      <label className="grid gap-1 text-[10px] font-bold uppercase tracking-wide text-slate-500 md:block">
+                        <span className="md:hidden">Produit offert</span>
+                        <select value={range.productId} onChange={(event) => updateGiftRange(index, { productId: Number(event.target.value) })} className={`w-full rounded-xl border px-3 py-2 text-sm font-semibold outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 ${adminTheme === 'light' ? 'border-slate-200 bg-white text-slate-800' : 'border-slate-700 bg-slate-950 text-slate-100'}`}>
+                          <option value="">Choisir un produit</option>
+                          {products.map((product: any) => <option key={product.id} value={product.id}>{product.title || product.nameFr || product.name || `Produit #${product.id}`}</option>)}
+                        </select>
+                      </label>
+                      <button type="button" onClick={() => setGiftRangesDraft((current) => current.filter((_, rangeIndex) => rangeIndex !== index))} className={`inline-flex min-h-10 items-center justify-center gap-1 rounded-xl border px-3 text-xs font-bold transition ${adminTheme === 'light' ? 'border-rose-100 text-rose-600 hover:bg-rose-50' : 'border-rose-500/20 text-rose-300 hover:bg-rose-500/10'}`} aria-label={`Supprimer le palier ${index + 1}`}>
+                        <Trash2 className="h-4 w-4" aria-hidden="true" /><span className="md:sr-only">Supprimer</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {giftRangesDraft.length > 0 && (
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-xs leading-5 text-slate-500">Les paliers sont vérifiés sur le sous-total, avant les frais de livraison et les réductions.</p>
+                <button type="button" onClick={saveGiftRanges} disabled={isSavingGiftRanges} className="po-ui-button po-ui-button--primary po-ui-button--md px-4 py-2.5 text-xs font-black uppercase tracking-wider disabled:cursor-not-allowed disabled:opacity-60">
+                  <Check className="h-4 w-4" aria-hidden="true" /> {isSavingGiftRanges ? 'Enregistrement...' : 'Enregistrer les cadeaux'}
+                </button>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* D. VISUAL DISCOUNT & COUPONS MANAGER */}
         {activeSettingsSubTab === 'coupons' && (
           <div className="space-y-6">
             

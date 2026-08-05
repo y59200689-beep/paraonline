@@ -112,7 +112,7 @@ const BRAND_PAGE_IMAGE_SLOTS: GalleryImage[] = brandPageDefinitions.flatMap((bra
   brandPageSlot(brand, 'method', 'Soin emblématique', brand.method),
 ]);
 
-export const IMAGE_MANIFEST: GalleryImage[] = [
+const IMAGE_MANIFEST: GalleryImage[] = [
   // ── Heroes ──────────────────────────────────────────────────────────────
   { key: 'hero_bestsellers',       label: 'Hero 1 — Best-Sellers (Meilleures Ventes)', group: 'heroes', filePath: 'images/hero_bestsellers.webp', url: '/images/hero_bestsellers.webp' },
   { key: 'hero_summersale',        label: 'Hero 2 — Summer Sale (Offres d\'Été)',     group: 'heroes', filePath: 'images/hero_summersale.webp',  url: '/images/hero_summersale.webp' },
