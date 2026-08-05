@@ -922,7 +922,7 @@ export default function CatalogTab({
   const [importError, setImportError] = useState('');
   const [importMessage, setImportMessage] = useState('');
   const [importResult, setImportResult] = useState<{ created: number; updated: number; skipped: number; validationErrors: number } | null>(null);
-  const [importHistory, setImportHistory] = useState<Array<{ id: string; date: string; details: string; errors?: Array<{ row: number; errors: Record<string, string>; raw: Record<string, unknown> }> }>>([]);
+  const [importHistory, setImportHistory] = useState<Array<{ id: string; date: string; details: string; errors?: Array<{ row: number; errors: Record<string, string>; raw?: Record<string, unknown> }> }>>([]);
 
   // Saved mapping profiles
   const [savedProfiles, setSavedProfiles] = useState<Record<string, Record<string, string>>>({});
@@ -959,7 +959,7 @@ export default function CatalogTab({
     URL.revokeObjectURL(url);
   };
 
-  const downloadHistoricalImportErrors = (errors: Array<{ row: number; errors: Record<string, string>; raw: Record<string, unknown> }>) => {
+  const downloadHistoricalImportErrors = (errors: Array<{ row: number; errors: Record<string, string>; raw?: Record<string, unknown> }>) => {
     const escape = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`;
     const csv = [
       ['Ligne', 'Erreurs', 'Données source'],
@@ -1738,13 +1738,68 @@ export default function CatalogTab({
 
     try {
       const validationErrorCount = rowValidations.filter(validation => Object.keys(validation.errors).length > 0).length;
-      const result = await handleImportProducts(importedProducts, importUpdateExisting, {
-        fileName: importFile?.name,
+      // Vercel rejects request bodies above its limit. Do not duplicate raw rows
+      // in audit metadata, and split large spreadsheets into safe API batches.
+      const validationErrors = rowValidations
+        .filter(validation => Object.keys(validation.errors).length > 0)
+        .map(validation => ({ row: validation.rowIndex + 1, errors: validation.errors }));
+      const maxBatchBytes = 2_500_000;
+      const encoder = new TextEncoder();
+      const batches: any[][] = [];
+      let currentBatch: any[] = [];
+      let currentBatchBytes = 0;
+
+      for (const product of importedProducts) {
+        const productBytes = encoder.encode(JSON.stringify(product)).byteLength;
+        if (productBytes > maxBatchBytes) {
+          throw new Error(`Le produit « ${product.title || product.sku || product.id} » est trop volumineux pour être importé. Réduisez le contenu de ses cellules.`);
+        }
+        if (currentBatch.length > 0 && currentBatchBytes + productBytes > maxBatchBytes) {
+          batches.push(currentBatch);
+          currentBatch = [];
+          currentBatchBytes = 0;
+        }
+        currentBatch.push(product);
+        currentBatchBytes += productBytes;
+      }
+      if (currentBatch.length > 0) batches.push(currentBatch);
+
+      const summary = { count: 0, created: 0, updated: 0, skipped: 0, categories: new Set<string>(), message: '' };
+      for (const [batchIndex, batch] of batches.entries()) {
+        const result = await handleImportProducts(batch, importUpdateExisting, {
+          fileName: importFile?.name,
+          validationErrorCount: batchIndex === 0 ? validationErrorCount : 0,
+          validationErrors: batchIndex === 0 ? validationErrors : [],
+        });
+        if (!result.success) throw new Error(result.error || 'Erreur inconnue');
+        summary.count += result.count;
+        summary.created += result.createdCount || 0;
+        summary.updated += result.updatedCount || 0;
+        summary.skipped += result.skippedCount || 0;
+        result.categories?.forEach(category => summary.categories.add(category));
+        if (result.message) summary.message = result.message;
+        setImportProgress(35 + Math.round(((batchIndex + 1) / batches.length) * 50));
+      }
+      const result: {
+        success: boolean;
+        count: number;
+        createdCount: number;
+        updatedCount: number;
+        skippedCount: number;
+        validationErrorCount: number;
+        categories: string[];
+        message: string;
+        error?: string;
+      } = {
+        success: true,
+        count: summary.count,
+        createdCount: summary.created,
+        updatedCount: summary.updated,
+        skippedCount: summary.skipped,
         validationErrorCount,
-        validationErrors: rowValidations
-          .filter(validation => Object.keys(validation.errors).length > 0)
-          .map(validation => ({ row: validation.rowIndex + 1, errors: validation.errors, raw: validation.raw })),
-      });
+        categories: Array.from(summary.categories),
+        message: summary.message,
+      };
       setImportProgress(85);
       
       if (result.success) {
