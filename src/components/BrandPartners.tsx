@@ -39,33 +39,48 @@ export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands }) => {
 
   const allBrands = Array.from(mergedBrandsMap.values()) as Brand[];
 
-  // Deal brands into rows rather than slicing groups. Each row therefore has
-  // a varied sequence and no row gets stranded with a short tail of cards.
-  const rows: Brand[][] = [[], [], []];
-  allBrands.forEach((brand, index) => rows[index % rows.length].push(brand));
-  const [row1, row2, row3] = rows;
-
   return (
     <section 
       className="aurora-bg border-b border-slate-200/40 relative overflow-hidden py-8 md:py-12 reveal-on-scroll"
     >
       <style>{`
-        .brand-partner-row {
-          display: flex;
-          gap: 0.75rem;
-          overflow-x: auto;
-          scrollbar-width: none;
-          padding-bottom: 0.25rem;
+        .brand-partner-viewport {
+          overflow: hidden;
+          width: 100%;
+          mask-image: linear-gradient(to right, transparent, black 4%, black 96%, transparent);
+          -webkit-mask-image: linear-gradient(to right, transparent, black 4%, black 96%, transparent);
         }
-        .brand-partner-row::-webkit-scrollbar { display: none; }
+        .brand-partner-track {
+          display: flex;
+          width: max-content;
+          gap: 0.75rem;
+          will-change: transform;
+          animation: brand-partner-marquee 42s linear infinite;
+        }
         @media (min-width: 640px) {
-          .brand-partner-row {
+          .brand-partner-track {
             gap: 1rem;
           }
         }
-        .brand-partner-row a {
+        .brand-partner-viewport:hover .brand-partner-track {
+          animation-play-state: paused;
+        }
+        .brand-partner-track a {
           pointer-events: auto;
           cursor: pointer;
+        }
+        @keyframes brand-partner-marquee {
+          to { transform: translate3d(-50%, 0, 0); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .brand-partner-viewport {
+            overflow-x: auto;
+            mask-image: none;
+            -webkit-mask-image: none;
+            scrollbar-width: none;
+          }
+          .brand-partner-track { animation: none; }
+          .brand-partner-viewport::-webkit-scrollbar { display: none; }
         }
       `}</style>
 
@@ -90,38 +105,14 @@ export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands }) => {
             </h2>
           </div>
 
-          {/* Static, touch-scrollable rows avoid animating duplicate logo cards
-              while the customer scrolls the rest of the storefront. */}
-          <div className="relative overflow-hidden w-full py-2 flex flex-col gap-4">
-            
-            {/* Fade Overlays — pointer-events-none so they don't block clicks */}
-            <div className="absolute top-0 bottom-0 left-0 w-12 sm:w-20 bg-gradient-to-r from-white via-white/80 to-transparent z-10 pointer-events-none" />
-            <div className="absolute top-0 bottom-0 right-0 w-12 sm:w-20 bg-gradient-to-l from-white via-white/80 to-transparent z-10 pointer-events-none" />
-            
-            <div className="brand-partner-row">
-              {row1.map((brand, i) => (
-                <div key={brand.name + '-r1-' + i} className="w-[72px] sm:w-[150px] shrink-0">
-                  <BrandLogoCard brand={brand} />
+          <div className="brand-partner-viewport py-2" aria-label="Marques partenaires">
+            <div className="brand-partner-track">
+              {[...allBrands, ...allBrands].map((brand, index) => (
+                <div key={`${brand.name}-${index}`} className="w-[116px] shrink-0 sm:w-[156px] md:w-[176px]">
+                  <BrandLogoCard brand={brand} decorative={index >= allBrands.length} />
                 </div>
               ))}
             </div>
-
-            <div className="brand-partner-row">
-              {row2.map((brand, i) => (
-                <div key={brand.name + '-r2-' + i} className="w-[72px] sm:w-[150px] shrink-0">
-                  <BrandLogoCard brand={brand} />
-                </div>
-              ))}
-            </div>
-
-            <div className="brand-partner-row">
-              {row3.map((brand, i) => (
-                <div key={brand.name + '-r3-' + i} className="w-[72px] sm:w-[150px] shrink-0">
-                  <BrandLogoCard brand={brand} />
-                </div>
-              ))}
-            </div>
-
           </div>
 
         </div>
