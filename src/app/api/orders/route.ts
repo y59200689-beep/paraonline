@@ -170,7 +170,7 @@ export async function POST(request: Request) {
     const shippingFee = calculateShipping(subtotal, String(orderData.city), coupon, settings);
     const total = roundMoney(subtotal - discountAmount + shippingFee);
     const giftRange = Array.isArray(settings.giftRanges)
-      ? settings.giftRanges.find((range: any) => subtotal >= Number(range.minAmount) && subtotal <= Number(range.maxAmount))
+      ? settings.giftRanges.find((range: any) => range.isActive !== false && subtotal >= Number(range.minAmount) && subtotal <= Number(range.maxAmount))
       : null;
     const isCod = paymentMethod === 'cod';
     const fallbackOrderId = `PO-${crypto.randomInt(100000, 1000000)}`;

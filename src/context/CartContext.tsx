@@ -401,7 +401,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Dynamically resolve tiered free gifts based on subtotal (order value) range
   const activeGiftRange = settings.giftRanges?.find(
-    r => subtotal >= r.minAmount && subtotal <= r.maxAmount
+    r => r.isActive !== false && subtotal >= r.minAmount && subtotal <= r.maxAmount
   );
   const resolvedGiftName = activeGiftRange 
     ? activeGiftRange.productName 

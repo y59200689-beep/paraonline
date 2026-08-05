@@ -34,6 +34,8 @@ export interface GiftRange {
   maxAmount: number;
   productId: number;
   productName: string;
+  /** Disabled tiers remain configured but are excluded from cart and order gift resolution. */
+  isActive?: boolean;
 }
 
 export interface CityDeliveryRule {
