@@ -3195,22 +3195,22 @@ export default function SettingsTab() {
               </div>
             ) : (
               <div className={`overflow-hidden rounded-2xl border ${adminTheme === 'light' ? 'border-slate-200 bg-white' : 'border-slate-800 bg-slate-900/30'}`}>
-                <div className={`hidden grid-cols-[auto_minmax(118px,0.65fr)_minmax(118px,0.65fr)_minmax(230px,2fr)_auto_auto] items-center gap-3 border-b px-5 py-3 text-[10px] font-black uppercase tracking-[0.12em] md:grid ${adminTheme === 'light' ? 'border-slate-100 bg-slate-50 text-slate-500' : 'border-slate-800 bg-slate-950/40 text-slate-400'}`}>
+                <div className={`hidden grid-cols-[48px_190px_190px_minmax(0,1fr)_132px_44px] items-center gap-3 border-b px-5 py-3 text-[10px] font-black uppercase tracking-[0.12em] md:grid ${adminTheme === 'light' ? 'border-slate-100 bg-slate-50 text-slate-500' : 'border-slate-800 bg-slate-950/40 text-slate-400'}`}>
                   <span>Palier</span><span>À partir de</span><span>Jusqu’à</span><span>Produit offert</span><span>Statut</span><span>Action</span>
                 </div>
                 <div className="divide-y divide-slate-100 dark:divide-slate-800">
                   {giftRangesDraft.map((range, index) => (
-                    <div key={`${range.productId}-${index}`} className={`grid gap-3 px-4 py-4 transition-opacity md:grid-cols-[auto_minmax(118px,0.65fr)_minmax(118px,0.65fr)_minmax(230px,2fr)_auto_auto] md:items-start md:px-5 ${range.isActive === false ? 'opacity-65' : ''}`}>
+                    <div key={`${range.productId}-${index}`} className={`grid gap-3 px-4 py-4 transition-opacity md:grid-cols-[48px_190px_190px_minmax(0,1fr)_132px_44px] md:items-start md:px-5 ${range.isActive === false ? 'opacity-65' : ''}`}>
                       <span className={`inline-flex h-8 w-8 items-center justify-center rounded-lg text-xs font-black ${adminTheme === 'light' ? 'bg-slate-100 text-slate-700' : 'bg-slate-800 text-slate-200'}`}>{index + 1}</span>
                       <label className="grid gap-1 text-[10px] font-bold uppercase tracking-wide text-slate-500 md:block">
                         <span className="md:hidden">À partir de</span>
-                        <span className="relative block"><input type="number" min="0" step="1" value={range.minAmount} onChange={(event) => updateGiftRange(index, { minAmount: Number(event.target.value) })} className={`w-full rounded-xl border px-3 py-2 pr-10 text-right text-sm font-bold outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 ${adminTheme === 'light' ? 'border-slate-200 bg-white text-slate-800' : 'border-slate-700 bg-slate-950 text-slate-100'}`} /><span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[10px] font-bold text-slate-400">DH</span></span>
+                        <span className="relative block"><input type="number" min="0" step="1" value={range.minAmount} onChange={(event) => updateGiftRange(index, { minAmount: Number(event.target.value) })} className={`h-12 w-full rounded-xl border px-3 py-2 pr-10 text-right text-sm font-bold outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 ${adminTheme === 'light' ? 'border-slate-200 bg-white text-slate-800' : 'border-slate-700 bg-slate-950 text-slate-100'}`} /><span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[10px] font-bold text-slate-400">DH</span></span>
                       </label>
                       <label className="grid gap-1 text-[10px] font-bold uppercase tracking-wide text-slate-500 md:block">
                         <span className="md:hidden">Jusqu’à</span>
-                        <span className="relative block"><input type="number" min="0" step="1" value={range.maxAmount} onChange={(event) => updateGiftRange(index, { maxAmount: Number(event.target.value) })} className={`w-full rounded-xl border px-3 py-2 pr-10 text-right text-sm font-bold outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 ${adminTheme === 'light' ? 'border-slate-200 bg-white text-slate-800' : 'border-slate-700 bg-slate-950 text-slate-100'}`} /><span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[10px] font-bold text-slate-400">DH</span></span>
+                        <span className="relative block"><input type="number" min="0" step="1" value={range.maxAmount} onChange={(event) => updateGiftRange(index, { maxAmount: Number(event.target.value) })} className={`h-12 w-full rounded-xl border px-3 py-2 pr-10 text-right text-sm font-bold outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 ${adminTheme === 'light' ? 'border-slate-200 bg-white text-slate-800' : 'border-slate-700 bg-slate-950 text-slate-100'}`} /><span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[10px] font-bold text-slate-400">DH</span></span>
                       </label>
-                      <div className="relative grid gap-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                      <div className="relative grid min-w-0 gap-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">
                         <span className="md:hidden">Produit offert</span>
                         {(() => {
                           const selectedProduct = products.find((product: any) => Number(product.id) === Number(range.productId));
@@ -3232,13 +3232,14 @@ export default function SettingsTab() {
                                 setOpenGiftPickerIndex((current) => current === index ? null : index);
                                 setGiftProductQueries((current) => ({ ...current, [index]: '' }));
                               }}
-                              className={`flex min-h-12 w-full items-center gap-3 rounded-xl border px-3 py-2 text-left transition focus:outline-none focus:ring-2 focus:ring-emerald-500/25 ${adminTheme === 'light' ? 'border-slate-200 bg-white hover:border-emerald-300' : 'border-slate-700 bg-slate-950 hover:border-emerald-500/60'} ${selectedStock <= 0 ? 'border-rose-300' : ''}`}
+                              title={selectedName || 'Choisir un produit en stock'}
+                              className={`flex h-12 min-w-0 w-full items-center gap-3 rounded-xl border px-3 py-2 text-left transition focus:outline-none focus:ring-2 focus:ring-emerald-500/25 ${adminTheme === 'light' ? 'border-slate-200 bg-white hover:border-emerald-300' : 'border-slate-700 bg-slate-950 hover:border-emerald-500/60'} ${selectedStock <= 0 ? 'border-rose-300' : ''}`}
                             >
                               <span className={`relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border ${adminTheme === 'light' ? 'border-slate-100 bg-slate-50' : 'border-slate-800 bg-slate-900'}`}>
                                 {getGiftProductImage(selectedProduct) ? <img src={getGiftProductImage(selectedProduct)} alt="" className="h-full w-full object-cover" /> : <Gift className="h-4 w-4 text-emerald-500" aria-hidden="true" />}
                               </span>
                               <span className="min-w-0 flex-1">
-                                <span className={`block truncate text-sm font-bold normal-case ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-100'}`}>{selectedName || 'Choisir un produit en stock'}</span>
+                                <span className={`block truncate whitespace-nowrap text-sm font-bold normal-case ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-100'}`}>{selectedName || 'Choisir un produit en stock'}</span>
                                 {selectedProduct && <span className={`mt-0.5 block text-[10px] font-semibold normal-case ${selectedStock > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>{selectedStock > 0 ? `${selectedStock} en stock` : 'Rupture de stock, choisissez un autre produit'}</span>}
                               </span>
                               <ChevronDown className={`h-4 w-4 shrink-0 transition ${openGiftPickerIndex === index ? 'rotate-180 text-emerald-600' : 'text-slate-400'}`} aria-hidden="true" />
@@ -3298,12 +3299,12 @@ export default function SettingsTab() {
                         role="switch"
                         aria-checked={range.isActive !== false}
                         onClick={() => updateGiftRange(index, { isActive: range.isActive === false })}
-                        className={`inline-flex min-h-10 items-center gap-2 rounded-xl border px-3 text-[10px] font-black uppercase tracking-wide transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 ${range.isActive !== false ? (adminTheme === 'light' ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20') : (adminTheme === 'light' ? 'border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100' : 'border-slate-700 bg-slate-900 text-slate-400 hover:bg-slate-800')}`}
+                        className={`inline-flex h-12 items-center justify-center gap-2 rounded-xl border px-3 text-[10px] font-black uppercase tracking-wide transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 ${range.isActive !== false ? (adminTheme === 'light' ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20') : (adminTheme === 'light' ? 'border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100' : 'border-slate-700 bg-slate-900 text-slate-400 hover:bg-slate-800')}`}
                       >
                         <span className={`h-2 w-2 rounded-full ${range.isActive !== false ? 'bg-emerald-500' : 'bg-slate-400'}`} aria-hidden="true" />
                         {range.isActive !== false ? 'En ligne' : 'En pause'}
                       </button>
-                      <button type="button" onClick={() => setGiftRangesDraft((current) => current.filter((_, rangeIndex) => rangeIndex !== index))} className={`inline-flex min-h-10 items-center justify-center gap-1 rounded-xl border px-3 text-xs font-bold transition ${adminTheme === 'light' ? 'border-rose-100 text-rose-600 hover:bg-rose-50' : 'border-rose-500/20 text-rose-300 hover:bg-rose-500/10'}`} aria-label={`Supprimer le palier ${index + 1}`}>
+                      <button type="button" onClick={() => setGiftRangesDraft((current) => current.filter((_, rangeIndex) => rangeIndex !== index))} className={`inline-flex h-12 items-center justify-center gap-1 rounded-xl border px-3 text-xs font-bold transition ${adminTheme === 'light' ? 'border-rose-100 text-rose-600 hover:bg-rose-50' : 'border-rose-500/20 text-rose-300 hover:bg-rose-500/10'}`} aria-label={`Supprimer le palier ${index + 1}`}>
                         <Trash2 className="h-4 w-4" aria-hidden="true" /><span className="md:sr-only">Supprimer</span>
                       </button>
                     </div>
