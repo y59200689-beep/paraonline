@@ -234,7 +234,7 @@ export const CurationClinique: React.FC = () => {
   const activeConcern = dynamicConcerns.find((c: any) => c.key === activeConcernKey) ?? dynamicConcerns[0];
 
   useEffect(() => {
-    fetch('/api/products?limit=500&page=1')
+    fetch('/api/products?limit=100&page=1')
       .then(r => r.json())
       .then(data => { setAllProducts(data.products ?? []); setLoading(false); })
       .catch(() => setLoading(false));

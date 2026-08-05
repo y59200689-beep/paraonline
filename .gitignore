@@ -43,3 +43,8 @@ next-env.d.ts
 # User uploads
 /public/uploads
 gallery-overrides.json
+
+# Local development-only mock persistence. Never commit production-like data
+# or credentials to the repository.
+supabase-mock-db.json
+supabase-mock-db.json.bak

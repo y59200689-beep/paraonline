@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useEffect } from 'react';
+import Link from 'next/link';
 import { AlertTriangle, RotateCcw, Home } from 'lucide-react';
+import { reportClientError } from '@/lib/client-telemetry';
 
 interface ErrorProps {
   error: Error & { digest?: string };
@@ -10,28 +12,9 @@ interface ErrorProps {
 
 export default function ErrorPage({ error, reset }: ErrorProps) {
   useEffect(() => {
-    // Log the error via client-to-server telemetry pipeline
     console.error('Next.js Page Error caught:', error);
-
-    fetch('/api/telemetry', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: error.message || 'Next.js App Router exception',
-        error: {
-          name: error.name,
-          message: error.message,
-          stack: error.stack,
-          digest: error.digest,
-        },
-        context: {
-          level: 'error',
-          digest: error.digest,
-          route: typeof window !== 'undefined' ? window.location.pathname : '',
-        },
-      }),
-    }).catch(err => {
-      console.error('Failed to dispatch telemetry report:', err);
+    reportClientError(error, {
+      messageFallback: 'Next.js App Router exception',
     });
   }, [error]);
 
@@ -68,13 +51,13 @@ export default function ErrorPage({ error, reset }: ErrorProps) {
             <RotateCcw className="w-3.5 h-3.5" />
             Réessayer
           </button>
-          <a
+          <Link
             href="/"
             className="flex-1 py-3 px-4 bg-slate-50 hover:bg-slate-100 text-slate-600 text-[11.5px] font-black uppercase tracking-widest rounded-xl border border-slate-200/60 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
           >
             <Home className="w-3.5 h-3.5" />
             Accueil
-          </a>
+          </Link>
         </div>
       </div>
     </div>

@@ -28,6 +28,22 @@ const PUBLIC_PRODUCT_COLUMNS = [
   'sensitivity_levels', 'active_strength', 'time_of_day',
 ].join(',');
 
+const MAX_CATALOG_PAGE = 10_000;
+const MAX_CATALOG_PAGE_SIZE = 100;
+const MAX_CATALOG_SEARCH_LENGTH = 120;
+
+const boundedPositiveInteger = (value: string | null, fallback: number, maximum: number) => {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? Math.min(parsed, maximum) : fallback;
+};
+
+const sanitizeCatalogSearch = (value: string) => value
+  .normalize('NFKC')
+  .replace(/[^\p{L}\p{N}\s-]/gu, ' ')
+  .replace(/\s+/g, ' ')
+  .trim()
+  .slice(0, MAX_CATALOG_SEARCH_LENGTH);
+
 const normalizeIngredientKey = (value: string) => value
   .trim()
   .toLowerCase()
@@ -167,12 +183,16 @@ function customConcernFilter(concern: { keywords?: string[]; ingredientKeywords?
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
-  const limit = Math.max(1, parseInt(searchParams.get('limit') || '15'));
+  const page = boundedPositiveInteger(searchParams.get('page'), 1, MAX_CATALOG_PAGE);
+  const limit = boundedPositiveInteger(searchParams.get('limit'), 15, MAX_CATALOG_PAGE_SIZE);
   const category = normalizeCatalogCategoryId(searchParams.get('category') || 'all');
-  const search = searchParams.get('search') || '';
-  const vendor = searchParams.get('vendor') || '';
-  const vendors = (searchParams.get('vendors') || '').split(',').map(v => v.trim()).filter(Boolean);
+  const search = sanitizeCatalogSearch(searchParams.get('search') || '');
+  const vendor = sanitizeCatalogSearch(searchParams.get('vendor') || '');
+  const vendors = (searchParams.get('vendors') || '')
+    .split(',')
+    .map(sanitizeCatalogSearch)
+    .filter(Boolean)
+    .slice(0, 20);
   const concern = searchParams.get('concern') || 'all';
   const requestedIngredient = (searchParams.get('ingredient') || '').trim().slice(0, 100);
   // Storefront clients send `ingredient=all` for the default view. Treat it as
@@ -253,7 +273,7 @@ export async function GET(request: Request) {
     }
 
     if (search) {
-      const cleanSearch = search.replace(/"/g, '').trim();
+      const cleanSearch = search;
       if (cleanSearch) {
         const words = cleanSearch.split(/\s+/).filter(Boolean);
         const fields = ['title', 'name', 'name_fr', 'sku', 'vendor', 'category', 'description'];

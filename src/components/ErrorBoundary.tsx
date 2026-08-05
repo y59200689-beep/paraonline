@@ -1,7 +1,9 @@
 'use client';
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import Link from 'next/link';
 import { AlertOctagon, RotateCcw, Home } from 'lucide-react';
+import { reportClientError } from '@/lib/client-telemetry';
 
 interface Props {
   children?: ReactNode;
@@ -24,26 +26,9 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error inside ErrorBoundary:', error, errorInfo);
-    
-    // Fire-and-forget reporting to our telemetry API endpoint
-    fetch('/api/telemetry', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: error.message || 'React component tree exception',
-        error: {
-          name: error.name,
-          message: error.message,
-          stack: error.stack,
-        },
-        context: {
-          level: 'error',
-          componentStack: errorInfo.componentStack,
-          route: typeof window !== 'undefined' ? window.location.pathname : '',
-        },
-      }),
-    }).catch(err => {
-      console.error('Failed to dispatch telemetry report:', err);
+    reportClientError(error, {
+      messageFallback: 'React component tree exception',
+      componentStack: errorInfo.componentStack,
     });
   }
 
@@ -89,13 +74,13 @@ export class ErrorBoundary extends Component<Props, State> {
                 <RotateCcw className="w-3.5 h-3.5" />
                 Actualiser
               </button>
-              <a
+              <Link
                 href="/"
                 className="flex-1 py-3 px-4 bg-slate-50 hover:bg-slate-100 text-slate-600 text-[11.5px] font-black uppercase tracking-widest rounded-xl border border-slate-200/60 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Home className="w-3.5 h-3.5" />
                 Accueil
-              </a>
+              </Link>
             </div>
           </div>
         </div>

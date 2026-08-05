@@ -49,7 +49,7 @@ export default function BrandClient({ brand, initialProducts = [] }: BrandClient
     const fetchBrandProducts = async () => {
       try {
         const res = await fetch(
-          `/api/products?vendor=${encodeURIComponent(brand.name)}&limit=500&page=1`,
+          `/api/products?vendor=${encodeURIComponent(brand.name)}&limit=100&page=1`,
           { cache: 'no-store' }
         );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);

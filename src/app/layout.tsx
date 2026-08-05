@@ -7,6 +7,7 @@ import { AiAssistant } from "../components/AiAssistant";
 import { CodeSnippetInjector } from "../components/CodeSnippetInjector";
 import { triggerLazyCron } from "@/lib/lazy-cron";
 import { getPublicSettings } from "@/lib/get-public-settings";
+import { toThemeColorVariable } from "@/lib/theme-colors";
 
 // The storefront catalogue response is too large for Vercel ISR. Keep the
 // route dynamic, while getPublicSettings remains independently cached.
@@ -37,7 +38,7 @@ function getServerThemeVariables(themeColors: unknown) {
   const declarations = Object.entries(themeColors as Record<string, unknown>)
     .flatMap(([key, value]) => {
       if (!/^[a-z][a-zA-Z0-9]*$/.test(key) || !isSafeCssColor(value)) return [];
-      return `--color-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}:${value.trim()};`;
+      return `${toThemeColorVariable(key)}:${value.trim()};`;
     });
 
   return declarations.length ? `:root{${declarations.join('')}}` : '';

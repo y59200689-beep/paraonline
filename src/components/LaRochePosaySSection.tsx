@@ -2,6 +2,7 @@
 
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useTranslation } from '@/context/LanguageContext';
 import { ChevronLeft, ChevronRight, Award } from 'lucide-react';
 import { ProductCard } from './ProductCard';
@@ -99,12 +100,12 @@ export const LaRochePosaySSection: React.FC = () => {
                     : "Développée avec des dermatologues, La Roche-Posay propose des formules innovantes avec l'Eau Thermale pour les peaux les plus sensibles."}
                 </p>
                 <div className="pt-2">
-                  <a
+                  <Link
                     href="/brand/la-roche-posay"
                     className="inline-flex items-center gap-1.5 px-4.5 py-2.5 bg-white text-slate-950 rounded-full text-xs font-bold shadow-md hover:bg-slate-100 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer"
                   >
                     <span>{language === 'AR' ? 'اكتشف المجموعة' : 'Découvrir la gamme'}</span>
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>

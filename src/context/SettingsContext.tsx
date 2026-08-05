@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { toThemeColorVariable } from '@/lib/theme-colors';
 
 export interface HeroCardConfig {
   tagFr: string;
@@ -817,7 +818,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode; initialSett
       Object.entries(settings.themeColors).forEach(([key, val]) => {
         if (val) {
           // Convert camelCase key to kebab-case CSS variable
-          const cssKey = `--color-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+          const cssKey = toThemeColorVariable(key);
           root.style.setProperty(cssKey, val);
         }
       });

@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { SearchX, Home, ArrowRight } from 'lucide-react';
 import type { Metadata } from 'next';
 
@@ -43,20 +44,20 @@ export default function NotFound() {
 
         {/* CTA */}
         <div className="w-full flex flex-col gap-3">
-          <a
+          <Link
             href="/"
             className="group w-full py-3.5 px-5 bg-primary hover:bg-accent text-white text-[11.5px] font-black uppercase tracking-widest rounded-xl hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-[0_6px_20px_rgba(236,72,153,0.25)] hover:shadow-[0_8px_28px_rgba(236,72,153,0.35)]"
           >
             <Home className="w-3.5 h-3.5" />
             Retour à la boutique
             <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
-          </a>
-          <a
+          </Link>
+          <Link
             href="/products"
             className="w-full py-3 px-5 bg-slate-50 hover:bg-slate-100 text-slate-600 text-[11.5px] font-black uppercase tracking-widest rounded-xl border border-slate-200/60 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
           >
             Explorer nos produits
-          </a>
+          </Link>
         </div>
 
         {/* Brand footer */}

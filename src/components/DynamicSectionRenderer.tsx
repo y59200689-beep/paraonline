@@ -41,6 +41,71 @@ interface DynamicSectionRendererProps {
   sections: HomepageSectionItem[];
 }
 
+const ALLOWED_CUSTOM_HTML_TAGS = new Set([
+  'a', 'abbr', 'b', 'blockquote', 'br', 'code', 'div', 'em', 'figcaption',
+  'figure', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'i', 'img', 'li', 'ol',
+  'p', 'pre', 'section', 'small', 'span', 'strong', 'sub', 'sup', 'table',
+  'tbody', 'td', 'th', 'thead', 'tr', 'u', 'ul',
+]);
+
+const isSafeCustomHtmlUrl = (value: string) => {
+  const url = value.trim();
+  return url.startsWith('/') || url.startsWith('#') || /^(https?:|mailto:|tel:)/i.test(url);
+};
+
+function sanitizeCustomHtml(html: string) {
+  if (typeof window === 'undefined') return '';
+
+  const template = document.createElement('template');
+  template.innerHTML = html;
+
+  for (const element of Array.from(template.content.querySelectorAll('*'))) {
+    const tag = element.tagName.toLowerCase();
+    if (!ALLOWED_CUSTOM_HTML_TAGS.has(tag)) {
+      element.remove();
+      continue;
+    }
+
+    for (const attribute of Array.from(element.attributes)) {
+      const name = attribute.name.toLowerCase();
+      const value = attribute.value;
+      const isGlobal = name === 'class' || name === 'id' || name === 'title' || name === 'role'
+        || name.startsWith('aria-') || name.startsWith('data-');
+      const isSafeLink = tag === 'a' && ['href', 'target', 'rel'].includes(name);
+      const isSafeImage = tag === 'img' && ['src', 'alt', 'width', 'height', 'loading'].includes(name);
+
+      if ((!isGlobal && !isSafeLink && !isSafeImage)
+        || name.startsWith('on')
+        || ((name === 'href' || name === 'src') && !isSafeCustomHtmlUrl(value))) {
+        element.removeAttribute(attribute.name);
+      }
+    }
+
+    if (tag === 'a' && element.getAttribute('target') === '_blank') {
+      element.setAttribute('rel', 'noopener noreferrer');
+    }
+  }
+
+  return template.innerHTML;
+}
+
+function CustomHtmlSection({ html }: { html: string }) {
+  const [sanitizedHtml, setSanitizedHtml] = useState('');
+
+  useEffect(() => {
+    setSanitizedHtml(sanitizeCustomHtml(html));
+  }, [html]);
+
+  if (!sanitizedHtml) return null;
+
+  return (
+    <section
+      className="w-full overflow-hidden reveal-on-scroll"
+      dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
+    />
+  );
+}
+
 /**
  * Delays a below-the-fold section until it is comfortably close to view.
  *
@@ -204,15 +269,10 @@ export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps
           case 'faq':
             return deferred(section.id, <InteractiveFaqWrapper />);
 
-          case 'customHtml':
+          case 'customHtml': {
             if (!section.settings?.html?.trim()) return null;
-            return (
-              <section
-                key={section.id}
-                className="w-full overflow-hidden reveal-on-scroll"
-                dangerouslySetInnerHTML={{ __html: section.settings?.html || '' }}
-              />
-            );
+            return <CustomHtmlSection key={section.id} html={section.settings.html} />;
+          }
 
           case 'richText': {
             const title = isRTL ? section.settings?.titleAr : section.settings?.titleFr;

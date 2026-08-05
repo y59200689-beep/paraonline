@@ -816,7 +816,7 @@ class MockSupabaseQueryBuilder {
       }
     }
 
-    let list = globalForMock.mockDb[this.table as keyof typeof globalForMock.mockDb] || [];
+    const list = globalForMock.mockDb[this.table as keyof typeof globalForMock.mockDb] || [];
 
     if (this.actionType === 'delete') {
       const itemsToKeep = list.filter(item => !this.filters.every(f => f(item)));
@@ -979,10 +979,18 @@ export const supabase = isPlaceholder
   ? mockSupabaseClient 
   : createClient(supabaseUrl, supabaseAnonKey);
 
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseAnonKey;
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// Never silently downgrade server-side operations to the public anon key.
+// The shared module is also imported by client components, so only enforce the
+// server-only secret at runtime on the server.
+if (!isPlaceholder && typeof window === 'undefined' && !serviceRoleKey) {
+  throw new Error('SUPABASE_SERVICE_ROLE_KEY must be configured for server-side database access.');
+}
+
 export const supabaseAdmin = isPlaceholder 
   ? mockSupabaseClient 
-  : createClient(supabaseUrl, serviceRoleKey, {
+  : createClient(supabaseUrl, serviceRoleKey || supabaseAnonKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,

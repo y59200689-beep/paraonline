@@ -250,8 +250,7 @@ export async function GET(request: Request) {
       const step = actions[currentIdx];
       const runLogs = run.logs || [];
       let nextRunAt = new Date().toISOString();
-      let newIdx = currentIdx + 1;
-      let shouldUpdateRun = true;
+      const newIdx = currentIdx + 1;
 
       // Variables for interpolations
       const variables: Record<string, string> = {

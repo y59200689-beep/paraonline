@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import Image from 'next/image';
+import Link from 'next/link';
 
 interface ProductDetailClientProps {
   product: Product;
@@ -566,9 +567,9 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
         
         {/* Breadcrumbs */}
         <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 mb-8 font-medium">
-          <a href="/products" className="hover:text-primary transition-colors">
+          <Link href="/products" className="hover:text-primary transition-colors">
             {language === 'FR' ? 'Boutique' : 'المتجر'}
-          </a>
+          </Link>
           <span>/</span>
           <span className="capitalize">{product.category}</span>
           <span>/</span>

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import OrdersTab from '../components/admin/OrdersTab';
 
 vi.mock('next/navigation', () => ({
@@ -158,21 +158,16 @@ describe('Moroccan COD Financial Reconciliation Ledger tests', () => {
   });
 
   it('should render the reconciliation upload view initially', async () => {
-    await act(async () => {
-      render(<ReconciliationTestComponent />, { wrapper: AllProvidersWrapper });
-      await new Promise(resolve => setTimeout(resolve, 100));
-    });
+    render(<ReconciliationTestComponent />, { wrapper: AllProvidersWrapper });
 
-    expect(screen.getByText(/Rapprochement Financier des Settlements COD/i)).toBeDefined();
+    expect(await screen.findByText(/Rapprochement Financier des Settlements COD/i)).toBeDefined();
     expect(screen.getByText(/Fichier de règlement \(Settlement\)/i)).toBeDefined();
     expect(screen.getByText(/Choisir un fichier CSV/i)).toBeDefined();
   });
 
   it('should parse simulated CSV settlement content and identify matching classifications', async () => {
-    await act(async () => {
-      render(<ReconciliationTestComponent />, { wrapper: AllProvidersWrapper });
-      await new Promise(resolve => setTimeout(resolve, 100));
-    });
+    render(<ReconciliationTestComponent />, { wrapper: AllProvidersWrapper });
+    await screen.findByText(/Rapprochement Financier des Settlements COD/i);
 
     // Simulating file drag and drop/upload
     const file = new File([
@@ -185,14 +180,10 @@ describe('Moroccan COD Financial Reconciliation Ledger tests', () => {
 
     const input = screen.getByLabelText(/Choisir un fichier CSV/i) as HTMLInputElement;
 
-    await act(async () => {
-      fireEvent.change(input, { target: { files: [file] } });
-      // wait for FileReader onLoad
-      await new Promise(resolve => setTimeout(resolve, 150));
-    });
+    fireEvent.change(input, { target: { files: [file] } });
 
     // Verify stats updates
-    expect(screen.getByText(/Paiement Total Reçu/i)).toBeDefined();
+    expect(await screen.findByText(/Paiement Total Reçu/i)).toBeDefined();
     expect(screen.getByText(/Frais de Livraison Retenus/i)).toBeDefined();
     
     // Verify row classifications

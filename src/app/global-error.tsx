@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { AlertOctagon, RotateCcw } from 'lucide-react';
+import { reportClientError } from '@/lib/client-telemetry';
 
 interface GlobalErrorProps {
   error: Error & { digest?: string };
@@ -10,28 +11,9 @@ interface GlobalErrorProps {
 
 export default function GlobalError({ error, reset }: GlobalErrorProps) {
   useEffect(() => {
-    // Log the error via client-to-server telemetry pipeline
     console.error('Next.js Global Root Layout Error caught:', error);
-
-    fetch('/api/telemetry', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: error.message || 'Next.js Global Layout Root exception',
-        error: {
-          name: error.name,
-          message: error.message,
-          stack: error.stack,
-          digest: error.digest,
-        },
-        context: {
-          level: 'error',
-          digest: error.digest,
-          route: typeof window !== 'undefined' ? window.location.pathname : '',
-        },
-      }),
-    }).catch(err => {
-      console.error('Failed to dispatch telemetry report:', err);
+    reportClientError(error, {
+      messageFallback: 'Next.js Global Layout Root exception',
     });
   }, [error]);
 

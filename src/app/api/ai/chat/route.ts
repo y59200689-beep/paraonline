@@ -3,6 +3,35 @@ import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { PRODUCTS_DB } from '@/lib/data';
 import { rateLimit, getClientIp } from '@/lib/rateLimit';
 
+const MAX_MESSAGES = 12;
+const MAX_MESSAGE_LENGTH = 2_000;
+const MAX_CATALOG_PRODUCTS = 150;
+
+type ChatMessage = {
+  sender?: unknown;
+  textFr?: unknown;
+  textAr?: unknown;
+};
+
+function normalizeMessages(messages: unknown): Array<{ role: 'user' | 'model'; text: string }> {
+  if (!Array.isArray(messages) || messages.length === 0 || messages.length > MAX_MESSAGES) return [];
+
+  const normalized = messages.map((message: ChatMessage) => {
+    const rawText = typeof message.textFr === 'string'
+      ? message.textFr
+      : typeof message.textAr === 'string'
+        ? message.textAr
+        : '';
+    return {
+      role: message.sender === 'user' ? 'user' as const : 'model' as const,
+      text: rawText.trim(),
+    };
+  }).filter((message) => message.text.length > 0 && message.text.length <= MAX_MESSAGE_LENGTH);
+
+  const totalLength = normalized.reduce((total, message) => total + message.text.length, 0);
+  return totalLength <= MAX_MESSAGES * MAX_MESSAGE_LENGTH ? normalized : [];
+}
+
 export async function POST(request: Request) {
   try {
     // Rate limit: 30 AI messages per IP per minute to protect API quota
@@ -12,10 +41,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, fallback: true, error: 'Trop de messages. Veuillez patienter une minute.' }, { status: 429 });
     }
 
-    const { messages, language } = await request.json();
+    const { messages } = await request.json();
+    const contents = normalizeMessages(messages);
 
-    if (!messages || !Array.isArray(messages)) {
-      return NextResponse.json({ success: false, error: 'Messages are required' }, { status: 400 });
+    if (contents.length === 0) {
+      return NextResponse.json({ success: false, error: 'Messages invalides ou trop volumineux.' }, { status: 400 });
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
@@ -29,7 +59,9 @@ export async function POST(request: Request) {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('id, title, name_fr, vendor, price, category, tags, description, ingredients, usage');
+        .select('id, title, name_fr, vendor, price, category, tags, description, ingredients, usage')
+        .eq('status', 'live')
+        .limit(MAX_CATALOG_PRODUCTS);
       
       if (error || !data || data.length === 0) {
         throw error || new Error('No products in database');
@@ -49,7 +81,7 @@ export async function POST(request: Request) {
       }));
     } catch (dbError) {
       console.warn("Failed to fetch products from Supabase, falling back to static PRODUCTS_DB:", dbError);
-      productsList = PRODUCTS_DB.map(p => ({
+      productsList = PRODUCTS_DB.slice(0, MAX_CATALOG_PRODUCTS).map(p => ({
         id: p.id,
         title: p.title,
         nameFr: p.nameFr || p.title,
@@ -136,21 +168,8 @@ JSON Output Schema:
   }
 }`;
 
-    // 4. Format conversation history for Gemini
-    const contents = [];
-    
-    // Convert past messages to Gemini roles
-    for (const msg of messages) {
-      const role = msg.sender === 'user' ? 'user' : 'model';
-      // Use textFr or textAr (for user messages they are identical)
-      const text = msg.textFr || msg.textAr || '';
-      if (text) {
-        contents.push({
-          role,
-          parts: [{ text }]
-        });
-      }
-    }
+    // 4. Format validated, bounded conversation history for Gemini.
+    const geminiContents = contents.map(({ role, text }) => ({ role, parts: [{ text }] }));
 
     // Call Gemini API using native fetch
     const response = await fetch(
@@ -161,7 +180,7 @@ JSON Output Schema:
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          contents,
+          contents: geminiContents,
           systemInstruction: {
             parts: [{ text: systemInstruction }]
           },
@@ -210,7 +229,8 @@ JSON Output Schema:
               required: ['textFr', 'textAr']
             }
           }
-        })
+        }),
+        signal: AbortSignal.timeout(20_000),
       }
     );
 

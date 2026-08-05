@@ -61,9 +61,9 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const fetchProducts = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Fetch up to 500 products in one shot — plenty for this catalogue size.
+      // The public API deliberately caps a catalogue request at 100 products.
       // The API route already reads from Supabase and maps rows to Product objects.
-      const res = await fetch('/api/products?limit=500&page=1', { cache: 'no-store' });
+      const res = await fetch('/api/products?limit=100&page=1', { cache: 'no-store' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (data.success && Array.isArray(data.products) && data.products.length > 0) {

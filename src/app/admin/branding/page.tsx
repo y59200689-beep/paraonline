@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 import { useAdmin } from '@/context/AdminContext';
+import { toThemeColorVariable } from '@/lib/theme-colors';
 import { Paintbrush, RotateCcw, Save, Sparkles, Check, Phone } from 'lucide-react';
 
 interface ThemeColorSet {
@@ -169,7 +170,7 @@ export default function AdminBrandingPage() {
     const root = document.documentElement;
     Object.entries(colors).forEach(([key, val]) => {
       if (val) {
-        const cssKey = `--color-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+        const cssKey = toThemeColorVariable(key);
         root.style.setProperty(cssKey, val);
       }
     });
