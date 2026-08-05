@@ -38,15 +38,18 @@ export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands }) => {
   });
 
   const allBrands = Array.from(mergedBrandsMap.values()) as Brand[];
-  // Three deliberately different selections keep the partner area feeling curated,
-  // while four copies of each row create a seamless transform-only loop.
+  // Each line shows the complete partner collection once before it repeats.
+  // The shifted order keeps the three moving rows visually distinct without
+  // showing the same brand twice in a visible pass.
+  const rotateBrands = (offset: number) => [
+    ...allBrands.slice(offset),
+    ...allBrands.slice(0, offset),
+  ];
   const brandRows = [
-    allBrands.filter((_, index) => index % 3 === 0),
-    allBrands.filter((_, index) => index % 3 === 1),
-    allBrands.filter((_, index) => index % 3 === 2),
+    rotateBrands(0),
+    rotateBrands(Math.ceil(allBrands.length / 3)),
+    rotateBrands(Math.ceil((allBrands.length * 2) / 3)),
   ].filter((row) => row.length > 0);
-
-  const repeatingRow = (row: Brand[]) => Array.from({ length: 4 }, () => row).flat();
 
   return (
     <section 
@@ -86,7 +89,7 @@ export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands }) => {
           cursor: pointer;
         }
         @keyframes brand-partner-marquee {
-          to { transform: translate3d(-25%, 0, 0); }
+          to { transform: translate3d(-50%, 0, 0); }
         }
         @media (prefers-reduced-motion: reduce) {
           .brand-partner-viewport {
@@ -123,7 +126,7 @@ export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands }) => {
 
           <div className="space-y-2.5 sm:space-y-3" aria-label="Marques partenaires">
             {brandRows.map((row, rowIndex) => {
-              const rowBrands = repeatingRow(row);
+              const rowBrands = [...row, ...row];
               const motionClass = rowIndex === 1
                 ? 'brand-partner-track--reverse'
                 : rowIndex === 2
