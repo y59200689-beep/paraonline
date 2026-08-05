@@ -291,6 +291,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       className={`group relative bg-white border border-slate-100 ${compact ? 'rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.01)]' : 'rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.015)]'} hover:shadow-[0_12px_30px_rgba(13,148,136,0.06)] hover:border-teal-500/20 hover:-translate-y-1.5 transition-all duration-300 flex flex-col h-full cursor-default card-press-feedback ${className || ''}`}
       style={{ ...style }}
     >
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleWishlist(product);
+        }}
+        aria-pressed={isFavorite}
+        title={language === 'FR' ? (isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris') : (isFavorite ? 'حذف من المفضلة' : 'إضافة للمفضلة')}
+        aria-label={language === 'FR' ? (isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris') : (isFavorite ? 'حذف من المفضلة' : 'إضافة للمفضلة')}
+        className={`absolute z-40 ${compact ? 'top-4 right-4' : 'top-5 right-5'} w-8 h-8 rounded-full flex items-center justify-center bg-white border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.05)] transition-all duration-200 ease-out active:scale-90 cursor-pointer ${
+          isFavorite ? 'text-[#F43F5E] border-rose-100 scale-105' : 'text-slate-400 hover:text-rose-500 hover:border-rose-100'
+        }`}
+      >
+        <Heart className={`w-3.5 h-3.5 transition-transform duration-300 ${isFavorite ? 'fill-[#F43F5E] scale-110 text-[#F43F5E]' : ''}`} />
+      </button>
       <a
         href={`/products/${product.id}`}
         onMouseEnter={() => setShouldLoadAlternateImage(true)}
@@ -307,21 +323,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             -{discount}%
           </span>
         ) : null}
-
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleWishlist(product);
-          }}
-          className={`absolute top-2.5 right-2.5 z-30 w-8 h-8 rounded-full flex items-center justify-center bg-white border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.05)] transition-all duration-200 ease-out active:scale-90 cursor-pointer ${
-            isFavorite ? 'text-[#F43F5E] border-rose-100' : 'text-slate-400 hover:text-slate-600'
-          }`}
-          title={language === 'FR' ? 'Ajouter aux favoris' : 'إضافة للمفضلة'}
-          aria-label={language === 'FR' ? 'Ajouter aux favoris' : 'إضافة للمفضلة'}
-        >
-          <Heart className={`w-3.5 h-3.5 transition-transform duration-300 ${isFavorite ? 'fill-[#F43F5E] scale-110 text-[#F43F5E]' : ''}`} />
-        </button>
 
         <div className="bezel-inner absolute inset-2 bg-white rounded-xl border-0 flex items-center justify-center overflow-hidden z-0 transition-transform duration-500 ease-out group-hover/img:scale-[1.02]">
           <Image
