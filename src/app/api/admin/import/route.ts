@@ -26,25 +26,39 @@ function hasValue(value: unknown): boolean {
   return value !== undefined && value !== null && String(value).trim() !== '';
 }
 
-async function fetchAllExistingProducts() {
-  const pageSize = 1000;
-  const allProducts: any[] = [];
+async function fetchExistingProductsForImport(importedProducts: any[]) {
+  const ids = Array.from(new Set(
+    importedProducts
+      .map(product => Number(product.id))
+      .filter(id => Number.isInteger(id) && id > 0),
+  ));
+  const skus = Array.from(new Set(
+    importedProducts
+      .map(product => typeof product.sku === 'string' ? product.sku.trim() : '')
+      .filter(Boolean),
+  ));
+  const existingProducts: any[] = [];
+  const chunkSize = 500;
 
-  for (let from = 0; ; from += pageSize) {
-    const to = from + pageSize - 1;
+  for (let index = 0; index < ids.length; index += chunkSize) {
     const { data, error } = await supabase
       .from('products')
       .select('*')
-      .range(from, to);
-
+      .in('id', ids.slice(index, index + chunkSize));
     if (error) throw error;
-    const batch = data || [];
-    allProducts.push(...batch);
-
-    if (batch.length < pageSize) break;
+    existingProducts.push(...(data || []));
   }
 
-  return allProducts;
+  for (let index = 0; index < skus.length; index += chunkSize) {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .in('sku', skus.slice(index, index + chunkSize));
+    if (error) throw error;
+    existingProducts.push(...(data || []));
+  }
+
+  return Array.from(new Map(existingProducts.map(product => [product.id, product])).values());
 }
 
 function buildExistingProductUpdate(imported: any, existing: any) {
@@ -179,9 +193,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Invalid products array' }, { status: 400 });
     }
 
-    // Fetch all existing rows in pages. Supabase REST responses are capped at
-    // 1000 rows, so a single select would miss most of a large catalogue.
-    const existingList = await fetchAllExistingProducts();
+    // Only read products referenced by this file. Loading the full catalogue for
+    // each small spreadsheet makes imports unnecessarily slow and can time out.
+    const existingList = await fetchExistingProductsForImport(products);
+    const existingById = new Map(existingList.map(product => [Number(product.id), product]));
+    const existingBySku = new Map(existingList
+      .filter(product => typeof product.sku === 'string' && product.sku.trim())
+      .map(product => [product.sku.trim(), product]));
     const productsToUpsert: any[] = [];
     const importedCategories = new Set<string>();
     let createdCount = 0;
@@ -190,10 +208,8 @@ export async function POST(request: Request) {
 
     for (const p of products) {
       // Find match in existing products
-      const match = existingList.find((ep: { id: number; sku: string | null }) => 
-        (p.id && ep.id === Number(p.id)) || 
-        (p.sku && ep.sku === p.sku)
-      );
+      const match = (p.id ? existingById.get(Number(p.id)) : undefined)
+        || (typeof p.sku === 'string' && p.sku.trim() ? existingBySku.get(p.sku.trim()) : undefined);
 
       if (hasValue(p.category) || hasValue(p.categories) || (Array.isArray(p.categories) && p.categories.length > 0)) {
         normalizeImportedCategories(p.categories, p.category).forEach(category => importedCategories.add(category));

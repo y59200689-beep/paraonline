@@ -2,10 +2,10 @@
 -- This is safe to run when earlier manual setup created them as plain text columns.
 do $$
 declare
-  column_name text;
+  metadata_column text;
   data_type_name text;
 begin
-  foreach column_name in array array[
+  foreach metadata_column in array array[
     'routine_roles',
     'suitable_skin_types',
     'suitable_concerns',
@@ -13,15 +13,15 @@ begin
     'time_of_day'
   ] loop
     select data_type into data_type_name
-    from information_schema.columns
-    where table_schema = 'public'
-      and table_name = 'products'
-      and column_name = column_name;
+    from information_schema.columns as columns_info
+    where columns_info.table_schema = 'public'
+      and columns_info.table_name = 'products'
+      and columns_info.column_name = metadata_column;
 
     if data_type_name is null then
       execute format(
         'alter table public.products add column %I text[] not null default ''{}''::text[]',
-        column_name
+        metadata_column
       );
     elsif data_type_name <> 'ARRAY' then
       execute format($sql$
@@ -40,10 +40,10 @@ begin
             where btrim(trim(both '"' from item)) <> ''
           )
         end
-      $sql$, column_name);
-      execute format('alter table public.products alter column %I set default ''{}''::text[]', column_name);
-      execute format('update public.products set %1$I = ''{}''::text[] where %1$I is null', column_name);
-      execute format('alter table public.products alter column %I set not null', column_name);
+      $sql$, metadata_column);
+      execute format('alter table public.products alter column %I set default ''{}''::text[]', metadata_column);
+      execute format('update public.products set %1$I = ''{}''::text[] where %1$I is null', metadata_column);
+      execute format('alter table public.products alter column %I set not null', metadata_column);
     end if;
   end loop;
 

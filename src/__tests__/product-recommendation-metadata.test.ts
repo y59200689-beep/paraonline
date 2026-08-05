@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ACTIVE_STRENGTH_OPTIONS,
   ROUTINE_ROLE_OPTIONS,
+  TIME_OF_DAY_OPTIONS,
   normalizeRecommendationMetadata,
   parseOptionValues,
   parseSingleOption,

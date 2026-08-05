@@ -432,7 +432,17 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ products: rawProducts, updateExisting, ...metadata })
       });
-      const data = await res.json();
+      const responseBody = await res.text();
+      let data: Record<string, any> = {};
+      try {
+        data = responseBody ? JSON.parse(responseBody) : {};
+      } catch {
+        return {
+          success: false,
+          count: 0,
+          error: `Le serveur a renvoyé une réponse invalide (${res.status} ${res.statusText}).`,
+        };
+      }
       if (data.success) {
         await loadProducts();
         await loadSettings();
@@ -448,7 +458,11 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
           validationErrorCount: data.validationErrorCount,
         };
       }
-      return { success: false, count: 0, error: data.error || 'L’importation a échoué.' };
+      return {
+        success: false,
+        count: 0,
+        error: data.error || `L’importation a échoué (${res.status} ${res.statusText}).`,
+      };
     } catch (e) {
       showToast("Erreur de connexion lors de l'importation.", 'error');
       return { success: false, count: 0, error: 'Erreur de connexion lors de l’importation.' };
