@@ -38,18 +38,12 @@ export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands }) => {
   });
 
   const allBrands = Array.from(mergedBrandsMap.values()) as Brand[];
-  // Each line shows the complete partner collection once before it repeats.
-  // The shifted order keeps the three moving rows visually distinct without
-  // showing the same brand twice in a visible pass.
-  const rotateBrands = (offset: number) => [
-    ...allBrands.slice(offset),
-    ...allBrands.slice(0, offset),
-  ];
-  const brandRows = [
-    rotateBrands(0),
-    rotateBrands(Math.ceil(allBrands.length / 3)),
-    rotateBrands(Math.ceil((allBrands.length * 2) / 3)),
-  ].filter((row) => row.length > 0);
+  // A partner belongs to one marquee line only. This keeps the three lines
+  // genuinely different instead of repeating the same brands on every line.
+  const brandsPerRow = Math.ceil(allBrands.length / 3);
+  const brandRows = Array.from({ length: 3 }, (_, rowIndex) =>
+    allBrands.slice(rowIndex * brandsPerRow, (rowIndex + 1) * brandsPerRow)
+  ).filter((row) => row.length > 0);
 
   return (
     <section 
@@ -137,7 +131,12 @@ export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands }) => {
                 <div className="brand-partner-viewport py-0.5" key={`brand-row-${rowIndex}`}>
                   <div className={`brand-partner-track ${motionClass}`}>
                     {rowBrands.map((brand, index) => (
-                      <div key={`${brand.name}-${rowIndex}-${index}`} className="w-[116px] shrink-0 sm:w-[156px] md:w-[176px]">
+                      <div
+                        key={`${brand.name}-${rowIndex}-${index}`}
+                        className={row.length === 3
+                          ? 'w-[calc(33.333%-0.75rem)] shrink-0'
+                          : 'w-[calc(25%-0.75rem)] shrink-0'}
+                      >
                         <BrandLogoCard brand={brand} decorative={index >= row.length} />
                       </div>
                     ))}
