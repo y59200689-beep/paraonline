@@ -307,11 +307,10 @@ export const Header: React.FC = () => {
               onCartOpen={() => setIsCartOpen(true)}
               onWalletOpen={() => router.push('/customer')}
               onWishlistOpen={() => {
-                if (!clientUser) {
-                  router.push('/customer');
-                } else {
-                  router.push('/customer?tab=favoris');
-                }
+                // The portal tab is initialized from the URL. A document
+                // navigation keeps this reliable even when the header is
+                // clicked while the customer portal is already mounted.
+                window.location.assign('/customer?tab=favoris');
               }}
             />
           </div>
