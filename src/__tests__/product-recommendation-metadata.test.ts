@@ -15,6 +15,11 @@ describe('product recommendation metadata', () => {
     });
   });
 
+  it('accepts JSON and PostgreSQL-style arrays pasted into spreadsheet cells', () => {
+    expect(parseOptionValues('["cleanser", "moisturizer"]', ROUTINE_ROLE_OPTIONS).values).toEqual(['cleanser', 'moisturizer']);
+    expect(parseOptionValues('{morning, evening}', TIME_OF_DAY_OPTIONS).values).toEqual(['morning', 'evening']);
+  });
+
   it('reports unknown spreadsheet values instead of silently storing them', () => {
     expect(parseOptionValues('cleanser | mystery_role', ROUTINE_ROLE_OPTIONS)).toEqual({
       values: ['cleanser'],

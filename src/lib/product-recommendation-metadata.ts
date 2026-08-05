@@ -114,7 +114,15 @@ const EXTRA_ALIASES: Record<string, string> = {
 function splitSheetValues(value: unknown): unknown[] {
   if (Array.isArray(value)) return value;
   if (value === undefined || value === null || value === '') return [];
-  return String(value).split(/[;,|\n]+/);
+  // Accept the normal spreadsheet format ("cleanser | moisturizer") as well
+  // as values copied from JSON or PostgreSQL text arrays.
+  const normalized = String(value)
+    .trim()
+    .replace(/^\s*[\[{]\s*/, '')
+    .replace(/\s*[\]}]\s*$/, '');
+  return normalized
+    .split(/[;,|\n]+/)
+    .map(entry => entry.trim().replace(/^["']+|["']+$/g, ''));
 }
 
 export function parseOptionValues<T extends readonly (readonly [string, string])[]>(

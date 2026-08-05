@@ -23,7 +23,7 @@ export interface AdminCatalogContextProps {
   handleSaveLoyaltySettings: (formSettings: any) => Promise<boolean>;
   handleSavePaymentSettings: (formSettings: any) => Promise<boolean>;
   handleSaveNotificationTemplates: (formSettings: any, notifTemplates: any) => Promise<boolean>;
-  handleImportProducts: (rawProducts: any[], updateExisting: boolean, metadata?: { fileName?: string; validationErrorCount?: number; validationErrors?: Array<{ row: number; errors: Record<string, string>; raw: Record<string, unknown> }> }) => Promise<{ success: boolean; count: number; categories?: string[]; message?: string; createdCount?: number; updatedCount?: number; skippedCount?: number; validationErrorCount?: number }>;
+  handleImportProducts: (rawProducts: any[], updateExisting: boolean, metadata?: { fileName?: string; validationErrorCount?: number; validationErrors?: Array<{ row: number; errors: Record<string, string>; raw: Record<string, unknown> }> }) => Promise<{ success: boolean; count: number; error?: string; categories?: string[]; message?: string; createdCount?: number; updatedCount?: number; skippedCount?: number; validationErrorCount?: number }>;
 }
 
 const AdminCatalogContext = createContext<AdminCatalogContextProps | undefined>(undefined);
@@ -421,7 +421,7 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return false;
   };
 
-  const handleImportProducts = async (rawProducts: any[], updateExisting: boolean, metadata?: { fileName?: string; validationErrorCount?: number; validationErrors?: Array<{ row: number; errors: Record<string, string>; raw: Record<string, unknown> }> }): Promise<{ success: boolean; count: number; categories?: string[]; message?: string; createdCount?: number; updatedCount?: number; skippedCount?: number; validationErrorCount?: number }> => {
+  const handleImportProducts = async (rawProducts: any[], updateExisting: boolean, metadata?: { fileName?: string; validationErrorCount?: number; validationErrors?: Array<{ row: number; errors: Record<string, string>; raw: Record<string, unknown> }> }): Promise<{ success: boolean; count: number; error?: string; categories?: string[]; message?: string; createdCount?: number; updatedCount?: number; skippedCount?: number; validationErrorCount?: number }> => {
     if (currentUser?.role === 'support') {
       showToast("Permission refusée.", 'error');
       return { success: false, count: 0 };
@@ -448,10 +448,10 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
           validationErrorCount: data.validationErrorCount,
         };
       }
-      return { success: false, count: 0, message: data.error };
+      return { success: false, count: 0, error: data.error || 'L’importation a échoué.' };
     } catch (e) {
       showToast("Erreur de connexion lors de l'importation.", 'error');
-      return { success: false, count: 0 };
+      return { success: false, count: 0, error: 'Erreur de connexion lors de l’importation.' };
     }
   };
 
