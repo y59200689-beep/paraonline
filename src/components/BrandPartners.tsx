@@ -38,6 +38,15 @@ export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands }) => {
   });
 
   const allBrands = Array.from(mergedBrandsMap.values()) as Brand[];
+  // Three deliberately different selections keep the partner area feeling curated,
+  // while four copies of each row create a seamless transform-only loop.
+  const brandRows = [
+    allBrands.filter((_, index) => index % 3 === 0),
+    allBrands.filter((_, index) => index % 3 === 1),
+    allBrands.filter((_, index) => index % 3 === 2),
+  ].filter((row) => row.length > 0);
+
+  const repeatingRow = (row: Brand[]) => Array.from({ length: 4 }, () => row).flat();
 
   return (
     <section 
@@ -55,7 +64,14 @@ export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands }) => {
           width: max-content;
           gap: 0.75rem;
           will-change: transform;
-          animation: brand-partner-marquee 42s linear infinite;
+          animation: brand-partner-marquee 31s linear infinite;
+        }
+        .brand-partner-track--reverse {
+          animation-direction: reverse;
+          animation-duration: 37s;
+        }
+        .brand-partner-track--slow {
+          animation-duration: 43s;
         }
         @media (min-width: 640px) {
           .brand-partner-track {
@@ -70,7 +86,7 @@ export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands }) => {
           cursor: pointer;
         }
         @keyframes brand-partner-marquee {
-          to { transform: translate3d(-50%, 0, 0); }
+          to { transform: translate3d(-25%, 0, 0); }
         }
         @media (prefers-reduced-motion: reduce) {
           .brand-partner-viewport {
@@ -105,14 +121,27 @@ export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands }) => {
             </h2>
           </div>
 
-          <div className="brand-partner-viewport py-2" aria-label="Marques partenaires">
-            <div className="brand-partner-track">
-              {[...allBrands, ...allBrands].map((brand, index) => (
-                <div key={`${brand.name}-${index}`} className="w-[116px] shrink-0 sm:w-[156px] md:w-[176px]">
-                  <BrandLogoCard brand={brand} decorative={index >= allBrands.length} />
+          <div className="space-y-2.5 sm:space-y-3" aria-label="Marques partenaires">
+            {brandRows.map((row, rowIndex) => {
+              const rowBrands = repeatingRow(row);
+              const motionClass = rowIndex === 1
+                ? 'brand-partner-track--reverse'
+                : rowIndex === 2
+                  ? 'brand-partner-track--slow'
+                  : '';
+
+              return (
+                <div className="brand-partner-viewport py-0.5" key={`brand-row-${rowIndex}`}>
+                  <div className={`brand-partner-track ${motionClass}`}>
+                    {rowBrands.map((brand, index) => (
+                      <div key={`${brand.name}-${rowIndex}-${index}`} className="w-[116px] shrink-0 sm:w-[156px] md:w-[176px]">
+                        <BrandLogoCard brand={brand} decorative={index >= row.length} />
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
 
         </div>
