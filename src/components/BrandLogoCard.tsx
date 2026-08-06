@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { slugify } from '@/lib/brands';
+
 
 interface BrandLogoCardProps {
   brand: {
@@ -18,10 +18,10 @@ interface BrandLogoCardProps {
 export const BrandLogoCard: React.FC<BrandLogoCardProps> = ({ brand, decorative = false }) => {
   const [imgError, setImgError] = useState(false);
   const brandName = brand.name || 'Marque';
-  const brandSlug = slugify(brandName);
+
   const logo = brand.logo_url || brand.logoUrl;
   const domain = brand.domain || `${brandName.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
-  const href = brand.card_link || `/brand/${brandSlug}`;
+  const href = brand.card_link || `/products?brand=${encodeURIComponent(brandName)}`;
 
   return (
     <Link
