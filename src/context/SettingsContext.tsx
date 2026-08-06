@@ -167,6 +167,8 @@ export interface Settings {
     productIds?: number[];
   }[];
   galleryOverrides?: Record<string, string>;
+  /** Per-category link overrides — maps category tag (e.g. "solaire") to a URL */
+  categoryLinks?: Record<string, string>;
 }
 
 export interface HomepageSectionItem {

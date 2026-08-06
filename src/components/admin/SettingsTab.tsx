@@ -3151,6 +3151,71 @@ export default function SettingsTab() {
                 </div>
               </form>
             )}
+
+            {/* CATEGORY LINKS EDITOR */}
+            <div className={`border rounded-3xl p-6 transition-all duration-200 space-y-5 ${
+              adminTheme === 'light'
+                ? 'bg-white border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.03)]'
+                : 'bg-slate-900/30 border-slate-900 shadow-xl'
+            }`}>
+              <div className={`border-b pb-3 ${adminTheme === 'light' ? 'border-slate-100' : 'border-slate-900'}`}>
+                <h3 className={`text-sm font-extrabold uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-300'}`}>
+                  Liens des Catégories
+                </h3>
+                <p className={`text-[11px] mt-1 ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-500'}`}>
+                  Personnalisez l&apos;URL de destination pour chaque carte de la barre des catégories. Laissez vide pour utiliser le lien par défaut.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {[
+                  { tag: 'all',         labelFr: 'Tous les produits' },
+                  { tag: 'offers',      labelFr: 'Meilleures Ventes' },
+                  { tag: 'giftbox',     labelFr: 'Coffrets Cadeaux' },
+                  { tag: 'solaire',     labelFr: 'Solaires' },
+                  { tag: 'visage',      labelFr: 'Visage' },
+                  { tag: 'cheveux',     labelFr: 'Cheveux' },
+                  { tag: 'corps',       labelFr: 'Corps' },
+                  { tag: 'appareils',   labelFr: 'Accessoires' },
+                  { tag: 'complements', labelFr: 'Compléments' },
+                  { tag: 'maquillage',  labelFr: 'Maquillage' },
+                  { tag: 'sport',       labelFr: 'Sport' },
+                  { tag: 'masques',     labelFr: 'Masques' },
+                  { tag: 'homme',       labelFr: 'Homme' },
+                  { tag: 'bebe',        labelFr: 'Bébé' },
+                ].map(({ tag, labelFr }) => (
+                  <div key={tag} className="space-y-1">
+                    <label className={`text-[9px] font-bold uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'}`}>
+                      {labelFr}
+                    </label>
+                    <input
+                      type="text"
+                      value={settings.categoryLinks?.[tag] || ''}
+                      onChange={(e) => {
+                        const updated = {
+                          ...settings,
+                          categoryLinks: {
+                            ...(settings.categoryLinks || {}),
+                            [tag]: e.target.value,
+                          },
+                        };
+                        saveSettings(updated);
+                      }}
+                      placeholder={`/products?category=${tag}`}
+                      className={`w-full text-xs transition outline-none rounded-xl px-3 py-2 border font-mono ${
+                        adminTheme === 'light'
+                          ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20'
+                          : 'bg-slate-950 border-slate-900 text-slate-200 focus:border-emerald-500/50'
+                      }`}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <p className={`text-[10px] leading-relaxed ${adminTheme === 'light' ? 'text-slate-400' : 'text-slate-600'}`}>
+                💡 Exemples : <span className="font-mono">/products</span>, <span className="font-mono">/products?category=solaire</span>, <span className="font-mono">https://exemple.com</span>. Modifications sauvegardées immédiatement.
+              </p>
+            </div>
           </div>
         )}
 

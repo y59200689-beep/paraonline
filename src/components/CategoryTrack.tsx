@@ -165,7 +165,10 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
             >
               {CATEGORIES.map((cat, index) => {
                  const isActive = activeCategory === cat.tag;
-                 const productCategoryByCardTag: Record<string, string> = {
+
+                 // Admin-configurable link overrides take priority, then hardcoded fallbacks
+                 const adminLink = settings?.categoryLinks?.[cat.tag];
+                 const hardcodedCategoryByTag: Record<string, string> = {
                    solaire: 'solaire',
                    visage: 'visage',
                    cheveux: 'cheveux',
@@ -175,9 +178,11 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
                    bebe: 'bébé',
                    homme: 'homme',
                  };
-                 const productCategory = productCategoryByCardTag[cat.tag];
-                 const productsHref = productCategory
-                   ? `/products?category=${productCategory}`
+                 const hardcodedCategory = hardcodedCategoryByTag[cat.tag];
+                 const productsHref = adminLink
+                   ? adminLink
+                   : hardcodedCategory
+                   ? `/products?category=${hardcodedCategory}`
                    : null;
                  
                  // Exact top-down gradient; borderless layout with soft shadow; overflow-hidden to crop bleeding illustrations

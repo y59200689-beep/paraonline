@@ -9,12 +9,15 @@ import { gsap } from 'gsap';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { useGalleryOverrides } from '@/lib/useGalleryOverrides';
 
+import { useRouter } from 'next/navigation';
+
 interface HeroProps {
   onOpenDiagnostic: () => void;
-  onSelectCategory: (category: string) => void;
+  onSelectCategory?: (category: string) => void;
 }
 
 export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }) => {
+  const router = useRouter();
   const { language } = useTranslation();
   const { settings } = useSettings();
   const { getDisplayImage } = useGalleryOverrides();
@@ -63,18 +66,25 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
   }, [mounted]);
 
   // Helper to safely navigate custom banner actions
-  const getBannerAction = (banner: { linkType?: string; linkValue?: string }) => {
-    if (!banner) return () => {};
-    if (banner.linkType === 'category' && banner.linkValue) {
-      return () => onSelectCategory(banner.linkValue!);
+  const getBannerAction = (banner: { linkType?: string; linkValue?: string } | undefined) => {
+    if (banner) {
+      if (banner.linkType === 'category' && banner.linkValue) {
+        const href = banner.linkValue.startsWith('/')
+          ? banner.linkValue
+          : `/products?category=${encodeURIComponent(banner.linkValue)}`;
+        return () => router.push(href);
+      }
+      if (banner.linkType === 'diagnostic') {
+        return onOpenDiagnostic;
+      }
+      if (banner.linkValue?.startsWith('http')) {
+        return () => window.open(banner.linkValue, '_blank');
+      }
+      if (banner.linkValue?.startsWith('/')) {
+        return () => router.push(banner.linkValue!);
+      }
     }
-    if (banner.linkType === 'diagnostic') {
-      return onOpenDiagnostic;
-    }
-    if (banner.linkValue?.startsWith('http')) {
-      return () => window.open(banner.linkValue, '_blank');
-    }
-    return () => {};
+    return () => router.push('/products');
   };
 
   const customBanners = settings?.banners?.length ? settings.banners : null;
@@ -91,7 +101,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
       cta_fr: customBanners ? customBanners[0].ctaFr : 'Explorer les Best-Sellers',
       cta_ar: customBanners ? customBanners[0].ctaAr : 'تسوقي الأكثر مبيعاً',
       bgImage: getDisplayImage((customBanners && customBanners[0]?.bgImage) || '/images/hero_bestsellers.webp', 'hero_bestsellers'),
-      action: customBanners ? getBannerAction(customBanners[0]) : () => onSelectCategory('offers'),
+      action: customBanners ? getBannerAction(customBanners[0]) : () => router.push('/products'),
     },
     card2: {
       tag_fr: customBanners ? customBanners[1].tagFr : '☀️ SUMMER SALE · JUSQU\'À -40%',
@@ -101,7 +111,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
       cta_fr: customBanners ? customBanners[1].ctaFr : 'Profiter des Offres',
       cta_ar: customBanners ? customBanners[1].ctaAr : 'استفيدي من العروض',
       bgImage: getDisplayImage((customBanners && customBanners[1]?.bgImage) || '/images/hero_summersale.webp', 'hero_summersale'),
-      action: customBanners ? getBannerAction(customBanners[1]) : () => onSelectCategory('solaire'),
+      action: customBanners ? getBannerAction(customBanners[1]) : () => router.push('/products'),
     },
     card3: {
       tag_fr: customBanners ? customBanners[2].tagFr : '⚡ PROMO HEBDO · JUSQU\'À -35%',
@@ -111,7 +121,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
       cta_fr: customBanners ? customBanners[2].ctaFr : 'Voir les Promos',
       cta_ar: customBanners ? customBanners[2].ctaAr : 'شاهد العروض',
       bgImage: getDisplayImage((customBanners && customBanners[2]?.bgImage) || '/images/hero_weeklypromo_v2.webp', 'hero_weeklypromo'),
-      action: customBanners ? getBannerAction(customBanners[2]) : () => onSelectCategory('offers'),
+      action: customBanners ? getBannerAction(customBanners[2]) : () => router.push('/products'),
     },
     card4: {
       tag_fr: customBanners ? customBanners[3].tagFr : '✨ NOUVEAUTÉS · DERNIERS ARRIVAGES',
@@ -121,7 +131,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
       cta_fr: customBanners ? customBanners[3].ctaFr : 'Découvrir la Nouveauté',
       cta_ar: customBanners ? customBanners[3].ctaAr : 'اكتشفي الجديد',
       bgImage: getDisplayImage((customBanners && customBanners[3]?.bgImage) || '/images/hero_newarrivals.webp', 'hero_newarrivals'),
-      action: customBanners ? getBannerAction(customBanners[3]) : () => onSelectCategory('kbeauty'),
+      action: customBanners ? getBannerAction(customBanners[3]) : () => router.push('/products'),
     },
   };
 
