@@ -691,7 +691,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
         isOpen={isDiagnosticOpen}
         onClose={() => setDiagnosticOpen(false)}
         onOpenCart={() => setIsCartOpen(true)}
-        experience={pathname.startsWith('/customer') && clientUser ? 'client' : 'storefront'}
+        experience="client"
       />
       <ScratchCard isOpen={isScratchCardOpen} onClose={() => setScratchCardOpen(false)} />
       <QuickViewModal product={selectedProduct} isOpen={selectedProduct !== null} onClose={() => setSelectedProduct(null)} />

@@ -129,7 +129,7 @@ const ICONS: Record<string, React.ComponentType<{ className?: string; 'aria-hidd
   wind: Wind,
 };
 
-export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose, onOpenCart, experience = 'storefront' }) => {
+export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose, onOpenCart, experience = 'client' }) => {
   const { language } = useTranslation();
   const { products } = useProducts();
   const { addToCart } = useCart();
