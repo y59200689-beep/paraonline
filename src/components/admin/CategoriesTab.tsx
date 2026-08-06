@@ -428,38 +428,46 @@ export default function CategoriesTab() {
 
   // Delete Category or Concern
   const handleDeleteItem = async (id: string) => {
-    const confirm = window.confirm(`Voulez-vous vraiment supprimer "${id}" ?`);
+    const confirm = window.confirm(`Voulez-vous vraiment supprimer "${id}" ? cette action est irréversible.`);
     if (!confirm) return;
 
     try {
       if (activeTab === 'brands') {
-        const updatedBrands = customBrands.filter((b: any) => b.name !== id);
-        const success = await saveUpdatedBrands(updatedBrands);
-        if (success) {
-          const productsToUpdate = products.filter(p => p.vendor === id);
-          for (const p of productsToUpdate) {
-            await fetch(`/api/admin/products?id=${p.id}`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ...p, vendor: '', nameFr: p.nameFr || p.title })
-            });
-          }
-          await loadProducts();
-          showToast('Marque supprimée.', 'success');
-        }
+        // Delete from backend DB (cms_brands table and clears vendor on products)
+        await fetch(`/api/cms/brands?id=${encodeURIComponent(id)}&name=${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+        });
+
+        const updatedBrands = customBrands.filter((b: any) => b.name !== id && b.id !== id);
+        await saveUpdatedBrands(updatedBrands);
+        await loadProducts();
+        showToast('Marque supprimée avec succès.', 'success');
       } else if (activeTab === 'categories') {
-        const updatedCats = customCategories.filter((c: any) => c.id !== id);
-        const updated = { ...settings, customCategories: updatedCats };
-        const success = await saveSettings(updated);
-        if (success) showToast('Catégorie supprimée.', 'success');
+        // Delete category from backend DB (products table) & site_settings
+        await fetch(`/api/admin/categories?id=${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+        });
+
+        const updatedCats = customCategories.filter((c: any) => c.id !== id && c !== id);
+        const updatedSettingCategories = (settings.categories || []).filter((c: string) => c !== id);
+        const updated = {
+          ...settings,
+          customCategories: updatedCats,
+          categories: updatedSettingCategories,
+        };
+
+        await saveSettings(updated);
+        await loadProducts();
+        showToast('Catégorie supprimée avec succès.', 'success');
       } else {
-        const updatedConcerns = customConcerns.filter((c: any) => c.id !== id);
+        const updatedConcerns = customConcerns.filter((c: any) => c.id !== id && c !== id);
         const updated = { ...settings, customConcerns: updatedConcerns };
-        const success = await saveSettings(updated);
-        if (success) showToast('Préoccupation supprimée.', 'success');
+        await saveSettings(updated);
+        await loadProducts();
+        showToast('Préoccupation supprimée avec succès.', 'success');
       }
     } catch (err) {
-      showToast('Erreur de suppression.', 'error');
+      showToast('Erreur lors de la suppression.', 'error');
     }
   };
 

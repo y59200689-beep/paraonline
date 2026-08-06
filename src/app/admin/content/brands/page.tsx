@@ -151,11 +151,12 @@ function AddBrandModal({ isDark, onClose, onCreated }: { isDark: boolean; onClos
 // ──────────────────────────────────────────────────────────────────────────────
 
 function BrandsList({
-  brands, onSelect, onToggleVisible, isDark, canManage,
+  brands, onSelect, onToggleVisible, onDelete, isDark, canManage,
 }: {
   brands: CmsBrand[];
   onSelect: (b: CmsBrand) => void;
   onToggleVisible: (id: string, visible: boolean) => void;
+  onDelete?: (b: CmsBrand) => void;
   isDark: boolean;
   canManage: boolean;
 }) {
@@ -224,27 +225,44 @@ function BrandsList({
                   )}
                 </div>
 
-                {/* Visibility pill */}
+                {/* Visibility & Delete pill */}
                 {canManage && (
-                  <button
-                    onClick={e => { e.stopPropagation(); onToggleVisible(brand.id, !brand.is_visible); }}
-                    title={brand.is_visible ? 'Masquer sur le site' : 'Afficher sur le site'}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: '5px',
-                      padding: '4px 10px', fontSize: '10px', fontWeight: 700, borderRadius: '999px',
-                      border: brand.is_visible
-                        ? (isDark ? '1px solid rgba(16,185,129,0.3)' : '1px solid rgba(16,185,129,0.35)')
-                        : (isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)'),
-                      background: brand.is_visible
-                        ? (isDark ? 'rgba(16,185,129,0.1)' : 'rgba(16,185,129,0.06)')
-                        : 'transparent',
-                      color: brand.is_visible ? (isDark ? '#34d399' : '#059669') : (isDark ? '#475569' : '#94a3b8'),
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {brand.is_visible ? <Eye size={11} /> : <EyeOff size={11} />}
-                    {brand.is_visible ? 'Visible' : 'Masqué'}
-                  </button>
+                  <div style={{ display: 'flex', items: 'center', gap: '6px' }}>
+                    <button
+                      onClick={e => { e.stopPropagation(); onToggleVisible(brand.id, !brand.is_visible); }}
+                      title={brand.is_visible ? 'Masquer sur le site' : 'Afficher sur le site'}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '5px',
+                        padding: '4px 10px', fontSize: '10px', fontWeight: 700, borderRadius: '999px',
+                        border: brand.is_visible
+                          ? (isDark ? '1px solid rgba(16,185,129,0.3)' : '1px solid rgba(16,185,129,0.35)')
+                          : (isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)'),
+                        background: brand.is_visible
+                          ? (isDark ? 'rgba(16,185,129,0.1)' : 'rgba(16,185,129,0.06)')
+                          : 'transparent',
+                        color: brand.is_visible ? (isDark ? '#34d399' : '#059669') : (isDark ? '#475569' : '#94a3b8'),
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {brand.is_visible ? <Eye size={11} /> : <EyeOff size={11} />}
+                      {brand.is_visible ? 'Visible' : 'Masqué'}
+                    </button>
+                    {onDelete && (
+                      <button
+                        onClick={e => { e.stopPropagation(); onDelete(brand); }}
+                        title="Supprimer la marque"
+                        style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          padding: '5px', fontSize: '10px', borderRadius: '8px',
+                          border: isDark ? '1px solid rgba(244,63,94,0.3)' : '1px solid rgba(244,63,94,0.2)',
+                          background: isDark ? 'rgba(244,63,94,0.1)' : 'rgba(244,63,94,0.05)',
+                          color: '#f43f5e', cursor: 'pointer',
+                        }}
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
 
@@ -735,7 +753,24 @@ export default function ContentBrandsPage() {
     return <BrandEditor brand={selected} onBack={() => setSelected(null)} isDark={isDark} role={role} onUpdated={handleUpdated} />;
   }
 
-  const visibleCount = brands.filter(b => b.is_visible && b.status === 'published').length;
+  const handleDeleteBrand = useCallback(async (brand: CmsBrand) => {
+    const confirm = window.confirm(`Voulez-vous vraiment supprimer la marque "${brand.name}" ? Cette action effacera la marque et détachera les produits associés.`);
+    if (!confirm) return;
+
+    try {
+      const res = await fetch(`/api/cms/brands?id=${encodeURIComponent(brand.id)}&name=${encodeURIComponent(brand.name)}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        setBrands(prev => prev.filter(b => b.id !== brand.id));
+        if (selected?.id === brand.id) setSelected(null);
+      } else {
+        alert('Erreur lors de la suppression de la marque.');
+      }
+    } catch {
+      alert('Erreur réseau lors de la suppression.');
+    }
+  }, [selected]);
 
   return (
     <>
@@ -795,6 +830,7 @@ export default function ContentBrandsPage() {
           brands={brands}
           onSelect={setSelected}
           onToggleVisible={handleToggleVisible}
+          onDelete={handleDeleteBrand}
           isDark={isDark}
           canManage={canManage}
         />

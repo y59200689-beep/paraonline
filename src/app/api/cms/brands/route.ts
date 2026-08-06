@@ -312,3 +312,55 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: e?.message ?? 'Unknown error' }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  const session = await verifyAdminSession(req);
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!canManageBrands(session.role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+  try {
+    const url = new URL(req.url);
+    let id = url.searchParams.get('id');
+    let name = url.searchParams.get('name');
+
+    if (!id && !name) {
+      try {
+        const body = await req.json();
+        id = body.id || null;
+        name = body.name || null;
+      } catch {}
+    }
+
+    if (!id && !name) {
+      return NextResponse.json({ error: 'Missing brand id or name' }, { status: 400 });
+    }
+
+    // 1. Delete from cms_brands table
+    if (id) {
+      await supabaseAdmin.from('cms_brands').delete().eq('id', id);
+    }
+    if (name) {
+      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      await supabaseAdmin.from('cms_brands').delete().or(`name.ilike."${name}",slug.eq."${slug}"`);
+      
+      // 2. Clear vendor field on matching products in catalog
+      await supabaseAdmin.from('products').update({ vendor: '' }).ilike('vendor', name);
+    }
+
+    await supabaseAdmin.from('cms_change_log').insert({
+      entity_type: 'brand',
+      entity_id: id || name || 'unknown',
+      entity_label: name || id || 'deleted brand',
+      action: 'delete',
+      previous: null,
+      next_state: null,
+      changed_by: session.username,
+    }).then(() => {});
+
+    return NextResponse.json({ success: true, message: 'Brand deleted successfully' });
+  } catch (e: any) {
+    console.error('DELETE /api/cms/brands error:', e);
+    return NextResponse.json({ error: e?.message ?? 'Failed to delete brand' }, { status: 500 });
+  }
+}
+
