@@ -149,7 +149,7 @@ async function loadCatalogPage(category: string, brand = '', concern = 'all') {
 const getCachedCatalogPage = unstable_cache(
   loadCatalogPage,
   ['catalog-page'],
-  { tags: [PUBLIC_CATALOG_CACHE_TAG], revalidate: 300 }
+  { tags: [PUBLIC_CATALOG_CACHE_TAG], revalidate: 3600 }
 );
 
 function normalizeCategory(value: string | string[] | undefined) {
