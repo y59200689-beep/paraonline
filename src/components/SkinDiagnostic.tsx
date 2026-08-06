@@ -159,9 +159,16 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
       fetch('/api/cms/diagnostic/public')
         .then(res => res.json())
         .then(data => {
-          if (data.questions && Array.isArray(data.questions) && data.questions.length > 0) {
+          if (
+            data.questions &&
+            Array.isArray(data.questions) &&
+            data.questions.length > 0 &&
+            // Only use CMS data if it actually has answer options populated
+            data.questions.some((q: DiagnosticQuestion) => q.options && q.options.length > 0)
+          ) {
             setQuestions(data.questions);
           }
+          // Otherwise keep the static fallback (diagnostic-questions.json)
         })
         .catch(err => console.warn('Could not load dynamic CMS diagnostic questions:', err));
     }

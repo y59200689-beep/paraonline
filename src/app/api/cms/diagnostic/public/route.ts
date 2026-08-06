@@ -52,11 +52,18 @@ export async function GET() {
       };
     });
 
+    // If Supabase has questions but NO answers have been seeded yet, fall back to static JSON
+    const hasAnswers = mapped.some((q: any) => q.options.length > 0);
+    if (!hasAnswers) {
+      return NextResponse.json({ questions: defaultQuestions.questions });
+    }
+
     return NextResponse.json({ questions: mapped }, {
       headers: {
         'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
       },
     });
+
   } catch (err) {
     console.error("Failed to load public diagnostic questions:", err);
     return NextResponse.json({ questions: defaultQuestions.questions });
