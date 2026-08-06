@@ -17,8 +17,10 @@ interface BrandLogoCardProps {
 
 export const BrandLogoCard: React.FC<BrandLogoCardProps> = ({ brand, decorative = false }) => {
   const [imgError, setImgError] = useState(false);
-  const brandSlug = slugify(brand.name);
+  const brandName = brand.name || 'Marque';
+  const brandSlug = slugify(brandName);
   const logo = brand.logo_url || brand.logoUrl;
+  const domain = brand.domain || `${brandName.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
   const href = brand.card_link || `/brand/${brandSlug}`;
 
   return (
@@ -34,12 +36,12 @@ export const BrandLogoCard: React.FC<BrandLogoCardProps> = ({ brand, decorative 
       >
         {imgError ? (
           <span className="text-[7.5px] sm:text-xs font-black tracking-widest text-slate-400 group-hover:text-primary uppercase transition-colors duration-300 px-1 text-center truncate w-full">
-            {brand.name}
+            {brandName}
           </span>
         ) : (
           <img
-            src={logo || `https://logos.hunter.io/${brand.domain}`}
-            alt={brand.name}
+            src={logo || `https://logos.hunter.io/${domain}`}
+            alt={brandName}
             className="w-full h-full object-contain filter grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300 p-1.5 sm:p-2"
             loading="lazy"
             onError={() => setImgError(true)}

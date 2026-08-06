@@ -28,17 +28,44 @@ const FALLBACK_BRANDS: BrandData[] = [
 ];
 
 export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands: propBrands }) => {
-  const [brands, setBrands] = useState<BrandData[]>(propBrands ?? FALLBACK_BRANDS);
+  const [dbBrands, setDbBrands] = useState<BrandData[]>([]);
 
   useEffect(() => {
-    if (propBrands && propBrands.length > 0) return; // already supplied by caller
     fetch('/api/brands')
       .then(r => r.ok ? r.json() : null)
       .then(data => {
-        if (data?.brands?.length) setBrands(data.brands);
+        if (data?.brands?.length) setDbBrands(data.brands);
       })
       .catch(() => {}); // keep fallback on error
-  }, [propBrands]);
+  }, []);
+
+  const brands = React.useMemo(() => {
+    let list: BrandData[] = [];
+
+    if (propBrands && Array.isArray(propBrands) && propBrands.length > 0) {
+      list = propBrands.map((b: any) => {
+        if (typeof b === 'string') {
+          const match = FALLBACK_BRANDS.find(f => f.name.toLowerCase() === b.toLowerCase());
+          return match || { name: b, domain: `${b.toLowerCase().replace(/[^a-z0-9]/g, '')}.com` };
+        }
+        return b;
+      });
+    } else if (dbBrands.length > 0) {
+      list = dbBrands;
+    }
+
+    // Ensure at least 9 brand cards so the 3 marquee rows are rich and full
+    if (list.length < 9) {
+      const existingNames = new Set(list.map(b => b.name?.toLowerCase()));
+      for (const fb of FALLBACK_BRANDS) {
+        if (!existingNames.has(fb.name.toLowerCase())) {
+          list.push(fb);
+        }
+      }
+    }
+
+    return list;
+  }, [propBrands, dbBrands]);
 
   // Split into 3 marquee rows
   const brandsPerRow = Math.ceil(brands.length / 3);
@@ -122,7 +149,7 @@ export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands: propBrands
 
           <div className="space-y-2.5 sm:space-y-3" aria-label="Marques partenaires">
             {brandRows.map((row, rowIndex) => {
-              const rowBrands = [...row, ...row];
+              const rowBrands = [...row, ...row, ...row];
               const motionClass = rowIndex === 1
                 ? 'brand-partner-track--reverse'
                 : rowIndex === 2
@@ -135,9 +162,7 @@ export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands: propBrands
                     {rowBrands.map((brand, index) => (
                       <div
                         key={`${brand.name}-${rowIndex}-${index}`}
-                        className={row.length === 3
-                          ? 'w-[calc(33.333%-0.75rem)] shrink-0'
-                          : 'w-[calc(25%-0.75rem)] shrink-0'}
+                        className="w-32 sm:w-44 shrink-0"
                       >
                         <BrandLogoCard brand={brand} decorative={index >= row.length} />
                       </div>
