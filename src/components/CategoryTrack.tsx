@@ -171,14 +171,18 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
                  const hardcodedCategoryByTag: Record<string, string> = {
                    all: '',
                    offers: '',
+                   giftbox: '',
                    solaire: 'solaire',
                    visage: 'visage',
                    cheveux: 'cheveux',
                    corps: 'corp',
                    appareils: 'accessories',
                    complements: 'complement',
-                   bebe: 'bébé',
+                   maquillage: '',
+                   sport: '',
+                   masques: '',
                    homme: 'homme',
+                   bebe: 'bébé',
                  };
                  const hardcodedCategory = hardcodedCategoryByTag[cat.tag];
                  const productsHref = adminLink

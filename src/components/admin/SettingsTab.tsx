@@ -3171,16 +3171,16 @@ export default function SettingsTab() {
                 {[
                   { tag: 'all',         labelFr: 'Tous les produits',   defaultHref: '/products' },
                   { tag: 'offers',      labelFr: 'Meilleures Ventes',   defaultHref: '/products' },
-                  { tag: 'giftbox',     labelFr: 'Coffrets Cadeaux',    defaultHref: '' },
+                  { tag: 'giftbox',     labelFr: 'Coffrets Cadeaux',    defaultHref: '/products' },
                   { tag: 'solaire',     labelFr: 'Solaires',            defaultHref: '/products?category=solaire' },
                   { tag: 'visage',      labelFr: 'Visage',              defaultHref: '/products?category=visage' },
                   { tag: 'cheveux',     labelFr: 'Cheveux',             defaultHref: '/products?category=cheveux' },
                   { tag: 'corps',       labelFr: 'Corps',               defaultHref: '/products?category=corp' },
                   { tag: 'appareils',   labelFr: 'Accessoires',         defaultHref: '/products?category=accessories' },
                   { tag: 'complements', labelFr: 'Compléments',         defaultHref: '/products?category=complement' },
-                  { tag: 'maquillage',  labelFr: 'Maquillage',          defaultHref: '' },
-                  { tag: 'sport',       labelFr: 'Sport',               defaultHref: '' },
-                  { tag: 'masques',     labelFr: 'Masques',             defaultHref: '' },
+                  { tag: 'maquillage',  labelFr: 'Maquillage',          defaultHref: '/products' },
+                  { tag: 'sport',       labelFr: 'Sport',               defaultHref: '/products' },
+                  { tag: 'masques',     labelFr: 'Masques',             defaultHref: '/products' },
                   { tag: 'homme',       labelFr: 'Homme',               defaultHref: '/products?category=homme' },
                   { tag: 'bebe',        labelFr: 'Bébé',                defaultHref: '/products?category=bébé' },
                 ].map(({ tag, labelFr, defaultHref }) => (
@@ -3204,7 +3204,7 @@ export default function SettingsTab() {
                         };
                         saveSettings(updated);
                       }}
-                      placeholder={defaultHref || 'Aucun lien par défaut — filtrage homepage'}
+                      placeholder={defaultHref}
                       className={`w-full text-xs transition outline-none rounded-xl px-3 py-2 border font-mono ${
                         adminTheme === 'light'
                           ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20'
