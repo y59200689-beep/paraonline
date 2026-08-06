@@ -170,6 +170,7 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
                  const adminLink = settings?.categoryLinks?.[cat.tag];
                  const hardcodedCategoryByTag: Record<string, string> = {
                    all: '',
+                   offers: '',
                    solaire: 'solaire',
                    visage: 'visage',
                    cheveux: 'cheveux',
