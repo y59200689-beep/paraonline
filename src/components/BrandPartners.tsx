@@ -90,14 +90,14 @@ export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands: propBrands
           width: max-content;
           gap: 0.75rem;
           will-change: transform;
-          animation: brand-partner-marquee 31s linear infinite;
+          animation: brand-partner-marquee 80s linear infinite;
         }
         .brand-partner-track--reverse {
           animation-direction: reverse;
-          animation-duration: 37s;
+          animation-duration: 95s;
         }
         .brand-partner-track--slow {
-          animation-duration: 43s;
+          animation-duration: 110s;
         }
         @media (min-width: 640px) {
           .brand-partner-track {
