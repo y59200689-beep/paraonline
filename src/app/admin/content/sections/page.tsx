@@ -240,15 +240,17 @@ export default function ContentSectionsPage() {
               <div
                 key={sec.id}
                 onClick={() => handleOpenEdit(sec)}
-                className="group relative p-4 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between hover:shadow-lg hover:-translate-y-0.5"
+                className="group relative rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col hover:shadow-lg hover:-translate-y-0.5 overflow-hidden"
                 style={{
                   borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0',
                   background: isDark ? 'rgba(15, 23, 42, 0.6)' : '#ffffff',
+                  minHeight: '160px',
                 }}
               >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full border" style={{
+                {/* Card body — grows to fill available space */}
+                <div className="flex-1 p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full border truncate max-w-[55%]" style={{
                       backgroundColor: isDark ? 'rgba(16,185,129,0.12)' : '#ecfdf5',
                       color: isDark ? '#34d399' : '#047857',
                       borderColor: isDark ? 'rgba(16,185,129,0.25)' : '#a7f3d0',
@@ -275,7 +277,7 @@ export default function ContentSectionsPage() {
                   </div>
 
                   <div>
-                    <h3 className="text-sm font-bold group-hover:text-emerald-600 transition-colors" style={{ color: isDark ? '#f8fafc' : '#0f172a' }}>
+                    <h3 className="text-sm font-bold group-hover:text-emerald-600 transition-colors line-clamp-1" style={{ color: isDark ? '#f8fafc' : '#0f172a' }}>
                       {displayTitle}
                     </h3>
                     <p className="text-xs line-clamp-2 mt-1 leading-relaxed" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>
@@ -284,7 +286,8 @@ export default function ContentSectionsPage() {
                   </div>
                 </div>
 
-                <div className="mt-4 pt-3 border-t flex items-center justify-between" style={{ borderColor: isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9' }}>
+                {/* Card footer — always at bottom, always inside card */}
+                <div className="px-4 py-2.5 border-t flex items-center justify-between shrink-0" style={{ borderColor: isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9', background: isDark ? 'rgba(255,255,255,0.02)' : '#f8fafc' }}>
                   <span className="text-[10px] font-mono" style={{ color: isDark ? '#64748b' : '#94a3b8' }}>
                     {meta.category}
                   </span>
