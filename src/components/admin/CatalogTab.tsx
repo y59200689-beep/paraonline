@@ -3077,7 +3077,7 @@ export default function CatalogTab({
                       <div className="px-2 py-1 text-[10px] uppercase tracking-wider font-extrabold text-slate-400 border-b border-slate-100 dark:border-slate-800/80 mb-1">
                         Assigner Catégorie
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1 overflow-y-auto" style={{ maxHeight: '60vh' }}>
                         {categoryOptions.map(cat => (
                           <button
                             key={cat}
@@ -5059,7 +5059,7 @@ export default function CatalogTab({
                 <div className="px-2 py-1 text-[10px] uppercase tracking-wider font-extrabold text-slate-400 border-b border-slate-100 dark:border-slate-800/80 mb-1">
                   Assigner Catégorie
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-1 overflow-y-auto" style={{ maxHeight: '60vh' }}>
                   {categoryOptions.map(cat => (
                     <button
                       key={cat}
