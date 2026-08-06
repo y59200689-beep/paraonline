@@ -129,10 +129,6 @@ const ICONS: Record<string, React.ComponentType<{ className?: string; 'aria-hidd
   wind: Wind,
 };
 
-function optionFor(field: AnswerField, value: string) {
-  return QUESTIONS.find((question) => question.field === field)?.options.find((option) => option.val === value);
-}
-
 export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose, onOpenCart, experience = 'storefront' }) => {
   const { language } = useTranslation();
   const { products } = useProducts();
@@ -140,6 +136,12 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
   const { earnPoints } = useLoyalty();
   const { setDiagnostic } = useUi();
   const { settings } = useSettings();
+  
+  // Dynamic diagnostic questions state (defaults to static questions.json fallback)
+  const [questions, setQuestions] = useState<DiagnosticQuestion[]>(
+    (diagnosticQuestions.questions as DiagnosticQuestion[]) || []
+  );
+
   const [isVisible, setIsVisible] = useState(false);
   const [modalState, setModalState] = useState<'closed' | 'open' | 'closing'>('closed');
   const [questionIndex, setQuestionIndex] = useState(-1);
@@ -151,13 +153,31 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
   const dialogRef = useRef<HTMLElement>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
 
+  // Fetch dynamic questions from CMS whenever modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetch('/api/cms/diagnostic/public')
+        .then(res => res.json())
+        .then(data => {
+          if (data.questions && Array.isArray(data.questions) && data.questions.length > 0) {
+            setQuestions(data.questions);
+          }
+        })
+        .catch(err => console.warn('Could not load dynamic CMS diagnostic questions:', err));
+    }
+  }, [isOpen]);
+
+  function optionFor(field: AnswerField, value: string) {
+    return questions.find((q) => q.field === field)?.options.find((option) => option.val === value);
+  }
+
   const isRTL = language === 'AR';
   const isClientExperience = experience === 'client';
   const isIntro = questionIndex === -1;
-  const isResults = questionIndex === QUESTIONS.length;
-  const currentQuestion = !isIntro && !isResults ? QUESTIONS[questionIndex] : null;
+  const isResults = questionIndex === questions.length;
+  const currentQuestion = !isIntro && !isResults ? questions[questionIndex] : null;
   const QuestionIcon = currentQuestion ? (ICONS[currentQuestion.options[0]?.icon] || Sparkles) : Sparkles;
-  const progress = isIntro ? 0 : isResults ? 100 : Math.round(((questionIndex + 1) / QUESTIONS.length) * 100);
+  const progress = isIntro ? 0 : isResults ? 100 : Math.round(((questionIndex + 1) / questions.length) * 100);
 
   useEffect(() => {
     if (isOpen) {
@@ -281,7 +301,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
 
   const handleContinue = () => {
     if (!currentQuestion || !answers[currentQuestion.field]) return;
-    if (questionIndex < QUESTIONS.length - 1) {
+    if (questionIndex < questions.length - 1) {
       setQuestionIndex((current) => current + 1);
       return;
     }
@@ -289,7 +309,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
     setIsGenerating(true);
     window.setTimeout(() => {
       buildRecommendations();
-      setQuestionIndex(QUESTIONS.length);
+      setQuestionIndex(questions.length);
       setIsGenerating(false);
     }, 360);
   };
@@ -376,7 +396,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
           <div className={isClientExperience ? styles.progressHeader : 'shrink-0 border-b border-slate-200 bg-white px-5 py-3 sm:px-7'}>
             <div className="mb-2 flex items-center justify-between gap-3 text-xs font-semibold">
               <span className="text-slate-600">
-                {isRTL ? `السؤال ${questionIndex + 1} من ${QUESTIONS.length}` : `Question ${questionIndex + 1} sur ${QUESTIONS.length}`}
+                {isRTL ? `السؤال ${questionIndex + 1} من ${questions.length}` : `Question ${questionIndex + 1} sur ${questions.length}`}
               </span>
               <span className="font-mono text-emerald-700 tabular-nums">{progress}%</span>
             </div>
@@ -584,7 +604,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
             <div className={styles.questionStage}>
               <nav className={styles.questionRail} aria-label={isRTL ? 'تقدم التشخيص' : 'Progression du diagnostic'}>
                 <ol>
-                  {QUESTIONS.map((question, index) => {
+                  {questions.map((question, index) => {
                     const complete = index < questionIndex;
                     const active = index === questionIndex;
                     return (
@@ -667,7 +687,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                   {isRTL ? 'مسار التقييم' : 'Votre parcours'}
                 </p>
                 <ol className="mt-5 space-y-1.5">
-                  {QUESTIONS.map((question, index) => {
+                  {questions.map((question, index) => {
                     const complete = Boolean(answers[question.field]);
                     const active = index === questionIndex;
                     return (
@@ -756,7 +776,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                   <dl className="mt-3 divide-y divide-slate-200 border-y border-slate-200">
                     {answerSummary.map(({ field, option }) => option && (
                       <div key={field} className="py-3">
-                        <dt className="text-[11px] text-slate-500">{isRTL ? QUESTIONS.find((question) => question.field === field)?.eyebrowAr : QUESTIONS.find((question) => question.field === field)?.eyebrowFr}</dt>
+                        <dt className="text-[11px] text-slate-500">{isRTL ? questions.find((q) => q.field === field)?.eyebrowAr : questions.find((q) => q.field === field)?.eyebrowFr}</dt>
                         <dd className="mt-1 text-sm font-semibold text-slate-900">{isRTL ? option.labelAr : option.labelFr}</dd>
                       </div>
                     ))}
@@ -827,7 +847,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                 rightIcon={isRTL ? <ArrowLeft /> : <ArrowRight />}
                 onClick={handleContinue}
               >
-                {questionIndex === QUESTIONS.length - 1
+                {questionIndex === questions.length - 1
                   ? (isRTL ? 'عرض روتيني' : 'Voir ma routine')
                   : (isRTL ? 'متابعة' : 'Continuer')}
               </PoButton>
