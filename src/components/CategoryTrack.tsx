@@ -169,6 +169,7 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
                  // Admin-configurable link overrides take priority, then hardcoded fallbacks
                  const adminLink = settings?.categoryLinks?.[cat.tag];
                  const hardcodedCategoryByTag: Record<string, string> = {
+                   all: '',
                    solaire: 'solaire',
                    visage: 'visage',
                    cheveux: 'cheveux',
@@ -181,8 +182,10 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
                  const hardcodedCategory = hardcodedCategoryByTag[cat.tag];
                  const productsHref = adminLink
                    ? adminLink
-                   : hardcodedCategory
-                   ? `/products?category=${hardcodedCategory}`
+                   : cat.tag in hardcodedCategoryByTag
+                   ? hardcodedCategory
+                     ? `/products?category=${hardcodedCategory}`
+                     : '/products'
                    : null;
                  
                  // Exact top-down gradient; borderless layout with soft shadow; overflow-hidden to crop bleeding illustrations
