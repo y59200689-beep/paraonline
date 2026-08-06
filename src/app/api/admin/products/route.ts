@@ -6,6 +6,8 @@ import { revalidatePath, revalidateTag } from 'next/cache';
 import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/catalog-cache';
 import { normalizeRecommendationMetadata } from '@/lib/product-recommendation-metadata';
 
+import { catalogCategoryFilter } from '@/lib/catalog-categories';
+
 function normalizeCategories(categories: unknown, primaryCategory: unknown): string[] {
   const primary = typeof primaryCategory === 'string' && primaryCategory.trim()
     ? primaryCategory.trim().toLowerCase()
@@ -39,7 +41,7 @@ function applyProductFilters(
   options: { includeStatus?: boolean } = {}
 ) {
   if (category && category !== 'all') {
-    query = query.or(`category.eq.${category},categories.cs.{"${category}"}`);
+    query = query.or(catalogCategoryFilter(category));
   }
   if (vendor && vendor !== 'all') {
     query = query.eq('vendor', vendor);
