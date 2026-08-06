@@ -91,6 +91,7 @@ export interface Settings {
     delayHours: number;
   }[];
   categories?: string[];
+  featuredProductIds?: number[];
   banners?: HeroCardConfig[];
   loyaltyPointsPerDh?: number;
   loyaltyBronzeMultiplier?: number;
