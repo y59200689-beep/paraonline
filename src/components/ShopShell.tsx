@@ -76,31 +76,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const [showToast, setShowToast] = useState(false);
-  const [toastData, setToastData] = useState({ name: '', city: '', product: '', time: '' });
-  const [recentOrders, setRecentOrders] = useState<any[]>([]);
 
-  useEffect(() => {
-    let cancelled = false;
-    const fetchRecentActivity = async () => {
-      try {
-        const res = await fetch('/api/orders/recent-activity');
-        const data = await res.json();
-        if (!cancelled && data.success && data.orders && data.orders.length > 0) {
-          setRecentOrders(data.orders);
-        }
-      } catch (err) {
-        console.error("Failed to load recent activity:", err);
-      }
-    };
-
-    // This powers an optional notification, not the shopping flow. Let the
-    // header and first products win the network on a cold page visit.
-    const timer = window.setTimeout(fetchRecentActivity, 1800);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timer);
-    };
-  }, []);
 
   // Pre-unlock AudioContext on first user gesture
   useEffect(() => {
@@ -159,10 +135,12 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const [toastData, setToastData] = useState({ name: '', city: '', product: '', time: '' });
+
   // FOMO Toast notification trigger
   useEffect(() => {
-    const cities = ['Casablanca', 'Rabat', 'Tanger', 'Fès', 'Marrakech', 'Agadir', 'Oujda', 'Meknès', 'Tétouan'];
-    const names = ['Khadija', 'Aminata', 'Fatima', 'Salma', 'Meryem', 'Imane', 'Laila', 'Nadia'];
+    const cities = ['Casablanca', 'Rabat', 'Tanger', 'Fès', 'Marrakech', 'Agadir', 'Oujda', 'Meknès', 'Tétouan', 'Kénitra', 'Salé', 'Mohammedia', 'El Jadida', 'Béni Mellal', 'Nador'];
+    const names = ['Khadija', 'Aminata', 'Fatima', 'Salma', 'Meryem', 'Imane', 'Laila', 'Nadia', 'Samira', 'Houda', 'Zineb', 'Kaoutar', 'Ghita', 'Malak', 'Hajar'];
 
     /*
     const playSubtleChime = () => {
@@ -212,27 +190,19 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
     */
 
     const triggerToast = () => {
-      if (recentOrders.length > 0) {
-        const order = recentOrders[Math.floor(Math.random() * recentOrders.length)];
-        setToastData({
-          name: order.name,
-          city: order.city,
-          product: order.product,
-          time: language === 'FR' ? order.timeFr : order.timeAr
-        });
-      } else {
-        const randomProduct = products[Math.floor(Math.random() * products.length)] || products[0];
-        const timesFR = ['il y a 1 min', 'il y a 2 min', 'il y a 5 min'];
-        const timesAR = ['منذ دقيقة', 'منذ دقيقتين', 'منذ 5 دقائق'];
-        const randomIndex = Math.floor(Math.random() * timesFR.length);
-        
-        setToastData({
-          name: names[Math.floor(Math.random() * names.length)],
-          city: cities[Math.floor(Math.random() * cities.length)],
-          product: randomProduct.title,
-          time: language === 'FR' ? timesFR[randomIndex] : timesAR[randomIndex],
-        });
-      }
+      // Always generate a fully random fake order — never uses real customer data
+      const randomProduct = products[Math.floor(Math.random() * products.length)] || products[0];
+      // Random minute count 1-10
+      const mins = Math.floor(Math.random() * 10) + 1;
+      const timeFr = mins === 1 ? 'il y a 1 min' : `il y a ${mins} min`;
+      const timeAr = mins === 1 ? 'منذ دقيقة' : mins === 2 ? 'منذ دقيقتين' : `منذ ${mins} دقائق`;
+
+      setToastData({
+        name: names[Math.floor(Math.random() * names.length)],
+        city: cities[Math.floor(Math.random() * cities.length)],
+        product: randomProduct?.title || '',
+        time: language === 'FR' ? timeFr : timeAr,
+      });
       setShowToast(true);
       // playSubtleChime();
       setTimeout(() => setShowToast(false), 5500);
@@ -241,7 +211,8 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
     const initial = setTimeout(triggerToast, 5000);
     const interval = setInterval(triggerToast, 20000);
     return () => { clearTimeout(initial); clearInterval(interval); };
-  }, [language, recentOrders, products]);
+  }, [language, products]);
+
 
   const isRTL = language === 'AR';
 
