@@ -20,7 +20,6 @@ import { HomepageSectionItem, useSettings } from '@/context/SettingsContext';
 const BrandPartners = dynamic(() => import('@/components/BrandPartners').then((m) => m.BrandPartners), { ssr: false });
 const DiagnosticBanner = dynamic(() => import('@/components/DiagnosticBanner').then((m) => m.DiagnosticBanner), { ssr: false });
 const SummerSalePromo = dynamic(() => import('@/components/SummerSalePromo').then((m) => m.SummerSalePromo), { ssr: false });
-const SkinConcernsSelector = dynamic(() => import('@/components/SkinConcernsSelector').then((m) => m.SkinConcernsSelector), { ssr: false });
 const HorizontalPromoBanner = dynamic(() => import('@/components/HorizontalPromoBanner').then((m) => m.HorizontalPromoBanner), { ssr: false });
 const MoroccoTrustBar = dynamic(() => import('@/components/MoroccoTrustBar').then((m) => m.MoroccoTrustBar), { ssr: false });
 const CustomerReviews = dynamic(() => import('@/components/CustomerReviews').then((m) => m.CustomerReviews), { ssr: false });
@@ -225,7 +224,7 @@ export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps
             return deferred(section.id, <SummerSalePromo />);
 
           case 'skinConcerns':
-            return deferred(section.id, <SkinConcernsSelector />);
+            return null;
 
           case 'horizontalPromo':
             return deferred(section.id, <HorizontalPromoBanner settings={section.settings} />);
