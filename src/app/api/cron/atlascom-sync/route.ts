@@ -161,6 +161,7 @@ async function runAtlascomSync() {
       const nextPrice = Number.isFinite(price) && price > 0
         ? price
         : Number(existing.price || existing.compare_price || existing.comparePrice || 0);
+      const nextVendor = existing.vendor === 'Atlascom' ? '' : (existing.vendor ?? '');
       const nextRow = {
         ...existing,
         title,
@@ -169,12 +170,14 @@ async function runAtlascomSync() {
         stock: Number.isFinite(stock) ? stock : 0,
         price: nextPrice,
         compare_price: existing.compare_price ?? existing.comparePrice ?? nextPrice,
+        vendor: nextVendor,
       };
 
       if (
         String(existing.title || existing.name || existing.name_fr || '') !== title
         || Number(existing.stock) !== nextRow.stock
         || Number(existing.price) !== nextRow.price
+        || existing.vendor === 'Atlascom'
       ) {
         updated++;
       }
@@ -190,7 +193,7 @@ async function runAtlascomSync() {
         price: Number.isFinite(price) && price > 0 ? price : 0,
         compare_price: Number.isFinite(price) && price > 0 ? price : 0,
         stock: Number.isFinite(stock) ? stock : 0,
-        vendor: 'Atlascom',
+        vendor: '',
         category: 'visage',
         categories: ['visage'],
         image: '',
