@@ -208,7 +208,41 @@ export const Sidebar: React.FC<SidebarProps> = ({
         href={item.href}
         prefetch={true}
         title={sidebarCollapsed ? item.label : undefined}
-        onClick={() => setIsMobileDrawerOpen(false)}
+        onClick={() => {
+          setIsMobileDrawerOpen(false);
+          // Sync activeTab state immediately (avoids waiting for useEffect on pathname)
+          const tabMap: Record<string, any> = {
+            dashboard: 'dashboard',
+            orders: 'orders',
+            catalog: 'catalog',
+            crm: 'crm',
+            analytics: 'analytics',
+            coupons: 'coupons',
+            gifts: 'settings',
+            loyalty: 'loyalty',
+            'content-pages': 'gallery',
+            'content-sections': 'gallery',
+            'content-brands': 'gallery',
+            gallery: 'gallery',
+            'content-global': 'gallery',
+            'content-translations': 'gallery',
+            'content-seo': 'gallery',
+            'experience-diagnostic': 'settings',
+            'experience-assistant': 'settings',
+            reviews: 'reviews',
+            advice: 'advice',
+            'settings-shipping': 'settings',
+            'settings-payment': 'settings',
+            'settings-integrations': 'settings',
+            'settings-team': 'settings',
+            'audit-logs': 'audit-logs',
+            cron: 'cron',
+            snippets: 'snippets',
+            branding: 'branding',
+          };
+          const resolvedTab = tabMap[item.id] ?? item.id;
+          setActiveTab(resolvedTab);
+        }}
         className={`relative flex items-center rounded-xl border transition-all duration-150 cursor-pointer select-none group ${
           sidebarCollapsed ? 'justify-center px-2 py-2.5' : 'justify-between px-3 py-2.5'
         }`}
