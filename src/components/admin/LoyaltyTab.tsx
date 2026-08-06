@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { 
   Users, 
@@ -11,7 +11,9 @@ import {
   TrendingUp, 
   Edit3, 
   Search, 
-  X 
+  X,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { useAdmin, Order } from '@/context/AdminContext';
 import { useSettings } from '@/context/SettingsContext';
@@ -95,6 +97,23 @@ export default function LoyaltyTab() {
       return matchVendor && matchSearch;
     });
   }, [products, productPointsVendorFilter, productPointsSearch]);
+
+  // Product Points Pagination (50 products per page)
+  const ITEMS_PER_PAGE = 50;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [productPointsSearch, productPointsVendorFilter]);
+
+  const totalPages = useMemo(() => {
+    return Math.ceil(ppFiltered.length / ITEMS_PER_PAGE) || 1;
+  }, [ppFiltered.length]);
+
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return ppFiltered.slice(start, start + ITEMS_PER_PAGE);
+  }, [ppFiltered, currentPage]);
 
   // Filtered products for Bulk Points tab
   const bpFiltered = useMemo(() => {
@@ -326,7 +345,7 @@ export default function LoyaltyTab() {
                   </tr>
                 </thead>
                 <tbody className={`divide-y text-xs ${adminTheme === 'light' ? 'divide-slate-100 text-slate-700' : 'divide-slate-900 text-slate-300'}`}>
-                  {ppFiltered.map((product: any) => {
+                  {paginatedProducts.map((product: any) => {
                     const currentPoints = productPointsEdits[product.id] !== undefined ? productPointsEdits[product.id] : (product.points ?? '');
                     const hasEdit = productPointsEdits[product.id] !== undefined;
                     const isSaving = savingProductPointsId === product.id;
@@ -378,6 +397,42 @@ export default function LoyaltyTab() {
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className={`p-4 border-t flex flex-col sm:flex-row items-center justify-between gap-3 text-xs ${adminTheme === 'light' ? 'bg-slate-50/50 border-slate-200 text-slate-600' : 'bg-slate-900/50 border-slate-800 text-slate-400'}`}>
+                <div>
+                  Affichage de <span className="font-bold text-slate-900 dark:text-slate-100">{((currentPage - 1) * ITEMS_PER_PAGE) + 1}</span> à <span className="font-bold text-slate-900 dark:text-slate-100">{Math.min(currentPage * ITEMS_PER_PAGE, ppFiltered.length)}</span> sur <span className="font-bold text-slate-900 dark:text-slate-100">{ppFiltered.length}</span> produits (50 par page)
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border text-xs font-bold transition ${
+                      currentPage === 1
+                        ? 'opacity-40 cursor-not-allowed'
+                        : (adminTheme === 'light' ? 'bg-white hover:bg-slate-100 border-slate-200 text-slate-700 shadow-sm cursor-pointer' : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-200 cursor-pointer')
+                    }`}
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" /> Précédent
+                  </button>
+                  <span className="font-mono text-xs px-2">
+                    Page <span className="font-bold text-emerald-600 dark:text-emerald-400">{currentPage}</span> / {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border text-xs font-bold transition ${
+                      currentPage === totalPages
+                        ? 'opacity-40 cursor-not-allowed'
+                        : (adminTheme === 'light' ? 'bg-white hover:bg-slate-100 border-slate-200 text-slate-700 shadow-sm cursor-pointer' : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-200 cursor-pointer')
+                    }`}
+                  >
+                    Suivant <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
