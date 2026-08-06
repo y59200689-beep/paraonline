@@ -960,10 +960,10 @@ export default function CRMTab() {
 
               const estimatedPoints = Math.round(cust.totalSpend * pointsPerDh);
               const tierGradients: Record<string, { ring: string; badge: string; badgeText: string; glow: string; emoji: string }> = {
-                Bronze:   { ring: 'from-amber-700 to-amber-500',    badge: adminTheme === 'light' ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-amber-950/30 border-amber-800/40 text-amber-400',   badgeText: 'Bronze',   glow: 'shadow-amber-500/10',   emoji: '🥉' },
-                Silver:   { ring: 'from-slate-400 to-slate-300',    badge: adminTheme === 'light' ? 'bg-slate-100 border-slate-300 text-slate-600' : 'bg-slate-800/40 border-slate-700 text-slate-300',       badgeText: 'Silver',   glow: 'shadow-slate-400/10',   emoji: '🥈' },
-                Gold:     { ring: 'from-yellow-500 to-amber-300',   badge: adminTheme === 'light' ? 'bg-yellow-50 border-yellow-200 text-yellow-700' : 'bg-yellow-950/30 border-yellow-800/40 text-yellow-400', badgeText: 'Gold',     glow: 'shadow-yellow-500/15',  emoji: '🥇' },
-                Platinum: { ring: 'from-violet-500 to-indigo-400',  badge: adminTheme === 'light' ? 'bg-violet-50 border-violet-200 text-violet-700' : 'bg-violet-950/30 border-violet-800/40 text-violet-400', badgeText: 'Platinum', glow: 'shadow-violet-500/20',  emoji: '💎' },
+                Bronze:   { ring: 'from-amber-700 to-amber-500',    badge: adminTheme === 'light' ? 'bg-amber-50 border-amber-200 text-amber-700'           : 'bg-amber-950/30 border-amber-800/40 text-amber-400',   badgeText: 'Bronze',   glow: 'shadow-amber-500/10',   emoji: '🥉' },
+                Silver:   { ring: 'from-slate-400 to-slate-300',    badge: adminTheme === 'light' ? 'bg-slate-200/80 border-slate-400/60 text-slate-700'   : 'bg-slate-800/40 border-slate-700 text-slate-300',       badgeText: 'Silver',   glow: 'shadow-slate-400/10',   emoji: '🥈' },
+                Gold:     { ring: 'from-yellow-500 to-amber-300',   badge: adminTheme === 'light' ? 'bg-yellow-50 border-yellow-200 text-yellow-700'         : 'bg-yellow-950/30 border-yellow-800/40 text-yellow-400', badgeText: 'Gold',     glow: 'shadow-yellow-500/15',  emoji: '🥇' },
+                Platinum: { ring: 'from-violet-500 to-indigo-400',  badge: adminTheme === 'light' ? 'bg-violet-50 border-violet-200 text-violet-700'         : 'bg-violet-950/30 border-violet-800/40 text-violet-400', badgeText: 'Platinum', glow: 'shadow-violet-500/20',  emoji: '💎' },
               };
               const tg = tierGradients[tier];
               const initials = (cust.name || '?').split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
@@ -1003,11 +1003,19 @@ export default function CRMTab() {
                           <span className={`font-black text-sm ${ adminTheme === 'light' ? 'text-slate-900' : 'text-slate-100'}`}>{cust.name || 'Anonyme'}</span>
                           <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${tg.badge}`}>{tg.badgeText}</span>
                           {hasAcc ? (
-                            <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/30 dark:border-emerald-900/40 dark:text-emerald-400">
+                            <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                              adminTheme === 'light'
+                                ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                                : 'bg-emerald-950/30 border-emerald-900/40 text-emerald-400'
+                            }`}>
                               👤 Compte Membre
                             </span>
                           ) : (
-                            <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border bg-slate-100 border-slate-200 text-slate-500 dark:bg-slate-800/40 dark:border-slate-700 dark:text-slate-400">
+                            <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                              adminTheme === 'light'
+                                ? 'bg-indigo-50 border-indigo-200 text-indigo-600'
+                                : 'bg-slate-800/40 border-slate-700 text-slate-400'
+                            }`}>
                               🛍️ Invité
                             </span>
                           )}

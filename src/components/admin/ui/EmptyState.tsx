@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useAdmin } from '@/context/AdminContext';
 
 interface EmptyStateProps {
   icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
@@ -26,16 +27,23 @@ export function EmptyState({
   description,
   action,
   secondaryAction,
-  theme = 'dark',
+  theme,
   size = 'md',
   className = '',
 }: EmptyStateProps) {
-  const isLight = theme === 'light';
+  let isLight = false;
+
+  try {
+    const { adminTheme } = useAdmin();
+    isLight = theme ? theme === 'light' : adminTheme === 'light';
+  } catch {
+    isLight = theme === 'light';
+  }
 
   const sizeMap = {
-    sm: { wrapper: 'py-10 px-6', iconBox: 'w-10 h-10', iconSize: 'w-4 h-4', gap: 'gap-2.5' },
-    md: { wrapper: 'py-14 px-8', iconBox: 'w-14 h-14', iconSize: 'w-5 h-5', gap: 'gap-3' },
-    lg: { wrapper: 'py-20 px-10', iconBox: 'w-16 h-16', iconSize: 'w-6 h-6', gap: 'gap-4' },
+    sm: { wrapper: 'py-8 px-4', iconBox: 'w-10 h-10', iconSize: 'w-4 h-4', gap: 'gap-2' },
+    md: { wrapper: 'py-12 px-6', iconBox: 'w-12 h-12', iconSize: 'w-5 h-5', gap: 'gap-2.5' },
+    lg: { wrapper: 'py-16 px-8', iconBox: 'w-14 h-14', iconSize: 'w-6 h-6', gap: 'gap-3' },
   };
   const s = sizeMap[size];
 
@@ -47,6 +55,11 @@ export function EmptyState({
         ${s.wrapper}
         ${className}
       `}
+      style={{
+        background: isLight ? 'rgba(248,250,252,0.6)' : 'rgba(255,255,255,0.015)',
+        borderColor: isLight ? 'rgba(226,232,240,0.8)' : 'rgba(255,255,255,0.08)',
+        borderRadius: 'var(--admin-radius-lg)',
+      }}
     >
       {/* Animated icon block */}
       <div
@@ -54,12 +67,12 @@ export function EmptyState({
           rich-empty-state-icon
           ${s.iconBox}
           ${isLight
-            ? 'bg-slate-50 border border-slate-200/80'
-            : 'bg-slate-900/60 border border-slate-800/60'}
+            ? 'bg-slate-100 border border-slate-200 text-slate-500'
+            : 'bg-slate-900/60 border border-slate-800/60 text-slate-400'}
         `}
       >
         <Icon
-          className={`${s.iconSize} ${isLight ? 'text-slate-400' : 'text-slate-500'}`}
+          className={`${s.iconSize}`}
           strokeWidth={1.5}
         />
       </div>
@@ -70,7 +83,7 @@ export function EmptyState({
           className="font-semibold tracking-tight text-center"
           style={{
             fontSize: 'var(--admin-text-base)',
-            color: 'var(--admin-text-primary)',
+            color: isLight ? '#0f172a' : '#f1f5f9',
           }}
         >
           {title}
@@ -80,7 +93,7 @@ export function EmptyState({
             className="text-center max-w-xs leading-relaxed"
             style={{
               fontSize: 'var(--admin-text-xs)',
-              color: 'var(--admin-text-muted)',
+              color: isLight ? '#64748b' : '#94a3b8',
             }}
           >
             {description}

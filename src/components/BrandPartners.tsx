@@ -1,49 +1,51 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrandLogoCard } from './BrandLogoCard';
-import { useSettings } from '@/context/SettingsContext';
 
-interface BrandPartnersProps {
-  brands?: { name: string; domain: string; logoUrl?: string }[];
+interface BrandData {
+  name: string;
+  domain: string;
+  logo_url?: string | null;
+  card_link?: string | null;
 }
 
-type Brand = { name: string; domain: string; logoUrl?: string };
+interface BrandPartnersProps {
+  // Optional override list (e.g. from SSR props) – if omitted, fetched from /api/brands
+  brands?: BrandData[];
+}
 
-export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands }) => {
-  const { settings } = useSettings();
-  
-  // Resolve brands from settings
-  const activeSection = settings.homepageSections?.sectionOrder?.find(s => s.type === 'brandPartners');
-  const customBrands = brands?.length ? brands : activeSection?.settings?.brands || [];
-  
-  // High quality default brands with pre-uploaded logos in database
-  const defaultBrands = [
-    { name: 'La Roche-Posay', domain: 'laroche-posay.com', logoUrl: '/uploads/1783623589633_jkjd_png.png' },
-    { name: 'Vichy', domain: 'vichyusa.com', logoUrl: '/uploads/1783623593877_uh_png.png' },
-    { name: 'CeraVe', domain: 'cerave.com', logoUrl: '/uploads/1783623598712_dfq_png.png' },
-    { name: 'Eucerin', domain: 'eucerin.com', logoUrl: '/uploads/1783623605965_Eucerin_logo_logotype_png.png' },
-    { name: 'Bioderma', domain: 'bioderma.com', logoUrl: '/uploads/1783623610675_thf_png.png' },
-    { name: 'SVR', domain: 'labo-svr.com', logoUrl: '/uploads/1783623616070_svr_png.png' },
-    { name: 'Cetaphil', domain: 'cetaphil.com', logoUrl: '/uploads/1783623621993_op_png.png' },
-    { name: 'Avène', domain: 'aveneusa.com', logoUrl: '/uploads/1783623626820_Avene_Logo_jpg.jpg' },
-    { name: 'Mixa', domain: 'mixa.fr', logoUrl: '/uploads/1783623633547_logo_mixa_jpg.jpg' },
-    { name: "L'Oréal Paris", domain: 'loreal-paris.com', logoUrl: '/uploads/1783623638829_ikl_png.png' },
-    { name: 'Garnier', domain: 'garnier.com', logoUrl: '/uploads/1783623642984_kl_l_png.png' }
-  ];
+const FALLBACK_BRANDS: BrandData[] = [
+  { name: 'La Roche-Posay', domain: 'laroche-posay.com', logo_url: '/uploads/1783623589633_jkjd_png.png' },
+  { name: 'Vichy', domain: 'vichyusa.com', logo_url: '/uploads/1783623593877_uh_png.png' },
+  { name: 'CeraVe', domain: 'cerave.com', logo_url: '/uploads/1783623598712_dfq_png.png' },
+  { name: 'Eucerin', domain: 'eucerin.com', logo_url: '/uploads/1783623605965_Eucerin_logo_logotype_png.png' },
+  { name: 'Bioderma', domain: 'bioderma.com', logo_url: '/uploads/1783623610675_thf_png.png' },
+  { name: 'SVR', domain: 'labo-svr.com', logo_url: '/uploads/1783623616070_svr_png.png' },
+  { name: 'Cetaphil', domain: 'cetaphil.com', logo_url: '/uploads/1783623621993_op_png.png' },
+  { name: 'Avène', domain: 'aveneusa.com', logo_url: '/uploads/1783623626820_Avene_Logo_jpg.jpg' },
+  { name: 'Mixa', domain: 'mixa.fr', logo_url: '/uploads/1783623633547_logo_mixa_jpg.jpg' },
+  { name: "L'Oréal Paris", domain: 'loreal-paris.com', logo_url: '/uploads/1783623638829_ikl_png.png' },
+  { name: 'Garnier', domain: 'garnier.com', logo_url: '/uploads/1783623642984_kl_l_png.png' },
+];
 
-  // Merge custom brands and default brands, avoiding duplicates by name (case-insensitive)
-  const mergedBrandsMap = new Map();
-  defaultBrands.forEach(b => mergedBrandsMap.set(b.name.toLowerCase(), b));
-  customBrands.forEach((b: any) => {
-    mergedBrandsMap.set(b.name.toLowerCase(), b);
-  });
+export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands: propBrands }) => {
+  const [brands, setBrands] = useState<BrandData[]>(propBrands ?? FALLBACK_BRANDS);
 
-  const allBrands = Array.from(mergedBrandsMap.values()) as Brand[];
-  // A partner belongs to one marquee line only. This keeps the three lines
-  // genuinely different instead of repeating the same brands on every line.
-  const brandsPerRow = Math.ceil(allBrands.length / 3);
+  useEffect(() => {
+    if (propBrands && propBrands.length > 0) return; // already supplied by caller
+    fetch('/api/brands')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.brands?.length) setBrands(data.brands);
+      })
+      .catch(() => {}); // keep fallback on error
+  }, [propBrands]);
+
+  // Split into 3 marquee rows
+  const brandsPerRow = Math.ceil(brands.length / 3);
   const brandRows = Array.from({ length: 3 }, (_, rowIndex) =>
-    allBrands.slice(rowIndex * brandsPerRow, (rowIndex + 1) * brandsPerRow)
+    brands.slice(rowIndex * brandsPerRow, (rowIndex + 1) * brandsPerRow)
   ).filter((row) => row.length > 0);
+
 
   return (
     <section 

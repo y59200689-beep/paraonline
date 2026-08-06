@@ -504,10 +504,26 @@
   background-color: rgba(15, 23, 42, 0.4) !important;
 }
 .admin-light .bg-slate-900:not(button),
+.admin-light .bg-slate-900\/10:not(button),
+.admin-light .bg-slate-900\/20:not(button),
 .admin-light .bg-slate-900\/30:not(button),
 .admin-light .bg-slate-900\/40:not(button),
+.admin-light .bg-slate-900\/50:not(button),
 .admin-light .bg-slate-900\/60:not(button),
-.admin-light .bg-slate-950:not(button) {
+.admin-light .bg-slate-900\/80:not(button),
+.admin-light .bg-slate-950:not(button),
+.admin-light .bg-slate-950\/30:not(button),
+.admin-light .bg-slate-950\/40:not(button),
+.admin-light .bg-slate-950\/60:not(button),
+.admin-light .bg-slate-800:not(button),
+.admin-light .bg-slate-800\/30:not(button),
+.admin-light .bg-slate-800\/40:not(button),
+.admin-light .bg-slate-800\/50:not(button),
+.admin-light .bg-slate-800\/60:not(button),
+.admin-light .bg-white\/40:not(button),
+.admin-light .bg-white\/50:not(button),
+.admin-light .bg-white\/60:not(button),
+.admin-light .bg-white\/80:not(button) {
   background-color: #ffffff !important;
   border-color: #e2e8f0 !important;
   color: #0f172a !important;

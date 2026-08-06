@@ -8,7 +8,9 @@ interface BrandLogoCardProps {
   brand: {
     name: string;
     domain: string;
-    logoUrl?: string;
+    logoUrl?: string | null;
+    logo_url?: string | null;
+    card_link?: string | null;
   };
   decorative?: boolean;
 }
@@ -16,10 +18,12 @@ interface BrandLogoCardProps {
 export const BrandLogoCard: React.FC<BrandLogoCardProps> = ({ brand, decorative = false }) => {
   const [imgError, setImgError] = useState(false);
   const brandSlug = slugify(brand.name);
+  const logo = brand.logo_url || brand.logoUrl;
+  const href = brand.card_link || `/brand/${brandSlug}`;
 
   return (
     <Link
-      href={`/brand/${brandSlug}`}
+      href={href}
       aria-hidden={decorative || undefined}
       tabIndex={decorative ? -1 : undefined}
       className="w-full block"
@@ -34,7 +38,7 @@ export const BrandLogoCard: React.FC<BrandLogoCardProps> = ({ brand, decorative 
           </span>
         ) : (
           <img
-            src={brand.logoUrl || `https://logos.hunter.io/${brand.domain}`}
+            src={logo || `https://logos.hunter.io/${brand.domain}`}
             alt={brand.name}
             className="w-full h-full object-contain filter grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300 p-1.5 sm:p-2"
             loading="lazy"

@@ -232,12 +232,20 @@ export default function AdminAdvicePage() {
     products, 
     currentUser, 
     adminTheme,
+    loadAdviceArticles,
     handleCreateAdviceArticle,
     handleUpdateAdviceArticle,
     handleDeleteAdviceArticle
   } = useAdmin();
 
+  const isDark = adminTheme === 'dark';
   const isOwner = currentUser ? canManageAdvice(currentUser.role) : false;
+
+  React.useEffect(() => {
+    if (loadAdviceArticles) {
+      loadAdviceArticles();
+    }
+  }, []);
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -407,37 +415,64 @@ export default function AdminAdvicePage() {
     <div className="space-y-6 admin-tab-enter">
       
       {/* 1. Metrics section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
         {[
-          { label: "Total Articles", value: metrics.total, desc: "Articles rédigés", border: "border-slate-200/60 dark:border-slate-800" },
-          { label: "Publiés", value: metrics.published, desc: "Visibles sur le site", border: "border-emerald-200/50 dark:border-emerald-950/30", text: "text-emerald-500" },
-          { label: "Brouillons", value: metrics.drafts, desc: "En cours de rédaction", border: "border-amber-200/50 dark:border-amber-950/30", text: "text-amber-500" }
+          { label: "Total Articles", value: metrics.total, desc: "Articles rédigés", text: isDark ? '#f1f5f9' : '#0f172a' },
+          { label: "Publiés", value: metrics.published, desc: "Visibles sur le site", text: isDark ? '#34d399' : '#059669' },
+          { label: "Brouillons", value: metrics.drafts, desc: "En cours de rédaction", text: isDark ? '#fbbf24' : '#d97706' }
         ].map((m, idx) => (
           <div 
             key={idx} 
-            className={`p-6 rounded-2xl border bg-white/60 dark:bg-slate-900/40 backdrop-blur-md shadow-sm flex flex-col justify-between ${m.border}`}
+            style={{
+              padding: '20px',
+              borderRadius: '16px',
+              border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.07)',
+              background: isDark ? 'rgba(255,255,255,0.01)' : '#ffffff',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+            }}
           >
             <div>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">{m.label}</span>
-              <span className={`text-3xl font-black mt-2 block ${m.text || 'text-slate-800 dark:text-slate-100'}`}>{m.value}</span>
+              <span style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: isDark ? '#475569' : '#94a3b8', display: 'block' }}>{m.label}</span>
+              <span style={{ fontSize: '28px', fontWeight: 900, marginTop: '8px', display: 'block', color: m.text }}>{m.value}</span>
             </div>
-            <span className="text-xs text-slate-400 font-light mt-3 block">{m.desc}</span>
+            <span style={{ fontSize: '12px', color: isDark ? '#475569' : '#94a3b8', marginTop: '12px', display: 'block' }}>{m.desc}</span>
           </div>
         ))}
       </div>
 
       {/* 2. Controls toolbar */}
-      <div className="p-4 rounded-2xl border border-slate-200/60 dark:border-slate-900/60 bg-white/40 dark:bg-slate-950/40 backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+      <div style={{
+        padding: '16px',
+        borderRadius: '16px',
+        border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.07)',
+        background: isDark ? 'rgba(255,255,255,0.01)' : '#ffffff',
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '12px',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', flex: 1 }}>
           {/* Search box */}
-          <div className="relative w-full sm:w-72">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+          <div style={{ position: 'relative', width: '260px' }}>
+            <Search className="w-3.5 h-3.5" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: isDark ? '#475569' : '#94a3b8' }} />
             <input
               type="text"
               placeholder="Rechercher par titre ou slug..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 focus:border-emerald-500/60 text-slate-700 dark:text-slate-200 rounded-xl outline-none transition"
+              style={{
+                width: '100%',
+                padding: '7px 10px 7px 30px',
+                fontSize: '12px',
+                borderRadius: '10px',
+                border: isDark ? '1px solid rgba(255,255,255,0.09)' : '1px solid rgba(0,0,0,0.1)',
+                background: isDark ? 'rgba(255,255,255,0.03)' : '#f8fafc',
+                color: isDark ? '#e2e8f0' : '#0f172a',
+                outline: 'none',
+              }}
             />
           </div>
 
@@ -445,7 +480,16 @@ export default function AdminAdvicePage() {
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-500 dark:text-slate-300 rounded-xl outline-none transition cursor-pointer"
+            style={{
+              padding: '7px 12px',
+              fontSize: '12px',
+              borderRadius: '10px',
+              border: isDark ? '1px solid rgba(255,255,255,0.09)' : '1px solid rgba(0,0,0,0.1)',
+              background: isDark ? 'rgba(255,255,255,0.03)' : '#f8fafc',
+              color: isDark ? '#e2e8f0' : '#0f172a',
+              outline: 'none',
+              cursor: 'pointer',
+            }}
           >
             <option value="all">Toutes Catégories</option>
             <option value="skincare">Soin de peau</option>
@@ -457,7 +501,16 @@ export default function AdminAdvicePage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-500 dark:text-slate-300 rounded-xl outline-none transition cursor-pointer"
+            style={{
+              padding: '7px 12px',
+              fontSize: '12px',
+              borderRadius: '10px',
+              border: isDark ? '1px solid rgba(255,255,255,0.09)' : '1px solid rgba(0,0,0,0.1)',
+              background: isDark ? 'rgba(255,255,255,0.03)' : '#f8fafc',
+              color: isDark ? '#e2e8f0' : '#0f172a',
+              outline: 'none',
+              cursor: 'pointer',
+            }}
           >
             <option value="all">Tous les Statuts</option>
             <option value="published">Publié</option>
@@ -469,38 +522,55 @@ export default function AdminAdvicePage() {
         {isOwner ? (
           <button
             onClick={handleOpenCreate}
-            className="po-ui-button po-ui-button--primary po-ui-button--md w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-emerald-500/10 transition active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer text-xs"
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '8px 16px', fontSize: '12px', fontWeight: 700,
+              borderRadius: '10px', border: 'none', cursor: 'pointer',
+              background: 'linear-gradient(135deg, #10b981, #0d9488)',
+              color: '#fff', flexShrink: 0,
+            }}
           >
-            <Plus className="w-4 h-4 text-slate-950 stroke-[2.5]" />
-            <span>Rédiger un Article</span>
+            <Plus size={14} /> Rédiger un Article
           </button>
         ) : (
-          <div className="text-xs font-medium text-amber-500 flex items-center gap-1.5 px-3 py-2 border border-amber-500/20 bg-amber-500/5 rounded-xl">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>Mode Lecture Seule</span>
+          <div style={{ fontSize: '11px', fontWeight: 600, color: '#f59e0b', padding: '6px 12px', borderRadius: '10px', border: '1px solid rgba(245,158,11,0.2)', background: 'rgba(245,158,11,0.05)' }}>
+            Mode Lecture Seule
           </div>
         )}
       </div>
 
       {/* 3. Grid / Table of articles */}
-      <div className="border border-slate-200/60 dark:border-slate-900 rounded-2xl overflow-hidden bg-white/40 dark:bg-slate-950/40 backdrop-blur-md">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+      <div style={{
+        borderRadius: '16px',
+        border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.07)',
+        background: isDark ? 'rgba(255,255,255,0.01)' : '#ffffff',
+        overflow: 'hidden',
+      }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
             <thead>
-              <tr className="border-b border-slate-200/60 dark:border-slate-900 text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider bg-slate-50/50 dark:bg-slate-900/30">
-                <th className="p-4 font-semibold">Visuel</th>
-                <th className="p-4 font-semibold">Article / Titre</th>
-                <th className="p-4 font-semibold">Catégorie</th>
-                <th className="p-4 font-semibold">Temps de lecture</th>
-                <th className="p-4 font-semibold">Produits Liés</th>
-                <th className="p-4 font-semibold">Statut</th>
-                <th className="p-4 font-semibold text-right">Actions</th>
+              <tr style={{
+                borderBottom: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.07)',
+                background: isDark ? 'rgba(255,255,255,0.02)' : '#f8fafc',
+                color: isDark ? '#475569' : '#94a3b8',
+                fontWeight: 800,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                fontSize: '10px',
+              }}>
+                <th style={{ padding: '12px 16px' }}>Visuel</th>
+                <th style={{ padding: '12px 16px' }}>Article / Titre</th>
+                <th style={{ padding: '12px 16px' }}>Catégorie</th>
+                <th style={{ padding: '12px 16px' }}>Temps de lecture</th>
+                <th style={{ padding: '12px 16px' }}>Produits Liés</th>
+                <th style={{ padding: '12px 16px' }}>Statut</th>
+                <th style={{ padding: '12px 16px', textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-900">
+            <tbody>
               {filteredArticles.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-slate-400 dark:text-slate-600 font-light text-xs">
+                  <td colSpan={7} style={{ padding: '32px', textAlign: 'center', color: isDark ? '#475569' : '#94a3b8', fontSize: '12px' }}>
                     Aucun article trouvé.
                   </td>
                 </tr>
@@ -508,16 +578,19 @@ export default function AdminAdvicePage() {
                 filteredArticles.map(art => (
                   <tr 
                     key={art.id} 
-                    className="hover:bg-slate-50/50 dark:hover:bg-slate-900/10 transition duration-150 text-slate-700 dark:text-slate-300"
+                    style={{
+                      borderBottom: isDark ? '1px solid rgba(255,255,255,0.04)' : '1px solid rgba(0,0,0,0.05)',
+                      color: isDark ? '#e2e8f0' : '#0f172a',
+                    }}
                   >
                     {/* Cover image thumbnail */}
-                    <td className="p-4">
-                      <div className="w-14 h-10 rounded-lg overflow-hidden border border-slate-200/60 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 shrink-0">
+                    <td style={{ padding: '12px 16px' }}>
+                      <div style={{ width: '56px', height: '40px', borderRadius: '8px', overflow: 'hidden', border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.09)', background: isDark ? '#0f172a' : '#f1f5f9', flexShrink: 0 }}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img 
                           src={art.image} 
                           alt="Cover" 
-                          className="w-full h-full object-cover"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           onError={(e) => {
                             (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=200&auto=format&fit=crop';
                           }}
@@ -526,70 +599,70 @@ export default function AdminAdvicePage() {
                     </td>
 
                     {/* Excerpt / Titles */}
-                    <td className="p-4 max-w-xs">
+                    <td style={{ padding: '12px 16px', maxWidth: '240px' }}>
                       <div>
-                        <span className="font-bold block text-slate-800 dark:text-slate-100 truncate leading-normal" title={art.title_fr}>
+                        <span style={{ fontWeight: 700, display: 'block', color: isDark ? '#e2e8f0' : '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={art.title_fr}>
                           {art.title_fr}
                         </span>
-                        <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 block truncate mt-0.5" dir="ltr">
+                        <span style={{ fontSize: '10px', fontFamily: 'monospace', color: isDark ? '#475569' : '#94a3b8', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '2px' }} dir="ltr">
                           /{art.slug}
                         </span>
                       </div>
                     </td>
 
                     {/* Category tag */}
-                    <td className="p-4 font-semibold capitalize">
-                      <span className="inline-flex items-center gap-1">
-                        <Tag className="w-3.5 h-3.5 text-slate-400" />
+                    <td style={{ padding: '12px 16px', fontWeight: 600, textTransform: 'capitalize' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Tag className="w-3.5 h-3.5" style={{ color: isDark ? '#475569' : '#94a3b8' }} />
                         <span>{art.category === 'kbeauty' ? 'K-Beauty' : art.category === 'skincare' ? 'Soin de Peau' : art.category}</span>
                       </span>
                     </td>
 
                     {/* Read time */}
-                    <td className="p-4 text-slate-500 font-medium">
-                      <span className="inline-flex items-center gap-1.5">
-                        <Clock className="w-3.5 h-3.5 text-slate-400" />
+                    <td style={{ padding: '12px 16px', fontWeight: 500, color: isDark ? '#64748b' : '#64748b' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Clock className="w-3.5 h-3.5" style={{ color: isDark ? '#475569' : '#94a3b8' }} />
                         <span>{art.read_time} min</span>
                       </span>
                     </td>
 
                     {/* Recommended products count */}
-                    <td className="p-4 font-semibold text-slate-500">
-                      <span className="px-2.5 py-0.5 bg-slate-100 dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 rounded-full">
+                    <td style={{ padding: '12px 16px', fontWeight: 600, color: isDark ? '#64748b' : '#64748b' }}>
+                      <span style={{ padding: '2px 10px', fontSize: '11px', borderRadius: '999px', background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)', border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)' }}>
                         {art.recommended_products?.length || 0} produits
                       </span>
                     </td>
 
                     {/* Status pill */}
-                    <td className="p-4">
+                    <td style={{ padding: '12px 16px' }}>
                       {art.status === 'published' ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/30">
-                          <Check className="w-3 h-3 stroke-[2.5]" /> Publié
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '2px 9px', borderRadius: '999px', fontSize: '10px', fontWeight: 800, background: isDark ? 'rgba(16,185,129,0.12)' : 'rgba(16,185,129,0.08)', color: isDark ? '#34d399' : '#047857', border: isDark ? '1px solid rgba(16,185,129,0.25)' : '1px solid rgba(16,185,129,0.25)' }}>
+                          <Check size={12} /> Publié
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200/50 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800">
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '2px 9px', borderRadius: '999px', fontSize: '10px', fontWeight: 800, background: isDark ? 'rgba(245,158,11,0.12)' : 'rgba(245,158,11,0.08)', color: isDark ? '#fbbf24' : '#b45309', border: isDark ? '1px solid rgba(245,158,11,0.25)' : '1px solid rgba(245,158,11,0.25)' }}>
                           Brouillon
                         </span>
                       )}
                     </td>
 
                     {/* Actions buttons */}
-                    <td className="p-4 text-right">
-                      <div className="flex items-center justify-end gap-2.5">
+                    <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
                         <button
                           onClick={() => handleOpenEdit(art)}
                           title="Modifier"
-                          className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-emerald-500 hover:bg-slate-100 dark:hover:bg-slate-900 transition cursor-pointer"
+                          style={{ padding: '6px', borderRadius: '8px', border: isDark ? '1px solid rgba(255,255,255,0.09)' : '1px solid rgba(0,0,0,0.1)', background: 'transparent', color: isDark ? '#94a3b8' : '#64748b', cursor: 'pointer' }}
                         >
-                          <Edit2 className="w-3.5 h-3.5" />
+                          <Edit2 size={13} />
                         </button>
                         {isOwner && (
                           <button
                             onClick={() => handleDelete(art.id, art.title_fr)}
                             title="Supprimer"
-                            className="p-1.5 rounded-lg border border-transparent text-slate-400 hover:text-rose-500 hover:bg-rose-50/50 dark:hover:bg-rose-950/20 transition cursor-pointer"
+                            style={{ padding: '6px', borderRadius: '8px', border: 'none', background: 'transparent', color: '#ef4444', cursor: 'pointer' }}
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 size={13} />
                           </button>
                         )}
                       </div>

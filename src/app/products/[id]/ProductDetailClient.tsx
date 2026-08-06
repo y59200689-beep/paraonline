@@ -833,9 +833,31 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 >
                   <Minus className="w-4 h-4" />
                 </button>
-                <span className="px-4 text-sm font-black text-slate-800 dark:text-slate-100 min-w-[36px] text-center">
-                  {product.stock !== undefined && product.stock <= 0 ? 0 : quantity}
-                </span>
+                <input
+                  type="number"
+                  min={1}
+                  max={product.stock !== undefined ? product.stock : undefined}
+                  value={product.stock !== undefined && product.stock <= 0 ? 0 : quantity}
+                  disabled={product.stock !== undefined && product.stock <= 0}
+                  onChange={e => {
+                    const val = parseInt(e.target.value, 10);
+                    if (!isNaN(val) && val >= 1) {
+                      if (product.stock !== undefined) {
+                        setQuantity(Math.min(val, product.stock));
+                      } else {
+                        setQuantity(val);
+                      }
+                    } else if (e.target.value === '') {
+                      setQuantity(1);
+                    }
+                  }}
+                  onBlur={e => {
+                    const val = parseInt(e.target.value, 10);
+                    if (isNaN(val) || val < 1) setQuantity(1);
+                    else if (product.stock !== undefined && val > product.stock) setQuantity(product.stock);
+                  }}
+                  className="w-12 text-sm font-black text-slate-800 dark:text-slate-100 text-center bg-transparent border-0 outline-none appearance-none [&::-webkit-inner-spin-button]:hidden [&::-webkit-outer-spin-button]:hidden focus:ring-0"
+                />
                 <button 
                   onClick={() => setQuantity(p => p + 1)}
                   disabled={product.stock !== undefined && (product.stock <= 0 || quantity >= product.stock)}

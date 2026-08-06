@@ -2,11 +2,13 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+import { AdminRole } from '@/lib/permissions';
+
 export interface AdminUser {
   id: string;
   name: string;
   username: string;
-  role: 'owner' | 'logistician' | 'support';
+  role: AdminRole;
 }
 
 export interface AdminAuthContextProps {

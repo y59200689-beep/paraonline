@@ -591,9 +591,28 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen,
               >
                 <Minus className="w-3.5 h-3.5" />
               </button>
-              <span className="px-3.5 text-xs font-black text-primary-dark min-w-[32px] text-center">
-                {liveStock <= 0 ? 0 : quantity}
-              </span>
+              <input
+                type="number"
+                min={1}
+                max={liveStock > 0 ? liveStock : undefined}
+                value={liveStock <= 0 ? 0 : quantity}
+                disabled={liveStock <= 0}
+                onChange={e => {
+                  const val = parseInt(e.target.value, 10);
+                  if (!isNaN(val) && val >= 1) {
+                    setQuantity(Math.min(val, liveStock > 0 ? liveStock : val));
+                  } else if (e.target.value === '') {
+                    setQuantity(1);
+                  }
+                }}
+                onBlur={e => {
+                  const val = parseInt(e.target.value, 10);
+                  if (isNaN(val) || val < 1) setQuantity(1);
+                  else if (liveStock > 0 && val > liveStock) setQuantity(liveStock);
+                }}
+                aria-label={language === 'FR' ? 'Quantité' : 'الكمية'}
+                className="w-10 text-xs font-black text-primary-dark text-center bg-transparent border-0 outline-none appearance-none [&::-webkit-inner-spin-button]:hidden [&::-webkit-outer-spin-button]:hidden focus:ring-0"
+              />
               <button 
                 onClick={() => setQuantity(p => p + 1)} 
                 disabled={liveStock <= 0 || quantity >= liveStock}

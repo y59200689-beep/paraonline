@@ -67,28 +67,43 @@ function AnalyticsKpiCard({ label, value, suffix, icon: Icon, pctChange, inverse
     return () => clearInterval(timer);
   }, [value]);
 
+  const isDark = theme === 'dark';
   const isPositive = pctChange !== null && pctChange > 0;
   const isNegative = pctChange !== null && pctChange < 0;
-  
-  let pctBadge = 'text-slate-500 bg-slate-100 dark:bg-slate-800/80 dark:text-slate-400 border-slate-200 dark:border-slate-700';
-  if (pctChange !== null && pctChange !== 0) {
-    if (isPositive) {
-      pctBadge = inverse 
-        ? 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800'
-        : 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800';
-    } else if (isNegative) {
-      pctBadge = inverse
-        ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800'
-        : 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800';
+
+  const getBadgeStyle = (): React.CSSProperties => {
+    if (pctChange !== null && pctChange !== 0) {
+      const isBadOutcome = inverse ? isPositive : isNegative || (!isPositive && pctChange < 0);
+      if (isBadOutcome) {
+        return {
+          background: isDark ? 'rgba(244,63,94,0.15)' : '#fef2f2',
+          color: isDark ? '#f87171' : '#dc2626',
+          border: isDark ? '1px solid rgba(244,63,94,0.3)' : '1px solid #fecaca',
+        };
+      }
+      return {
+        background: isDark ? 'rgba(16,185,129,0.15)' : '#ecfdf5',
+        color: isDark ? '#34d399' : '#059669',
+        border: isDark ? '1px solid rgba(16,185,129,0.3)' : '1px solid #a7f3d0',
+      };
     }
-  }
+    return {
+      background: isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9',
+      color: isDark ? '#94a3b8' : '#475569',
+      border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e2e8f0',
+    };
+  };
 
   return (
-    <div className={`relative overflow-hidden rounded-3xl border p-5 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group ${
-      theme === 'light'
-        ? 'bg-white border-slate-200/90 text-slate-800 shadow-sm shadow-slate-200/50'
-        : 'bg-slate-900/90 border-slate-800 text-slate-100 shadow-xl shadow-slate-950/50'
-    }`}>
+    <div 
+      className="relative overflow-hidden rounded-3xl p-5 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group"
+      style={{
+        background: isDark ? 'rgba(15, 23, 42, 0.9)' : '#ffffff',
+        border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0',
+        color: isDark ? '#f8fafc' : '#0f172a',
+        boxShadow: isDark ? 'none' : '0 1px 3px 0 rgba(0,0,0,0.05), 0 1px 2px -1px rgba(0,0,0,0.05)',
+      }}
+    >
       {/* Background Micro Glow Gradient */}
       <div className={`absolute -right-8 -top-8 w-32 h-32 rounded-full opacity-10 blur-2xl transition-opacity group-hover:opacity-25 ${
         color.includes('emerald') ? 'bg-emerald-500' :
@@ -98,36 +113,45 @@ function AnalyticsKpiCard({ label, value, suffix, icon: Icon, pctChange, inverse
       }`} />
 
       <div className="flex items-center justify-between gap-3 relative z-10">
-        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center border shrink-0 transition-transform duration-300 group-hover:scale-105 ${
-          theme === 'light'
-            ? 'bg-slate-50 border-slate-200/80 text-slate-700 shadow-xs'
-            : 'bg-slate-950 border-slate-800 text-slate-200'
-        }`}>
-          <Icon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+        <div 
+          className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105"
+          style={{
+            background: isDark ? '#020617' : '#f8fafc',
+            border: isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #e2e8f0',
+            color: isDark ? '#e2e8f0' : '#334155',
+          }}
+        >
+          <Icon className={`w-5 h-5 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`} />
         </div>
 
         {pctChange !== null && pctChange !== 0 ? (
-          <span className={`text-[11px] font-extrabold px-2.5 py-1 rounded-full border flex items-center gap-1 shrink-0 ${pctBadge}`}>
+          <span 
+            className="text-[11px] font-extrabold px-2.5 py-1 rounded-full flex items-center gap-1 shrink-0"
+            style={getBadgeStyle()}
+          >
             <span>{isPositive ? '↑' : '↓'}</span>
             <span>{Math.abs(pctChange)}%</span>
           </span>
         ) : (
-          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800/60 px-2.5 py-1 rounded-full border border-slate-200/60 dark:border-slate-800 shrink-0">
+          <span 
+            className="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0"
+            style={getBadgeStyle()}
+          >
             En direct
           </span>
         )}
       </div>
 
       <div className="mt-4 relative z-10">
-        <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 block truncate">
+        <span className="text-xs font-bold uppercase tracking-wider block truncate" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>
           {label}
         </span>
         <div className="flex items-baseline gap-1.5 mt-1">
-          <span className="text-2xl font-black font-mono tracking-tight">
+          <span className="text-2xl font-black font-mono tracking-tight" style={{ color: isDark ? '#f8fafc' : '#0f172a' }}>
             {animatedValue.toLocaleString('fr-FR')}
           </span>
           {suffix && (
-            <span className="text-xs font-extrabold text-slate-500 dark:text-slate-400">
+            <span className="text-xs font-extrabold" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>
               {suffix.trim()}
             </span>
           )}

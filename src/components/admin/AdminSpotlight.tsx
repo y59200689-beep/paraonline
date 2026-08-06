@@ -40,7 +40,7 @@ interface AdminSpotlightProps {
   setProductForm: (form: any) => void;
   setSpotlightTarget: (target: { type: 'order' | 'product'; id: string } | null) => void;
   handleOpenCrmCustomer: (phone: string, name: string, orders: any[], totalSpend: number) => void;
-  setLoyaltySubTab: (sub: 'members' | 'product_points' | 'bulk_points' | 'logs') => void;
+  setLoyaltySubTab: (sub: 'product_points' | 'bulk_points' | 'logs') => void;
 }
 
 export const AdminSpotlight: React.FC<AdminSpotlightProps> = ({

@@ -135,9 +135,25 @@ export const CartItemList: React.FC<CartItemListProps> = ({
                   >
                     <Minus className="w-2.5 h-2.5" />
                   </button>
-                  <span className="text-center text-[11px] font-bold text-slate-800 w-6">
-                    {item.quantity}
-                  </span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={stock !== undefined ? stock : undefined}
+                    value={item.quantity}
+                    onChange={e => {
+                      const val = parseInt(e.target.value, 10);
+                      if (!isNaN(val) && val >= 1) {
+                        updateQuantity(item.product.id, stock !== undefined ? Math.min(val, stock) : val);
+                      }
+                    }}
+                    onBlur={e => {
+                      const val = parseInt(e.target.value, 10);
+                      if (isNaN(val) || val < 1) updateQuantity(item.product.id, 1);
+                      else if (stock !== undefined && val > stock) updateQuantity(item.product.id, stock);
+                    }}
+                    aria-label={isFR ? 'Quantité' : 'الكمية'}
+                    className="text-center text-[11px] font-bold text-slate-800 w-7 bg-transparent border-0 outline-none appearance-none [&::-webkit-inner-spin-button]:hidden [&::-webkit-outer-spin-button]:hidden focus:ring-0"
+                  />
                   <button
                     onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
                     disabled={item.quantity >= (stock !== undefined ? stock : 100)}

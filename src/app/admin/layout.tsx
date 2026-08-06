@@ -193,7 +193,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
                 onClick={() => {
                   if (activeTab === 'crm') setCrmSubTab('clients');
                   if (activeTab === 'orders') setOrdersSubTab('list');
-                  if (activeTab === 'loyalty') setLoyaltySubTab('members');
+                  if (activeTab === 'loyalty') setLoyaltySubTab('product_points');
                   if (activeTab === 'settings') setActiveSettingsSubTab('general');
                 }}
                 className="font-bold uppercase tracking-widest transition cursor-pointer border-0 bg-transparent outline-none p-0 text-emerald-500 hover:text-emerald-400"

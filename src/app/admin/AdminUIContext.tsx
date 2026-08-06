@@ -21,8 +21,8 @@ export interface AdminUIContextProps {
   setOrdersSubTab: React.Dispatch<React.SetStateAction<'list' | 'abandoned' | 'shipping' | 'reconciliation'>>;
   crmSubTab: 'clients' | 'analytics' | 'diagnostics' | 'leads' | 'rules' | 'rfm' | 'reminders' | 'automations';
   setCrmSubTab: React.Dispatch<React.SetStateAction<'clients' | 'analytics' | 'diagnostics' | 'leads' | 'rules' | 'rfm' | 'reminders' | 'automations'>>;
-  loyaltySubTab: 'members' | 'product_points' | 'bulk_points' | 'logs';
-  setLoyaltySubTab: React.Dispatch<React.SetStateAction<'members' | 'product_points' | 'bulk_points' | 'logs'>>;
+  loyaltySubTab: 'product_points' | 'bulk_points' | 'logs';
+  setLoyaltySubTab: React.Dispatch<React.SetStateAction<'product_points' | 'bulk_points' | 'logs'>>;
   activeSettingsSubTab: 'general' | 'banners' | 'coupons' | 'shipping' | 'loyalty' | 'faq' | 'logs' | 'notifications' | 'operators' | 'payment' | 'security' | 'gifts' | 'delivery' | 'homepage';
   setActiveSettingsSubTab: React.Dispatch<React.SetStateAction<'general' | 'banners' | 'coupons' | 'shipping' | 'loyalty' | 'faq' | 'logs' | 'notifications' | 'operators' | 'payment' | 'security' | 'gifts' | 'delivery' | 'homepage'>>;
 
@@ -89,7 +89,7 @@ export const AdminUIProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const [ordersSubTab, setOrdersSubTab] = useState<'list' | 'abandoned' | 'shipping' | 'reconciliation'>('list');
   const [crmSubTab, setCrmSubTab] = useState<'clients' | 'analytics' | 'diagnostics' | 'leads' | 'rules' | 'rfm' | 'reminders' | 'automations'>('clients');
-  const [loyaltySubTab, setLoyaltySubTab] = useState<'members' | 'product_points' | 'bulk_points' | 'logs'>('members');
+  const [loyaltySubTab, setLoyaltySubTab] = useState<'product_points' | 'bulk_points' | 'logs'>('product_points');
   const [activeSettingsSubTab, setActiveSettingsSubTab] = useState<any>('general');
 
   // Restore sub-tab states from localStorage on mount
@@ -102,7 +102,10 @@ export const AdminUIProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (savedCrmTab) setCrmSubTab(savedCrmTab as any);
 
       const savedLoyaltyTab = localStorage.getItem('admin_loyalty_subtab');
-      if (savedLoyaltyTab) setLoyaltySubTab(savedLoyaltyTab as any);
+      // Guard: 'members' tab no longer exists — reset to product_points
+      const validLoyaltyTab = savedLoyaltyTab && savedLoyaltyTab !== 'members' ? savedLoyaltyTab : 'product_points';
+      setLoyaltySubTab(validLoyaltyTab as any);
+      if (savedLoyaltyTab === 'members') localStorage.setItem('admin_loyalty_subtab', 'product_points');
 
       const savedSettingsTab = localStorage.getItem('admin_settings_subtab');
       if (savedSettingsTab) setActiveSettingsSubTab(savedSettingsTab as any);

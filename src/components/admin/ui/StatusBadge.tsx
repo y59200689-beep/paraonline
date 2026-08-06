@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useAdmin } from '@/context/AdminContext';
 
 // Known status values auto-mapped to colors
 const STATUS_MAP: Record<string, { light: string; dark: string; dot: string }> = {
@@ -26,13 +27,25 @@ const STATUS_MAP: Record<string, { light: string; dark: string; dot: string }> =
   success:     { light: 'bg-emerald-50 text-emerald-700 border-emerald-200/60', dark: 'bg-emerald-950/30 text-emerald-400 border-emerald-800/30', dot: '#10b981' },
   warning:     { light: 'bg-amber-50 text-amber-700 border-amber-200/60',    dark: 'bg-amber-950/30 text-amber-400 border-amber-800/30',   dot: '#f59e0b' },
   info:        { light: 'bg-blue-50 text-blue-700 border-blue-200/60',       dark: 'bg-blue-950/30 text-blue-400 border-blue-800/30',     dot: '#3b82f6' },
+  // CMS publishing states
+  draft:       { light: 'bg-slate-100 text-slate-700 border-slate-300/80',   dark: 'bg-slate-800/40 text-slate-400 border-slate-700/30',   dot: '#64748b' },
+  scheduled:   { light: 'bg-amber-50 text-amber-800 border-amber-300/80',    dark: 'bg-amber-950/30 text-amber-400 border-amber-800/30',   dot: '#f59e0b' },
+  published:   { light: 'bg-emerald-100/80 text-emerald-800 border-emerald-300/80', dark: 'bg-emerald-950/30 text-emerald-400 border-emerald-800/30', dot: '#10b981' },
+  archived:    { light: 'bg-violet-100/80 text-violet-800 border-violet-300/80', dark: 'bg-violet-950/30 text-violet-400 border-violet-800/30', dot: '#8b5cf6' },
 };
 
-const FALLBACK = { light: 'bg-slate-100 text-slate-600 border-slate-200/60', dark: 'bg-slate-800/40 text-slate-400 border-slate-700/30', dot: '#94a3b8' };
+const FALLBACK = { light: 'bg-slate-100 text-slate-700 border-slate-300/80', dark: 'bg-slate-800/40 text-slate-400 border-slate-700/30', dot: '#94a3b8' };
+
+const CMS_LABELS: Record<string, string> = {
+  draft: 'Brouillon',
+  scheduled: 'Planifié',
+  published: 'Publié',
+  archived: 'Archivé',
+};
 
 interface StatusBadgeProps {
   status: string;
-  label?: string;          // Override display text (default: capitalize status)
+  label?: string;          // Override display text
   size?: 'xs' | 'sm';
   dot?: boolean;           // Show leading dot
   theme?: 'light' | 'dark';
@@ -44,14 +57,23 @@ export function StatusBadge({
   label,
   size = 'sm',
   dot = true,
-  theme = 'dark',
+  theme,
   className = '',
 }: StatusBadgeProps) {
+  let isLight = false;
+
+  try {
+    const { adminTheme } = useAdmin();
+    isLight = theme ? theme === 'light' : adminTheme === 'light';
+  } catch {
+    isLight = theme === 'light';
+  }
+
   const key = status.toLowerCase().trim();
   const colors = STATUS_MAP[key] ?? FALLBACK;
-  const colorCls = theme === 'light' ? colors.light : colors.dark;
+  const colorCls = isLight ? colors.light : colors.dark;
 
-  const displayLabel = label ?? status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+  const displayLabel = label ?? CMS_LABELS[key] ?? (status.charAt(0).toUpperCase() + status.slice(1).toLowerCase());
 
   const sizeStyles = {
     xs: { fontSize: 'var(--admin-text-2xs)', padding: '1px 6px', dotSize: '5px' },
@@ -72,7 +94,7 @@ export function StatusBadge({
             width: s.dotSize, 
             height: s.dotSize, 
             background: colors.dot,
-            boxShadow: theme === 'dark' ? `0 0 6px ${colors.dot}` : undefined
+            boxShadow: !isLight ? `0 0 6px ${colors.dot}` : undefined
           }}
         />
       )}

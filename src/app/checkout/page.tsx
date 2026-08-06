@@ -394,9 +394,28 @@ function CheckoutPageContent() {
                       >
                         <Minus className="w-3 h-3" />
                       </button>
-                      <span className="w-6 text-center text-[11px] font-bold text-slate-800 font-mono">
-                        {item.quantity}
-                      </span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={item.product.stock !== undefined ? item.product.stock : undefined}
+                        value={item.quantity}
+                        onChange={e => {
+                          const val = parseInt(e.target.value, 10);
+                          if (!isNaN(val) && val >= 1) {
+                            updateQuantity(
+                              item.product.id,
+                              item.product.stock !== undefined ? Math.min(val, item.product.stock) : val
+                            );
+                          }
+                        }}
+                        onBlur={e => {
+                          const val = parseInt(e.target.value, 10);
+                          if (isNaN(val) || val < 1) updateQuantity(item.product.id, 1);
+                          else if (item.product.stock !== undefined && val > item.product.stock)
+                            updateQuantity(item.product.id, item.product.stock);
+                        }}
+                        className="w-6 text-center text-[11px] font-bold text-slate-800 font-mono bg-transparent border-0 outline-none appearance-none [&::-webkit-inner-spin-button]:hidden [&::-webkit-outer-spin-button]:hidden focus:ring-0"
+                      />
                       <button
                         onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
                         className="w-5 h-5 flex items-center justify-center text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"

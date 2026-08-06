@@ -132,7 +132,7 @@ export function verifySessionToken(token: string): any {
  * Extract, verify, and return user profile details from the session cookie.
  * This function automatically rotates the session token if more than half of its lifetime has elapsed.
  */
-export async function verifyAdminSession() {
+export async function verifyAdminSession(req?: any) {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('admin_session')?.value;
