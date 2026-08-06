@@ -43,6 +43,7 @@ import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 import { useAdminUI } from '@/app/admin/AdminUIContext';
 import { StatusBadge, EmptyState } from '@/components/admin/ui';
+import { getCanonicalCategory } from '@/lib/catalog-categories';
 import {
   ACTIVE_STRENGTH_OPTIONS,
   CONCERN_OPTIONS,
@@ -1844,16 +1845,16 @@ export default function CatalogTab({
   // Get unique categories and vendors for filtering select boxes
   const uniqueCategories = useMemo(() => {
     const cats = new Set<string>();
-    products.forEach(p => p.category && cats.add(p.category));
-    paginatedProducts.forEach(p => p.category && cats.add(p.category));
-    products.forEach(p => p.categories?.forEach(category => cats.add(category)));
-    paginatedProducts.forEach(p => p.categories?.forEach(category => cats.add(category)));
+    products.forEach(p => p.category && cats.add(getCanonicalCategory(p.category)));
+    paginatedProducts.forEach(p => p.category && cats.add(getCanonicalCategory(p.category)));
+    products.forEach(p => p.categories?.forEach(category => cats.add(getCanonicalCategory(category))));
+    paginatedProducts.forEach(p => p.categories?.forEach(category => cats.add(getCanonicalCategory(category))));
     return Array.from(cats);
   }, [products, paginatedProducts]);
 
   const categoryOptions = useMemo(() => Array.from(new Set([
     'visage', 'kbeauty', 'garnier', 'hadalabo', 'offers',
-    ...(settings.categories || []),
+    ...(settings.categories || []).map(getCanonicalCategory),
     ...uniqueCategories,
   ])).sort((a, b) => a.localeCompare(b)), [settings.categories, uniqueCategories]);
 
@@ -3430,7 +3431,7 @@ export default function CatalogTab({
                           <span className={`text-[10px] uppercase font-semibold tracking-wider ${
                             adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'
                           }`}>
-                            {(product.categories?.length ? product.categories : [product.category]).join(' · ')}
+                            {(product.categories?.length ? product.categories : [product.category]).map(getCanonicalCategory).join(' · ')}
                           </span>
                         </td>
 
@@ -3499,7 +3500,7 @@ export default function CatalogTab({
                       </div>
                     )}
                     <span className={`absolute top-3 right-3 px-2 py-0.5 rounded-full border text-[9px] uppercase font-bold shadow-sm ${adminTheme === 'light' ? 'bg-white/95 border-slate-200 text-slate-600' : 'bg-slate-950/80 border-slate-800 text-slate-400'}`}>
-                      {product.category}
+                      {getCanonicalCategory(product.category)}
                     </span>
                   </div>
                   

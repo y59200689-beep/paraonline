@@ -5,6 +5,7 @@ import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { PUBLIC_SETTINGS_CACHE_TAG } from '@/lib/get-public-settings';
 import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/catalog-cache';
 import { normalizeRecommendationMetadata } from '@/lib/product-recommendation-metadata';
+import { getCanonicalCategory } from '@/lib/catalog-categories';
 
 function normalizeImportedCategories(categories: unknown, primaryCategory: unknown): string[] {
   const rawValues = Array.isArray(categories)
@@ -12,10 +13,10 @@ function normalizeImportedCategories(categories: unknown, primaryCategory: unkno
     : typeof categories === 'string'
       ? categories.split(/[,;|]/)
       : [];
-  const primary = typeof primaryCategory === 'string' ? primaryCategory.trim().toLowerCase() : '';
+  const primary = typeof primaryCategory === 'string' ? getCanonicalCategory(primaryCategory) : '';
   const normalized = rawValues
     .filter((category): category is string => typeof category === 'string')
-    .map(category => category.trim().toLowerCase())
+    .map(category => getCanonicalCategory(category))
     .filter(Boolean);
 
   const result = Array.from(new Set([primary, ...normalized].filter(Boolean)));
