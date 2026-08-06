@@ -155,9 +155,20 @@ function SearchableDropdown({
   }, []);
 
   const filteredOptions = useMemo(() => {
-    return options.filter(opt => 
-      opt.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    if (!searchQuery.trim()) return options;
+    const q = searchQuery.toLowerCase().trim();
+    const canonQ = getCanonicalCategory(q);
+
+    return options.filter(opt => {
+      const optLower = opt.toLowerCase();
+      const optCanon = getCanonicalCategory(opt);
+      return (
+        optLower.includes(q) ||
+        optCanon.includes(q) ||
+        (canonQ !== q && optCanon.includes(canonQ)) ||
+        (canonQ !== q && optLower.includes(canonQ))
+      );
+    });
   }, [options, searchQuery]);
 
   const selectedDisplay = useMemo(() => {

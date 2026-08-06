@@ -11,41 +11,88 @@ const normalize = (value: string) => value
 export const CANONICAL_CATEGORY_MAP: Record<string, string> = {
   ortopedique: 'orthopedique',
   orthopedique: 'orthopedique',
+  orthepedique: 'orthopedique',
   ortopedie: 'orthopedique',
   orthopedie: 'orthopedique',
+  orthopedia: 'orthopedique',
+  ortopedia: 'orthopedique',
+
   dental: 'dentaire',
   dentaire: 'dentaire',
+  dentisterie: 'dentaire',
+  dents: 'dentaire',
+  dent: 'dentaire',
+
   corp: 'corps',
   corps: 'corps',
+  body: 'corps',
+
   accessories: 'appareils',
   accessoire: 'appareils',
   accessoires: 'appareils',
   appareil: 'appareils',
   appareils: 'appareils',
+  materiel: 'appareils',
+  matériel: 'appareils',
+
   complement: 'complements',
   complément: 'complements',
   compléments: 'complements',
   complements: 'complements',
+  supplement: 'complements',
+  supplements: 'complements',
+
   baby: 'bebe',
   bébé: 'bebe',
   bebe: 'bebe',
+  pediatrique: 'bebe',
+  pédiatrique: 'bebe',
+
   'protection solaire': 'solaire',
   'solaire & protection': 'solaire',
   sun: 'solaire',
   solaire: 'solaire',
+  bronzage: 'solaire',
+
   makeup: 'maquillage',
+  'make-up': 'maquillage',
+  'make up': 'maquillage',
   maquillage: 'maquillage',
+
   face: 'visage',
   visage: 'visage',
+  peau: 'visage',
+
   hair: 'cheveux',
   cheveu: 'cheveux',
   capillaire: 'cheveux',
+  capillaires: 'cheveux',
   cheveux: 'cheveux',
+
   pack: 'offers',
   packs: 'offers',
   coffret: 'offers',
   coffrets: 'offers',
   giftbox: 'offers',
+  offer: 'offers',
+  offers: 'offers',
+  promo: 'offers',
+  promotions: 'offers',
+
+  homme: 'homme',
+  hommes: 'homme',
+  men: 'homme',
+  man: 'homme',
+
+  secheresse: 'secheresse',
+  sécheresse: 'secheresse',
+  dryness: 'secheresse',
+
+  serum: 'serum',
+  sérum: 'serum',
+
+  patch: 'patch',
+  patches: 'patch',
 };
 
 const CATEGORY_FILTER_VARIANTS: Record<string, string[]> = {
@@ -54,19 +101,23 @@ const CATEGORY_FILTER_VARIANTS: Record<string, string[]> = {
   'anti age': ['anti age', 'anti-age', 'age', 'ride', 'rides'],
   'secheresse & hydratation': ['secheresse & hydratation', 'sécheresse & hydratation', 'secheresse', 'hydratation'],
   'anti rougeur': ['anti rougeur', 'anti-rougeur', 'rougeur', 'rougeurs'],
-  orthopedique: ['ortopedique', 'orthopedique', 'ortopedie', 'orthopedie'],
-  ortopedique: ['ortopedique', 'orthopedique', 'ortopedie', 'orthopedie'],
-  corps: ['corps', 'corp'],
+  orthopedique: ['orthopedique', 'ortopedique', 'orthepedique', 'ortopedie', 'orthopedie', 'orthopedia', 'ortopedia'],
+  ortopedique: ['orthopedique', 'ortopedique', 'orthepedique', 'ortopedie', 'orthopedie', 'orthopedia', 'ortopedia'],
+  orthepedique: ['orthopedique', 'ortopedique', 'orthepedique', 'ortopedie', 'orthopedie', 'orthopedia', 'ortopedia'],
+  corps: ['corps', 'corp', 'body'],
   bebe: ['bebe', 'bébé', 'baby', 'pediatrique', 'pédiatrique'],
-  appareils: ['appareils', 'appareil', 'accessories', 'accessoire', 'accessoires'],
-  complements: ['complements', 'complement', 'complément', 'compléments'],
-  dentaire: ['dentaire', 'dental'],
+  appareils: ['appareils', 'appareil', 'accessories', 'accessoire', 'accessoires', 'materiel'],
+  complements: ['complements', 'complement', 'complément', 'compléments', 'supplement'],
+  dentaire: ['dentaire', 'dental', 'dentisterie', 'dents', 'dent'],
   visage: ['visage', 'face', 'peau'],
-  cheveux: ['cheveux', 'cheveu', 'hair', 'capillaire'],
-  maquillage: ['maquillage', 'makeup'],
-  solaire: ['solaire', 'protection solaire', 'solaire & protection', 'sun'],
-  offers: ['offers', 'pack', 'packs', 'coffret', 'coffrets', 'giftbox'],
+  cheveux: ['cheveux', 'cheveu', 'hair', 'capillaire', 'capillaires'],
+  maquillage: ['maquillage', 'makeup', 'make-up', 'make up'],
+  solaire: ['solaire', 'protection solaire', 'solaire & protection', 'sun', 'bronzage'],
+  offers: ['offers', 'offer', 'pack', 'packs', 'coffret', 'coffrets', 'giftbox', 'promo', 'promotions'],
+  homme: ['homme', 'hommes', 'men', 'man'],
+  secheresse: ['secheresse', 'sécheresse', 'dryness'],
   serum: ['serum', 'sérum'],
+  patch: ['patch', 'patches'],
 };
 
 export function getCanonicalCategory(category: string | null | undefined): string {
@@ -76,13 +127,21 @@ export function getCanonicalCategory(category: string | null | undefined): strin
 
   if (CANONICAL_CATEGORY_MAP[clean]) return CANONICAL_CATEGORY_MAP[clean];
   if (CANONICAL_CATEGORY_MAP[normalized]) return CANONICAL_CATEGORY_MAP[normalized];
-  if (normalized.includes('orthop') || normalized.includes('ortop')) return 'orthopedique';
-  if (normalized.includes('dent')) return 'dentaire';
-  if (normalized.includes('solaire') || normalized.includes('sun')) return 'solaire';
-  if (normalized.includes('cheve') || normalized.includes('capill')) return 'cheveux';
-  if (normalized.includes('compl')) return 'complements';
-  if (normalized.includes('apparel') || normalized.includes('access')) return 'appareils';
-  if (normalized.includes('bebe') || normalized.includes('pedia')) return 'bebe';
+
+  if (/orth|ort|eped|epedique|opedic|orthe/i.test(normalized)) return 'orthopedique';
+  if (/dent/i.test(normalized)) return 'dentaire';
+  if (/solair|sun|bronz/i.test(normalized)) return 'solaire';
+  if (/chev|capill|hair/i.test(normalized)) return 'cheveux';
+  if (/compl|suppl/i.test(normalized)) return 'complements';
+  if (/appar|access|materiel|matériel/i.test(normalized)) return 'appareils';
+  if (/bebe|bÉbÉ|pedia|baby/i.test(normalized)) return 'bebe';
+  if (/maquill|makeup|make-up/i.test(normalized)) return 'maquillage';
+  if (/pack|coffret|gift|offer|promo/i.test(normalized)) return 'offers';
+  if (/homm|men/i.test(normalized)) return 'homme';
+  if (/corp|body/i.test(normalized)) return 'corps';
+  if (/visag|face|peau/i.test(normalized)) return 'visage';
+  if (/serum|sérum/i.test(normalized)) return 'serum';
+  if (/patch/i.test(normalized)) return 'patch';
 
   return clean;
 }
