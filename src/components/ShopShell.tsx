@@ -493,7 +493,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
               {/* Column 5: Conciergerie Directe (Col-span 2) */}
               <div className="lg:col-span-2 space-y-4">
                 <h4 className="text-xs font-black uppercase tracking-[0.2em] text-cyan-400 font-mono">
-                  {language === 'AR' ? 'التواصل المباشر' : 'Conciergerie'}
+                  {language === 'AR' ? 'تواصل معنا' : 'Contactez-nous'}
                 </h4>
                 <div className="space-y-3 text-xs">
                   <a
@@ -513,10 +513,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
                     {language === 'AR' ? 'من الإثنين إلى السبت: 09:00 – 18:00' : 'Du lundi au samedi: 09h00 – 18h00 (GMT+1)'}
                   </p>
 
-                  <div className="pt-2 border-t border-slate-800/80 text-[11px] text-slate-400 space-y-1">
-                    <p className="font-bold text-slate-300">Maarif, Casablanca</p>
-                    <p className="text-[10px] text-slate-500">Bd Al Massira Al Khadra, Maroc</p>
-                  </div>
+
                 </div>
               </div>
 
