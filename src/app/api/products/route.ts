@@ -216,7 +216,7 @@ export async function GET(request: Request) {
 
     // Batch fetch by comma-separated IDs (used by curated ProductGrid)
     if (idsStr) {
-      const ids = idsStr.split(',').map(Number).filter(Boolean).slice(0, 15);
+      const ids = idsStr.split(',').map(Number).filter(Boolean).slice(0, 50);
       const { data, error } = await supabase
         .from('products')
         .select(PUBLIC_PRODUCT_COLUMNS)

@@ -162,9 +162,13 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, onSele
             const pinnedOrderMap = new Map(pinnedProductIds.map((id, index) => [id, index]));
             pinnedList.sort((a, b) => (pinnedOrderMap.get(a.id) ?? 999) - (pinnedOrderMap.get(b.id) ?? 999));
 
-            const pinnedIds = new Set(pinnedList.map(p => p.id));
-            const filteredFetched = fetchedList.filter(p => !pinnedIds.has(p.id));
-            list = [...pinnedList, ...filteredFetched].slice(0, 16);
+            if (pinnedProductIds.length >= 16) {
+              list = pinnedList.slice(0, 16);
+            } else {
+              const pinnedIds = new Set(pinnedList.map(p => p.id));
+              const filteredFetched = fetchedList.filter(p => !pinnedIds.has(p.id));
+              list = [...pinnedList, ...filteredFetched].slice(0, 16);
+            }
           } else {
             list = fetchedList;
           }
