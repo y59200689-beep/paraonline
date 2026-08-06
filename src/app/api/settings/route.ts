@@ -59,8 +59,27 @@ export async function POST(request: Request) {
       .upsert({ id: 1, value: mergedSettings }, { onConflict: 'id' });
     
     if (error) throw error;
+
+    // Also sync section_order to cms_pages table if homepageSections contains sectionOrder
+    if (mergedSettings.homepageSections?.sectionOrder && Array.isArray(mergedSettings.homepageSections.sectionOrder)) {
+      try {
+        await supabase
+          .from('cms_pages')
+          .upsert({
+            slug: 'home',
+            title_fr: 'Page d\'accueil',
+            status: 'published',
+            section_order: mergedSettings.homepageSections.sectionOrder,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'slug' });
+      } catch (err) {
+        console.warn('Could not sync section_order to cms_pages:', err);
+      }
+    }
+
     try {
       revalidateTag(PUBLIC_SETTINGS_CACHE_TAG, { expire: 0 });
+      revalidateTag('cms-homepage', { expire: 0 });
       revalidatePath('/');
     } catch {}
     return NextResponse.json({ success: true });

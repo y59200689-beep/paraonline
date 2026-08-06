@@ -11,7 +11,7 @@ import { Hero } from '@/components/Hero';
 import { CategoryTrack } from '@/components/CategoryTrack';
 import { ProductGrid } from '@/components/ProductGrid';
 
-import { HomepageSectionItem } from '@/context/SettingsContext';
+import { HomepageSectionItem, useSettings } from '@/context/SettingsContext';
 
 // Below-the-fold Components (Dynamically Imported to defer non-critical JS)
 // These sections sit below the initial storefront viewport. Rendering them on
@@ -151,6 +151,7 @@ export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps
     setSelectedProduct
   } = useUi();
 
+  const { settings } = useSettings();
   const { language } = useTranslation();
   const isRTL = language === 'AR';
 
@@ -198,17 +199,21 @@ export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps
               />
             );
 
-          case 'productGrid':
+          case 'productGrid': {
+            const pinnedIds = (section.settings?.productIds && section.settings.productIds.length > 0)
+              ? section.settings.productIds
+              : (settings?.featuredProductIds || []);
             return (
               <main id="boutique-grid" key={section.id} className="reveal-on-scroll">
                 <ProductGrid
                   activeCategory={activeCategory}
                   onSelectCategory={setActiveCategory}
                   onOpenQuickView={(p) => setSelectedProduct(p)}
-                  pinnedProductIds={section.settings?.productIds || []}
+                  pinnedProductIds={pinnedIds}
                 />
               </main>
             );
+          }
 
           case 'brandPartners':
             return deferred(section.id, <BrandPartners brands={section.settings?.brands} />);

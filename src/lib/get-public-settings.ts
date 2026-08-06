@@ -97,6 +97,7 @@ async function fetchPublicSettings(): Promise<PublicSettings> {
       diagnosticRules: settings.diagnosticRules || [],
       deliverySettings: settings.deliverySettings || null,
       homepageSections,
+      featuredProductIds: settings.featuredProductIds || [],
       galleryOverrides: mergedGalleryOverrides,
       paymentSettings: settings.paymentSettings ? {
         onlinePaymentEnabled: settings.paymentSettings.onlinePaymentEnabled,

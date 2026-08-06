@@ -20,19 +20,31 @@ async function fetchHomepageSections(
   defaultSections: HomepageSectionItem[]
 ): Promise<HomepageSectionItem[]> {
   try {
-    const { data, error } = await supabaseAdmin
+    // 1. Primary: fetch published section_order from cms_pages
+    const { data: cmsData } = await supabaseAdmin
       .from('cms_pages')
       .select('section_order')
       .eq('slug', 'home')
       .eq('status', 'published')
       .maybeSingle();
 
-    if (error || !data?.section_order) return defaultSections;
+    if (cmsData?.section_order && Array.isArray(cmsData.section_order) && cmsData.section_order.length > 0) {
+      return cmsData.section_order as HomepageSectionItem[];
+    }
 
-    const sections = data.section_order as HomepageSectionItem[];
-    if (!Array.isArray(sections) || sections.length === 0) return defaultSections;
+    // 2. Secondary: fallback to store_settings table homepageSections.sectionOrder
+    const { data: settingsData } = await supabaseAdmin
+      .from('settings')
+      .select('value')
+      .eq('id', 1)
+      .maybeSingle();
 
-    return sections;
+    const settingsOrder = settingsData?.value?.homepageSections?.sectionOrder;
+    if (settingsOrder && Array.isArray(settingsOrder) && settingsOrder.length > 0) {
+      return settingsOrder as HomepageSectionItem[];
+    }
+
+    return defaultSections;
   } catch {
     // CMS tables may not exist yet on first deploy; fall back gracefully
     return defaultSections;
