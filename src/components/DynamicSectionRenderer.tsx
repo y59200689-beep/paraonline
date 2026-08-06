@@ -255,7 +255,7 @@ export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps
             return deferred(section.id, <LaRochePosaySSection />);
 
           case 'ingredientDictionary':
-            return deferred(section.id, <IngredientDictionary />);
+            return null;
 
           case 'dermoCorner':
             return deferred(section.id, <DermoCorner />);
