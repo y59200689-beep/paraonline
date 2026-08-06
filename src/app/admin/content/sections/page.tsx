@@ -37,13 +37,20 @@ const SECTION_TYPE_MAP: Record<string, { label: string; desc: string; category: 
 };
 
 export default function ContentSectionsPage() {
-  const { currentUser, adminTheme, products } = useAdmin();
+  const { currentUser, adminTheme, products, loadProducts, isProductsLoading } = useAdmin();
   const { settings, saveSettings } = useSettings();
   const { showToast } = useUi();
   const isDark = adminTheme === 'dark';
   const role = currentUser?.role ?? 'viewer';
 
   const canEdit = canEditContent(role as any);
+
+  // Auto-fetch catalog products on mount if not already loaded
+  React.useEffect(() => {
+    if (!products || products.length === 0) {
+      loadProducts();
+    }
+  }, [products, loadProducts]);
 
   const [query, setQuery] = useState('');
   const [selectedSection, setSelectedSection] = useState<HomepageSectionItem | null>(null);
@@ -552,38 +559,49 @@ export default function ContentSectionsPage() {
 
                   {/* Product Options List */}
                   <div className="max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 rounded-xl border border-slate-100 dark:border-slate-800">
-                    {products
-                      .filter((p: any) => {
-                        const title = (p.nameFr || p.title || p.name || '').toLowerCase();
-                        const vendor = (p.vendor || '').toLowerCase();
-                        const q = productSearch.toLowerCase();
-                        const matchBrand = brandFilter === 'ALL' || p.vendor === brandFilter;
-                        return !selectedProductIds.includes(p.id) && matchBrand && (!q || title.includes(q) || vendor.includes(q));
-                      })
-                      .slice(0, 20)
-                      .map((p: any) => (
-                        <div
-                          key={`select-opt-${p.id}`}
-                          onClick={() => handleAddProductToSlot(p.id)}
-                          className="flex items-center justify-between p-3 text-left hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition cursor-pointer group"
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-10 h-10 rounded-xl relative overflow-hidden shrink-0 bg-slate-100 border">
-                              <Image src={p.image || '/placeholder.png'} alt="" fill className="object-contain p-0.5" sizes="40px" />
+                    {isProductsLoading ? (
+                      <div className="p-6 text-center text-xs font-bold text-slate-400 flex items-center justify-center gap-2">
+                        <span className="w-4 h-4 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+                        Chargement des produits en cours...
+                      </div>
+                    ) : products.length === 0 ? (
+                      <div className="p-6 text-center text-xs font-bold text-slate-400">
+                        Aucun produit disponible dans le catalogue.
+                      </div>
+                    ) : (
+                      products
+                        .filter((p: any) => {
+                          const title = (p.nameFr || p.title || p.name || '').toLowerCase();
+                          const vendor = (p.vendor || '').toLowerCase();
+                          const q = productSearch.toLowerCase();
+                          const matchBrand = brandFilter === 'ALL' || p.vendor === brandFilter;
+                          return !selectedProductIds.includes(p.id) && matchBrand && (!q || title.includes(q) || vendor.includes(q));
+                        })
+                        .slice(0, 20)
+                        .map((p: any) => (
+                          <div
+                            key={`select-opt-${p.id}`}
+                            onClick={() => handleAddProductToSlot(p.id)}
+                            className="flex items-center justify-between p-3 text-left hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition cursor-pointer group"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-10 h-10 rounded-xl relative overflow-hidden shrink-0 bg-slate-100 border">
+                                <Image src={p.image || '/placeholder.png'} alt="" fill className="object-contain p-0.5" sizes="40px" />
+                              </div>
+                              <div className="truncate">
+                                <p className="text-[10px] font-bold uppercase text-emerald-600">{p.vendor}</p>
+                                <h5 className="text-xs font-bold truncate" style={{ color: isDark ? '#f8fafc' : '#0f172a' }}>
+                                  {p.nameFr || p.title || p.name}
+                                </h5>
+                                <p className="text-[10px] text-slate-400 font-mono">{p.price} DH · Stock: {p.stock ?? 'Dispo'}</p>
+                              </div>
                             </div>
-                            <div className="truncate">
-                              <p className="text-[10px] font-bold uppercase text-emerald-600">{p.vendor}</p>
-                              <h5 className="text-xs font-bold truncate" style={{ color: isDark ? '#f8fafc' : '#0f172a' }}>
-                                {p.nameFr || p.title || p.name}
-                              </h5>
-                              <p className="text-[10px] text-slate-400 font-mono">{p.price} DH · Stock: {p.stock ?? 'Dispo'}</p>
-                            </div>
+                            <span className="text-xs font-bold text-white px-3 py-1.5 rounded-xl bg-emerald-600 group-hover:bg-emerald-500 shadow-sm transition shrink-0 flex items-center gap-1">
+                              <Plus className="w-3.5 h-3.5" /> Sélectionner
+                            </span>
                           </div>
-                          <span className="text-xs font-bold text-white px-3 py-1.5 rounded-xl bg-emerald-600 group-hover:bg-emerald-500 shadow-sm transition shrink-0 flex items-center gap-1">
-                            <Plus className="w-3.5 h-3.5" /> Sélectionner
-                          </span>
-                        </div>
-                      ))}
+                        ))
+                    )}
                   </div>
                 </div>
               )}

@@ -367,6 +367,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     // 2. Asynchronously load all secondary modules in background without blocking dashboard render
     setTimeout(() => {
       Promise.allSettled([
+        loadProducts(),
         loadAuditLogs(),
         loadAbandonedCarts(),
         loadDiagnostics(),
