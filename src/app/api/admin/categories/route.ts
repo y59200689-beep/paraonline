@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { verifyAdminSession } from '@/lib/session';
-import { revalidateTag } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/catalog-cache';
 
 export async function DELETE(req: NextRequest) {
@@ -97,7 +97,9 @@ export async function DELETE(req: NextRequest) {
       }
     }
 
-    revalidateTag(PUBLIC_CATALOG_CACHE_TAG);
+    revalidatePath('/products');
+    revalidatePath('/');
+    revalidateTag(PUBLIC_CATALOG_CACHE_TAG, { expire: 0 });
 
     return NextResponse.json({
       success: true,

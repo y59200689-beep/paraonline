@@ -227,7 +227,7 @@ function BrandsList({
 
                 {/* Visibility & Delete pill */}
                 {canManage && (
-                  <div style={{ display: 'flex', items: 'center', gap: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <button
                       onClick={e => { e.stopPropagation(); onToggleVisible(brand.id, !brand.is_visible); }}
                       title={brand.is_visible ? 'Masquer sur le site' : 'Afficher sur le site'}
@@ -741,17 +741,7 @@ export default function ContentBrandsPage() {
     setSelected(updated);
   }, []);
 
-  if (!canManage) {
-    return <div style={{ padding: '40px', textAlign: 'center' }}><p style={{ fontSize: '14px', color: isDark ? '#475569' : '#94a3b8' }}>Accès refusé.</p></div>;
-  }
-
-  if (loading) {
-    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px' }}><div className="w-6 h-6 border-2 border-slate-700 border-t-emerald-500 rounded-full animate-spin" /></div>;
-  }
-
-  if (selected) {
-    return <BrandEditor brand={selected} onBack={() => setSelected(null)} isDark={isDark} role={role} onUpdated={handleUpdated} />;
-  }
+  const visibleCount = brands.filter(b => b.is_visible && b.status === 'published').length;
 
   const handleDeleteBrand = useCallback(async (brand: CmsBrand) => {
     const confirm = window.confirm(`Voulez-vous vraiment supprimer la marque "${brand.name}" ? Cette action effacera la marque et détachera les produits associés.`);
@@ -763,14 +753,26 @@ export default function ContentBrandsPage() {
       });
       if (res.ok) {
         setBrands(prev => prev.filter(b => b.id !== brand.id));
-        if (selected?.id === brand.id) setSelected(null);
+        setSelected(prev => (prev?.id === brand.id ? null : prev));
       } else {
         alert('Erreur lors de la suppression de la marque.');
       }
     } catch {
       alert('Erreur réseau lors de la suppression.');
     }
-  }, [selected]);
+  }, []);
+
+  if (!canManage) {
+    return <div style={{ padding: '40px', textAlign: 'center' }}><p style={{ fontSize: '14px', color: isDark ? '#475569' : '#94a3b8' }}>Accès refusé.</p></div>;
+  }
+
+  if (loading) {
+    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px' }}><div className="w-6 h-6 border-2 border-slate-700 border-t-emerald-500 rounded-full animate-spin" /></div>;
+  }
+
+  if (selected) {
+    return <BrandEditor brand={selected} onBack={() => setSelected(null)} isDark={isDark} role={role} onUpdated={handleUpdated} />;
+  }
 
   return (
     <>
