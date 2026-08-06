@@ -90,14 +90,14 @@ export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands: propBrands
           width: max-content;
           gap: 0.75rem;
           will-change: transform;
-          animation: brand-partner-marquee 80s linear infinite;
+          animation: brand-partner-marquee 220s linear infinite;
         }
         .brand-partner-track--reverse {
           animation-direction: reverse;
-          animation-duration: 95s;
+          animation-duration: 260s;
         }
         .brand-partner-track--slow {
-          animation-duration: 110s;
+          animation-duration: 300s;
         }
         @media (min-width: 640px) {
           .brand-partner-track {
@@ -155,10 +155,15 @@ export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands: propBrands
                 : rowIndex === 2
                   ? 'brand-partner-track--slow'
                   : '';
+              const baseMultiplier = rowIndex === 1 ? 16 : rowIndex === 2 ? 18 : 14;
+              const dynamicDuration = Math.max(120, row.length * baseMultiplier);
 
               return (
                 <div className="brand-partner-viewport py-0.5" key={`brand-row-${rowIndex}`}>
-                  <div className={`brand-partner-track ${motionClass}`}>
+                  <div
+                    className={`brand-partner-track ${motionClass}`}
+                    style={{ animationDuration: `${dynamicDuration}s` }}
+                  >
                     {rowBrands.map((brand, index) => (
                       <div
                         key={`${brand.name}-${rowIndex}-${index}`}
