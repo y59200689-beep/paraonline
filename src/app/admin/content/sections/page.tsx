@@ -6,14 +6,17 @@ import { useAdmin } from '@/context/AdminContext';
 import { useSettings, HomepageSectionItem } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 import { canEditContent } from '@/lib/permissions';
-import { Layers, Search, Eye, EyeOff, Edit3, X, Save, Sparkles, Plus, Trash2, ChevronUp, ChevronDown, Check } from 'lucide-react';
+import { 
+  Layers, Search, Eye, EyeOff, Edit3, X, Save, Sparkles, Plus, Trash2, 
+  ChevronUp, ChevronDown, Check, LayoutGrid, Package, ArrowUpRight, Filter
+} from 'lucide-react';
 import { BilingualField } from '@/components/admin/ui/BilingualField';
 import { EmptyState } from '@/components/admin/ui/EmptyState';
 
 const SECTION_TYPE_MAP: Record<string, { label: string; desc: string; category: string }> = {
   hero: { label: 'Héro Carrousel', desc: 'Bannière principale avec diaporama d\'images et boutons d\'action.', category: 'En-tête' },
   categoryTrack: { label: 'Barre Catégories', desc: 'Barre de défilement horizontale des catégories avec icônes.', category: 'Navigation' },
-  productGrid: { label: 'Grille Produits (Produits Vedettes)', desc: 'Sélection des 16 produits vedettes affichés sur la boutique.', category: 'Catalogue' },
+  productGrid: { label: 'Grille Produits Vedettes', desc: 'Sélection des 16 produits vedettes affichés sur la boutique.', category: 'Catalogue' },
   brandPartners: { label: 'Marques Partenaires', desc: 'Galerie des logos des marques partenaires.', category: 'Marques' },
   diagnosticBanner: { label: 'Diagnostic IA Banner', desc: 'Bannière d\'appel à l\'action pour le diagnostic de peau IA.', category: 'Expérience' },
   summerSale: { label: 'Offres Événementielles', desc: 'Section promotionnelle pour ventes flash ou saisonnières.', category: 'Promotions' },
@@ -60,9 +63,14 @@ export default function ContentSectionsPage() {
   // Product Selection State (for productGrid / topRated / bestSellers)
   const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
   const [productSearch, setProductSearch] = useState('');
+  const [brandFilter, setBrandFilter] = useState('ALL');
   const [isAddingProductOpen, setIsAddingProductOpen] = useState(false);
+  const [targetSlotIndex, setTargetSlotIndex] = useState<number | null>(null);
 
   const sectionOrders = settings?.homepageSections?.sectionOrder || [];
+
+  // Extract all unique brands for filter dropdown
+  const allBrands = Array.from(new Set(products.map((p: any) => p.vendor).filter(Boolean))).sort() as string[];
 
   // Prepare full list of all 20 section types
   const fullSectionsList: HomepageSectionItem[] = Object.keys(SECTION_TYPE_MAP).map((type) => {
@@ -111,7 +119,9 @@ export default function ContentSectionsPage() {
     const existingProductIds = sec.settings?.productIds || (sec.type === 'productGrid' ? settings.featuredProductIds : []) || [];
     setSelectedProductIds(existingProductIds);
     setProductSearch('');
+    setBrandFilter('ALL');
     setIsAddingProductOpen(false);
+    setTargetSlotIndex(null);
   };
 
   const handleSaveSection = async () => {
@@ -166,6 +176,21 @@ export default function ContentSectionsPage() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleAddProductToSlot = (productId: number) => {
+    if (selectedProductIds.includes(productId)) return;
+
+    if (targetSlotIndex !== null && targetSlotIndex < 16) {
+      const copy = [...selectedProductIds];
+      copy[targetSlotIndex] = productId;
+      setSelectedProductIds(copy.filter(Boolean));
+    } else if (selectedProductIds.length < 16) {
+      setSelectedProductIds(prev => [...prev, productId]);
+    }
+    setIsAddingProductOpen(false);
+    setTargetSlotIndex(null);
+    setProductSearch('');
   };
 
   if (!canEdit) {
@@ -273,49 +298,62 @@ export default function ContentSectionsPage() {
         </div>
       )}
 
-      {/* EDIT SECTION MODAL */}
+      {/* SHOPIFY-PLUS LEVEL SECTION EDIT MODAL */}
       {selectedSection && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/70 backdrop-blur-md animate-fade-in overflow-hidden">
           <div 
-            className="relative w-full max-w-3xl max-h-[92vh] flex flex-col rounded-3xl border shadow-2xl overflow-hidden"
+            className="relative w-full max-w-5xl max-h-[94vh] flex flex-col rounded-3xl border shadow-2xl overflow-hidden"
             style={{
-              backgroundColor: isDark ? '#0f172a' : '#ffffff',
-              borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0',
+              backgroundColor: isDark ? '#0b1329' : '#ffffff',
+              borderColor: isDark ? 'rgba(255,255,255,0.12)' : '#e2e8f0',
               color: isDark ? '#f8fafc' : '#0f172a',
             }}
           >
             {/* Modal Header */}
             <div className="px-6 py-4 border-b flex items-center justify-between shrink-0" style={{ borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#f1f5f9' }}>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                  <Sparkles className="w-5 h-5" />
+                <div className="w-11 h-11 rounded-2xl flex items-center justify-center bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 shrink-0">
+                  <LayoutGrid className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-black">Éditer la section: {selectedSection.type}</h2>
-                  <p className="text-xs" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>
-                    Modifiez le titre, le texte, la sélection des 16 produits et la visibilité de ce bloc.
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-black tracking-tight">{titleFr || selectedSection.type}</h2>
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                      {selectedSection.type}
+                    </span>
+                  </div>
+                  <p className="text-xs mt-0.5" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>
+                    Éditeur professionnel de section · Configurez le titre, les 16 produits vedettes et la visibilité en direct.
                   </p>
                 </div>
               </div>
+              
               <button
                 onClick={() => setSelectedSection(null)}
-                className="w-8 h-8 rounded-full flex items-center justify-center transition hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="w-9 h-9 rounded-full flex items-center justify-center transition hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Modal Body */}
             <div className="p-6 overflow-y-auto space-y-6 flex-1">
 
-              {/* Visibility Toggle */}
-              <div className="p-4 rounded-2xl border flex items-center justify-between" style={{
+              {/* Visibility Toggle Bar */}
+              <div className="p-4 rounded-2xl border flex items-center justify-between shadow-sm" style={{
                 backgroundColor: isDark ? 'rgba(255,255,255,0.02)' : '#f8fafc',
-                borderColor: isDark ? 'rgba(255,255,255,0.06)' : '#e2e8f0',
+                borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0',
               }}>
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-wider block">Visibilité sur le site</span>
-                  <span className="text-xs" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>Afficher cette section sur la page d'accueil</span>
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${isVisible ? 'bg-emerald-500/15 text-emerald-600' : 'bg-slate-200 dark:bg-slate-800 text-slate-400'}`}>
+                    {isVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                  </div>
+                  <div>
+                    <span className="text-xs font-black uppercase tracking-wider block">Statut d&apos;affichage sur la boutique</span>
+                    <span className="text-xs" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>
+                      {isVisible ? 'Section publiée et visible par vos visiteurs sur la page d\'accueil' : 'Section masquée du storefront (Brouillon)'}
+                    </span>
+                  </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -324,184 +362,225 @@ export default function ContentSectionsPage() {
                     onChange={e => setIsVisible(e.target.checked)}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                  <div className="w-12 h-6.5 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5.5 after:w-5.5 after:transition-all peer-checked:bg-emerald-500 shadow-inner"></div>
                 </label>
               </div>
 
-              {/* 16 PRODUCTS SELECTOR (For productGrid / topRated / bestSellers / summerSale) */}
+              {/* SHOPIFY-PLUS 16 FEATURED PRODUCTS VISUAL SLOT BOARD */}
               {(selectedSection.type === 'productGrid' || selectedSection.type === 'topRated' || selectedSection.type === 'bestSellers' || selectedSection.type === 'summerSale') && (
-                <div className="p-4 rounded-2xl border space-y-4" style={{
-                  backgroundColor: isDark ? 'rgba(255,255,255,0.015)' : '#f8fafc',
-                  borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0',
+                <div className="p-5 rounded-3xl border space-y-5" style={{
+                  backgroundColor: isDark ? 'rgba(15,23,42,0.6)' : '#ffffff',
+                  borderColor: isDark ? 'rgba(16,185,129,0.2)' : '#e2e8f0',
+                  boxShadow: isDark ? '0 10px 30px rgba(0,0,0,0.3)' : '0 10px 30px rgba(0,0,0,0.03)',
                 }}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="text-xs font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                        Sélection des 16 Produits Vedettes ({selectedProductIds.length} / 16)
-                      </h4>
-                      <p className="text-[11px] mt-0.5" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>
-                        Choisissez l'ordre exact des 16 produits affichés dans la grille sur la boutique.
-                      </p>
+                  {/* Panel Header */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-4" style={{ borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#f1f5f9' }}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/20">
+                        <Package className="w-4.5 h-4.5" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm font-black tracking-tight">Grille des 16 Produits Vedettes</h3>
+                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                            {selectedProductIds.length} / 16 Remplis
+                          </span>
+                        </div>
+                        <p className="text-xs" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>
+                          Sélectionnez et ordonnez les 16 produits affichés dans cette section sur votre boutique.
+                        </p>
+                      </div>
                     </div>
+
+                    <button
+                      type="button"
+                      onClick={() => { setIsAddingProductOpen(true); setTargetSlotIndex(null); }}
+                      disabled={selectedProductIds.length >= 16}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-xs uppercase tracking-wider shadow-md shadow-emerald-500/20 transition cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                    >
+                      <Plus className="w-4 h-4" /> Ajouter un produit
+                    </button>
                   </div>
 
-                  {/* List of currently selected 16 products */}
-                  <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                    {selectedProductIds.length === 0 ? (
-                      <p className="text-xs italic p-4 text-center text-slate-400 border border-dashed rounded-xl">
-                        Aucun produit épinglé. (Le catalogue général s'affichera par défaut).
-                      </p>
-                    ) : (
-                      selectedProductIds.map((pid, idx) => {
-                        const prod = products.find((p: any) => p.id === pid);
-                        if (!prod) return null;
+                  {/* 16 Visual Grid Slots */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {Array.from({ length: 16 }).map((_, slotIdx) => {
+                      const pid = selectedProductIds[slotIdx];
+                      const prod = pid ? products.find((p: any) => p.id === pid) : null;
+
+                      if (prod) {
                         return (
                           <div
-                            key={`pid-slot-${pid}-${idx}`}
-                            className="flex items-center justify-between gap-3 p-2.5 rounded-xl border transition"
+                            key={`visual-slot-${slotIdx}-${prod.id}`}
+                            className="group relative p-3 rounded-2xl border transition-all duration-200 flex flex-col justify-between hover:shadow-md"
                             style={{
-                              backgroundColor: isDark ? '#0f172a' : '#ffffff',
-                              borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#cbd5e1',
+                              backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : '#ffffff',
+                              borderColor: isDark ? 'rgba(16,185,129,0.3)' : '#cbd5e1',
                             }}
                           >
-                            <div className="flex items-center gap-3 min-w-0 flex-1">
-                              <span className="text-[11px] font-mono font-bold w-6 h-6 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
-                                #{idx + 1}
+                            {/* Slot header */}
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-[10px] font-mono font-black px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                Slot #{slotIdx + 1}
                               </span>
-                              
-                              <div className="w-9 h-9 rounded-lg overflow-hidden shrink-0 bg-slate-100 relative">
-                                <Image src={prod.image || '/placeholder.png'} alt="" fill className="object-cover" sizes="36px" />
-                              </div>
-
-                              <div className="min-w-0 flex-1">
-                                <p className="text-xs font-bold truncate" style={{ color: isDark ? '#f8fafc' : '#0f172a' }}>
-                                  {prod.nameFr || prod.title || prod.name}
-                                </p>
-                                <p className="text-[10px] text-slate-400 font-mono">
-                                  {prod.vendor || 'Marque'} · {prod.price} DH
-                                </p>
+                              <div className="flex items-center gap-0.5">
+                                <button
+                                  type="button"
+                                  disabled={slotIdx === 0}
+                                  onClick={() => {
+                                    const arr = [...selectedProductIds];
+                                    const tmp = arr[slotIdx];
+                                    arr[slotIdx] = arr[slotIdx - 1];
+                                    arr[slotIdx - 1] = tmp;
+                                    setSelectedProductIds(arr);
+                                  }}
+                                  className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-20 text-slate-400 hover:text-slate-600"
+                                >
+                                  <ChevronUp className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={slotIdx === selectedProductIds.length - 1}
+                                  onClick={() => {
+                                    const arr = [...selectedProductIds];
+                                    const tmp = arr[slotIdx];
+                                    arr[slotIdx] = arr[slotIdx + 1];
+                                    arr[slotIdx + 1] = tmp;
+                                    setSelectedProductIds(arr);
+                                  }}
+                                  className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-20 text-slate-400 hover:text-slate-600"
+                                >
+                                  <ChevronDown className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedProductIds(prev => prev.filter((_, i) => i !== slotIdx))}
+                                  className="p-1 rounded text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 ml-1"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-1 shrink-0">
-                              {/* Move Up */}
-                              <button
-                                type="button"
-                                disabled={idx === 0}
-                                onClick={() => {
-                                  const arr = [...selectedProductIds];
-                                  const tmp = arr[idx];
-                                  arr[idx] = arr[idx - 1];
-                                  arr[idx - 1] = tmp;
-                                  setSelectedProductIds(arr);
-                                }}
-                                className="p-1.5 rounded-lg border hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-20 cursor-pointer"
-                              >
-                                <ChevronUp className="w-3.5 h-3.5" />
-                              </button>
-                              {/* Move Down */}
-                              <button
-                                type="button"
-                                disabled={idx === selectedProductIds.length - 1}
-                                onClick={() => {
-                                  const arr = [...selectedProductIds];
-                                  const tmp = arr[idx];
-                                  arr[idx] = arr[idx + 1];
-                                  arr[idx + 1] = tmp;
-                                  setSelectedProductIds(arr);
-                                }}
-                                className="p-1.5 rounded-lg border hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-20 cursor-pointer"
-                              >
-                                <ChevronDown className="w-3.5 h-3.5" />
-                              </button>
-                              {/* Remove */}
-                              <button
-                                type="button"
-                                onClick={() => setSelectedProductIds(prev => prev.filter(id => id !== pid))}
-                                className="p-1.5 rounded-lg border text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 cursor-pointer ml-1"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+                            {/* Product preview card */}
+                            <div className="flex gap-2.5 items-center">
+                              <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 border relative shrink-0">
+                                <Image src={prod.image || '/placeholder.png'} alt="" fill className="object-contain p-0.5" sizes="48px" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-[9px] font-extrabold uppercase text-emerald-600 truncate">{prod.vendor || 'Marque'}</p>
+                                <h5 className="text-xs font-bold leading-snug line-clamp-1" style={{ color: isDark ? '#f8fafc' : '#0f172a' }}>
+                                  {prod.nameFr || prod.title || prod.name}
+                                </h5>
+                                <p className="text-[11px] font-mono font-bold mt-0.5 text-slate-500">{prod.price} DH</p>
+                              </div>
                             </div>
                           </div>
                         );
-                      })
-                    )}
+                      }
+
+                      return (
+                        <div
+                          key={`empty-slot-${slotIdx}`}
+                          onClick={() => { setIsAddingProductOpen(true); setTargetSlotIndex(slotIdx); }}
+                          className="group p-4 rounded-2xl border border-dashed transition-all duration-200 cursor-pointer flex flex-col items-center justify-center gap-1.5 min-h-[100px] hover:border-emerald-500 hover:bg-emerald-500/5"
+                          style={{
+                            borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#cbd5e1',
+                            backgroundColor: isDark ? 'rgba(255,255,255,0.01)' : '#f8fafc',
+                          }}
+                        >
+                          <span className="text-[10px] font-mono font-bold text-slate-400 group-hover:text-emerald-500">
+                            Slot #{slotIdx + 1}
+                          </span>
+                          <div className="w-7 h-7 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Plus className="w-4 h-4" />
+                          </div>
+                          <span className="text-[10px] font-bold text-slate-400 group-hover:text-emerald-600">
+                            Choisir un produit
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* QUICK PRODUCT PICKER DRAWER / MODAL OVERLAY */}
+              {isAddingProductOpen && (
+                <div className="p-4 rounded-3xl border space-y-4 bg-white dark:bg-slate-900 border-emerald-500/40 shadow-2xl animate-fade-in">
+                  <div className="flex items-center justify-between border-b pb-3">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-emerald-500" />
+                      <h4 className="text-xs font-black uppercase tracking-wider">
+                        {targetSlotIndex !== null ? `Choisir le produit pour le Slot #${targetSlotIndex + 1}` : 'Ajouter un produit aux Produits Vedettes'}
+                      </h4>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { setIsAddingProductOpen(false); setTargetSlotIndex(null); setProductSearch(''); }}
+                      className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
                   </div>
 
-                  {/* Add Product Search Dropdown */}
-                  <div className="pt-2">
-                    {!isAddingProductOpen ? (
-                      <button
-                        type="button"
-                        onClick={() => setIsAddingProductOpen(true)}
-                        disabled={selectedProductIds.length >= 16}
-                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed text-xs font-bold transition hover:bg-emerald-500/5 hover:border-emerald-500/30 text-emerald-600 dark:text-emerald-400 disabled:opacity-40 cursor-pointer"
-                      >
-                        <Plus className="w-4 h-4" />
-                        {selectedProductIds.length >= 16 ? 'Limite de 16 produits atteinte' : 'Ajouter un produit aux Produits Vedettes'}
-                      </button>
-                    ) : (
-                      <div className="p-3 rounded-2xl border space-y-3 bg-white dark:bg-slate-900 border-emerald-500/30 shadow-lg">
-                        <div className="flex items-center justify-between gap-2 border-b pb-2">
-                          <div className="flex items-center gap-2 flex-1">
-                            <Search className="w-4 h-4 text-slate-400 shrink-0" />
-                            <input
-                              type="text"
-                              autoFocus
-                              value={productSearch}
-                              onChange={e => setProductSearch(e.target.value)}
-                              placeholder="Rechercher par nom de produit ou marque..."
-                              className="w-full text-xs font-bold bg-transparent outline-none"
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => { setIsAddingProductOpen(false); setProductSearch(''); }}
-                            className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
+                  {/* Filter & Search Bar */}
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="relative flex-1">
+                      <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="text"
+                        autoFocus
+                        value={productSearch}
+                        onChange={e => setProductSearch(e.target.value)}
+                        placeholder="Rechercher par nom de produit..."
+                        className="w-full pl-9 pr-4 py-2 text-xs font-bold rounded-xl border outline-none bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800"
+                      />
+                    </div>
+                    <select
+                      value={brandFilter}
+                      onChange={e => setBrandFilter(e.target.value)}
+                      className="px-3 py-2 text-xs font-bold rounded-xl border outline-none bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 shrink-0"
+                    >
+                      <option value="ALL">Toutes les marques ({allBrands.length})</option>
+                      {allBrands.map(b => <option key={b} value={b}>{b}</option>)}
+                    </select>
+                  </div>
 
-                        <div className="max-h-48 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
-                          {products
-                            .filter((p: any) => {
-                              const title = (p.nameFr || p.title || p.name || '').toLowerCase();
-                              const vendor = (p.vendor || '').toLowerCase();
-                              const q = productSearch.toLowerCase();
-                              return !selectedProductIds.includes(p.id) && (!q || title.includes(q) || vendor.includes(q));
-                            })
-                            .slice(0, 15)
-                            .map((p: any) => (
-                              <button
-                                key={`opt-prod-${p.id}`}
-                                type="button"
-                                onClick={() => {
-                                  if (selectedProductIds.length < 16) {
-                                    setSelectedProductIds(prev => [...prev, p.id]);
-                                    setProductSearch('');
-                                  }
-                                }}
-                                className="w-full flex items-center justify-between p-2 text-left hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition rounded-lg"
-                              >
-                                <div className="flex items-center gap-2 min-w-0">
-                                  <div className="w-7 h-7 rounded relative overflow-hidden shrink-0 bg-slate-100">
-                                    <Image src={p.image || '/placeholder.png'} alt="" fill className="object-cover" sizes="28px" />
-                                  </div>
-                                  <div className="truncate">
-                                    <p className="text-xs font-bold truncate">{p.nameFr || p.title || p.name}</p>
-                                    <p className="text-[10px] text-slate-400">{p.vendor} · {p.price} DH</p>
-                                  </div>
-                                </div>
-                                <span className="text-[10px] font-bold text-emerald-600 px-2 py-1 rounded-lg bg-emerald-500/10 shrink-0">
-                                  + Ajouter
-                                </span>
-                              </button>
-                            ))}
+                  {/* Product Options List */}
+                  <div className="max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 rounded-xl border border-slate-100 dark:border-slate-800">
+                    {products
+                      .filter((p: any) => {
+                        const title = (p.nameFr || p.title || p.name || '').toLowerCase();
+                        const vendor = (p.vendor || '').toLowerCase();
+                        const q = productSearch.toLowerCase();
+                        const matchBrand = brandFilter === 'ALL' || p.vendor === brandFilter;
+                        return !selectedProductIds.includes(p.id) && matchBrand && (!q || title.includes(q) || vendor.includes(q));
+                      })
+                      .slice(0, 20)
+                      .map((p: any) => (
+                        <div
+                          key={`select-opt-${p.id}`}
+                          onClick={() => handleAddProductToSlot(p.id)}
+                          className="flex items-center justify-between p-3 text-left hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition cursor-pointer group"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-10 h-10 rounded-xl relative overflow-hidden shrink-0 bg-slate-100 border">
+                              <Image src={p.image || '/placeholder.png'} alt="" fill className="object-contain p-0.5" sizes="40px" />
+                            </div>
+                            <div className="truncate">
+                              <p className="text-[10px] font-bold uppercase text-emerald-600">{p.vendor}</p>
+                              <h5 className="text-xs font-bold truncate" style={{ color: isDark ? '#f8fafc' : '#0f172a' }}>
+                                {p.nameFr || p.title || p.name}
+                              </h5>
+                              <p className="text-[10px] text-slate-400 font-mono">{p.price} DH · Stock: {p.stock ?? 'Dispo'}</p>
+                            </div>
+                          </div>
+                          <span className="text-xs font-bold text-white px-3 py-1.5 rounded-xl bg-emerald-600 group-hover:bg-emerald-500 shadow-sm transition shrink-0 flex items-center gap-1">
+                            <Plus className="w-3.5 h-3.5" /> Sélectionner
+                          </span>
                         </div>
-                      </div>
-                    )}
+                      ))}
                   </div>
                 </div>
               )}
