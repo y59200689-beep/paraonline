@@ -3169,24 +3169,27 @@ export default function SettingsTab() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
-                  { tag: 'all',         labelFr: 'Tous les produits' },
-                  { tag: 'offers',      labelFr: 'Meilleures Ventes' },
-                  { tag: 'giftbox',     labelFr: 'Coffrets Cadeaux' },
-                  { tag: 'solaire',     labelFr: 'Solaires' },
-                  { tag: 'visage',      labelFr: 'Visage' },
-                  { tag: 'cheveux',     labelFr: 'Cheveux' },
-                  { tag: 'corps',       labelFr: 'Corps' },
-                  { tag: 'appareils',   labelFr: 'Accessoires' },
-                  { tag: 'complements', labelFr: 'Compléments' },
-                  { tag: 'maquillage',  labelFr: 'Maquillage' },
-                  { tag: 'sport',       labelFr: 'Sport' },
-                  { tag: 'masques',     labelFr: 'Masques' },
-                  { tag: 'homme',       labelFr: 'Homme' },
-                  { tag: 'bebe',        labelFr: 'Bébé' },
-                ].map(({ tag, labelFr }) => (
+                  { tag: 'all',         labelFr: 'Tous les produits',   defaultHref: '/products' },
+                  { tag: 'offers',      labelFr: 'Meilleures Ventes',   defaultHref: '/products' },
+                  { tag: 'giftbox',     labelFr: 'Coffrets Cadeaux',    defaultHref: '' },
+                  { tag: 'solaire',     labelFr: 'Solaires',            defaultHref: '/products?category=solaire' },
+                  { tag: 'visage',      labelFr: 'Visage',              defaultHref: '/products?category=visage' },
+                  { tag: 'cheveux',     labelFr: 'Cheveux',             defaultHref: '/products?category=cheveux' },
+                  { tag: 'corps',       labelFr: 'Corps',               defaultHref: '/products?category=corp' },
+                  { tag: 'appareils',   labelFr: 'Accessoires',         defaultHref: '/products?category=accessories' },
+                  { tag: 'complements', labelFr: 'Compléments',         defaultHref: '/products?category=complement' },
+                  { tag: 'maquillage',  labelFr: 'Maquillage',          defaultHref: '' },
+                  { tag: 'sport',       labelFr: 'Sport',               defaultHref: '' },
+                  { tag: 'masques',     labelFr: 'Masques',             defaultHref: '' },
+                  { tag: 'homme',       labelFr: 'Homme',               defaultHref: '/products?category=homme' },
+                  { tag: 'bebe',        labelFr: 'Bébé',                defaultHref: '/products?category=bébé' },
+                ].map(({ tag, labelFr, defaultHref }) => (
                   <div key={tag} className="space-y-1">
                     <label className={`text-[9px] font-bold uppercase tracking-wider ${adminTheme === 'light' ? 'text-slate-600' : 'text-slate-400'}`}>
                       {labelFr}
+                      {defaultHref && (
+                        <span className="ml-1 font-mono font-normal normal-case opacity-50">({defaultHref})</span>
+                      )}
                     </label>
                     <input
                       type="text"
@@ -3201,7 +3204,7 @@ export default function SettingsTab() {
                         };
                         saveSettings(updated);
                       }}
-                      placeholder={`/products?category=${tag}`}
+                      placeholder={defaultHref || 'Aucun lien par défaut — filtrage homepage'}
                       className={`w-full text-xs transition outline-none rounded-xl px-3 py-2 border font-mono ${
                         adminTheme === 'light'
                           ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20'
