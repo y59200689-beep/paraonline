@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { ShoppingBag, Store, Coins, Sparkles } from 'lucide-react';
 
 interface MobileBottomNavProps {
@@ -30,17 +31,17 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
 }) => {
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-border shadow-2xl z-40 flex items-center justify-around py-2.5">
-      <a href="#" className="flex flex-col items-center gap-1 text-[10px] font-bold text-primary-dark">
-        <Store className="w-4.5 h-4.5" />
+      <Link href="/products" className="flex flex-col items-center gap-1 text-[10px] font-bold text-primary-dark">
+        <Store className="w-5 h-5" />
         <span>{t('mob_boutique')}</span>
-      </a>
+      </Link>
 
       <button
         onClick={onDiagnosticOpen}
         aria-label={language === 'FR' ? 'Faire le Diagnostic Dermo-IA' : 'تشخيص البشرة'}
         className="flex flex-col items-center gap-1 text-[10px] font-bold text-accent"
       >
-        <Sparkles className="w-4.5 h-4.5 text-accent" />
+        <Sparkles className="w-5 h-5 text-accent" />
         <span>{t('diagnostic_nav')}</span>
       </button>
 
@@ -52,7 +53,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           isJiggling ? 'animate-cart-jiggle' : ''
         }`}
       >
-        <ShoppingBag className="w-4.5 h-4.5" />
+        <ShoppingBag className="w-5 h-5" />
         {cartCount > 0 && (
           <span
             className={`absolute -top-1 right-1 w-3.5 h-3.5 bg-accent text-white text-[8px] font-black rounded-full flex items-center justify-center ${
@@ -71,7 +72,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         className="flex flex-col items-center gap-1 text-[10px] font-bold text-primary-dark relative cursor-pointer active:scale-95"
       >
         <div className="relative">
-          <Coins className="w-4.5 h-4.5 text-slate-500" />
+          <Coins className="w-5 h-5 text-slate-500" />
           <span className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] px-1 bg-accent text-white text-[8px] font-black rounded-full flex items-center justify-center border border-white shadow-xs whitespace-nowrap leading-none tracking-tight">
             {points > 9999 ? '9999+' : points}
           </span>
@@ -85,7 +86,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         rel="noopener noreferrer"
         className="flex flex-col items-center gap-1 text-[10px] font-bold text-whatsapp"
       >
-        <span className="w-4.5 h-4.5 bg-whatsapp text-white rounded-full flex items-center justify-center text-[9px] font-black">
+        <span className="w-5 h-5 bg-whatsapp text-white rounded-full flex items-center justify-center text-[9px] font-black">
           WA
         </span>
         <span>{t('mob_whatsapp')}</span>
