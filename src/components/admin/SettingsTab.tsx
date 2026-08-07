@@ -203,7 +203,7 @@ export default function SettingsTab() {
       !Number.isFinite(range.maxAmount) ||
       range.minAmount < 0 ||
       range.maxAmount < range.minAmount ||
-      !range.productId ||
+      (!range.productId && range.productId !== -1) ||
       !range.productName
     ));
 
@@ -213,7 +213,7 @@ export default function SettingsTab() {
     }
 
     const hasOverlap = normalized.some((range, index) => (
-      index > 0 && range.minAmount <= normalized[index - 1].maxAmount
+      index > 0 && range.minAmount < normalized[index - 1].maxAmount
     ));
     if (hasOverlap) {
       showToast('Les paliers cadeau ne doivent pas se chevaucher.', 'error');
@@ -221,6 +221,7 @@ export default function SettingsTab() {
     }
 
     const unavailableGift = normalized.find((range) => {
+      if (range.productId === -1 || range.productName === 'Livraison Gratuite') return false;
       const product = products.find((item: any) => Number(item.id) === range.productId);
       return !product || product.status === 'draft' || getGiftProductStock(product) <= 0;
     });
