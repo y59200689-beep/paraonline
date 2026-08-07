@@ -277,12 +277,36 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
         {/* Count badge */}
         {!sidebarCollapsed && item.count !== undefined && item.count > 0 && (
-          <span className="text-white font-black px-1.5 py-0.5 rounded-full min-w-[18px] text-center shrink-0 text-[9px]" style={{ background: item.countColor ?? '#10b981' }}>
+          <span
+            className="inline-flex items-center justify-center shrink-0 min-w-[20px] h-[20px] px-1.5 rounded-full text-[10px] font-black tracking-tight leading-none text-white shadow-sm border border-white/20 transition-all duration-200"
+            style={{
+              background: item.id === 'orders'
+                ? 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)'
+                : item.id === 'reviews'
+                ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+                : (item.countColor || '#10b981'),
+              color: '#ffffff',
+              boxShadow: item.id === 'orders'
+                ? '0 2px 8px rgba(244, 63, 94, 0.35)'
+                : item.id === 'reviews'
+                ? '0 2px 8px rgba(245, 158, 11, 0.35)'
+                : '0 2px 8px rgba(16, 185, 129, 0.35)',
+            }}
+          >
             {item.count}
           </span>
         )}
         {sidebarCollapsed && item.count !== undefined && item.count > 0 && (
-          <span className="absolute top-1 right-1 w-2 h-2 rounded-full border-2" style={{ background: item.countColor ?? '#10b981', borderColor: isDark ? 'hsl(224,30%,8%)' : '#fff' }} />
+          <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
+            <span
+              className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+              style={{ background: item.countColor ?? '#f43f5e' }}
+            />
+            <span
+              className="relative inline-flex rounded-full h-2.5 w-2.5 border border-white dark:border-slate-900"
+              style={{ background: item.countColor ?? '#f43f5e' }}
+            />
+          </span>
         )}
         {active && sidebarCollapsed && (
           <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full" style={{ background: '#10b981' }} />
