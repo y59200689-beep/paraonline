@@ -23,6 +23,7 @@ export interface ShippingSettings {
   freeShippingThreshold?: number;
   shippingFee?: number;
   shippingRules?: { city: string; fee: number }[];
+  giftRanges?: { minAmount: number; maxAmount: number; productId: number; productName: string; isActive?: boolean }[];
 }
 
 /**
@@ -57,8 +58,15 @@ export function calculateShippingFee(
   isCouponFreeShipping: boolean
 ): number {
   const threshold = settings.freeShippingThreshold || 600;
-  const isFreeShipping = isCouponFreeShipping || subtotal >= threshold || subtotal === 0;
-  
+  const activeGiftRange = settings.giftRanges?.find(
+    (r) => r.isActive !== false && subtotal >= r.minAmount && subtotal <= r.maxAmount
+  );
+  const isGiftFreeShipping = !!(
+    activeGiftRange &&
+    (activeGiftRange.productId === -1 || activeGiftRange.productName === 'Livraison Gratuite')
+  );
+  const isFreeShipping = isCouponFreeShipping || isGiftFreeShipping || subtotal >= threshold || subtotal === 0;
+
   if (isFreeShipping) return 0;
   
   if (shippingCity) {

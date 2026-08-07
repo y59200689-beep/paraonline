@@ -392,17 +392,22 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Math calculations
   const subtotal = calculateSubtotal(cart);
-  const discountAmount = calculateDiscount(subtotal, appliedCoupon);
-  const shippingThreshold = settings.freeShippingThreshold || 600;
-  const isFreeShipping = !!(appliedCoupon?.freeShipping || subtotal >= shippingThreshold || subtotal === 0);
-  const shippingFee = calculateShippingFee(subtotal, shippingCity, settings, !!appliedCoupon?.freeShipping);
-  const amountNeededForFreeShipping = calculateAmountNeededForFreeShipping(subtotal, shippingThreshold);
-  const total = calculateTotal(subtotal, discountAmount, shippingFee);
-
   // Dynamically resolve tiered free gifts based on subtotal (order value) range
   const activeGiftRange = settings.giftRanges?.find(
     r => r.isActive !== false && subtotal >= r.minAmount && subtotal <= r.maxAmount
   );
+  const isFreeShippingGift = !!(
+    activeGiftRange &&
+    (activeGiftRange.productId === -1 || activeGiftRange.productName === 'Livraison Gratuite')
+  );
+
+  const discountAmount = calculateDiscount(subtotal, appliedCoupon);
+  const shippingThreshold = settings.freeShippingThreshold || 600;
+  const isFreeShipping = !!(appliedCoupon?.freeShipping || isFreeShippingGift || subtotal >= shippingThreshold || subtotal === 0);
+  const shippingFee = calculateShippingFee(subtotal, shippingCity, settings, !!appliedCoupon?.freeShipping || isFreeShippingGift);
+  const amountNeededForFreeShipping = calculateAmountNeededForFreeShipping(subtotal, shippingThreshold);
+  const total = calculateTotal(subtotal, discountAmount, shippingFee);
+
   const resolvedGiftName = activeGiftRange 
     ? activeGiftRange.productName 
     : (dailyGiftCode ? dailyGiftName : null);

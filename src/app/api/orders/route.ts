@@ -275,7 +275,12 @@ function calculateDiscount(subtotal: number, coupon: Coupon | null) {
 }
 
 function calculateShipping(subtotal: number, city: string, coupon: Coupon | null, settings: Record<string, any>) {
-  if (coupon?.freeShipping || subtotal >= Number(settings.freeShippingThreshold || 600)) return 0;
+  const giftRange = Array.isArray(settings.giftRanges)
+    ? settings.giftRanges.find((range: any) => range.isActive !== false && subtotal >= Number(range.minAmount) && subtotal <= Number(range.maxAmount))
+    : null;
+  const isFreeShippingGift = !!(giftRange && (Number(giftRange.productId) === -1 || giftRange.productName === 'Livraison Gratuite'));
+
+  if (coupon?.freeShipping || isFreeShippingGift || subtotal >= Number(settings.freeShippingThreshold || 600)) return 0;
   const cityRule = Array.isArray(settings.shippingRules)
     ? settings.shippingRules.find((rule: any) => String(rule.city).toLowerCase() === city.toLowerCase())
     : null;
