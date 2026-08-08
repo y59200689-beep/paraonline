@@ -302,10 +302,29 @@ function isTimeCompatible(product: Product, step: RoutineStep) {
   return step !== 'sunscreen' || product.timeOfDay.includes('morning');
 }
 
+/**
+ * Returns true if this product has explicit, DB-stored AI Diagnostic metadata
+ * (as opposed to inferred/enriched metadata). These products get a large priority bonus
+ * because the store owner has manually verified their diagnostic suitability.
+ */
+function hasExplicitDiagnosticData(product: Product): boolean {
+  return (
+    Array.isArray(product.routineRoles) && product.routineRoles.length > 0 &&
+    Array.isArray(product.suitableConcerns) && product.suitableConcerns.length > 0 &&
+    Array.isArray(product.suitableSkinTypes) && product.suitableSkinTypes.length > 0
+  );
+}
+
 function productFitScore(product: Product, answers: DiagnosticAnswers, extraKeywords: string[]) {
   const text = productText(product);
   const titleText = productTitleText(product);
   let score = 0;
+
+  // AI DIAGNOSTIC METADATA PRIORITY: Products with explicit DB-tagged diagnostic data
+  // are far more reliable than keyword-inferred ones. Give them a strong head-start.
+  if (hasExplicitDiagnosticData(product)) {
+    score += 35;
+  }
 
   // TITLE-FIRST CONCERN BOOST: Heavy priority when the product TITLE explicitly names the concern
   const titleConcernMatches = countMatches(titleText, CONCERN_TERMS[answers.concern] || []);
@@ -415,6 +434,12 @@ function isStrictlyEligibleForProfileAndStep(product: Product, answers: Diagnost
     if (includesAny(titleAndCategory, harshTerms)) return false;
   }
 
+  // 3b. HARD GATE: Redness and dry skin concerns CANNOT receive peels/exfoliants in treatment slot
+  if ((answers.concern === 'redness' || answers.skinType === 'dry') && step === 'treatment') {
+    const peelTerms = ['peeling', 'peel', 'scrub', 'acide glycolique', 'glycolic acid', 'exfoliant', 'gommage'];
+    if (includesAny(titleAndCategory, peelTerms)) return false;
+  }
+
   // 4. HARD GATE: Step role purity
   if (step === 'sunscreen') {
     const isSunscreen = normalize(product.category || '').includes('solaire') || includesAny(fullText, ['spf', 'solaire', 'ecran solaire', 'sunscreen', 'uvmune', 'photoprotection']);
@@ -431,11 +456,13 @@ function isStrictlyEligibleForProfileAndStep(product: Product, answers: Diagnost
   }
 
   if (step === 'treatment') {
-    // Exclude body sprays, itch sprays, and deodorant-style spray formats from face treatment slot
+    // Exclude body sprays, itch sprays, eye contours and deodorant-style spray formats from face treatment slot
     const titleLower = productTitleText(product);
     const isBadTreatment = includesAny(titleLower, [
       'spray sos', 'sos grattage', 'grattage', 'spray corps', 'deodorant', 'deo spray',
       'spray buccal', 'spray nasal',
+      'contour yeux', 'contour des yeux', 'eye contour', 'eye cream', 'contour eye',
+      'creme yeux', 'soin yeux', 'regard', 'yeux fatigues',
     ]);
     if (isBadTreatment) return false;
     // Must have at least one proper facial treatment indicator in title or text
@@ -532,8 +559,30 @@ export function buildDiagnosticRoutine(
         .sort((a, b) => b.score - a.score || b.product.rating - a.product.rating);
     }
 
-    const winner = candidates[0];
-    if (!winner) continue;
+    // Build a top-5 shortlist from the best candidates (prefer products with explicit diagnostic data)
+    // Then apply weighted random selection so the same answers can produce different routines each time.
+    const SHORTLIST_SIZE = 5;
+    const topExplicit = candidates.filter(c => hasExplicitDiagnosticData(c.product)).slice(0, SHORTLIST_SIZE);
+    const topFallback = candidates.filter(c => !hasExplicitDiagnosticData(c.product)).slice(0, SHORTLIST_SIZE);
+    // Use explicit-data products if available (at least 3), otherwise mix
+    const shortlist = topExplicit.length >= 3
+      ? topExplicit.slice(0, SHORTLIST_SIZE)
+      : [...topExplicit, ...topFallback].slice(0, SHORTLIST_SIZE);
+
+    if (!shortlist.length) continue;
+
+    // Weighted random selection: score is used as weight so higher-scored products
+    // have a proportionally higher chance of being selected, but any of the top-5 can win.
+    const minScore = Math.min(...shortlist.map(c => c.score));
+    const weights = shortlist.map(c => Math.max(c.score - minScore + 1, 1));
+    const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+    let rand = Math.random() * totalWeight;
+    let winner = shortlist[shortlist.length - 1]; // fallback to last if rounding error
+    for (let i = 0; i < shortlist.length; i++) {
+      rand -= weights[i];
+      if (rand <= 0) { winner = shortlist[i]; break; }
+    }
+
     selected.push({ step, product: winner.product, score: winner.score });
     usedIds.add(winner.product.id);
     if (winner.product.vendor) usedVendors.add(normalize(winner.product.vendor));
