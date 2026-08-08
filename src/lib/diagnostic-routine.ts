@@ -362,19 +362,18 @@ type RoutineBuilderOptions = {
 };
 
 function isStrictlyEligibleForProfileAndStep(product: Product, answers: DiagnosticAnswers, step: RoutineStep): boolean {
-  const text = productText(product);
-  const category = normalize(product.category || '');
+  const titleAndCategory = normalize([product.title, product.name, product.nameFr, product.category].filter(Boolean).join(' '));
+  const fullText = productText(product);
 
-  // 1. HARD GATE: Non-acne profiles CANNOT receive anti-acne / oil-control products
+  // 1. HARD GATE: Non-acne profiles CANNOT receive explicit anti-acne line products
   const isAcneProfile = answers.concern === 'acne' || answers.breakoutFrequency === 'frequent';
   if (!isAcneProfile) {
-    const acneTerms = [
+    const acneLines = [
       'acniben', 'actipur', 'acnilia', 'keracnyl', 'effaclar', 'acnewin', 'teen derm',
       'sebium', 'hyseac', 'zindaclin', 'controle de la brillance', 'brillance et des boutons',
-      'anti imperfection', 'anti imperfections', 'anti-imperfections', 'anti bouton', 'anti boutons',
-      'sebum control', 'anti sebum', 'bactericide',
+      'anti imperfection', 'anti-imperfections', 'anti bouton', 'anti-boutons',
     ];
-    if (includesAny(text, acneTerms)) return false;
+    if (includesAny(titleAndCategory, acneLines)) return false;
   }
 
   // 2. HARD GATE: Dry skin CANNOT receive mattifying / anti-shine products
@@ -383,23 +382,23 @@ function isStrictlyEligibleForProfileAndStep(product: Product, answers: Diagnost
       'matifiant', 'mattifiant', 'controle de la brillance', 'brillance et des boutons',
       'anti brillance', 'p.grasses', 'peaux grasses', 'peau grasse', 'sebum control',
     ];
-    if (includesAny(text, dryAntiterms)) return false;
+    if (includesAny(titleAndCategory, dryAntiterms)) return false;
   }
 
   // 3. HARD GATE: High sensitivity CANNOT receive aggressive peels or scrubs
   if (answers.sensitivity === 'high') {
     const harshTerms = ['peel', 'peeling', 'scrub', 'exfoliant fort', 'acide glycolique fort'];
-    if (includesAny(text, harshTerms)) return false;
+    if (includesAny(titleAndCategory, harshTerms)) return false;
   }
 
   // 4. HARD GATE: Step role purity
   if (step === 'sunscreen') {
-    const isSunscreen = category.includes('solaire') || includesAny(text, ['spf', 'solaire', 'ecran solaire', 'sunscreen', 'uvmune', 'photoprotection']);
+    const isSunscreen = normalize(product.category || '').includes('solaire') || includesAny(fullText, ['spf', 'solaire', 'ecran solaire', 'sunscreen', 'uvmune', 'photoprotection']);
     if (!isSunscreen) return false;
   }
 
   if (step === 'cleanser') {
-    const isCleanser = includesAny(text, [
+    const isCleanser = includesAny(fullText, [
       'nettoy', 'cleanser', 'cleansing', 'moussant', 'mousse nettoy', 'micell',
       'demaquill', 'face wash', 'huile lavante', 'creme lavante', 'gelee purifiante',
       'gel nettoyant', 'gel lavant', 'lait nettoyant', 'eau nettoyante', 'nettoyant',
@@ -431,26 +430,27 @@ export function buildDiagnosticRoutine(
     } as Product;
   });
 
-  let eligible = products.filter(isDiagnosticEligibleProduct);
+  const baseEligible = products.filter(isDiagnosticEligibleProduct);
+  let brandEligible = baseEligible;
   if (options.allowedBrands?.length) {
     const normalizedAllowed = options.allowedBrands.map(b => b.trim().toLowerCase());
-    eligible = eligible.filter(p => {
+    brandEligible = baseEligible.filter(p => {
       const v = (p.vendor || '').trim().toLowerCase();
       return normalizedAllowed.some(allowed => v === allowed || v.includes(allowed) || allowed.includes(v));
     });
   }
+
   const configuredIds = new Set(options.configuredProductIds || []);
   const selected: RoutineRecommendation[] = [];
   const usedIds = new Set<number>();
   const usedVendors = new Set<string>();
 
   for (const step of routineStepsFor(answers)) {
-    const candidates = eligible
+    const filterCandidates = (sourcePool: Product[]) => sourcePool
       .filter((product) => !usedIds.has(product.id)
         && isStructuredCompatibilitySafe(product, answers)
         && isTimeCompatible(product, step)
         && isStrictlyEligibleForProfileAndStep(product, answers, step)
-        // Prevent high-SPF sunscreen products from filling non-sunscreen steps
         && (step === 'sunscreen' || routineStepScores(product).sunscreen < 14)
         && routineStepScores(product)[step] >= 3)
       .map((product) => {
@@ -467,6 +467,24 @@ export function buildDiagnosticRoutine(
         };
       })
       .sort((a, b) => b.score - a.score || b.product.rating - a.product.rating || b.product.reviews - a.product.reviews || a.product.id - b.product.id);
+
+    let candidates = filterCandidates(brandEligible);
+
+    // Fallback 1: If brand constraint yields 0 candidates, search full catalogue
+    if (!candidates.length && brandEligible !== baseEligible) {
+      candidates = filterCandidates(baseEligible);
+    }
+
+    // Fallback 2: If strict rules yield 0 candidates for step, search base eligible without strict gate
+    if (!candidates.length) {
+      candidates = baseEligible
+        .filter((product) => !usedIds.has(product.id) && routineStepScores(product)[step] >= 1)
+        .map((product) => ({
+          product,
+          score: productFitScore(product, answers, options.extraKeywords || []),
+        }))
+        .sort((a, b) => b.score - a.score);
+    }
 
     const winner = candidates[0];
     if (!winner) continue;
