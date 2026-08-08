@@ -29,6 +29,55 @@ export const ROUTINE_STEP_LABELS: Record<RoutineStep, { fr: string; ar: string }
   sunscreen: { fr: 'Protéger', ar: 'الحماية' },
 };
 
+export type StepUsageInfo = {
+  when: { fr: string; ar: string };
+  tip: { fr: string; ar: string };
+  icon: string;
+};
+
+export const ROUTINE_STEP_USAGE: Record<RoutineStep, StepUsageInfo> = {
+  cleanser: {
+    when: { fr: 'Matin & Soir', ar: 'صباحاً ومساءً' },
+    tip: {
+      fr: "Appliquer sur peau mouillée, masser en douceur 30 secondes, rincer à l'eau tiède.",
+      ar: 'ضعيه على الوجه المبلل، دلّكي برفق 30 ثانية ثم اشطفي بالماء الدافئ.',
+    },
+    icon: '💧',
+  },
+  toner: {
+    when: { fr: 'Matin & Soir', ar: 'صباحاً ومساءً' },
+    tip: {
+      fr: 'Après nettoyage, appliquer sur un coton ou dans le creux des mains, tapoter délicatement.',
+      ar: 'بعد التنظيف، ضعيه بواسطة قطنة أو راحة اليد وانقريه برفق على البشرة.',
+    },
+    icon: '🌿',
+  },
+  treatment: {
+    when: { fr: 'Soir (ou matin si non photosensibilisant)', ar: 'مساءً (أو صباحاً إذا لم يكن حساساً للضوء)' },
+    tip: {
+      fr: "Appliquer 2–3 gouttes ou une noisette sur peau propre et sèche. Laisser pénétrer 1 minute avant l'hydratant.",
+      ar: 'ضعي 2–3 قطرات أو حبة بندق على البشرة النظيفة والجافة. انتظري دقيقة قبل المرطب.',
+    },
+    icon: '✨',
+  },
+  moisturizer: {
+    when: { fr: 'Matin & Soir', ar: 'صباحاً ومساءً' },
+    tip: {
+      fr: "Appliquer sur peau légèrement humide, masser avec des mouvements ascendants jusqu'à absorption complète.",
+      ar: 'ضعيه على بشرة رطبة قليلاً، دلّكي بحركات تصاعدية حتى الامتصاص الكامل.',
+    },
+    icon: '🧴',
+  },
+  sunscreen: {
+    when: { fr: 'Chaque matin (dernier geste)', ar: 'كل صباح (آخر خطوة)' },
+    tip: {
+      fr: "Appliquer généreusement 15 min avant exposition. Renouveler toutes les 2 heures en cas d'exposition prolongée au soleil.",
+      ar: 'ضعيه بكمية كافية قبل 15 دقيقة من التعرض للشمس. كرري التطبيق كل ساعتين عند التعرض المطوّل.',
+    },
+    icon: '☀️',
+  },
+};
+
 const normalize = (value: string) => value
   .normalize('NFD')
   .replace(/[\u0300-\u036f]/g, '')

@@ -44,6 +44,7 @@ import { Product } from '@/lib/data';
 import {
   buildDiagnosticRoutine,
   ROUTINE_STEP_LABELS,
+  ROUTINE_STEP_USAGE,
   type DiagnosticAnswers,
   type RoutineRecommendation,
 } from '@/lib/diagnostic-routine';
@@ -819,8 +820,14 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                     {recommendedProducts.map((product, index) => {
                       const routineStep = recommendedRoutine[index]?.step;
                       const stepLabel = routineStep ? ROUTINE_STEP_LABELS[routineStep] : null;
+                      const usage = routineStep ? ROUTINE_STEP_USAGE[routineStep] : null;
+                      // Dynamic sunscreen tip: if user is frequently exposed, emphasize re-application
+                      const sunscreenTip = routineStep === 'sunscreen' && answers.sunExposure === 'intense'
+                        ? { fr: "Appliquer 15 min avant exposition. Renouveler toutes les 2 heures \u2014 vous \u00eates souvent expos\u00e9(e) au soleil.", ar: '\u0636\u0639\u064a\u0647 \u0642\u0628\u0644 15 \u062f\u0642\u064a\u0642\u0629 \u0645\u0646 \u0627\u0644\u062a\u0639\u0631\u0636. \u0643\u0631\u0631\u064a \u0627\u0644\u062a\u0637\u0628\u064a\u0642 \u0643\u0644 \u0633\u0627\u0639\u062a\u064a\u0646 \u2014 \u062a\u0639\u0631\u0636\u0643\u0650 \u0644\u0644\u0634\u0645\u0633 \u0645\u0631\u062a\u0641\u0639.' }
+                        : null;
+
                       return (
-                      <article key={product.id} className="flex items-center gap-3 p-3.5 sm:gap-4 sm:p-4">
+                      <article key={product.id} className="flex gap-3 p-3.5 sm:gap-4 sm:p-4">
                         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-950 font-mono text-xs font-bold text-white">{index + 1}</span>
                         <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 p-1">
                           <Image src={product.image} alt={product.title} width={56} height={56} unoptimized className="h-full w-full object-contain" />
@@ -832,7 +839,20 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                             </span>
                           )}
                           <p className="truncate text-sm font-semibold text-slate-900">{product.title}</p>
-                          <p className="mt-1 text-xs text-slate-500">{product.vendor || product.category}</p>
+                          <p className="mt-0.5 text-xs text-slate-500">{product.vendor || product.category}</p>
+                          {usage && (
+                            <div className="mt-2 space-y-1">
+                              <p className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                                <span>{usage.icon}</span>
+                                <span>{isRTL ? usage.when.ar : usage.when.fr}</span>
+                              </p>
+                              <p className="text-[11px] leading-relaxed text-slate-500">
+                                {isRTL
+                                  ? (sunscreenTip?.ar ?? usage.tip.ar)
+                                  : (sunscreenTip?.fr ?? usage.tip.fr)}
+                              </p>
+                            </div>
+                          )}
                         </div>
                         <div className="shrink-0 text-end">
                           <strong className="block text-sm text-emerald-700">{Math.round(product.price * 0.85)} DH</strong>
