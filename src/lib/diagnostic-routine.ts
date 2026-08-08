@@ -204,12 +204,14 @@ const CONCERN_TERMS: Record<string, string[]> = {
 };
 
 // Strong signals that a product is specifically targeted at a given concern.
-// When the user's concern differs, matching these terms causes a score penalty.
+// When the user's concern differs, matching these terms causes a severe score penalty.
 const CONCERN_ANTITERMS: Record<string, string[]> = {
   acne: [
-    'acniben', 'acnilia', 'keracnyl', 'effaclar', 'acnewin', 'teen derm', 'neutrogena t gel',
-    'anti bouton', 'anti acne', 'anti imperfection', 'purifiant pores', 'sebum control',
-    'gel purifiant', 'soin purifiant', 'anti comedone', 'point noir',
+    'acniben', 'acnilia', 'actipur', 'keracnyl', 'effaclar', 'acnewin', 'teen derm',
+    'sebium', 'hyseac', 'zindaclin', 'dermo nettoyant', 'dermo-nettoyant', 'bactericide',
+    'anti bouton', 'anti boutons', 'anti acne', 'anti imperfection', 'anti imperfections',
+    'purifiant pores', 'sebum control', 'controle de la brillance', 'brillance et des boutons',
+    'gel purifiant', 'soin purifiant', 'anti comedone', 'point noir', 'points noirs',
   ],
   spots: [
     'azlabright', 'melascreen', 'pigmentclar', 'lumiactiv', 'depigment', 'depigmentant',
@@ -229,14 +231,29 @@ const CONCERN_ANTITERMS: Record<string, string[]> = {
   ],
 };
 
-const SKIN_TYPE_TERMS: Record<string, string[]> = {
-  oily: ['matifiant', 'mattifiant', 'sebum', 'pore', 'oil control', 'purif', 'non comedogene', 'p grasses', 'peau grasse'],
-  dry: ['hydrat', 'nourri', 'baume', 'ceramide', 'hyaluron', 'emollient', 'peau seche', 'seche', 'xero'],
-  mixed: ['equilibr', 'niacinamide', 'matifiant', 'hydrat', 'mixte', 'peau mixte'],
-  normal: ['daily', 'quotidien', 'doux', 'gentle', 'hydrat'],
+// Skin type mismatch penalties (e.g. oil-control / matifying products MUST NOT be given to dry skin)
+const SKIN_TYPE_ANTITERMS: Record<string, string[]> = {
+  dry: [
+    'matifiant', 'mattifiant', 'controle de la brillance', 'brillance et des boutons',
+    'anti brillance', 'p.grasses', 'peaux grasses', 'peau grasse', 'sebum control',
+    'anti imperfection', 'anti boutons', 'desincrustant',
+  ],
+  normal: [
+    'controle de la brillance', 'brillance et des boutons', 'p.grasses', 'peaux grasses',
+  ],
+  oily: [
+    'ultra riche', 'creme riche', 'baume nutritif', 'beurre', 'peau tres seche',
+  ],
 };
 
-const STRONG_ACTIVE_TERMS = ['retinol', 'retinal', 'peel', 'glycolic', 'aha ', 'bha ', 'forte concentration'];
+const SKIN_TYPE_TERMS: Record<string, string[]> = {
+  oily: ['matifiant', 'mattifiant', 'sebum', 'pore', 'oil control', 'purif', 'non comedogene', 'p grasses', 'peau grasse'],
+  dry: ['hydrat', 'nourri', 'baume', 'ceramide', 'hyaluron', 'emollient', 'peau seche', 'seche', 'xero', 'confort'],
+  mixed: ['equilibr', 'niacinamide', 'matifiant', 'hydrat', 'mixte', 'peau mixte'],
+  normal: ['daily', 'quotidien', 'doux', 'gentle', 'hydrat', 'confort'],
+};
+
+const STRONG_ACTIVE_TERMS = ['retinol', 'retinal', 'peel', 'peeling', 'exfoliant', 'glycolic', 'aha ', 'bha ', 'forte concentration'];
 const SOOTHING_TERMS = ['centella', 'cica', 'panthenol', 'madecassoside', 'ceramide', 'apais', 'barriere', 'doux', 'gentle'];
 
 const ANSWER_SKIN_TYPE: Record<string, SuitableSkinType> = {
@@ -272,14 +289,22 @@ function productFitScore(product: Product, answers: DiagnosticAnswers, extraKeyw
 
   // Primary concern match — greatly boosted
   score += countMatches(text, CONCERN_TERMS[answers.concern] || []) * 9;
+  
   // Cross-concern mismatch penalty — subtract if product strongly signals a different concern
   for (const [otherConcern, antiterms] of Object.entries(CONCERN_ANTITERMS)) {
     if (otherConcern === answers.concern) continue;
     const antiMatches = countMatches(text, (CONCERN_TERMS[otherConcern] || []));
     const antiSignal = countMatches(text, antiterms);
-    if (antiSignal >= 2 || antiMatches >= 4) score -= 25; // heavy mismatch (e.g. acnewin acne cleanser for wrinkles user)
-    else if (antiSignal >= 1 || antiMatches >= 2) score -= 12; // moderate mismatch (e.g. acnilia for spots user)
+    if (antiSignal >= 2 || antiMatches >= 4) score -= 35; // heavy mismatch
+    else if (antiSignal >= 1 || antiMatches >= 2) score -= 20; // moderate mismatch
   }
+
+  // Skin type mismatch penalty (e.g. oil-control products penalised for dry skin)
+  const skinTypeAntiterms = SKIN_TYPE_ANTITERMS[answers.skinType] || [];
+  const skinTypeAntiMatches = countMatches(text, skinTypeAntiterms);
+  if (skinTypeAntiMatches >= 2) score -= 30;
+  else if (skinTypeAntiMatches >= 1) score -= 15;
+
   score += countMatches(text, SKIN_TYPE_TERMS[answers.skinType] || []) * 4;
   score += countMatches(text, extraKeywords.map(normalize)) * 3;
 
@@ -300,11 +325,11 @@ function productFitScore(product: Product, answers: DiagnosticAnswers, extraKeyw
     score += countMatches(text, ['salicyl', 'niacinamide', 'azelaic', 'zinc', 'non comedogene']) * 3;
   }
   if (answers.sensitivity === 'high') {
-    score += countMatches(text, SOOTHING_TERMS) * 4;
-    score -= countMatches(text, STRONG_ACTIVE_TERMS) * 8;
+    score += countMatches(text, SOOTHING_TERMS) * 5;
+    score -= countMatches(text, STRONG_ACTIVE_TERMS) * 12; // Harsh actives & exfoliants penalized for high sensitivity
   }
   if (answers.activeTolerance === 'beginner') {
-    score -= countMatches(text, STRONG_ACTIVE_TERMS) * 5;
+    score -= countMatches(text, STRONG_ACTIVE_TERMS) * 8;
   } else if (answers.activeTolerance === 'advanced') {
     score += countMatches(text, ['retinol', 'retinal', 'peptide', 'vitamin c', 'vitamine c', 'acid']) * 2;
   }
