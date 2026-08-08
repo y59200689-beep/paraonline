@@ -15,6 +15,14 @@ interface Message {
   textFr: string;
   textAr: string;
   type?: 'text' | 'card' | 'order_collect' | 'order_confirm';
+  products?: Array<{
+    productId: number;
+    title: string;
+    price: number;
+    reasonFr: string;
+    reasonAr: string;
+    image?: string;
+  }>;
   cardData?: {
     titleFr: string;
     titleAr: string;
@@ -60,6 +68,7 @@ export const AiAssistant: React.FC = () => {
   const [lastPlacedOrderId, setLastPlacedOrderId] = useState<string | null>(null);
   const [verificationToken, setVerificationToken] = useState<string>('');
   const [activeOrderMessageIndex, setActiveOrderMessageIndex] = useState<number | null>(null);
+  const [showProductSearch, setShowProductSearch] = useState(false);
   const [orderSearch, setOrderSearch] = useState('');
   const normalizedOrderSearch = orderSearch.trim().toLocaleLowerCase('fr');
   const orderSearchResults = products
@@ -68,8 +77,38 @@ export const AiAssistant: React.FC = () => {
       .filter(Boolean)
       .some(value => String(value).toLocaleLowerCase('fr').includes(normalizedOrderSearch)))
     .slice(0, 5);
+
+  const getProductDetails = (productId: number) => {
+    const catalogProd = products.find(p => p.id === productId);
+    if (catalogProd) return catalogProd;
+
+    for (const m of messages) {
+      if (m.products) {
+        const match = m.products.find(p => p.productId === productId);
+        if (match) {
+          return {
+            id: match.productId,
+            title: match.title,
+            price: match.price,
+            image: match.image || '',
+            vendor: '',
+            category: ''
+          };
+        }
+      }
+    }
+    return {
+      id: productId,
+      title: `Produit #${productId}`,
+      price: 0,
+      image: '',
+      vendor: '',
+      category: ''
+    };
+  };
+
   const orderSubtotal = activeOrderForm?.items.reduce((total, item) => {
-    const product = products.find(candidate => candidate.id === item.productId);
+    const product = getProductDetails(item.productId);
     return total + (product ? product.price * item.quantity : 0);
   }, 0) || 0;
   const orderShippingEstimate = orderSubtotal >= 600 ? 0 : 35;
@@ -115,18 +154,29 @@ export const AiAssistant: React.FC = () => {
     );
   };
 
-  const startChatOrder = () => {
-    setActiveOrderForm({ customerName: '', phone: '', address: '', city: '', items: [] });
+  const startChatOrder = (initialProductId?: number) => {
+    const initialItems = initialProductId ? [{ productId: initialProductId, quantity: 1 }] : [];
+    setActiveOrderForm({ customerName: '', phone: '', address: '', city: '', items: initialItems });
     setOrderSearch('');
+    setShowProductSearch(!initialProductId);
     setLastPlacedOrderId(null);
     setVerificationToken('');
     setActiveOrderMessageIndex(messages.length);
+
+    const initialProduct = initialProductId ? getProductDetails(initialProductId) : null;
+    const introFr = initialProduct
+      ? `Produit "${initialProduct.title}" sélectionné. Renseignez vos coordonnées de livraison ci-dessous pour valider votre commande.`
+      : 'Je vous accompagne pour finaliser votre commande. Choisissez vos produits puis renseignez votre livraison ci-dessous.';
+    const introAr = initialProduct
+      ? `تم اختيار المنتج "${initialProduct.title}". أكملي بيانات التوصيل أدناه لتأكيد طلبكِ.`
+      : 'سأرافقكِ لإتمام طلبكِ. اختاري منتجاتكِ ثم أضيفي بيانات التوصيل أدناه.';
+
     setMessages(prev => [...prev, {
       sender: 'ai',
-      textFr: 'Je vous accompagne pour finaliser votre commande ici, en toute simplicité. Recherchez vos produits, puis renseignez votre livraison.',
-      textAr: 'سأرافقكِ لإتمام طلبكِ هنا بكل سهولة. ابحثي عن منتجاتكِ ثم أضيفي بيانات التوصيل.',
+      textFr: introFr,
+      textAr: introAr,
       type: 'order_collect',
-      orderData: { items: [] }
+      orderData: { items: initialItems }
     }]);
   };
 
@@ -155,7 +205,7 @@ export const AiAssistant: React.FC = () => {
     setIsOrderSubmitting(true);
     try {
       const orderItems = form.items.map((item) => {
-        const prod = products.find(p => p.id === item.productId);
+        const prod = getProductDetails(item.productId);
         return {
           id: item.productId,
           title: prod ? prod.title : 'Produit',
@@ -447,6 +497,7 @@ export const AiAssistant: React.FC = () => {
           textFr: data.message.textFr,
           textAr: data.message.textAr,
           type: data.message.type,
+          products: data.message.products,
           cardData: data.message.cardData,
           orderData: data.message.orderData
         }]);
@@ -561,6 +612,54 @@ export const AiAssistant: React.FC = () => {
                       {language === 'FR' ? msg.textFr : msg.textAr}
                     </p>
  
+                    {/* Recommended Products Cards */}
+                    {msg.products && msg.products.length > 0 && (
+                      <div className="mt-3 pt-2.5 border-t border-slate-100 flex flex-col gap-2">
+                        <span className="text-[9px] font-black uppercase tracking-wider text-emerald-700 block">
+                          {language === 'FR' ? 'Produits Recommandés :' : 'المنتجات الموصى بها :'}
+                        </span>
+                        {msg.products.map((item, pIdx) => {
+                          const catalogProduct = products.find(p => p.id === item.productId);
+                          const imageUrl = item.image || catalogProduct?.image;
+                          return (
+                            <div key={pIdx} className="p-2 bg-slate-50/90 border border-slate-200/75 rounded-xl flex items-center justify-between gap-2 shadow-xs">
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
+                                {imageUrl ? (
+                                  <img src={imageUrl} alt={item.title} className="w-9 h-9 object-contain rounded-md bg-white p-0.5 border border-slate-100 shrink-0" />
+                                ) : (
+                                  <div className="w-9 h-9 rounded-md bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-[10px] shrink-0">
+                                    {item.title.charAt(0)}
+                                  </div>
+                                )}
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-bold text-[10.5px] text-slate-800 truncate m-0">{item.title}</p>
+                                  <p className="text-[9.5px] text-slate-500 m-0 leading-tight truncate">
+                                    {language === 'FR' ? item.reasonFr : item.reasonAr}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0 flex flex-col items-end gap-1">
+                                <span className="font-mono text-[10.5px] font-bold text-emerald-700">{item.price} DH</span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (activeOrderForm && activeOrderMessageIndex !== null) {
+                                      addOrderProduct(item.productId);
+                                    } else {
+                                      startChatOrder(item.productId);
+                                    }
+                                  }}
+                                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[9.5px] rounded-md transition border-0 cursor-pointer shadow-xs active:scale-95"
+                                >
+                                  {language === 'FR' ? 'Commander' : 'طلب'}
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
                     {/* Card display inside message */}
                     {msg.type === 'card' && msg.cardData && (
                       <div className="mt-3.5 pt-3 border-t border-slate-100 flex flex-col gap-2.5">
@@ -601,103 +700,178 @@ export const AiAssistant: React.FC = () => {
                           </div>
                           <span className="rounded-full bg-white px-2 py-1 text-[9px] font-bold text-emerald-700 ring-1 ring-emerald-100">{language === 'FR' ? 'Paiement à la livraison' : 'الدفع عند الاستلام'}</span>
                         </div>
-                        <div className="flex flex-col gap-3 p-3.5">
-                          <span className="text-[10px] font-black uppercase text-accent tracking-wider block">{language === 'FR' ? '1. Choisissez vos produits' : '١. اختاري منتجاتكِ'}</span>
-                          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2 focus-within:border-emerald-400 focus-within:bg-white">
-                            <Search className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                            <input type="search" value={orderSearch} onChange={(event) => setOrderSearch(event.target.value)} placeholder={language === 'FR' ? 'Produit ou marque' : 'منتج أو علامة'} className="min-w-0 flex-1 bg-transparent text-[11px] font-semibold text-slate-700 outline-none placeholder:text-slate-400" />
-                          </div>
-                          <div className="max-h-40 space-y-1 overflow-y-auto pr-1">
-                            {orderSearchResults.map(product => (
-                              <div key={product.id} className="flex items-center gap-2 rounded-xl border border-slate-100 bg-white p-2">
-                                <div className="h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-slate-50">{product.image ? <img src={product.image} alt="" className="h-full w-full object-contain p-0.5" loading="lazy" /> : null}</div>
-                                <div className="min-w-0 flex-1"><p className="truncate text-[10px] font-bold text-slate-800">{product.title}</p><p className="mt-0.5 text-[9px] font-semibold text-slate-400">{product.vendor} · {product.price.toFixed(2)} DH</p></div>
-                                <button type="button" onClick={() => addOrderProduct(product.id)} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-emerald-300 hover:text-emerald-700" aria-label={language === 'FR' ? `Ajouter ${product.title}` : `إضافة ${product.title}`}><Plus className="h-3.5 w-3.5" /></button>
+                        <div className="flex flex-col gap-3.5 p-3.5">
+                          {/* 1. Selected Products Section */}
+                          <div>
+                            <div className="flex items-center justify-between gap-2 mb-2">
+                              <span className="text-[10px] font-black uppercase text-emerald-800 tracking-wider">
+                                {language === 'FR' ? '1. Produit(s) sélectionné(s)' : '١. المنتجات المختارة'}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setShowProductSearch(prev => !prev)}
+                                className="text-[9.5px] font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 cursor-pointer bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded-lg border border-emerald-200/60 transition"
+                              >
+                                <Plus className="h-3 w-3" />
+                                {language === 'FR' ? 'Ajouter un autre produit' : 'إضافة منتج آخر'}
+                              </button>
+                            </div>
+
+                            {activeOrderForm.items.length > 0 ? (
+                              <div className="space-y-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200/70">
+                                {activeOrderForm.items.map((item, itemIdx) => {
+                                  const prod = getProductDetails(item.productId);
+                                  if (!prod) return null;
+                                  return (
+                                    <div key={itemIdx} className="flex items-center justify-between gap-2.5 p-2 bg-white rounded-lg border border-slate-100 shadow-2xs">
+                                      {prod.image ? (
+                                        <img src={prod.image} alt="" className="w-8 h-8 object-contain rounded bg-slate-50 p-0.5 shrink-0" />
+                                      ) : (
+                                        <div className="w-8 h-8 rounded bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-[10px] shrink-0">
+                                          {prod.title.charAt(0)}
+                                        </div>
+                                      )}
+                                      <div className="min-w-0 flex-1">
+                                        <p className="truncate text-[10.5px] font-bold text-slate-800 m-0">{prod.title}</p>
+                                        <p className="text-[9.5px] font-bold text-emerald-700 m-0">{prod.price.toFixed(2)} DH</p>
+                                      </div>
+                                      <div className="flex items-center gap-1.5 shrink-0">
+                                        <button
+                                          type="button"
+                                          onClick={() => item.quantity === 1 ? handleRemoveOrderItem(item.productId) : handleUpdateQty(item.productId, -1)}
+                                          className="w-5 h-5 rounded bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold border-0 outline-none text-[11px] text-slate-700 cursor-pointer transition"
+                                        >
+                                          -
+                                        </button>
+                                        <span className="font-mono text-[11px] font-bold px-1">{item.quantity}</span>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleUpdateQty(item.productId, 1)}
+                                          className="w-5 h-5 rounded bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold border-0 outline-none text-[11px] text-slate-700 cursor-pointer transition"
+                                        >
+                                          +
+                                        </button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
-                            ))}
-                          </div>
-                          {activeOrderForm.items.length > 0 && <span className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-500">{language === 'FR' ? '2. Votre sélection et livraison' : '٢. اختياركِ والتوصيل'}</span>}
-                        
-                        {/* Products summary */}
-                        {activeOrderForm.items.length > 0 && <div className="space-y-1.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                          {activeOrderForm.items.map((item, itemIdx) => {
-                            const prod = products.find(p => p.id === item.productId);
-                            if (!prod) return null;
-                            return (
-                              <div key={itemIdx} className="flex items-center justify-between gap-2 text-[11px] font-bold">
-                                <span className="truncate flex-1">{prod.title}</span>
-                                <div className="flex items-center gap-1.5 shrink-0">
-                                  <button
-                                    type="button"
-                                  onClick={() => item.quantity === 1 ? handleRemoveOrderItem(item.productId) : handleUpdateQty(item.productId, -1)}
-                                    className="w-4 h-4 rounded bg-slate-200 hover:bg-slate-300 flex items-center justify-center font-bold border-0 outline-none text-[10px] cursor-pointer"
-                                  >
-                                    -
-                                  </button>
-                                  <span className="font-mono">{item.quantity}</span>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleUpdateQty(item.productId, 1)}
-                                    className="w-4 h-4 rounded bg-slate-200 hover:bg-slate-300 flex items-center justify-center font-bold border-0 outline-none text-[10px] cursor-pointer"
-                                  >
-                                    +
-                                  </button>
+                            ) : (
+                              <div className="p-3 bg-amber-50 border border-amber-200/80 rounded-xl text-center">
+                                <p className="text-[10.5px] font-bold text-amber-800 m-0">
+                                  {language === 'FR' ? 'Aucun produit sélectionné. Cliquez ci-dessous pour rechercher un produit.' : 'لم يتم اختيار أي منتج. اضغطي أدناه للبحث عن منتج.'}
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Collapsible Product Search Box */}
+                            {(showProductSearch || activeOrderForm.items.length === 0) && (
+                              <div className="mt-3 space-y-2 p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                                <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-2 focus-within:border-emerald-400">
+                                  <Search className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                                  <input
+                                    type="search"
+                                    value={orderSearch}
+                                    onChange={(event) => setOrderSearch(event.target.value)}
+                                    placeholder={language === 'FR' ? 'Rechercher un produit ou une marque...' : 'ابحثي عن منتج أو علامة تجارية...'}
+                                    className="min-w-0 flex-1 bg-transparent text-[11px] font-semibold text-slate-700 outline-none placeholder:text-slate-400"
+                                  />
                                 </div>
-                                <span className="font-mono shrink-0 text-emerald-600">{(prod.price * item.quantity).toFixed(2)} DH</span>
+                                <div className="max-h-40 space-y-1 overflow-y-auto pr-1">
+                                  {orderSearchResults.map(product => (
+                                    <div key={product.id} className="flex items-center gap-2 rounded-xl border border-slate-100 bg-white p-2">
+                                      <div className="h-8 w-8 shrink-0 overflow-hidden rounded bg-slate-50">
+                                        {product.image ? <img src={product.image} alt="" className="h-full w-full object-contain p-0.5" loading="lazy" /> : null}
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <p className="truncate text-[10px] font-bold text-slate-800">{product.title}</p>
+                                        <p className="mt-0.5 text-[9px] font-semibold text-slate-400">{product.vendor} · {product.price.toFixed(2)} DH</p>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          addOrderProduct(product.id);
+                                        }}
+                                        className="flex h-6 px-2 shrink-0 items-center justify-center gap-1 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[9.5px] transition cursor-pointer border-0"
+                                      >
+                                        <Plus className="h-3 w-3" />
+                                        {language === 'FR' ? 'Ajouter' : 'إضافة'}
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
-                            );
-                          })}
-                        </div>}
+                            )}
+                          </div>
 
-                        {/* Customer Form Inputs */}
-                        {activeOrderForm.items.length > 0 && <div className="space-y-2">
-                          <input
-                            type="text"
-                            placeholder={language === 'FR' ? "Nom Complet" : "الاسم الكامل"}
-                            value={activeOrderForm.customerName}
-                            onChange={(e) => setActiveOrderForm(prev => prev ? { ...prev, customerName: e.target.value } : null)}
-                            className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-[11px] font-semibold focus:outline-none focus:border-primary-dark"
-                          />
-                          <input
-                            type="tel"
-                            placeholder={language === 'FR' ? "Numéro de Téléphone" : "رقم الهاتف"}
-                            value={activeOrderForm.phone}
-                            onChange={(e) => setActiveOrderForm(prev => prev ? { ...prev, phone: normalizeMoroccanPhoneInput(e.target.value) } : null)}
-                            className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-[11px] font-semibold focus:outline-none focus:border-primary-dark"
-                            inputMode="numeric"
-                            maxLength={MOROCCAN_PHONE_MAX_DIGITS}
-                          />
-                          <input
-                            type="text"
-                            placeholder={language === 'FR' ? "Adresse de livraison" : "عنوان التوصيل"}
-                            value={activeOrderForm.address}
-                            onChange={(e) => setActiveOrderForm(prev => prev ? { ...prev, address: e.target.value } : null)}
-                            className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-[11px] font-semibold focus:outline-none focus:border-primary-dark"
-                          />
-                          <input
-                            type="text"
-                            placeholder={language === 'FR' ? "Ville" : "المدينة"}
-                            value={activeOrderForm.city}
-                            onChange={(e) => setActiveOrderForm(prev => prev ? { ...prev, city: e.target.value } : null)}
-                            className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-[11px] font-semibold focus:outline-none focus:border-primary-dark"
-                          />
-                        </div>}
+                          {/* 2. Customer Delivery Information Section */}
+                          {activeOrderForm.items.length > 0 && (
+                            <div className="space-y-2.5 pt-2 border-t border-slate-100">
+                              <span className="text-[10px] font-black uppercase tracking-[0.12em] text-emerald-800 block">
+                                {language === 'FR' ? '2. Coordonnées de livraison' : '٢. بيانات التوصيل'}
+                              </span>
+                              <div className="space-y-2">
+                                <input
+                                  type="text"
+                                  placeholder={language === 'FR' ? "Nom Complet" : "الاسم الكامل"}
+                                  value={activeOrderForm.customerName}
+                                  onChange={(e) => setActiveOrderForm(prev => prev ? { ...prev, customerName: e.target.value } : null)}
+                                  className="w-full px-2.5 py-2 border border-slate-200 rounded-xl text-[11px] font-semibold focus:outline-none focus:border-emerald-500"
+                                />
+                                <input
+                                  type="tel"
+                                  placeholder={language === 'FR' ? "Numéro de Téléphone (ex: 0612345678)" : "رقم الهاتف"}
+                                  value={activeOrderForm.phone}
+                                  onChange={(e) => setActiveOrderForm(prev => prev ? { ...prev, phone: normalizeMoroccanPhoneInput(e.target.value) } : null)}
+                                  className="w-full px-2.5 py-2 border border-slate-200 rounded-xl text-[11px] font-semibold focus:outline-none focus:border-emerald-500"
+                                  inputMode="numeric"
+                                  maxLength={MOROCCAN_PHONE_MAX_DIGITS}
+                                />
+                                <input
+                                  type="text"
+                                  placeholder={language === 'FR' ? "Adresse de livraison" : "عنوان التوصيل"}
+                                  value={activeOrderForm.address}
+                                  onChange={(e) => setActiveOrderForm(prev => prev ? { ...prev, address: e.target.value } : null)}
+                                  className="w-full px-2.5 py-2 border border-slate-200 rounded-xl text-[11px] font-semibold focus:outline-none focus:border-emerald-500"
+                                />
+                                <input
+                                  type="text"
+                                  placeholder={language === 'FR' ? "Ville (ex: Casablanca, Rabat...)" : "المدينة"}
+                                  value={activeOrderForm.city}
+                                  onChange={(e) => setActiveOrderForm(prev => prev ? { ...prev, city: e.target.value } : null)}
+                                  className="w-full px-2.5 py-2 border border-slate-200 rounded-xl text-[11px] font-semibold focus:outline-none focus:border-emerald-500"
+                                />
+                              </div>
 
-                        {/* Action buttons */}
-                        {activeOrderForm.items.length > 0 && <>
-                        <div className="rounded-xl bg-slate-950 px-3 py-2.5 text-white"><div className="flex items-center justify-between text-[10px] font-semibold text-white/70"><span>{language === 'FR' ? 'Livraison estimée' : 'تقدير التوصيل'}</span><span>{orderShippingEstimate === 0 ? (language === 'FR' ? 'Offerte' : 'مجانية') : `${orderShippingEstimate.toFixed(2)} DH`}</span></div><div className="mt-1 flex items-center justify-between text-xs font-black"><span>{language === 'FR' ? 'Total estimé' : 'المجموع التقديري'}</span><span>{(orderSubtotal + orderShippingEstimate).toFixed(2)} DH</span></div></div>
-                        <button
-                          type="button"
-                          disabled={isOrderSubmitting || !activeOrderForm.customerName || !isValidMoroccanPhone(activeOrderForm.phone) || !activeOrderForm.address || !activeOrderForm.city || activeOrderForm.items.length === 0}
-                          onClick={() => handlePlaceAiOrder(activeOrderForm)}
-                          className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-black text-[10px] uppercase tracking-[0.1em] rounded-xl shadow-[0_10px_20px_rgba(5,150,105,0.22)] transition active:scale-95 border-0 outline-none text-center"
-                        >
-                          {isOrderSubmitting
-                            ? (language === 'FR' ? 'Enregistrement...' : 'جاري تسجيل الطلب...')
-                            : (language === 'FR' ? 'Confirmer ma Commande' : 'تأكيد الطلب الآن')}
-                        </button>
-                        <p className="flex items-start gap-1.5 text-[9px] leading-relaxed text-slate-400"><MapPin className="mt-0.5 h-3 w-3 shrink-0" />{language === 'FR' ? 'Le stock, les frais et le total final sont vérifiés en temps réel avant la création.' : 'يتم التحقق من المخزون ورسوم الشحن والمجموع النهائي مباشرةً قبل إنشاء الطلب.'}</p>
-                        </>}
+                              {/* Pricing summary */}
+                              <div className="rounded-xl bg-slate-950 px-3 py-2.5 text-white">
+                                <div className="flex items-center justify-between text-[10px] font-semibold text-white/70">
+                                  <span>{language === 'FR' ? 'Livraison estimée' : 'تقدير التوصيل'}</span>
+                                  <span>{orderShippingEstimate === 0 ? (language === 'FR' ? 'Offerte' : 'مجانية') : `${orderShippingEstimate.toFixed(2)} DH`}</span>
+                                </div>
+                                <div className="mt-1 flex items-center justify-between text-xs font-black">
+                                  <span>{language === 'FR' ? 'Total estimé' : 'المجموع التقديري'}</span>
+                                  <span>{(orderSubtotal + orderShippingEstimate).toFixed(2)} DH</span>
+                                </div>
+                              </div>
+
+                              {/* Confirm Button */}
+                              <button
+                                type="button"
+                                disabled={isOrderSubmitting || !activeOrderForm.customerName || !isValidMoroccanPhone(activeOrderForm.phone) || !activeOrderForm.address || !activeOrderForm.city || activeOrderForm.items.length === 0}
+                                onClick={() => handlePlaceAiOrder(activeOrderForm)}
+                                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-black text-[10px] uppercase tracking-[0.1em] rounded-xl shadow-[0_10px_20px_rgba(5,150,105,0.22)] transition active:scale-95 border-0 outline-none text-center cursor-pointer"
+                              >
+                                {isOrderSubmitting
+                                  ? (language === 'FR' ? 'Enregistrement...' : 'جاري تسجيل الطلب...')
+                                  : (language === 'FR' ? 'Confirmer ma Commande' : 'تأكيد الطلب الآن')}
+                              </button>
+                              <p className="flex items-start gap-1.5 text-[9px] leading-relaxed text-slate-400">
+                                <MapPin className="mt-0.5 h-3 w-3 shrink-0" />
+                                {language === 'FR' ? 'Le stock, les frais et le total final sont vérifiés en temps réel avant la création.' : 'يتم التحقق من المخزون ورسوم الشحن والمجموع النهائي مباشرةً قبل إنشاء الطلب.'}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </section>
                     )}
@@ -722,33 +896,7 @@ export const AiAssistant: React.FC = () => {
             )}
           </div>
 
-          {/* Quick presets (Pills zone) */}
-          <div className="p-3 border-t border-slate-100 bg-white shrink-0 flex flex-col gap-2 select-none">
-            <span className={`text-[8.5px] font-black uppercase tracking-wider text-slate-400 block ${isRTL ? 'text-right' : 'text-left'}`}>
-              {language === 'FR' ? 'Consultations Fréquentes :' : 'الاستشارات الشائعة :'}
-            </span>
-            <div className="flex flex-wrap gap-2 justify-start max-h-[110px] overflow-y-auto no-scrollbar">
-              <button
-                type="button"
-                onClick={startChatOrder}
-                disabled={isTyping}
-                className="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 border border-emerald-600 rounded-lg text-[10.5px] font-extrabold text-white transition-all cursor-pointer leading-tight active:scale-[0.98] outline-none shrink-0"
-              >
-                <ShoppingBag className="h-3.5 w-3.5" />
-                {language === 'FR' ? 'Commander par le chat' : 'الطلب عبر المحادثة'}
-              </button>
-              {PRESETS.map((preset) => (
-                <button
-                  key={preset.id}
-                  onClick={() => handleSelectPreset(preset)}
-                  disabled={isTyping}
-                  className="px-3 py-2 bg-slate-50 hover:bg-primary-dark border border-slate-200 rounded-lg text-[10.5px] font-extrabold text-primary-dark hover:text-white transition-all cursor-pointer leading-tight active:scale-[0.98] outline-none shrink-0"
-                >
-                  {language === 'FR' ? preset.qFr : preset.qAr}
-                </button>
-              ))}
-            </div>
-          </div>
+
 
           {/* Input Zone */}
           <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-100 bg-white shrink-0 flex items-center gap-2">

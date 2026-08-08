@@ -132,7 +132,7 @@ async function seedAndFetch() {
 
     if (inserted?.id && answers?.length) {
       const answerRows = answers.map(a => ({
-        ...a, question_id: inserted.id, created_by: 'system', updated_by: 'system',
+        ...a, question_id: inserted.id,
       }));
       await supabaseAdmin
         .from('cms_diagnostic_answers')
@@ -231,7 +231,7 @@ export async function PATCH(req: NextRequest) {
     const { question_id, value_key, label_fr, label_ar, icon, display_order: aOrder } = body;
     if (!question_id || !value_key || !label_fr) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
     const { data, error } = await supabaseAdmin.from('cms_diagnostic_answers')
-      .insert({ question_id, value_key, label_fr, label_ar: label_ar || '', icon: icon || null, display_order: aOrder ?? 999, enabled: true, created_by: session.username, updated_by: session.username })
+      .insert({ question_id, value_key, label_fr, label_ar: label_ar || '', icon: icon || null, display_order: aOrder ?? 999, enabled: true })
       .select().single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ answer: data }, { status: 201 });

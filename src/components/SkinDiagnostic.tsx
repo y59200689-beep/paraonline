@@ -152,6 +152,8 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
   const [isGenerating, setIsGenerating] = useState(false);
   const dialogRef = useRef<HTMLElement>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+  // Always-current answers ref — avoids stale closure in setTimeout callbacks
+  const answersRef = useRef<DiagnosticAnswers>(EMPTY_ANSWERS);
 
   // Fetch dynamic questions from CMS whenever modal opens
   useEffect(() => {
@@ -247,10 +249,17 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
     };
   }, [isOpen, onClose]);
 
+  // Keep answersRef in sync with answers state
+  useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
+
   useEffect(() => {
     if (!isOpen) {
+      const fresh = { ...EMPTY_ANSWERS };
       setQuestionIndex(-1);
-      setAnswers(EMPTY_ANSWERS);
+      setAnswers(fresh);
+      answersRef.current = fresh;
       setRecommendedProducts([]);
       setRecommendedRoutine([]);
       setMatchedRule(null);
@@ -266,14 +275,17 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
   }, [answers]);
 
   const buildRecommendations = () => {
+    // Always read from the ref to avoid stale closure over `answers` state
+    const currentAnswers = { ...answersRef.current };
+
     const rules = settings?.diagnosticRules || [];
     let bestRule: any = null;
     let highestRuleScore = -1;
 
     for (const rule of rules) {
-      const matchConcern = rule.concern === 'any' || rule.concern === answers.concern;
-      const matchSkinType = rule.skinType === 'any' || rule.skinType === answers.skinType;
-      const matchSunExposure = rule.sunExposure === 'any' || rule.sunExposure === answers.sunExposure;
+      const matchConcern = rule.concern === 'any' || rule.concern === currentAnswers.concern;
+      const matchSkinType = rule.skinType === 'any' || rule.skinType === currentAnswers.skinType;
+      const matchSunExposure = rule.sunExposure === 'any' || rule.sunExposure === currentAnswers.sunExposure;
       if (!matchConcern || !matchSkinType || !matchSunExposure) continue;
 
       const ruleScore = Number(rule.concern !== 'any') + Number(rule.skinType !== 'any') + Number(rule.sunExposure !== 'any');
@@ -285,11 +297,12 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
 
     setMatchedRule(bestRule);
 
-    const customConcern = (settings.customConcerns || []).find((concern: any) => concern.id === answers.concern);
+    const customConcern = (settings.customConcerns || []).find((concern: any) => concern.id === currentAnswers.concern);
     const configuredIds: number[] = bestRule?.productIds?.length
       ? bestRule.productIds
       : customConcern?.productIds || [];
-    const routine = buildDiagnosticRoutine(products, answers, {
+
+    const routine = buildDiagnosticRoutine(products, currentAnswers, {
       configuredProductIds: configuredIds,
       extraKeywords: [...(customConcern?.keywords || []), ...(customConcern?.ingredientKeywords || [])],
     });
@@ -299,10 +312,10 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
     fetch('/api/diagnostics', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(answers),
+      body: JSON.stringify(currentAnswers),
     }).catch((error) => console.error('Diagnostics API sync error:', error));
 
-    setDiagnostic(answers);
+    setDiagnostic(currentAnswers);
     earnPoints(100, 'Diagnostic de peau IA', 'تشخيص البشرة بالذكاء الاصطناعي');
   };
 
@@ -322,8 +335,10 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
   };
 
   const handleReset = () => {
+    const fresh = { ...EMPTY_ANSWERS };
+    answersRef.current = fresh;
+    setAnswers(fresh);
     setQuestionIndex(-1);
-    setAnswers(EMPTY_ANSWERS);
     setRecommendedProducts([]);
     setRecommendedRoutine([]);
     setMatchedRule(null);

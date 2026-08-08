@@ -5,6 +5,7 @@ import { useAdmin } from '@/context/AdminContext';
 import { canManageChat, canEditContent } from '@/lib/permissions';
 import { MessageSquare, Save, Loader2, Sparkles, Plus, Trash2, HelpCircle } from 'lucide-react';
 import { BilingualField } from '@/components/admin/ui/BilingualField';
+import { BrandRestrictionSection } from '@/components/admin/BrandRestrictionSection';
 
 interface SuggestedPrompt {
   id: string;
@@ -141,7 +142,7 @@ export default function ExperienceAssistantPage() {
         <div>
           <h1 style={{ fontSize: 'var(--admin-text-xl)', fontWeight: 900, color: isDark ? '#f1f5f9' : '#0f172a', margin: 0 }}>Assistant Chat IA</h1>
           <p style={{ fontSize: '13px', color: isDark ? '#475569' : '#94a3b8', margin: '4px 0 0' }}>
-            Personnalisez le comportement commercial et les messages d&apos;accueil de l&apos;assistant. Les clés d&apos;API et le prompt système ne sont pas exposés.
+            Personnalisez le comportement commercial, la restriction des marques et les messages d&apos;accueil de l&apos;assistant.
           </p>
         </div>
 
@@ -149,13 +150,22 @@ export default function ExperienceAssistantPage() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-xs uppercase tracking-wider shadow-md shadow-emerald-500/25 hover:shadow-lg hover:shadow-emerald-500/35 transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              height: '36px', padding: '0 16px', borderRadius: 'var(--admin-radius)',
+              background: dirty ? '#10b981' : isDark ? '#1e293b' : '#f1f5f9',
+              color: dirty ? '#fff' : isDark ? '#e2e8f0' : '#0f172a',
+              fontSize: '13px', fontWeight: 800, border: 'none', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: '8px', opacity: saving ? 0.6 : 1,
+            }}
           >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            {saving ? 'Enregistrement...' : 'Enregistrer'}
+            {saving ? <Loader2 style={{ width: '14px', height: '14px' }} className="animate-spin" /> : <Save style={{ width: '14px', height: '14px' }} />}
+            Enregistrer
           </button>
         )}
       </div>
+
+      {/* Brand Restriction Section */}
+      <BrandRestrictionSection isDark={isDark} />
 
       {/* Main card */}
       <div style={{ padding: '24px', borderRadius: 'var(--admin-radius-lg)', border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.07)', background: isDark ? 'rgba(255,255,255,0.01)' : '#fff', display: 'flex', flexDirection: 'column', gap: '20px' }}>

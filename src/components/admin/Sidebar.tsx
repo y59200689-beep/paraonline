@@ -94,7 +94,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const isDark = adminTheme === 'dark';
   const role = (currentUser?.role ?? 'viewer') as any;
 
-  const pendingOrders = orders.filter(o => o.status.toLowerCase() === 'pending').length;
+  const pendingOrders = orders.length;
   const pendingReviews = reviews.filter(r => r.status === 'pending').length;
 
   // Collapsible group state

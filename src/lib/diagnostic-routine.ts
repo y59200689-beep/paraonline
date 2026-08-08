@@ -247,6 +247,7 @@ function routineStepsFor(answers: DiagnosticAnswers): RoutineStep[] {
 type RoutineBuilderOptions = {
   configuredProductIds?: number[];
   extraKeywords?: string[];
+  allowedBrands?: string[];
 };
 
 export function buildDiagnosticRoutine(
@@ -254,7 +255,14 @@ export function buildDiagnosticRoutine(
   answers: DiagnosticAnswers,
   options: RoutineBuilderOptions = {},
 ): RoutineRecommendation[] {
-  const eligible = products.filter(isDiagnosticEligibleProduct);
+  let eligible = products.filter(isDiagnosticEligibleProduct);
+  if (options.allowedBrands?.length) {
+    const normalizedAllowed = options.allowedBrands.map(b => b.trim().toLowerCase());
+    eligible = eligible.filter(p => {
+      const v = (p.vendor || '').trim().toLowerCase();
+      return normalizedAllowed.some(allowed => v === allowed || v.includes(allowed) || allowed.includes(v));
+    });
+  }
   const configuredIds = new Set(options.configuredProductIds || []);
   const selected: RoutineRecommendation[] = [];
   const usedIds = new Set<number>();

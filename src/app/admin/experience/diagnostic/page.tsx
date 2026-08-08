@@ -8,6 +8,7 @@ import {
   GripVertical, Save, Loader2, AlertCircle, Check, X, Edit2,
 } from 'lucide-react';
 import { EmptyState } from '@/components/admin/ui/EmptyState';
+import { BrandRestrictionSection } from '@/components/admin/BrandRestrictionSection';
 
 interface DiagnosticAnswer {
   id: string;
@@ -599,6 +600,9 @@ export default function DiagnosticPage() {
             </button>
           )}
         </div>
+
+        {/* Brand Restriction Section */}
+        <BrandRestrictionSection isDark={isDark} />
 
         {/* Read-only notice */}
         {!canEdit && (
