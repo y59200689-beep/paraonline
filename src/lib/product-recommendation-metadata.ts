@@ -199,3 +199,70 @@ export function normalizeRecommendationMetadata(input: Record<string, unknown>):
 }
 
 export const formatMetadataForSheet = (values: readonly string[] | undefined) => (values || []).join(' | ');
+
+/**
+ * Automatically infers and enriches diagnostic metadata (roles, suitable skin types,
+ * suitable concerns, sensitivity levels, active strength, time of day) for any product
+ * if DB values are missing.
+ */
+export function enrichProductMetadata(product: Partial<Product>): ProductRecommendationMetadata {
+  const text = [
+    product.title, product.name, product.nameFr, product.category,
+    ...(product.categories || []), ...(product.tags || []),
+    product.description, product.ingredients, product.usage,
+  ].filter(Boolean).join(' ').toLowerCase();
+
+  // 1. Infer Routine Roles
+  const roles = new Set<RoutineRole>(product.routineRoles || []);
+  if (!roles.size) {
+    if (text.includes('solaire') || text.includes('spf') || text.includes('ecran')) roles.add('sunscreen');
+    if (text.includes('nettoy') || text.includes('cleanser') || text.includes('mouss') || text.includes('micell')) roles.add('cleanser');
+    if (text.includes('demaquill')) roles.add('makeup_remover');
+    if (text.includes('tonique') || text.includes('toner') || text.includes('essence')) roles.add('toner');
+    if (text.includes('serum') || text.includes('concentre') || text.includes('ampoule') || text.includes('traitement') || text.includes('anti ride') || text.includes('anti tache')) roles.add('treatment');
+    if (text.includes('creme') || text.includes('hydrat') || text.includes('baume') || text.includes('emollient') || text.includes('fluide')) roles.add('moisturizer');
+  }
+
+  // 2. Infer Suitable Skin Types
+  const skinTypes = new Set<SuitableSkinType>(product.suitableSkinTypes || []);
+  if (!skinTypes.size) {
+    if (text.includes('toutes peaux') || text.includes('tout type') || text.includes('tous types')) {
+      skinTypes.add('normal'); skinTypes.add('dry'); skinTypes.add('oily'); skinTypes.add('combination');
+    }
+    if (text.includes('peau seche') || text.includes('seche') || text.includes('secheresse') || text.includes('nourri') || text.includes('baume')) skinTypes.add('dry');
+    if (text.includes('peau grasse') || text.includes('p.grasses') || text.includes('matifiant') || text.includes('sebum') || text.includes('acne')) skinTypes.add('oily');
+    if (text.includes('peau mixte') || text.includes('mixte') || text.includes('equilibr')) skinTypes.add('combination');
+    if (!skinTypes.size) {
+      skinTypes.add('normal'); skinTypes.add('dry'); skinTypes.add('oily'); skinTypes.add('combination');
+    }
+  }
+
+  // 3. Infer Suitable Concerns
+  const concerns = new Set<SuitableConcern>(product.suitableConcerns || []);
+  if (!concerns.size) {
+    if (text.includes('acne') || text.includes('imperfection') || text.includes('bouton') || text.includes('point noir')) concerns.add('acne');
+    if (text.includes('tache') || text.includes('depigment') || text.includes('eclat') || text.includes('vitamin c') || text.includes('azlabright')) concerns.add('dark_spots');
+    if (text.includes('ride') || text.includes('anti age') || text.includes('fermete') || text.includes('retinol') || text.includes('collagen')) concerns.add('wrinkles');
+    if (text.includes('hydrat') || text.includes('deshydrat') || text.includes('secheresse') || text.includes('hyaluron')) concerns.add('dryness');
+    if (text.includes('rougeur') || text.includes('rosace') || text.includes('couperose') || text.includes('cica') || text.includes('apais')) concerns.add('redness');
+  }
+
+  // 4. Infer Sensitivity Levels
+  const sensitivity = new Set<SensitivityLevel>(product.sensitivityLevels || []);
+  if (!sensitivity.size) {
+    if (text.includes('haute tolerance') || text.includes('peau sensible') || text.includes('hypersensible') || text.includes('cica') || text.includes('apais') || text.includes('toleriane')) {
+      sensitivity.add('low'); sensitivity.add('medium'); sensitivity.add('high');
+    } else {
+      sensitivity.add('low'); sensitivity.add('medium');
+    }
+  }
+
+  return {
+    routineRoles: Array.from(roles),
+    suitableSkinTypes: Array.from(skinTypes),
+    suitableConcerns: Array.from(concerns),
+    sensitivityLevels: Array.from(sensitivity),
+    activeStrength: product.activeStrength || (text.includes('retinol') || text.includes('peel') ? 'strong' : 'gentle'),
+    timeOfDay: product.timeOfDay?.length ? product.timeOfDay : ['morning', 'evening'],
+  };
+}

@@ -52,9 +52,11 @@ const normalizeIngredientKey = (value: string) => value
   .replace(/[^a-z0-9]+/g, '_')
   .replace(/^_|_$/g, '');
 
+import { enrichProductMetadata } from '@/lib/product-recommendation-metadata';
+
 function mapProduct(item: Record<string, unknown>): Product {
   const category = item.category as string;
-  return {
+  const baseProduct: Partial<Product> = {
     id: item.id as number,
     title: item.title as string,
     name: (item.name as string) || undefined,
@@ -82,9 +84,21 @@ function mapProduct(item: Record<string, unknown>): Product {
     suitableSkinTypes: Array.isArray(item.suitable_skin_types) ? item.suitable_skin_types as Product['suitableSkinTypes'] : [],
     suitableConcerns: Array.isArray(item.suitable_concerns) ? item.suitable_concerns as Product['suitableConcerns'] : [],
     sensitivityLevels: Array.isArray(item.sensitivity_levels) ? item.sensitivity_levels as Product['sensitivityLevels'] : [],
-    activeStrength: (item.active_strength as Product['activeStrength']) || 'none',
+    activeStrength: (item.active_strength as Product['activeStrength']) || undefined,
     timeOfDay: Array.isArray(item.time_of_day) ? item.time_of_day as Product['timeOfDay'] : [],
   };
+
+  const enriched = enrichProductMetadata(baseProduct);
+
+  return {
+    ...baseProduct,
+    routineRoles: enriched.routineRoles,
+    suitableSkinTypes: enriched.suitableSkinTypes,
+    suitableConcerns: enriched.suitableConcerns,
+    sensitivityLevels: enriched.sensitivityLevels,
+    activeStrength: enriched.activeStrength,
+    timeOfDay: enriched.timeOfDay,
+  } as Product;
 }
 
 async function fetchProductFacetRows() {

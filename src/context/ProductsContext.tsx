@@ -16,12 +16,14 @@ interface ProductsContextProps {
 
 const ProductsContext = createContext<ProductsContextProps | undefined>(undefined);
 
+import { enrichProductMetadata } from '@/lib/product-recommendation-metadata';
+
 /**
  * Maps a raw Supabase row to a typed Product object.
  * Keeps the same shape transformation used in /api/products/route.ts.
  */
 function rowToProduct(item: Record<string, unknown>): Product {
-  return {
+  const baseProduct: Partial<Product> = {
     id: item.id as number,
     title: item.title as string,
     name: (item.name as string) || undefined,
@@ -49,9 +51,21 @@ function rowToProduct(item: Record<string, unknown>): Product {
     suitableSkinTypes: Array.isArray(item.suitable_skin_types) ? item.suitable_skin_types as Product['suitableSkinTypes'] : [],
     suitableConcerns: Array.isArray(item.suitable_concerns) ? item.suitable_concerns as Product['suitableConcerns'] : [],
     sensitivityLevels: Array.isArray(item.sensitivity_levels) ? item.sensitivity_levels as Product['sensitivityLevels'] : [],
-    activeStrength: (item.active_strength as Product['activeStrength']) || 'none',
+    activeStrength: (item.active_strength as Product['activeStrength']) || undefined,
     timeOfDay: Array.isArray(item.time_of_day) ? item.time_of_day as Product['timeOfDay'] : [],
   };
+
+  const enriched = enrichProductMetadata(baseProduct);
+
+  return {
+    ...baseProduct,
+    routineRoles: enriched.routineRoles,
+    suitableSkinTypes: enriched.suitableSkinTypes,
+    suitableConcerns: enriched.suitableConcerns,
+    sensitivityLevels: enriched.sensitivityLevels,
+    activeStrength: enriched.activeStrength,
+    timeOfDay: enriched.timeOfDay,
+  } as Product;
 }
 
 export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

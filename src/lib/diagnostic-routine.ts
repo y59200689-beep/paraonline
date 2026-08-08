@@ -410,11 +410,27 @@ function isStrictlyEligibleForProfileAndStep(product: Product, answers: Diagnost
   return true;
 }
 
+import { enrichProductMetadata } from '@/lib/product-recommendation-metadata';
+
 export function buildDiagnosticRoutine(
-  products: Product[],
+  rawProducts: Product[],
   answers: DiagnosticAnswers,
   options: RoutineBuilderOptions = {},
 ): RoutineRecommendation[] {
+  const products = rawProducts.map((p) => {
+    if (p.suitableSkinTypes?.length && p.suitableConcerns?.length && p.routineRoles?.length) return p;
+    const enriched = enrichProductMetadata(p);
+    return {
+      ...p,
+      routineRoles: enriched.routineRoles,
+      suitableSkinTypes: enriched.suitableSkinTypes,
+      suitableConcerns: enriched.suitableConcerns,
+      sensitivityLevels: enriched.sensitivityLevels,
+      activeStrength: enriched.activeStrength,
+      timeOfDay: enriched.timeOfDay,
+    } as Product;
+  });
+
   let eligible = products.filter(isDiagnosticEligibleProduct);
   if (options.allowedBrands?.length) {
     const normalizedAllowed = options.allowedBrands.map(b => b.trim().toLowerCase());
