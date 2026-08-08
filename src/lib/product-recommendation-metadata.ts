@@ -1,3 +1,5 @@
+import type { Product } from '@/lib/data';
+
 export const ROUTINE_ROLE_OPTIONS = [
   ['cleanser', 'Nettoyant'],
   ['makeup_remover', 'Démaquillant'],
