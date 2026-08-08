@@ -71,25 +71,36 @@ export const AiAssistant: React.FC = () => {
   const [showProductSearch, setShowProductSearch] = useState(false);
   const [orderSearch, setOrderSearch] = useState('');
   const normalizedOrderSearch = orderSearch.trim().toLocaleLowerCase('fr');
-  const orderSearchResults = products
-    .filter(product => product.status !== 'draft' && Number(product.stock ?? 100) > 0)
+  const safeFormatPrice = (val: any) => {
+    const num = Number(val);
+    return (isNaN(num) ? 0 : num).toFixed(2);
+  };
+
+  const safeProductsList = Array.isArray(products) ? products : [];
+  const orderSearchResults = safeProductsList
+    .filter(product => product && product.status !== 'draft' && Number(product.stock ?? 100) > 0)
     .filter(product => !normalizedOrderSearch || [product.title, product.nameFr, product.vendor, product.sku]
       .filter(Boolean)
       .some(value => String(value).toLocaleLowerCase('fr').includes(normalizedOrderSearch)))
     .slice(0, 5);
 
   const getProductDetails = (productId: number) => {
-    const catalogProd = products.find(p => p.id === productId);
-    if (catalogProd) return catalogProd;
+    const catalogProd = safeProductsList.find(p => p && p.id === productId);
+    if (catalogProd) {
+      return {
+        ...catalogProd,
+        price: typeof catalogProd.price === 'number' && !isNaN(catalogProd.price) ? catalogProd.price : 0
+      };
+    }
 
-    for (const m of messages) {
-      if (m.products) {
-        const match = m.products.find(p => p.productId === productId);
+    for (const m of (messages || [])) {
+      if (m && Array.isArray(m.products)) {
+        const match = m.products.find(p => p && p.productId === productId);
         if (match) {
           return {
             id: match.productId,
-            title: match.title,
-            price: match.price,
+            title: match.title || `Produit #${productId}`,
+            price: typeof match.price === 'number' && !isNaN(match.price) ? match.price : 0,
             image: match.image || '',
             vendor: '',
             category: ''
@@ -109,7 +120,7 @@ export const AiAssistant: React.FC = () => {
 
   const orderSubtotal = activeOrderForm?.items.reduce((total, item) => {
     const product = getProductDetails(item.productId);
-    return total + (product ? product.price * item.quantity : 0);
+    return total + (product ? (Number(product.price) || 0) * item.quantity : 0);
   }, 0) || 0;
   const orderShippingEstimate = orderSubtotal >= 600 ? 0 : 35;
 
@@ -681,7 +692,7 @@ export const AiAssistant: React.FC = () => {
                         </h5>
  
                         <div className="flex flex-col gap-1.5 text-left rtl:text-right" style={{ fontSize: '11px' }}>
-                          {(language === 'FR' ? msg.cardData.pointsFr : msg.cardData.pointsAr).map((pt, pIdx) => (
+                          {(Array.isArray(language === 'FR' ? msg.cardData.pointsFr : msg.cardData.pointsAr) ? (language === 'FR' ? msg.cardData.pointsFr : msg.cardData.pointsAr) : []).map((pt, pIdx) => (
                             <div key={pIdx} className="font-semibold text-slate-600 leading-normal">
                               {pt}
                             </div>
@@ -733,7 +744,7 @@ export const AiAssistant: React.FC = () => {
                                       )}
                                       <div className="min-w-0 flex-1">
                                         <p className="truncate text-[10.5px] font-bold text-slate-800 m-0">{prod.title}</p>
-                                        <p className="text-[9.5px] font-bold text-emerald-700 m-0">{prod.price.toFixed(2)} DH</p>
+                                        <p className="text-[9.5px] font-bold text-emerald-700 m-0">{safeFormatPrice(prod.price)} DH</p>
                                       </div>
                                       <div className="flex items-center gap-1.5 shrink-0">
                                         <button
@@ -785,7 +796,7 @@ export const AiAssistant: React.FC = () => {
                                       </div>
                                       <div className="min-w-0 flex-1">
                                         <p className="truncate text-[10px] font-bold text-slate-800">{product.title}</p>
-                                        <p className="mt-0.5 text-[9px] font-semibold text-slate-400">{product.vendor} · {product.price.toFixed(2)} DH</p>
+                                        <p className="mt-0.5 text-[9px] font-semibold text-slate-400">{product.vendor} · {safeFormatPrice(product.price)} DH</p>
                                       </div>
                                       <button
                                         type="button"
@@ -847,11 +858,11 @@ export const AiAssistant: React.FC = () => {
                               <div className="rounded-xl bg-slate-950 px-3 py-2.5 text-white">
                                 <div className="flex items-center justify-between text-[10px] font-semibold text-white/70">
                                   <span>{language === 'FR' ? 'Livraison estimée' : 'تقدير التوصيل'}</span>
-                                  <span>{orderShippingEstimate === 0 ? (language === 'FR' ? 'Offerte' : 'مجانية') : `${orderShippingEstimate.toFixed(2)} DH`}</span>
+                                  <span>{orderShippingEstimate === 0 ? (language === 'FR' ? 'Offerte' : 'مجانية') : `${safeFormatPrice(orderShippingEstimate)} DH`}</span>
                                 </div>
                                 <div className="mt-1 flex items-center justify-between text-xs font-black">
                                   <span>{language === 'FR' ? 'Total estimé' : 'المجموع التقديري'}</span>
-                                  <span>{(orderSubtotal + orderShippingEstimate).toFixed(2)} DH</span>
+                                  <span>{safeFormatPrice(orderSubtotal + orderShippingEstimate)} DH</span>
                                 </div>
                               </div>
 
