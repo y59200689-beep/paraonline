@@ -88,6 +88,8 @@ const EXCLUDED_PRODUCT_TERMS = [
   // Bulk chemical raw materials, industrial items & non-cosmetic products
   'condor', 'le condor', '1 kg', '250 ml', '500 ml', '1000 ml', 'litre',
   'alcool glycerine', 'acide borique', 'vaseline salicylee', 'solvant', 'matiere premiere',
+  // Body itch/scratch sprays – not facial treatments
+  'grattage', 'sos grattage', 'spray sos',
 ];
 
 export function isDiagnosticEligibleProduct(product: Product) {
@@ -426,6 +428,24 @@ function isStrictlyEligibleForProfileAndStep(product: Product, answers: Diagnost
       'gel nettoyant', 'gel lavant', 'lait nettoyant', 'eau nettoyante', 'nettoyant',
     ]);
     if (!isCleanser) return false;
+  }
+
+  if (step === 'treatment') {
+    // Exclude body sprays, itch sprays, and deodorant-style spray formats from face treatment slot
+    const titleLower = productTitleText(product);
+    const isBadTreatment = includesAny(titleLower, [
+      'spray sos', 'sos grattage', 'grattage', 'spray corps', 'deodorant', 'deo spray',
+      'spray buccal', 'spray nasal',
+    ]);
+    if (isBadTreatment) return false;
+    // Must have at least one proper facial treatment indicator in title or text
+    const hasTreatmentIndicator = includesAny(titleLower, [
+      'serum', 'ampoule', 'concentre', 'correcteur', 'filler', 'booster', 'eclat',
+      'anti tache', 'anti ride', 'anti age', 'anti rougeur', 'cica', 'cicalfate', 'cicaplast',
+      'sensibio', 'rosaliac', 'retinol', 'niacinamide', 'vitamine c', 'hyalur', 'peptide',
+      'soin', 'traitement', 'solution', 'complexe',
+    ]) || includesAny(fullText, ['serum', 'concentre', 'correcteur', 'traitement localise']);
+    if (!hasTreatmentIndicator) return false;
   }
 
   return true;

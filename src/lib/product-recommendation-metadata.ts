@@ -252,10 +252,25 @@ export function enrichProductMetadata(product: Partial<Product>): ProductRecomme
   // 4. Infer Sensitivity Levels
   const sensitivity = new Set<SensitivityLevel>(product.sensitivityLevels || []);
   if (!sensitivity.size) {
-    if (text.includes('haute tolerance') || text.includes('peau sensible') || text.includes('hypersensible') || text.includes('cica') || text.includes('apais') || text.includes('toleriane')) {
+    // Products explicitly formulated for sensitive / reactive skin include high sensitivity
+    if (
+      text.includes('haute tolerance') || text.includes('peau sensible') || text.includes('hypersensible')
+      || text.includes('cica') || text.includes('apais') || text.includes('toleriane')
+      || text.includes('sensibio') || text.includes('avene') || text.includes('thermal')
+    ) {
       sensitivity.add('low'); sensitivity.add('medium'); sensitivity.add('high');
-    } else {
+    } else if (
+      // Products with known harsh/irritant ingredients are NOT suitable for high sensitivity
+      text.includes('alcool denature') || text.includes('parfum puissant')
+      || text.includes('retinol') || text.includes('retinal')
+      || text.includes('acide glycolique') || text.includes('glycolic acid')
+      || (text.includes('acide salicylique') && text.includes('fort'))
+      || text.includes('peeling fort') || text.includes('exfoliant fort')
+    ) {
       sensitivity.add('low'); sensitivity.add('medium');
+    } else {
+      // Default: most facial products are accessible to all sensitivity profiles
+      sensitivity.add('low'); sensitivity.add('medium'); sensitivity.add('high');
     }
   }
 
