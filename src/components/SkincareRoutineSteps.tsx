@@ -50,11 +50,12 @@ export const SkincareRoutineSteps: React.FC<SkincareRoutineStepsProps> = ({ onOp
   const [activeStep, setActiveStep] = useState<number>(-1);
 
   useEffect(() => {
-    if (isTestCompleted && activeStep === -1) {
-      setActiveStep(0);
-    } else if (!isTestCompleted && activeStep !== -1) {
+    // Only reset to intro when the diagnostic is cleared (e.g. user resets)
+    if (!isTestCompleted && activeStep !== -1) {
       setActiveStep(-1);
     }
+    // Do NOT auto-advance to step 0 — the user should stay on the intro state
+    // after finishing the test, and click a step tab to explore results.
   }, [isTestCompleted, activeStep]);
 
   const triggerOpenBundleDrawer = () => {
@@ -190,9 +191,16 @@ export const SkincareRoutineSteps: React.FC<SkincareRoutineStepsProps> = ({ onOp
             
             {/* Left Column: Premium Intro */}
             <div className={`space-y-6 ${isRTL ? 'text-right' : 'text-left'}`}>
-              <div className="inline-flex items-center gap-1.5 bg-[#EC4899]/10 border border-[#EC4899]/15 rounded-lg text-[9px] font-black text-[#EC4899] uppercase tracking-wider shadow-sm px-3.5 py-1.5">
-                <Sparkles className="w-3.5 h-3.5 fill-[#EC4899] text-[#EC4899] animate-pulse" />
-                <span>{language === 'FR' ? 'Diagnostic IA Disponible' : 'متاح تشخيص الذكاء الاصطناعي'}</span>
+              <div className={`inline-flex items-center gap-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider shadow-sm px-3.5 py-1.5 ${
+                isTestCompleted
+                  ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-700'
+                  : 'bg-[#EC4899]/10 border border-[#EC4899]/15 text-[#EC4899]'
+              }`}>
+                <Sparkles className={`w-3.5 h-3.5 animate-pulse ${isTestCompleted ? 'fill-emerald-600 text-emerald-600' : 'fill-[#EC4899] text-[#EC4899]'}`} />
+                <span>{isTestCompleted
+                  ? (language === 'FR' ? 'Routine Personnalisée Prête ✓' : 'روتينكِ المخصص جاهز ✓')
+                  : (language === 'FR' ? 'Diagnostic IA Disponible' : 'متاح تشخيص الذكاء الاصطناعي')
+                }</span>
               </div>
               
               <h3 className="text-2xl md:text-3.5xl font-black font-heading text-slate-800 leading-tight tracking-tight">
@@ -234,20 +242,41 @@ export const SkincareRoutineSteps: React.FC<SkincareRoutineStepsProps> = ({ onOp
                 ))}
               </div>
 
-              <div className="pt-4 flex flex-col sm:flex-row gap-4 items-center">
-                <button
-                  onClick={triggerOpenBundleDrawer}
-                  onMouseEnter={() => setIsIntroBtnHovered(true)}
-                  onMouseLeave={() => setIsIntroBtnHovered(false)}
-                  className="group relative inline-flex items-center gap-2.5 px-8 py-3.5 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-0.5 active:scale-95 cursor-pointer shadow-md hover:shadow-primary/20 animate-fade-in animate-pulse"
-                  style={{
-                    backgroundColor: 'var(--color-primary)',
-                    color: '#ffffff',
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  <span>{language === 'FR' ? "Lancer le Diagnostic de Routine 🔬" : 'بدء تشخيص الروتين 🔬'}</span>
-                </button>
+              <div className="pt-4 flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                {isTestCompleted ? (
+                  <>
+                    {/* Primary: View routine */}
+                    <button
+                      onClick={() => setActiveStep(0)}
+                      className="group relative inline-flex items-center gap-2.5 px-8 py-3.5 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-0.5 active:scale-95 cursor-pointer shadow-md hover:shadow-emerald-600/20"
+                      style={{ backgroundColor: '#059669', color: '#ffffff' }}
+                    >
+                      <span>{language === 'FR' ? 'Voir ma routine →' : 'عرض روتيني ←'}</span>
+                    </button>
+                    {/* Secondary: Retake */}
+                    <button
+                      onClick={() => { setDiagnostic(null); triggerOpenBundleDrawer(); }}
+                      className="inline-flex items-center gap-2 px-5 py-3.5 text-slate-600 text-xs font-bold rounded-xl border border-slate-200 hover:border-primary/30 hover:text-primary bg-white transition-all duration-200 cursor-pointer"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      <span>{language === 'FR' ? 'Refaire le diagnostic' : 'إعادة التشخيص'}</span>
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={triggerOpenBundleDrawer}
+                    onMouseEnter={() => setIsIntroBtnHovered(true)}
+                    onMouseLeave={() => setIsIntroBtnHovered(false)}
+                    className="group relative inline-flex items-center gap-2.5 px-8 py-3.5 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-0.5 active:scale-95 cursor-pointer shadow-md hover:shadow-primary/20 animate-fade-in animate-pulse"
+                    style={{
+                      backgroundColor: 'var(--color-primary)',
+                      color: '#ffffff',
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    <span>{language === 'FR' ? "Lancer le Diagnostic de Routine 🔬" : 'بدء تشخيص الروتين 🔬'}</span>
+                  </button>
+                )}
               </div>
             </div>
 
