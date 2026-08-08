@@ -98,6 +98,10 @@ export function isDiagnosticEligibleProduct(product: Product) {
   return !includesAny(text, EXCLUDED_PRODUCT_TERMS.map(normalize));
 }
 
+function productTitleText(product: Product) {
+  return normalize([product.title, product.name, product.nameFr].filter(Boolean).join(' '));
+}
+
 function routineStepScores(product: Product): Record<RoutineStep, number> {
   if (product.routineRoles?.length) {
     const roleToStep: Partial<Record<RoutineRole, RoutineStep>> = {
@@ -123,37 +127,47 @@ function routineStepScores(product: Product): Record<RoutineStep, number> {
     return scores;
   }
   const text = productText(product);
+  const titleText = productTitleText(product);
   const category = normalize(product.category || '');
 
+  // TITLE-FIRST MATCHING: Terms in the product TITLE receive heavy priority
   const sunscreen =
     (category.includes('solaire') ? 12 : 0)
-    + countMatches(text, ['spf', 'solaire', 'ecran solaire', 'sun protection', 'sunscreen', 'uvmune', 'photoprotection']) * 5;
-  const cleanser = countMatches(text, [
-    'nettoy', 'cleanser', 'cleansing', 'moussant', 'mousse nettoy', 'micell',
-    'demaquill', 'face wash', 'huile lavante', 'creme lavante', 'gelee purifiante',
-    'gel nettoyant', 'gel lavant', 'lait nettoyant', 'eau nettoyante', 'nettoyant doux',
-  ]) * 5;
+    + countMatches(titleText, ['spf', 'solaire', 'ecran', 'sunscreen', 'uvmune', 'photoprotection', 'uv ']) * 10
+    + countMatches(text, ['spf', 'solaire', 'ecran solaire', 'sun protection', 'sunscreen', 'uvmune', 'photoprotection']) * 3;
+
+  const cleanser =
+    countMatches(titleText, [
+      'nettoy', 'cleanser', 'cleansing', 'moussant', 'mousse', 'micell',
+      'demaquill', 'face wash', 'huile lavante', 'creme lavante', 'gelee purifiante',
+      'gel nettoyant', 'gel lavant', 'lait nettoyant', 'eau nettoyante', 'nettoyant',
+    ]) * 10
+    + countMatches(text, ['nettoy', 'cleanser', 'cleansing', 'moussant', 'micell', 'demaquill']) * 2;
+
   // Toner: must NOT be a sunscreen spray – exclude SPF-containing products from toner slot
-  const tonerRaw = countMatches(text, ['toner', 'tonique', 'essence', 'lotion preparatrice', 'eau micellaire']) * 4
-    + (text.includes('lotion') && !text.includes('spf') && !text.includes('solaire') ? 2 : 0);
-  const toner = sunscreen >= 10 ? 0 : tonerRaw; // hard-block SPF products from toner slot
+  const tonerRaw = countMatches(titleText, ['toner', 'tonique', 'essence', 'lotion preparatrice', 'eau micellaire']) * 8
+    + countMatches(text, ['toner', 'tonique', 'essence', 'lotion preparatrice']) * 2
+    + (titleText.includes('lotion') && !titleText.includes('spf') && !titleText.includes('solaire') ? 4 : 0);
+  const toner = sunscreen >= 10 ? 0 : tonerRaw;
+
   const treatment =
-    countMatches(text, [
+    countMatches(titleText, [
       'serum', 'ampoule', 'concentre', 'traitement', 'correcteur', 'correctrice',
-      'anti tache', 'depigment', 'anti acne', 'anti imperfection', 'anti ride', 'antiride',
+      'anti tache', 'anti taches', 'depigment', 'anti acne', 'anti imperfection', 'anti ride', 'antiride',
       'retinol', 'retinal', 'peel', 'vitamine c', 'vitamin c', 'niacinamide', 'azelaic',
-      'peptide', 'acide hyaluronique', 'filler', 'soin lissant', 'soin eclat',
-    ]) * 4
-    + (category.includes('acne') || category.includes('anti tache') || category.includes('anti age') ? 2 : 0)
-    + countMatches(text, ['bouton', 'imperfection', 'eclat', 'rides', 'fermete', 'firmness']) * 2;
+      'peptide', 'acide hyaluronique', 'filler', 'soin lissant', 'soin eclat', 'cica', 'cicalfate', 'cicaplast',
+    ]) * 10
+    + (category.includes('acne') || category.includes('anti tache') || category.includes('anti age') ? 4 : 0)
+    + countMatches(text, ['serum', 'concentre', 'traitement', 'correcteur', 'rides', 'fermete']) * 2;
+
   const moisturizer =
-    countMatches(text, [
+    countMatches(titleText, [
       'hydrat', 'moistur', 'emollient', 'reparatrice', 'reparateur', 'barriere cutanee',
       'nourrissant', 'nourrissante', 'creme riche', 'baume', 'soothing cream',
-      'gel hydratant', 'lait hydratant', 'soin hydratant', 'fluide hydratant',
-    ]) * 5
-    + countMatches(text, ['gel creme', 'creme visage', 'face cream', 'creme soin']) * 3
-    + (text.includes('creme') || text.includes('cream') ? 1 : 0);
+      'gel hydratant', 'lait hydratant', 'soin hydratant', 'fluide hydratant', 'emulsion', 'creme',
+    ]) * 8
+    + countMatches(titleText, ['gel creme', 'creme visage', 'face cream', 'creme soin']) * 5
+    + countMatches(text, ['hydrat', 'emollient', 'creme', 'baume', 'nourri']) * 2;
 
   return { cleanser, toner, treatment, moisturizer, sunscreen };
 }
@@ -288,9 +302,14 @@ function isTimeCompatible(product: Product, step: RoutineStep) {
 
 function productFitScore(product: Product, answers: DiagnosticAnswers, extraKeywords: string[]) {
   const text = productText(product);
+  const titleText = productTitleText(product);
   let score = 0;
 
-  // Primary concern match — greatly boosted
+  // TITLE-FIRST CONCERN BOOST: Heavy priority when the product TITLE explicitly names the concern
+  const titleConcernMatches = countMatches(titleText, CONCERN_TERMS[answers.concern] || []);
+  score += titleConcernMatches * 20;
+
+  // Primary concern match in full product text
   score += countMatches(text, CONCERN_TERMS[answers.concern] || []) * 9;
   
   // Cross-concern mismatch penalty — subtract if product strongly signals a different concern
