@@ -361,6 +361,55 @@ type RoutineBuilderOptions = {
   allowedBrands?: string[];
 };
 
+function isStrictlyEligibleForProfileAndStep(product: Product, answers: DiagnosticAnswers, step: RoutineStep): boolean {
+  const text = productText(product);
+  const category = normalize(product.category || '');
+
+  // 1. HARD GATE: Non-acne profiles CANNOT receive anti-acne / oil-control products
+  const isAcneProfile = answers.concern === 'acne' || answers.breakoutFrequency === 'frequent';
+  if (!isAcneProfile) {
+    const acneTerms = [
+      'acniben', 'actipur', 'acnilia', 'keracnyl', 'effaclar', 'acnewin', 'teen derm',
+      'sebium', 'hyseac', 'zindaclin', 'controle de la brillance', 'brillance et des boutons',
+      'anti imperfection', 'anti imperfections', 'anti-imperfections', 'anti bouton', 'anti boutons',
+      'sebum control', 'anti sebum', 'bactericide',
+    ];
+    if (includesAny(text, acneTerms)) return false;
+  }
+
+  // 2. HARD GATE: Dry skin CANNOT receive mattifying / anti-shine products
+  if (answers.skinType === 'dry') {
+    const dryAntiterms = [
+      'matifiant', 'mattifiant', 'controle de la brillance', 'brillance et des boutons',
+      'anti brillance', 'p.grasses', 'peaux grasses', 'peau grasse', 'sebum control',
+    ];
+    if (includesAny(text, dryAntiterms)) return false;
+  }
+
+  // 3. HARD GATE: High sensitivity CANNOT receive aggressive peels or scrubs
+  if (answers.sensitivity === 'high') {
+    const harshTerms = ['peel', 'peeling', 'scrub', 'exfoliant fort', 'acide glycolique fort'];
+    if (includesAny(text, harshTerms)) return false;
+  }
+
+  // 4. HARD GATE: Step role purity
+  if (step === 'sunscreen') {
+    const isSunscreen = category.includes('solaire') || includesAny(text, ['spf', 'solaire', 'ecran solaire', 'sunscreen', 'uvmune', 'photoprotection']);
+    if (!isSunscreen) return false;
+  }
+
+  if (step === 'cleanser') {
+    const isCleanser = includesAny(text, [
+      'nettoy', 'cleanser', 'cleansing', 'moussant', 'mousse nettoy', 'micell',
+      'demaquill', 'face wash', 'huile lavante', 'creme lavante', 'gelee purifiante',
+      'gel nettoyant', 'gel lavant', 'lait nettoyant', 'eau nettoyante', 'nettoyant',
+    ]);
+    if (!isCleanser) return false;
+  }
+
+  return true;
+}
+
 export function buildDiagnosticRoutine(
   products: Product[],
   answers: DiagnosticAnswers,
@@ -384,6 +433,7 @@ export function buildDiagnosticRoutine(
       .filter((product) => !usedIds.has(product.id)
         && isStructuredCompatibilitySafe(product, answers)
         && isTimeCompatible(product, step)
+        && isStrictlyEligibleForProfileAndStep(product, answers, step)
         // Prevent high-SPF sunscreen products from filling non-sunscreen steps
         && (step === 'sunscreen' || routineStepScores(product).sunscreen < 14)
         && routineStepScores(product)[step] >= 3)
@@ -394,7 +444,6 @@ export function buildDiagnosticRoutine(
         const brandDiversityPenalty = normalizedVendor && usedVendors.has(normalizedVendor) ? 1.5 : 0;
         return {
           product,
-          // roleConfidence * 1: step eligibility contributes, but does NOT dominate concern relevance
           score: productFitScore(product, answers, options.extraKeywords || [])
             + roleConfidence * 1
             + configuredBoost
