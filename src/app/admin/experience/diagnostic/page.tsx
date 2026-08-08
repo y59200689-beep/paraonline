@@ -3,9 +3,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAdmin } from '@/context/AdminContext';
 import { canManageDiagnostic, canEditContent } from '@/lib/permissions';
+import Link from 'next/link';
 import {
   Brain, Search, ChevronDown, ChevronUp, Plus, Trash2, Eye, EyeOff,
-  GripVertical, Save, Loader2, AlertCircle, Check, X, Edit2,
+  GripVertical, Save, Loader2, AlertCircle, Check, X, Edit2, PackageCheck,
 } from 'lucide-react';
 import { EmptyState } from '@/components/admin/ui/EmptyState';
 import { BrandRestrictionSection } from '@/components/admin/BrandRestrictionSection';
@@ -599,6 +600,31 @@ export default function DiagnosticPage() {
               <Plus size={14} /> Nouvelle question
             </button>
           )}
+        </div>
+
+        {/* Sub-nav Tabs */}
+        <div style={{ display: 'flex', gap: '8px', borderBottom: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.07)', paddingBottom: '12px' }}>
+          <Link
+            href="/admin/experience/diagnostic"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: '6px',
+              padding: '6px 14px', fontSize: '12px', fontWeight: 700, borderRadius: '10px',
+              background: isDark ? '#10b981' : '#059669', color: '#fff', textDecoration: 'none',
+            }}
+          >
+            <Brain size={14} /> Questions & Configuration
+          </Link>
+          <Link
+            href="/admin/experience/diagnostic/catalogue"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: '6px',
+              padding: '6px 14px', fontSize: '12px', fontWeight: 700, borderRadius: '10px',
+              background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
+              color: isDark ? '#94a3b8' : '#64748b', textDecoration: 'none',
+            }}
+          >
+            <PackageCheck size={14} /> Catalogue IA
+          </Link>
         </div>
 
         {/* Brand Restriction Section */}

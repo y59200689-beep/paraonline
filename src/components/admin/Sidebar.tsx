@@ -38,6 +38,7 @@ import {
   BookOpen,
   Shield,
   Code,
+  PackageCheck,
   Clock,
 } from 'lucide-react';
 import {
@@ -150,7 +151,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   const experienceItems: NavItem[] = [
-    ...(canManageDiagnostic(role) ? [{ id: 'experience-diagnostic', label: 'Diagnostic IA',    href: '/admin/experience/diagnostic', icon: Brain }] : []),
+    ...(canManageDiagnostic(role) ? [
+      { id: 'experience-diagnostic',           label: 'Diagnostic IA',        href: '/admin/experience/diagnostic',           icon: Brain },
+      { id: 'experience-diagnostic-catalogue', label: 'Catalogue IA',         href: '/admin/experience/diagnostic/catalogue', icon: PackageCheck },
+    ] : []),
     ...(canManageChat(role)       ? [{ id: 'experience-assistant',  label: 'Assistant chat',   href: '/admin/experience/assistant',  icon: MessageSquare }] : []),
     { id: 'reviews',                                                  label: 'Avis',            href: '/admin/reviews', icon: Star, count: pendingReviews || undefined, countColor: '#f59e0b' },
     { id: 'advice',                                                   label: 'FAQ & Conseils',  href: '/admin/advice', icon: BookOpen },

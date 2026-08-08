@@ -449,6 +449,7 @@ function routineStepsFor(answers: DiagnosticAnswers): RoutineStep[] {
 
 type RoutineBuilderOptions = {
   configuredProductIds?: number[];
+  excludedProductIds?: number[];
   extraKeywords?: string[];
   allowedBrands?: string[];
 };
@@ -548,7 +549,8 @@ export function buildDiagnosticRoutine(
     } as Product;
   });
 
-  const baseEligible = products.filter(isDiagnosticEligibleProduct);
+  const excludedIds = new Set(options.excludedProductIds || []);
+  const baseEligible = products.filter(p => !excludedIds.has(p.id) && isDiagnosticEligibleProduct(p));
   let brandEligible = baseEligible;
   if (options.allowedBrands?.length) {
     const normalizedAllowed = options.allowedBrands.map(b => b.trim().toLowerCase());

@@ -58,7 +58,13 @@ export async function GET() {
       return NextResponse.json({ questions: defaultQuestions.questions });
     }
 
-    return NextResponse.json({ questions: mapped }, {
+    // Fetch manually excluded product IDs from admin
+    const { data: excludedRows } = await supabaseAdmin
+      .from('diagnostic_excluded_products')
+      .select('product_id');
+    const excludedProductIds = (excludedRows || []).map((r: { product_id: number }) => r.product_id);
+
+    return NextResponse.json({ questions: mapped, excludedProductIds }, {
       headers: {
         'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
       },

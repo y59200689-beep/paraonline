@@ -156,12 +156,17 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
   // Always-current answers ref — avoids stale closure in setTimeout callbacks
   const answersRef = useRef<DiagnosticAnswers>(EMPTY_ANSWERS);
 
-  // Fetch dynamic questions from CMS whenever modal opens
+  const [excludedProductIds, setExcludedProductIds] = useState<number[]>([]);
+
+  // Fetch dynamic questions & excluded product IDs from CMS whenever modal opens
   useEffect(() => {
     if (isOpen) {
       fetch('/api/cms/diagnostic/public')
         .then(res => res.json())
         .then(data => {
+          if (Array.isArray(data.excludedProductIds)) {
+            setExcludedProductIds(data.excludedProductIds);
+          }
           if (
             data.questions &&
             Array.isArray(data.questions) &&
@@ -305,6 +310,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
 
     const routine = buildDiagnosticRoutine(products, currentAnswers, {
       configuredProductIds: configuredIds,
+      excludedProductIds,
       extraKeywords: [...(customConcern?.keywords || []), ...(customConcern?.ingredientKeywords || [])],
     });
     setRecommendedRoutine(routine);
