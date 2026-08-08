@@ -85,6 +85,9 @@ const EXCLUDED_PRODUCT_TERMS = [
   'enfant', 'kids ', 'junior ', 'massage',
   // Bundles & packs
   'coffret', 'trousse', 'pack ',
+  // Bulk chemical raw materials, industrial items & non-cosmetic products
+  'condor', 'le condor', '1 kg', '250 ml', '500 ml', '1000 ml', 'litre',
+  'alcool glycerine', 'acide borique', 'vaseline salicylee', 'solvant', 'matiere premiere',
 ];
 
 export function isDiagnosticEligibleProduct(product: Product) {
@@ -475,15 +478,19 @@ export function buildDiagnosticRoutine(
       candidates = filterCandidates(baseEligible);
     }
 
-    // Fallback 2: If strict rules yield 0 candidates for step, search base eligible without strict gate
+    // Fallback 2: If strict rules yield 0 candidates for step, relax minimum score threshold but STILL enforce strict profile safety
     if (!candidates.length) {
       candidates = baseEligible
-        .filter((product) => !usedIds.has(product.id) && routineStepScores(product)[step] >= 1)
+        .filter((product) => !usedIds.has(product.id)
+          && isStructuredCompatibilitySafe(product, answers)
+          && isTimeCompatible(product, step)
+          && isStrictlyEligibleForProfileAndStep(product, answers, step)
+          && routineStepScores(product)[step] >= 1)
         .map((product) => ({
           product,
           score: productFitScore(product, answers, options.extraKeywords || []),
         }))
-        .sort((a, b) => b.score - a.score);
+        .sort((a, b) => b.score - a.score || b.product.rating - a.product.rating);
     }
 
     const winner = candidates[0];
