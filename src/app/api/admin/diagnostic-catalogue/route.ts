@@ -74,10 +74,11 @@ export async function GET(req: NextRequest) {
   const products = (allProducts || []).map((row: Record<string, unknown>) => {
     const product = rowToProduct(row);
     const manuallyExcluded = manualExcludedIds.has(product.id);
-    const algorithmEligible = isDiagnosticEligibleProduct(product);
+    const algorithmEligible = isDiagnosticEligibleProduct(product, { ignoreStock: true });
     const inDiagnosticPool = algorithmEligible && !manuallyExcluded;
-    const hasExplicitData = Array.isArray(product.routineRoles) && product.routineRoles.length > 0
-      && Array.isArray(product.suitableConcerns) && product.suitableConcerns.length > 0;
+    const hasExplicitData = (Array.isArray(product.routineRoles) && product.routineRoles.length > 0)
+      || (Array.isArray(product.suitableConcerns) && product.suitableConcerns.length > 0)
+      || (Array.isArray(product.suitableSkinTypes) && product.suitableSkinTypes.length > 0);
 
     return {
       id: product.id,

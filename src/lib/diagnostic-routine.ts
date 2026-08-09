@@ -110,42 +110,52 @@ function countMatches(text: string, terms: string[]) {
 }
 
 const EXCLUDED_CATEGORIES = [
-  'bebe', 'cheveux', 'complement', 'corp', 'dentaire', 'orthopedique',
-  'veterinaire', 'materiel medical',
+  'orthopedique', 'dentaire', 'accessories',
 ];
 
 const EXCLUDED_PRODUCT_TERMS = [
-  // Body & hair
-  'corps', 'body lotion', 'body cream', 'body butter', 'cheveux', 'shampoo', 'shampoing', 'apres shampoing',
+  // Hair & scalp only
+  'shampoo', 'shampoing', 'apres shampoing', 'masque capillaire',
   // Oral / dental
   'dent ', 'dentaire', 'dentifrice', 'bain de bouche', 'spray buccal', 'gencive', 'tartre',
-  // Medications / supplements
+  // Medications / supplements (oral only)
   'gelule', 'gélule', 'capsule', 'comprime', 'sirop', 'cachet', 'ampoule buvable',
-  // Extremities
+  // Extremities & body specific
   'creme main', 'creme mains', 'soin mains', 'hand cream', 'creme pied', 'soin pieds', 'foot cream',
   // Medical devices & orthopaedics
   'anneau ', 'claviculaire', 'attelle', 'minerve', 'manchon', 'semelle', 'genouillere',
   'chaussette de compression', 'contention', 'bandage', 'gilet', 'cervical',
-  // Intimate / baby
-  'intime', 'mamelon', 'sac a langer', 'abc derm', 'dermifant',
+  // Intimate & diapers
+  'intime', 'mamelon', 'sac a langer', 'abc derm change',
   // Deodorant / anti-perspirant
   'deodorant', 'anti transpirant', 'antitranspirant', 'deo bille', 'deo stick',
-  // Baby / kids / massage
-  'enfant', 'kids ', 'junior ', 'massage',
-  // Bundles & packs
-  'coffret', 'trousse', 'pack ',
-  // Bulk chemical raw materials, industrial items & non-cosmetic products
-  'condor', 'le condor', '1 kg', '250 ml', '500 ml', '1000 ml', 'litre',
-  'alcool glycerine', 'acide borique', 'vaseline salicylee', 'solvant', 'matiere premiere',
+  // Bulk chemical raw materials & industrial items
+  'condor', 'le condor', '1 kg', 'solvant', 'matiere premiere',
   // Body itch/scratch sprays – not facial treatments
-  'grattage', 'sos grattage', 'spray sos',
+  'sos grattage', 'spray sos',
 ];
 
-export function isDiagnosticEligibleProduct(product: Product) {
-  if (product.status === 'draft' || (product.stock !== undefined && product.stock <= 0)) return false;
+export function isDiagnosticEligibleProduct(product: Product, options?: { ignoreStock?: boolean }) {
+  if (product.status === 'draft') return false;
+  if (!options?.ignoreStock && product.stock !== undefined && product.stock <= 0) return false;
+
+  // RULE 1: If admin explicitly configured AI Diagnostic metadata (roles, concerns, skin types) on this product,
+  // it is ALWAYS ELIGIBLE for the AI diagnostic pool!
+  const p = product as unknown as Record<string, unknown>;
+  const hasExplicitData =
+    (Array.isArray(product.routineRoles) && product.routineRoles.length > 0) ||
+    (Array.isArray(product.suitableConcerns) && product.suitableConcerns.length > 0) ||
+    (Array.isArray(product.suitableSkinTypes) && product.suitableSkinTypes.length > 0) ||
+    (Array.isArray(p.routine_roles) && (p.routine_roles as unknown[]).length > 0) ||
+    (Array.isArray(p.suitable_concerns) && (p.suitable_concerns as unknown[]).length > 0) ||
+    (Array.isArray(p.suitable_skin_types) && (p.suitable_skin_types as unknown[]).length > 0);
+
+  if (hasExplicitData) return true;
+
+  // RULE 2: Code-level facial product filter for un-tagged products
   const category = normalize(product.category || '');
   const text = productText(product);
-  if (EXCLUDED_CATEGORIES.some((excluded) => category.includes(excluded))) return false;
+  if (EXCLUDED_CATEGORIES.some((excluded) => category === excluded || category.includes(excluded))) return false;
   return !includesAny(text, EXCLUDED_PRODUCT_TERMS.map(normalize));
 }
 
