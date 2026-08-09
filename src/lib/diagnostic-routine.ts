@@ -125,8 +125,9 @@ const EXCLUDED_PRODUCT_TERMS = [
   // Medical devices & orthopaedics
   'anneau ', 'claviculaire', 'attelle', 'minerve', 'manchon', 'semelle', 'genouillere',
   'chaussette de compression', 'contention', 'bandage', 'gilet', 'cervical',
-  // Intimate & diapers
-  'intime', 'mamelon', 'sac a langer', 'abc derm change',
+  // Baby, infant & pediatric products (not for adult face diagnostic)
+  'abc derm', 'abcderm', 'dermifant', 'liniment', 'tout petits', 'touts petits',
+  'bebe', 'baby', 'nourrisson', 'change bebe', 'couche', 'tetine', 'sucette', 'biberon',
   // Deodorant / anti-perspirant
   'deodorant', 'anti transpirant', 'antitranspirant', 'deo bille', 'deo stick',
   // Bulk chemical raw materials & industrial items
@@ -445,6 +446,9 @@ function productFitScore(product: Product, answers: DiagnosticAnswers, extraKeyw
 }
 
 function routineStepsFor(answers: DiagnosticAnswers): RoutineStep[] {
+  if (answers.routineDepth === 'essential') {
+    return ['cleanser', 'moisturizer', 'sunscreen'];
+  }
   if (answers.routineDepth === 'complete') {
     return ['cleanser', 'toner', 'treatment', 'moisturizer', 'sunscreen'];
   }
@@ -513,6 +517,16 @@ function isStrictlyEligibleForProfileAndStep(product: Product, answers: Diagnost
       'gel nettoyant', 'gel lavant', 'lait nettoyant', 'eau nettoyante', 'nettoyant',
     ]);
     if (!isCleanser) return false;
+  }
+
+  if (step === 'moisturizer') {
+    const titleLower = productTitleText(product);
+    const isBodyOrHandCream = includesAny(titleLower, [
+      'creme main', 'creme mains', 'soin mains', 'hand cream',
+      'creme pied', 'soin pieds', 'foot cream', 'lait corps',
+      'baume corps', 'creme corps', 'body lotion', 'body cream',
+    ]);
+    if (isBodyOrHandCream) return false;
   }
 
   if (step === 'treatment') {
@@ -612,6 +626,19 @@ export function buildDiagnosticRoutine(
           && isStructuredCompatibilitySafe(product, answers)
           && isTimeCompatible(product, step)
           && isStrictlyEligibleForProfileAndStep(product, answers, step)
+          && routineStepScores(product)[step] >= 1)
+        .map((product) => ({
+          product,
+          score: productFitScore(product, answers, options.extraKeywords || []),
+        }))
+        .sort((a, b) => b.score - a.score || b.product.rating - a.product.rating);
+    }
+
+    // Fallback 3: Guarantee step completion (e.g. essential 3-step routine) if strict safety filters yield 0 candidates
+    if (!candidates.length) {
+      candidates = baseEligible
+        .filter((product) => !usedIds.has(product.id)
+          && isTimeCompatible(product, step)
           && routineStepScores(product)[step] >= 1)
         .map((product) => ({
           product,
