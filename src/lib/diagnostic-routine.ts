@@ -109,25 +109,42 @@ function countMatches(text: string, terms: string[]) {
   return terms.reduce((score, term) => score + Number(text.includes(term)), 0);
 }
 
+// Categories that absolutely cannot contain facial skincare products.
+// These are hard-stops applied even to explicitly DB-configured products.
 const EXCLUDED_CATEGORIES = [
   'orthopedique', 'dentaire', 'accessories',
+  // 'complement' is used for dietary supplements and orthopaedic devices in this DB
+  // Only exclude it if the product title/text has no skincare signals (handled below via HARD_STOP_TERMS)
+];
+
+// These terms are ABSOLUTE hard stops — a product containing ANY of these in its title
+// will NEVER appear in a skincare diagnostic, regardless of any DB metadata configuration.
+const HARD_STOP_TERMS = [
+  // Orthopaedic devices (by brand + product type)
+  'actius', 'valgus', 'genouillere', 'coudiere', 'chevillere', 'molletiere', 'cuissard',
+  'attelle', 'minerve', 'contention', 'cervical', 'ceinture lombaire', 'ceinture de grossesse',
+  'coussinet plantaire', 'semelle', 'bandage', 'separateur d orteil', 'correcteur h valgus',
+  'correcteur hallux', 'gilet', 'epicondylite', 'claviculaire',
+  // Braces and supports
+  'bracelet anti', 'manchon', 'poignet neoprene', 'bande poignet', 'bande abdominale',
+  // Baby / infant care (absolute)
+  'abc derm', 'abcderm', 'dermifant', 'liniment', 'tout petits', 'touts petits',
+  'nourrisson', 'couche', 'tetine', 'sucette', 'biberon',
+  // Oral / dental
+  'dentifrice', 'bain de bouche', 'spray buccal', 'gencive', 'tartre',
+  // Medical devices / optical
+  'lentille', 'loupe',
 ];
 
 const EXCLUDED_PRODUCT_TERMS = [
   // Hair & scalp only
   'shampoo', 'shampoing', 'apres shampoing', 'masque capillaire',
-  // Oral / dental
-  'dent ', 'dentaire', 'dentifrice', 'bain de bouche', 'spray buccal', 'gencive', 'tartre',
   // Medications / supplements (oral only)
   'gelule', 'gélule', 'capsule', 'comprime', 'sirop', 'cachet', 'ampoule buvable',
   // Extremities & body specific
   'creme main', 'creme mains', 'soin mains', 'hand cream', 'creme pied', 'soin pieds', 'foot cream',
-  // Medical devices & orthopaedics
-  'anneau ', 'claviculaire', 'attelle', 'minerve', 'manchon', 'semelle', 'genouillere',
-  'chaussette de compression', 'contention', 'bandage', 'gilet', 'cervical',
-  // Baby, infant & pediatric products (not for adult face diagnostic)
-  'abc derm', 'abcderm', 'dermifant', 'liniment', 'tout petits', 'touts petits',
-  'bebe', 'baby', 'nourrisson', 'change bebe', 'couche', 'tetine', 'sucette', 'biberon',
+  // Baby products
+  'bebe', 'baby',
   // Deodorant / anti-perspirant
   'deodorant', 'anti transpirant', 'antitranspirant', 'deo bille', 'deo stick',
   // Bulk chemical raw materials & industrial items
@@ -140,8 +157,16 @@ export function isDiagnosticEligibleProduct(product: Product, options?: { ignore
   if (product.status === 'draft') return false;
   if (!options?.ignoreStock && product.stock !== undefined && product.stock <= 0) return false;
 
-  // RULE 1: If admin explicitly configured AI Diagnostic metadata (roles, concerns, skin types) on this product,
-  // it is ALWAYS ELIGIBLE for the AI diagnostic pool!
+  // HARD STOP: These terms disqualify a product unconditionally, even if it has explicit DB metadata.
+  // This prevents orthopaedic devices, baby care items, dental products, etc. from appearing in
+  // a facial skincare routine regardless of how they are categorized in the database.
+  const titleText = normalize([product.title, product.name, product.nameFr].filter(Boolean).join(' '));
+  if (includesAny(titleText, HARD_STOP_TERMS.map(normalize))) return false;
+
+  // Also hard-stop on orthopaedic categories regardless of title
+  const category = normalize(product.category || '');
+  if (EXCLUDED_CATEGORIES.some((excluded) => category === excluded || category.includes(excluded))) return false;
+
   const p = product as unknown as Record<string, unknown>;
   const hasExplicitData =
     (Array.isArray(product.routineRoles) && product.routineRoles.length > 0) ||
@@ -151,12 +176,11 @@ export function isDiagnosticEligibleProduct(product: Product, options?: { ignore
     (Array.isArray(p.suitable_concerns) && (p.suitable_concerns as unknown[]).length > 0) ||
     (Array.isArray(p.suitable_skin_types) && (p.suitable_skin_types as unknown[]).length > 0);
 
+  // RULE 1: If admin explicitly configured AI Diagnostic metadata AND product passed all hard stops, it is eligible.
   if (hasExplicitData) return true;
 
   // RULE 2: Code-level facial product filter for un-tagged products
-  const category = normalize(product.category || '');
   const text = productText(product);
-  if (EXCLUDED_CATEGORIES.some((excluded) => category === excluded || category.includes(excluded))) return false;
   return !includesAny(text, EXCLUDED_PRODUCT_TERMS.map(normalize));
 }
 
@@ -214,13 +238,16 @@ function routineStepScores(product: Product): Record<RoutineStep, number> {
 
   const treatment =
     countMatches(titleText, [
-      'serum', 'ampoule', 'concentre', 'traitement', 'correcteur', 'correctrice',
+      'serum', 'ampoule', 'concentre', 'traitement',
+      // NOTE: 'correcteur' removed — matches orthopaedic correctors (e.g. ACTIUS CORRECTEUR H VALGUS).
+      // Use only skincare-specific corrector terms below instead.
+      'correcteur taches', 'correcteur teint', 'correcteur imperfection',
       'anti tache', 'anti taches', 'depigment', 'anti acne', 'anti imperfection', 'anti ride', 'antiride',
       'retinol', 'retinal', 'peel', 'vitamine c', 'vitamin c', 'niacinamide', 'azelaic',
       'peptide', 'acide hyaluronique', 'filler', 'soin lissant', 'soin eclat', 'cica', 'cicalfate', 'cicaplast',
     ]) * 10
     + (category.includes('acne') || category.includes('anti tache') || category.includes('anti age') ? 4 : 0)
-    + countMatches(text, ['serum', 'concentre', 'traitement', 'correcteur', 'rides', 'fermete']) * 2;
+    + countMatches(text, ['serum', 'concentre', 'traitement', 'rides', 'fermete']) * 2;
 
   const moisturizer =
     countMatches(titleText, [
@@ -539,13 +566,15 @@ function isStrictlyEligibleForProfileAndStep(product: Product, answers: Diagnost
       'creme yeux', 'soin yeux', 'regard', 'yeux fatigues',
     ]);
     if (isBadTreatment) return false;
-    // Must have at least one proper facial treatment indicator in title or text
+    // Must have at least one proper facial treatment indicator in title or text.
+    // NOTE: 'correcteur' removed — too generic, matches orthopaedic correctors.
     const hasTreatmentIndicator = includesAny(titleLower, [
-      'serum', 'ampoule', 'concentre', 'correcteur', 'filler', 'booster', 'eclat',
+      'serum', 'ampoule', 'concentre', 'filler', 'booster', 'eclat',
+      'correcteur taches', 'correcteur teint', 'correcteur imperfection',
       'anti tache', 'anti ride', 'anti age', 'anti rougeur', 'cica', 'cicalfate', 'cicaplast',
       'sensibio', 'rosaliac', 'retinol', 'niacinamide', 'vitamine c', 'hyalur', 'peptide',
-      'soin', 'traitement', 'solution', 'complexe',
-    ]) || includesAny(fullText, ['serum', 'concentre', 'correcteur', 'traitement localise']);
+      'soin', 'traitement', 'solution', 'complexe', 'depigment',
+    ]) || includesAny(fullText, ['serum', 'concentre', 'traitement localise', 'soin cible']);
     if (!hasTreatmentIndicator) return false;
   }
 
