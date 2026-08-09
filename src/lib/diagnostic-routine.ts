@@ -134,6 +134,9 @@ const HARD_STOP_TERMS = [
   'dentifrice', 'bain de bouche', 'spray buccal', 'gencive', 'tartre',
   // Medical devices / optical
   'lentille', 'loupe',
+  // Oral supplements / medications in title (capsule/tablet packs)
+  // Note: 'ampoule' is NOT here as it is a valid skincare format (serum ampoule)
+  'gelules', 'comprimes', 'capsules', 'sirop', 'cachet',
 ];
 
 const EXCLUDED_PRODUCT_TERMS = [
@@ -157,16 +160,12 @@ export function isDiagnosticEligibleProduct(product: Product, options?: { ignore
   if (product.status === 'draft') return false;
   if (!options?.ignoreStock && product.stock !== undefined && product.stock <= 0) return false;
 
-  // HARD STOP: These terms disqualify a product unconditionally, even if it has explicit DB metadata.
-  // This prevents orthopaedic devices, baby care items, dental products, etc. from appearing in
-  // a facial skincare routine regardless of how they are categorized in the database.
-  const titleText = normalize([product.title, product.name, product.nameFr].filter(Boolean).join(' '));
-  if (includesAny(titleText, HARD_STOP_TERMS.map(normalize))) return false;
-
-  // Also hard-stop on orthopaedic categories regardless of title
-  const category = normalize(product.category || '');
-  if (EXCLUDED_CATEGORIES.some((excluded) => category === excluded || category.includes(excluded))) return false;
-
+  // ─────────────────────────────────────────────────────────────────────────────
+  // RULE #1 — ABSOLUTE REQUIREMENT (checked first, no exceptions)
+  // A product MUST have at least one of routine_roles, suitable_skin_types, or
+  // suitable_concerns explicitly configured in the database by an admin.
+  // Products with ALL THREE empty will NEVER appear in any diagnostic routine.
+  // ─────────────────────────────────────────────────────────────────────────────
   const p = product as unknown as Record<string, unknown>;
   const hasExplicitData =
     (Array.isArray(product.routineRoles) && product.routineRoles.length > 0) ||
@@ -176,12 +175,19 @@ export function isDiagnosticEligibleProduct(product: Product, options?: { ignore
     (Array.isArray(p.suitable_concerns) && (p.suitable_concerns as unknown[]).length > 0) ||
     (Array.isArray(p.suitable_skin_types) && (p.suitable_skin_types as unknown[]).length > 0);
 
-  // RULE 1: If admin explicitly configured AI Diagnostic metadata AND product passed all hard stops, it is eligible.
-  if (hasExplicitData) return true;
+  if (!hasExplicitData) return false;
 
-  // RULE 2: Code-level facial product filter for un-tagged products
-  const text = productText(product);
-  return !includesAny(text, EXCLUDED_PRODUCT_TERMS.map(normalize));
+  // ─────────────────────────────────────────────────────────────────────────────
+  // HARD STOP — even explicitly-configured products are blocked if they contain
+  // orthopaedic, baby, dental, or other non-skincare signals in their title.
+  // ─────────────────────────────────────────────────────────────────────────────
+  const titleText = normalize([product.title, product.name, product.nameFr].filter(Boolean).join(' '));
+  if (includesAny(titleText, HARD_STOP_TERMS.map(normalize))) return false;
+
+  const category = normalize(product.category || '');
+  if (EXCLUDED_CATEGORIES.some((excluded) => category === excluded || category.includes(excluded))) return false;
+
+  return true;
 }
 
 function productTitleText(product: Product) {
@@ -588,7 +594,18 @@ export function buildDiagnosticRoutine(
   answers: DiagnosticAnswers,
   options: RoutineBuilderOptions = {},
 ): RoutineRecommendation[] {
-  const products = rawProducts.map((p) => {
+  const excludedIds = new Set(options.excludedProductIds || []);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // STEP 1: Filter eligibility on RAW DB data FIRST (before any enrichment).
+  // This enforces Rule #1 absolutely: keyword-enriched metadata from
+  // enrichProductMetadata() can NEVER rescue a product that has no explicit
+  // admin-configured DB data (routine_roles / suitable_skin_types / suitable_concerns).
+  // ─────────────────────────────────────────────────────────────────────────────
+  const eligibleRaw = rawProducts.filter((p) => !excludedIds.has(p.id) && isDiagnosticEligibleProduct(p));
+
+  // STEP 2: Enrich only the eligible products with inferred metadata for better step scoring.
+  const baseEligible = eligibleRaw.map((p) => {
     if (p.suitableSkinTypes?.length && p.suitableConcerns?.length && p.routineRoles?.length) return p;
     const enriched = enrichProductMetadata(p);
     return {
@@ -602,8 +619,6 @@ export function buildDiagnosticRoutine(
     } as Product;
   });
 
-  const excludedIds = new Set(options.excludedProductIds || []);
-  const baseEligible = products.filter(p => !excludedIds.has(p.id) && isDiagnosticEligibleProduct(p));
   let brandEligible = baseEligible;
   if (options.allowedBrands?.length) {
     const normalizedAllowed = options.allowedBrands.map(b => b.trim().toLowerCase());
