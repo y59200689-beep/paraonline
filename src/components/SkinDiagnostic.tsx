@@ -443,6 +443,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
             isClientExperience ? (
               <div className={styles.entry}>
                 <section className={styles.visual} aria-labelledby="diagnostic-entry-title">
+                  <span className={styles.visualOrb} aria-hidden="true" />
                   <Image
                     src="/images/diagnostic/dermo-research-still-life.png"
                     alt=""
@@ -453,6 +454,10 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                   />
                   <span className={styles.visualVeil} aria-hidden="true" />
                   <div className={styles.visualCopy}>
+                    <span className={styles.visualBadge}>
+                      <Sparkles className="h-3 w-3" />
+                      {isRTL ? 'خوارزمية جلدية 100% علمية' : 'Algorithme Dermatologique 100% Scientifique'}
+                    </span>
                     <h3 id="diagnostic-entry-title" className={styles.visualTitle}>
                       {isRTL ? (
                         <>بشرتك تستحق روتيناً <span className={styles.visualTitleAccent}>مناسباً حقاً.</span></>
