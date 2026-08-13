@@ -13,6 +13,11 @@ import {
 } from 'lucide-react';
 import { ShopShell } from '@/components/ShopShell';
 import { PRODUCTS_DB } from '@/lib/data';
+import { useTranslation } from '@/context/LanguageContext';
+import { getCustomerAccessToken } from '@/lib/customer-session';
+import { customerStatusLabel } from '@/lib/customer-presenters';
+
+type TrackingErrorKind = 'missing-access' | 'not-found' | 'invalid-access' | 'rate-limit' | 'network';
 
 interface OrderItem {
   id?: number;
@@ -117,6 +122,7 @@ interface Order {
 }
 
 export default function SuiviCommandeClient() {
+  const { language } = useTranslation();
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get('order') || searchParams.get('id') || '';
   const initialToken = searchParams.get('token') || '';
@@ -126,8 +132,8 @@ export default function SuiviCommandeClient() {
   const [loading, setLoading] = useState(false);
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [errorKind, setErrorKind] = useState<TrackingErrorKind>('not-found');
   const [copied, setCopied] = useState(false);
-  const [language, setLanguage] = useState<'FR' | 'AR'>('FR');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Modals
@@ -149,7 +155,7 @@ export default function SuiviCommandeClient() {
         || ''
       : '';
     const token = initialToken || savedToken;
-    if (initialQuery && token) {
+    if (initialQuery) {
       setTrackingToken(token);
       handleSearch(initialQuery, token);
     } else {
@@ -165,8 +171,9 @@ export default function SuiviCommandeClient() {
   const handleSearch = async (searchTarget?: string, accessToken?: string) => {
     const searchTerm = (searchTarget !== undefined ? searchTarget : query).trim();
     const token = (accessToken !== undefined ? accessToken : trackingToken).trim();
-    if (!searchTerm || !token) {
-      setError(language === 'AR' ? 'الرجاء إدخال رقم الطلب ورمز التتبع.' : 'Veuillez saisir votre numéro de commande et votre code de suivi.');
+    if (!searchTerm) {
+      setErrorKind('missing-access');
+      setError(language === 'AR' ? 'الرجاء إدخال رقم الطلب.' : 'Veuillez saisir votre numéro de commande.');
       return;
     }
 
@@ -175,7 +182,19 @@ export default function SuiviCommandeClient() {
 
     // Fetch real order from backend API endpoint (Supabase Database)
     try {
-      const res = await fetch(`/api/orders?orderId=${encodeURIComponent(searchTerm)}&token=${encodeURIComponent(token)}`);
+      const customerAccessToken = token ? null : await getCustomerAccessToken().catch(() => null);
+      if (!token && !customerAccessToken) {
+        setErrorKind('missing-access');
+        setError(language === 'AR'
+          ? 'أدخلي رمز التتبع أو سجّلي الدخول إلى حسابك لمتابعة هذا الطلب.'
+          : 'Saisissez votre code de suivi ou connectez-vous à votre compte pour suivre cette commande.');
+        return;
+      }
+      const queryString = new URLSearchParams({ orderId: searchTerm });
+      if (token) queryString.set('token', token);
+      const res = await fetch(`/api/orders?${queryString.toString()}`, {
+        headers: customerAccessToken ? { Authorization: `Bearer ${customerAccessToken}` } : undefined,
+      });
       const data = await res.json();
 
       if (data.success && data.orders && data.orders.length > 0) {
@@ -193,8 +212,8 @@ export default function SuiviCommandeClient() {
               time: 'Statut Actuel',
               date: orderDateStr,
               location: `Destination: ${liveOrder.city || 'Maroc'}`,
-              titleFr: `Statut de la commande: ${liveOrder.status || 'En cours'}`,
-              titleAr: `حالة الطلب: ${liveOrder.status || 'قيد المعالجة'}`,
+              titleFr: `Statut de la commande: ${customerStatusLabel(liveOrder.status || 'pending', 'FR')}`,
+              titleAr: `حالة الطلب: ${customerStatusLabel(liveOrder.status || 'pending', 'AR')}`,
               descFr: `Dossier N° ${liveOrder.order_id} enregistré dans notre système logistique.`,
               descAr: `الملف رقم ${liveOrder.order_id} مسجل في نظامنا اللوجستي.`,
               status: 'current'
@@ -205,14 +224,16 @@ export default function SuiviCommandeClient() {
         setOrder(liveOrder);
       } else {
         setOrder(null);
+        setErrorKind(res.status === 401 || res.status === 403 ? 'invalid-access' : res.status === 429 ? 'rate-limit' : 'not-found');
         setError(
-          language === 'AR'
+          data.error || (language === 'AR'
             ? `لم نتمكن من العثور على أي طلب يطابق "${searchTerm}". تحقق من الرقم وحاول مجدداً.`
-            : `Aucune commande trouvée pour "${searchTerm}". Vérifiez votre numéro de commande ou numéro de téléphone.`
+            : `Aucune commande trouvée pour "${searchTerm}". Vérifiez votre numéro de commande.`)
         );
       }
     } catch (err) {
       console.error('Order tracking lookup error:', err);
+      setErrorKind('network');
       setError(
         language === 'AR'
           ? 'حدث خطأ أثناء الاتصال بالخادم. يرجى المحاولة لاحقاً.'
@@ -253,6 +274,13 @@ export default function SuiviCommandeClient() {
   };
 
   const currentStep = order ? getStatusIndex(order.status) : 0;
+  const statusLabel = order ? customerStatusLabel(order.status, language) : '';
+  const giftItem = order?.gift_item && !['null', 'undefined'].includes(order.gift_item.trim().toLowerCase())
+    ? order.gift_item.trim()
+    : null;
+  const shippingFee = order
+    ? Math.max(0, Number(order.total || 0) - Number(order.subtotal || 0) + Number(order.discount_amount || 0))
+    : 0;
 
   const STEPS = [
     {
@@ -298,8 +326,8 @@ export default function SuiviCommandeClient() {
   ];
 
   return (
-    <ShopShell hideHeader={true}>
-      <div className={`min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-emerald-500 selection:text-slate-950 ${isRTL ? 'rtl' : 'ltr'}`}>
+    <ShopShell>
+      <div className={`public-page min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-emerald-500 selection:text-slate-950 ${isRTL ? 'rtl' : 'ltr'}`}>
         
         {/* Toast Notification Floating Banner */}
         {toastMessage && (
@@ -308,47 +336,6 @@ export default function SuiviCommandeClient() {
             <span>{toastMessage}</span>
           </div>
         )}
-
-        {/* Top Service Bar */}
-        <div className="bg-slate-900/90 border-b border-slate-800 text-[11px] font-mono py-2 px-4 overflow-hidden relative z-20 backdrop-blur-md">
-          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 text-slate-400">
-            <div className="flex items-center gap-6 overflow-x-auto no-scrollbar whitespace-nowrap">
-              <span className="flex items-center gap-2 text-emerald-400 font-bold">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                {isRTL ? 'نظام تتبع الشحنات المباشر' : 'SUIVI OFFICIEL DES EXPÉDITIONS'}
-              </span>
-              <span className="hidden sm:inline-flex items-center gap-1.5 text-slate-400">
-                <Truck className="w-3 h-3 text-cyan-400" />
-                {isRTL ? 'توصيل سريع لكافة المدن المغربية' : 'LIVRAISON EXPRESS PARTOUT AU MAROC'}
-              </span>
-              <span className="hidden md:inline-flex items-center gap-1.5 text-slate-400">
-                <Shield className="w-3 h-3 text-amber-400" />
-                {isRTL ? 'الدفع عند الاستلام مع الفحص' : 'PAIEMENT À LA LIVRAISON (COD) SÉCURISÉ'}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3 shrink-0">
-              <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-full p-0.5">
-                <button
-                  onClick={() => setLanguage('FR')}
-                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all ${
-                    language === 'FR' ? 'bg-emerald-500 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  FR
-                </button>
-                <button
-                  onClick={() => setLanguage('AR')}
-                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all ${
-                    language === 'AR' ? 'bg-emerald-500 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  العربية
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Hero & Search Area */}
         <div className="relative overflow-hidden border-b border-slate-800/80 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 pt-10 pb-16">
@@ -367,8 +354,8 @@ export default function SuiviCommandeClient() {
               </Link>
 
               <div className="flex items-center gap-2 text-xs font-mono text-emerald-400/90 bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-1.5 rounded-full backdrop-blur-md">
-                <Activity className="w-3.5 h-3.5 animate-pulse text-emerald-400" />
-                <span>{isRTL ? 'تتبع مباشر متصل بالخادم' : 'SUIVI EN TEMPS RÉEL'}</span>
+                <Activity className="w-3.5 h-3.5 text-emerald-400" />
+                <span>{isRTL ? 'تتبع آمن للطلب' : 'SUIVI SÉCURISÉ'}</span>
               </div>
             </div>
 
@@ -380,12 +367,12 @@ export default function SuiviCommandeClient() {
               </div>
 
               <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white font-heading leading-none">
-                {isRTL ? 'تتبّعي مسار طلبِك في الوقت الفعلي' : 'Suivi de Commande en Temps Réel'}
+                {isRTL ? 'تتبّعي حالة طلبِك' : 'Suivi de votre commande'}
               </h1>
               <p className="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
                 {isRTL
                   ? 'أدخلي رقم الطلب ورمز التتبع الآمن الخاص بكِ لمتابعة حالة الشحنة وموعد الوصول.'
-                  : 'Saisissez votre numéro de commande et votre code de suivi sécurisé pour consulter l\'état réel de votre livraison.'}
+                  : 'Saisissez votre référence numérique et le code de suivi sécurisé reçu après confirmation pour consulter l’état de votre commande.'}
               </p>
             </div>
 
@@ -410,7 +397,7 @@ export default function SuiviCommandeClient() {
                       type="text"
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
-                      placeholder={isRTL ? 'رقم الطلب PO-...' : 'N° de commande PO-...'}
+                      placeholder={isRTL ? 'رقم الطلب (مثال: 100001)' : 'N° de commande (ex. 100001)'}
                       className="w-full bg-transparent text-white placeholder-slate-500 text-sm font-mono py-3.5 px-2 focus:outline-none"
                     />
                     <input
@@ -464,7 +451,15 @@ export default function SuiviCommandeClient() {
             <div className="max-w-2xl mx-auto bg-rose-500/10 border border-rose-500/30 text-rose-300 p-6 rounded-3xl flex items-start gap-4 text-sm shadow-xl backdrop-blur-xl animate-in fade-in">
               <AlertCircle className="w-6 h-6 shrink-0 text-rose-400 mt-0.5" />
               <div className="space-y-1">
-                <h4 className="font-bold text-rose-200">{isRTL ? 'تعذر العثور على الطلب' : 'Commande non trouvée'}</h4>
+                <h4 className="font-bold text-rose-200">
+                  {errorKind === 'network'
+                    ? (isRTL ? 'تعذر الاتصال بالخدمة' : 'Service momentanément indisponible')
+                    : errorKind === 'missing-access' || errorKind === 'invalid-access'
+                      ? (isRTL ? 'يلزم التحقق من الوصول' : 'Accès au suivi requis')
+                      : errorKind === 'rate-limit'
+                        ? (isRTL ? 'محاولات كثيرة جداً' : 'Trop de tentatives')
+                        : (isRTL ? 'تعذر العثور على الطلب' : 'Commande non trouvée')}
+                </h4>
                 <p className="text-xs text-rose-300/90 leading-relaxed">{error}</p>
                 <div className="pt-2 text-xs">
                   <span className="text-slate-400">{isRTL ? 'هل تحتاجين مساعدة؟' : 'Besoin d\'assistance ?'} </span>
@@ -474,7 +469,7 @@ export default function SuiviCommandeClient() {
                     rel="noopener noreferrer"
                     className="text-emerald-400 font-bold underline hover:text-emerald-300"
                   >
-                    {isRTL ? 'تحدثي معنا عبر واتساب 24/7' : 'Contactez le support WhatsApp 24/7'}
+                    {isRTL ? 'تحدثي معنا عبر واتساب' : 'Contacter le support WhatsApp'}
                   </a>
                 </div>
               </div>
@@ -494,28 +489,28 @@ export default function SuiviCommandeClient() {
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
                   {isRTL
-                  ? 'أدخلي رقم الطلب (مثال: PO-102948) ورمز التتبع الذي تلقيته بعد تأكيد الطلب لعرض تفاصيل الشحنة.'
-                    : 'Consultez la progression réelle de votre livraison avec votre référence de commande et le code de suivi reçu après confirmation.'}
+                  ? 'أدخلي رقم الطلب (مثال: 100001) ورمز التتبع الذي تلقيته بعد تأكيد الطلب لعرض تفاصيل الشحنة.'
+                    : 'Utilisez votre référence numérique (ex. 100001) et le code de suivi reçu après confirmation. Vous trouverez ce code dans le message de confirmation de commande.'}
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 text-xs">
                 <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800/80 space-y-1">
                   <Truck className="w-5 h-5 text-emerald-400 mx-auto" />
-                  <span className="font-bold text-slate-200 block">{isRTL ? 'توصيل express' : 'Livraison Express'}</span>
-                  <span className="text-[11px] text-slate-500">{isRTL ? 'كافة المدن المغربية' : 'Sur tout le Maroc'}</span>
+                  <span className="font-bold text-slate-200 block">{isRTL ? 'معلومات التوصيل' : 'Informations livraison'}</span>
+                  <span className="text-[11px] text-slate-400">{isRTL ? 'تظهر عند تأكيد الطلب' : 'Affichées après confirmation'}</span>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800/80 space-y-1">
                   <ShieldCheck className="w-5 h-5 text-cyan-400 mx-auto" />
                   <span className="font-bold text-slate-200 block">{isRTL ? 'دفع عند الاستلام' : 'Paiement à la livraison'}</span>
-                  <span className="text-[11px] text-slate-500">{isRTL ? 'نقداً أو بالبطاقة' : 'Espèces ou TPE'}</span>
+                  <span className="text-[11px] text-slate-400">{isRTL ? 'نقداً أو بالبطاقة' : 'Espèces ou TPE'}</span>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800/80 space-y-1">
                   <MessageCircle className="w-5 h-5 text-purple-400 mx-auto" />
-                  <span className="font-bold text-slate-200 block">{isRTL ? 'دعم 24/7' : 'Support 24/7'}</span>
-                  <span className="text-[11px] text-slate-500">{isRTL ? 'مساعدة عبر واتساب' : 'Via WhatsApp'}</span>
+                  <span className="font-bold text-slate-200 block">{isRTL ? 'هل فقدت رمز التتبع؟' : 'Code de suivi perdu ?'}</span>
+                  <a href="https://wa.me/212660808080?text=Bonjour%2C%20j%E2%80%99ai%20besoin%20d%E2%80%99aide%20pour%20retrouver%20mon%20code%20de%20suivi." target="_blank" rel="noopener noreferrer" className="inline-flex text-[11px] font-semibold underline underline-offset-2 hover:text-white" style={{ color: '#86efac' }}>{isRTL ? 'اطلب المساعدة عبر واتساب' : 'Demander de l’aide via WhatsApp'}</a>
                 </div>
               </div>
             </div>
@@ -553,7 +548,7 @@ export default function SuiviCommandeClient() {
                           <span className={`w-2 h-2 rounded-full ${
                             currentStep === 4 ? 'bg-emerald-400 animate-pulse' : currentStep >= 2 ? 'bg-cyan-400 animate-pulse' : 'bg-amber-400 animate-pulse'
                           }`} />
-                          {order.status}
+                          {statusLabel}
                         </span>
                       </div>
 
@@ -637,7 +632,9 @@ export default function SuiviCommandeClient() {
                       </span>
                       <div className="flex items-center gap-2">
                         <MapPin className="w-4 h-4 text-amber-400" />
-                        <span className="text-sm font-bold text-slate-100">{order.city || 'Maroc'}, Maroc</span>
+                        <span className="text-sm font-bold text-slate-100">
+                          {order.city ? `${order.city}, Maroc` : (isRTL ? 'تُحدّد عند التأكيد' : 'Confirmée avec votre commande')}
+                        </span>
                       </div>
                     </div>
 
@@ -647,7 +644,7 @@ export default function SuiviCommandeClient() {
                       </span>
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-purple-400" />
-                        <span className="text-sm font-bold text-cyan-300">{order.estimated_delivery || '24h - 48h Express'}</span>
+                        <span className="text-sm font-bold text-cyan-300">{order.estimated_delivery || (isRTL ? 'تُحدّد حسب مدينة التوصيل' : 'Calculée selon la ville de livraison')}</span>
                       </div>
                     </div>
                   </div>
@@ -819,7 +816,7 @@ export default function SuiviCommandeClient() {
                         <circle cx="340" cy="100" r="6" fill="#06b6d4" className="animate-ping" />
                         <circle cx="340" cy="100" r="6" fill="#06b6d4" />
                         <text x="340" y="145" fill="#38bdf8" fontSize="12" fontWeight="bold" textAnchor="middle">
-                          {order.status || 'En Transit'}
+                          {statusLabel || (isRTL ? 'قيد المعالجة' : 'En cours')}
                         </text>
 
                         {/* Point C */}
@@ -1012,11 +1009,11 @@ export default function SuiviCommandeClient() {
                       })}
                     </div>
 
-                    {order.gift_item && (
+                    {giftItem && (
                       <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center gap-3 text-xs font-bold">
                         <Sparkles className="w-5 h-5 shrink-0 text-emerald-400" />
                         <span>
-                          {isRTL ? 'هدية مجانية مدرجة بالشحنة:' : 'Cadeau offert inclus:'} {order.gift_item}
+                          {isRTL ? 'هدية مجانية مدرجة بالشحنة:' : 'Cadeau offert inclus:'} {giftItem}
                         </span>
                       </div>
                     )}
@@ -1052,7 +1049,9 @@ export default function SuiviCommandeClient() {
 
                         <div className="flex justify-between">
                           <span>{isRTL ? 'رسوم الشحن:' : 'Frais de livraison:'}</span>
-                          <span className="text-emerald-400 font-bold uppercase">{isRTL ? 'مجاناً' : 'GRATUIT'}</span>
+                          <span className={shippingFee === 0 ? 'text-emerald-400 font-bold uppercase' : 'font-mono font-medium text-slate-200'}>
+                            {shippingFee === 0 ? (isRTL ? 'مجاناً' : 'GRATUIT') : `${shippingFee.toFixed(2)} MAD`}
+                          </span>
                         </div>
                       </div>
 

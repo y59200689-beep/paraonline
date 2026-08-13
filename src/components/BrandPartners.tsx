@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { BrandLogoCard } from './BrandLogoCard';
 
 interface BrandData {
@@ -32,7 +31,6 @@ const FALLBACK_BRANDS: BrandData[] = [
 
 export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands: propBrands }) => {
   const [dbBrands, setDbBrands] = useState<BrandData[]>([]);
-  const router = useRouter();
 
   useEffect(() => {
     fetch('/api/brands')
@@ -71,23 +69,6 @@ export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands: propBrands
     return list;
   }, [propBrands, dbBrands]);
 
-  // Eagerly prefetch every brand product page so clicks are near-instant
-  useEffect(() => {
-    if (!brands.length) return;
-    // Deduplicate hrefs (unique brands only, not duplicated rows)
-    const hrefs = Array.from(
-      new Set(
-        brands.map(b =>
-          b.card_link || `/products?brand=${encodeURIComponent(b.name || '')}`
-        )
-      )
-    );
-    // Stagger prefetch to avoid flooding the server on mount
-    hrefs.forEach((href, i) => {
-      setTimeout(() => router.prefetch(href), i * 80);
-    });
-  }, [brands, router]);
-
   // Split into 3 marquee rows
   const brandsPerRow = Math.ceil(brands.length / 3);
   const brandRows = Array.from({ length: 3 }, (_, rowIndex) =>
@@ -125,7 +106,7 @@ export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands: propBrands
             gap: 1rem;
           }
         }
-        .brand-partner-viewport:hover .brand-partner-track {
+        .brand-partner-viewport:is(:hover, :focus-within) .brand-partner-track {
           animation-play-state: paused;
         }
         .brand-partner-track a {

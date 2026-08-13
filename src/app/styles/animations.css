@@ -72,7 +72,7 @@
   100% { transform: translateX(-33.333%); }
 }
 .animate-marquee-slow { animation: marquee-scroll 20s linear infinite; display: inline-block; }
-.animate-marquee-slow:hover { animation-play-state: paused; }
+.animate-marquee-slow:is(:hover, :focus-within) { animation-play-state: paused; }
 
 /* Infinite scrolling review cards marquee */
 @keyframes marquee-reviews {
@@ -85,7 +85,7 @@
   animation: marquee-reviews 70s linear infinite;
   transform: translate3d(0, 0, 0);
 }
-.animate-reviews-marquee:hover {
+.animate-reviews-marquee:is(:hover, :focus-within) {
   animation-play-state: paused;
 }
 
@@ -1621,5 +1621,4 @@
   .save-btn__spinner { animation: none !important; }
   .save-btn__check   { animation: none !important; }
 }
-
 

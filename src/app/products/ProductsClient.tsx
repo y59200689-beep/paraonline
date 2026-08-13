@@ -8,6 +8,7 @@ import { ShopShell } from '@/components/ShopShell';
 import { Search, SlidersHorizontal, Check, ArrowUpDown, X, AlertTriangle, Sparkles, Loader2, ChevronLeft, ChevronRight, RotateCcw, Tags, HeartPulse, CircleDollarSign, FlaskConical } from 'lucide-react';
 import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
+import { isDiagnosticProductEligible } from '@/lib/diagnostic-eligibility';
 
 const CONCERNS = [
   { id: 'acne', labelFR: 'Acné & Imperfections', labelAR: 'حب الشباب والشوائب' },
@@ -67,7 +68,7 @@ const productCategoryIds = (product: Product) => {
 };
 
 const getProductMatchScore = (product: Product, diagnostic: any) => {
-  if (!diagnostic) return null;
+  if (!diagnostic || !isDiagnosticProductEligible(product)) return null;
   const { skinType, concern } = diagnostic;
   let score = 76; // Premium base compatibility
 
@@ -191,6 +192,7 @@ export default function ProductsClient({
   const [selectedBrands, setSelectedBrands] = useState<string[]>(initialBrands);
   const [selectedConcerns, setSelectedConcerns] = useState<string[]>(initialConcerns);
   const [ingredientQuery, setIngredientQuery] = useState('');
+  const [brandQuery, setBrandQuery] = useState('');
   const [maxPrice, setMaxPrice] = useState(1500);
   const [sortOption, setSortOption] = useState('alphabetical'); // alphabetical, price-asc, price-desc, rating
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
@@ -223,6 +225,11 @@ export default function ProductsClient({
   const brandsList = useMemo(() => {
     return catalogFacets.brands.map(brand => brand.name);
   }, [catalogFacets.brands]);
+  const visibleBrands = useMemo(() => {
+    const query = brandQuery.trim().toLocaleLowerCase(language === 'AR' ? 'ar-MA' : 'fr-FR');
+    if (!query) return brandsList;
+    return brandsList.filter(brand => brand.toLocaleLowerCase(language === 'AR' ? 'ar-MA' : 'fr-FR').includes(query));
+  }, [brandQuery, brandsList, language]);
 
   // Dynamic counts for filters
   const categoryCounts = useMemo(() => {
@@ -378,7 +385,7 @@ export default function ProductsClient({
 
   return (
     <ShopShell>
-      <main className="max-w-7xl mx-auto px-6 sm:px-10 md:px-16 lg:px-20 xl:px-24 pt-20 pb-12 lg:py-12 select-none">
+      <main className="public-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-12 lg:py-12 select-none">
         
         {/* Editorial Double-Bezel Header Card */}
         <div className="rounded-[2rem] p-1.5 bg-slate-900/5 dark:bg-white/5 border border-slate-200/40 dark:border-slate-800/40 mb-12">
@@ -392,12 +399,12 @@ export default function ProductsClient({
                 {language === 'FR' ? 'Sélection beauté' : 'اختيارات الجمال'}
               </span>
               <h1 className="text-3xl sm:text-4xl font-extrabold font-heading tracking-tight text-white leading-none">
-                {language === 'FR' ? "L'Herboristerie" : 'العناية الطبيعية'}
+                {language === 'FR' ? 'Le catalogue' : 'الكتالوج'}
               </h1>
               <p className="text-slate-400 text-xs sm:text-sm font-light leading-relaxed">
                 {language === 'FR' 
-                  ? 'Découvrez notre sélection de soins, d’inspiration coréenne et naturelle, pour votre routine quotidienne.'
-                  : 'اكتشفي مجموعتنا من منتجات العناية الكورية والطبيعية لروتينكِ اليومي.'}
+                  ? 'Recherchez par produit, marque ou catégorie et utilisez les filtres avancés lorsque vous en avez besoin.'
+                  : 'ابحثي حسب المنتج أو العلامة أو الفئة، واستخدمي الفلاتر المتقدمة عند الحاجة.'}
               </p>
             </div>
           </div>
@@ -609,8 +616,19 @@ export default function ProductsClient({
                     <span>{language === 'FR' ? 'Marques' : 'العلامات التجارية'}</span>
                     <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[9px] tabular-nums text-slate-500 dark:bg-slate-900 dark:text-slate-400">{brandsList.length}</span>
                   </div>
+                  <label className="relative mb-2 block">
+                    <span className="sr-only">{language === 'FR' ? 'Rechercher une marque' : 'البحث عن علامة تجارية'}</span>
+                    <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="search"
+                      value={brandQuery}
+                      onChange={(event) => setBrandQuery(event.target.value)}
+                      placeholder={language === 'FR' ? 'Rechercher une marque…' : 'ابحث عن علامة…'}
+                      className="h-10 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/15 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                    />
+                  </label>
                   <div className="max-h-44 space-y-1 overflow-y-auto pr-1 custom-sidebar-scroll">
-                    {brandsList.map(brand => {
+                    {visibleBrands.map(brand => {
                       const isChecked = selectedBrands.includes(brand);
                       return (
                         <label key={brand} className="group flex min-h-9 cursor-pointer items-center justify-between rounded-md px-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-900">
@@ -660,40 +678,6 @@ export default function ProductsClient({
           {/* Right Column: Grid and Toolbar */}
           <div className="flex-grow w-full min-w-0 space-y-6">
 
-            {/* Mobile-only static search bar (replaces removed sticky sub-header) */}
-            <div className="flex items-center gap-2 lg:hidden">
-              <div className="relative flex-grow">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder={language === 'FR' ? 'Rechercher un produit...' : 'ابحثي عن منتج...'}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 text-xs rounded-xl pl-9 pr-4 py-2.5 outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/5 transition-all"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-              <button
-                onClick={() => setMobileFilterOpen(true)}
-                className="relative px-3.5 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-700 dark:text-slate-300 flex items-center gap-1.5 text-xs font-bold shrink-0 cursor-pointer"
-              >
-                <SlidersHorizontal className="w-3.5 h-3.5 text-primary" />
-                <span>{language === 'FR' ? 'Filtrer' : 'تصفية'}</span>
-                {(selectedCategory !== 'all' || selectedBrands.length > 0 || selectedConcerns.length > 0 || ingredientQuery.trim() || searchQuery || maxPrice < 1500 || showOnlyMatches) && (
-                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-primary text-white text-[9px] font-black flex items-center justify-center">
-                    {selectedBrands.length + selectedConcerns.length + (ingredientQuery.trim() ? 1 : 0) + (selectedCategory !== 'all' ? 1 : 0) + (searchQuery ? 1 : 0) + (maxPrice < 1500 ? 1 : 0) + (showOnlyMatches ? 1 : 0)}
-                  </span>
-                )}
-              </button>
-            </div>
-
             {/* Skin Diagnostic Profile Banner */}
             {diagnostic && (
               <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-teal-500/10 via-emerald-500/5 to-transparent border border-teal-500/20 dark:border-teal-500/30 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-[0_4px_20px_rgba(13,148,136,0.03)]">
@@ -742,14 +726,35 @@ export default function ProductsClient({
 
             {/* Toolbar: Sorting & Count */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 rounded-2xl shadow-sm">
-              <div className="space-y-1">
+              <div className="min-w-0 flex-1 space-y-3 sm:space-y-1">
+                <div className="relative lg:hidden">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="search"
+                    aria-label={language === 'FR' ? 'Rechercher dans le catalogue' : 'البحث في الكتالوج'}
+                    placeholder={language === 'FR' ? 'Rechercher un produit ou une marque' : 'ابحث عن منتج أو علامة'}
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50/70 pl-10 pr-10 text-base font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      aria-label={language === 'FR' ? 'Effacer la recherche' : 'مسح البحث'}
+                      className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
                 <span className="text-xs font-semibold text-slate-500 block">
                 {totalResults === 1 
                   ? (language === 'FR' ? '1 produit disponible' : 'منتج واحد متوفر')
                   : (language === 'FR' ? `${totalResults} produits disponibles` : `${totalResults} منتجات متوفرة`)}
                 </span>
                 {pagination.total > 0 && !showOnlyMatches && (
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600">
                     {language === 'FR'
                       ? `Lot ${pageStart}-${pageEnd} sur ${pagination.total}`
                       : `الدفعة ${pageStart}-${pageEnd} من ${pagination.total}`}
@@ -760,6 +765,7 @@ export default function ProductsClient({
               <div className="flex items-center gap-3 self-end sm:self-auto">
                 <button
                   onClick={() => setMobileFilterOpen(true)}
+                  type="button"
                   className="lg:hidden px-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 text-slate-700 dark:text-slate-300 cursor-pointer bg-white dark:bg-slate-900"
                 >
                   <SlidersHorizontal className="w-3.5 h-3.5 text-primary" />
@@ -769,6 +775,7 @@ export default function ProductsClient({
                 <div className="relative flex items-center gap-2">
                   <ArrowUpDown className="w-4 h-4 text-slate-400 shrink-0" />
                   <select 
+                    aria-label={language === 'FR' ? 'Trier les produits' : 'ترتيب المنتجات'}
                     value={sortOption}
                     onChange={(e) => setSortOption(e.target.value)}
                     className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-primary/50 text-slate-700 dark:text-slate-300 text-xs rounded-xl px-3 py-2 outline-none cursor-pointer font-bold select-none"
@@ -875,7 +882,7 @@ export default function ProductsClient({
                       </p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-1 min-[390px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-4 gap-6">
                     {recommendations.map((product, idx) => (
                       <div key={product.id} className="w-full">
                         <ProductCard product={product} showMatchScore={true} searchQuery={searchQuery} priority={idx < 2} />
@@ -887,7 +894,7 @@ export default function ProductsClient({
             ) : (
               <div 
                 key={`${currentPage}-${selectedCategory}-${selectedBrands.join(',')}-${selectedConcerns.join(',')}-${searchQuery}-${maxPrice}-${showOnlyMatches}-${sortOption}`}
-                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6"
+                className="grid grid-cols-1 min-[390px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5 sm:gap-6"
               >
                 {filteredProducts.map((product, index) => (
                   <div 
@@ -909,7 +916,7 @@ export default function ProductsClient({
             {pagination.totalPages > 1 && !showOnlyMatches && (
               <div className="rounded-3xl border border-slate-100 bg-white p-3 sm:p-4 shadow-sm dark:border-slate-900 dark:bg-slate-950">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-slate-600">
                     {language === 'FR'
                       ? `Page ${pagination.page} / ${pagination.totalPages} - 50 produits par page`
                       : `الصفحة ${pagination.page} / ${pagination.totalPages}`}
@@ -917,6 +924,7 @@ export default function ProductsClient({
                   <div className="flex flex-wrap items-center gap-1.5">
                     <button
                       type="button"
+                      aria-label={language === 'FR' ? 'Page précédente' : 'الصفحة السابقة'}
                       onClick={() => goToPage(currentPage - 1)}
                       disabled={currentPage <= 1 || isPageLoading}
                       className="h-9 px-3 rounded-xl border border-slate-200 bg-white text-xs font-black text-slate-600 transition hover:border-primary/30 hover:text-primary disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
@@ -940,6 +948,7 @@ export default function ProductsClient({
                     ))}
                     <button
                       type="button"
+                      aria-label={language === 'FR' ? 'Page suivante' : 'الصفحة التالية'}
                       onClick={() => goToPage(currentPage + 1)}
                       disabled={currentPage >= pagination.totalPages || isPageLoading}
                       className="h-9 px-3 rounded-xl border border-slate-200 bg-white text-xs font-black text-slate-600 transition hover:border-primary/30 hover:text-primary disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
@@ -956,9 +965,9 @@ export default function ProductsClient({
 
       {/* --- MOBILE FILTER DRAWER SHEET --- */}
       {mobileFilterOpen && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-[2px] z-50 lg:hidden flex justify-end animate-in fade-in duration-200">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-[2px] z-50 lg:hidden flex items-end sm:items-stretch sm:justify-end animate-in fade-in duration-200" onClick={() => setMobileFilterOpen(false)}>
           <div 
-            className="w-full max-w-sm h-full bg-white dark:bg-slate-950 p-6 flex flex-col justify-between shadow-2xl animate-in slide-in-from-right duration-300"
+            className="flex max-h-[86svh] w-full flex-col justify-between rounded-t-[28px] bg-white p-5 shadow-2xl dark:bg-slate-950 sm:h-full sm:max-h-none sm:max-w-sm sm:rounded-none sm:p-6 animate-in slide-in-from-bottom sm:slide-in-from-right duration-300"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="space-y-6 overflow-y-auto flex-1 pr-1 pb-4">
@@ -987,7 +996,7 @@ export default function ProductsClient({
                     placeholder={language === 'FR' ? 'Saisir un mot-clé...' : 'اكتب للبحث...'}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 focus:border-primary/50 text-slate-800 dark:text-slate-100 text-xs rounded-xl pl-9 pr-4 py-2.5 outline-none transition"
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 focus:border-primary/50 text-slate-800 dark:text-slate-100 text-base sm:text-xs rounded-xl pl-9 pr-4 py-2.5 outline-none transition"
                   />
                 </div>
               </div>
@@ -1092,8 +1101,19 @@ export default function ProductsClient({
                 <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                   {language === 'FR' ? 'Marques' : 'العلامات التجارية'}
                 </label>
+                <label className="relative block">
+                  <span className="sr-only">{language === 'FR' ? 'Rechercher une marque' : 'البحث عن علامة تجارية'}</span>
+                  <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="search"
+                    value={brandQuery}
+                    onChange={(event) => setBrandQuery(event.target.value)}
+                    placeholder={language === 'FR' ? 'Rechercher une marque…' : 'ابحث عن علامة…'}
+                    className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-base text-slate-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                  />
+                </label>
                 <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto pr-1">
-                  {brandsList.map(brand => {
+                  {visibleBrands.map(brand => {
                     const isChecked = selectedBrands.includes(brand);
                     return (
                       <label 

@@ -22,7 +22,7 @@ export type AdminRole =
 // ─── Convenience sets ─────────────────────────────────────────
 
 const SENIOR_ROLES: (AdminRole | string)[] = ['owner', 'manager', 'admin', 'administrator', 'superadmin'];
-const CONTENT_ROLES: (AdminRole | string)[] = ['owner', 'manager', 'content_editor', 'catalogue_editor', 'admin', 'administrator', 'superadmin'];
+const CONTENT_ROLES: (AdminRole | string)[] = ['owner', 'manager', 'content_editor', 'admin', 'administrator', 'superadmin'];
 const CATALOGUE_ROLES: (AdminRole | string)[] = ['owner', 'manager', 'catalogue_editor', 'admin', 'administrator', 'superadmin'];
 const FULFILMENT_ROLES: (AdminRole | string)[] = ['owner', 'manager', 'logistician', 'fulfilment', 'admin', 'administrator', 'superadmin'];
 
@@ -113,7 +113,7 @@ export function canScheduleContent(role: AdminRole): boolean {
  * Allowed: owner, manager, content_editor
  */
 export function canManageBrands(role: AdminRole): boolean {
-  return CONTENT_ROLES.includes(role);
+  return CONTENT_ROLES.includes(role) || role === 'catalogue_editor';
 }
 
 /**

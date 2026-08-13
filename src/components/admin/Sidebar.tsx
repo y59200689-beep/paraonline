@@ -60,6 +60,7 @@ interface SidebarProps {
   setSidebarCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
   isMobileDrawerOpen: boolean;
   setIsMobileDrawerOpen: (open: boolean) => void;
+  mobileTriggerRef?: React.RefObject<HTMLButtonElement | null>;
 }
 
 interface NavItem {
@@ -87,6 +88,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setSidebarCollapsed,
   isMobileDrawerOpen,
   setIsMobileDrawerOpen,
+  mobileTriggerRef,
 }) => {
   const { orders, reviews, currentUser, adminTheme, handleLogout } = useAdmin();
   const { settings } = useSettings();
@@ -115,6 +117,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
     window.addEventListener('keydown', onEscape);
     return () => window.removeEventListener('keydown', onEscape);
   }, [setIsMobileDrawerOpen]);
+
+  useEffect(() => {
+    if (!isMobileDrawerOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const firstLink = document.querySelector<HTMLElement>('[data-admin-mobile-nav] a, [data-admin-mobile-nav] button');
+    window.setTimeout(() => firstLink?.focus(), 0);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      mobileTriggerRef?.current?.focus();
+    };
+  }, [isMobileDrawerOpen, mobileTriggerRef]);
 
   // Auto-open group that contains the current path
   useEffect(() => {
@@ -349,20 +363,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {isMobileDrawerOpen && (
         <div
           onClick={() => setIsMobileDrawerOpen(false)}
-          className="fixed inset-0 z-40 md:hidden"
+          className="fixed inset-0 z-40 lg:hidden"
           aria-hidden="true"
           style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' } as React.CSSProperties}
         />
       )}
 
       <aside
+        data-admin-mobile-nav={isMobileDrawerOpen ? '' : undefined}
         style={sidebarStyle}
         className={`shrink-0 flex flex-col justify-between transition-all duration-300 h-full overflow-y-auto ${
           isMobileDrawerOpen
             ? 'fixed inset-y-0 left-0 w-64 z-50 flex shadow-2xl animate-slide-in'
-            : 'hidden md:flex'
-        } ${sidebarCollapsed ? 'md:w-[68px]' : 'md:w-64'}`}
+            : 'hidden lg:flex'
+        } ${sidebarCollapsed ? 'lg:w-[68px]' : 'lg:w-64'}`}
         aria-label="Navigation principale de l'administration"
+        aria-modal={isMobileDrawerOpen ? true : undefined}
+        role={isMobileDrawerOpen ? 'dialog' : undefined}
       >
         {/* ── TOP SECTION ─────────────────────────────────────────── */}
         <div className="flex flex-col gap-1 p-3">
@@ -434,7 +451,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {/* Collapse toggle */}
           <button
             onClick={() => setSidebarCollapsed(c => !c)}
-            className="hidden md:flex w-full items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-semibold transition-all duration-200 cursor-pointer"
+            className="hidden lg:flex w-full items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-semibold transition-all duration-200 cursor-pointer"
             style={{ color: isDark ? '#2d3a4d' : '#c4cdd9', background: 'transparent', border: 'none' }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'; (e.currentTarget as HTMLElement).style.color = isDark ? '#94a3b8' : '#64748b'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = isDark ? '#2d3a4d' : '#c4cdd9'; }}

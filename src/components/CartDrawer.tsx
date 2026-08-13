@@ -11,12 +11,11 @@ import {
   Truck, ArrowLeft, AlertTriangle, CreditCard, Sparkles, Gift
 } from 'lucide-react';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
-import { isValidMoroccanPhone } from '@/lib/moroccan-phone';
+import { PRODUCT_IMAGE_FALLBACK } from '@/lib/public-images';
+import { validateCheckoutFields } from '@/lib/checkout-validation';
 import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 import Image from 'next/image';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements } from '@stripe/react-stripe-js';
 
 // Sub-components
 import { CartItemList } from './cart/CartItemList';
@@ -24,8 +23,9 @@ import { CartUpsells } from './cart/CartUpsells';
 import { CouponSection } from './cart/CouponSection';
 import { CheckoutForm } from './cart/CheckoutForm';
 import { CartFooter } from './cart/CartFooter';
+import { useModalAccessibility } from '@/hooks/useModalAccessibility';
 
-const placeholderSvg = "data:image/svg+xml;utf8," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300' width='100%' height='100%'><rect width='100%' height='100%' fill='#f1f5f9'/><path d='M150 100a40 40 0 1 0 40 40 40 40 0 0 0-40-40zm0 60a20 20 0 1 1 20-20 20 20 0 0 1-20 20z' fill='#94a3b8'/><path d='M180 180h-60a10 10 0 0 0-10 10v10h80v-10a10 10 0 0 0-10-10z' fill='#94a3b8'/><text x='150' y='230' font-family='sans-serif' font-size='12' font-weight='bold' fill='#64748b' text-anchor='middle'>Image Indisponible</text></svg>");
+const placeholderSvg = PRODUCT_IMAGE_FALLBACK;
 
 const toTitleCase = (str: string) => {
   if (!str) return '';
@@ -45,6 +45,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   onSelectProduct,
   onOpenScratchCard,
 }) => {
+  const drawerRef = useModalAccessibility<HTMLDivElement>(isOpen, onClose);
   const { t, language } = useTranslation();
   const { products } = useProducts();
   const { settings } = useSettings();
@@ -79,14 +80,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   // ── Stripe state ─────────────────────────────────────────────────────────
   const [clientSecret, setClientSecret] = useState('');
   const [stripeOrderId, setStripeOrderId] = useState('');
+  const [stripeTrackingToken, setStripeTrackingToken] = useState('');
   const [isInitializingStripe, setIsInitializingStripe] = useState(false);
-  const [stripePromise, setStripePromise] = useState<ReturnType<typeof loadStripe> | null>(null);
-
-  useEffect(() => {
-    if (settings?.paymentSettings?.stripePublishableKey) {
-      setStripePromise(loadStripe(settings.paymentSettings.stripePublishableKey));
-    }
-  }, [settings?.paymentSettings?.stripePublishableKey]);
 
   // ── Swipe-to-dismiss gesture ─────────────────────────────────────────────
   const touchStartX = useRef(0);
@@ -105,6 +100,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       setSwipeOffset(0);
       setClientSecret('');
       setStripeOrderId('');
+      setStripeTrackingToken('');
       setPaymentMethod('cod');
     }
   }, [isOpen, setPaymentMethod]);
@@ -114,29 +110,25 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const hasFoam = cart.some(item => item.product.id === 22);
   const showDoubleCleanseUpsell = hasOil && !hasFoam;
 
-  const thresholdItems = products.filter(
-    p => p.price <= 200 && !cart.some(item => item.product.id === p.id)
-  ).slice(0, 3);
+  const cartCategories = new Set(cart.flatMap(item => [item.product.category, ...(item.product.categories || [])]).filter(Boolean));
+  const thresholdItems = products
+    .filter(p =>
+      p.status === 'live'
+      && Number(p.stock || 0) > 0
+      && p.price <= 200
+      && !cart.some(item => item.product.id === p.id)
+    )
+    .sort((a, b) => {
+      const aRelevant = [a.category, ...(a.categories || [])].some(category => cartCategories.has(category));
+      const bRelevant = [b.category, ...(b.categories || [])].some(category => cartCategories.has(category));
+      return Number(bRelevant) - Number(aRelevant) || b.rating - a.rating;
+    })
+    .slice(0, 3);
 
-  // ── Calculate Total Savings ───────────────────────────────────────────────
-  const getSavingsDetails = () => {
-    const couponSavings = discountAmount;
-    let shippingSavings = 0;
-    if (isFreeShipping && subtotal > 0) {
-      if (formFields.city && settings?.shippingRules) {
-        const cityRule = settings.shippingRules.find(
-          r => r.city.toLowerCase() === formFields.city.toLowerCase()
-        );
-        shippingSavings = cityRule ? cityRule.fee : (settings.shippingFee ?? 35);
-      } else {
-        shippingSavings = settings?.shippingFee ?? 35;
-      }
-    }
-    const giftSavings = activeGiftProduct ? activeGiftProduct.price : 0;
-    return couponSavings + shippingSavings + giftSavings;
-  };
-
-  const totalSavings = getSavingsDetails();
+  // Only an applied monetary discount is presented as an immediate saving.
+  // Free delivery and gifts are separate benefits, not money removed from the
+  // merchandise subtotal.
+  const totalSavings = discountAmount;
 
   // ── Handlers ─────────────────────────────────────────────────────────────
   const handleApplyCoupon = async (e: React.FormEvent) => {
@@ -147,21 +139,35 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     if (res.success) setCouponCode('');
   };
 
+  const proceedToSecureCheckout = async () => {
+    try {
+      const response = await fetch('/api/cart/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: cart.map((item) => ({ id: item.product.id, quantity: item.quantity })) }),
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || !payload?.success) {
+        showToast(
+          payload?.error || (language === 'FR' ? 'Certains produits ne sont plus disponibles.' : 'بعض المنتجات لم تعد متوفرة.'),
+          'error'
+        );
+        return;
+      }
+      setStep('checkout');
+    } catch {
+      showToast(
+        language === 'FR' ? 'Impossible de vérifier le stock. Réessayez.' : 'تعذر التحقق من المخزون. حاول مرة أخرى.',
+        'error'
+      );
+    }
+  };
+
   // ── Merged single-step handler (replaces proceedToDelivery + handleCheckoutSubmit) ──
   const handleMergedSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormErrors({});
-    const errors: Record<string, string> = {};
-
-    // Validate all fields in one pass
-    if (!formFields.name.trim())
-      errors.name = language === 'FR' ? 'Nom complet requis' : 'الاسم الكامل مطلوب';
-    if (!isValidMoroccanPhone(formFields.phone))
-      errors.phone = language === 'FR' ? 'Saisissez un numéro marocain de 9 à 10 chiffres.' : 'أدخل رقم هاتف مغربي من 9 إلى 10 أرقام.';
-    if (!formFields.city)
-      errors.city = language === 'FR' ? 'Veuillez choisir votre ville' : 'يرجى اختيار مدينتكِ';
-    if (!formFields.address.trim())
-      errors.address = language === 'FR' ? 'Adresse complète requise' : 'العنوان الكامل مطلوب';
+    const errors = validateCheckoutFields(formFields, language);
 
     if (Object.keys(errors).length > 0) { setFormErrors(errors); return; }
 
@@ -248,6 +254,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         const orderRes = await submitOrder(formFields);
         if (orderRes.success && orderRes.orderId) {
           setStripeOrderId(orderRes.orderId);
+          setStripeTrackingToken(orderRes.trackingToken || '');
           const res = await fetch('/api/payment/stripe', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -300,6 +307,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
   // ── Stripe success handler ────────────────────────────────────────────────
   const handleStripeSuccess = () => {
+    const completionUrl = `/checkout/success?orderId=${encodeURIComponent(stripeOrderId)}&token=${encodeURIComponent(stripeTrackingToken)}`;
     earnPoints(Math.round(total), 'Paiement en ligne réussi', 'دفع ناجح عبر الإنترنت');
     clearCart();
     setShippingCity('');
@@ -314,6 +322,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         : 'تم الدفع بنجاح! تم تسجيل طلبك بنجاح.',
       'success',
     );
+    window.location.assign(completionUrl);
   };
 
   return (
@@ -333,6 +342,13 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
       {/* Drawer Panel */}
       <div
+        ref={drawerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cart-drawer-title"
+        aria-hidden={!isOpen}
+        inert={!isOpen}
+        tabIndex={-1}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -350,12 +366,13 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             <div className="w-9 h-9 rounded-xl bg-primary/5 text-primary flex items-center justify-center">
               <ShoppingBag className="w-4.5 h-4.5" />
             </div>
-            <h3 className="text-base font-heading font-extrabold text-primary-dark leading-none">
+            <h3 id="cart-drawer-title" className="text-base font-heading font-extrabold text-primary-dark leading-none">
               {step === 'cart' ? t('cart_title') : (language === 'FR' ? 'Validation de commande' : 'تأكيد الطلب')}
             </h3>
           </div>
           <button
             onClick={onClose}
+            data-autofocus
             aria-label={language === 'FR' ? 'Fermer' : 'إغلاق'}
             className="w-9 h-9 rounded-full hover:bg-slate-50 flex items-center justify-center text-slate-400 hover:text-primary-dark transition-all duration-300"
           >
@@ -529,23 +546,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 )}
               </div>
 
-              {/* 3. Coupon */}
-              <div
-                className={isOpen ? 'animate-slide-up' : 'opacity-0'}
-                style={isOpen ? { animationDelay: `${cart.length * 55 + 150}ms` } : undefined}
-              >
-                <CouponSection
-                  language={language}
-                  couponCode={couponCode}
-                  setCouponCode={setCouponCode}
-                  couponMessage={couponMessage}
-                  appliedCoupon={appliedCoupon}
-                  onApply={handleApplyCoupon}
-                  onRemove={removeCoupon}
-                />
-              </div>
-
-              {/* 4. Loyalty Points Preview */}
+              {/* 3. Loyalty Points Preview */}
               {(() => {
                 const pointsPerDh = settings?.loyaltyPointsPerDh ?? 1.0;
                 const pointsToEarn = Math.round(Math.round(subtotal * pointsPerDh) * tierMultiplier);
@@ -615,7 +616,19 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               </div>
             </>
           ) : (
-            <CheckoutForm
+            <>
+              <div className="mb-4">
+                <CouponSection
+                  language={language}
+                  couponCode={couponCode}
+                  setCouponCode={setCouponCode}
+                  couponMessage={couponMessage}
+                  appliedCoupon={appliedCoupon}
+                  onApply={handleApplyCoupon}
+                  onRemove={removeCoupon}
+                />
+              </div>
+              <CheckoutForm
               language={language}
               isRTL={isRTL}
               checkoutSubStep={checkoutSubStep}
@@ -632,7 +645,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               clientSecret={clientSecret}
               setClientSecret={setClientSecret}
               stripeOrderId={stripeOrderId}
-              stripePromise={stripePromise}
+              stripeTrackingToken={stripeTrackingToken}
+              stripePublishableKey={settings.paymentSettings?.stripePublishableKey || ''}
               total={total}
               onlinePaymentEnabled={!!settings.paymentSettings?.onlinePaymentEnabled}
               testMode={!!settings.paymentSettings?.testMode}
@@ -642,8 +656,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               handleCheckoutSubmit={handleMergedSubmit}
               handleConfirmOrder={handleConfirmPayment}
               onStripeSuccess={handleStripeSuccess}
-              t={t}
-            />
+                t={t}
+              />
+            </>
           )}
         </div>
 
@@ -658,7 +673,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             language={language}
             isRTL={isRTL}
             step={step}
-            onCheckout={() => setStep('checkout')}
+            onCheckout={proceedToSecureCheckout}
             t={t}
             showShipping={step === 'checkout' && formFields.city !== ''}
             shippingCity={formFields.city}

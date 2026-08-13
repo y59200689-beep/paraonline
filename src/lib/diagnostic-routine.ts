@@ -691,29 +691,10 @@ export function buildDiagnosticRoutine(
         .sort((a, b) => b.score - a.score || b.product.rating - a.product.rating);
     }
 
-    // Build a top-5 shortlist from the best candidates (prefer products with explicit diagnostic data)
-    // Then apply weighted random selection so the same answers can produce different routines each time.
-    const SHORTLIST_SIZE = 5;
-    const topExplicit = candidates.filter(c => hasExplicitDiagnosticData(c.product)).slice(0, SHORTLIST_SIZE);
-    const topFallback = candidates.filter(c => !hasExplicitDiagnosticData(c.product)).slice(0, SHORTLIST_SIZE);
-    // Use explicit-data products if available (at least 3), otherwise mix
-    const shortlist = topExplicit.length >= 3
-      ? topExplicit.slice(0, SHORTLIST_SIZE)
-      : [...topExplicit, ...topFallback].slice(0, SHORTLIST_SIZE);
-
-    if (!shortlist.length) continue;
-
-    // Weighted random selection: score is used as weight so higher-scored products
-    // have a proportionally higher chance of being selected, but any of the top-5 can win.
-    const minScore = Math.min(...shortlist.map(c => c.score));
-    const weights = shortlist.map(c => Math.max(c.score - minScore + 1, 1));
-    const totalWeight = weights.reduce((sum, w) => sum + w, 0);
-    let rand = Math.random() * totalWeight;
-    let winner = shortlist[shortlist.length - 1]; // fallback to last if rounding error
-    for (let i = 0; i < shortlist.length; i++) {
-      rand -= weights[i];
-      if (rand <= 0) { winner = shortlist[i]; break; }
-    }
+    // Recommendations must be reproducible and explainable. The candidate list
+    // is already sorted by compatibility, rating, reviews and stable product ID.
+    const winner = candidates[0];
+    if (!winner) continue;
 
     selected.push({ step, product: winner.product, score: winner.score });
     usedIds.add(winner.product.id);

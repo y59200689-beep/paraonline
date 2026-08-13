@@ -31,14 +31,8 @@ export function EmptyState({
   size = 'md',
   className = '',
 }: EmptyStateProps) {
-  let isLight = false;
-
-  try {
-    const { adminTheme } = useAdmin();
-    isLight = theme ? theme === 'light' : adminTheme === 'light';
-  } catch {
-    isLight = theme === 'light';
-  }
+  const { adminTheme } = useAdmin();
+  const isLight = theme ? theme === 'light' : adminTheme === 'light';
 
   const sizeMap = {
     sm: { wrapper: 'py-8 px-4', iconBox: 'w-10 h-10', iconSize: 'w-4 h-4', gap: 'gap-2' },

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from '@/context/LanguageContext';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
@@ -9,7 +9,6 @@ import { useSettings } from '@/context/SettingsContext';
 import { useLoyalty } from '@/context/LoyaltyContext';
 import { usePathname, useRouter } from 'next/navigation';
 import { Product } from '@/lib/data';
-import { useProducts } from '@/context/ProductsContext';
 import Link from 'next/link';
 import { ShoppingBag, Home as HomeIcon, Store, Sparkles, Mail, Send, ShieldCheck, Truck, MessageSquare, Lock, CheckCircle2, Award, Package, Crown, FlaskConical, Building2, Coins, CreditCard, Scale } from 'lucide-react';
 import Image from 'next/image';
@@ -34,11 +33,11 @@ interface ShopShellProps {
   children: React.ReactNode;
   hideHeader?: boolean;
   hideFooter?: boolean;
+  hideMobileNav?: boolean;
 }
 
-export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hideFooter }) => {
+export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hideFooter, hideMobileNav = false }) => {
   const { t, language } = useTranslation();
-  const { products } = useProducts();
   const { settings } = useSettings();
   const { clientUser } = useLoyalty();
   const { cart, isCartOpen, setIsCartOpen } = useCart();
@@ -59,6 +58,14 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
 
+  const openCart = () => {
+    setWishlistOpen(false);
+    setDiagnosticOpen(false);
+    setScratchCardOpen(false);
+    setSelectedProduct(null);
+    setIsCartOpen(true);
+  };
+
   const handleNewsletterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (newsletterEmail.trim()) {
@@ -72,50 +79,6 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
 
   useEffect(() => {
     setMounted(true);
-  }, []);
-
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const [showToast, setShowToast] = useState(false);
-
-
-  // Pre-unlock AudioContext on first user gesture
-  useEffect(() => {
-    let unlocked = false;
-    const unlock = () => {
-      if (unlocked) return;
-      unlocked = true;
-      cleanup();
-
-      try {
-        const AudioContextClass = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-        if (!AudioContextClass) return;
-        if (!audioContextRef.current) {
-          audioContextRef.current = new AudioContextClass();
-        }
-        const ctx = audioContextRef.current;
-        if (ctx.state === 'suspended') {
-          ctx.resume().then(() => {
-            console.log('AudioContext successfully unlocked');
-          });
-        }
-      } catch (e) {
-        console.warn('AudioContext unlock failed:', e);
-      }
-    };
-
-    const cleanup = () => {
-      window.removeEventListener('click', unlock);
-      window.removeEventListener('touchstart', unlock);
-      window.removeEventListener('keydown', unlock);
-      window.removeEventListener('scroll', unlock);
-    };
-
-    window.addEventListener('click', unlock, { passive: true });
-    window.addEventListener('touchstart', unlock, { passive: true });
-    window.addEventListener('keydown', unlock, { passive: true });
-    window.addEventListener('scroll', unlock, { passive: true });
-
-    return cleanup;
   }, []);
 
   // Dynamic Scroll Listener for Mobile Bottom Navigation
@@ -135,93 +98,18 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const [toastData, setToastData] = useState({ name: '', city: '', product: '', time: '' });
-
-  // FOMO Toast notification trigger
-  useEffect(() => {
-    const cities = ['Casablanca', 'Rabat', 'Tanger', 'Fès', 'Marrakech', 'Agadir', 'Oujda', 'Meknès', 'Tétouan', 'Kénitra', 'Salé', 'Mohammedia', 'El Jadida', 'Béni Mellal', 'Nador'];
-    const names = ['Khadija', 'Aminata', 'Fatima', 'Salma', 'Meryem', 'Imane', 'Laila', 'Nadia', 'Samira', 'Houda', 'Zineb', 'Kaoutar', 'Ghita', 'Malak', 'Hajar'];
-
-    /*
-    const playSubtleChime = () => {
-      try {
-        const AudioContextClass = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-        if (!AudioContextClass) return;
-        
-        if (!audioContextRef.current) {
-          audioContextRef.current = new AudioContextClass();
-        }
-        const ctx = audioContextRef.current;
-        if (ctx.state === 'suspended') {
-          ctx.resume();
-        }
-        
-        const now = ctx.currentTime;
-
-        // Elegant high-end chime (C6 then E6 arpeggio)
-        const osc1 = ctx.createOscillator();
-        const gain1 = ctx.createGain();
-        osc1.type = 'sine';
-        osc1.frequency.setValueAtTime(1046.50, now);
-        gain1.gain.setValueAtTime(0, now);
-        gain1.gain.linearRampToValueAtTime(0.12, now + 0.04);
-        gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
-        osc1.connect(gain1);
-        gain1.connect(ctx.destination);
-
-        const osc2 = ctx.createOscillator();
-        const gain2 = ctx.createGain();
-        osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(1318.51, now + 0.08);
-        gain2.gain.setValueAtTime(0, now + 0.08);
-        gain2.gain.linearRampToValueAtTime(0.06, now + 0.12);
-        gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
-        osc2.connect(gain2);
-        gain2.connect(ctx.destination);
-
-        osc1.start(now);
-        osc1.stop(now + 0.4);
-        osc2.start(now + 0.08);
-        osc2.stop(now + 0.5);
-      } catch (e) {
-        console.log('Chime playback failed:', e);
-      }
-    };
-    */
-
-    const triggerToast = () => {
-      // Always generate a fully random fake order — never uses real customer data
-      const randomProduct = products[Math.floor(Math.random() * products.length)] || products[0];
-      // Random minute count 1-10
-      const mins = Math.floor(Math.random() * 10) + 1;
-      const timeFr = mins === 1 ? 'il y a 1 min' : `il y a ${mins} min`;
-      const timeAr = mins === 1 ? 'منذ دقيقة' : mins === 2 ? 'منذ دقيقتين' : `منذ ${mins} دقائق`;
-
-      setToastData({
-        name: names[Math.floor(Math.random() * names.length)],
-        city: cities[Math.floor(Math.random() * cities.length)],
-        product: randomProduct?.title || '',
-        time: language === 'FR' ? timeFr : timeAr,
-      });
-      setShowToast(true);
-      // playSubtleChime();
-      setTimeout(() => setShowToast(false), 5500);
-    };
-
-    const initial = setTimeout(triggerToast, 5000);
-    const interval = setInterval(triggerToast, 20000);
-    return () => { clearTimeout(initial); clearInterval(interval); };
-  }, [language, products]);
-
-
   const isRTL = language === 'AR';
+  const whatsappNumber = String(settings.storeWhatsApp || '212660808080').replace(/\D/g, '');
 
   return (
     <div
-      className="page-entry-animate min-h-screen bg-background text-foreground flex flex-col pb-20 md:pb-0"
+      className={`public-page page-entry-animate min-h-screen bg-background text-foreground flex flex-col ${hideMobileNav ? 'pb-0' : 'pb-[calc(5rem+env(safe-area-inset-bottom,0px))] lg:pb-0'}`}
       dir={isRTL ? 'rtl' : 'ltr'}
       style={{ direction: isRTL ? 'rtl' : 'ltr' }}
     >
+      <a href="#main-content" className="public-skip-link">
+        {language === 'AR' ? 'انتقل إلى المحتوى الرئيسي' : 'Aller au contenu principal'}
+      </a>
       {/* Editorial Noise Overlay */}
       <div className="editorial-noise" />
 
@@ -229,13 +117,13 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
       {!hideHeader && <Header />}
 
       {/* Main page content */}
-      <div className="flex-grow">
+      <div id="main-content" tabIndex={-1} className="flex-grow scroll-mt-32">
         {children}
       </div>
 
       {/* ── FLAGSHIP LUXURY FOOTER ─────────────────────────────────────── */}
       {!hideFooter && (
-        <footer id="footer" className="relative overflow-hidden text-slate-100 bg-[#080F1E] border-t border-slate-800/80 font-sans select-none">
+        <footer id="footer" className="relative overflow-hidden text-slate-100 bg-[#080F1E] border-t border-slate-800/80 font-sans">
           {/* Subtle background grid & ambient light mesh */}
           <div className="absolute inset-0 pointer-events-none select-none" aria-hidden="true">
             <div className="absolute -top-32 left-1/4 w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.08)_0%,transparent_70%)]" />
@@ -276,7 +164,11 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
                     <div className="flex flex-col sm:flex-row gap-2.5">
                       <div className="relative flex-1">
                         <Mail className="w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 left-3.5 pointer-events-none" />
+                        <label htmlFor="storefront-newsletter-email" className="sr-only">
+                          {language === 'AR' ? 'البريد الإلكتروني للاشتراك' : 'Adresse e-mail pour la newsletter'}
+                        </label>
                         <input
+                          id="storefront-newsletter-email"
                           type="email"
                           required
                           value={newsletterEmail}
@@ -294,8 +186,9 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
                       </button>
                     </div>
                   )}
-                  <p className="text-[10px] text-slate-500 mt-2 text-center lg:text-left">
-                    🔒 {language === 'AR' ? 'بياناتكِ محمية وسرية 100%. خالية من الرسائل العشوائية.' : 'Données confidentielles protégées. Désinscription en 1 clic.'}
+                  <p className="text-[10px] text-slate-500 mt-2 text-center lg:text-left flex items-center justify-center lg:justify-start gap-1.5">
+                    <Lock className="h-3 w-3" aria-hidden="true" />
+                    {language === 'AR' ? 'نستخدم بريدك فقط لإرسال الرسائل التي اشتركتِ فيها.' : 'Votre adresse sert uniquement aux communications auxquelles vous vous inscrivez.'}
                   </p>
                 </form>
               </div>
@@ -303,7 +196,9 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
 
             {/* ── 2. Guarantee micro-pills grid ── */}
             <div className="py-8 border-b border-slate-800/80 grid grid-cols-2 lg:grid-cols-4 gap-4 text-left" style={{ textAlign: isRTL ? 'right' : undefined }}>
-              {[
+              {(settings.trustBadges?.length ? settings.trustBadges.map((badge, index) => ({
+                titleFr: badge.label_fr || '', titleAr: badge.label_ar || '', descFr: '', descAr: '', icon: index === 1 ? Truck : ShieldCheck, color: index === 1 ? 'text-teal-400' : 'text-emerald-400'
+              })) : [
                 {
                   titleFr: 'Produits sélectionnés',
                   titleAr: 'منتجات مختارة',
@@ -336,7 +231,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
                   icon: Lock,
                   color: 'text-amber-400'
                 }
-              ].map((pill, idx) => {
+              ]).map((pill, idx) => {
                 const PillIcon = pill.icon;
                 return (
                   <div key={idx} className="flex items-center gap-3 p-3.5 rounded-2xl bg-slate-900/40 border border-slate-800/60" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
@@ -357,7 +252,13 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
             </div>
 
             {/* ── 3. Main 5-Column Navigation Deck ── */}
-            <div className="py-14 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-12 gap-10 lg:gap-8 text-left" style={{ textAlign: isRTL ? 'right' : undefined }}>
+            {settings.footerColumns?.length ? <div className="py-14 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 text-left" style={{ textAlign: isRTL ? 'right' : undefined }}>
+              {settings.footerColumns.map((column, index) => <div key={column.id ?? index} className="space-y-4">
+                <h4 className="text-xs font-black uppercase tracking-[0.2em] text-emerald-400 font-mono">{language === 'AR' ? column.heading_ar : column.heading_fr}</h4>
+                <ul className="space-y-2.5 text-xs text-slate-400">{(column.links ?? []).map((link, linkIndex) => <li key={`${link.href}-${linkIndex}`}><Link href={link.href} className="hover:text-white transition-colors duration-200">{language === 'AR' ? link.label_ar : link.label_fr}</Link></li>)}</ul>
+              </div>)}
+            </div> : null}
+            <div className={`${settings.footerColumns?.length ? 'hidden' : ''} py-14 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-12 gap-10 lg:gap-8 text-left`} style={{ textAlign: isRTL ? 'right' : undefined }}>
               
               {/* Column 1: Brand Thesis & Corporate Badges (Col-span 4) */}
               <div className="lg:col-span-4 space-y-5">
@@ -365,10 +266,10 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
                   <Image
                     src={getOptimizedImageUrl("/images/logo.png")}
                     alt="Para Officinal S.A"
-                    width={150}
-                    height={42}
+                    width={933}
+                    height={257}
                     className="object-contain"
-                    style={{ filter: 'brightness(0) invert(1) opacity(0.92)' }}
+                    style={{ width: '150px', height: 'auto', filter: 'brightness(0) invert(1) opacity(0.92)' }}
                   />
                 </Link>
 
@@ -497,7 +398,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
                 </h4>
                 <div className="space-y-3 text-xs">
                   <a
-                    href={`https://wa.me/${settings.storeWhatsApp || '212660808080'}`}
+                    href={`https://wa.me/${whatsappNumber}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 transition flex items-center gap-2.5 group font-mono font-bold"
@@ -506,7 +407,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                       <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
                     </span>
-                    <span className="text-[11px] uppercase tracking-wider">{settings.storePhone || '+212 6 60 80 80 80'}</span>
+                    <span className="text-[11px] uppercase tracking-wider">WhatsApp · +{whatsappNumber}</span>
                   </a>
 
                   <p className="text-[11px] text-slate-400 leading-relaxed font-normal">
@@ -534,7 +435,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
                   <CreditCard className="w-3.5 h-3.5 text-teal-400" /> Carte Bancaire CMI
                 </span>
                 <span className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-slate-300 font-bold inline-flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" /> Chiffrement SSL 256-bit
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" /> Connexion chiffrée
                 </span>
               </div>
             </div>
@@ -544,10 +445,10 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
       )}
 
       {/* ── Mobile Bottom Navigation ─────────────────────────────────── */}
-      {mounted && (
+      {mounted && !hideMobileNav && (
         <nav
           style={{ paddingBottom: 'calc(8px + env(safe-area-inset-bottom, 0px))' }}
-          className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] z-40 flex items-center justify-around pt-2.5 px-3"
+          className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] z-40 flex items-center justify-around pt-2.5 px-3"
         >
           {/* Home Link */}
           <button
@@ -567,7 +468,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
             }`}
           >
             <HomeIcon className={`w-5 h-5 transition-transform duration-300 ${activeMobileTab === 'home' ? 'scale-110' : ''}`} />
-            <span className={`text-[10px] tracking-wider uppercase font-heading ${activeMobileTab === 'home' ? 'font-black text-primary-dark' : 'font-semibold text-slate-400'}`}>
+            <span className={`text-[10px] tracking-wider uppercase font-heading ${activeMobileTab === 'home' ? 'font-black text-primary-dark' : 'font-semibold text-slate-600'}`}>
               {language === 'AR' ? 'الرئيسية' : 'Accueil'}
             </span>
           </button>
@@ -591,7 +492,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
             }`}
           >
             <Store className={`w-5 h-5 transition-transform duration-300 ${activeMobileTab === 'boutique' ? 'scale-110' : ''}`} />
-            <span className={`text-[10px] tracking-wider uppercase font-heading ${activeMobileTab === 'boutique' ? 'font-black text-primary-dark' : 'font-semibold text-slate-400'}`}>
+            <span className={`text-[10px] tracking-wider uppercase font-heading ${activeMobileTab === 'boutique' ? 'font-black text-primary-dark' : 'font-semibold text-slate-600'}`}>
               {language === 'AR' ? 'المتجر' : 'Boutique'}
             </span>
           </button>
@@ -610,7 +511,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
             }`}
           >
             <Sparkles className={`w-5 h-5 transition-transform duration-300 ${activeMobileTab === 'diagnostic' ? 'scale-110 text-accent animate-pulse' : ''}`} />
-            <span className={`text-[10px] tracking-wider uppercase font-heading ${activeMobileTab === 'diagnostic' ? 'font-black text-primary-dark' : 'font-semibold text-slate-400'}`}>
+            <span className={`text-[10px] tracking-wider uppercase font-heading ${activeMobileTab === 'diagnostic' ? 'font-black text-primary-dark' : 'font-semibold text-slate-600'}`}>
               {language === 'AR' ? 'تشخيص' : 'Diagnostic'}
             </span>
           </button>
@@ -618,7 +519,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
           {/* Cart Link */}
           <button
             onClick={() => {
-              setIsCartOpen(true);
+              openCart();
               setActiveMobileTab('cart');
             }}
             aria-current={activeMobileTab === 'cart' ? 'page' : undefined}
@@ -636,7 +537,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
                 </span>
               )}
             </div>
-            <span className={`text-[10px] tracking-wider uppercase font-heading ${activeMobileTab === 'cart' ? 'font-black text-primary-dark' : 'font-semibold text-slate-400'}`}>
+            <span className={`text-[10px] tracking-wider uppercase font-heading ${activeMobileTab === 'cart' ? 'font-black text-primary-dark' : 'font-semibold text-slate-600'}`}>
               {language === 'AR' ? 'السلة' : 'Panier'}
             </span>
           </button>
@@ -644,12 +545,14 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
       )}
 
       {/* Drawers & Modals */}
-      <CartDrawer
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-        onSelectProduct={(p) => { setSelectedProduct(p); setIsCartOpen(false); }}
-        onOpenScratchCard={() => { setScratchCardOpen(true); setIsCartOpen(false); }}
-      />
+      {isCartOpen && (
+        <CartDrawer
+          isOpen
+          onClose={() => setIsCartOpen(false)}
+          onSelectProduct={(p) => { setSelectedProduct(p); setIsCartOpen(false); }}
+          onOpenScratchCard={() => { setScratchCardOpen(true); setIsCartOpen(false); }}
+        />
+      )}
       <WishlistDrawer
         isOpen={isWishlistOpen}
         onClose={() => setWishlistOpen(false)}
@@ -658,7 +561,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
       <SkinDiagnostic
         isOpen={isDiagnosticOpen}
         onClose={() => setDiagnosticOpen(false)}
-        onOpenCart={() => setIsCartOpen(true)}
+        onOpenCart={openCart}
         experience="client"
       />
       <ScratchCard isOpen={isScratchCardOpen} onClose={() => setScratchCardOpen(false)} />
@@ -669,31 +572,6 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
       <CartBubbleCoordinator />
       <OrderSuccessModal />
 
-      {/* FOMO Toast (hidden when drawers or quiz modals are active to prevent mobile overlaps) */}
-      {showToast && !isCartOpen && !isDiagnosticOpen && !isScratchCardOpen && !selectedProduct && (
-        <div className="fixed bottom-[72px] md:bottom-6 left-3 md:left-8 right-auto z-50 bg-white/95 backdrop-blur-md border border-slate-200/50 shadow-[0_15px_35px_rgba(26,37,93,0.08)] py-2.5 px-3.5 md:py-3.5 md:px-5 rounded-[12px] flex items-center gap-3 md:gap-4 w-[280px] md:w-auto max-w-[calc(100vw-24px)] md:max-w-[340px] animate-slide-in select-none">
-          <div className="w-8 h-8 md:w-10 md:h-10 rounded-[8px] md:rounded-[10px] bg-primary/5 border border-primary/10 text-primary flex items-center justify-center shrink-0">
-            <ShoppingBag className="w-3.5 h-3.5 md:w-4 md:h-4 stroke-[2.25]" />
-          </div>
-          <div className="flex-1 min-w-0 text-[10.5px] md:text-[11.5px] leading-relaxed">
-            <div className="flex items-center gap-1.5">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-              </span>
-              <span className="font-black text-[8.5px] md:text-[9px] tracking-widest uppercase text-slate-500 leading-none">
-                {t('cro_recent_activity_badge')}
-              </span>
-            </div>
-            <p className="text-slate-700 font-medium mt-1 line-clamp-2 font-sans">
-              {t('cro_toast_text_new')
-                .replace('{name}', toastData.name)
-                .replace('{city}', toastData.city)
-                .replace('{time}', toastData.time)}
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

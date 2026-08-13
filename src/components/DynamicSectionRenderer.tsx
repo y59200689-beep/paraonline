@@ -132,14 +132,18 @@ function DeferredHomepageSection({ children }: { children: React.ReactNode }) {
           observer.disconnect();
         }
       },
-      { rootMargin: '1800px 0px' }
+      { rootMargin: '600px 0px' }
     );
 
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
 
-  return <div ref={sentinelRef}>{shouldRender ? children : null}</div>;
+  return (
+    <div ref={sentinelRef} className="public-deferred-section">
+      {shouldRender ? children : null}
+    </div>
+  );
 }
 
 export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps) {
@@ -160,8 +164,6 @@ export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps
     if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const seenTypes = new Set<string>();
-
   const deferred = (key: string, content: React.ReactNode) => (
     <DeferredHomepageSection key={key}>{content}</DeferredHomepageSection>
   );
@@ -170,14 +172,6 @@ export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps
     <>
       {sections.map((section) => {
         if (section.visible === false) return null;
-
-        // Deduplicate section types so bestSellers/weeklySales or duplicates render only once
-        const normalizedType = (section.type === 'weeklySales' || section.type === 'bestSellers') 
-          ? 'bestSellers' 
-          : section.type;
-
-        if (seenTypes.has(normalizedType)) return null;
-        seenTypes.add(normalizedType);
 
         switch (section.type) {
           case 'hero':

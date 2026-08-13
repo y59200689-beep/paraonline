@@ -8,6 +8,7 @@ import { Sparkles, Shield, Activity, ArrowRight, ArrowLeft } from 'lucide-react'
 import { gsap } from 'gsap';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { useGalleryOverrides } from '@/lib/useGalleryOverrides';
+import { shouldBypassNextImageOptimization } from '@/lib/public-images';
 
 import { useRouter } from 'next/navigation';
 
@@ -15,6 +16,56 @@ interface HeroProps {
   onOpenDiagnostic: () => void;
   onSelectCategory?: (category: string) => void;
 }
+
+interface DeferredHeroImageProps {
+  src: string;
+  sizes: string;
+  className: string;
+}
+
+const DeferredHeroImage: React.FC<DeferredHeroImageProps> = ({ src, sizes, className }) => {
+  const imageSlotRef = useRef<HTMLSpanElement>(null);
+  const [shouldLoad, setShouldLoad] = useState(false);
+
+  useEffect(() => {
+    const element = imageSlotRef.current;
+    if (!element || shouldLoad) return;
+
+    if (!('IntersectionObserver' in window)) {
+      setShouldLoad(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setShouldLoad(true);
+        observer.disconnect();
+      },
+      { threshold: 0.01 }
+    );
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [shouldLoad]);
+
+  return (
+    <span ref={imageSlotRef} className="absolute inset-0 bg-slate-100" aria-hidden="true">
+      {shouldLoad && (
+        <Image
+          src={src}
+          alt=""
+          fill
+          sizes={sizes}
+          loading="lazy"
+          fetchPriority="low"
+          unoptimized={shouldBypassNextImageOptimization(src)}
+          className={className}
+        />
+      )}
+    </span>
+  );
+};
 
 export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }) => {
   const router = useRouter();
@@ -151,17 +202,17 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
           {/* Card 1: Left Main Banner (Spans 2 columns, full height) */}
           <div 
             onClick={CARDS.card1.action}
-            className="hero-card-gsap md:col-span-2 lg:col-span-2 relative group overflow-hidden rounded-3xl ring-1 ring-black/6 bg-white shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 cursor-pointer h-[280px] md:h-[480px] lg:h-[520px] shimmer-sweep-1 card-press-feedback"
+            className="hero-card-gsap md:col-span-2 lg:col-span-2 relative group overflow-hidden rounded-3xl ring-1 ring-black/6 bg-white shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 cursor-pointer h-[260px] md:h-[480px] lg:h-[520px] shimmer-sweep-1 card-press-feedback"
             style={{ opacity: mounted ? 0 : 1 }}
           >
             {/* Background image parallax — 2s ease-out-premium for visible breath */}
             <Image
               src={CARDS.card1.bgImage}
-              unoptimized
               alt=""
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 50vw"
-              priority
+              preload
+              unoptimized={shouldBypassNextImageOptimization(CARDS.card1.bgImage)}
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2000ms] ease-[var(--ease-out-premium)] group-hover:scale-[1.06]"
             />
             {/* Soft Ambient Radial/Linear Overlay */}
@@ -243,11 +294,8 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
             style={{ opacity: mounted ? 0 : 1 }}
           >
             {/* Background image */}
-            <Image
+            <DeferredHeroImage
               src={CARDS.card2.bgImage}
-              unoptimized
-              alt=""
-              fill
               sizes="(max-width: 768px) 0vw, (max-width: 1024px) 25vw, 25vw"
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2000ms] ease-[var(--ease-out-premium)] group-hover:scale-[1.06]"
             />
@@ -300,11 +348,8 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
               style={{ opacity: mounted ? 0 : 1 }}
             >
               {/* Background image */}
-              <Image
+              <DeferredHeroImage
                 src={CARDS.card3.bgImage}
-                unoptimized
-                alt=""
-                fill
                 sizes="(max-width: 768px) 0vw, (max-width: 1024px) 25vw, 25vw"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2000ms] ease-[var(--ease-out-premium)] group-hover:scale-[1.06]"
               />
@@ -348,11 +393,8 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
               style={{ opacity: mounted ? 0 : 1 }}
             >
               {/* Background image */}
-              <Image
+              <DeferredHeroImage
                 src={CARDS.card4.bgImage}
-                unoptimized
-                alt=""
-                fill
                 sizes="(max-width: 768px) 0vw, (max-width: 1024px) 25vw, 25vw"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2000ms] ease-[var(--ease-out-premium)] group-hover:scale-[1.06]"
               />
@@ -391,21 +433,23 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
 
           </div>
 
-          {/* MOBILE ONLY 3-COLUMN GRID FOR CARDS 2, 3, 4 */}
-          <div className="grid grid-cols-3 gap-2 md:hidden mt-2 w-full">
+          {/* Mobile campaign rail: one legible card at a time with scroll snap. */}
+          <div
+            className="-mx-4 mt-2 flex w-[calc(100%+2rem)] snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 md:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            tabIndex={0}
+            role="region"
+            aria-label={isRTL ? 'العروض الترويجية' : 'Offres promotionnelles'}
+          >
             
             {/* Mobile Card 2 */}
             <div 
               onClick={CARDS.card2.action}
-              className="hero-card-gsap w-full relative group overflow-hidden rounded-xl border border-slate-200/50 bg-white h-[110px] cursor-pointer shimmer-sweep-2 card-press-feedback"
+              className="hero-card-gsap relative h-[150px] min-w-[78%] snap-center overflow-hidden rounded-2xl border border-slate-200/50 bg-white cursor-pointer shimmer-sweep-2 card-press-feedback"
               style={{ opacity: mounted ? 0 : 1 }}
             >
-              <Image
+              <DeferredHeroImage
                 src={CARDS.card2.bgImage}
-                unoptimized
-                alt=""
-                fill
-                sizes="33vw"
+                sizes="78vw"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2000ms] ease-[var(--ease-out-premium)] group-hover:scale-[1.06]"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-primary-dark/95 via-primary-dark/50 to-transparent" />
@@ -425,15 +469,12 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
             {/* Mobile Card 3 */}
             <div 
               onClick={CARDS.card3.action}
-              className="hero-card-gsap w-full relative group overflow-hidden rounded-xl border border-slate-200/50 bg-white h-[110px] cursor-pointer shimmer-sweep-3 card-press-feedback"
+              className="hero-card-gsap relative h-[150px] min-w-[78%] snap-center overflow-hidden rounded-2xl border border-slate-200/50 bg-white cursor-pointer shimmer-sweep-3 card-press-feedback"
               style={{ opacity: mounted ? 0 : 1 }}
             >
-              <Image
+              <DeferredHeroImage
                 src={CARDS.card3.bgImage}
-                unoptimized
-                alt=""
-                fill
-                sizes="33vw"
+                sizes="78vw"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2000ms] ease-[var(--ease-out-premium)] group-hover:scale-[1.06]"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-primary-dark/95 via-primary-dark/50 to-transparent" />
@@ -453,15 +494,12 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic, onSelectCategory }
             {/* Mobile Card 4 */}
             <div 
               onClick={CARDS.card4.action}
-              className="hero-card-gsap w-full relative group overflow-hidden rounded-xl border border-slate-200/50 bg-white h-[110px] cursor-pointer shimmer-sweep-3 card-press-feedback"
+              className="hero-card-gsap relative h-[150px] min-w-[78%] snap-center overflow-hidden rounded-2xl border border-slate-200/50 bg-white cursor-pointer shimmer-sweep-3 card-press-feedback"
               style={{ opacity: mounted ? 0 : 1 }}
             >
-              <Image
+              <DeferredHeroImage
                 src={CARDS.card4.bgImage}
-                unoptimized
-                alt=""
-                fill
-                sizes="33vw"
+                sizes="78vw"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2000ms] ease-[var(--ease-out-premium)] group-hover:scale-[1.06]"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-primary-dark/95 via-primary-dark/50 to-transparent" />

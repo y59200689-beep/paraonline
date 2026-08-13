@@ -93,11 +93,13 @@ export const CartBubbleCoordinator: React.FC = () => {
               willChange: 'transform, opacity'
             }}
           >
-            <img
-              src={getOptimizedImageUrl(bubble.image) || undefined}
-              alt=""
-              className="w-full h-full object-cover rounded-full"
-            />
+            {getOptimizedImageUrl(bubble.image) ? (
+              <img
+                src={getOptimizedImageUrl(bubble.image)}
+                alt=""
+                className="w-full h-full object-cover rounded-full"
+              />
+            ) : null}
           </div>
         </div>
       ))}

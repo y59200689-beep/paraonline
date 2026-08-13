@@ -4,7 +4,7 @@ import SuiviCommandeClient from '../suivi-commande/SuiviCommandeClient';
 
 export const metadata: Metadata = {
   title: 'Suivi de Commande | Para Officinal Maroc',
-  description: 'Suivez votre commande en temps réel au Maroc. Statut de livraison express, numéro de suivi et assistance WhatsApp 24/7.',
+  description: 'Consultez le statut de votre commande au Maroc avec votre numéro de commande et votre code de suivi sécurisé.',
   alternates: { canonical: '/suivi-commande' },
 };
 

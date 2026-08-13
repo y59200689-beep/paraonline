@@ -32,29 +32,12 @@ export interface AdminAuthContextProps {
 const AdminAuthContext = createContext<AdminAuthContextProps | undefined>(undefined);
 
 export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<AdminUser | null>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = sessionStorage.getItem('admin_user');
-      try {
-        return stored ? JSON.parse(stored) : null;
-      } catch (e) {
-        return null;
-      }
-    }
-    return null;
-  });
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('admin_authenticated') === 'true';
-    }
-    return false;
-  });
-  const [isVerifyingSession, setIsVerifyingSession] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('admin_authenticated') !== 'true';
-    }
-    return true;
-  });
+  // The HttpOnly session cookie is the only authentication authority. Browser
+  // storage may contain stale or user-edited data, so it must never unlock the
+  // private shell before the server confirms the session.
+  const [currentUser, setCurrentUser] = useState<AdminUser | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isVerifyingSession, setIsVerifyingSession] = useState(true);
   const [authError, setAuthError] = useState('');
   const [requiresMfa, setRequiresMfa] = useState(false);
   const [requiresMfaSetup, setRequiresMfaSetup] = useState(false);
@@ -79,10 +62,13 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   useEffect(() => {
     const verifySession = async () => {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
       try {
-        const res = await fetch('/api/admin/auth/me', { signal: controller.signal });
-        clearTimeout(timeoutId);
+        const res = await fetch('/api/admin/auth/me', {
+          signal: controller.signal,
+          credentials: 'same-origin',
+          cache: 'no-store',
+        });
         const data = await res.json();
         if (data.success && data.user) {
           setCurrentUser(data.user);
@@ -97,15 +83,17 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           fetch('/api/admin/auth/logout', { method: 'POST' }).catch(() => {});
         }
       } catch (e) {
-        clearTimeout(timeoutId);
-        // Only reset if no cached user exists
-        if (!sessionStorage.getItem('admin_user')) {
-          setIsAuthenticated(false);
-          setCurrentUser(null);
-          sessionStorage.removeItem('admin_authenticated');
-          fetch('/api/admin/auth/logout', { method: 'POST' }).catch(() => {});
-        }
+        setIsAuthenticated(false);
+        setCurrentUser(null);
+        sessionStorage.removeItem('admin_authenticated');
+        sessionStorage.removeItem('admin_user');
+        setAuthError(
+          e instanceof DOMException && e.name === 'AbortError'
+            ? 'La vérification de session a expiré. Reconnectez-vous.'
+            : 'Impossible de vérifier votre session. Reconnectez-vous.'
+        );
       } finally {
+        clearTimeout(timeoutId);
         setIsVerifyingSession(false);
       }
     };

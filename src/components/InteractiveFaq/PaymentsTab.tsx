@@ -124,7 +124,7 @@ export const PaymentsTab: React.FC<PaymentsTabProps> = ({ text, isRTL }) => {
               <div className="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-500 shadow-sm mt-2">
                 <MapPin className="w-5 h-5" />
               </div>
-              <h4 className="text-[11px] font-black text-slate-700 uppercase tracking-widest">CASH ON DELIVERY (COD)</h4>
+              <h4 className="text-[11px] font-black text-slate-700 uppercase tracking-widest">Paiement à la livraison</h4>
               <p className="text-[9.5px] font-semibold text-slate-400 leading-normal max-w-[180px] mb-2">{text.payCodDesc}</p>
             </div>
           )}

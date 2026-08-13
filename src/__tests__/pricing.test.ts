@@ -5,6 +5,7 @@ import {
   calculateShippingFee,
   calculateAmountNeededForFreeShipping,
   calculateTotal,
+  calculateCommerceSummary,
   MinimalCartItem,
   MinimalCoupon,
   ShippingSettings
@@ -44,7 +45,7 @@ describe('Pricing Calculations', () => {
 
     it('should round percentage discount correctly', () => {
       const coupon: MinimalCoupon = { code: 'TEST15', discountPercent: 15, freeShipping: false };
-      expect(calculateDiscount(105, coupon)).toBe(16); // 105 * 0.15 = 15.75 -> round to 16
+      expect(calculateDiscount(105, coupon)).toBe(15.75);
     });
 
     it('should calculate fixed discount correctly', () => {
@@ -130,6 +131,68 @@ describe('Pricing Calculations', () => {
 
     it('should handle zero shipping and zero discount', () => {
       expect(calculateTotal(300, 0, 0)).toBe(300);
+    });
+  });
+
+  describe('calculateCommerceSummary', () => {
+    const cart = [{ product: { price: 100 }, quantity: 4 }];
+    const settings: ShippingSettings = {
+      freeShippingThreshold: 600,
+      shippingFee: 35,
+      loyaltyPointsPerDh: 1,
+      giftRanges: [
+        { minAmount: 400, maxAmount: 599, productId: 12, productName: 'Cadeau 400', isActive: true },
+        { minAmount: 600, maxAmount: 9999, productId: 13, productName: 'Cadeau 600', isActive: true },
+      ],
+    };
+
+    it('handles below and exact free-delivery thresholds', () => {
+      expect(calculateCommerceSummary({ cart, coupon: null, settings }).shippingFee).toBe(35);
+      const atThreshold = [{ product: { price: 200 }, quantity: 3 }];
+      expect(calculateCommerceSummary({ cart: atThreshold, coupon: null, settings }).shippingFee).toBe(0);
+    });
+
+    it('selects the matching gift tier and excludes disabled gifts', () => {
+      const eligible = calculateCommerceSummary({
+        cart,
+        coupon: null,
+        settings,
+        giftProducts: [{ id: 12, stock: 2, status: 'live' }],
+      });
+      expect(eligible.giftItem).toBe('Cadeau 400');
+
+      const disabled = calculateCommerceSummary({
+        cart,
+        coupon: null,
+        settings: { ...settings, giftRanges: [{ ...settings.giftRanges![0], isActive: false }] },
+        giftProducts: [{ id: 12, stock: 2, status: 'live' }],
+      });
+      expect(disabled.giftItem).toBeNull();
+    });
+
+    it('excludes out-of-stock gifts', () => {
+      const summary = calculateCommerceSummary({
+        cart,
+        coupon: null,
+        settings,
+        giftProducts: [{ id: 12, stock: 0, status: 'live' }],
+      });
+      expect(summary.giftItem).toBeNull();
+    });
+
+    it('recalculates coupon, shipping, savings and total together', () => {
+      const summary = calculateCommerceSummary({
+        cart: [{ product: { price: 99.95 }, quantity: 2 }],
+        coupon: { code: 'SAVE10', discountPercent: 10, freeShipping: true },
+        settings,
+      });
+      expect(summary).toMatchObject({
+        subtotal: 199.9,
+        discountAmount: 19.99,
+        shippingFee: 0,
+        total: 179.91,
+        totalSavings: 19.99,
+      });
     });
   });
 });

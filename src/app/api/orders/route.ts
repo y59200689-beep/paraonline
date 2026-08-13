@@ -4,6 +4,13 @@ import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { createOrderTrackingToken, createOrderVerificationToken, verifyOrderToken } from '@/lib/order-security';
 import { rateLimit, getClientIp } from '@/lib/rateLimit';
 import { isValidMoroccanPhone, normalizeMoroccanPhoneInput } from '@/lib/moroccan-phone';
+import {
+  calculateCommerceSummary,
+  calculateSubtotal,
+  roundMoney,
+  type GiftProductEligibility,
+  type ShippingSettings,
+} from '@/lib/pricing';
 
 type ProductRecord = {
   id: number;
@@ -35,11 +42,11 @@ const MOCK_COUPONS: Record<string, Coupon> = {
   GIFTGLOW: { code: 'GIFTGLOW' },
 };
 
-const roundMoney = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
-
 function safeTrackingOrder(order: Record<string, unknown>) {
   return {
     order_id: order.order_id,
+    customer_name: order.customer_name,
+    city: order.city,
     items: Array.isArray(order.items) ? order.items : [],
     subtotal: order.subtotal,
     discount_amount: order.discount_amount,
@@ -48,6 +55,7 @@ function safeTrackingOrder(order: Record<string, unknown>) {
     total: order.total,
     status: order.status,
     payment_status: order.payment_status,
+    payment_method: order.payment_method,
     created_at: order.created_at,
     carrier: order.carrier,
     tracking_number: order.tracking_number,
@@ -63,8 +71,8 @@ export async function GET(request: Request) {
     const orderId = searchParams.get('orderId')?.trim() || '';
     const token = searchParams.get('token')?.trim() || '';
 
-    if (!orderId || !token) {
-      return NextResponse.json({ success: false, error: 'Une référence et un code de suivi sont requis.' }, { status: 400 });
+    if (!orderId) {
+      return NextResponse.json({ success: false, error: 'Une référence de commande est requise.' }, { status: 400 });
     }
 
     const ip = getClientIp(request);
@@ -73,16 +81,32 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, error: 'Trop de requêtes. Veuillez réessayer dans une minute.' }, { status: 429 });
     }
 
-    const [tokenOrderId, signature] = token.split('.');
-    if (tokenOrderId !== orderId || !signature || !verifyOrderToken(orderId, signature, 'track')) {
-      return NextResponse.json({ success: false, error: 'Code de suivi invalide.' }, { status: 403 });
+    let authenticatedCustomerId: string | null = null;
+    if (token) {
+      const [tokenOrderId, signature] = token.split('.');
+      if (tokenOrderId !== orderId || !signature || !verifyOrderToken(orderId, signature, 'track')) {
+        return NextResponse.json({ success: false, error: 'Code de suivi invalide.' }, { status: 403 });
+      }
+    } else {
+      const bearerToken = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim();
+      if (!bearerToken) {
+        return NextResponse.json({ success: false, error: 'Un code de suivi ou une session client est requis.' }, { status: 401 });
+      }
+      const { data: authData, error: authError } = await supabase.auth.getUser(bearerToken);
+      if (authError || !authData.user) {
+        return NextResponse.json({ success: false, error: 'Session client invalide ou expirée.' }, { status: 401 });
+      }
+      authenticatedCustomerId = authData.user.id;
     }
 
-    const { data: order, error } = await supabase
+    let orderQuery = supabase
       .from('orders')
-      .select('order_id, items, subtotal, discount_amount, applied_coupon, gift_item, total, status, payment_status, created_at, carrier, tracking_number, estimated_delivery, package_weight, logs')
-      .eq('order_id', orderId)
-      .maybeSingle();
+      .select('order_id, customer_id, customer_name, city, items, subtotal, discount_amount, applied_coupon, gift_item, total, status, payment_status, payment_method, created_at, carrier, tracking_number, estimated_delivery, package_weight, logs')
+      .eq('order_id', orderId);
+    if (authenticatedCustomerId) {
+      orderQuery = orderQuery.eq('customer_id', authenticatedCustomerId);
+    }
+    const { data: order, error } = await orderQuery.maybeSingle();
 
     if (error) throw error;
     if (!order) {
@@ -163,15 +187,29 @@ export async function POST(request: Request) {
       };
     });
 
-    const subtotal = roundMoney(items.reduce((sum, item) => sum + item.price * item.quantity, 0));
-    const settings = settingsData?.value || {};
-    const coupon = await resolveCoupon(body.appliedCoupon, subtotal, settings);
-    const discountAmount = calculateDiscount(subtotal, coupon);
-    const shippingFee = calculateShipping(subtotal, String(orderData.city), coupon, settings);
-    const total = roundMoney(subtotal - discountAmount + shippingFee);
-    const giftRange = Array.isArray(settings.giftRanges)
-      ? settings.giftRanges.find((range: any) => range.isActive !== false && subtotal >= Number(range.minAmount) && subtotal <= Number(range.maxAmount))
-      : null;
+    const settings = (settingsData?.value || {}) as ShippingSettings & Record<string, any>;
+    const subtotalForCoupon = calculateSubtotal(items.map((item) => ({ product: item, quantity: item.quantity })));
+    const coupon = await resolveCoupon(body.appliedCoupon, subtotalForCoupon, settings);
+    const giftProductIds = Array.isArray(settings.giftRanges)
+      ? [...new Set(settings.giftRanges.map((range) => Number(range.productId)).filter((id) => id > 0))]
+      : [];
+    let giftProducts: GiftProductEligibility[] = [];
+    if (giftProductIds.length > 0) {
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, title, stock, status')
+        .in('id', giftProductIds);
+      if (error) throw error;
+      giftProducts = (data || []) as GiftProductEligibility[];
+    }
+    const pricing = calculateCommerceSummary({
+      cart: items.map((item) => ({ product: item, quantity: item.quantity })),
+      coupon,
+      settings,
+      shippingCity: String(orderData.city),
+      giftProducts,
+    });
+    const { subtotal, discountAmount, shippingFee, total } = pricing;
     const isCod = paymentMethod === 'cod';
     const fallbackOrderId = `PO-${crypto.randomInt(100000, 1000000)}`;
 
@@ -192,11 +230,11 @@ export async function POST(request: Request) {
       subtotal,
       discount_amount: discountAmount,
       applied_coupon: coupon?.code || '',
-      gift_item: giftRange ? giftRange.productName : null,
+      gift_item: pricing.giftItem,
       total,
       status: isCod ? 'Pending' : 'Pending Payment',
       skin_diagnostic: body.skinDiagnostic || null,
-      loyalty_points: 0,
+      loyalty_points: pricing.loyaltyPoints,
       loyalty_tier: null,
       payment_method: paymentMethod,
       payment_status: 'unpaid',
@@ -224,6 +262,8 @@ export async function POST(request: Request) {
       discountAmount,
       shippingFee,
       total,
+      giftItem: pricing.giftItem,
+      loyaltyPoints: pricing.loyaltyPoints,
       items,
     });
   } catch (error: any) {
@@ -265,24 +305,4 @@ async function resolveCoupon(code: unknown, subtotal: number, settings: Record<s
     if ((count || 0) >= coupon.usageLimit) throw new Error('INVALID_COUPON');
   }
   return { ...coupon, code: normalizedCode };
-}
-
-function calculateDiscount(subtotal: number, coupon: Coupon | null) {
-  if (!coupon) return 0;
-  const value = Number(coupon.discountValue ?? coupon.discountPercent ?? 0);
-  const discount = coupon.discountType === 'fixed' ? Math.min(subtotal, value) : subtotal * (value / 100);
-  return roundMoney(Math.max(0, discount));
-}
-
-function calculateShipping(subtotal: number, city: string, coupon: Coupon | null, settings: Record<string, any>) {
-  const giftRange = Array.isArray(settings.giftRanges)
-    ? settings.giftRanges.find((range: any) => range.isActive !== false && subtotal >= Number(range.minAmount) && subtotal <= Number(range.maxAmount))
-    : null;
-  const isFreeShippingGift = !!(giftRange && (Number(giftRange.productId) === -1 || giftRange.productName === 'Livraison Gratuite'));
-
-  if (coupon?.freeShipping || isFreeShippingGift || subtotal >= Number(settings.freeShippingThreshold || 600)) return 0;
-  const cityRule = Array.isArray(settings.shippingRules)
-    ? settings.shippingRules.find((rule: any) => String(rule.city).toLowerCase() === city.toLowerCase())
-    : null;
-  return roundMoney(Number(cityRule?.fee ?? settings.shippingFee ?? 35));
 }

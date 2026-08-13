@@ -116,7 +116,7 @@ export default function BrandClient({ brand, initialProducts = [] }: BrandClient
     }).sort((a, b) => {
       if (sortOption === 'price-asc') return a.price - b.price;
       if (sortOption === 'price-desc') return b.price - a.price;
-      if (sortOption === 'rating') return (b.rating || 5) - (a.rating || 5);
+      if (sortOption === 'rating') return (b.rating || 0) - (a.rating || 0);
       return (b.reviews || 0) - (a.reviews || 0); // popular default
     });
   }, [brandProducts, selectedCategory, selectedConcerns, maxPrice, sortOption]);

@@ -10,6 +10,7 @@ import { Star, Heart, ShoppingCart, Sparkles } from 'lucide-react';
 import { useUi } from '@/context/UiContext';
 import Image from 'next/image';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
+import { PRODUCT_IMAGE_FALLBACK } from '@/lib/public-images';
 import { useSettings } from '@/context/SettingsContext';
 import { useGalleryOverrides } from '@/lib/useGalleryOverrides';
 
@@ -138,7 +139,7 @@ export const TopRatedAsymmetricGrid: React.FC = () => {
                   {/* Left image container */}
                   <div className="w-[88px] h-[88px] rounded-[14px] bg-[#F8FAF8] flex items-center justify-center shrink-0 overflow-hidden relative self-center">
                     <Image 
-                      src={getOptimizedImageUrl(product.image)} 
+                      src={getOptimizedImageUrl(product.image) || PRODUCT_IMAGE_FALLBACK}
                       alt={titleStr} 
                       fill
                       sizes="88px"
@@ -213,7 +214,7 @@ export const TopRatedAsymmetricGrid: React.FC = () => {
                   {/* Image container */}
                   <div className="w-full aspect-[4/3] rounded-[18px] bg-[#F8FAF8] flex items-center justify-center shrink-0 overflow-hidden relative mb-4">
                     <Image 
-                      src={getOptimizedImageUrl(product.image)} 
+                      src={getOptimizedImageUrl(product.image) || PRODUCT_IMAGE_FALLBACK}
                       alt={titleStr} 
                       fill
                       sizes="(max-width: 768px) 100vw, 33vw"
@@ -317,7 +318,7 @@ export const TopRatedAsymmetricGrid: React.FC = () => {
                   {/* Left image container */}
                   <div className="w-[88px] h-[88px] rounded-[14px] bg-[#F8FAF8] flex items-center justify-center shrink-0 overflow-hidden relative self-center">
                     <Image 
-                      src={getOptimizedImageUrl(product.image)} 
+                      src={getOptimizedImageUrl(product.image) || PRODUCT_IMAGE_FALLBACK}
                       alt={titleStr} 
                       fill
                       sizes="88px"

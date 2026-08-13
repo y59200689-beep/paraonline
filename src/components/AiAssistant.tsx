@@ -9,6 +9,9 @@ import { useUi } from '@/context/UiContext';
 import { useCart } from '@/context/CartContext';
 import { isValidMoroccanPhone, MOROCCAN_PHONE_MAX_DIGITS, normalizeMoroccanPhoneInput } from '@/lib/moroccan-phone';
 import { getCustomerAccessToken } from '@/lib/customer-session';
+import { useModalAccessibility } from '@/hooks/useModalAccessibility';
+import Image from 'next/image';
+import { safePublicImage } from '@/lib/public-images';
 
 interface Message {
   sender: 'user' | 'ai';
@@ -41,6 +44,14 @@ interface Message {
   };
 }
 
+interface PublicChatConfig {
+  welcome_fr?: string;
+  welcome_ar?: string;
+  suggested_prompts?: Array<{ id?: string; label_fr?: string; label_ar?: string; prompt_fr?: string; prompt_ar?: string }>;
+  fallback_replies?: Array<{ text_fr?: string; text_ar?: string }>;
+  whatsapp_link?: string;
+}
+
 export const AiAssistant: React.FC = () => {
   const pathname = usePathname();
   const { language } = useTranslation();
@@ -49,10 +60,12 @@ export const AiAssistant: React.FC = () => {
 
   const shouldHideAssistant =
     pathname?.startsWith('/admin') || 
+    pathname?.startsWith('/customer') ||
     pathname?.startsWith('/checkout') || 
     isCartOpen || 
     isDiagnosticOpen || 
     isScratchCardOpen;
+  const isProductDetailRoute = /^\/products\/[^/]+\/?$/.test(pathname || '');
 
   const { products } = useProducts();
 
@@ -133,9 +146,29 @@ export const AiAssistant: React.FC = () => {
       textAr: "مرحباً ! أنا مستشارتكِ الجلدية الرقمية. اسأليني عن المكونات النشطة أو مدى توافق مستحضرات العناية ببشرتكِ."
     }
   ]);
+  const [chatConfig, setChatConfig] = useState<PublicChatConfig>({});
   const [isTyping, setIsTyping] = useState(false);
   const [inputText, setInputText] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
+  const assistantDialogRef = useModalAccessibility<HTMLDivElement>(isOpen && !shouldHideAssistant, () => setIsOpen(false));
+
+  useEffect(() => {
+    let active = true;
+    fetch('/api/cms/chat/public')
+      .then(response => response.ok ? response.json() : null)
+      .then(payload => {
+        if (!active || !payload?.config) return;
+        const config = payload.config as PublicChatConfig;
+        setChatConfig(config);
+        if (config.welcome_fr || config.welcome_ar) {
+          setMessages(prev => prev.length === 1 && prev[0].sender === 'ai'
+            ? [{ ...prev[0], textFr: config.welcome_fr || prev[0].textFr, textAr: config.welcome_ar || prev[0].textAr }]
+            : prev);
+        }
+      })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -449,8 +482,8 @@ export const AiAssistant: React.FC = () => {
     // Generic friendly offline message
     setMessages(prev => [...prev, {
       sender: 'ai',
-      textFr: "Je suis désolée, je rencontre des difficultés de connexion. Vous pouvez cliquer sur l'une des consultations fréquentes ci-dessus pour obtenir des réponses immédiates.",
-      textAr: "أعتذر، أواجه مشكلة في الاتصال حالياً. يمكنكِ النقر على أحد الأزرار المتاحة أعلاه للحصول على إجابات فورية."
+      textFr: chatConfig.fallback_replies?.[0]?.text_fr || "Je suis désolée, je rencontre des difficultés de connexion. Vous pouvez réessayer ou contacter notre équipe.",
+      textAr: chatConfig.fallback_replies?.[0]?.text_ar || "أعتذر، أواجه مشكلة في الاتصال حالياً. يمكنك إعادة المحاولة أو التواصل مع فريقنا."
     }]);
   };
 
@@ -525,11 +558,19 @@ export const AiAssistant: React.FC = () => {
 
 
   return (
-    <div className="fixed bottom-20 md:bottom-6 right-6 z-50 flex flex-col items-end font-sans">
+    <div className={`fixed right-4 sm:right-6 z-50 flex flex-col items-end font-sans ${
+      isProductDetailRoute ? 'bottom-[9.75rem] lg:bottom-6' : 'bottom-20 lg:bottom-6'
+    }`}>
       
       {/* ─── CHAT PANEL ─── */}
       {isOpen && (
         <div 
+          ref={assistantDialogRef}
+          id="public-ai-assistant"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="public-ai-assistant-title"
+          tabIndex={-1}
           className={`w-[calc(100vw-2rem)] sm:w-[400px] h-[min(720px,calc(100dvh-7rem))] rounded-3xl bg-white/95 backdrop-blur-xl border border-slate-200/50 shadow-2xl flex flex-col overflow-hidden mb-4 transition-all duration-300 origin-bottom-right scale-100 ${
             isRTL ? 'text-right' : 'text-left'
           }`}
@@ -550,7 +591,7 @@ export const AiAssistant: React.FC = () => {
                 <Sparkles className="w-4 h-4 text-accent fill-accent animate-pulse" />
               </div>
               <div>
-                <h4 className="font-heading font-black text-white text-[13.5px] leading-tight select-none">
+                <h4 id="public-ai-assistant-title" className="font-heading font-black text-white text-[13.5px] leading-tight select-none">
                   {language === 'FR' ? 'Pharmacienne Digitale IA' : 'الصيدلانية الرقمية الذكية'}
                 </h4>
                 <span className="text-[9px] font-black uppercase text-accent tracking-widest block mt-0.5 select-none">
@@ -561,6 +602,7 @@ export const AiAssistant: React.FC = () => {
 
             <button 
               onClick={() => setIsOpen(false)}
+              data-autofocus
               aria-label={language === 'FR' ? 'Fermer' : 'إغلاق'}
               className="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all cursor-pointer border-0 outline-none"
             >
@@ -583,7 +625,7 @@ export const AiAssistant: React.FC = () => {
                 </p>
                 {verificationToken && (
                   <a
-                    href={`https://wa.me/212600000000?text=${encodeURIComponent(`Bonjour, je souhaite confirmer ma commande #${lastPlacedOrderId} passée via l'Assistant IA. Lien : https://paraofficinal.ma/api/orders/verify?token=${verificationToken}&action=confirm`)}`}
+                    href={`${chatConfig.whatsapp_link || 'https://wa.me/212600000000'}?text=${encodeURIComponent(`Bonjour, je souhaite confirmer ma commande #${lastPlacedOrderId} passée via l'Assistant IA. Lien : https://paraofficinal.ma/api/orders/verify?token=${verificationToken}&action=confirm`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] uppercase tracking-wider rounded-lg shadow-sm hover:shadow-md transition active:scale-95 border-0 outline-none w-full text-center"
@@ -635,13 +677,13 @@ export const AiAssistant: React.FC = () => {
                           return (
                             <div key={pIdx} className="p-2 bg-slate-50/90 border border-slate-200/75 rounded-xl flex items-center justify-between gap-2 shadow-xs">
                               <div className="flex items-center gap-2 min-w-0 flex-1">
-                                {imageUrl ? (
-                                  <img src={imageUrl} alt={item.title} className="w-9 h-9 object-contain rounded-md bg-white p-0.5 border border-slate-100 shrink-0" />
-                                ) : (
-                                  <div className="w-9 h-9 rounded-md bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-[10px] shrink-0">
-                                    {item.title.charAt(0)}
-                                  </div>
-                                )}
+                                <Image
+                                  src={safePublicImage(imageUrl)}
+                                  alt={item.title}
+                                  width={36}
+                                  height={36}
+                                  className="h-9 w-9 shrink-0 rounded-md border border-slate-100 bg-white object-contain p-0.5"
+                                />
                                 <div className="min-w-0 flex-1">
                                   <p className="font-bold text-[10.5px] text-slate-800 truncate m-0">{item.title}</p>
                                   <p className="text-[9.5px] text-slate-500 m-0 leading-tight truncate">
@@ -735,13 +777,13 @@ export const AiAssistant: React.FC = () => {
                                   if (!prod) return null;
                                   return (
                                     <div key={itemIdx} className="flex items-center justify-between gap-2.5 p-2 bg-white rounded-lg border border-slate-100 shadow-2xs">
-                                      {prod.image ? (
-                                        <img src={prod.image} alt="" className="w-8 h-8 object-contain rounded bg-slate-50 p-0.5 shrink-0" />
-                                      ) : (
-                                        <div className="w-8 h-8 rounded bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-[10px] shrink-0">
-                                          {prod.title.charAt(0)}
-                                        </div>
-                                      )}
+                                      <Image
+                                        src={safePublicImage(prod.image)}
+                                        alt={prod.title}
+                                        width={32}
+                                        height={32}
+                                        className="h-8 w-8 shrink-0 rounded bg-slate-50 object-contain p-0.5"
+                                      />
                                       <div className="min-w-0 flex-1">
                                         <p className="truncate text-[10.5px] font-bold text-slate-800 m-0">{prod.title}</p>
                                         <p className="text-[9.5px] font-bold text-emerald-700 m-0">{safeFormatPrice(prod.price)} DH</p>
@@ -791,9 +833,13 @@ export const AiAssistant: React.FC = () => {
                                 <div className="max-h-40 space-y-1 overflow-y-auto pr-1">
                                   {orderSearchResults.map(product => (
                                     <div key={product.id} className="flex items-center gap-2 rounded-xl border border-slate-100 bg-white p-2">
-                                      <div className="h-8 w-8 shrink-0 overflow-hidden rounded bg-slate-50">
-                                        {product.image ? <img src={product.image} alt="" className="h-full w-full object-contain p-0.5" loading="lazy" /> : null}
-                                      </div>
+                                      <Image
+                                        src={safePublicImage(product.image)}
+                                        alt={product.title}
+                                        width={32}
+                                        height={32}
+                                        className="h-8 w-8 shrink-0 rounded bg-slate-50 object-contain p-0.5"
+                                      />
                                       <div className="min-w-0 flex-1">
                                         <p className="truncate text-[10px] font-bold text-slate-800">{product.title}</p>
                                         <p className="mt-0.5 text-[9px] font-semibold text-slate-400">{product.vendor} · {safeFormatPrice(product.price)} DH</p>
@@ -907,6 +953,16 @@ export const AiAssistant: React.FC = () => {
             )}
           </div>
 
+          {chatConfig.suggested_prompts?.length && messages.length === 1 ? (
+            <div className="flex flex-wrap gap-2 px-3 pb-3 bg-white" dir={isRTL ? 'rtl' : 'ltr'}>
+              {chatConfig.suggested_prompts.slice(0, 4).map((prompt, index) => (
+                <button key={prompt.id ?? index} type="button" onClick={() => setInputText(isRTL ? (prompt.prompt_ar || prompt.prompt_fr || '') : (prompt.prompt_fr || prompt.prompt_ar || ''))} className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[10px] font-semibold text-slate-600 hover:border-emerald-300 hover:text-emerald-700 transition">
+                  {isRTL ? (prompt.label_ar || prompt.label_fr) : (prompt.label_fr || prompt.label_ar)}
+                </button>
+              ))}
+            </div>
+          ) : null}
+
 
 
           {/* Input Zone */}
@@ -943,7 +999,9 @@ export const AiAssistant: React.FC = () => {
           boxShadow: '0 12px 32px rgba(26, 37, 93, 0.35), 0 0 10px rgba(197, 168, 128, 0.1)',
           border: '1px solid rgba(255, 255, 255, 0.15)'
         }}
-        aria-label="Clinical AI Assistant"
+        aria-controls="public-ai-assistant"
+        aria-expanded={isOpen}
+        aria-label={language === 'FR' ? (isOpen ? 'Fermer l’assistant conseil' : 'Ouvrir l’assistant conseil') : (isOpen ? 'إغلاق مساعد الاستشارة' : 'فتح مساعد الاستشارة')}
       >
         {/* Pulsing glow ring around the button */}
         <div className="absolute inset-0 rounded-full border border-accent opacity-20 group-hover:scale-125 transition-transform duration-700 animate-ping pointer-events-none" />

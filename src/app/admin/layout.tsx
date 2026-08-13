@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useAdmin, AdminProvider } from '@/context/AdminContext';
 import { AdminUIProvider, useAdminUI } from './AdminUIContext';
 import { usePathname, useRouter } from 'next/navigation';
@@ -57,10 +57,18 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [mounted, setMounted] = React.useState(false);
   const [isProfileOpen, setIsProfileOpen] = React.useState(false);
+  const mobileMenuButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (isMobileDrawerOpen) setIsMobileDrawerOpen(false);
+    // The route change itself is the reason for closing the drawer. We do not
+    // include the drawer state to avoid closing it immediately after opening.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   // Redirect to login if session verification completes and user is not authenticated
   useEffect(() => {
@@ -122,7 +130,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const isDark = adminTheme === 'dark';
 
   return (
-    <main data-app-area="admin" className={`h-screen overflow-hidden font-sans flex flex-col md:flex-row relative transition-colors duration-300 ${
+    <main data-app-area="admin" className={`h-screen overflow-hidden font-sans flex flex-col lg:flex-row relative transition-colors duration-300 ${
       isDark ? 'text-slate-100 admin-dark admin-page-bg-dark' : 'text-slate-900 admin-light admin-page-bg'
     }`}>
       
@@ -134,10 +142,11 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
         setSidebarCollapsed={setSidebarCollapsed}
         isMobileDrawerOpen={isMobileDrawerOpen}
         setIsMobileDrawerOpen={setIsMobileDrawerOpen}
+        mobileTriggerRef={mobileMenuButtonRef}
       />
 
       {/* 2. Main content container */}
-      <section className="admin-workspace flex-1 min-w-0 px-5 py-5 md:px-8 md:py-7 space-y-5 overflow-y-auto max-h-screen relative z-10 transition-colors duration-300">
+      <section className="admin-workspace flex-1 min-w-0 px-4 py-4 sm:px-5 sm:py-5 lg:px-8 lg:py-7 space-y-5 overflow-y-auto max-h-screen relative z-10 transition-colors duration-300">
         
         {/* Loading Skeleton Screen */}
         {isDataLoading && (
@@ -233,7 +242,8 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
             >
               <button
                 onClick={() => setIsMobileDrawerOpen(true)}
-                className={`md:hidden p-1.5 rounded-lg border cursor-pointer transition ${
+                ref={mobileMenuButtonRef}
+                className={`lg:hidden min-w-11 min-h-11 p-2.5 rounded-xl border cursor-pointer transition ${
                   isDark
                     ? 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800'
                     : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'

@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { 
   Sparkles, ShieldCheck, Lock, Mail, User, Phone, ArrowRight, ArrowLeft,
-  Eye, EyeOff, CheckCircle2, PackageCheck, Award, HeartHandshake, KeyRound, Zap, Sun, Moon
+  Eye, EyeOff, CheckCircle2, PackageCheck, Award, HeartHandshake, KeyRound, Sun, Moon
 } from 'lucide-react';
 import { useTranslation } from '@/context/LanguageContext';
 
@@ -24,6 +24,7 @@ interface CustomerAuthPortalProps {
   authLoading: boolean;
   handleLogin: (e: React.FormEvent) => void;
   handleSignup: (e: React.FormEvent) => void;
+  handlePasswordReset: (email: string) => Promise<{ success: boolean; error?: string }>;
   onClose?: () => void;
   isModal?: boolean;
   themeMode?: 'light' | 'dark';
@@ -46,6 +47,7 @@ export const CustomerAuthPortal: React.FC<CustomerAuthPortalProps> = ({
   authLoading,
   handleLogin,
   handleSignup,
+  handlePasswordReset,
   onClose,
   isModal = false,
   themeMode = 'dark',
@@ -56,19 +58,35 @@ export const CustomerAuthPortal: React.FC<CustomerAuthPortalProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetError, setResetError] = useState('');
+  const [isHydrated, setIsHydrated] = useState(false);
 
-  const handleResetSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  const handleResetSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!authEmail) return;
+    setResetLoading(true);
+    setResetError('');
+    const result = await handlePasswordReset(authEmail);
+    setResetLoading(false);
+    if (!result.success) {
+      setResetError(result.error || 'Impossible d’envoyer le lien. Réessayez.');
+      return;
+    }
     setResetSent(true);
-    setTimeout(() => {
-      setResetSent(false);
-      setForgotPasswordMode(false);
-    }, 4000);
   };
 
   return (
-    <div className={`w-full max-w-6xl mx-auto space-y-6 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+    <div
+      className={`w-full max-w-6xl mx-auto space-y-6 ${isRTL ? 'rtl' : 'ltr'}`}
+      dir={isRTL ? 'rtl' : 'ltr'}
+      data-testid="customer-auth-portal"
+      data-hydrated={isHydrated ? 'true' : 'false'}
+    >
       
       {/* ── Top Bar Header (Only when rendered full-page) ── */}
       {!isModal && (
@@ -357,6 +375,12 @@ export const CustomerAuthPortal: React.FC<CustomerAuthPortalProps> = ({
               </div>
             )}
 
+            {resetError && (
+              <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 text-xs font-semibold" role="alert">
+                {resetError}
+              </div>
+            )}
+
             {/* FORGOT PASSWORD FORM */}
             {forgotPasswordMode ? (
               <form onSubmit={handleResetSubmit} className="space-y-4">
@@ -384,9 +408,10 @@ export const CustomerAuthPortal: React.FC<CustomerAuthPortalProps> = ({
                 <div className="flex items-center gap-3 pt-2">
                   <button
                     type="submit"
+                    disabled={resetLoading || resetSent}
                     className="flex-1 py-3.5 px-6 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 cursor-pointer border-0"
                   >
-                    <span>{isRTL ? 'إرسال رابط التعيين' : 'Envoyer le lien de réinitialisation'}</span>
+                    <span>{resetLoading ? (isRTL ? 'جارٍ الإرسال…' : 'Envoi…') : (isRTL ? 'إرسال رابط التعيين' : 'Envoyer le lien de réinitialisation')}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
 
@@ -611,23 +636,6 @@ export const CustomerAuthPortal: React.FC<CustomerAuthPortalProps> = ({
 
               </form>
             )}
-
-            {/* Quick Demo Login Option */}
-            <div className="pt-2 text-center">
-              <button
-                type="button"
-                onClick={() => {
-                  setAuthEmail('client.demo@para.ma');
-                  setAuthPassword('demo123456');
-                }}
-                className="text-[11px] font-mono text-slate-500 hover:text-emerald-400 transition-colors bg-transparent border-0 cursor-pointer underline"
-              >
-                <span className="inline-flex items-center gap-1">
-                  <Zap className="w-3.5 h-3.5 text-amber-500" />
-                  <span>{isRTL ? 'ملء تلقائي لتجربة الحساب (Demo)' : 'Remplissage rapide pour tester le compte (Demo)'}</span>
-                </span>
-              </button>
-            </div>
 
           </div>
 

@@ -58,6 +58,7 @@ import { DynamicSectionRenderer } from '@/components/DynamicSectionRenderer';
 import { HomepageSectionItem } from '@/context/SettingsContext';
 import { getPublicSettings } from '@/lib/get-public-settings';
 import { getHomepageSections } from '@/lib/cms-homepage';
+import { getCmsPreviewSnapshot } from '@/lib/cms-preview';
 
 // Default sections — used only when no CMS homepage record exists.
 // Once the admin publishes the homepage, this array is never consulted.
@@ -83,15 +84,18 @@ const DEFAULT_SECTIONS: HomepageSectionItem[] = [
   { id: 'trustBar-1',             type: 'trustBar',             nameFr: 'Barre de Confiance Maroc',              visible: true },
 ];
 
-export default async function Home() {
+export default async function Home({ searchParams }: { searchParams?: Promise<{ preview_token?: string }> }) {
   // The CMS is the single authority for homepage section order and visibility.
   // getHomepageSections() queries cms_pages where slug='home' and status='published'.
   // If no published record exists it falls back to DEFAULT_SECTIONS — safe for
   // first deploy before any admin interaction.
-  const [settings, sectionsList] = await Promise.all([
+  const previewToken = (await searchParams)?.preview_token;
+  const preview = await getCmsPreviewSnapshot<{ section_order?: HomepageSectionItem[] }>(previewToken, 'page', 'page-home');
+  const [settings, publishedSections] = await Promise.all([
     getPublicSettings(),
     getHomepageSections(DEFAULT_SECTIONS),
   ]);
+  const sectionsList = preview?.section_order?.length ? preview.section_order : publishedSections;
 
   return (
     <ShopShell>

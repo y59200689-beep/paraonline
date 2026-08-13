@@ -44,6 +44,10 @@ export interface Product {
   sku?: string;
   buyingCost?: number;
   status?: 'draft' | 'live';
+  /** Whether the product is explicitly usable in the facial skincare diagnostic. */
+  isFaceProduct?: boolean;
+  /** A product must be approved before it can receive a diagnostic match score. */
+  recommendationStatus?: 'approved' | 'draft' | 'rejected';
   /** Admin-maintained metadata used to build safe, non-duplicated skincare routines. */
   routineRoles?: RoutineRole[];
   suitableSkinTypes?: SuitableSkinType[];

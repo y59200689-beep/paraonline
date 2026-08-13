@@ -8,7 +8,16 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "cron-runner": "node scripts/local-cron-runner.js"
+    "cron-runner": "node scripts/local-cron-runner.js",
+    "cms:export": "node scripts/export-cms.mjs",
+    "cms:health": "node scripts/cms-health-check.mjs",
+    "qa:cms": "node scripts/qa-cms.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:a11y": "playwright test tests/e2e/public-quality.spec.ts",
+    "test:e2e:smoke": "playwright test tests/e2e/commerce-smoke.spec.ts",
+    "test:e2e:baseline": "playwright test tests/e2e/baseline-captures.spec.ts --project=baseline"
+    ,"test:e2e:private": "playwright test tests/e2e/private-product-smoke.spec.ts"
+    ,"test:e2e:private:baseline": "playwright test tests/e2e/private-product-baseline.spec.ts --project=baseline"
   },
   "dependencies": {
     "@stripe/react-stripe-js": "^6.8.0",
@@ -25,6 +34,7 @@
     "stripe": "^22.4.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4.3.3",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^20.19.43",

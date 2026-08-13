@@ -23,7 +23,7 @@ function rowToProduct(item: any): Product {
     comparePrice: Number(item.compare_price || item.price),
     category: item.category as string,
     tags: (item.tags as string[]) || [],
-    rating: Number(item.rating || 5),
+    rating: Number(item.rating || 0),
     reviews: Number(item.reviews || 0),
     description: (item.description as string) || '',
     ingredients: (item.ingredients as string) || '',
@@ -32,6 +32,21 @@ function rowToProduct(item: any): Product {
     sku: (item.sku as string) || undefined,
     buyingCost: item.buying_cost != null ? Number(item.buying_cost) : undefined,
     points: item.points != null ? Number(item.points) : 0,
+    status: item.status === 'live' ? 'live' : 'draft',
+    isFaceProduct: item.is_face_product === true || [item.category, ...(Array.isArray(item.categories) ? item.categories : [])]
+      .filter(Boolean)
+      .some((category: unknown) => /(^|\\s)(visage|face|skincare|soin visage)(\\s|$)/i.test(String(category))),
+    recommendationStatus: item.recommendation_status === 'rejected'
+      ? 'rejected'
+      : item.recommendation_status === 'draft'
+        ? 'draft'
+        : 'approved',
+    routineRoles: Array.isArray(item.routine_roles) ? item.routine_roles : [],
+    suitableSkinTypes: Array.isArray(item.suitable_skin_types) ? item.suitable_skin_types : [],
+    suitableConcerns: Array.isArray(item.suitable_concerns) ? item.suitable_concerns : [],
+    sensitivityLevels: Array.isArray(item.sensitivity_levels) ? item.sensitivity_levels : [],
+    activeStrength: item.active_strength || undefined,
+    timeOfDay: Array.isArray(item.time_of_day) ? item.time_of_day : [],
   };
 }
 
@@ -186,4 +201,3 @@ export default async function ProductPage({ params }: { params: any }) {
     </>
   );
 }
-

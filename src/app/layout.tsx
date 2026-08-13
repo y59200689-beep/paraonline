@@ -7,7 +7,9 @@ import { AiAssistant } from "../components/AiAssistant";
 import { CodeSnippetInjector } from "../components/CodeSnippetInjector";
 import { triggerLazyCron } from "@/lib/lazy-cron";
 import { getPublicSettings } from "@/lib/get-public-settings";
+import { getMergedPublicSettings } from "@/lib/cms-global-settings";
 import { toThemeColorVariable } from "@/lib/theme-colors";
+import { PublicWebVitals } from "@/components/PublicWebVitals";
 
 // The storefront catalogue response is too large for Vercel ISR. Keep the
 // route dynamic, while getPublicSettings remains independently cached.
@@ -50,7 +52,7 @@ export const viewport = {
   viewportFit: 'cover',
 };
 
-export const metadata: Metadata = {
+const fallbackMetadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: `${SITE_NAME} | Parapharmacie et K-Beauty au Maroc`,
@@ -78,7 +80,7 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     title: `${SITE_NAME} | Parapharmacie & K-Beauty`,
     description:
-      'Leader de la K-Beauty et de la Dermo-Cosmétique au Maroc. Diagnostic IA, livraison gratuite, paiement sécurisé.',
+      'Parapharmacie en ligne au Maroc : dermo-cosmétique, K-Beauty, diagnostic personnalisé et livraison confirmée avant commande.',
     images: [
       {
         url: '/og-image.jpg',
@@ -93,7 +95,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: `${SITE_NAME} | Parapharmacie & K-Beauty`,
     description:
-      'Leader de la K-Beauty et de la Dermo-Cosmétique au Maroc. Diagnostic IA, livraison gratuite, paiement sécurisé.',
+      'Parapharmacie en ligne au Maroc : dermo-cosmétique, K-Beauty, diagnostic personnalisé et livraison confirmée avant commande.',
     images: ['/og-image.jpg'],
     creator: '@paraofficinal',
     site: '@paraofficinal',
@@ -103,6 +105,25 @@ export const metadata: Metadata = {
     apple: '/favicon.ico',
   },
 };
+
+/** Global CMS SEO overrides are optional; hardcoded metadata remains the safe fallback. */
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const settings = await getMergedPublicSettings();
+    const title = settings.seoDefaultTitleFr || (fallbackMetadata.title as { default: string }).default;
+    const description = settings.seoDefaultDescFr || fallbackMetadata.description;
+    const image = settings.ogDefaultImage || '/og-image.jpg';
+    return {
+      ...fallbackMetadata,
+      title: { default: title, template: `%s | ${SITE_NAME}` },
+      description,
+      openGraph: { ...fallbackMetadata.openGraph, title, description, images: [{ url: image, width: 1200, height: 630, alt: title }] },
+      twitter: { ...fallbackMetadata.twitter, title, description, images: [image] },
+    };
+  } catch {
+    return fallbackMetadata;
+  }
+}
 
 export default async function RootLayout({
   children,
@@ -125,6 +146,7 @@ export default async function RootLayout({
         {serverThemeVariables ? <style id="server-theme-variables">{serverThemeVariables}</style> : null}
       </head>
       <body className="antialiased selection:bg-primary/30 selection:text-primary-dark" suppressHydrationWarning>
+        <PublicWebVitals />
         <ThemeScript />
         <AppProviders initialSettings={initialSettings}>
           <CodeSnippetInjector />

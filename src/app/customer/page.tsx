@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useTranslation } from '@/context/LanguageContext';
 import { useLoyalty, LoyaltyTier } from '@/context/LoyaltyContext';
 import { useSettings } from '@/context/SettingsContext';
@@ -22,7 +22,9 @@ import { useCart } from '@/context/CartContext';
 import { CustomerAuthPortal } from '@/components/CustomerAuthPortal';
 import { ShopShell } from '@/components/ShopShell';
 import { PoButton } from '@/components/ui/PoButton';
+import { CustomerMetricCard, CustomerPanelCard, CustomerSectionHeader, CustomerStatusBadge } from '@/components/customer/CustomerPanelUi';
 import { getCustomerAccessToken, getLocallyTrackedOrderClaims } from '@/lib/customer-session';
+import { customerStatusLabel, skinTypeLabel } from '@/lib/customer-presenters';
 
 interface OrderItem {
   id: number;
@@ -139,6 +141,8 @@ export default function CustomerDashboard() {
     isLoadingAuth,
     loginClient,
     signUpClient,
+    requestPasswordReset,
+    updateClientPassword,
     updateClientProfile,
     logoutClient,
   } = useLoyalty();
@@ -151,18 +155,33 @@ export default function CustomerDashboard() {
   type TabType = 'overview' | 'commandes' | 'diagnostic' | 'cagnotte' | 'favoris' | 'profil';
   const [activeTab, setActiveTab] = useState<TabType>('overview');
 
+  const selectCustomerTab = useCallback((tab: TabType, mode: 'push' | 'replace' = 'push') => {
+    setActiveTab(tab);
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    if (tab === 'overview') url.searchParams.delete('tab');
+    else url.searchParams.set('tab', tab);
+    window.history[mode === 'replace' ? 'replaceState' : 'pushState']({}, '', `${url.pathname}${url.search}${url.hash}`);
+  }, []);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const tabParam = params.get('tab')?.toLowerCase();
-      if (tabParam === 'favoris') setActiveTab('favoris');
-      else if (tabParam === 'commandes' || tabParam === 'suivi') setActiveTab('commandes');
-      else if (tabParam === 'diagnostic') setActiveTab('diagnostic');
-      else if (tabParam === 'cagnotte' || tabParam === 'club') setActiveTab('cagnotte');
-      else if (tabParam === 'profil') setActiveTab('profil');
-      else if (tabParam === 'overview' || tabParam === 'vue') setActiveTab('overview');
+      if (tabParam === 'favoris') selectCustomerTab('favoris', 'replace');
+      else if (tabParam === 'commandes' || tabParam === 'suivi') selectCustomerTab('commandes', 'replace');
+      else if (tabParam === 'diagnostic') selectCustomerTab('diagnostic', 'replace');
+      else if (tabParam === 'cagnotte' || tabParam === 'club') selectCustomerTab('cagnotte', 'replace');
+      else if (tabParam === 'profil') selectCustomerTab('profil', 'replace');
+      else if (tabParam === 'overview' || tabParam === 'vue') selectCustomerTab('overview', 'replace');
     }
-  }, []);
+    const handlePopState = () => {
+      const tab = new URLSearchParams(window.location.search).get('tab') as TabType | null;
+      setActiveTab(tab && ['commandes', 'diagnostic', 'cagnotte', 'favoris', 'profil'].includes(tab) ? tab : 'overview');
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [selectCustomerTab]);
 
   const tabsRef = useRef<HTMLDivElement>(null);
 
@@ -177,6 +196,45 @@ export default function CustomerDashboard() {
   const [authNotice, setAuthNotice] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(false);
   const authSubmissionInFlight = useRef(false);
+  const [recoveryMode, setRecoveryMode] = useState(false);
+  const [recoveryPassword, setRecoveryPassword] = useState('');
+  const [recoveryConfirmation, setRecoveryConfirmation] = useState('');
+  const [recoveryError, setRecoveryError] = useState<string | null>(null);
+  const [recoverySuccess, setRecoverySuccess] = useState(false);
+  const [recoveryLoading, setRecoveryLoading] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setRecoveryMode(new URLSearchParams(window.location.search).get('recovery') === '1');
+  }, []);
+
+  const closeRecovery = () => {
+    setRecoveryMode(false);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('recovery');
+      window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+    }
+  };
+
+  const handleRecoverySubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setRecoveryError(null);
+    if (recoveryPassword !== recoveryConfirmation) {
+      setRecoveryError(isRTL ? 'كلمتا المرور غير متطابقتين.' : 'Les mots de passe ne correspondent pas.');
+      return;
+    }
+    setRecoveryLoading(true);
+    const result = await updateClientPassword(recoveryPassword);
+    setRecoveryLoading(false);
+    if (!result.success) {
+      setRecoveryError(result.error || (isRTL ? 'تعذر تحديث كلمة المرور.' : 'Impossible de modifier le mot de passe.'));
+      return;
+    }
+    setRecoverySuccess(true);
+    setRecoveryPassword('');
+    setRecoveryConfirmation('');
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -604,7 +662,7 @@ export default function CustomerDashboard() {
   }, [settings.coupons]);
 
   return (
-    <ShopShell hideHeader={!clientUser}>
+    <ShopShell hideHeader hideFooter hideMobileNav>
       <div
         data-app-area={clientUser ? 'client' : undefined}
         className={`min-h-screen relative overflow-hidden transition-colors ${
@@ -620,6 +678,96 @@ export default function CustomerDashboard() {
         <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.02] bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:24px_24px]" />
         <div className="pointer-events-none absolute -top-40 left-1/3 w-[700px] h-[700px] rounded-full bg-emerald-500/10 blur-[140px]" />
         <div className="pointer-events-none absolute -bottom-40 right-1/3 w-[700px] h-[700px] rounded-full bg-cyan-500/10 blur-[140px]" />
+
+        {recoveryMode && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm" role="presentation">
+            <section
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="password-recovery-title"
+              className={`w-full max-w-md rounded-3xl border p-6 shadow-2xl sm:p-8 ${
+                themeMode === 'dark' ? 'border-slate-700 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-950'
+              }`}
+            >
+              <div className="mb-6 flex items-start justify-between gap-4">
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/12 text-emerald-500">
+                    <KeyRound className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <div>
+                    <h2 id="password-recovery-title" className="text-lg font-bold">
+                      {isRTL ? 'اختيار كلمة مرور جديدة' : 'Choisir un nouveau mot de passe'}
+                    </h2>
+                    <p className={`mt-1 text-sm ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+                      {isRTL ? 'استخدمي 8 أحرف على الأقل لحماية حسابك.' : 'Utilisez au moins 8 caractères pour sécuriser votre compte.'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeRecovery}
+                  aria-label={isRTL ? 'إغلاق' : 'Fermer'}
+                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition-colors ${
+                    themeMode === 'dark' ? 'border-slate-700 hover:bg-slate-800' : 'border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  <X className="h-5 w-5" aria-hidden="true" />
+                </button>
+              </div>
+
+              {recoverySuccess ? (
+                <div className="space-y-5">
+                  <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-4 text-sm font-semibold text-emerald-600" role="status">
+                    {isRTL ? 'تم تحديث كلمة المرور بنجاح.' : 'Votre mot de passe a été mis à jour.'}
+                  </div>
+                  <PoButton onClick={closeRecovery} variant="primary" size="lg" className="w-full">
+                    {isRTL ? 'متابعة إلى حسابي' : 'Continuer vers mon compte'}
+                  </PoButton>
+                </div>
+              ) : (
+                <form className="space-y-4" onSubmit={handleRecoverySubmit}>
+                  <label className="block space-y-2 text-sm font-semibold">
+                    <span>{isRTL ? 'كلمة المرور الجديدة' : 'Nouveau mot de passe'}</span>
+                    <input
+                      autoFocus
+                      type="password"
+                      value={recoveryPassword}
+                      onChange={(event) => setRecoveryPassword(event.target.value)}
+                      minLength={8}
+                      autoComplete="new-password"
+                      required
+                      className={`h-12 w-full rounded-xl border px-4 text-base outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 ${
+                        themeMode === 'dark' ? 'border-slate-700 bg-slate-950 text-white' : 'border-slate-300 bg-white text-slate-950'
+                      }`}
+                    />
+                  </label>
+                  <label className="block space-y-2 text-sm font-semibold">
+                    <span>{isRTL ? 'تأكيد كلمة المرور' : 'Confirmer le mot de passe'}</span>
+                    <input
+                      type="password"
+                      value={recoveryConfirmation}
+                      onChange={(event) => setRecoveryConfirmation(event.target.value)}
+                      minLength={8}
+                      autoComplete="new-password"
+                      required
+                      className={`h-12 w-full rounded-xl border px-4 text-base outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 ${
+                        themeMode === 'dark' ? 'border-slate-700 bg-slate-950 text-white' : 'border-slate-300 bg-white text-slate-950'
+                      }`}
+                    />
+                  </label>
+                  {recoveryError && (
+                    <div className="rounded-xl border border-rose-500/25 bg-rose-500/10 p-3 text-sm font-semibold text-rose-500" role="alert">
+                      {recoveryError}
+                    </div>
+                  )}
+                  <PoButton type="submit" variant="primary" size="lg" loading={recoveryLoading} className="w-full">
+                    {isRTL ? 'حفظ كلمة المرور' : 'Enregistrer le mot de passe'}
+                  </PoButton>
+                </form>
+              )}
+            </section>
+          </div>
+        )}
 
         <div className={`w-full relative z-10 ${!clientUser ? 'max-w-6xl' : 'max-w-6xl mx-auto space-y-8'}`}>
           
@@ -641,6 +789,7 @@ export default function CustomerDashboard() {
               authLoading={authLoading}
               handleLogin={handleLogin}
               handleSignup={handleSignup}
+              handlePasswordReset={requestPasswordReset}
               themeMode={themeMode}
               onToggleTheme={toggleThemeMode}
             />
@@ -770,7 +919,7 @@ export default function CustomerDashboard() {
                         if (nextIndex === null) return;
 
                         event.preventDefault();
-                        setActiveTab(allTabs[nextIndex].id as TabType);
+                        selectCustomerTab(allTabs[nextIndex].id as TabType);
                         const buttons = tabsRef.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]');
                         buttons?.[nextIndex]?.focus();
                       };
@@ -785,7 +934,7 @@ export default function CustomerDashboard() {
                           aria-selected={isActive}
                           tabIndex={isActive ? 0 : -1}
                           onKeyDown={handleKeyDown}
-                          onClick={() => setActiveTab(tab.id as TabType)}
+                          onClick={() => selectCustomerTab(tab.id as TabType)}
                           className={`group relative min-h-14 rounded-[1rem] px-3.5 py-3 text-[0.78rem] font-semibold tracking-[-0.01em] outline-none transition-[background-color,color,box-shadow,transform] duration-200 ease-out motion-reduce:transition-none flex items-center justify-center gap-2.5 cursor-pointer border-0 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 active:translate-y-px ${
                             isActive
                               ? themeMode === 'dark'
@@ -826,162 +975,69 @@ export default function CustomerDashboard() {
               {activeTab === 'overview' && (
                 <div id="customer-panel-overview" role="tabpanel" aria-labelledby="customer-tab-overview" className="space-y-8 animate-in fade-in duration-300">
                   
-                  {/* Executive Metric Cards Bento */}
+                  <CustomerSectionHeader
+                    eyebrow={isRTL ? 'نظرة عامة' : 'Vue d’ensemble'}
+                    title={isRTL ? `مرحباً ${clientUser.name?.trim() || ''}` : `Bonjour ${clientUser.name?.trim() || ''}`}
+                    description={isRTL ? 'تابعي طلباتك ومكافآتك وروتين العناية من مكان واحد.' : 'Retrouvez vos commandes, vos avantages et votre routine depuis un espace unique.'}
+                    theme={themeMode}
+                  />
+
+                  {/* Executive Metric Cards */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    
-                    {/* Bento 1: Wallet Balance */}
-                    <div className={`p-6 rounded-3xl border shadow-lg relative overflow-hidden flex flex-col justify-between space-y-4 ${
-                      themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
-                    }`}>
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-emerald-500">
-                          SOLDE CAGNOTTE
-                        </span>
-                        <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center justify-center">
-                          <Coins className="w-5 h-5" />
-                        </div>
-                      </div>
-
-                      <div>
-                        <span className={`text-3xl font-black font-heading ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                          {points} <span className="text-xs font-mono font-bold text-emerald-500">PTS</span>
-                        </span>
-                        <p className={`text-xs mt-1 ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                          Valeur estimée: <strong className="text-emerald-500 font-bold">{walletMadValue} MAD</strong>
-                        </p>
-                      </div>
-
-                      <PoButton
-                        onClick={() => setActiveTab('cagnotte')}
-                        variant="accentSoft"
-                        size="md"
-                        fullWidth
-                        rightIcon={<ChevronRight className={isRTL ? 'rotate-180' : ''} />}
-                      >
-                        Convertir mes points
-                      </PoButton>
-                    </div>
-
-                    {/* Bento 2: Active Orders */}
-                    <div className={`p-6 rounded-3xl border shadow-lg relative overflow-hidden flex flex-col justify-between space-y-4 ${
-                      themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
-                    }`}>
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-cyan-500">
-                          COMMANDES EN COURS
-                        </span>
-                        <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-500 flex items-center justify-center">
-                          <Truck className="w-5 h-5" />
-                        </div>
-                      </div>
-
-                      <div>
-                        <span className={`text-3xl font-black font-heading ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                          {activeOrderCount} <span className="text-xs font-mono font-bold text-cyan-500">Colis</span>
-                        </span>
-                        <p className={`text-xs mt-1 ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                          {latestOrder ? <>Dernière commande: <strong className="text-cyan-500 font-bold">{latestOrder.order_id}</strong></> : 'Aucune commande en cours'}
-                        </p>
-                      </div>
-
-                      <PoButton
-                        onClick={() => setActiveTab('commandes')}
-                        variant="secondary"
-                        size="md"
-                        fullWidth
-                        rightIcon={<ChevronRight className={isRTL ? 'rotate-180' : ''} />}
-                      >
-                        Suivre la livraison
-                      </PoButton>
-                    </div>
-
-                    {/* Bento 3: AI Skin Score */}
-                    <div className={`p-6 rounded-3xl border shadow-lg relative overflow-hidden flex flex-col justify-between space-y-4 ${
-                      themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
-                    }`}>
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-500">
-                          DIAGNOSTIC CUTANÉ
-                        </span>
-                        <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center">
-                          <Sparkles className="w-5 h-5" />
-                        </div>
-                      </div>
-
-                      <div>
-                        <span className={`text-3xl font-black font-heading ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                          {diagnostic ? 'Disponible' : 'À faire'}
-                        </span>
-                        <p className={`text-xs mt-1 ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                          {diagnostic ? <>Profil: <strong className="text-amber-500 font-bold">{diagnostic.skinType}</strong></> : 'Obtenez une routine adaptée à votre peau.'}
-                        </p>
-                      </div>
-
-                      <PoButton
-                        onClick={() => setActiveTab('diagnostic')}
-                        variant="neutral"
-                        size="md"
-                        fullWidth
-                        rightIcon={<ChevronRight className={isRTL ? 'rotate-180' : ''} />}
-                      >
-                        {diagnostic ? 'Voir ma routine' : 'Faire le diagnostic'}
-                      </PoButton>
-                    </div>
-
-                    {/* Bento 4: Available Coupons */}
-                    <div className={`p-6 rounded-3xl border shadow-lg relative overflow-hidden flex flex-col justify-between space-y-4 ${
-                      themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
-                    }`}>
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-purple-500">
-                          BONS DISPONIBLES
-                        </span>
-                        <div className="w-10 h-10 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-500 flex items-center justify-center">
-                          <Ticket className="w-5 h-5" />
-                        </div>
-                      </div>
-
-                      <div>
-                        <span className={`text-3xl font-black font-heading ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                          {activeCoupons.length} <span className="text-xs font-mono font-bold text-purple-500">{activeCoupons.length > 1 ? 'codes' : 'code'}</span>
-                        </span>
-                        <p className={`text-xs mt-1 ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                          {activeCoupons[0]
-                            ? <>Code actif: <strong className="text-purple-500 font-mono font-bold">{activeCoupons[0].code}</strong></>
-                            : 'Aucune offre active pour le moment.'}
-                        </p>
-                      </div>
-
-                      <PoButton
-                        onClick={() => activeCoupons[0] ? copyCouponToClipboard(activeCoupons[0].code) : setActiveTab('cagnotte')}
-                        variant="neutral"
-                        size="md"
-                        fullWidth
-                        leftIcon={activeCoupons[0] ? <Copy /> : <Ticket />}
-                      >
-                        {activeCoupons[0] ? `Copier le code ${activeCoupons[0].code}` : 'Voir les offres'}
-                      </PoButton>
-                    </div>
-
+                    <CustomerMetricCard
+                      label={isRTL ? 'رصيد المكافآت' : 'Solde cagnotte'}
+                      value={points}
+                      unit={isRTL ? 'نقطة' : 'pts'}
+                      description={isRTL ? <>القيمة التقديرية: <strong className="text-emerald-400">{walletMadValue} MAD</strong></> : <>Valeur estimée : <strong className="text-emerald-400">{walletMadValue} MAD</strong></>}
+                      icon={Coins}
+                      tone="emerald"
+                      theme={themeMode}
+                      action={<PoButton onClick={() => selectCustomerTab('cagnotte')} variant="accentSoft" size="md" fullWidth rightIcon={<ChevronRight className={isRTL ? 'rotate-180' : ''} />}>{isRTL ? 'عرض المكافآت' : 'Voir mes avantages'}</PoButton>}
+                    />
+                    <CustomerMetricCard
+                      label={isRTL ? 'الطلبات الجارية' : 'Commandes en cours'}
+                      value={activeOrderCount}
+                      unit={isRTL ? 'طلب' : activeOrderCount > 1 ? 'colis' : 'colis'}
+                      description={latestOrder ? (isRTL ? <>آخر طلب: <strong className="text-sky-400">{latestOrder.order_id}</strong></> : <>Dernière commande : <strong className="text-sky-400">{latestOrder.order_id}</strong></>) : (isRTL ? 'لا توجد طلبات جارية' : 'Aucune commande en cours')}
+                      icon={Truck}
+                      tone="blue"
+                      theme={themeMode}
+                      action={<PoButton onClick={() => selectCustomerTab('commandes')} variant="secondary" size="md" fullWidth rightIcon={<ChevronRight className={isRTL ? 'rotate-180' : ''} />}>{isRTL ? 'تتبع طلباتي' : 'Suivre mes commandes'}</PoButton>}
+                    />
+                    <CustomerMetricCard
+                      label={isRTL ? 'تشخيص البشرة' : 'Diagnostic cutané'}
+                      value={diagnostic ? (isRTL ? 'متاح' : 'Disponible') : (isRTL ? 'غير مكتمل' : 'À faire')}
+                      description={diagnostic ? (isRTL ? <>الملف: <strong className="text-amber-400">{skinTypeLabel(diagnostic.skinType, language)}</strong></> : <>Profil : <strong className="text-amber-400">{skinTypeLabel(diagnostic.skinType, language)}</strong></>) : (isRTL ? 'احصلي على روتين يناسب بشرتك.' : 'Obtenez une routine adaptée à votre peau.')}
+                      icon={Sparkles}
+                      tone="amber"
+                      theme={themeMode}
+                      action={<PoButton onClick={() => selectCustomerTab('diagnostic')} variant="neutral" size="md" fullWidth rightIcon={<ChevronRight className={isRTL ? 'rotate-180' : ''} />}>{diagnostic ? (isRTL ? 'عرض روتيني' : 'Voir ma routine') : (isRTL ? 'بدء التشخيص' : 'Faire le diagnostic')}</PoButton>}
+                    />
+                    <CustomerMetricCard
+                      label={isRTL ? 'العروض المتاحة' : 'Offres disponibles'}
+                      value={activeCoupons.length}
+                      unit={isRTL ? 'عرض' : activeCoupons.length > 1 ? 'codes' : 'code'}
+                      description={activeCoupons[0] ? (isRTL ? <>الرمز: <strong className="text-violet-400">{activeCoupons[0].code}</strong></> : <>Code actif : <strong className="text-violet-400">{activeCoupons[0].code}</strong></>) : (isRTL ? 'لا توجد عروض نشطة حالياً.' : 'Aucune offre active pour le moment.')}
+                      icon={Ticket}
+                      tone="violet"
+                      theme={themeMode}
+                      action={<PoButton onClick={() => activeCoupons[0] ? copyCouponToClipboard(activeCoupons[0].code) : selectCustomerTab('cagnotte')} variant="neutral" size="md" fullWidth leftIcon={activeCoupons[0] ? <Copy /> : <Ticket />}>{activeCoupons[0] ? (isRTL ? 'نسخ الرمز' : 'Copier le code') : (isRTL ? 'عرض العروض' : 'Voir les offres')}</PoButton>}
+                    />
                   </div>
 
 
                   {/* Recent Order Live Card */}
-                  {latestOrder ? <div className={`p-6 sm:p-8 rounded-3xl border shadow-xl relative overflow-hidden ${
-                    themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
-                  }`}>
+                  {latestOrder ? <CustomerPanelCard theme={themeMode} className="relative overflow-hidden p-5 sm:p-7">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
                       <div className="space-y-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="text-xs font-mono font-bold text-emerald-500 uppercase tracking-widest">
-                            DERNIÈRE EXPÉDITION
+                            {isRTL ? 'آخر شحنة' : 'DERNIÈRE EXPÉDITION'}
                           </span>
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-                            {latestOrder.status}
-                          </span>
+                          <CustomerStatusBadge label={customerStatusLabel(latestOrder.status, language)} status={latestOrder.status} />
                         </div>
                         <h3 className={`text-xl font-black font-heading ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                          Commande N° {latestOrder.order_id}
+                          {isRTL ? 'الطلب رقم' : 'Commande N°'} {latestOrder.order_id}
                         </h3>
                       </div>
 
@@ -993,7 +1049,7 @@ export default function CustomerDashboard() {
                         leftIcon={<RefreshCw />}
                         rightIcon={<ArrowRight />}
                       >
-                        Re-commander en 1 clic
+                        {isRTL ? 'إعادة الطلب' : 'Re-commander en 1 clic'}
                       </PoButton>
                       </div>
                     </div>
@@ -1001,7 +1057,7 @@ export default function CustomerDashboard() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-6 items-center">
                       <div className="space-y-3 lg:col-span-2">
                         <p className={`text-xs font-semibold ${themeMode === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
-                          Articles inclus dans cette expédition:
+                          {isRTL ? 'المنتجات الموجودة في هذه الشحنة:' : 'Articles inclus dans cette expédition :'}
                         </p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           {latestOrder.items.map((item, idx) => (
@@ -1011,7 +1067,7 @@ export default function CustomerDashboard() {
                               <div className="w-12 h-12 rounded-xl bg-white p-1 border border-slate-200 shrink-0">
                                 <img src={resolveCustomerProductImage(item)} onError={applyCustomerImageFallback} alt={item.title} className="w-full h-full object-contain" />
                               </div>
-                              <div className="min-w-0 flex-1 text-left">
+                              <div className="min-w-0 flex-1 text-start">
                                 <h4 className={`text-xs font-bold truncate ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
                                   {item.title}
                                 </h4>
@@ -1024,24 +1080,24 @@ export default function CustomerDashboard() {
                         </div>
                       </div>
 
-                      <div className={`p-5 rounded-2xl border space-y-3 text-left ${
+                      <div className={`p-5 rounded-2xl border space-y-3 text-start ${
                         themeMode === 'dark' ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-slate-200/80'
                       }`}>
                         <div className="space-y-1">
-                          <span className="text-[10px] font-mono font-bold text-slate-400 uppercase">Livraison Estimée</span>
-                          <p className="text-sm font-bold text-cyan-400">{latestOrder.estimated_delivery || 'Délai communiqué par le transporteur'}</p>
+                          <span className="text-[10px] font-mono font-bold text-slate-400 uppercase">{isRTL ? 'التسليم المتوقع' : 'Livraison estimée'}</span>
+                          <p className="text-sm font-bold text-cyan-400">{latestOrder.estimated_delivery || (isRTL ? 'يحدده الناقل' : 'Délai communiqué par le transporteur')}</p>
                         </div>
                         <div className="space-y-1">
-                          <span className="text-[10px] font-mono font-bold text-slate-400 uppercase">Transporteur</span>
-                          <p className={`text-xs font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>{latestOrder.carrier || 'Transporteur à confirmer'}{latestOrder.tracking_number ? ` (N° ${latestOrder.tracking_number})` : ''}</p>
+                          <span className="text-[10px] font-mono font-bold text-slate-400 uppercase">{isRTL ? 'شركة التوصيل' : 'Transporteur'}</span>
+                          <p className={`text-xs font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>{latestOrder.carrier || (isRTL ? 'سيتم التأكيد' : 'Transporteur à confirmer')}{latestOrder.tracking_number ? ` (${latestOrder.tracking_number})` : ''}</p>
                         </div>
                       </div>
                     </div>
-                  </div> : <section className={`p-8 sm:p-10 rounded-3xl border text-center ${themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'}`}>
+                  </CustomerPanelCard> : <CustomerPanelCard theme={themeMode} className="p-8 text-center sm:p-10">
                     <Box className="w-8 h-8 mx-auto mb-4 text-emerald-500" aria-hidden="true" />
-                    <h3 className={`text-lg font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>Votre historique de commandes apparaîtra ici</h3>
-                    <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">Vos commandes liées à ce compte sont affichées de façon privée et sécurisée.</p>
-                  </section>}
+                    <h3 className={`text-lg font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>{isRTL ? 'سيظهر سجل طلباتك هنا' : 'Votre historique de commandes apparaîtra ici'}</h3>
+                    <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">{isRTL ? 'تظهر الطلبات المرتبطة بهذا الحساب بشكل خاص وآمن.' : 'Vos commandes liées à ce compte sont affichées de façon privée et sécurisée.'}</p>
+                  </CustomerPanelCard>}
 
                 </div>
               )}
@@ -1052,7 +1108,7 @@ export default function CustomerDashboard() {
                 <div id="customer-panel-commandes" role="tabpanel" aria-labelledby="customer-tab-commandes" className="space-y-6 animate-in fade-in duration-300">
                   
                   {/* Filter & Search Bar */}
-                  <div className={`p-4 rounded-3xl border shadow-md flex flex-col sm:flex-row items-center justify-between gap-4 ${
+                  <div className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-4 ${
                     themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
                   }`}>
                     <div className="relative flex-1 w-full">
@@ -1139,13 +1195,7 @@ export default function CustomerDashboard() {
                               <h3 className={`text-xl font-black font-mono tracking-tight ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
                                 {order.order_id}
                               </h3>
-                              <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${
-                                order.status.toLowerCase().includes('deliver')
-                                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                                  : 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
-                              }`}>
-                                {order.status}
-                              </span>
+                              <CustomerStatusBadge label={customerStatusLabel(order.status, language)} status={order.status} />
                             </div>
                             <p className="text-xs text-slate-400">
                               Commandé le {new Date(order.date || order.created_at || Date.now()).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
@@ -1211,7 +1261,7 @@ export default function CustomerDashboard() {
                           themeMode === 'dark' ? 'bg-slate-950/50 border-slate-800/80' : 'bg-slate-100/70 border-slate-200/80'
                         }`}>
                           <div className="flex items-center gap-4">
-                            <span>Transporteur: <strong>{order.carrier || 'Yalidine Express'}</strong></span>
+                            <span>Transporteur: <strong>{order.carrier || (language === 'AR' ? 'سيتم تأكيده عند الشحن' : 'Confirmé lors de l’expédition')}</strong></span>
                             <span>Destination: <strong>{order.city}</strong></span>
                           </div>
 
@@ -1523,24 +1573,15 @@ export default function CustomerDashboard() {
               {/* ──────────────── TAB 5: MES FAVORIS ──────────────── */}
               {activeTab === 'favoris' && (
                 <div id="customer-panel-favoris" role="tabpanel" aria-labelledby="customer-tab-favoris" className="space-y-6 animate-in fade-in duration-300">
-                  <div className={`p-6 rounded-3xl border shadow-xl flex items-center justify-between gap-4 ${
-                    themeMode === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200/90'
-                  }`}>
-                    <div>
-                      <h3 className={`text-xl font-black font-heading uppercase tracking-wide flex items-center gap-2 ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                        <Heart className="w-5 h-5 text-rose-500 fill-rose-500" />
-                        <span>{language === 'FR' ? 'Mes Produits Coups de Cœur' : 'منتجاتي المفضلة'}</span>
-                      </h3>
-                      <p className={`text-xs font-medium mt-1 ${themeMode === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                        {wishlist.length} soins sauvegardés dans votre espace personnel.
-                      </p>
-                    </div>
-                  </div>
+                  <CustomerSectionHeader
+                    eyebrow={language === 'FR' ? 'Sélection personnelle' : 'اختياراتي'}
+                    title={language === 'FR' ? 'Mes favoris' : 'منتجاتي المفضلة'}
+                    description={language === 'FR' ? `${wishlist.length} soin${wishlist.length > 1 ? 's' : ''} sauvegardé${wishlist.length > 1 ? 's' : ''} dans votre espace.` : `${wishlist.length} منتجات محفوظة في حسابك.`}
+                    theme={themeMode}
+                  />
 
                   {wishlist.length === 0 ? (
-                    <div className={`text-center py-16 border rounded-3xl space-y-4 shadow-sm relative overflow-hidden transition-colors ${
-                      themeMode === 'dark' ? 'bg-slate-900/60 border-slate-800/80' : 'bg-white border-slate-200/80'
-                    }`}>
+                    <CustomerPanelCard theme={themeMode} className="relative space-y-4 overflow-hidden py-16 text-center">
                       <div className="w-14 h-14 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto text-rose-400">
                         <Heart className="w-6 h-6 animate-pulse" />
                       </div>
@@ -1562,13 +1603,11 @@ export default function CustomerDashboard() {
                       >
                         {language === 'FR' ? 'Découvrir nos soins' : 'استكشاف المنتجات'}
                       </PoButton>
-                    </div>
+                    </CustomerPanelCard>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                       {wishlist.map((product) => (
-                        <div key={product.id} className={`border rounded-2xl p-4 flex flex-col justify-between space-y-4 relative group transition shadow-md ${
-                          themeMode === 'dark' ? 'bg-slate-900 border-slate-800 hover:border-slate-700 text-white' : 'bg-white border-slate-200/90 hover:border-slate-300 text-slate-900'
-                        }`}>
+                        <CustomerPanelCard key={product.id} theme={themeMode} as="article" className="group relative flex flex-col justify-between space-y-4 p-4 transition-colors hover:border-emerald-500/35">
                           <PoButton
                             onClick={() => removeFromWishlist(product.id)}
                             className="absolute top-3 right-3 z-10"
@@ -1613,7 +1652,7 @@ export default function CustomerDashboard() {
                               {language === 'FR' ? 'Ajouter' : 'إضافة'}
                             </PoButton>
                           </div>
-                        </div>
+                        </CustomerPanelCard>
                       ))}
                     </div>
                   )}

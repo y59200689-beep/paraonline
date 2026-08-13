@@ -25,7 +25,7 @@ import { MobileHeader } from './Header/MobileHeader';
 
 const LANGUAGES = [
   { id: 'FR', label: 'Français', flag: '🇫🇷' },
-  { id: 'AR', label: 'عربي',     flag: '🇲🇦' },
+  { id: 'AR', label: 'العربية',  flag: '🇲🇦' },
 ];
 
 export const Header: React.FC = () => {
@@ -39,6 +39,7 @@ export const Header: React.FC = () => {
   const {
     setWishlistOpen,
     setDiagnosticOpen,
+    setScratchCardOpen,
     setSelectedProduct,
     setActiveGlossaryKey,
     cartJiggleTrigger,
@@ -91,6 +92,24 @@ export const Header: React.FC = () => {
   const currentLang = LANGUAGES.find((l) => l.id === language) || LANGUAGES[0];
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
+  const openCart = () => {
+    setWishlistOpen(false);
+    setDiagnosticOpen(false);
+    setScratchCardOpen(false);
+    setSelectedProduct(null);
+    setIsWalletOpen(false);
+    setIsCartOpen(true);
+  };
+
+  const openWallet = () => {
+    setWishlistOpen(false);
+    setDiagnosticOpen(false);
+    setScratchCardOpen(false);
+    setSelectedProduct(null);
+    setIsCartOpen(false);
+    setIsWalletOpen(true);
+  };
+
   // ── Effects ────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (cartJiggleTrigger > 0) setIsJiggling(true);
@@ -119,20 +138,16 @@ export const Header: React.FC = () => {
 
   // Debounced search
   useEffect(() => {
+    if (!showSearch) {
+      setSearchResults([]);
+      setMatchedIngredients([]);
+      return;
+    }
+
     if (!searchQuery.trim()) {
       setMatchedIngredients([]);
-      let active = true;
-      const timer = setTimeout(async () => {
-        try {
-          const params = new URLSearchParams({ search: '', limit: '24', category: selectedCategoryId });
-          const res = await fetch(`/api/products?${params}`);
-          const data = await res.json();
-          if (active && data.success) setSearchResults(data.products || []);
-        } catch (err) {
-          console.error('Default products fetch failed:', err);
-        }
-      }, 50);
-      return () => { active = false; clearTimeout(timer); };
+      setSearchResults([]);
+      return;
     }
     const q = searchQuery.toLowerCase();
 
@@ -161,7 +176,7 @@ export const Header: React.FC = () => {
     }, 250);
 
     return () => { active = false; clearTimeout(timer); };
-  }, [searchQuery, selectedCategoryId]);
+  }, [searchQuery, selectedCategoryId, showSearch]);
 
   // Click-outside handler
   useEffect(() => {
@@ -263,17 +278,18 @@ export const Header: React.FC = () => {
           className="max-w-[1400px] mx-auto px-6 md:px-[30px]"
         >
           {/* Desktop grid */}
-          <div className="hidden md:grid md:grid-cols-[auto_1fr_auto] items-center gap-10">
+          <div className="hidden lg:grid lg:grid-cols-[auto_1fr_auto] items-center gap-8 xl:gap-10">
             {/* Logo */}
             <div className="flex items-center shrink-0">
               <Link href="/" className="flex items-center group active:scale-98 transition-transform duration-300">
                 <Image
                   src={getOptimizedImageUrl("/images/logo.png")}
                   alt="Para Officinal S.A"
-                  width={180}
-                  height={48}
+                  width={933}
+                  height={257}
                   loading="eager"
                   className="object-contain"
+                  style={{ width: '180px', height: 'auto' }}
                 />
               </Link>
             </div>
@@ -304,8 +320,8 @@ export const Header: React.FC = () => {
               accountName={clientUser?.name?.trim() || undefined}
               ratesLoading={ratesLoading}
               convertPrice={convertPrice}
-              onCartOpen={() => setIsCartOpen(true)}
-              onWalletOpen={() => router.push('/customer')}
+              onCartOpen={openCart}
+              onWalletOpen={openWallet}
               onWishlistOpen={() => {
                 // The portal tab is initialized from the URL. A document
                 // navigation keeps this reliable even when the header is
@@ -320,12 +336,22 @@ export const Header: React.FC = () => {
             cartCount={cartCount}
             isBumping={isBumping}
             searchRef={mobileSearchRef}
-            onCartOpen={() => setIsCartOpen(true)}
+            onCartOpen={openCart}
             onToggleLanguage={toggleLanguage}
             t={t}
             pathname={pathname}
             {...sharedSearchProps}
           />
+
+          {settings.headerNav?.length ? (
+            <nav aria-label={language === 'AR' ? 'التنقل الرئيسي' : 'Navigation principale'} className="hidden lg:flex items-center gap-2 mt-4 pt-3 border-t border-slate-200/60">
+              {settings.headerNav.map((item, index) => (
+                <Link key={item.id ?? `${item.href}-${index}`} href={item.href} className="px-3 py-1.5 rounded-full text-xs font-semibold text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 transition-colors">
+                  {language === 'AR' ? (item.label_ar || item.label_fr) : item.label_fr}
+                </Link>
+              ))}
+            </nav>
+          ) : null}
         </div>
       </header>
 

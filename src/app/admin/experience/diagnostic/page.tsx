@@ -3,10 +3,13 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAdmin } from '@/context/AdminContext';
 import { canManageDiagnostic, canEditContent } from '@/lib/permissions';
+import { AsyncState } from '@/components/admin/ui/AsyncState';
+import { requestJson } from '@/lib/request-json';
 import Link from 'next/link';
 import {
   Brain, Search, ChevronDown, ChevronUp, Plus, Trash2, Eye, EyeOff,
   GripVertical, Save, Loader2, AlertCircle, Check, X, Edit2, PackageCheck,
+  History, Send,
 } from 'lucide-react';
 import { EmptyState } from '@/components/admin/ui/EmptyState';
 import { BrandRestrictionSection } from '@/components/admin/BrandRestrictionSection';
@@ -466,20 +469,46 @@ export default function DiagnosticPage() {
 
   const [questions, setQuestions] = useState<DiagnosticQuestion[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [query, setQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [reordering, setReordering] = useState(false);
+  const [versions, setVersions] = useState<{ id: string; version_number: number; status: string; created_at: string; published_at?: string | null }[]>([]);
+  const [versionSaving, setVersionSaving] = useState(false);
   const reorderTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const canEdit = canManageDiagnostic(role as any);
   const canView = canEditContent(role as any);
 
-  useEffect(() => {
-    fetch('/api/cms/diagnostic')
-      .then(r => r.json())
-      .then(data => { setQuestions(data.questions ?? []); setLoading(false); })
-      .catch(() => setLoading(false));
+  const loadQuestions = useCallback(async () => {
+    setLoading(true);
+    setLoadError('');
+    try {
+      const data = await requestJson<{ questions?: DiagnosticQuestion[] }>('/api/cms/diagnostic');
+      setQuestions(data.questions ?? []);
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : 'Impossible de charger le questionnaire.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => { void loadQuestions(); }, [loadQuestions]);
+
+  const loadVersions = useCallback(async () => {
+    const res = await fetch('/api/cms/diagnostic/versions');
+    if (res.ok) setVersions((await res.json()).versions ?? []);
+  }, []);
+
+  useEffect(() => { if (canView || canEdit) loadVersions(); }, [canView, canEdit, loadVersions]);
+
+  const saveDiagnosticVersion = async (action: 'save_draft' | 'publish') => {
+    setVersionSaving(true);
+    try {
+      const res = await fetch('/api/cms/diagnostic/versions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action }) });
+      if (res.ok) await loadVersions();
+    } finally { setVersionSaving(false); }
+  };
 
   // Debounced reorder persistence
   const persistOrder = useCallback((qs: DiagnosticQuestion[]) => {
@@ -564,12 +593,14 @@ export default function DiagnosticPage() {
   );
 
   if (!canView && !canEdit) {
-    return <div style={{ padding: '40px', textAlign: 'center' }}><p style={{ fontSize: '14px', color: isDark ? '#475569' : '#94a3b8' }}>Accès refusé.</p></div>;
+    return <AsyncState kind="forbidden" description="Votre rôle ne permet pas de consulter la configuration du diagnostic." />;
   }
 
   if (loading) {
-    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px' }}><div className="w-6 h-6 border-2 border-slate-700 border-t-emerald-500 rounded-full animate-spin" /></div>;
+    return <AsyncState kind="loading" />;
   }
+
+  if (loadError) return <AsyncState kind="error" description={loadError} onRetry={loadQuestions} />;
 
   return (
     <>
@@ -640,6 +671,21 @@ export default function DiagnosticPage() {
         {/* Info box */}
         <div style={{ padding: '10px 14px', borderRadius: '10px', border: isDark ? '1px solid rgba(99,102,241,0.15)' : '1px solid rgba(99,102,241,0.15)', background: isDark ? 'rgba(99,102,241,0.04)' : 'rgba(99,102,241,0.03)', fontSize: '11px', color: isDark ? '#64748b' : '#64748b' }}>
           <strong>Réordonnancement :</strong> utilisez les flèches ▲▼ pour changer l'ordre. L'ordre est sauvegardé automatiquement. L'algorithme de recommandation lit toujours les questions dans cet ordre.
+        </div>
+
+        {/* Safe release boundary: edits are not public until a manager publishes a snapshot. */}
+        <div style={{ padding: '16px', borderRadius: '14px', border: isDark ? '1px solid rgba(16,185,129,0.2)' : '1px solid rgba(16,185,129,0.2)', background: isDark ? 'rgba(16,185,129,0.04)' : 'rgba(16,185,129,0.035)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+            <History size={18} style={{ color: '#10b981', marginTop: '2px' }} />
+            <div>
+              <p style={{ margin: 0, fontSize: '13px', fontWeight: 800, color: isDark ? '#e2e8f0' : '#0f172a' }}>Versions publiées</p>
+              <p style={{ margin: '3px 0 0', fontSize: '11px', color: isDark ? '#64748b' : '#64748b' }}>{versions.find(v => v.status === 'published') ? `v${versions.find(v => v.status === 'published')?.version_number} active pour les clients` : 'Aucune version publiée : le fallback actuel reste actif.'}</p>
+            </div>
+          </div>
+          {canEdit && <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={() => saveDiagnosticVersion('save_draft')} disabled={versionSaving} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 12px', borderRadius: '9px', border: isDark ? '1px solid rgba(255,255,255,0.12)' : '1px solid rgba(0,0,0,0.1)', background: 'transparent', color: isDark ? '#cbd5e1' : '#475569', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}><Save size={13} /> Enregistrer un brouillon</button>
+            <button onClick={() => saveDiagnosticVersion('publish')} disabled={versionSaving} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '9px', border: 'none', background: '#059669', color: '#fff', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}>{versionSaving ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />} Publier la configuration</button>
+          </div>}
         </div>
 
         {/* Search */}

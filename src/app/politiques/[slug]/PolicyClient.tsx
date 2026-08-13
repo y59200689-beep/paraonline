@@ -11,11 +11,7 @@ import {
   Sparkles,
   MessageSquare,
   Lock,
-  Truck,
   CheckCircle2,
-  Building2,
-  Scale,
-  Award
 } from 'lucide-react';
 
 interface PolicySection {
@@ -38,18 +34,18 @@ interface PolicyData {
 
 const POLICIES_DATA: Record<string, PolicyData> = {
   'conditions-vente': {
-    titleFr: 'Conditions Générales de Vente (CGV)',
+    titleFr: 'Conditions Générales de Vente',
     titleAr: 'الشروط العامة للبيع (CGV)',
-    subtitleFr: 'Réglementation officielle des commandes, expéditions et transactions Cash-on-Delivery (COD) au Maroc.',
+    subtitleFr: 'Les règles applicables aux commandes, à la livraison et au paiement sur Para Officinal.',
     subtitleAr: 'اللوائح الرسمية للطلبات، الشحنات، والمعاملات عند الدفع والاستلام بالمغرب.',
     icon: <FileText className="w-5 h-5 text-emerald-600" />,
     lastUpdatedFr: 'Dernière mise à jour : 12 Mai 2026',
     lastUpdatedAr: 'آخر تحديث: 12 ماي 2026',
     sections: [
       {
-        titleFr: '1. Préambule et Cadre Clinique',
+        titleFr: '1. Objet et champ d’application',
         titleAr: '1. تمهيد وإطار العمل السريري',
-        descFr: 'Para Officinal S.A est le distributeur officiel de cosmétiques et produits de parapharmacie certifiés au Maroc. Toutes les transactions effectuées sur ce portail sont soumises à ces termes régulateurs de vente clinique.',
+        descFr: 'Para Officinal S.A propose une sélection de produits de parapharmacie et de beauté. Toute commande réalisée sur ce site est soumise aux présentes conditions de vente.',
         descAr: 'تعتبر صيدلية Para Officinal S.A الموزع الرسمي المعتمد لمستحضرات التجميل والعناية بالبشرة السريرية في المغرب. تخضع جميع المعاملات على هذا المتجر لشروط البيع التنظيمية المحددة أدناه.'
       },
       {
@@ -61,13 +57,13 @@ const POLICIES_DATA: Record<string, PolicyData> = {
       {
         titleFr: '3. Tarification, Offres et Monnaies',
         titleAr: '3. الأسعار، العروض والعملة',
-        descFr: 'Tous les prix des produits sont affichés en Dirhams Marocains (MAD / DH). Ils incluent les taxes applicables au Maroc. Les réductions offertes (comme les remises suite au diagnostic de peau par IA) sont calculées automatiquement lors du checkout.',
+        descFr: 'Les prix sont affichés en Dirhams Marocains (MAD / DH). Les promotions, avantages et frais applicables sont récapitulés avant la validation de la commande.',
         descAr: 'تعرض جميع أسعار المنتجات بالدرهم المغربي (MAD / DH) وتتضمن الضرائب المعمول بها. تُحتسب التخفيضات المقدمة (مثل خصومات التشخيص الذكي للبشرة) تلقائياً أثناء إتمام عملية الشراء.'
       },
       {
-        titleFr: '4. Expédition Rapide et Frais de Livraison',
+        titleFr: '4. Livraison et frais',
         titleAr: '4. الشحن السريع ورسوم التوصيل',
-        descFr: 'La livraison est gratuite sur l\'ensemble du territoire marocain. Pour la ville de Casablanca, la livraison express est effectuée le jour même sous un délai de 2 à 6 heures. Pour les autres villes du Maroc, le colis est livré sous 24 à 48 heures par notre transporteur partenaire.',
+        descFr: 'Les options de livraison, leurs frais, les seuils de gratuité éventuels et les estimations de délai sont affichés avant le paiement. Les délais peuvent varier selon la zone et la disponibilité du produit.',
         descAr: 'خدمة التوصيل مجانية بالكامل لجميع أنحاء المغرب. بالنسبة لمدينة الدار البيضاء، يتم التوصيل السريع في نفس اليوم خلال 2 إلى 6 ساعات. أما بالنسبة للمدن المغربية الأخرى، فيتم تسليم الشحنة خلال 24 إلى 48 ساعة عبر شركائنا في خدمات الشحن.'
       },
       {
@@ -79,36 +75,36 @@ const POLICIES_DATA: Record<string, PolicyData> = {
     ]
   },
   'confidentialite': {
-    titleFr: 'Politique de Confidentialité & SSL',
+    titleFr: 'Politique de confidentialité',
     titleAr: 'سياسة الخصوصية وأمان البيانات',
-    subtitleFr: 'Transparence absolue sur la sécurité de vos données personnelles et résultats cliniques de l\'IA.',
+    subtitleFr: 'Les informations que nous utilisons pour traiter les commandes et améliorer votre expérience.',
     subtitleAr: 'شفافية مطلقة حول أمان بياناتكِ الشخصية ونتائج تشخيص البشرة بالذكاء الاصطناعي.',
     icon: <Lock className="w-5 h-5 text-teal-600" />,
     lastUpdatedFr: 'Dernière mise à jour : 12 Mai 2026',
     lastUpdatedAr: 'آخر تحديث: 12 ماي 2026',
     sections: [
       {
-        titleFr: '1. Collecte Intelligente des Données',
+        titleFr: '1. Données collectées',
         titleAr: '1. جمع البيانات الذكي',
-        descFr: 'Nous collectons uniquement les informations indispensables à la gestion de vos livraisons : Nom, Prénom, Numéro WhatsApp, Ville et Adresse. De plus, les données issues de notre Diagnostic Dermatologique IA (Type de peau, préoccupations cutanées) sont stockées pour concevoir des routines sur-mesure.',
+        descFr: 'Nous collectons les informations nécessaires au traitement des commandes, à la livraison et au support client. Les réponses au diagnostic sont utilisées pour personnaliser les suggestions cosmétiques lorsque cette fonctionnalité est utilisée.',
         descAr: 'نقوم بجمع المعلومات الأساسية والضرورية فقط لإدارة وتوصيل طلباتكِ: الاسم، اللقب، رقم الواتساب، المدينة، والعنوان. بالإضافة إلى ذلك، يتم حفظ البيانات الناتجة عن تشخيص البشرة بالذكاء الاصطناعي لتصميم روتين علاجي مخصص لبشرتكِ.'
       },
       {
-        titleFr: '2. Objectifs du Traitement et Algorithmes IA',
+        titleFr: '2. Utilisation des données',
         titleAr: '2. أهداف معالجة البيانات وخوارزميات الذكاء الاصطناعي',
-        descFr: 'Vos coordonnées servent exclusivement à la validation téléphonique, au suivi de commande express (COD) et à l\'optimisation de l\'analyse de peau clinique par l\'intelligence artificielle pour vous proposer les actifs les plus ciblés.',
+        descFr: 'Vos coordonnées servent à gérer la commande, communiquer au sujet de sa livraison et répondre à vos demandes. Le diagnostic propose des conseils cosmétiques et ne constitue pas un avis médical.',
         descAr: 'تستخدم بيانات التواصل الخاصة بكِ حصرياً لتأكيد الطلبات هاتفياً، وتتبع شحن الطرود السريعة، وتحسين دقة تحليل البشرة الذكي لتقديم التوصيات الدقيقة بالمكونات النشطة المناسبة لكِ.'
       },
       {
-        titleFr: '3. Sécurité Clinique et Protection des Données',
+        titleFr: '3. Sécurité et conservation',
         titleAr: '3. الأمان والحماية الطبية للبيانات',
-        descFr: 'Conformément aux directives CNDP au Maroc et aux standards GDPR internationaux, nous appliquons un protocole de chiffrement SSL 256-bit strict. Aucune information médicale ou personnelle n\'est jamais cédée ou vendue à des tiers.',
-        descAr: 'تماشياً مع توجيهات اللجنة الوطنية لحماية المعطيات ذات الطابع الشخصي (CNDP) والمعايير الدولية، نطبق نظام تشفير صارم SSL 256-bit. لا يتم مشاركة أو بيع أي بيانات طبية أو شخصية لأي طرف ثالث نهائياً.'
+        descFr: 'Nous prenons des mesures raisonnables pour protéger les informations confiées au site. Pour toute question relative à vos données, contactez notre service client.',
+        descAr: 'نطبق تدابير معقولة لحماية المعلومات التي تقدمونها عبر الموقع. لأي سؤال حول بياناتكم، يرجى التواصل مع خدمة العملاء.'
       },
       {
-        titleFr: '4. Vos Droits et Contrôle (CNDP & GDPR)',
+        titleFr: '4. Vos droits',
         titleAr: '4. حقوقكِ والتحكم بالبيانات',
-        descFr: 'Vous bénéficiez d\'un droit permanent d\'accès, de modification et de suppression définitive de vos données. Pour exercer ce droit, contactez simplement notre conciergerie WhatsApp ou notre service client officinal.',
+        descFr: 'Vous pouvez demander l\'accès, la correction ou la suppression de vos informations en contactant le service client. Nous vous indiquerons les étapes applicables à votre demande.',
         descAr: 'يحق لكِ في أي وقت طلب الإطلاع، التعديل، أو الحذف النهائي لجميع بياناتكِ المسجلة لدينا. لممارسة هذا الحق، يمكنكِ التواصل مباشرة مع خدمة العملاء عبر الواتساب.'
       }
     ]
@@ -116,34 +112,34 @@ const POLICIES_DATA: Record<string, PolicyData> = {
   'retours-reclamations': {
     titleFr: 'Politique de Retours & Réclamations',
     titleAr: 'سياسة الإرجاع والشكاوى',
-    subtitleFr: 'Procédures d\'échange express, garanties de scellé officinal et remboursements transparents.',
+    subtitleFr: 'Les conditions et étapes à connaître pour une demande de retour ou une réclamation.',
     subtitleAr: 'إجراءات الاستبدال، ضمانات التغليف الصيدلاني، والاسترداد السريع.',
     icon: <ShieldCheck className="w-5 h-5 text-cyan-600" />,
     lastUpdatedFr: 'Dernière mise à jour : 12 Mai 2026',
     lastUpdatedAr: 'آخر تحديث: 12 ماي 2026',
     sections: [
       {
-        titleFr: '1. Conditions Strictes d\'Hygiène et Sécurité Officinale',
+        titleFr: '1. Conditions de retour',
         titleAr: '1. شروط السلامة والنظافة الصيدلانية',
-        descFr: 'Afin d\'assurer une sécurité dermatologique irréprochable à l\'ensemble de nos clientes, seuls les produits non ouverts, conservés dans leur emballage d\'origine scellé et leur film protecteur intact peuvent faire l\'objet d\'un retour sous 7 jours.',
+        descFr: 'Les conditions de retour dépendent notamment de l\'état du produit, de son emballage et du motif de la demande. Contactez le support avant de renvoyer un article afin de recevoir les instructions applicables.',
         descAr: 'ضماناً للسلامة الصحية والسريرية لجميع عملائنا، يُقبل إرجاع المنتجات فقط إذا كانت غير مفتوحة، وفي غلافها الأصلي المختوم مع الشريط الواقي دون أي تلف خلال فترة 7 أيام من الاستلام.'
       },
       {
         titleFr: '2. Colis Endommagé ou Produit Non Conforme',
         titleAr: '2. الشحنات المتضررة أو المنتجات غير المطابقة',
-        descFr: 'En cas de réception d\'un produit endommagé lors du transport ou d\'une erreur de référence, Para Officinal S.A prend en charge l\'intégralité des frais de réexpédition. Un échange express immédiat est organisé sous 24 à 48h.',
+        descFr: 'Si un produit est endommagé à la réception ou ne correspond pas à votre commande, contactez-nous avec les informations et photos utiles. Nous examinerons la demande et vous proposerons la suite appropriée.',
         descAr: 'في حالة استلام منتج متضرر أثناء النقل أو وجود خطأ في نوع المستحضر، تتكفل صيدلية Para Officinal S.A بكافة رسوم الإرجاع والشحن. يتم تنظيم عملية استبدال سريعة فوراً خلال 24 إلى 48 ساعة.'
       },
       {
-        titleFr: '3. Procédure Simplifiée via Conciergerie WhatsApp',
+        titleFr: '3. Faire une demande',
         titleAr: '3. خطوات الإرجاع البسيطة عبر الواتساب',
-        descFr: 'Pour initier un retour ou déposer une réclamation, envoyez simplement une photo du colis et de la facture à notre conciergerie WhatsApp (+212 6 60 80 80 80). Notre équipe traite votre demande en moins de 30 minutes.',
+        descFr: 'Pour initier une demande, contactez le service client en précisant le numéro de commande, le produit concerné et le motif. Conservez la facture et les éléments utiles jusqu\'à la résolution de votre demande.',
         descAr: 'لبدء عملية الإرجاع أو تقديم شكوى، يكفي إرسال صورة للشحنة والفاتورة عبر خدمة الواتساب المباشرة (+212 6 60 80 80 80). يقوم فريقنا بمعالجة طلبكِ في أقل من 30 دقيقة.'
       },
       {
         titleFr: '4. Modalités de Remboursement',
         titleAr: '4. طرق الاسترداد المالي',
-        descFr: 'Après réception et inspection de conformité par notre pharmacien, le remboursement est effectué selon votre choix : via bon d\'achat immédiat valable sur la boutique, ou par virement bancaire sous 3 à 5 jours ouvrés.',
+        descFr: 'Lorsqu\'un remboursement ou un échange est accepté, les modalités applicables vous sont communiquées par le service client avant leur mise en œuvre.',
         descAr: 'بعد استلام الشحنة وفحصها من قبل الصيدلي المختص، يتم الاسترداد المالي حسب اختياركِ: إما عبر قسيمة شراء فورية للاستخدام في المتجر، أو عبر تحويل بنكي خلال 3 إلى 5 أيام عمل.'
       }
     ]
@@ -168,9 +164,6 @@ export const PolicyClient: React.FC<PolicyClientProps> = ({ slug }) => {
         className="min-h-screen bg-[#FAF9F6] text-slate-900 font-sans selection:bg-emerald-500 selection:text-white relative overflow-hidden"
         style={{ direction: isRTL ? 'rtl' : 'ltr' }}
       >
-        {/* Subtle Ambient Radial Light */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[450px] bg-[radial-gradient(ellipse_at_top,rgba(16,185,129,0.08)_0%,rgba(14,165,233,0.03)_45%,transparent_70%)] pointer-events-none z-0" />
-
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-12">
           
           {/* Breadcrumb Navigation */}
@@ -209,38 +202,9 @@ export const PolicyClient: React.FC<PolicyClientProps> = ({ slug }) => {
               </p>
             </div>
 
-            {/* 3 Quick Guarantee Micro-Pills */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-slate-100">
-              <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200/70" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                <div className="w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-emerald-600 shrink-0 shadow-sm">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-bold text-slate-900">{isRTL ? 'حماية CNDP & SSL' : 'Protection CNDP & SSL'}</p>
-                  <p className="text-[10px] text-slate-500 truncate">{isRTL ? 'تشفير عالي الأمان 256-bit' : 'Chiffrement strict 256-bit'}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200/70" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                <div className="w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-teal-600 shrink-0 shadow-sm">
-                  <Truck className="w-4 h-4 text-teal-600" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-bold text-slate-900">{isRTL ? 'توصيل محكم وسريع' : 'Livraison Scellée Maroc'}</p>
-                  <p className="text-[10px] text-slate-500 truncate">{isRTL ? 'تغليف طبي ضد الصدمات' : 'Emballage isotherme COD'}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200/70" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                <div className="w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-cyan-600 shrink-0 shadow-sm">
-                  <MessageSquare className="w-4 h-4 text-cyan-600" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-bold text-slate-900">{isRTL ? 'دعم الواتساب الفوري' : 'Conciergerie WhatsApp'}</p>
-                  <p className="text-[10px] text-slate-500 truncate">{isRTL ? 'رد خلال 30 دقيقة' : 'Assistance en 30 minutes'}</p>
-                </div>
-              </div>
-            </div>
+            <p className="border-t border-slate-100 pt-5 text-xs leading-relaxed text-slate-500">
+              {isRTL ? 'يرجى قراءة كل وثيقة بعناية قبل استخدام الموقع أو تقديم طلب.' : 'Veuillez lire ce document attentivement avant d’utiliser le site ou de passer commande.'}
+            </p>
           </div>
 
 
@@ -354,18 +318,17 @@ export const PolicyClient: React.FC<PolicyClientProps> = ({ slug }) => {
                 </div>
               ))}
 
-              {/* Official Clinical Sign-off Box */}
-              <div className="p-8 rounded-3xl bg-emerald-50/80 border border-emerald-200/90 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
+              <div className="p-8 rounded-3xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-6">
                 <div className="flex items-center gap-4" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
                   <div className="w-12 h-12 rounded-2xl bg-white border border-emerald-200 flex items-center justify-center text-emerald-700 shrink-0 shadow-sm">
-                    <Award className="w-6 h-6 text-emerald-600" />
+                    <FileText className="w-6 h-6 text-emerald-600" />
                   </div>
                   <div>
                     <h4 className="text-sm font-black text-slate-900 font-heading">
-                      {isRTL ? 'إثبات الاعتماد والصحة الصيدلانية' : 'CERTIFICATION OFFICINALE CONFORME'}
+                      {isRTL ? 'معلومات الناشر' : 'INFORMATIONS ÉDITEUR'}
                     </h4>
                     <p className="text-xs text-slate-600 mt-0.5">
-                      {isRTL ? 'موزع رسمي معتمد بالمملكة المغربية — CNDP & GDPR' : 'Distributeur Dermo-Cosmétique Agréé au Maroc (CNDP)'}
+                      {isRTL ? 'للاستفسارات حول هذه الوثيقة، تواصلوا مع خدمة العملاء.' : 'Pour toute question sur ce document, contactez le service client.'}
                     </p>
                   </div>
                 </div>

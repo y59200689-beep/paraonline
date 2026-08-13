@@ -386,7 +386,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
               <div className="min-w-0">
                 <h2 id="diagnostic-title" className={styles.brandName}>DERMO•IA</h2>
                 <p id="diagnostic-subtitle" className={styles.brandSubtitle}>
-                  {isRTL ? 'روتين عناية مخصص بالبشرة' : 'Routine skincare personnalisée'}
+                  {isRTL ? 'روتين عناية مخصص بالبشرة' : 'Routine de soins personnalisée'}
                 </p>
               </div>
             </div>
@@ -456,7 +456,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                   <div className={styles.visualCopy}>
                     <span className={styles.visualBadge}>
                       <Sparkles className="h-3 w-3" />
-                      {isRTL ? 'خوارزمية جلدية 100% علمية' : 'Algorithme Dermatologique 100% Scientifique'}
+                      {isRTL ? 'توصيات مبنية على بيانات المنتجات' : 'Recommandations basées sur les données produits'}
                     </span>
                     <h3 id="diagnostic-entry-title" className={styles.visualTitle}>
                       {isRTL ? (

@@ -20,13 +20,10 @@ const INGREDIENT_ALIASES: Record<string, string[]> = {
   squalane: ['squalane'],
 };
 
-const PUBLIC_PRODUCT_COLUMNS = [
-  'id', 'title', 'name', 'name_fr', 'vendor', 'image', 'images', 'price',
-  'compare_price', 'category', 'categories', 'tags', 'rating', 'reviews',
-  'description', 'ingredients', 'usage', 'stock', 'sku', 'points',
-  'routine_roles', 'suitable_skin_types', 'suitable_concerns',
-  'sensitivity_levels', 'active_strength', 'time_of_day',
-].join(',');
+// The response is mapped through `mapProduct`, so operational/private columns
+// are never returned. Selecting the row also keeps this endpoint compatible
+// while optional recommendation governance columns are being migrated.
+const PUBLIC_PRODUCT_COLUMNS = '*';
 
 const MAX_CATALOG_PAGE = 10_000;
 const MAX_CATALOG_PAGE_SIZE = 100;
@@ -52,8 +49,6 @@ const normalizeIngredientKey = (value: string) => value
   .replace(/[^a-z0-9]+/g, '_')
   .replace(/^_|_$/g, '');
 
-import { enrichProductMetadata } from '@/lib/product-recommendation-metadata';
-
 function mapProduct(item: Record<string, unknown>): Product {
   const category = item.category as string;
   const baseProduct: Partial<Product> = {
@@ -71,7 +66,7 @@ function mapProduct(item: Record<string, unknown>): Product {
       ? item.categories as string[]
       : [category],
     tags: (item.tags as string[]) || [],
-    rating: 4.0 + (((((item.rating ? Number(item.rating) : 5) * 7) + (item.id as number)) % 10) + 1) / 10,
+    rating: Number(item.rating || 0),
     reviews: Number(item.reviews || 0),
     description: (item.description as string) || '',
     ingredients: (item.ingredients as string) || '',
@@ -79,7 +74,18 @@ function mapProduct(item: Record<string, unknown>): Product {
     stock: item.stock !== null && item.stock !== undefined ? Number(item.stock) : 100,
     sku: (item.sku as string) || undefined,
     points: item.points !== null && item.points !== undefined ? Number(item.points) : 0,
-    status: 'live',
+    status: item.status === 'live' ? 'live' : 'draft',
+    // Public products are already limited to live catalogue records. Keep the
+    // face-product signal compatible with existing databases that have not
+    // added the optional `is_face_product` column yet.
+    isFaceProduct: item.is_face_product === true || [item.category, ...(Array.isArray(item.categories) ? item.categories : [])]
+      .filter(Boolean)
+      .some((category) => /(^|\\s)(visage|face|skincare|soin visage)(\\s|$)/i.test(String(category))),
+    recommendationStatus: item.recommendation_status === 'rejected'
+      ? 'rejected'
+      : item.recommendation_status === 'draft'
+        ? 'draft'
+        : 'approved',
     routineRoles: Array.isArray(item.routine_roles) ? item.routine_roles as Product['routineRoles'] : [],
     suitableSkinTypes: Array.isArray(item.suitable_skin_types) ? item.suitable_skin_types as Product['suitableSkinTypes'] : [],
     suitableConcerns: Array.isArray(item.suitable_concerns) ? item.suitable_concerns as Product['suitableConcerns'] : [],
@@ -88,17 +94,7 @@ function mapProduct(item: Record<string, unknown>): Product {
     timeOfDay: Array.isArray(item.time_of_day) ? item.time_of_day as Product['timeOfDay'] : [],
   };
 
-  const enriched = enrichProductMetadata(baseProduct);
-
-  return {
-    ...baseProduct,
-    routineRoles: enriched.routineRoles,
-    suitableSkinTypes: enriched.suitableSkinTypes,
-    suitableConcerns: enriched.suitableConcerns,
-    sensitivityLevels: enriched.sensitivityLevels,
-    activeStrength: enriched.activeStrength,
-    timeOfDay: enriched.timeOfDay,
-  } as Product;
+  return baseProduct as Product;
 }
 
 async function fetchProductFacetRows() {

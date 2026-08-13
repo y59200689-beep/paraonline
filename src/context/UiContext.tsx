@@ -99,6 +99,38 @@ export const UiProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   const [diagnostic, setDiagnosticState] = useState<SkinDiagnosticResults | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
 
+  const openWishlist = (open: boolean) => {
+    setWishlistOpen(open);
+    if (!open) return;
+    setDiagnosticOpen(false);
+    setScratchCardOpen(false);
+    setSelectedProduct(null);
+  };
+
+  const openDiagnostic = (open: boolean) => {
+    setDiagnosticOpen(open);
+    if (!open) return;
+    setWishlistOpen(false);
+    setScratchCardOpen(false);
+    setSelectedProduct(null);
+  };
+
+  const openScratchCard = (open: boolean) => {
+    setScratchCardOpen(open);
+    if (!open) return;
+    setWishlistOpen(false);
+    setDiagnosticOpen(false);
+    setSelectedProduct(null);
+  };
+
+  const openProduct = (product: Product | null) => {
+    setSelectedProduct(product);
+    if (!product) return;
+    setWishlistOpen(false);
+    setDiagnosticOpen(false);
+    setScratchCardOpen(false);
+  };
+
   // Hydrate diagnostic state from localStorage on mount
   useEffect(() => {
     try {
@@ -109,57 +141,6 @@ export const UiProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     } catch (e) {
       console.error('LocalStorage hydration failed:', e);
     }
-  }, []);
-
-  // Exit-intent & inactivity timer to open scratch card daily reward
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    // Check if already triggered this session
-    const triggered = sessionStorage.getItem('exit_intent_triggered');
-    if (triggered) return;
-
-    let inactivityTimer: NodeJS.Timeout;
-
-    const triggerScratchCard = () => {
-      setScratchCardOpen(true);
-      sessionStorage.setItem('exit_intent_triggered', 'true');
-      cleanup();
-    };
-
-    const resetInactivityTimer = () => {
-      clearTimeout(inactivityTimer);
-      inactivityTimer = setTimeout(triggerScratchCard, 35000); // 35 seconds of inactivity
-    };
-
-    const handleMouseLeave = (e: MouseEvent) => {
-      // e.clientY <= 10 indicates leaving the top boundary of the viewport
-      if (e.clientY <= 10) {
-        triggerScratchCard();
-      }
-    };
-
-    const activityEvents = ['mousemove', 'keydown', 'click', 'scroll'];
-    
-    const setupListeners = () => {
-      activityEvents.forEach(event => {
-        window.addEventListener(event, resetInactivityTimer);
-      });
-      document.addEventListener('mouseleave', handleMouseLeave);
-    };
-
-    const cleanup = () => {
-      clearTimeout(inactivityTimer);
-      document.removeEventListener('mouseleave', handleMouseLeave);
-      activityEvents.forEach(event => {
-        window.removeEventListener(event, resetInactivityTimer);
-      });
-    };
-
-    setupListeners();
-    resetInactivityTimer(); // Start the first inactivity timer
-
-    return cleanup;
   }, []);
 
   const setDiagnostic = (results: SkinDiagnosticResults | null) => {
@@ -197,13 +178,13 @@ export const UiProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     <UiContext.Provider
       value={{
         isWishlistOpen,
-        setWishlistOpen,
+        setWishlistOpen: openWishlist,
         isDiagnosticOpen,
-        setDiagnosticOpen,
+        setDiagnosticOpen: openDiagnostic,
         isScratchCardOpen,
-        setScratchCardOpen,
+        setScratchCardOpen: openScratchCard,
         selectedProduct,
-        setSelectedProduct,
+        setSelectedProduct: openProduct,
         isSuccessModalOpen,
         setSuccessModalOpen,
         successOrderId,

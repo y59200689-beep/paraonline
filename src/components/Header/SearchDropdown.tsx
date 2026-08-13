@@ -6,8 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Product, INGREDIENTS_GLOSSARY } from '@/lib/data';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
-
-const placeholderSvg = "data:image/svg+xml;utf8," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300' width='100%' height='100%'><rect width='100%' height='100%' fill='#f1f5f9'/><path d='M150 100a40 40 0 1 0 40 40 40 40 0 0 0-40-40zm0 60a20 20 0 1 1 20-20 20 20 0 0 1-20 20z' fill='#94a3b8'/><path d='M180 180h-60a10 10 0 0 0-10 10v10h80v-10a10 10 0 0 0-10-10z' fill='#94a3b8'/><text x='150' y='230' font-family='sans-serif' font-size='12' font-weight='bold' fill='#64748b' text-anchor='middle'>Image Indisponible</text></svg>");
+import { PRODUCT_IMAGE_FALLBACK } from '@/lib/public-images';
 
 interface SearchDropdownProps {
   showSearch: boolean;
@@ -38,7 +37,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
   onOpenDiagnostic,
   onSetSearchQuery,
 }) => {
-  if (!showSearch) return null;
+  if (!showSearch || !searchQuery.trim()) return null;
 
   return (
     <div className="absolute top-full left-0 right-0 mt-3 bg-white/98 backdrop-blur-md border border-slate-200/80 rounded-xl shadow-[0_12px_40px_rgba(26,37,93,0.06)] z-50 overflow-hidden w-full text-left animate-in fade-in slide-in-from-top-2 duration-200">
@@ -64,7 +63,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                       className="flex-grow flex items-center gap-3 min-w-0 cursor-pointer"
                     >
                       <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 shrink-0 overflow-hidden relative">
-                        <Image src={getOptimizedImageUrl(product.image) || placeholderSvg} alt={product.title} fill sizes="40px" className="object-cover" />
+                        <Image src={getOptimizedImageUrl(product.image) || PRODUCT_IMAGE_FALLBACK} alt={product.title} fill sizes="40px" className="object-cover" />
                       </div>
                       <div className={`flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
                         <span className="text-[8px] font-extrabold uppercase text-[#846f48] block leading-none">{product.vendor}</span>
@@ -122,7 +121,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                       className="flex-grow flex items-center gap-3 min-w-0 cursor-pointer"
                     >
                       <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 shrink-0 overflow-hidden relative">
-                        <Image src={getOptimizedImageUrl(product.image) || placeholderSvg} alt={product.title} fill sizes="40px" className="object-cover" />
+                        <Image src={getOptimizedImageUrl(product.image) || PRODUCT_IMAGE_FALLBACK} alt={product.title} fill sizes="40px" className="object-cover" />
                       </div>
                       <div className={`flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
                         <span className="text-[8px] font-extrabold uppercase text-[#846f48] block leading-none">{product.vendor}</span>

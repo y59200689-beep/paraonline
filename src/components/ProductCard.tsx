@@ -13,6 +13,8 @@ import { useWishlist } from '@/context/WishlistContext';
 import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 import Image from 'next/image';
+import { isDiagnosticProductEligible } from '@/lib/diagnostic-eligibility';
+import { PRODUCT_IMAGE_FALLBACK, shouldBypassNextImageOptimization } from '@/lib/public-images';
 
 interface ProductCardProps {
   product: Product;
@@ -29,7 +31,7 @@ interface ProductCardProps {
   galleryKeyPrefix?: string;
 }
 
-const placeholderSvg = "data:image/svg+xml;utf8," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300' width='100%' height='100%'><rect width='100%' height='100%' fill='#f1f5f9'/><path d='M150 100a40 40 0 1 0 40 40 40 40 0 0 0-40-40zm0 60a20 20 0 1 1 20-20 20 20 0 0 1-20 20z' fill='#94a3b8'/><path d='M180 180h-60a10 10 0 0 0-10 10v10h80v-10a10 10 0 0 0-10-10z' fill='#94a3b8'/><text x='150' y='230' font-family='sans-serif' font-size='12' font-weight='bold' fill='#64748b' text-anchor='middle'>Image Indisponible</text></svg>");
+const placeholderSvg = PRODUCT_IMAGE_FALLBACK;
 
 const toTitleCase = (str: string) => {
   if (!str) return '';
@@ -188,6 +190,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   const matchScore = getMatchScore();
   const matchReason = getMatchReason();
+  const canShowMatchScore = showMatchScore && isDiagnosticProductEligible(product);
   const isRTL = language === 'AR';
 
   const handleAdd = (e: React.MouseEvent) => {
@@ -268,6 +271,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   const categoryLabel = getCategoryLabel();
 
+  const primaryImageSrc = (!product.image || imgError)
+    ? placeholderSvg
+    : galleryKeyPrefix
+      ? getDisplayImage(product.image, `${galleryKeyPrefix}_catalog_${product.id}_primary`)
+      : getOptimizedImageUrl(product.image);
+  const alternateImageSrc = (!product.images?.[1] || altImgError)
+    ? placeholderSvg
+    : galleryKeyPrefix
+      ? getDisplayImage(product.images[1], `${galleryKeyPrefix}_catalog_${product.id}_secondary`)
+      : getOptimizedImageUrl(product.images[1]);
+
   const cleanTitle = (title: string) => {
     let clean = title.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
     const vendorPrefixes = [
@@ -326,15 +340,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         <div className="bezel-inner absolute inset-2 bg-white rounded-xl border-0 flex items-center justify-center overflow-hidden z-0 transition-transform duration-500 ease-out group-hover/img:scale-[1.02]">
           <Image
-            src={(!product.image || imgError)
-              ? placeholderSvg
-              : galleryKeyPrefix
-                ? getDisplayImage(product.image, `${galleryKeyPrefix}_catalog_${product.id}_primary`)
-                : getOptimizedImageUrl(product.image)}
+            src={primaryImageSrc}
             alt={product.nameFr || product.name || product.title}
             width={300}
             height={300}
             priority={priority}
+            unoptimized={shouldBypassNextImageOptimization(primaryImageSrc)}
             className={`w-full h-full object-cover scale-[1.04] filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.03)] transition-all duration-700 ease-in-out ${
               shouldLoadAlternateImage && !singleImage && product.images && product.images.length > 1 ? 'group-hover:opacity-0 group-hover:blur-[1.5px]' : ''
             }`}
@@ -342,14 +353,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           />
           {shouldLoadAlternateImage && !singleImage && product.images && product.images.length > 1 && (
             <Image
-              src={(!product.images[1] || altImgError)
-                ? placeholderSvg
-                : galleryKeyPrefix
-                  ? getDisplayImage(product.images[1], `${galleryKeyPrefix}_catalog_${product.id}_secondary`)
-                  : getOptimizedImageUrl(product.images[1])}
+              src={alternateImageSrc}
               alt={`${product.nameFr || product.name || product.title} Alternate`}
               width={300}
               height={300}
+              unoptimized={shouldBypassNextImageOptimization(alternateImageSrc)}
               className="w-full h-full object-cover scale-[1.04] filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.03)] transition-all duration-700 ease-out opacity-0 group-hover:opacity-100 blur-[1.5px] group-hover:blur-0"
               onError={() => setAltImgError(true)}
             />
@@ -381,11 +389,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
       <div className={`${compact ? 'px-2.5 pb-2.5 pt-0.5' : 'px-4 pb-4 pt-1'} flex flex-col flex-grow`}>
         
-        {showMatchScore && diagnostic && matchScore && (
+        {canShowMatchScore && diagnostic && matchScore && (
           <div className="flex items-center mb-1 select-none">
             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-teal-50 dark:bg-teal-950/30 text-teal-700 dark:text-teal-400 text-[9px] font-black uppercase tracking-wider border border-teal-100/50 dark:border-teal-900/30">
               <Sparkles className="w-2.5 h-2.5 fill-current text-teal-500 dark:text-teal-400" />
-              {matchScore}% Match
+              {language === 'FR' ? `Compatibilité ${matchScore}%` : `التوافق ${matchScore}%`}
             </span>
           </div>
         )}
@@ -401,14 +409,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             {convertPrice(product.price)}
           </span>
           {discount && (
-            <span className={`${compact ? 'text-[9.5px]' : 'text-[11px]'} text-slate-400 line-through font-semibold whitespace-nowrap`}>
+            <span className={`${compact ? 'text-[9.5px]' : 'text-[11px]'} text-slate-600 line-through font-semibold whitespace-nowrap`}>
               {convertPrice(product.comparePrice)}
             </span>
           )}
         </div>
 
-        <div className="flex items-center justify-between border-t border-slate-50 pt-2 mt-auto select-none">
-          <div className="flex items-center gap-1">
+        <div className="flex items-center justify-between border-t border-slate-50 pt-2 mt-auto select-none min-h-6">
+          {product.reviews > 0 && product.rating > 0 ? <div className="flex items-center gap-1" aria-label={`${product.rating.toFixed(1)} sur 5, ${product.reviews} avis`}>
             <div className="flex items-center gap-0.5">
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star 
@@ -421,10 +429,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 />
               ))}
             </div>
-            <span className={`${compact ? 'text-[8.5px]' : 'text-[10.5px]'} font-bold text-slate-400 mt-0.5`}>
+            <span className={`${compact ? 'text-[8.5px]' : 'text-[10.5px]'} font-bold text-slate-600 mt-0.5`}>
               ({product.rating.toFixed(1)})
             </span>
-          </div>
+          </div> : <span className={`${compact ? 'text-[8.5px]' : 'text-[10.5px]'} font-semibold text-slate-600`}>
+            {language === 'FR' ? 'Pas encore d’avis' : 'لا توجد تقييمات بعد'}
+          </span>}
         </div>
 
         <button

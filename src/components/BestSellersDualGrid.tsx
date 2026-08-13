@@ -10,6 +10,7 @@ import { Star, Heart, ShoppingCart } from 'lucide-react';
 import { useUi } from '@/context/UiContext';
 import Image from 'next/image';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
+import { PRODUCT_IMAGE_FALLBACK } from '@/lib/public-images';
 import { useSettings } from '@/context/SettingsContext';
 
 const cleanTitle = (title: string) => {
@@ -141,7 +142,7 @@ export const BestSellersDualGrid: React.FC = () => {
                 {/* Left image container */}
                 <div className="w-[80px] h-[80px] rounded-[14px] bg-[#F8FAF8] flex items-center justify-center shrink-0 overflow-hidden relative self-center">
                   <Image 
-                    src={getOptimizedImageUrl(product.image)} 
+                    src={getOptimizedImageUrl(product.image) || PRODUCT_IMAGE_FALLBACK}
                     alt={titleStr} 
                     fill
                     sizes="80px"

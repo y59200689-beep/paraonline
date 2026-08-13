@@ -99,7 +99,7 @@ export const IngredientDictionary: React.FC = () => {
           </h2>
           <p className="text-slate-500 font-medium leading-relaxed max-w-lg text-[13.5px]">
             {language === 'FR'
-              ? "La transparence scientifique absolue. Découvrez l'indice de sécurité et les bénéfices prouvés de chaque ingrédient actif."
+              ? "Découvrez le rôle courant de chaque ingrédient et les précautions indiquées dans les informations produit."
               : 'الشفافية العلمية المطلقة لجمالكِ. اكتشفي مؤشر الأمان والفوائد المثبتة علمياً لكل مكون نشط.'}
           </p>
         </div>

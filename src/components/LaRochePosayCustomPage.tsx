@@ -848,7 +848,7 @@ const sortProducts = (list: Product[], opt: string) => {
   const arr = [...list];
   if (opt === 'price-asc')  return arr.sort((a,b) => a.price - b.price);
   if (opt === 'price-desc') return arr.sort((a,b) => b.price - a.price);
-  if (opt === 'rating')     return arr.sort((a,b) => (b.rating||5) - (a.rating||5));
+  if (opt === 'rating')     return arr.sort((a,b) => (b.rating||0) - (a.rating||0));
   return arr.sort((a,b) => (b.reviews||0) - (a.reviews||0));
 };
 
@@ -1031,7 +1031,7 @@ export default function LaRochePosayCustomPage({ brand = 'la-roche-posay' }: { b
                       <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-sky-200">Sélection experte</p>
                       <p className="mt-2 max-w-md text-xl font-bold leading-tight">{brandConfig.heroCaption}</p>
                     </div>
-                    <span className="inline-flex shrink-0 items-center gap-2 text-xs font-semibold text-slate-200"><ShieldCheck className="h-4 w-4 text-sky-300" /> Produits authentiques</span>
+                    <span className="inline-flex shrink-0 items-center gap-2 text-xs font-semibold text-slate-200"><ShieldCheck className="h-4 w-4 text-sky-300" /> Catalogue de la marque</span>
                   </div>
                 </div>
               </div>

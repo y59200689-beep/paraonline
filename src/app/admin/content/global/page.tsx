@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAdmin } from '@/context/AdminContext';
 import { canManageGlobalContent, canEditContent } from '@/lib/permissions';
 import { Navigation, Save, Loader2, Plus, Trash2, Globe } from 'lucide-react';
 import { BilingualField } from '@/components/admin/ui/BilingualField';
+import { AsyncState } from '@/components/admin/ui/AsyncState';
+import { requestJson } from '@/lib/request-json';
 
 interface HeaderNavItem {
   id: string;
@@ -29,6 +31,7 @@ export default function ContentGlobalPage() {
   const canView = canEditContent(role as any);
 
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
 
@@ -41,11 +44,25 @@ export default function ContentGlobalPage() {
   const [announcementEnabled, setAnnouncementEnabled] = useState(false);
   const [announcementLink, setAnnouncementLink] = useState('');
   const [headerNav, setHeaderNav] = useState<HeaderNavItem[]>([]);
+  const [storePhone, setStorePhone] = useState('');
+  const [storeWhatsapp, setStoreWhatsapp] = useState('');
+  const [deliveryCopyFr, setDeliveryCopyFr] = useState('');
+  const [deliveryCopyAr, setDeliveryCopyAr] = useState('');
+  const [seoTitleFr, setSeoTitleFr] = useState('');
+  const [seoTitleAr, setSeoTitleAr] = useState('');
+  const [seoDescFr, setSeoDescFr] = useState('');
+  const [seoDescAr, setSeoDescAr] = useState('');
+  const [ogImage, setOgImage] = useState('');
+  const [footerJson, setFooterJson] = useState('[]');
+  const [socialJson, setSocialJson] = useState('[]');
+  const [trustJson, setTrustJson] = useState('[]');
+  const [ctaJson, setCtaJson] = useState('{}');
 
-  useEffect(() => {
-    fetch('/api/cms/global')
-      .then(r => r.json())
-      .then(data => {
+  const loadGlobalContent = useCallback(async () => {
+    setLoading(true);
+    setLoadError('');
+    try {
+      const data = await requestJson<{ global?: Record<string, any> }>('/api/cms/global');
         const g = data.global ?? {};
         setStoreName(g.store_name ?? 'Para Officinal S.A');
         setTaglineFr(g.store_tagline_fr ?? '');
@@ -55,16 +72,43 @@ export default function ContentGlobalPage() {
         setAnnouncementEnabled(g.announcement_enabled ?? false);
         setAnnouncementLink(g.announcement_link ?? '');
         setHeaderNav(g.header_nav ?? []);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+        setStorePhone(g.store_phone ?? '');
+        setStoreWhatsapp(g.store_whatsapp ?? '');
+        setDeliveryCopyFr(g.delivery_copy_fr ?? '');
+        setDeliveryCopyAr(g.delivery_copy_ar ?? '');
+        setSeoTitleFr(g.seo_default_title_fr ?? '');
+        setSeoTitleAr(g.seo_default_title_ar ?? '');
+        setSeoDescFr(g.seo_default_desc_fr ?? '');
+        setSeoDescAr(g.seo_default_desc_ar ?? '');
+        setOgImage(g.og_default_image ?? '');
+        setFooterJson(JSON.stringify(g.footer_columns ?? [], null, 2));
+        setSocialJson(JSON.stringify(g.social_links ?? [], null, 2));
+        setTrustJson(JSON.stringify(g.trust_badges ?? [], null, 2));
+        setCtaJson(JSON.stringify(g.cta_labels ?? {}, null, 2));
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : 'Impossible de charger le contenu global.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => { void loadGlobalContent(); }, [loadGlobalContent]);
 
   const markDirty = () => setDirty(true);
 
   const handleSave = async () => {
     setSaving(true);
     try {
+      let footerColumns: unknown, socialLinks: unknown, trustBadges: unknown, ctaLabels: unknown;
+      try {
+        footerColumns = JSON.parse(footerJson);
+        socialLinks = JSON.parse(socialJson);
+        trustBadges = JSON.parse(trustJson);
+        ctaLabels = JSON.parse(ctaJson);
+      } catch {
+        window.alert('Vérifiez le format JSON des blocs globaux avant d’enregistrer.');
+        return;
+      }
       const res = await fetch('/api/cms/global', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -77,6 +121,19 @@ export default function ContentGlobalPage() {
           announcement_enabled: announcementEnabled,
           announcement_link: announcementLink,
           header_nav: headerNav,
+          store_phone: storePhone,
+          store_whatsapp: storeWhatsapp,
+          delivery_copy_fr: deliveryCopyFr,
+          delivery_copy_ar: deliveryCopyAr,
+          seo_default_title_fr: seoTitleFr,
+          seo_default_title_ar: seoTitleAr,
+          seo_default_desc_fr: seoDescFr,
+          seo_default_desc_ar: seoDescAr,
+          og_default_image: ogImage,
+          footer_columns: footerColumns,
+          social_links: socialLinks,
+          trust_badges: trustBadges,
+          cta_labels: ctaLabels,
         }),
       });
       if (res.ok) setDirty(false);
@@ -117,12 +174,14 @@ export default function ContentGlobalPage() {
   };
 
   if (!canView && !canEdit) {
-    return <div style={{ padding: '40px', textAlign: 'center' }}><p style={{ fontSize: '14px', color: isDark ? '#475569' : '#94a3b8' }}>Accès refusé.</p></div>;
+    return <AsyncState kind="forbidden" description="Votre rôle ne permet pas de consulter les réglages globaux de la boutique." />;
   }
 
   if (loading) {
-    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px' }}><div className="w-6 h-6 border-2 border-slate-700 border-t-emerald-500 rounded-full animate-spin" /></div>;
+    return <AsyncState kind="loading" />;
   }
+
+  if (loadError) return <AsyncState kind="error" description={loadError} onRetry={loadGlobalContent} />;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '900px' }}>
@@ -225,6 +284,37 @@ export default function ContentGlobalPage() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Contact, delivery and reusable global content */}
+        <div style={{ padding: '16px', borderRadius: 'var(--admin-radius-lg)', border: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.06)', background: isDark ? 'rgba(255,255,255,0.02)' : '#f8fafc', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div>
+            <p style={{ ...labelStyle, marginBottom: '2px' }}>Contenu global du storefront</p>
+            <p style={{ fontSize: '11px', color: isDark ? '#64748b' : '#94a3b8', margin: 0 }}>Ces valeurs alimentent les composants publics après publication. Les tableaux utilisent le format JSON indiqué dans chaque aide.</p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <div><label style={labelStyle}>Téléphone</label><input value={storePhone} onChange={e => { setStorePhone(e.target.value); markDirty(); }} style={inputStyle} /></div>
+            <div><label style={labelStyle}>WhatsApp</label><input value={storeWhatsapp} onChange={e => { setStoreWhatsapp(e.target.value); markDirty(); }} style={inputStyle} placeholder="+212..." /></div>
+          </div>
+          <BilingualField label="Message livraison" valueFr={deliveryCopyFr} valueAr={deliveryCopyAr} onChangeFr={v => { setDeliveryCopyFr(v); markDirty(); }} onChangeAr={v => { setDeliveryCopyAr(v); markDirty(); }} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <div><label style={labelStyle}>SEO title (FR)</label><input value={seoTitleFr} onChange={e => { setSeoTitleFr(e.target.value); markDirty(); }} style={inputStyle} /></div>
+            <div><label style={labelStyle}>SEO title (AR)</label><input value={seoTitleAr} onChange={e => { setSeoTitleAr(e.target.value); markDirty(); }} dir="rtl" style={{ ...inputStyle, direction: 'rtl' }} /></div>
+            <div><label style={labelStyle}>SEO description (FR)</label><textarea value={seoDescFr} onChange={e => { setSeoDescFr(e.target.value); markDirty(); }} rows={2} style={{ ...inputStyle, resize: 'vertical' }} /></div>
+            <div><label style={labelStyle}>SEO description (AR)</label><textarea value={seoDescAr} onChange={e => { setSeoDescAr(e.target.value); markDirty(); }} rows={2} dir="rtl" style={{ ...inputStyle, direction: 'rtl', resize: 'vertical' }} /></div>
+          </div>
+          <div><label style={labelStyle}>Image Open Graph (URL)</label><input value={ogImage} onChange={e => { setOgImage(e.target.value); markDirty(); }} style={inputStyle} placeholder="https://…/og-image.jpg" /></div>
+          {[
+            ['Footer columns', footerJson, setFooterJson, '[{"heading_fr":"Aide","heading_ar":"مساعدة","links":[{"label_fr":"Livraison","label_ar":"التوصيل","href":"/suivi-commande"}]}]'],
+            ['Liens sociaux', socialJson, setSocialJson, '[{"platform":"instagram","url":"https://…"}]'],
+            ['Badges de confiance', trustJson, setTrustJson, '[{"icon_key":"shield","label_fr":"Paiement sécurisé","label_ar":"دفع آمن"}]'],
+            ['Libellés CTA', ctaJson, setCtaJson, '{"add_to_cart":{"label_fr":"Ajouter au panier","label_ar":"أضف إلى السلة"}}'],
+          ].map(([label, value, setter, placeholder]) => (
+            <div key={label as string}>
+              <label style={labelStyle}>{label as string}</label>
+              <textarea value={value as string} onChange={e => { (setter as React.Dispatch<React.SetStateAction<string>>)(e.target.value); markDirty(); }} rows={3} style={{ ...inputStyle, fontFamily: 'monospace', fontSize: '11px', resize: 'vertical' }} placeholder={placeholder as string} spellCheck={false} />
+            </div>
+          ))}
         </div>
 
       </div>

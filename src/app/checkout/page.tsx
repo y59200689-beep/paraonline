@@ -10,8 +10,7 @@ import { useUi } from '@/context/UiContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { CheckoutForm } from '@/components/cart/CheckoutForm';
 import { ShopShell } from '@/components/ShopShell';
-import { isValidMoroccanPhone } from '@/lib/moroccan-phone';
-import { loadStripe } from '@stripe/stripe-js';
+import { validateCheckoutFields } from '@/lib/checkout-validation';
 import { 
   ShoppingBag, 
   Trash2, 
@@ -67,14 +66,8 @@ function CheckoutPageContent() {
   // ── Stripe state ─────────────────────────────────────────────────────────
   const [clientSecret, setClientSecret] = useState('');
   const [stripeOrderId, setStripeOrderId] = useState('');
+  const [stripeTrackingToken, setStripeTrackingToken] = useState('');
   const [isInitializingStripe, setIsInitializingStripe] = useState(false);
-  const [stripePromise, setStripePromise] = useState<ReturnType<typeof loadStripe> | null>(null);
-
-  useEffect(() => {
-    if (settings?.paymentSettings?.stripePublishableKey) {
-      setStripePromise(loadStripe(settings.paymentSettings.stripePublishableKey));
-    }
-  }, [settings?.paymentSettings?.stripePublishableKey]);
 
   // ── Handlers ─────────────────────────────────────────────────────────────
   const handleApplyCoupon = async (e: React.FormEvent) => {
@@ -87,11 +80,9 @@ function CheckoutPageContent() {
 
   const proceedToDelivery = () => {
     setFormErrors({});
-    const errors: Record<string, string> = {};
-    if (!formFields.name.trim())
-      errors.name = language === 'FR' ? 'Nom complet requis' : 'الاسم الكامل مطلوب';
-    if (!isValidMoroccanPhone(formFields.phone))
-      errors.phone = language === 'FR' ? 'Saisissez un numéro marocain de 9 à 10 chiffres.' : 'أدخل رقم هاتف مغربي من 9 إلى 10 أرقام.';
+    const errors = validateCheckoutFields({ ...formFields, address: 'pending', city: 'pending' }, language);
+    delete errors.address;
+    delete errors.city;
     if (Object.keys(errors).length > 0) { setFormErrors(errors); return; }
 
     // Capture abandoned cart
@@ -111,11 +102,7 @@ function CheckoutPageContent() {
   const handleCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormErrors({});
-    const errors: Record<string, string> = {};
-    if (!formFields.address.trim())
-      errors.address = language === 'FR' ? 'Adresse complète requise' : 'العنوان الكامل مطلوب';
-    if (!formFields.city)
-      errors.city = language === 'FR' ? 'Veuillez choisir votre ville' : 'يرجى اختيار مدينتكِ';
+    const errors = validateCheckoutFields(formFields, language);
     if (Object.keys(errors).length > 0) { setFormErrors(errors); return; }
 
     if (settings.paymentSettings?.onlinePaymentEnabled) {
@@ -184,6 +171,7 @@ function CheckoutPageContent() {
         const orderRes = await submitOrder(formFields);
         if (orderRes.success && orderRes.orderId) {
           setStripeOrderId(orderRes.orderId);
+          setStripeTrackingToken(orderRes.trackingToken || '');
           const res = await fetch('/api/payment/stripe', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -218,7 +206,7 @@ function CheckoutPageContent() {
     setFormFields({ name: '', phone: '', address: '', city: '', note: '' });
     setCheckoutSubStep('info');
     setClientSecret('');
-    router.push(`/checkout/success?orderId=${savedOrderId}`);
+    router.push(`/checkout/success?orderId=${encodeURIComponent(savedOrderId)}&token=${encodeURIComponent(stripeTrackingToken)}`);
     showToast(
       language === 'FR'
         ? `Commande confirmée ! Votre ID: ${savedOrderId}`
@@ -294,7 +282,8 @@ function CheckoutPageContent() {
             clientSecret={clientSecret}
             setClientSecret={setClientSecret}
             stripeOrderId={stripeOrderId}
-            stripePromise={stripePromise}
+            stripeTrackingToken={stripeTrackingToken}
+            stripePublishableKey={settings.paymentSettings?.stripePublishableKey || ''}
             total={total}
             onlinePaymentEnabled={!!settings.paymentSettings?.onlinePaymentEnabled}
             testMode={!!settings.paymentSettings?.testMode}

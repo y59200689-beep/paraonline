@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { isDiagnosticEligibleProduct } from '@/lib/diagnostic-routine';
 import type { Product } from '@/lib/data';
+import { verifyAdminSession } from '@/lib/session';
+import { canEditCatalog } from '@/lib/permissions';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -38,9 +40,13 @@ function rowToProduct(row: Record<string, unknown>): Product {
 }
 
 export async function GET(req: NextRequest) {
+  const session = await verifyAdminSession(req);
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!canEditCatalog(session.role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
   const { searchParams } = new URL(req.url);
-  const page = parseInt(searchParams.get('page') || '1', 10);
-  const limit = parseInt(searchParams.get('limit') || '50', 10);
+  const page = Math.max(1, Math.min(10_000, Number.parseInt(searchParams.get('page') || '1', 10) || 1));
+  const limit = Math.max(1, Math.min(100, Number.parseInt(searchParams.get('limit') || '50', 10) || 50));
   const search = searchParams.get('search') || '';
   const filter = searchParams.get('filter') || 'all'; // all | eligible | excluded | manual_excluded
 
@@ -54,7 +60,10 @@ export async function GET(req: NextRequest) {
     .order('title', { ascending: true });
 
   if (search) {
-    query = query.or(`title.ilike.%${search}%,vendor.ilike.%${search}%,category.ilike.%${search}%`);
+    // Keep user input inside the PostgREST filter grammar. Wildcards are not
+    // needed here and can otherwise change the meaning of the filter.
+    const safeSearch = search.replace(/[%,()]/g, ' ').trim().slice(0, 100);
+    if (safeSearch) query = query.or(`title.ilike.%${safeSearch}%,vendor.ilike.%${safeSearch}%,category.ilike.%${safeSearch}%`);
   }
 
   const { data: allProducts, error, count } = await query.range(offset, offset + limit - 1);
@@ -116,17 +125,26 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const session = await verifyAdminSession(req);
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!canEditCatalog(session.role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
   const body = await req.json();
   const { productId, action, reason, excludedBy } = body;
 
-  if (!productId || !action) {
+  const normalizedProductId = Number(productId);
+  if (!Number.isInteger(normalizedProductId) || normalizedProductId <= 0 || !action) {
     return NextResponse.json({ error: 'productId and action required' }, { status: 400 });
+  }
+
+  if (action !== 'exclude' && action !== 'include') {
+    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   }
 
   if (action === 'exclude') {
     const { error } = await supabase
       .from('diagnostic_excluded_products')
-      .upsert({ product_id: productId, excluded_by: excludedBy || 'admin', reason: reason || null, excluded_at: new Date().toISOString() });
+      .upsert({ product_id: normalizedProductId, excluded_by: session.id || excludedBy || 'admin', reason: typeof reason === 'string' ? reason.trim().slice(0, 500) || null : null, excluded_at: new Date().toISOString() });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ success: true, action: 'excluded' });
   }
@@ -135,10 +153,9 @@ export async function POST(req: NextRequest) {
     const { error } = await supabase
       .from('diagnostic_excluded_products')
       .delete()
-      .eq('product_id', productId);
+      .eq('product_id', normalizedProductId);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ success: true, action: 'included' });
   }
 
-  return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
 }

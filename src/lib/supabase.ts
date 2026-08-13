@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { PRODUCTS_DB } from './data';
 
+/* eslint-disable @typescript-eslint/no-require-imports -- Node built-ins are loaded lazily so this shared module remains browser-safe. */
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
 
@@ -990,7 +992,9 @@ if (!isPlaceholder && typeof window === 'undefined' && !serviceRoleKey) {
 
 export const supabaseAdmin = isPlaceholder 
   ? mockSupabaseClient 
-  : createClient(supabaseUrl, serviceRoleKey || supabaseAnonKey, {
+  : typeof window !== 'undefined'
+    ? supabase
+    : createClient(supabaseUrl, serviceRoleKey || supabaseAnonKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,

@@ -56,7 +56,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   isRTL,
 }) => (
   <div
-    className="hidden md:block w-full bg-white border-y border-slate-100 shadow-sm"
+    className="hidden lg:block w-full bg-white border-y border-slate-100 shadow-sm"
     style={{ paddingTop: '10px', paddingBottom: '10px' }}
   >
     <div
@@ -98,6 +98,10 @@ export const TopBar: React.FC<TopBarProps> = ({
         {/* Language Selector */}
         <div ref={langRef} className="relative">
           <button
+            type="button"
+            aria-haspopup="menu"
+            aria-expanded={showLangDropdown}
+            aria-controls="public-language-menu"
             onClick={() => showLangDropdown ? onCloseLang() : onOpenLang()}
             className="flex items-center gap-2 hover:text-slate-700 transition-colors duration-200 font-medium cursor-pointer text-slate-600"
           >
@@ -107,6 +111,10 @@ export const TopBar: React.FC<TopBarProps> = ({
           </button>
 
           <div
+            id="public-language-menu"
+            role="menu"
+            aria-hidden={!showLangDropdown}
+            inert={!showLangDropdown ? true : undefined}
             className={`t-dropdown absolute ${isRTL ? 'left-0' : 'right-0'} top-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.12)] py-2 z-50 w-40${
               showLangDropdown && !langClosing ? ' is-open' : langClosing ? ' is-closing' : ''
             }`}
@@ -115,6 +123,10 @@ export const TopBar: React.FC<TopBarProps> = ({
             {languages.map(lang => (
               <button
                 key={lang.id}
+                type="button"
+                role="menuitemradio"
+                aria-checked={language === lang.id}
+                tabIndex={showLangDropdown ? 0 : -1}
                 onClick={() => {
                   if (lang.id !== language) onToggleLanguage(lang.id);
                   onCloseLang();
@@ -137,6 +149,10 @@ export const TopBar: React.FC<TopBarProps> = ({
         {/* Currency Dropdown */}
         <div ref={currencyRef} className="relative">
           <button
+            type="button"
+            aria-haspopup="menu"
+            aria-expanded={showCurrencyDropdown}
+            aria-controls="public-currency-menu"
             onClick={() => showCurrencyDropdown ? onCloseCurrency() : onOpenCurrency()}
             className="flex items-center gap-1.5 hover:text-primary transition-colors duration-200 font-semibold cursor-pointer"
           >
@@ -145,6 +161,10 @@ export const TopBar: React.FC<TopBarProps> = ({
             <ChevronDown className={`w-3.5 h-3.5 text-slate-300 transition-transform duration-200 ${showCurrencyDropdown ? 'rotate-180' : ''}`} />
           </button>
           <div
+            id="public-currency-menu"
+            role="menu"
+            aria-hidden={!showCurrencyDropdown}
+            inert={!showCurrencyDropdown ? true : undefined}
             className={`t-dropdown absolute ${isRTL ? 'left-0' : 'right-0'} top-full mt-2 bg-white border border-slate-100 rounded-xl shadow-2xl py-1.5 z-50 w-36${
               showCurrencyDropdown && !currencyClosing ? ' is-open' : currencyClosing ? ' is-closing' : ''
             }`}
@@ -153,6 +173,10 @@ export const TopBar: React.FC<TopBarProps> = ({
             {CURRENCIES.map(c => (
               <button
                 key={c.id}
+                type="button"
+                role="menuitemradio"
+                aria-checked={selectedCurrency === c.id}
+                tabIndex={showCurrencyDropdown ? 0 : -1}
                 onClick={() => { onSetCurrency(c.id); onCloseCurrency(); }}
                 className={`w-full px-4 py-2.5 text-[11px] font-semibold flex items-center gap-2.5 transition-colors ${isRTL ? 'text-right flex-row-reverse' : 'text-left'} ${
                   selectedCurrency === c.id

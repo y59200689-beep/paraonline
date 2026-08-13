@@ -133,7 +133,7 @@ export const SkinConcernsSelector: React.FC = () => {
           <p className="max-w-md text-xs md:text-sm text-slate-400 leading-relaxed font-medium">
             {isRtl 
               ? 'صممنا لك مجموعات تجميلية كورية مخصصة تستهدف وتصلح مشاكل البشرة مباشرة وبأمان.'
-              : 'Trouvez les solutions ciblées à vos problématiques de peau à travers des formulations K-Beauty éprouvées.'
+              : 'Explorez des soins K-Beauty classés selon vos préoccupations et vérifiez les détails de chaque formule.'
             }
           </p>
         </div>

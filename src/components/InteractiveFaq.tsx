@@ -148,8 +148,8 @@ export const InteractiveFaq: React.FC = () => {
               <div className={`flex items-start justify-between gap-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
                 <div className="flex flex-col gap-1.5">
                   <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/15 border border-emerald-500/30 rounded text-[8px] font-black text-emerald-400 uppercase tracking-widest">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                    <span>ONLINE</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    <span>{language === 'FR' ? 'ASSISTANCE' : 'المساعدة'}</span>
                   </div>
                   <h3 className="font-black text-[14px] text-white tracking-tight mt-1">{text.supTitle}</h3>
                   <p className="text-[11.5px] font-medium text-slate-400 leading-relaxed max-w-[220px]">{text.supDesc}</p>

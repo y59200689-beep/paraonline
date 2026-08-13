@@ -1,6 +1,18 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  turbopack: {},
+  allowedDevOrigins: ['127.0.0.1'],
+  webpack(config, { isServer }) {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        path: false,
+      };
+    }
+    return config;
+  },
   outputFileTracingIncludes: {
     '/api/admin/recover-mock-data': ['./supabase-mock-db.json', './supabase-mock-db.json.bak'],
     '/api/admin/repair-product-fields': ['./supabase-mock-db.json'],

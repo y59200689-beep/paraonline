@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import OrdersTab from '../components/admin/OrdersTab';
 
 vi.mock('next/navigation', () => ({
@@ -130,7 +130,13 @@ describe('Moroccan COD Financial Reconciliation Ledger tests', () => {
 
     // Mock fetch calls to return orders list and settings
     vi.spyOn(global, 'fetch').mockImplementation((url) => {
-      const urlStr = typeof url === 'string' ? url : (url instanceof URL ? url.toString() : '');
+      const urlStr = typeof url === 'string'
+        ? url
+        : url instanceof URL
+          ? url.toString()
+          : url instanceof Request
+            ? url.url
+            : '';
       
       if (urlStr.includes('/api/admin/auth/me')) {
         return Promise.resolve({
@@ -180,10 +186,16 @@ describe('Moroccan COD Financial Reconciliation Ledger tests', () => {
 
     const input = screen.getByLabelText(/Choisir un fichier CSV/i) as HTMLInputElement;
 
+    // The admin provider hydrates orders asynchronously. Wait for that source
+    // data before parsing the settlement so classification is deterministic.
+    await waitFor(() => {
+      expect(screen.getByRole('tab', { name: /Commandes\s*3/i })).toBeDefined();
+    }, { timeout: 10_000 });
+
     fireEvent.change(input, { target: { files: [file] } });
 
     // Verify stats updates
-    expect(await screen.findByText(/Paiement Total Reçu/i)).toBeDefined();
+    expect(await screen.findByText(/Paiement Total Reçu/i, {}, { timeout: 10_000 })).toBeDefined();
     expect(screen.getByText(/Frais de Livraison Retenus/i)).toBeDefined();
     
     // Verify row classifications

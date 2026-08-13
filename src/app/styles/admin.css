@@ -640,6 +640,17 @@
   background: var(--admin-surface-hover) !important;
 }
 
+.admin-workspace [data-admin-scroll] {
+  position: relative;
+  overscroll-behavior-inline: contain;
+  scrollbar-gutter: stable;
+}
+
+.admin-workspace [data-admin-scroll]:focus-visible {
+  outline: 3px solid rgba(16, 185, 129, 0.4);
+  outline-offset: 3px;
+}
+
 /* Top-level route surfaces share the Tableau de bord's quiet, compact frame.
    Nested controls retain their own intended geometry. */
 .admin-workspace .admin-tab-enter > :is([class*="rounded-2xl"], [class*="rounded-3xl"]),
@@ -995,13 +1006,30 @@ aside :is(button:not(.po-ui-button), a:not(.po-ui-button)):focus-visible {
 
 .admin-dark .admin-quiet-label { color: #94a3b8; }
 
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   .admin-workspace {
     padding: 16px !important;
     padding-bottom: 88px !important;
   }
   .admin-workspace table { min-width: 720px; }
   .admin-workspace [data-admin-scroll] { scrollbar-width: thin; }
+}
+
+@media (max-width: 767px) {
+  .admin-workspace table { min-width: 760px; }
+
+  .admin-workspace table :is(th, td):first-child {
+    position: sticky;
+    inset-inline-start: 0;
+    z-index: 2;
+    background: inherit;
+    box-shadow: 1px 0 0 var(--admin-border);
+  }
+
+  .admin-workspace table thead :is(th, td):first-child {
+    z-index: 3;
+    background: var(--admin-surface-2) !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1012,3 +1040,27 @@ aside :is(button:not(.po-ui-button), a:not(.po-ui-button)):focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Shared async states keep loading, empty, error and permission feedback
+   consistent across private-product screens. */
+.admin-state-panel {
+  width: 100%;
+  padding: 24px;
+  border-radius: var(--admin-radius-lg);
+  border: 1px solid var(--admin-border, rgba(148, 163, 184, 0.18));
+  background: var(--admin-surface, rgba(255, 255, 255, 0.75));
+}
+.admin-state-skeleton-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.admin-state-skeleton-list { display: grid; gap: 10px; }
+.admin-state-skeleton {
+  display: block;
+  border-radius: 10px;
+  background: linear-gradient(90deg, rgba(148,163,184,.10), rgba(148,163,184,.24), rgba(148,163,184,.10));
+  background-size: 220% 100%;
+  animation: admin-state-shimmer 1.4s ease-in-out infinite;
+}
+.admin-state-skeleton-title { width: min(260px, 55%); height: 18px; }
+.admin-state-skeleton-action { width: 96px; height: 36px; }
+.admin-state-skeleton-row { width: 100%; height: 52px; }
+@keyframes admin-state-shimmer { to { background-position: -220% 0; } }
+@media (prefers-reduced-motion: reduce) { .admin-state-skeleton { animation: none; } }

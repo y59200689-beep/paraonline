@@ -7,6 +7,8 @@ import { StickyPublishBar } from '@/components/admin/ui/StickyPublishBar';
 import { BilingualField } from '@/components/admin/ui/BilingualField';
 import { EmptyState } from '@/components/admin/ui/EmptyState';
 import { canManageBrands, canPublishContent } from '@/lib/permissions';
+import { AsyncState } from '@/components/admin/ui/AsyncState';
+import { requestJson } from '@/lib/request-json';
 import {
   Tag, Search, ArrowLeft, ChevronRight, Globe, Image, Package, AlertCircle,
   Plus, Eye, EyeOff, Upload, Link2, Trash2, Check, RefreshCw,
@@ -693,17 +695,26 @@ export default function ContentBrandsPage() {
 
   const [brands, setBrands] = useState<CmsBrand[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [selected, setSelected] = useState<CmsBrand | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<{ imported: number; total: number } | null>(null);
 
-  useEffect(() => {
-    fetch('/api/cms/brands')
-      .then(r => r.json())
-      .then(data => { setBrands(data.brands ?? []); setLoading(false); })
-      .catch(() => setLoading(false));
+  const loadBrands = useCallback(async () => {
+    setLoading(true);
+    setLoadError('');
+    try {
+      const data = await requestJson<{ brands?: CmsBrand[] }>('/api/cms/brands');
+      setBrands(data.brands ?? []);
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : 'Impossible de charger les marques.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => { void loadBrands(); }, [loadBrands]);
 
   const handleSync = useCallback(async () => {
     setSyncing(true);
@@ -763,12 +774,14 @@ export default function ContentBrandsPage() {
   }, []);
 
   if (!canManage) {
-    return <div style={{ padding: '40px', textAlign: 'center' }}><p style={{ fontSize: '14px', color: isDark ? '#475569' : '#94a3b8' }}>Accès refusé.</p></div>;
+    return <AsyncState kind="forbidden" description="Votre rôle ne permet pas de gérer les pages de marque." />;
   }
 
   if (loading) {
-    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px' }}><div className="w-6 h-6 border-2 border-slate-700 border-t-emerald-500 rounded-full animate-spin" /></div>;
+    return <AsyncState kind="loading" />;
   }
+
+  if (loadError) return <AsyncState kind="error" description={loadError} onRetry={loadBrands} />;
 
   if (selected) {
     return <BrandEditor brand={selected} onBack={() => setSelected(null)} isDark={isDark} role={role} onUpdated={handleUpdated} />;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { AlertTriangle, Loader2, X } from 'lucide-react';
 
 type ConfirmDialogProps = {
@@ -15,17 +15,38 @@ type ConfirmDialogProps = {
 
 export function ConfirmDialog({ open, title, description, confirmLabel = 'Confirmer', busy = false, onConfirm, onClose }: ConfirmDialogProps) {
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLElement>(null);
+  const titleId = useId();
+  const descriptionId = useId();
 
   useEffect(() => {
     if (!open) return;
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && !busy) onClose();
+      if (event.key !== 'Tab') return;
+
+      const focusable = Array.from(
+        dialogRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])') || []
+      );
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener('keydown', onKeyDown);
     const timer = window.setTimeout(() => cancelButtonRef.current?.focus(), 0);
     return () => {
       window.removeEventListener('keydown', onKeyDown);
       window.clearTimeout(timer);
+      previouslyFocused?.focus();
     };
   }, [busy, onClose, open]);
 
@@ -33,15 +54,15 @@ export function ConfirmDialog({ open, title, description, confirmLabel = 'Confir
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) onClose(); }}>
-      <section role="dialog" aria-modal="true" aria-labelledby="admin-confirm-title" aria-describedby="admin-confirm-description" className="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-950/25">
+      <section ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={descriptionId} className="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-950/25">
         <div className="flex items-start gap-4 p-6">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600"><AlertTriangle className="h-5 w-5" aria-hidden="true" /></span>
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-3">
-              <h2 id="admin-confirm-title" className="text-base font-black text-slate-950">{title}</h2>
+              <h2 id={titleId} className="text-base font-black text-slate-950">{title}</h2>
               <button type="button" onClick={onClose} disabled={busy} className="-mr-1 -mt-1 inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-50" aria-label="Fermer la confirmation"><X className="h-4 w-4" aria-hidden="true" /></button>
             </div>
-            <p id="admin-confirm-description" className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
+            <p id={descriptionId} className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
           </div>
         </div>
         <div className="flex flex-col-reverse gap-2 border-t border-slate-100 bg-slate-50/70 p-4 sm:flex-row sm:justify-end">

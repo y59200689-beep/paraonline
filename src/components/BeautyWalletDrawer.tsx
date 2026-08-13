@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useLoyalty, LoyaltyTier } from '@/context/LoyaltyContext';
 import { useTranslation } from '@/context/LanguageContext';
 import { X, Award, Coins, ArrowRight, Check, ShieldCheck, Clock, Ticket, Copy } from 'lucide-react';
+import { useModalAccessibility } from '@/hooks/useModalAccessibility';
 
 interface BeautyWalletDrawerProps {
   isOpen: boolean;
@@ -52,6 +53,7 @@ export const BeautyWalletDrawer: React.FC<BeautyWalletDrawerProps> = ({ isOpen, 
   const [swipeOffset, setSwipeOffset] = useState(0);
 
   const isRTL = language === 'AR';
+  const drawerRef = useModalAccessibility<HTMLDivElement>(isOpen, onClose);
 
   useEffect(() => {
     if (!isOpen) {
@@ -204,6 +206,8 @@ export const BeautyWalletDrawer: React.FC<BeautyWalletDrawerProps> = ({ isOpen, 
 
   return (
     <div
+      aria-hidden={!isOpen}
+      inert={!isOpen}
       className={`fixed inset-0 bg-black/55 z-50 flex justify-end ${
         isOpen ? 'opacity-100 pointer-events-auto backdrop-blur-sm' : 'opacity-0 pointer-events-none'
       }`}
@@ -213,6 +217,11 @@ export const BeautyWalletDrawer: React.FC<BeautyWalletDrawerProps> = ({ isOpen, 
 
       {/* Drawer Container */}
       <div
+        ref={drawerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="beauty-wallet-title"
+        tabIndex={-1}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -230,7 +239,7 @@ export const BeautyWalletDrawer: React.FC<BeautyWalletDrawerProps> = ({ isOpen, 
             <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
               <Coins className="w-4.5 h-4.5" />
             </div>
-            <h3 className="text-[15px] font-black text-slate-800 leading-none">
+            <h3 id="beauty-wallet-title" className="text-[15px] font-black text-slate-800 leading-none">
               {language === 'FR' ? 'Mon Portefeuille Beauté' : 'محفظة الجمال الخاصة بي'}
             </h3>
           </div>

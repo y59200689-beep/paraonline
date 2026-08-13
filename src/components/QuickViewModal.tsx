@@ -10,14 +10,14 @@ import { X, Star, ShoppingBag, Plus, Minus, Info, ShieldCheck, Sparkles, Coins, 
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { useSettings } from '@/context/SettingsContext';
 import Image from 'next/image';
+import { useModalAccessibility } from '@/hooks/useModalAccessibility';
+import { PRODUCT_IMAGE_FALLBACK } from '@/lib/public-images';
 
 interface QuickViewModalProps {
   product: Product | null;
   isOpen: boolean;
   onClose: () => void;
 }
-
-const placeholderSvg = "data:image/svg+xml;utf8," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300' width='100%' height='100%'><rect width='100%' height='100%' fill='#f1f5f9'/><path d='M150 100a40 40 0 1 0 40 40 40 40 0 0 0-40-40zm0 60a20 20 0 1 1 20-20 20 20 0 0 1-20 20z' fill='#94a3b8'/><path d='M180 180h-60a10 10 0 0 0-10 10v10h80v-10a10 10 0 0 0-10-10z' fill='#94a3b8'/><text x='150' y='230' font-family='sans-serif' font-size='12' font-weight='bold' fill='#64748b' text-anchor='middle'>Image Indisponible</text></svg>");
 
 export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClose }) => {
   const { language } = useTranslation();
@@ -37,6 +37,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen,
   const [isVisible, setIsVisible] = useState(false);   // controls DOM presence
   const [modalState, setModalState] = useState<'closed' | 'opening' | 'open' | 'closing'>('closed');
   const closeMs = 160; // must match --modal-close-dur
+  const modalRef = useModalAccessibility<HTMLDivElement>(isVisible && modalState !== 'closing', onClose);
 
   const [liveProduct, setLiveProduct] = useState<Product | null>(null);
   const [isLiveLoading, setIsLiveLoading] = useState(false);
@@ -267,12 +268,18 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen,
   return (
     <div className={backdropCls}>
       <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="quick-view-title"
+        tabIndex={-1}
         className={modalCls}
         style={{ direction: isRTL ? 'rtl' : 'ltr' }}
       >
         {/* Close */}
         <button 
           onClick={onClose} 
+          data-autofocus
           aria-label={language === 'FR' ? 'Fermer' : 'إغلاق'}
           className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100 transition-all z-40 cursor-pointer"
         >
@@ -292,7 +299,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen,
                     </span>
                   )}
                   <Image
-                    src={imgError ? placeholderSvg : (imageToRender ? getOptimizedImageUrl(imageToRender) : placeholderSvg)}
+                    src={imgError ? PRODUCT_IMAGE_FALLBACK : (imageToRender ? getOptimizedImageUrl(imageToRender) : PRODUCT_IMAGE_FALLBACK)}
                     alt={product.title}
                     fill
                     sizes="(max-width: 768px) 100vw, 50vw"
@@ -311,7 +318,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen,
                         className={`w-14 h-14 rounded-[6px] overflow-hidden border-2 transition-all p-1 bg-white cursor-pointer ${imageToRender === img ? 'border-primary ring-2 ring-primary/10 shadow-md' : 'border-border/40 hover:border-accent'}`}
                       >
                         <Image
-                          src={img ? getOptimizedImageUrl(img) : placeholderSvg}
+                          src={img ? getOptimizedImageUrl(img) : PRODUCT_IMAGE_FALLBACK}
                           alt=""
                           width={56}
                           height={56}
@@ -333,14 +340,16 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen,
             <div className={`t-stagger ${modalState === 'open' ? 'is-shown' : ''}`}>
               <div className="t-stagger-line t-stagger-line--1 flex items-center justify-between text-xs">
                 <span className="text-accent font-black uppercase tracking-widest">{product.vendor}</span>
-                <div className="flex items-center gap-0.5 text-amber-500 font-bold">
-                  <Star className="w-3.5 h-3.5 fill-amber-400 stroke-none" />
-                  <span>{product.rating}</span>
-                  <span className="text-foreground/60 font-medium">({product.reviews} reviews)</span>
-                </div>
+                {product.reviews > 0 && product.rating > 0 ? (
+                  <div className="flex items-center gap-0.5 text-amber-500 font-bold" aria-label={language === 'FR' ? `${product.rating} sur 5, ${product.reviews} avis clients` : `${product.rating} من 5، ${product.reviews} تقييمات عملاء`}>
+                    <Star className="w-3.5 h-3.5 fill-amber-400 stroke-none" aria-hidden="true" />
+                    <span>{product.rating}</span>
+                    <span className="text-foreground/60 font-medium">({product.reviews} {language === 'FR' ? 'avis' : 'تقييم'})</span>
+                  </div>
+                ) : null}
               </div>
 
-              <h3 className="t-stagger-line t-stagger-line--2 text-lg md:text-xl font-black font-heading text-primary-dark leading-tight hover:text-primary transition-colors mt-2">
+              <h3 id="quick-view-title" className="t-stagger-line t-stagger-line--2 text-lg md:text-xl font-black font-heading text-primary-dark leading-tight hover:text-primary transition-colors mt-2">
                 <a href={`/products/${product.id}`} onClick={onClose} className="cursor-pointer">
                   {product.title}
                 </a>

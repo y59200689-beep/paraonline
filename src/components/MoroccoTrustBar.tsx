@@ -15,10 +15,10 @@ export const MoroccoTrustBar: React.FC = () => {
     {
       id: 'shipping',
       icon: Truck,
-      titleFR: 'Livraison Rapide Maroc',
-      titleAR: 'شحن سريع بالمغرب',
-      descFR: 'Gratuite sur Casablanca & Rabat sous 24h, et partout au Maroc sous 48h.',
-      descAR: 'مجاني في الدار البيضاء والرباط خلال 24 ساعة، وفي جميع أنحاء المغرب خلال 48 ساعة.',
+      titleFR: 'Livraison au Maroc',
+      titleAR: 'التوصيل داخل المغرب',
+      descFR: 'Le délai et les frais sont calculés selon votre ville avant la confirmation de la commande.',
+      descAR: 'يتم احتساب المدة والتكلفة حسب مدينتك قبل تأكيد الطلب.',
       highlight: false,
     },
     {
@@ -26,17 +26,17 @@ export const MoroccoTrustBar: React.FC = () => {
       icon: CreditCard,
       titleFR: 'Paiement à la Livraison',
       titleAR: 'الدفع عند الاستلام',
-      descFR: 'Paiement 100% sécurisé en espèces ou par carte bancaire lors de la réception.',
-      descAR: 'دفع آمن 100٪ عند الاستلام نقدًا أو بالبطاقة البنكية عند استلام طلبكِ.',
+      descFR: 'Réglez votre commande à la réception lorsque cette option est disponible pour votre zone.',
+      descAR: 'يمكنك الدفع عند الاستلام عندما تكون هذه الخدمة متاحة في منطقتك.',
       highlight: false,
     },
     {
       id: 'authenticity',
       icon: ShieldCheck,
-      titleFR: '100% Authentique',
-      titleAR: 'أصلي 100٪',
-      descFR: 'Produits certifiés d\'origine, importés directement de Séoul (K-Beauty) et de France.',
-      descAR: 'منتجات أصلية معتمدة، مستوردة مباشرة من سيول (كوريا) وفرنسا.',
+      titleFR: 'Origine et traçabilité',
+      titleAR: 'المصدر وإمكانية التتبع',
+      descFR: 'Notre équipe peut vous renseigner sur la provenance et les références des produits proposés.',
+      descAR: 'يمكن لفريقنا تزويدك بمعلومات حول مصدر المنتجات ومراجعها.',
       highlight: false,
     },
     {
@@ -44,8 +44,8 @@ export const MoroccoTrustBar: React.FC = () => {
       icon: MessageSquare,
       titleFR: 'Conseil & Support WhatsApp',
       titleAR: 'دعم و استشارة واتساب',
-      descFR: 'Des experts K-Beauty et conseillers disponibles 7j/7 pour vous guider.',
-      descAR: 'خبراء العناية بالبشرة ومستشارون متوفرون 7 أيام في الأسبوع لمساعدتكِ.',
+      descFR: 'Contactez notre équipe pour une question sur un produit, une commande ou une livraison.',
+      descAR: 'تواصل مع فريقنا لأي سؤال حول منتج أو طلب أو توصيل.',
       highlight: true,
       actionUrl: `https://wa.me/${storeWhatsApp}?text=Bonjour, je souhaite avoir des conseils de soin.`,
     },
@@ -67,14 +67,14 @@ export const MoroccoTrustBar: React.FC = () => {
               </>
             ) : (
               <>
-                Nos Engagements de <span className="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">Confiance Locale</span>
+                Des informations claires <span className="text-emerald-600">avant votre achat</span>
               </>
             )}
           </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
             {language === 'AR'
               ? 'نهتم برضاكِ من خلال تقديم تجربة تسوق آمنة وسريعة متوافقة تمامًا مع احتياجاتكِ في المغرب.'
-              : 'Parce que votre satisfaction est notre priorité absolue, nous vous garantissons un service irréprochable adapté au marché marocain.'
+              : 'Les conditions applicables sont présentées avant la validation, avec un accès direct à notre équipe si vous avez une question.'
             }
           </p>
         </div>

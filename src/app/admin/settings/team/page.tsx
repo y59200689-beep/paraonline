@@ -5,6 +5,8 @@ import { useAdmin } from '@/context/AdminContext';
 import { canManageOperators } from '@/lib/permissions';
 import { UserCog, Plus, Shield, User, Mail, Trash2, Loader2, Check } from 'lucide-react';
 import { StatusBadge } from '@/components/admin/ui/StatusBadge';
+import { AsyncState } from '@/components/admin/ui/AsyncState';
+import { requestJson } from '@/lib/request-json';
 
 interface Operator {
   id: string;
@@ -35,6 +37,7 @@ export default function SettingsTeamPage() {
 
   const [operators, setOperators] = useState<Operator[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
 
   // New user form
@@ -43,15 +46,20 @@ export default function SettingsTeamPage() {
   const [newRole, setNewRole] = useState('content_editor');
   const [adding, setAdding] = useState(false);
 
-  useEffect(() => {
-    fetch('/api/admin/operators')
-      .then(r => r.json())
-      .then(data => {
-        setOperators(data.operators ?? []);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+  const loadOperators = React.useCallback(async () => {
+    setLoading(true);
+    setLoadError('');
+    try {
+      const data = await requestJson<{ operators?: Operator[] }>('/api/admin/operators');
+      setOperators(data.operators ?? []);
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : 'Impossible de charger l’équipe.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => { if (canManage) void loadOperators(); }, [canManage, loadOperators]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,12 +107,14 @@ export default function SettingsTeamPage() {
   };
 
   if (!canManage) {
-    return <div style={{ padding: '40px', textAlign: 'center' }}><p style={{ fontSize: '14px', color: isDark ? '#475569' : '#94a3b8' }}>Seul le propriétaire peut gérer les membres de l&apos;équipe.</p></div>;
+    return <AsyncState kind="forbidden" description="Seul le propriétaire peut gérer les membres de l’équipe." />;
   }
 
   if (loading) {
-    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px' }}><div className="w-6 h-6 border-2 border-slate-700 border-t-emerald-500 rounded-full animate-spin" /></div>;
+    return <AsyncState kind="loading" />;
   }
+
+  if (loadError) return <AsyncState kind="error" description={loadError} onRetry={loadOperators} />;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1000px' }}>

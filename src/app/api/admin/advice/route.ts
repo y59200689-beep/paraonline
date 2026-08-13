@@ -46,10 +46,11 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, error: 'Accès non autorisé.' }, { status: 401 });
     }
 
-    let { data: articles, error } = await supabase
+    const { data: fetchedArticles, error } = await supabase
       .from('advice_articles')
       .select('*')
       .order('created_at', { ascending: false });
+    let articles = fetchedArticles;
 
     // Seed default articles if empty or table missing
     if (error || !articles || articles.length === 0) {
