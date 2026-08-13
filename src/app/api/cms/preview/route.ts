@@ -21,8 +21,11 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const { entity_type, entity_id, snapshot } = body;
 
-  if (!entity_type || !entity_id || !snapshot) {
+  if (!['page', 'brand', 'section'].includes(entity_type) || !/^[a-zA-Z0-9_-]{1,160}$/.test(String(entity_id ?? '')) || !snapshot || typeof snapshot !== 'object') {
     return NextResponse.json({ error: 'entity_type, entity_id, and snapshot are required' }, { status: 400 });
+  }
+  if (JSON.stringify(snapshot).length > 500_000) {
+    return NextResponse.json({ error: 'Preview snapshot is too large' }, { status: 413 });
   }
 
   // Purge expired tokens first (best-effort, non-blocking)
@@ -44,8 +47,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error?.message ?? 'Failed to create token' }, { status: 500 });
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
-  const preview_url = `${siteUrl}?preview_token=${data.token}`;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? new URL(req.url).origin;
+  const snapshotSlug = typeof snapshot?.slug === 'string' ? snapshot.slug : null;
+  const path = entity_type === 'brand' && snapshotSlug
+    ? `/brand/${encodeURIComponent(snapshotSlug)}`
+    : entity_type === 'page' && snapshotSlug
+      ? `/${encodeURIComponent(snapshotSlug)}`
+      : '/';
+  const preview_url = `${siteUrl}${path}?preview_token=${data.token}`;
 
   return NextResponse.json({ token: data.token, preview_url });
 }
@@ -72,5 +81,5 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Preview token has expired' }, { status: 410 });
   }
 
-  return NextResponse.json({ entity_type: data.entity_type, entity_id: data.entity_id, snapshot: data.snapshot });
+  return NextResponse.json({ entity_type: data.entity_type, entity_id: data.entity_id, snapshot: data.snapshot }, { headers: { 'Cache-Control': 'no-store' } });
 }

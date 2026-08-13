@@ -796,3 +796,75 @@ ALTER TABLE IF EXISTS cms_brands
   ADD COLUMN IF NOT EXISTS is_visible boolean NOT NULL DEFAULT true,
   ADD COLUMN IF NOT EXISTS card_link  text;
 UPDATE cms_brands SET is_visible = true WHERE is_visible IS NULL;
+
+-- ─── CMS Phase 0/1: approval workflow and revision diffs ─────
+ALTER TABLE IF EXISTS cms_pages
+  ADD COLUMN IF NOT EXISTS approval_status TEXT NOT NULL DEFAULT 'draft',
+  ADD COLUMN IF NOT EXISTS submitted_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS submitted_by TEXT,
+  ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS reviewed_by TEXT,
+  ADD COLUMN IF NOT EXISTS review_note TEXT;
+
+ALTER TABLE IF EXISTS cms_brands
+  ADD COLUMN IF NOT EXISTS approval_status TEXT NOT NULL DEFAULT 'draft',
+  ADD COLUMN IF NOT EXISTS submitted_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS submitted_by TEXT,
+  ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS reviewed_by TEXT,
+  ADD COLUMN IF NOT EXISTS review_note TEXT;
+
+ALTER TABLE IF EXISTS cms_page_revisions
+  ADD COLUMN IF NOT EXISTS changed_fields JSONB NOT NULL DEFAULT '[]'::JSONB;
+
+ALTER TABLE IF EXISTS cms_brand_revisions
+  ADD COLUMN IF NOT EXISTS changed_fields JSONB NOT NULL DEFAULT '[]'::JSONB;
+
+DO $$ BEGIN
+  ALTER TABLE cms_pages ADD CONSTRAINT cms_pages_approval_status_check
+    CHECK (approval_status IN ('draft', 'pending_review', 'approved', 'rejected'));
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  ALTER TABLE cms_brands ADD CONSTRAINT cms_brands_approval_status_check
+    CHECK (approval_status IN ('draft', 'pending_review', 'approved', 'rejected'));
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+CREATE INDEX IF NOT EXISTS cms_pages_approval_status_idx
+  ON cms_pages (approval_status, updated_at DESC);
+CREATE INDEX IF NOT EXISTS cms_brands_approval_status_idx
+  ON cms_brands (approval_status, updated_at DESC);
+
+-- ─── Phase 2: register public pages for CMS migration ───────
+INSERT INTO cms_pages (slug, page_type, title_fr, title_ar, status, section_order)
+VALUES
+  ('a-propos', 'about', 'À propos', 'من نحن', 'draft', '[]'::jsonb),
+  ('suivi-commande', 'delivery', 'Suivi de commande', 'تتبع الطلب', 'draft', '[]'::jsonb),
+  ('checkout-success', 'checkout_success', 'Commande confirmée', 'تم تأكيد الطلب', 'draft', '[]'::jsonb),
+  ('checkout-failure', 'checkout_failure', 'Paiement à vérifier', 'يرجى التحقق من الدفع', 'draft', '[]'::jsonb),
+  ('politiques/conditions-vente', 'policies', 'Conditions générales de vente', 'شروط البيع العامة', 'draft', '[]'::jsonb),
+  ('politiques/confidentialite', 'policies', 'Politique de confidentialité', 'سياسة الخصوصية', 'draft', '[]'::jsonb),
+  ('politiques/retours-reclamations', 'policies', 'Retours et réclamations', 'الإرجاع والشكاوى', 'draft', '[]'::jsonb),
+  ('customer-portal', 'customer_portal', 'Espace client', 'مساحة العميل', 'draft', '[]'::jsonb)
+ON CONFLICT (slug) DO NOTHING;
+
+-- ─── Phase 3: ordered no-code brand sections ────────────────
+ALTER TABLE IF EXISTS cms_brands ADD COLUMN IF NOT EXISTS page_sections JSONB NOT NULL DEFAULT '[]'::jsonb;
+
+-- ─── Phase 5: versioned Diagnostic IA configuration ────────
+CREATE TABLE IF NOT EXISTS cms_diagnostic_versions (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  version_number INTEGER NOT NULL,
+  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
+  snapshot JSONB NOT NULL DEFAULT '{"questions":[]}'::JSONB,
+  created_by TEXT NOT NULL DEFAULT 'system',
+  published_by TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now()),
+  published_at TIMESTAMPTZ,
+  UNIQUE (version_number)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS cms_diagnostic_one_published_version
+  ON cms_diagnostic_versions (status) WHERE status = 'published';
+ALTER TABLE cms_diagnostic_versions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS cms_diagnostic_versions_no_public ON cms_diagnostic_versions;
+CREATE POLICY cms_diagnostic_versions_no_public ON cms_diagnostic_versions FOR ALL USING (false);

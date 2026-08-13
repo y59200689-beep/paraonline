@@ -5,12 +5,7 @@ import Image from 'next/image';
 import { Trash2, Plus, Minus } from 'lucide-react';
 import { Product } from '@/lib/data';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
-
-const placeholderSvg =
-  "data:image/svg+xml;utf8," +
-  encodeURIComponent(
-    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300' width='100%' height='100%'><rect width='100%' height='100%' fill='#f1f5f9'/><path d='M150 100a40 40 0 1 0 40 40 40 40 0 0 0-40-40zm0 60a20 20 0 1 1 20-20 20 20 0 0 1-20 20z' fill='#94a3b8'/><path d='M180 180h-60a10 10 0 0 0-10 10v10h80v-10a10 10 0 0 0-10-10z' fill='#94a3b8'/><text x='150' y='230' font-family='sans-serif' font-size='12' font-weight='bold' fill='#64748b' text-anchor='middle'>Image Indisponible</text></svg>"
-  );
+import { PRODUCT_IMAGE_FALLBACK } from '@/lib/public-images';
 
 const toTitleCase = (str: string) => {
   if (!str) return '';
@@ -88,7 +83,7 @@ export const CartItemList: React.FC<CartItemListProps> = ({
             {/* Thumbnail */}
             <div className="w-16 h-16 shrink-0 rounded-xl bg-slate-50 border border-slate-100 overflow-hidden flex items-center justify-center p-1 relative transition-transform duration-300 group-hover:scale-[1.02]">
               <Image
-                src={getOptimizedImageUrl(item.product.image) || placeholderSvg}
+                src={getOptimizedImageUrl(item.product.image) || PRODUCT_IMAGE_FALLBACK}
                 alt={item.product.nameFr || item.product.name || item.product.title}
                 fill
                 sizes="64px"

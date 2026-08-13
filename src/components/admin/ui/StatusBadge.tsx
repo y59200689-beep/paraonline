@@ -60,14 +60,8 @@ export function StatusBadge({
   theme,
   className = '',
 }: StatusBadgeProps) {
-  let isLight = false;
-
-  try {
-    const { adminTheme } = useAdmin();
-    isLight = theme ? theme === 'light' : adminTheme === 'light';
-  } catch {
-    isLight = theme === 'light';
-  }
+  const { adminTheme } = useAdmin();
+  const isLight = theme ? theme === 'light' : adminTheme === 'light';
 
   const key = status.toLowerCase().trim();
   const colors = STATUS_MAP[key] ?? FALLBACK;

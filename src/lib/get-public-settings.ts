@@ -1,18 +1,49 @@
 import { supabaseAdmin as supabase } from '@/lib/supabase';
-import { DEFAULT_SETTINGS, type Settings } from '@/context/SettingsContext';
+import { DEFAULT_SETTINGS, type HeroCardConfig, type Settings } from '@/context/SettingsContext';
 import { unstable_cache } from 'next/cache';
 
 const BANNER_KEYS = ['hero_bestsellers', 'hero_summersale', 'hero_weeklypromo', 'hero_newarrivals'];
 export const PUBLIC_SETTINGS_CACHE_TAG = 'public-settings';
 
-interface PublicBanner {
-  bgImage?: string;
-  [key: string]: unknown;
-}
-
 type PublicSettings = Omit<Partial<Settings>, 'paymentSettings'> & {
   paymentSettings?: Partial<NonNullable<Settings['paymentSettings']>>;
 } & Record<string, unknown>;
+
+const SAFE_DELIVERY_FR = 'Les délais et frais de livraison dépendent de la ville et sont confirmés avant la validation de la commande.';
+const SAFE_DELIVERY_AR = 'تختلف مدة وتكلفة التوصيل حسب المدينة، ويتم تأكيدهما قبل إتمام الطلب.';
+
+function normalizeLegacyStorefrontClaims(settings: Settings): Settings {
+  const banners = (settings.banners || []).map((banner) => {
+    if (!banner.descFr?.includes('Formules certifiées, résultats prouvés')) return banner;
+    return {
+      ...banner,
+      tagFr: 'LES PLUS VENDUS · SÉLECTION',
+      tagAr: 'الأكثر مبيعاً · مختارات',
+      titleFr: 'Nos meilleures ventes',
+      descFr: 'Découvrez une sélection de soins et de produits K-Beauty appréciés par nos clients au Maroc.',
+      descAr: 'اكتشفي مجموعة من منتجات العناية والجمال الكوري التي يفضلها عملاؤنا في المغرب.',
+      ctaFr: 'Voir les meilleures ventes',
+    };
+  });
+
+  const faq = (settings.faq || []).map((item) => {
+    if (!item.a_fr?.includes('vous êtes livrés le jour même')) return item;
+    return { ...item, a_fr: SAFE_DELIVERY_FR, a_ar: SAFE_DELIVERY_AR };
+  });
+
+  const legacyAnnouncement = settings.announcementFr?.includes('LIVRAISON GRATUITE LE JOUR MÊME');
+  return {
+    ...settings,
+    banners,
+    faq,
+    announcementFr: legacyAnnouncement
+      ? 'LIVRAISON AU MAROC — Le délai et les frais sont confirmés avant la validation de votre commande.'
+      : settings.announcementFr,
+    announcementAr: legacyAnnouncement
+      ? 'التوصيل داخل المغرب — يتم تأكيد المدة والتكلفة قبل إتمام طلبك.'
+      : settings.announcementAr,
+  };
+}
 
 async function fetchPublicSettings(): Promise<PublicSettings> {
   try {
@@ -23,14 +54,14 @@ async function fetchPublicSettings(): Promise<PublicSettings> {
       .single();
 
     const dbSettings = data?.value || {};
-    const settings = {
+    const settings = normalizeLegacyStorefrontClaims({
       ...DEFAULT_SETTINGS,
       ...dbSettings,
       homepageSections: {
         ...DEFAULT_SETTINGS.homepageSections,
         ...(dbSettings.homepageSections || {}),
       },
-    };
+    } as Settings);
 
     // Fetch dedicated gallery overrides row (id=99) — authoritative source
     let dbGalleryOverrides: Record<string, string> = {};
@@ -52,7 +83,7 @@ async function fetchPublicSettings(): Promise<PublicSettings> {
     // Inject galleryOverrides directly into banners[i].bgImage
     let banners = settings.banners || [];
     if (banners.length > 0) {
-      banners = banners.map((b: PublicBanner, idx: number) => {
+      banners = banners.map((b: HeroCardConfig, idx: number) => {
         const key = BANNER_KEYS[idx];
         const cleanBg = b.bgImage ? b.bgImage.replace(/\.png(\?.*)?$/i, '.webp$1') : b.bgImage;
         const override = key && mergedGalleryOverrides[key];
@@ -95,7 +126,7 @@ async function fetchPublicSettings(): Promise<PublicSettings> {
       lowStockThreshold: settings.lowStockThreshold,
       themeColors: settings.themeColors,
       diagnosticRules: settings.diagnosticRules || [],
-      deliverySettings: settings.deliverySettings || null,
+      deliverySettings: settings.deliverySettings || undefined,
       homepageSections,
       featuredProductIds: settings.featuredProductIds || [],
       galleryOverrides: mergedGalleryOverrides,

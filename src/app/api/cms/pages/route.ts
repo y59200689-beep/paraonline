@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { verifyAdminSession } from '@/lib/session';
 import { canEditContent, canPublishContent } from '@/lib/permissions';
+import { canScheduleContent } from '@/lib/permissions';
 import { revalidateTag } from 'next/cache';
 import { CMS_HOMEPAGE_CACHE_TAG } from '@/lib/cms-homepage';
 import { PUBLIC_SETTINGS_CACHE_TAG } from '@/lib/get-public-settings';
@@ -56,17 +57,18 @@ export async function GET(req: NextRequest) {
   if (!canEditContent(session.role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   try {
-    let { data, error } = await supabaseAdmin
+    const { data: fetchedPages, error } = await supabaseAdmin
       .from('cms_pages')
-      .select('id,slug,page_type,title_fr,title_ar,status,updated_at,updated_by,section_order,seo_title_fr,seo_title_ar,seo_description_fr,seo_description_ar')
+      .select('id,slug,page_type,title_fr,title_ar,status,approval_status,submitted_at,submitted_by,reviewed_at,reviewed_by,review_note,scheduled_at,updated_at,updated_by,section_order,seo_title_fr,seo_title_ar,seo_description_fr,seo_description_ar')
       .order('page_type', { ascending: true });
+    let data = fetchedPages;
 
     // If table exists but is empty, seed initial pages
     if (!error && (!data || data.length === 0)) {
       await supabaseAdmin.from('cms_pages').upsert(DEFAULT_SEED_PAGES, { onConflict: 'slug' });
       const { data: seeded } = await supabaseAdmin
         .from('cms_pages')
-        .select('id,slug,page_type,title_fr,title_ar,status,updated_at,updated_by,section_order,seo_title_fr,seo_title_ar,seo_description_fr,seo_description_ar')
+        .select('id,slug,page_type,title_fr,title_ar,status,approval_status,submitted_at,submitted_by,reviewed_at,reviewed_by,review_note,scheduled_at,updated_at,updated_by,section_order,seo_title_fr,seo_title_ar,seo_description_fr,seo_description_ar')
         .order('page_type', { ascending: true });
       data = seeded || DEFAULT_SEED_PAGES as any;
     }
@@ -89,13 +91,23 @@ export async function PATCH(req: NextRequest) {
   if (!canEditContent(session.role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const body = await req.json();
-  const { id, status, ...fields } = body;
+  const { id, status, approval_action, ...fields } = body;
 
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
-  // Validate publish permission
+  const validStatuses = new Set(['draft', 'scheduled', 'published', 'archived']);
+  if (status && !validStatuses.has(status)) return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+  if (status === 'scheduled' && !canScheduleContent(session.role)) {
+    return NextResponse.json({ error: 'Only managers and owners can schedule content.' }, { status: 403 });
+  }
   if (status === 'published' && !canPublishContent(session.role)) {
-    return NextResponse.json({ error: 'You do not have permission to publish. Save as draft and request approval.' }, { status: 403 });
+    return NextResponse.json({ error: 'You do not have permission to publish. Submit this draft for approval.' }, { status: 403 });
+  }
+  if (approval_action && !['submit_for_approval', 'approve', 'reject'].includes(approval_action)) {
+    return NextResponse.json({ error: 'Invalid approval action' }, { status: 400 });
+  }
+  if (approval_action && approval_action !== 'submit_for_approval' && !canPublishContent(session.role)) {
+    return NextResponse.json({ error: 'Only managers and owners can review content.' }, { status: 403 });
   }
 
   // Read current state for revision snapshot
@@ -105,10 +117,38 @@ export async function PATCH(req: NextRequest) {
     ...fields,
     updated_by: session.username,
   };
+  const now = new Date().toISOString();
+  if (approval_action === 'submit_for_approval') {
+    updatePayload.status = 'draft';
+    updatePayload.approval_status = 'pending_review';
+    updatePayload.submitted_at = now;
+    updatePayload.submitted_by = session.username;
+  } else if (approval_action === 'approve') {
+    updatePayload.approval_status = 'approved';
+    updatePayload.reviewed_at = now;
+    updatePayload.reviewed_by = session.username;
+    updatePayload.review_note = body.review_note ?? null;
+  } else if (approval_action === 'reject') {
+    updatePayload.status = 'draft';
+    updatePayload.approval_status = 'rejected';
+    updatePayload.reviewed_at = now;
+    updatePayload.reviewed_by = session.username;
+    updatePayload.review_note = body.review_note ?? null;
+  }
   if (status) {
     updatePayload.status = status;
-    if (status === 'published') updatePayload.published_at = new Date().toISOString();
-    if (status === 'scheduled' && fields.scheduled_at) updatePayload.scheduled_at = fields.scheduled_at;
+    if (status === 'published') {
+      updatePayload.published_at = now;
+      updatePayload.approval_status = 'approved';
+      updatePayload.reviewed_at = now;
+      updatePayload.reviewed_by = session.username;
+    }
+    if (status === 'scheduled') {
+      // Scheduling is a manager/owner publishing decision; the cron may only
+      // publish records that have already crossed the approval gate.
+      updatePayload.approval_status = 'approved';
+      if (fields.scheduled_at) updatePayload.scheduled_at = fields.scheduled_at;
+    }
   }
 
   const { data, error } = await supabaseAdmin
@@ -121,11 +161,16 @@ export async function PATCH(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   // Write revision
+  const changedFields = current
+    ? Object.keys({ ...fields, ...(status ? { status } : {}), ...(approval_action ? { approval_action } : {}) })
+        .filter(key => JSON.stringify((current as any)[key]) !== JSON.stringify((data as any)?.[key]))
+    : Object.keys(fields);
   if (current) {
     await supabaseAdmin.from('cms_page_revisions').insert({
       page_id: id,
       snapshot: current,
       saved_by: session.username,
+      changed_fields: changedFields,
     }).then(() => {});
   }
 
@@ -134,7 +179,7 @@ export async function PATCH(req: NextRequest) {
     entity_type: 'page',
     entity_id: id,
     entity_label: current?.title_fr ?? current?.slug,
-    action: status === 'published' ? 'publish' : status === 'archived' ? 'archive' : 'update',
+    action: approval_action === 'submit_for_approval' ? 'submit_for_approval' : approval_action === 'approve' ? 'approve' : approval_action === 'reject' ? 'reject' : status === 'published' ? 'publish' : status === 'scheduled' ? 'schedule' : status === 'archived' ? 'archive' : 'update',
     previous: current ?? null,
     next_state: data,
     changed_by: session.username,

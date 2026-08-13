@@ -49,7 +49,7 @@ export const DesktopActions: React.FC<DesktopActionsProps> = ({
           <User className="w-5 h-5 text-slate-400 group-hover:text-primary transition-colors" />
         </div>
         <div className={`flex flex-col ${isRTL ? 'text-right' : 'text-left'} leading-snug shrink-0`}>
-          <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">
+          <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest">
             {language === 'FR' ? 'Bienvenue' : 'مرحباً'}
           </span>
           <span className="text-[12px] font-bold text-slate-700 group-hover:text-primary transition-colors mt-0.5">
@@ -64,7 +64,7 @@ export const DesktopActions: React.FC<DesktopActionsProps> = ({
       <button
         onClick={onWalletOpen}
         aria-label={language === 'FR' ? 'Mon Portefeuille Beauté' : 'محفظتي'}
-        className="relative flex flex-col items-center gap-1.5 text-slate-400 hover:text-primary transition-all cursor-pointer group"
+        className="relative flex flex-col items-center gap-1.5 text-slate-600 hover:text-primary transition-all cursor-pointer group"
       >
         <div className="relative">
           <Coins className="w-5 h-5 group-hover:scale-110 transition-transform duration-200 text-slate-400 group-hover:text-primary" />
@@ -83,7 +83,7 @@ export const DesktopActions: React.FC<DesktopActionsProps> = ({
       <button
         onClick={onWishlistOpen}
         aria-label={language === 'FR' ? "Ma Liste d'Envies" : 'المفضلة'}
-        className="relative flex flex-col items-center gap-1.5 text-slate-400 hover:text-primary transition-all cursor-pointer group"
+        className="relative flex flex-col items-center gap-1.5 text-slate-600 hover:text-primary transition-all cursor-pointer group"
       >
         <div className="relative">
           <Heart className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
@@ -120,7 +120,7 @@ export const DesktopActions: React.FC<DesktopActionsProps> = ({
           </span>
         </div>
         <div className={`flex flex-col ${isRTL ? 'text-right' : 'text-left'} leading-snug shrink-0`}>
-          <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">
+          <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest">
             {language === 'FR' ? 'Mon Panier' : 'سلتي'}
           </span>
           <span className="text-[13px] font-black text-slate-800 group-hover:text-primary transition-colors mt-0.5">

@@ -9,6 +9,7 @@ import { useCart } from '@/context/CartContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useTranslation } from '@/context/LanguageContext';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
+import { PRODUCT_IMAGE_FALLBACK } from '@/lib/public-images';
 
 const PRODUCT_LIMIT = 3;
 
@@ -94,7 +95,7 @@ export const ClinicalSelection: React.FC = () => {
                     <article key={product.id} className="group flex min-w-0 flex-col p-4 sm:p-5">
                       <Link href={`/products/${product.id}`} className="relative mb-4 block aspect-square overflow-hidden bg-[#f7f7f6]">
                         <Image
-                          src={getOptimizedImageUrl(product.image)}
+                          src={getOptimizedImageUrl(product.image) || PRODUCT_IMAGE_FALLBACK}
                           alt={title}
                           fill
                           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 22vw"

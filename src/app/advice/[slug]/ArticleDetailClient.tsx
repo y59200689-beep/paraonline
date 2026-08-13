@@ -119,7 +119,8 @@ export default function ArticleDetailClient({ article, initialRecommendedProduct
   const title = isRTL ? article.title_ar : article.title_fr;
   const content = isRTL ? article.content_ar : article.content_fr;
   const categoryLabel = article.category === 'kbeauty' ? (isRTL ? 'الجمال الكوري' : 'K-Beauty') : (isRTL ? 'العناية بالبشرة' : 'Soin');
-  const dateFormatted = new Date(article.created_at).toLocaleDateString(isRTL ? 'ar-MA' : 'fr-FR', {
+  const publicationDate = article.updated_at || article.created_at;
+  const dateFormatted = new Date(publicationDate).toLocaleDateString(isRTL ? 'ar-MA' : 'fr-FR', {
     day: 'numeric',
     month: 'long',
     year: 'numeric'
@@ -127,13 +128,8 @@ export default function ArticleDetailClient({ article, initialRecommendedProduct
 
   return (
     <ShopShell>
-      {/* Background decorations */}
-      <div className="absolute top-[10%] left-[-5%] w-[600px] h-[600px] rounded-full bg-teal-500/5 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-[20%] right-[-5%] w-[550px] h-[550px] rounded-full bg-amber-500/5 blur-3xl pointer-events-none" />
-
-      <main className="max-w-4xl mx-auto px-6 pt-32 pb-24 relative z-10" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+      <main className="public-page max-w-4xl mx-auto px-4 sm:px-6 pt-16 pb-24 relative z-10" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
         
-        {/* Navigation & Actions Row */}
         <div className="flex items-center justify-between mb-8">
           <Link 
             href="/advice"
@@ -161,6 +157,14 @@ export default function ArticleDetailClient({ article, initialRecommendedProduct
           </button>
         </div>
 
+        <nav aria-label={isRTL ? 'مسار التنقل' : 'Fil d’Ariane'} className="mb-8 flex items-center gap-2 text-xs text-slate-500">
+          <Link href="/" className="hover:text-[var(--public-action)]">{isRTL ? 'الرئيسية' : 'Accueil'}</Link>
+          <span aria-hidden="true">/</span>
+          <Link href="/advice" className="hover:text-[var(--public-action)]">{isRTL ? 'النصائح' : 'Conseils'}</Link>
+          <span aria-hidden="true">/</span>
+          <span className="truncate text-slate-700" aria-current="page">{title}</span>
+        </nav>
+
         {/* Article Header block */}
         <header className="space-y-6 mb-10 text-center md:text-left" style={{ textAlign: isRTL ? 'right' : 'left' }}>
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
@@ -184,6 +188,8 @@ export default function ArticleDetailClient({ article, initialRecommendedProduct
               <Clock className="w-3.5 h-3.5 text-slate-400" />
               <span>{article.read_time} min {isRTL ? 'قراءة' : 'de lecture'}</span>
             </span>
+            <span className="text-xs text-slate-500">{isRTL ? `تم التحديث ${dateFormatted}` : `Mis à jour le ${dateFormatted}`}</span>
+            <span className="text-xs text-slate-500">{isRTL ? 'فريق التحرير' : 'Équipe éditoriale'}</span>
           </div>
         </header>
 
@@ -204,6 +210,16 @@ export default function ArticleDetailClient({ article, initialRecommendedProduct
         <article className="prose prose-slate max-w-none mb-20 bg-white/70 backdrop-blur-md p-6 sm:p-10 md:p-12 border border-slate-200/60 rounded-[32px] shadow-sm">
           {parseMarkdownToReact(content)}
         </article>
+
+        <aside className="public-card mb-14 border-l-4 border-l-[var(--public-action)] p-5 text-sm leading-relaxed text-slate-600" style={{ textAlign: isRTL ? 'right' : 'left' }}>
+          <p className="font-bold text-slate-900">{isRTL ? 'ملاحظة مهمة' : 'À savoir'}</p>
+          <p className="mt-1">{isRTL ? 'هذا المقال يقدم معلومات تجميلية عامة ولا يغني عن استشارة مختص طبي عند الحاجة.' : 'Cet article propose des informations cosmétiques générales. Il ne remplace pas l’avis d’un professionnel de santé.'}</p>
+        </aside>
+
+        <section className="public-card mb-14 p-6" style={{ textAlign: isRTL ? 'right' : 'left' }}>
+          <h2 className="text-base font-bold text-slate-900">{isRTL ? 'المصادر والمراجع' : 'Sources et références'}</h2>
+          <p className="mt-2 text-sm leading-relaxed text-slate-600">{isRTL ? 'راجعوا وصف المنتج وقائمة المكونات وتعليمات الاستخدام قبل الاستعمال. المراجع الخاصة بهذا الدليل يتم عرضها عند توفرها.' : 'Consultez toujours la fiche produit, la liste d’ingrédients et les conseils d’utilisation. Les références spécifiques à ce guide sont affichées lorsqu’elles sont disponibles.'}</p>
+        </section>
 
         {/* Recommended products footer scroller */}
         {initialRecommendedProducts.length > 0 && (
@@ -253,14 +269,14 @@ export default function ArticleDetailClient({ article, initialRecommendedProduct
                         </h4>
                         
                         {/* Star Rating */}
-                        <div className="flex items-center gap-1">
+                        {p.reviews > 0 && p.rating > 0 ? <div className="flex items-center gap-1" aria-label={`${p.rating.toFixed(1)} sur 5, ${p.reviews} avis`}>
                           <div className="flex text-amber-400">
                             {[1, 2, 3, 4, 5].map((s) => (
-                              <Star key={s} className="w-3 h-3 fill-current" />
+                              <Star key={s} className={`w-3 h-3 ${s <= Math.round(p.rating) ? 'fill-current' : 'text-slate-200'}`} aria-hidden="true" />
                             ))}
                           </div>
-                          <span className="text-[10px] text-slate-400 font-semibold">({p.reviews || 5})</span>
-                        </div>
+                          <span className="text-[10px] text-slate-400 font-semibold">({p.reviews})</span>
+                        </div> : null}
                       </div>
                     </div>
 

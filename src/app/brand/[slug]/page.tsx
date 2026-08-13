@@ -3,6 +3,8 @@ import { BRANDS_DATA, slugify, getBrandBySlug } from '@/lib/brands';
 import BrandClient from './BrandClient';
 import LaRochePosayCustomPage from '@/components/LaRochePosayCustomPage';
 import type { Metadata } from 'next';
+import { getCmsBrandRecordBySlug } from '@/lib/cms-brands';
+import { CmsBrandPage } from '@/components/CmsBrandPage';
 
 export const revalidate = 3600; // Cache for 1 hour
 
@@ -56,6 +58,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function BrandPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+
+  const cmsBrand = await getCmsBrandRecordBySlug(slug);
+  if (cmsBrand?.page_sections?.length) return <CmsBrandPage brand={cmsBrand} />;
 
   // ── Custom branded pages ──────────────────────────────────────────────
   if (slug === 'la-roche-posay') {

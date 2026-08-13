@@ -98,7 +98,7 @@ export const SearchPill: React.FC<SearchPillProps> = ({
           <button
             type="button"
             onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-            className="bg-transparent hover:bg-slate-100 text-slate-500 hover:text-slate-800 font-bold text-[12.5px] rounded-lg flex items-center gap-2 transition-all cursor-pointer active:scale-97"
+            className="bg-transparent hover:bg-slate-100 text-slate-700 hover:text-slate-900 font-bold text-[12.5px] rounded-lg flex items-center gap-2 transition-all cursor-pointer active:scale-97"
             style={{ paddingLeft: '8px', paddingRight: '14px', paddingTop: '8px', paddingBottom: '8px' }}
           >
             <span className="truncate max-w-[110px]">{selectedCategoryLabel}</span>

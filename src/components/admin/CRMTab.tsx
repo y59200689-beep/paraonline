@@ -29,6 +29,7 @@ import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 import { useAdminUI } from '@/app/admin/AdminUIContext';
 import { StatusBadge, EmptyState } from '@/components/admin/ui';
+import { ConfirmDialog } from '@/components/admin/ui/ConfirmDialog';
 import { PRODUCTS_DB } from '@/lib/data';
 import RFMTab from './RFMTab';
 import AutomationsTab from './AutomationsTab';
@@ -65,6 +66,24 @@ export default function CRMTab() {
     descriptionAr: ''
   });
   const [ruleProductSearch, setRuleProductSearch] = useState('');
+  const [ruleToDelete, setRuleToDelete] = useState<string | null>(null);
+  const [isDeletingRule, setIsDeletingRule] = useState(false);
+
+  const confirmDeleteRule = async () => {
+    if (!ruleToDelete) return;
+    setIsDeletingRule(true);
+    try {
+      const updatedRules = (settings.diagnosticRules || []).filter((rule: any) => rule.id !== ruleToDelete);
+      const success = await saveSettings({ ...settings, diagnosticRules: updatedRules });
+      if (!success) throw new Error('La suppression n’a pas pu être enregistrée.');
+      showToast('Règle supprimée avec succès.', 'success');
+      setRuleToDelete(null);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Erreur lors de la suppression.', 'error');
+    } finally {
+      setIsDeletingRule(false);
+    }
+  };
 
   // Search & Filters for Clients
   const [crmSearchQuery, setCrmSearchQuery] = useState('');
@@ -1744,21 +1763,7 @@ export default function CRMTab() {
                         <Edit3 className="w-3.5 h-3.5 animate-pulse" /> Modifier
                       </button>
                       <button
-                        onClick={async () => {
-                          if (confirm('Voulez-vous vraiment supprimer cette règle de diagnostic ?')) {
-                            const updatedRules = (settings.diagnosticRules || []).filter((r: any) => r.id !== rule.id);
-                            const updatedSettings = {
-                              ...settings,
-                              diagnosticRules: updatedRules
-                            };
-                            const success = await saveSettings(updatedSettings);
-                            if (success) {
-                              showToast('Règle supprimée avec succès !', 'success');
-                            } else {
-                              showToast('Erreur lors de la suppression.', 'error');
-                            }
-                          }
-                        }}
+                        onClick={() => setRuleToDelete(rule.id)}
                         className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1 cursor-pointer transition border ${
                           adminTheme === 'light'
                             ? 'bg-rose-50 border-rose-100 hover:bg-rose-100/50 text-rose-700'
@@ -4605,6 +4610,16 @@ export default function CRMTab() {
           </div>
         );
       })()}
+
+      <ConfirmDialog
+        open={Boolean(ruleToDelete)}
+        title="Supprimer cette règle ?"
+        description="Cette règle de recommandation ne sera plus utilisée par le diagnostic. Cette action ne modifie pas les produits associés."
+        confirmLabel="Supprimer la règle"
+        busy={isDeletingRule}
+        onClose={() => { if (!isDeletingRule) setRuleToDelete(null); }}
+        onConfirm={confirmDeleteRule}
+      />
 
     </div>
   );

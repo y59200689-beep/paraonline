@@ -26,6 +26,7 @@ export const BrandLogoCard: React.FC<BrandLogoCardProps> = ({ brand, decorative 
   return (
     <Link
       href={href}
+      prefetch={false}
       aria-hidden={decorative || undefined}
       tabIndex={decorative ? -1 : undefined}
       className="w-full block"

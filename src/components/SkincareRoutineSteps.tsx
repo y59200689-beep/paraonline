@@ -9,8 +9,6 @@ import { ProductCard } from './ProductCard';
 import { useUi } from '@/context/UiContext';
 import { Magnetic } from './Magnetic';
 
-const placeholderSvg = "data:image/svg+xml;utf8," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300' width='100%' height='100%'><rect width='100%' height='100%' fill='#f1f5f9'/><path d='M150 100a40 40 0 1 0 40 40 40 40 0 0 0-40-40zm0 60a20 20 0 1 1 20-20 20 20 0 0 1-20 20z' fill='#94a3b8'/><path d='M180 180h-60a10 10 0 0 0-10 10v10h80v-10a10 10 0 0 0-10-10z' fill='#94a3b8'/><text x='150' y='230' font-family='sans-serif' font-size='12' font-weight='bold' fill='#64748b' text-anchor='middle'>Image Indisponible</text></svg>");
-
 const toTitleCase = (str: string) => {
   if (!str) return '';
   return str
@@ -86,7 +84,7 @@ export const SkincareRoutineSteps: React.FC<SkincareRoutineStepsProps> = ({ onOp
       productIds: [15, 22],
       benefits: [
         "Élimine l'excès de sébum et le maquillage",
-        "Désincruste les pores en profondeur à 100%",
+        "Aide à désincruster les pores et à réduire les impuretés",
         "Prévient l'apparition de comédons"
       ]
     },
@@ -295,95 +293,23 @@ export const SkincareRoutineSteps: React.FC<SkincareRoutineStepsProps> = ({ onOp
               {/* Glassmorphic console body */}
               <div className="relative flex flex-col items-center gap-6 z-10 w-full">
                 
-                {/* Scientific Screen Console */}
-                <div className="relative w-48 h-60 rounded-2xl bg-gradient-to-b from-[#080d19] via-[#0f172a] to-[#080d19] border border-slate-800 group-hover:border-[#38BDF8]/50 flex flex-col justify-between items-center p-3 overflow-hidden shadow-[0_20px_50px_rgba(8,13,25,0.7),0_0_30px_rgba(56,189,248,0.05)] group-hover:shadow-[0_20px_50px_rgba(8,13,25,0.8),0_0_40px_rgba(56,189,248,0.15)] transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] select-none">
-                  
-                  {/* Grid overlay */}
-                  <div 
-                    className="absolute inset-0 opacity-[0.08] pointer-events-none"
-                    style={{
-                      backgroundImage: 'radial-gradient(rgba(56, 189, 248, 0.8) 1.2px, transparent 1.2px)',
-                      backgroundSize: '10px 10px'
-                    }}
-                  />
-
-                  {/* Laser Sweeper Bar */}
-                  <div className="absolute left-0 right-0 h-[2.5px] bg-gradient-to-r from-transparent via-[#38BDF8] to-transparent shadow-[0_0_20px_#38BDF8] animate-scan z-20" />
-                  
-                  {/* Console Header Status */}
-                  <div className="w-full flex items-center justify-between z-10 px-1 pt-0.5">
-                    <div className="flex items-center gap-1">
-                      <span className="relative flex h-1.5 w-1.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400"></span>
-                      </span>
-                      <span className="text-[7.5px] font-black uppercase text-[#10B981] tracking-wider leading-none">SYS: ONLINE</span>
-                    </div>
-                    <span className="text-[7.5px] font-mono text-[#38BDF8]/60 tracking-wider">FPS 60 // AI.v4</span>
+                <div className="relative flex h-52 w-48 flex-col items-center justify-center gap-5 overflow-hidden rounded-2xl border border-sky-100 bg-white p-5 shadow-[0_18px_44px_rgba(15,39,71,0.1)] transition-all duration-300 group-hover:-translate-y-1 group-hover:border-sky-200 group-hover:shadow-[0_24px_56px_rgba(15,39,71,0.14)]">
+                  <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-400 via-sky-500 to-blue-600" />
+                  <div className="flex h-20 w-20 items-center justify-center rounded-3xl border border-sky-100 bg-sky-50 text-sky-700">
+                    <Sparkles className="h-9 w-9" aria-hidden="true" />
                   </div>
-
-                  {/* Center HUD Vector System */}
-                  <div className="relative w-32 h-32 flex items-center justify-center">
-                    
-                    {/* Rotating Biometric Outer Ring */}
-                    <svg viewBox="0 0 100 100" className="absolute w-full h-full text-[#38BDF8]/10 animate-spin-slow pointer-events-none">
-                      <circle cx="50" cy="50" r="46" stroke="currentColor" strokeWidth="1" strokeDasharray="6 8" fill="none" />
-                      <circle cx="50" cy="50" r="40" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 4" fill="none" />
-                    </svg>
-
-                    {/* Rotating Counter-Ring (Green) */}
-                    <svg viewBox="0 0 100 100" className="absolute w-[84%] h-[84%] text-[#10B981]/15 animate-spin-reverse pointer-events-none">
-                      <circle cx="50" cy="50" r="44" stroke="currentColor" strokeWidth="1" strokeDasharray="10 15 2 2" fill="none" />
-                    </svg>
-
-                    {/* Face Target Graphic */}
-                    <svg
-                      viewBox="0 0 100 100"
-                      className="w-20 h-20 text-[#38BDF8]/30 drop-shadow-[0_0_12px_rgba(56,189,248,0.5)] group-hover:scale-105 transition-transform duration-500 pointer-events-none z-10"
-                    >
-                      <path
-                        d="M 50 15 C 32 15 25 35 25 55 C 25 75 38 85 50 85 C 62 85 75 75 75 55 C 75 35 68 15 50 15 Z"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeDasharray="4 4"
-                      />
-                      <line x1="30" y1="45" x2="70" y2="45" stroke="currentColor" strokeWidth="0.5" strokeDasharray="3 3" opacity="0.5" />
-                      <line x1="50" y1="15" x2="50" y2="85" stroke="currentColor" strokeWidth="0.5" strokeDasharray="3 3" opacity="0.5" />
-                    </svg>
-
-                    {/* Active nodes */}
-                    <div className="absolute top-[28%] left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#38BDF8] shadow-[0_0_8px_#38BDF8] animate-pulse" />
-                    <div className="absolute top-[48%] left-[34%] w-1.5 h-1.5 rounded-full bg-[#38BDF8] shadow-[0_0_8px_#38BDF8]" />
-                    <div className="absolute top-[48%] right-[34%] w-1.5 h-1.5 rounded-full bg-[#38BDF8] shadow-[0_0_8px_#38BDF8]" />
-                    <div className="absolute bottom-[28%] left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#10B981] shadow-[0_0_8px_#10B981]" />
-
-                    {/* Laser Target Reticles */}
-                    <div className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-[#38BDF8]/60" />
-                    <div className="absolute top-0 right-0 w-2.5 h-2.5 border-t border-r border-[#38BDF8]/60" />
-                    <div className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b border-l border-[#38BDF8]/60" />
-                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b border-r border-[#38BDF8]/60" />
+                  <div className="space-y-1 text-center">
+                    <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-800">Dermo IA</p>
+                    <p className="text-[10px] font-semibold leading-relaxed text-slate-500">
+                      {language === 'FR' ? 'Questionnaire personnalisé' : 'استبيان مخصص'}
+                    </p>
                   </div>
-
-                  {/* Console Footer Metadata */}
-                  <div className="w-full flex flex-col items-center gap-1 z-10">
-                    <span className="text-[7px] font-black uppercase text-[#38BDF8] tracking-[0.25em] bg-[#38BDF8]/10 border border-[#38BDF8]/20 px-2 py-0.5 rounded shadow-sm">
-                      DERMO-IA v4.1
-                    </span>
-                    <span className="text-[6px] font-mono text-slate-500 tracking-widest group-hover:text-[#38BDF8]/60 transition-colors">
-                      [ SCAN READY : CLICK TO START ]
-                    </span>
-                  </div>
-
                 </div>
 
                 {/* Status and Action text logs */}
                 <div className="space-y-2 w-full text-center">
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 shadow-sm rounded-full">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/70 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                    </span>
+                    <span className="h-2 w-2 rounded-full bg-primary" />
                     <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-700">
                       {language === 'FR' ? "Lancer le Diagnostic IA" : "بدء تشخيص الذكاء الاصطناعي"}
                     </span>
@@ -391,8 +317,8 @@ export const SkincareRoutineSteps: React.FC<SkincareRoutineStepsProps> = ({ onOp
                   
                   <p className="text-[11px] font-medium text-slate-500 max-w-[240px] mx-auto leading-relaxed">
                     {language === 'FR' 
-                      ? "Cliquez pour analyser votre peau en direct et déverrouiller votre rituel sur-mesure." 
-                      : "انقري لتحليل بشرتكِ مباشرة واكتشاف روتينكِ العلاجي المخصص."}
+                      ? "Répondez à quelques questions pour recevoir une routine fondée sur les informations produit disponibles."
+                      : "أجيبي عن بعض الأسئلة للحصول على روتين مبني على معلومات المنتجات المتاحة."}
                   </p>
                 </div>
 

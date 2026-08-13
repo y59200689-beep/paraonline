@@ -73,7 +73,7 @@ export function AboutClient() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 max-w-5xl mx-auto">
               {[
                 {
-                  value: '90+',
+                  value: 'Sélection',
                   labelFr: 'Marques disponibles',
                   labelAr: 'علامات متوفرة',
                   descFr: 'Pour vos routines',
@@ -82,7 +82,7 @@ export function AboutClient() {
                   color: 'text-emerald-600'
                 },
                 {
-                  value: '24/48h',
+                  value: 'Maroc',
                   labelFr: 'Livraison au Maroc',
                   labelAr: 'توصيل في المغرب',
                   descFr: 'Selon la zone de livraison',
@@ -91,7 +91,7 @@ export function AboutClient() {
                   color: 'text-teal-600'
                 },
                 {
-                  value: '6j/7',
+                  value: 'Support',
                   labelFr: 'Équipe disponible',
                   labelAr: 'فريق متاح',
                   descFr: 'Pour vous accompagner',
@@ -141,7 +141,7 @@ export function AboutClient() {
           <section className="space-y-10">
             <div className="text-center space-y-3">
               <span className="text-[10px] font-mono font-bold tracking-widest text-emerald-700 uppercase bg-emerald-100/70 px-3.5 py-1 rounded-full border border-emerald-200">
-                {language === 'AR' ? 'فلسفتنا والتزامنا' : 'NOTRE RENAISSANCE & ENGAGEMENT'}
+                {language === 'AR' ? 'فلسفتنا والتزامنا' : 'NOTRE APPROCHE & ENGAGEMENT'}
               </span>
               <h2 className="text-2xl sm:text-4xl font-black text-slate-900 font-heading tracking-tight">
                 {language === 'AR' ? 'لماذا تختار فارما أوفيسينال؟' : 'Pourquoi Choisir Para Officinal S.A ?'}
@@ -149,7 +149,7 @@ export function AboutClient() {
               <p className="text-xs sm:text-sm text-slate-600 max-w-xl mx-auto leading-relaxed">
                 {language === 'AR'
                   ? 'ثلاثة ركائز أساسية تجعلنا الخيار الأول والآمن لكل من يبحث عن صحة ونضارة بشرته.'
-                  : 'Trois piliers fondamentaux qui font de notre maison le partenaire dermo-cosmétique le plus fiable au Maroc.'}
+                  : 'Trois engagements qui guident notre sélection et notre accompagnement au quotidien.'}
               </p>
             </div>
 

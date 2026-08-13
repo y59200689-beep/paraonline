@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { AboutClient } from './AboutClient';
+import { CmsPageRenderer } from '@/components/CmsPageRenderer';
+import { getCmsPageBySlug } from '@/lib/cms-pages';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://paraofficinal.ma';
 
@@ -19,6 +21,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function AboutPage() {
-  return <AboutClient />;
+export default async function AboutPage({ searchParams }: { searchParams?: Promise<{ preview_token?: string }> }) {
+  const page = await getCmsPageBySlug('a-propos', (await searchParams)?.preview_token);
+  return page?.section_order?.length ? <CmsPageRenderer page={page} /> : <AboutClient />;
 }

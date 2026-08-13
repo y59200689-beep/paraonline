@@ -43,6 +43,8 @@ interface LoyaltyContextProps {
   isLoadingAuth: boolean;
   loginClient: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signUpClient: (email: string, password: string, name: string, phone: string) => Promise<{ success: boolean; error?: string; emailConfirmationRequired?: boolean }>;
+  requestPasswordReset: (email: string) => Promise<{ success: boolean; error?: string }>;
+  updateClientPassword: (password: string) => Promise<{ success: boolean; error?: string }>;
   updateClientProfile: (updates: Pick<ClientUser, 'name' | 'phone'>) => Promise<{ success: boolean; error?: string }>;
   logoutClient: () => Promise<void>;
   syncDiaryLogs: (logs: any[]) => Promise<void>;
@@ -395,6 +397,44 @@ export const LoyaltyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     loadFromLocalStorage();
   };
 
+  const requestPasswordReset = async (email: string): Promise<{ success: boolean; error?: string }> => {
+    if (!isSupabaseConfigured()) {
+      return { success: false, error: 'Le service de connexion est momentanément indisponible.' };
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) return { success: false, error: 'Saisissez votre adresse email.' };
+
+    try {
+      const siteUrl = typeof window === 'undefined'
+        ? process.env.NEXT_PUBLIC_SITE_URL
+        : window.location.origin;
+      const redirectTo = `${(siteUrl || 'https://paraonline-weld.vercel.app').replace(/\/$/, '')}/customer?recovery=1`;
+      const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, { redirectTo });
+      if (error) return { success: false, error: customerAuthErrorMessage(error.message) };
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: customerAuthErrorMessage(error?.message || 'Reset failed.') };
+    }
+  };
+
+  const updateClientPassword = async (password: string): Promise<{ success: boolean; error?: string }> => {
+    if (!isSupabaseConfigured()) {
+      return { success: false, error: 'Le service de connexion est momentanément indisponible.' };
+    }
+    if (password.length < 8) {
+      return { success: false, error: 'Le mot de passe doit contenir au moins 8 caractères.' };
+    }
+
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) return { success: false, error: customerAuthErrorMessage(error.message) };
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: customerAuthErrorMessage(error?.message || 'Password update failed.') };
+    }
+  };
+
   const updateClientProfile = async (updates: Pick<ClientUser, 'name' | 'phone'>) => {
     if (!clientUser || !isSupabaseConfigured()) {
       return { success: false, error: 'Votre session a expiré. Veuillez vous reconnecter.' };
@@ -567,6 +607,8 @@ export const LoyaltyProvider: React.FC<{ children: React.ReactNode }> = ({ child
         isLoadingAuth,
         loginClient,
         signUpClient,
+        requestPasswordReset,
+        updateClientPassword,
         updateClientProfile,
         logoutClient,
         syncDiaryLogs,

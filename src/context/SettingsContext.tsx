@@ -66,6 +66,13 @@ export interface Settings {
   shippingFee: number;
   announcementFr: string;
   announcementAr: string;
+  headerNav?: { id?: string; label_fr?: string; label_ar?: string; href: string }[];
+  footerColumns?: { id?: string; heading_fr?: string; heading_ar?: string; links?: { label_fr?: string; label_ar?: string; href: string }[] }[];
+  socialLinks?: { platform: string; url: string }[];
+  trustBadges?: { icon_key?: string; label_fr?: string; label_ar?: string }[];
+  ctaLabels?: Record<string, { label_fr?: string; label_ar?: string }>;
+  deliveryCopyFr?: string;
+  deliveryCopyAr?: string;
   quizDiscountPercent: number;
   dailyGiftProductId: number;
   dailyGiftName: string;
@@ -293,7 +300,7 @@ export const DEFAULT_SETTINGS: Settings = {
     showCategoryTrack: true,
     showProductGrid: true,
     showBrandPartners: true,
-    showDiagnosticBanner: false,
+    showDiagnosticBanner: true,
     showSummerSale: true,
     showSkinConcerns: true,
     showHorizontalPromo: false,
@@ -301,7 +308,7 @@ export const DEFAULT_SETTINGS: Settings = {
     showCustomerReviews: true,
     showTriplePromo: true,
     showTopRated: true,
-    showBestSellers: true,
+    showBestSellers: false,
     showWeeklySales: true,
     showRoutineVisualizer: true,
     showFeaturedIngredient: true,
@@ -329,21 +336,10 @@ export const DEFAULT_SETTINGS: Settings = {
       { id: 'categoryTrack-1', type: 'categoryTrack', nameFr: 'Barre de Défilement des Catégories', visible: true },
       { id: 'productGrid-1', type: 'productGrid', nameFr: 'Grille Principale des Produits', visible: true },
       { id: 'brandPartners-1', type: 'brandPartners', nameFr: 'Marques Partenaires', visible: true },
-      { id: 'diagnosticBanner-1', type: 'diagnosticBanner', nameFr: 'Diagnostic de Peau IA', visible: false },
-      { id: 'summerSale-1', type: 'summerSale', nameFr: "Offres d'Été (Summer Sale)", visible: true },
+      { id: 'diagnosticBanner-1', type: 'diagnosticBanner', nameFr: 'Diagnostic de Peau IA', visible: true },
       { id: 'dermoCorner-1', type: 'dermoCorner', nameFr: 'Dermo Corner (Acné vs Taches)', visible: true },
-      { id: 'skinConcerns-1', type: 'skinConcerns', nameFr: 'Bento de Préoccupations Cutanées', visible: true },
-      { id: 'horizontalPromo-1', type: 'horizontalPromo', nameFr: 'Bannière Promotionnelle Horizontale', visible: false },
-      { id: 'customerReviews-1', type: 'customerReviews', nameFr: 'Témoignages & Avis Clients', visible: true },
-      { id: 'triplePromo-1', type: 'triplePromo', nameFr: 'Bannières Triple Promotionnelles', visible: true },
-      { id: 'topRated-1', type: 'topRated', nameFr: 'Produits les Mieux Notés', visible: true },
-      { id: 'bestSellers-1', type: 'bestSellers', nameFr: 'Produits les Plus Vendus', visible: true },
-      { id: 'routineVisualizer-1', type: 'routineVisualizer', nameFr: 'Visualiseur de Routine de Soins', visible: true },
-      { id: 'featuredIngredient-1', type: 'featuredIngredient', nameFr: 'Marques Vedettes de la Semaine', visible: true },
-      { id: 'skincareRoutineSteps-1', type: 'skincareRoutineSteps', nameFr: 'Étapes de la Routine Skincare', visible: true },
-      { id: 'activeIngredients-1', type: 'activeIngredients', nameFr: 'Molécules & Ingrédients Actifs', visible: true },
-      { id: 'ingredientDictionary-1', type: 'ingredientDictionary', nameFr: 'Dictionnaire Clinique des Ingrédients', visible: true },
       { id: 'faq-1', type: 'faq', nameFr: 'Foire Aux Questions (FAQ)', visible: true },
+      { id: 'customerReviews-1', type: 'customerReviews', nameFr: 'Témoignages & Avis Clients', visible: true },
       { id: 'officialDistributor-1', type: 'officialDistributor', nameFr: 'Badge Distributeur Officiel', visible: true },
       { id: 'trustBar-1', type: 'trustBar', nameFr: 'Barre de Confiance Maroc', visible: true }
     ]
@@ -353,8 +349,8 @@ export const DEFAULT_SETTINGS: Settings = {
   storeWhatsApp: "212660808080",
   freeShippingThreshold: 600,
   shippingFee: 35,
-  announcementFr: "LIVRAISON GRATUITE LE JOUR MÊME — Commandes avant midi à Tanger, Tétouan, Rabat, Salé, Témara, Fès, Meknès & Ifrane.",
-  announcementAr: "شحن مجاني في نفس اليوم — الطلبات قبل الظهر في طنجة، تطوان، الرباط، سلا، تمارة، فاس، مكناس وإيفران.",
+  announcementFr: "LIVRAISON AU MAROC — Le délai et les frais sont confirmés avant la validation de votre commande.",
+  announcementAr: "التوصيل داخل المغرب — يتم تأكيد المدة والتكلفة قبل إتمام طلبك.",
   quizDiscountPercent: 15,
   dailyGiftProductId: 22,
   dailyGiftName: "Anua Heartleaf Mousse Nettoyante",
@@ -426,9 +422,9 @@ export const DEFAULT_SETTINGS: Settings = {
     },
     {
       q_fr: "Quel est le délai de livraison ?",
-      a_fr: "Pour les grandes villes (Casablanca, Rabat, Tanger, Marrakech, etc.), vous êtes livrés le jour même pour toute commande passée avant midi. Pour les autres villes, comptez 24 à 48 heures maximum.",
+      a_fr: "Les délais et frais de livraison dépendent de la ville et sont confirmés avant la validation de la commande.",
       q_ar: "ما هي مدة التوصيل؟",
-      a_ar: "بالنسبة للمدن الكبرى، يتم التوصيل في نفس اليوم للطلبات قبل الظهر. بالنسبة للمدن الأخرى، يستغرق الأمر من 24 إلى 48 ساعة كحد أopsى."
+      a_ar: "تختلف مدة وتكلفة التوصيل حسب المدينة، ويتم تأكيدهما قبل إتمام الطلب."
     },
     {
       q_fr: "Comment fonctionne le paiement ?",
@@ -750,24 +746,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode; initialSett
         }
         if (!merged.diagnosticRules || merged.diagnosticRules.length === 0) {
           merged.diagnosticRules = DEFAULT_SETTINGS.diagnosticRules;
-        }
-        // Inject any new default sections missing from saved settings, preserving position
-        if (merged.homepageSections?.sectionOrder && DEFAULT_SETTINGS.homepageSections?.sectionOrder) {
-          const savedIds = new Set(merged.homepageSections.sectionOrder.map((s: any) => s.id));
-          const defaultSections = DEFAULT_SETTINGS.homepageSections.sectionOrder;
-          defaultSections.forEach((defaultSection, defaultIdx) => {
-            if (!savedIds.has(defaultSection.id)) {
-              const prevDefaultSection = defaultSections[defaultIdx - 1];
-              const insertAfterIdx = prevDefaultSection
-                ? merged.homepageSections!.sectionOrder!.findIndex((s: any) => s.id === prevDefaultSection.id)
-                : -1;
-              if (insertAfterIdx >= 0) {
-                merged.homepageSections!.sectionOrder!.splice(insertAfterIdx + 1, 0, defaultSection);
-              } else {
-                merged.homepageSections!.sectionOrder!.push(defaultSection);
-              }
-            }
-          });
         }
         setSettings(merged);
         settingsCache = merged;

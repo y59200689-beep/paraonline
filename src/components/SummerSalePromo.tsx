@@ -8,6 +8,7 @@ import { useUi } from '@/context/UiContext';
 import { Sparkles, ArrowRight, Star } from 'lucide-react';
 import Image from 'next/image';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
+import { PRODUCT_IMAGE_FALLBACK } from '@/lib/public-images';
 import { useSettings } from '@/context/SettingsContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useGalleryOverrides } from '@/lib/useGalleryOverrides';
@@ -24,31 +25,45 @@ export const SummerSalePromo: React.FC = () => {
   const summerSaleSection = hp?.sectionOrder?.find(
     (s: any) => s.type === 'summerSale'
   );
+  const campaignSettings = summerSaleSection?.settings as { endsAt?: string; endDate?: string } | undefined;
+  const campaignDeadline = campaignSettings?.endsAt || campaignSettings?.endDate || null;
   const leftImageRaw = summerSaleSection?.settings?.leftImage || hp?.summerSaleLeftImage || "/images/cicaplast_bundle.webp";
   const rightImageRaw = summerSaleSection?.settings?.rightImage || hp?.summerSaleRightImage || "/images/vichy_sunscreen_bundle.webp";
 
   const leftImage = getDisplayImage(leftImageRaw, 'cicaplast_bundle');
   const rightImage = getDisplayImage(rightImageRaw, 'vichy_sunscreen_bundle');
 
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 25, seconds: 0 });
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const { setSelectedProduct } = useUi();
 
   useEffect(() => {
-    // Reset timer to 00 hours, 25 minutes, 00 seconds on page mount/refresh
-    setTimeLeft({ days: 0, hours: 0, minutes: 25, seconds: 0 });
+    if (!campaignDeadline) {
+      setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      return;
+    }
+
+    const deadline = new Date(campaignDeadline).getTime();
+    if (!Number.isFinite(deadline)) return;
+
+    const calculateTimeLeft = () => {
+      const remaining = Math.max(0, deadline - Date.now());
+      return {
+        days: Math.floor(remaining / 86_400_000),
+        hours: Math.floor((remaining / 3_600_000) % 24),
+        minutes: Math.floor((remaining / 60_000) % 60),
+        seconds: Math.floor((remaining / 1_000) % 60),
+      };
+    };
+
+    setTimeLeft(calculateTimeLeft());
 
     const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
-        if (prev.minutes > 0) return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
-        if (prev.hours > 0) return { ...prev, hours: prev.hours - 1, minutes: 59, seconds: 59 };
-        if (prev.days > 0) return { ...prev, days: prev.days - 1, hours: 23, minutes: 59, seconds: 59 };
-        clearInterval(timer);
-        return prev;
-      });
+      const next = calculateTimeLeft();
+      setTimeLeft(next);
+      if (Object.values(next).every(value => value === 0)) clearInterval(timer);
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [campaignDeadline]);
 
   const handleSelectProduct = (product: Product) => {
     setSelectedProduct(product);
@@ -56,85 +71,29 @@ export const SummerSalePromo: React.FC = () => {
 
   const summerSaleItems = React.useMemo(() => {
     const curatedIds = hp?.summerSaleProductIds || [];
-    if (curatedIds.length > 0) {
-      return curatedIds
+    const selectedProducts = curatedIds.length > 0
+      ? curatedIds
         .map(id => products.find(p => p.id === id))
         .filter((p): p is Product => !!p)
-        .map(p => ({
-          id: p.id,
-          titleFr: p.nameFr || p.title,
-          titleAr: p.title,
-          image: p.image,
-          price: p.price,
-          comparePrice: p.comparePrice || p.price,
-          rating: p.rating,
-          category: p.category,
-          vendor: p.vendor
-        }));
-    }
+      : products
+          .filter(p => p.status !== 'draft' && (p.stock ?? 0) > 0 && p.comparePrice > p.price)
+          .slice(0, 4);
 
-    return [
-      {
-        id: 3,
-        titleFr: 'Garnier Sérum Vitamine C 30ml',
-        titleAr: 'سيروم غارنييه فيتامين سي 30مل',
-        image: 'https://images.unsplash.com/photo-1612817288484-6f916006741a?q=80&w=320&auto=format&fit=crop',
-        price: 119,
-        comparePrice: 139,
-        rating: 4.6,
-        category: 'visage',
-        vendor: 'Garnier'
-      },
-      {
-        id: 9,
-        titleFr: 'Bioderma Photoderm Fluid SPF 50+',
-        titleAr: 'بيوديرما واقي شمس سائل',
-        image: 'https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?q=80&w=320&auto=format&fit=crop',
-        price: 169,
-        comparePrice: 191,
-        rating: 4.9,
-        category: 'solaire',
-        vendor: 'Bioderma'
-      },
-      {
-        id: 18,
-        titleFr: 'Kérastase Huile Originale 100ml',
-        titleAr: 'زيت كريستاس الأصلي 100مل',
-        image: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?q=80&w=320&auto=format&fit=crop',
-        price: 450,
-        comparePrice: 490,
-        rating: 4.9,
-        category: 'cheveux',
-        vendor: 'Kérastase'
-      },
-      {
-        id: 108,
-        titleFr: 'Mixa Bébé Lait Très Doux',
-        titleAr: 'حليب ميكسا بيبي اللطيف',
-        image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=600&auto=format&fit=crop',
-        price: 119,
-        comparePrice: 149,
-        rating: 4.9,
-        category: 'corps',
-        vendor: 'Mixa'
-      }
-    ].map(item => {
-      const dbProd = products.find(p => p.id === item.id);
-      if (dbProd) {
-        return {
-          id: dbProd.id,
-          titleFr: dbProd.nameFr || dbProd.title,
-          titleAr: item.titleAr,
-          image: dbProd.image,
-          price: dbProd.price,
-          comparePrice: dbProd.comparePrice || dbProd.price,
-          rating: dbProd.rating,
-          category: dbProd.category,
-          vendor: dbProd.vendor
-        };
-      }
-      return item;
-    });
+    return selectedProducts
+      .filter(p => p.status !== 'draft' && (p.stock ?? 0) > 0)
+      .slice(0, 4)
+      .map(p => ({
+        id: p.id,
+        titleFr: p.nameFr || p.title,
+        titleAr: p.name || p.nameFr || p.title,
+        image: p.image,
+        price: p.price,
+        comparePrice: p.comparePrice || p.price,
+        rating: p.reviews > 0 ? p.rating : 0,
+        reviews: p.reviews,
+        category: p.category,
+        vendor: p.vendor,
+      }));
   }, [products, hp]);
 
   if (!showSummerSale || summerSaleItems.length === 0) return null;
@@ -193,28 +152,28 @@ export const SummerSalePromo: React.FC = () => {
                 <div className="mb-2 flex items-center justify-center gap-1.5 flex-wrap">
                   <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold text-white bg-[#7C3AED]/90 tracking-wide">
                     <Sparkles className="w-3.5 h-3.5" />
-                    {language === 'AR' ? 'أفضل عرض' : 'Best Deal'}
+                    {language === 'AR' ? 'عرض مختار' : 'Offre sélectionnée'}
                   </span>
                   <span className="inline-flex items-center gap-0.5 px-2.5 py-0.5 rounded-full text-[10px] font-black text-emerald-500 bg-emerald-50 border border-emerald-100 animate-pulse">
                     <span>🔥</span>
-                    <span>{language === 'AR' ? 'نشط الآن' : 'LIVE'}</span>
+                    <span>{language === 'AR' ? 'متاح الآن' : 'Disponible'}</span>
                   </span>
                 </div>
 
                 {/* Heading */}
                 <h3 className="text-2xl font-black text-slate-800 tracking-tight mb-1 select-none font-heading leading-tight">
-                  {language === 'AR' ? 'تخفيضات الصيف' : 'Summer Sale'}
+                  {language === 'AR' ? 'عروض الصيف' : 'Offres d’été'}
                 </h3>
 
                 {/* Subtext */}
                 <p className="text-slate-500 text-[12px] leading-relaxed mb-4 font-medium max-w-[240px]">
                   {language === 'AR'
                     ? 'خصومات تصل إلى 30% على كل شيء'
-                    : 'Up to 30% Off everything'}
+                    : 'Une sélection de produits actuellement remisés'}
                 </p>
 
-                {/* Countdown */}
-                <div className="flex items-center gap-2 mb-4 select-none" dir="ltr">
+                {/* A countdown is shown only when an editor configured a real deadline. */}
+                {campaignDeadline ? <div className="flex items-center gap-2 mb-4 select-none" dir="ltr" aria-label={language === 'AR' ? 'الوقت المتبقي للعرض' : 'Temps restant pour cette offre'}>
                   <div className="flex flex-col items-center">
                     <div className="w-12 h-12 rounded-[10px] bg-slate-50 border border-slate-100 shadow-sm flex flex-col items-center justify-center">
                       <span className="text-base font-black text-primary leading-none">
@@ -236,7 +195,7 @@ export const SummerSalePromo: React.FC = () => {
                       </span>
                     </div>
                   </div>
-                </div>
+                </div> : null}
 
                 {/* CTA */}
                 <button
@@ -251,7 +210,7 @@ export const SummerSalePromo: React.FC = () => {
                     boxShadow: '0 4px 12px rgba(30,80,55,0.28)',
                   }}
                 >
-                  <span style={{ color: '#ffffff' }}>{language === 'AR' ? 'تسوق الآن' : 'Shop Now'}</span>
+                  <span style={{ color: '#ffffff' }}>{language === 'AR' ? 'اكتشف المنتجات' : 'Découvrir les produits'}</span>
                   <ArrowRight className="w-3.5 h-3.5" style={{ color: '#ffffff', stroke: '#ffffff' }} />
                 </button>
               </div>
@@ -280,32 +239,32 @@ export const SummerSalePromo: React.FC = () => {
             <div className="lg:col-span-6 bg-white rounded-[24px] p-6 sm:p-8 flex flex-col items-center justify-center text-center relative overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.015)] border border-slate-100/50 min-h-[320px]">
               <div className="absolute inset-0 bg-gradient-to-b from-slate-50/30 to-transparent pointer-events-none" />
               
-              {/* Best Deal Badge */}
+              {/* Campaign status */}
               <div className="mb-4 flex items-center gap-2">
                 <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-white bg-[#7C3AED]/90 backdrop-blur-sm shadow-sm tracking-wide">
                   <Sparkles className="w-3.5 h-3.5" />
-                  {language === 'AR' ? 'أفضل عرض' : 'Best Deal'}
+                  {language === 'AR' ? 'عرض مختار' : 'Offre sélectionnée'}
                 </span>
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black text-emerald-500 bg-emerald-50 border border-emerald-100 shadow-sm animate-pulse">
                   <span>🔥</span>
-                  <span>{language === 'AR' ? 'نشط الآن' : 'LIVE'}</span>
+                  <span>{language === 'AR' ? 'متاح الآن' : 'Disponible'}</span>
                 </span>
               </div>
 
               {/* Summer Sale Heading */}
               <h3 className="text-3xl sm:text-[36px] font-black text-slate-800 tracking-tight mb-2 select-none font-heading">
-                {language === 'AR' ? 'تخفيضات الصيف' : 'Summer Sale'}
+                {language === 'AR' ? 'عروض الصيف' : 'Offres d’été'}
               </h3>
               
               {/* Promo Subtext */}
               <p className="text-slate-500 text-sm max-w-[280px] leading-relaxed mb-6 font-medium">
                 {language === 'AR' 
-                  ? 'أسرع واحصل على خصومات على جميع المنتجات تصل إلى 30%' 
-                  : 'Hurry & Get Discounts on all products up to 30% Off'}
+                  ? 'اكتشف مجموعتنا المختارة من المنتجات المخفضة'
+                  : 'Découvrez notre sélection de produits remisés'}
               </p>
 
               {/* Square Block Countdown Timer Row */}
-              <div className="flex items-center gap-1.5 sm:gap-3 mb-6 select-none" dir="ltr">
+              {campaignDeadline ? <div className="flex items-center gap-1.5 sm:gap-3 mb-6 select-none" dir="ltr" aria-label={language === 'AR' ? 'الوقت المتبقي للعرض' : 'Temps restant pour cette offre'}>
                 {/* Hours */}
                 <div className="flex flex-col items-center">
                   <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[12px] bg-white border border-slate-100 shadow-md flex flex-col items-center justify-center">
@@ -313,7 +272,7 @@ export const SummerSalePromo: React.FC = () => {
                       {String(timeLeft.hours).padStart(2, '0')}
                     </span>
                     <span className="text-[7px] sm:text-[8px] font-black text-slate-400 mt-1 tracking-wider uppercase">
-                      {language === 'AR' ? 'ساعة' : 'HOURS'}
+                      {language === 'AR' ? 'ساعة' : 'HEURES'}
                     </span>
                   </div>
                 </div>
@@ -327,7 +286,7 @@ export const SummerSalePromo: React.FC = () => {
                       {String(timeLeft.minutes).padStart(2, '0')}
                     </span>
                     <span className="text-[7px] sm:text-[8px] font-black text-slate-400 mt-1 tracking-wider uppercase">
-                      {language === 'AR' ? 'دقيقة' : 'MINS'}
+                      {language === 'AR' ? 'دقيقة' : 'MIN'}
                     </span>
                   </div>
                 </div>
@@ -341,11 +300,11 @@ export const SummerSalePromo: React.FC = () => {
                       {String(timeLeft.seconds).padStart(2, '0')}
                     </span>
                     <span className="text-[7px] sm:text-[8px] font-black text-slate-400 mt-1 tracking-wider uppercase">
-                      {language === 'AR' ? 'ثانية' : 'SECS'}
+                      {language === 'AR' ? 'ثانية' : 'SEC'}
                     </span>
                   </div>
                 </div>
-              </div>
+              </div> : null}
 
               {/* Shop Now CTA Button */}
               <button 
@@ -368,7 +327,7 @@ export const SummerSalePromo: React.FC = () => {
                   e.currentTarget.style.boxShadow = '0 4px 16px rgba(30,80,55,0.28), inset 0 1px 0 rgba(255,255,255,0.08)';
                 }}
               >
-                <span style={{ color: '#ffffff' }}>{language === 'AR' ? 'تسوق الآن' : 'Shop Now'}</span>
+                <span style={{ color: '#ffffff' }}>{language === 'AR' ? 'اكتشف المنتجات' : 'Découvrir les produits'}</span>
                 <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" style={{ color: '#ffffff', stroke: '#ffffff' }} />
               </button>
             </div>
@@ -399,26 +358,7 @@ export const SummerSalePromo: React.FC = () => {
                   key={item.id}
                   onClick={() => {
                     const dbProduct = products.find(p => p.id === item.id);
-                    if (dbProduct) {
-                      handleSelectProduct(dbProduct);
-                    } else {
-                      handleSelectProduct({
-                        id: item.id,
-                        vendor: 'Clinique',
-                        title: language === 'AR' ? item.titleAr : item.titleFr,
-                        category: item.category,
-                        tags: [item.category],
-                        price: item.price,
-                        comparePrice: item.comparePrice,
-                        image: item.image,
-                        rating: item.rating,
-                        reviews: 42,
-                        images: [item.image],
-                        ingredients: '',
-                        usage: '',
-                        description: 'Soin dermatologique haut de gamme.'
-                      } as Product);
-                    }
+                    if (dbProduct) handleSelectProduct(dbProduct);
                   }}
                   className="shrink-0 w-[130px] flex flex-col items-center gap-2 p-3 rounded-[14px] bg-slate-50/60 border border-slate-100 cursor-pointer active:scale-95 transition-transform duration-200"
                   style={{ scrollSnapAlign: 'start' }}
@@ -426,7 +366,7 @@ export const SummerSalePromo: React.FC = () => {
                   {/* Thumbnail */}
                   <div className="w-16 h-16 shrink-0 bg-white rounded-[12px] border border-slate-100 overflow-hidden relative shadow-sm">
                     <Image
-                      src={getOptimizedImageUrl(item.image)}
+                      src={getOptimizedImageUrl(item.image) || PRODUCT_IMAGE_FALLBACK}
                       alt={item.titleFr}
                       fill
                       sizes="64px"
@@ -438,7 +378,7 @@ export const SummerSalePromo: React.FC = () => {
                     {language === 'AR' ? item.titleAr : item.titleFr}
                   </p>
                   {/* Stars */}
-                  <div className="flex items-center gap-0.5">
+                  {item.reviews > 0 && item.rating > 0 ? <div className="flex items-center gap-0.5" aria-label={`${item.rating.toFixed(1)} sur 5, ${item.reviews} avis`}>
                     {[1, 2, 3, 4, 5].map((star) => (
                       <Star
                         key={star}
@@ -447,7 +387,7 @@ export const SummerSalePromo: React.FC = () => {
                         }`}
                       />
                     ))}
-                  </div>
+                  </div> : null}
                   {/* Price */}
                   <div className="flex items-baseline gap-1">
                     <span className="text-xs font-black text-primary">{convertPrice(item.price)}</span>
@@ -466,33 +406,14 @@ export const SummerSalePromo: React.FC = () => {
                   key={item.id} 
                   onClick={() => {
                     const dbProduct = products.find(p => p.id === item.id);
-                    if (dbProduct) {
-                      handleSelectProduct(dbProduct);
-                    } else {
-                      handleSelectProduct({
-                        id: item.id,
-                        vendor: 'Clinique',
-                        title: language === 'AR' ? item.titleAr : item.titleFr,
-                        category: item.category,
-                        tags: [item.category],
-                        price: item.price,
-                        comparePrice: item.comparePrice,
-                        image: item.image,
-                        rating: item.rating,
-                        reviews: 42,
-                        images: [item.image],
-                        ingredients: '',
-                        usage: '',
-                        description: 'Soin dermatologique haut de gamme.'
-                      } as Product);
-                    }
+                    if (dbProduct) handleSelectProduct(dbProduct);
                   }}
                   className="flex items-center gap-4 px-6 hover:bg-slate-50/80 transition-colors duration-300 cursor-pointer group"
                 >
                   {/* Thumbnail */}
                   <div className="w-20 h-20 shrink-0 bg-[#F8FAFC]/80 rounded-[14px] flex items-center justify-center group-hover:scale-105 transition-transform duration-300 border border-slate-100/50 overflow-hidden relative">
                     <Image 
-                      src={getOptimizedImageUrl(item.image)} 
+                      src={getOptimizedImageUrl(item.image) || PRODUCT_IMAGE_FALLBACK}
                       alt={item.titleFr} 
                       fill
                       sizes="80px"
@@ -507,7 +428,7 @@ export const SummerSalePromo: React.FC = () => {
                     </h4>
                     
                     {/* Stars */}
-                    <div className="flex items-center gap-1.5 my-1">
+                    {item.reviews > 0 && item.rating > 0 ? <div className="flex items-center gap-1.5 my-1" aria-label={`${item.rating.toFixed(1)} sur 5, ${item.reviews} avis`}>
                       <div className="flex items-center gap-0.5">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <Star 
@@ -523,7 +444,7 @@ export const SummerSalePromo: React.FC = () => {
                       <span className="text-[10px] font-black text-slate-400 leading-none mt-0.5">
                         ({item.rating.toFixed(1)})
                       </span>
-                    </div>
+                    </div> : null}
 
                     {/* Price */}
                     <div className="flex items-baseline gap-2 mt-0.5">

@@ -8,6 +8,8 @@ import { StickyPublishBar } from '@/components/admin/ui/StickyPublishBar';
 import { SectionOutline, SectionOutlineItem } from '@/components/admin/ui/SectionOutline';
 import { BilingualField } from '@/components/admin/ui/BilingualField';
 import { EmptyState } from '@/components/admin/ui/EmptyState';
+import { AsyncState } from '@/components/admin/ui/AsyncState';
+import { requestJson } from '@/lib/request-json';
 import { canEditContent, canPublishContent } from '@/lib/permissions';
 import {
   Layout,
@@ -35,6 +37,8 @@ interface CmsPage {
   title_fr: string | null;
   title_ar: string | null;
   status: CmsStatus;
+  approval_status?: 'draft' | 'pending_review' | 'approved' | 'rejected';
+  scheduled_at?: string | null;
   updated_at: string;
   updated_by: string;
   section_order: SectionOutlineItem[];
@@ -237,10 +241,12 @@ function PageEditor({ page, onBack, isDark, role }: {
   const [activePanel, setActivePanel] = useState<'sections' | 'seo'>('sections');
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
   const [addSectionOpen, setAddSectionOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [revisions, setRevisions] = useState<Array<{ id: string; saved_by: string; created_at: string; changed_fields?: string[] }>>([]);
 
   const markDirty = useCallback(() => setIsDirty(true), []);
 
-  const handleSave = useCallback(async (newStatus?: CmsStatus) => {
+  const handleSave = useCallback(async (newStatus?: CmsStatus, approvalAction?: 'submit_for_approval', scheduledAt?: string) => {
     setIsSaving(true);
     try {
       const body = {
@@ -253,6 +259,8 @@ function PageEditor({ page, onBack, isDark, role }: {
         seo_description_ar: seoDescAr,
         section_order: sections,
         status: newStatus ?? status,
+        ...(approvalAction ? { approval_action: approvalAction } : {}),
+        ...(scheduledAt ? { scheduled_at: new Date(scheduledAt).toISOString() } : {}),
       };
       const res = await fetch('/api/cms/pages', {
         method: 'PATCH',
@@ -268,6 +276,19 @@ function PageEditor({ page, onBack, isDark, role }: {
       setIsSaving(false);
     }
   }, [page.id, titleFr, titleAr, seoTitleFr, seoTitleAr, seoDescFr, seoDescAr, sections, status]);
+
+  const handleSchedule = useCallback((datetime: string) => {
+    void handleSave('scheduled', undefined, datetime).then(() => undefined);
+  }, [handleSave]);
+
+  const loadHistory = useCallback(async () => {
+    const res = await fetch(`/api/cms/pages/${page.id}/revisions`);
+    if (res.ok) {
+      const body = await res.json();
+      setRevisions(body.revisions ?? []);
+      setHistoryOpen(true);
+    }
+  }, [page.id]);
 
   const handlePreview = useCallback(async () => {
     const res = await fetch('/api/cms/preview', {
@@ -326,10 +347,33 @@ function PageEditor({ page, onBack, isDark, role }: {
         lastSavedAt={lastSavedAt}
         onSaveDraft={() => handleSave('draft')}
         onPreview={handlePreview}
-        onPublish={() => handleSave(canPublishContent(role as any) ? 'published' : 'draft')}
-        onSchedule={dt => { /* handleSchedule(dt) */ }}
+        onPublish={() => handleSave(canPublishContent(role as any) ? 'published' : 'draft', canPublishContent(role as any) ? undefined : 'submit_for_approval')}
+        onSchedule={handleSchedule}
         requiresApproval={!canPublishContent(role as any)}
       />
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
+        <button type="button" onClick={loadHistory} style={{ border: '1px solid rgba(100,116,139,.25)', borderRadius: 10, padding: '7px 12px', background: 'transparent', color: isDark ? '#cbd5e1' : '#475569', fontSize: 12, fontWeight: 700 }}>
+          <RotateCcw className="w-3.5 h-3.5 inline mr-1" /> Historique des versions
+        </button>
+      </div>
+
+      {historyOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(15,23,42,.4)', display: 'grid', placeItems: 'center', padding: 20 }} onClick={() => setHistoryOpen(false)}>
+          <div onClick={e => e.stopPropagation()} style={{ width: 'min(620px, 100%)', maxHeight: '80vh', overflow: 'auto', borderRadius: 18, background: isDark ? '#111827' : '#fff', padding: 22, boxShadow: '0 24px 80px rgba(15,23,42,.25)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div><h3 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>Historique des versions</h3><p style={{ margin: '4px 0 0', fontSize: 12, color: '#64748b' }}>Auteur, date et champs modifiés</p></div>
+              <button type="button" onClick={() => setHistoryOpen(false)} style={{ border: 0, background: 'transparent', color: '#64748b', fontSize: 20 }}>×</button>
+            </div>
+            {revisions.length === 0 ? <p style={{ color: '#64748b', fontSize: 13 }}>Aucune version enregistrée.</p> : revisions.map(revision => (
+              <div key={revision.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, borderTop: '1px solid rgba(148,163,184,.18)', padding: '13px 0' }}>
+                <div><div style={{ fontSize: 13, fontWeight: 700 }}>{new Date(revision.created_at).toLocaleString('fr-FR')}</div><div style={{ fontSize: 11, color: '#64748b' }}>par {revision.saved_by} · {(revision.changed_fields ?? []).join(', ') || 'contenu'}</div></div>
+                <button type="button" onClick={async () => { if (!window.confirm('Restaurer cette version ? Elle sera restaurée comme brouillon.')) return; const res = await fetch(`/api/cms/pages/${page.id}/revisions`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ revision_id: revision.id }) }); if (res.ok) window.location.reload(); }} style={{ border: '1px solid rgba(16,185,129,.35)', borderRadius: 9, padding: '6px 10px', background: 'rgba(16,185,129,.08)', color: '#047857', fontSize: 11, fontWeight: 700 }}>Restaurer</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 3-column editor layout */}
       <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr 320px', gap: '16px', flex: 1, minHeight: 0, overflow: 'hidden' }}>
@@ -536,30 +580,35 @@ export default function ContentPagesPage() {
 
   const [pages, setPages] = useState<CmsPage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [selectedPage, setSelectedPage] = useState<CmsPage | null>(null);
 
-  useEffect(() => {
-    fetch('/api/cms/pages')
-      .then(r => r.json())
-      .then(data => { setPages(data.pages ?? []); setLoading(false); })
-      .catch(() => setLoading(false));
+  const loadPages = useCallback(async () => {
+    setLoading(true);
+    setLoadError('');
+    try {
+      const data = await requestJson<{ pages?: CmsPage[] }>('/api/cms/pages');
+      setPages(data.pages ?? []);
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : 'Impossible de charger les pages.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => { void loadPages(); }, [loadPages]);
 
   if (!canEditContent(role as any)) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center' }}>
-        <p style={{ fontSize: '14px', color: isDark ? '#475569' : '#94a3b8' }}>Vous n&apos;avez pas accès à cette section.</p>
-      </div>
+      <AsyncState kind="forbidden" description="Votre rôle ne permet pas de gérer les pages et leurs sections." />
     );
   }
 
   if (loading) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px' }}>
-        <div className="w-6 h-6 border-2 border-slate-700 border-t-emerald-500 rounded-full animate-spin" />
-      </div>
-    );
+    return <AsyncState kind="loading" />;
   }
+
+  if (loadError) return <AsyncState kind="error" description={loadError} onRetry={loadPages} />;
 
   if (selectedPage) {
     return (

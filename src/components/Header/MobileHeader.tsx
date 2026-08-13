@@ -69,7 +69,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
   };
 
   return (
-    <div className="flex flex-col md:hidden gap-3">
+    <div className="flex flex-col lg:hidden gap-3">
       {/* Mobile top row */}
       <div className="w-full flex items-center justify-between">
         <Link
@@ -79,16 +79,18 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
           <Image
             src={getOptimizedImageUrl("/images/logo.png")}
             alt="Para Officinal S.A"
-            width={120}
-            height={32}
+            width={933}
+            height={257}
             loading="eager"
             className="object-contain"
+            style={{ width: '120px', height: 'auto' }}
           />
         </Link>
 
         <div className="flex items-center gap-2">
           <button
             onClick={onToggleLanguage}
+            aria-label={language === 'FR' ? 'Afficher le site en arabe' : 'Afficher le site en français'}
             className="h-10 px-3 rounded-xl flex items-center justify-center gap-1 hover:bg-slate-50 active:scale-95 text-primary transition-all duration-300 cursor-pointer"
           >
             <Globe className="w-4 h-4 text-secondary animate-pulse" />
@@ -125,7 +127,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
               value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); setShowSearch(true); }}
               onFocus={() => setShowSearch(true)}
-              className="flex-1 bg-transparent text-sm text-slate-700 placeholder-slate-400 focus:outline-none min-w-0"
+              className="flex-1 bg-transparent text-base text-slate-700 placeholder-slate-400 focus:outline-none min-w-0"
             />
             {searchQuery && (
               <button

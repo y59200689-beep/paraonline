@@ -19,12 +19,15 @@ import {
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import Image from 'next/image';
 import Link from 'next/link';
+import { isCommerceFeatureEnabled } from '@/lib/feature-flags';
+import { isDiagnosticProductEligible } from '@/lib/diagnostic-eligibility';
+import { PRODUCT_IMAGE_FALLBACK } from '@/lib/public-images';
 
 interface ProductDetailClientProps {
   product: Product;
 }
 
-const placeholderSvg = "data:image/svg+xml;utf8," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300' width='100%' height='100%'><rect width='100%' height='100%' fill='#f1f5f9'/><path d='M150 100a40 40 0 1 0 40 40 40 40 0 0 0-40-40zm0 60a20 20 0 1 1 20-20 20 20 0 0 1-20 20z' fill='#94a3b8'/><path d='M180 180h-60a10 10 0 0 0-10 10v10h80v-10a10 10 0 0 0-10-10z' fill='#94a3b8'/><text x='150' y='230' font-family='sans-serif' font-size='12' font-weight='bold' fill='#64748b' text-anchor='middle'>Image Indisponible</text></svg>");
+const placeholderSvg = PRODUCT_IMAGE_FALLBACK;
 
 export default function ProductDetailClient({ product }: ProductDetailClientProps) {
   const { language, t } = useTranslation();
@@ -37,6 +40,8 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   const isRTL = language === 'AR';
   const isFavorite = isInWishlist(product.id);
   const lowStockThreshold = settings.lowStockThreshold || 5;
+  const productRedesign = isCommerceFeatureEnabled('productRedesign');
+  const isDiagnosticEligible = isDiagnosticProductEligible(product);
 
   // Visual states
   const [activeImage, setActiveImage] = useState(product.image);
@@ -67,6 +72,8 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [isAddedToCart, setIsAddedToCart] = useState(false);
+  const [showStickyPurchase, setShowStickyPurchase] = useState(false);
+  const mobilePurchaseRef = useRef<HTMLDivElement>(null);
 
   // Form states
   const [newAuthor, setNewAuthor] = useState('');
@@ -171,57 +178,16 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
     return name.slice(0, 2).toUpperCase();
   };
 
-  // Generate default authentic reviews for empty states
-  const defaultReviews = useMemo(() => {
-    const name = product.nameFr || product.title;
-    return [
-      {
-        id: 'd1',
-        author: 'Sarah B.',
-        rating: 5,
-        comment: language === 'FR' 
-          ? `Une merveille absolue ! J'utilise le ${name} depuis deux semaines maintenant, ma peau est transformée, plus lisse et lumineuse. Recommandé à 100% !`
-          : `روعة حقيقية! أستخدم ${name} منذ أسبوعين، بشرتي تحسنت كثيراً وأصبحت أكثر نضارة ونعومة. أنصح به بشدة!`,
-        date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-        reply: language === 'FR'
-          ? `Merci Sarah ! Nous sommes ravis que le ${name} vous donne entière satisfaction. À très bientôt !`
-          : `شكراً لكِ سارة! يسعدنا جداً أن المنتج نال إعجابكِ. في أمان الله!`
-      },
-      {
-        id: 'd2',
-        author: 'Youssef M.',
-        rating: 5,
-        comment: language === 'FR'
-          ? `Excellent produit, la texture est incroyable et ne colle pas. Idéal pour un usage quotidien.`
-          : `منتج ممتاز، الملمس رائع ولا يلتصق. مثالي للاستخدام اليومي.`,
-        date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-        reply: ''
-      },
-      {
-        id: 'd3',
-        author: 'Lina K.',
-        rating: 4,
-        comment: language === 'FR'
-          ? `Très bon produit, efficace et conforme à la description. La livraison a été ultra rapide.`
-          : `منتج جيد جداً وفعال ومطابق للوصف. التوصيل كان سريعاً للغاية.`,
-        date: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
-        reply: ''
-      }
-    ];
-  }, [product, language]);
-
-  // Combine database reviews and default reviews
-  const allReviews = useMemo(() => {
-    return [...reviewsList, ...defaultReviews];
-  }, [reviewsList, defaultReviews]);
+  // Public ratings are based exclusively on stored customer reviews.
+  const allReviews = reviewsList;
 
   // Calculate rating statistics dynamically
   const ratingStats = useMemo(() => {
     const count = allReviews.length;
     if (count === 0) {
       return {
-        average: 5,
-        distribution: { 5: 100, 4: 0, 3: 0, 2: 0, 1: 0 },
+        average: 0,
+        distribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
         count: 0
       };
     }
@@ -247,56 +213,32 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
     return { average, distribution, count };
   }, [allReviews]);
 
-  // "Complete the Routine" helper classification
+  // Routine slots only use catalogue-approved diagnostic metadata. This
+  // prevents a title keyword from turning an unrelated item into skincare.
   const getProductStep = (p: Product): 'cleanse' | 'treat' | 'hydrate' | 'protect' | null => {
-    const title = (p.title || '').toLowerCase();
-    const desc = (p.description || '').toLowerCase();
-    const tags = (p.tags || []).map(t => t.toLowerCase());
-    
-    const isSolaire = tags.includes('solaire') || tags.includes('sun') || tags.includes('protect') ||
-                      title.includes('solaire') || title.includes('sunscreen') || title.includes('sun ') || 
-                      title.includes(' uv') || title.includes('spf') || title.includes('écran') ||
-                      desc.includes('solaire') || desc.includes('sunscreen') || desc.includes('protection solaire');
-    if (isSolaire) return 'protect';
-
-    const isCleanse = tags.includes('nettoyant') || tags.includes('cleanse') ||
-                      title.includes('nettoyant') || title.includes('cleansing') || title.includes('cleanser') || 
-                      title.includes('mousse') || title.includes('micellaire') || title.includes('gel lavant') ||
-                      desc.includes('nettoie') || desc.includes('nettoyant') || desc.includes('cleanser');
-    if (isCleanse) return 'cleanse';
-
-    const isTreat = tags.includes('serum') || tags.includes('sérum') || tags.includes('ampoule') ||
-                    title.includes('serum') || title.includes('sérum') || title.includes('ampoule') || 
-                    title.includes('booster') || title.includes('shampooing') || title.includes('elixir') ||
-                    desc.includes('sérum') || desc.includes('serum') || desc.includes('ampoule') || desc.includes('traiter');
-    if (isTreat) return 'treat';
-
-    const isHydrate = tags.includes('hydratant') || tags.includes('creme') || tags.includes('crème') ||
-                      title.includes('crème') || title.includes('cream') || title.includes('lotion') || 
-                      title.includes('baume') || title.includes('lait') || title.includes('hydra') ||
-                      desc.includes('crème') || desc.includes('cream') || desc.includes('hydrate') || desc.includes('hydratation');
-    if (isHydrate) return 'hydrate';
-
+    if (!isDiagnosticProductEligible(p)) return null;
+    const roles = new Set(p.routineRoles || []);
+    if (roles.has('cleanser') || roles.has('makeup_remover')) return 'cleanse';
+    if (roles.has('treatment') || roles.has('spot_treatment') || roles.has('exfoliant') || roles.has('essence') || roles.has('eye_care')) return 'treat';
+    if (roles.has('moisturizer') || roles.has('face_oil') || roles.has('mask') || roles.has('after_sun')) return 'hydrate';
+    if (roles.has('sunscreen')) return 'protect';
     return null;
   };
 
   const routineProducts = useMemo(() => {
     const currentStep = getProductStep(product);
     
+    const selectedIds = new Set<number>(currentStep ? [product.id] : []);
     const getProductForStep = (step: 'cleanse' | 'treat' | 'hydrate' | 'protect') => {
       if (currentStep === step) {
         return product;
       }
-      const candidates = products.filter(p => p.id !== product.id && getProductStep(p) === step);
-      const preferredIds: Record<string, number[]> = {
-        cleanse: [22, 15],
-        treat: [3, 14, 16],
-        hydrate: [5, 7, 6, 8],
-        protect: [13, 17, 1, 2, 4]
-      };
-      
-      const preferred = candidates.find(c => preferredIds[step].includes(c.id));
-      return preferred || candidates[0] || null;
+      const candidate = products
+        .filter(p => !selectedIds.has(p.id) && getProductStep(p) === step)
+        .sort((a, b) => Number(b.vendor === product.vendor) - Number(a.vendor === product.vendor) || Number(b.rating || 0) - Number(a.rating || 0))[0]
+        || null;
+      if (candidate) selectedIds.add(candidate.id);
+      return candidate;
     };
 
     return {
@@ -392,6 +334,27 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   const hasDiscount = comparePrice > currentPrice;
   const discountPercent = hasDiscount ? Math.round(((comparePrice - currentPrice) / comparePrice) * 100) : 0;
   const savingsAmount = hasDiscount ? comparePrice - currentPrice : 0;
+
+  const addCurrentProductToCart = () => {
+    const finalProduct = {
+      ...product,
+      price: currentPrice,
+      title: activeVariant ? `${product.title} (${activeVariant.title})` : product.title,
+    };
+    addToCart(finalProduct, quantity);
+    setIsAddedToCart(true);
+    setTimeout(() => setIsAddedToCart(false), 1500);
+  };
+
+  useEffect(() => {
+    if (!productRedesign || !mobilePurchaseRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowStickyPurchase(!entry.isIntersecting && entry.boundingClientRect.top < 0),
+      { threshold: 0.15 }
+    );
+    observer.observe(mobilePurchaseRef.current);
+    return () => observer.disconnect();
+  }, [productRedesign]);
 
   // Parse composition ingredients list and lookup in Glossary
   const matchedIngredients = useMemo(() => {
@@ -513,17 +476,17 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
     let glowColor = "";
 
     if (score >= 90) {
-      statusFr = "Excellent Match — Recommandé";
+      statusFr = "Excellente compatibilité, recommandé";
       statusAr = "تطابق ممتاز — موصى به";
       colorClass = "text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/30 border-emerald-300/40 dark:border-emerald-700/40";
       glowColor = "rgba(16,185,129,0.25)";
     } else if (score >= 70) {
-      statusFr = "Très Bon Match — Compatible";
+      statusFr = "Très bonne compatibilité";
       statusAr = "تطابق جيد جداً — متوافق";
       colorClass = "text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/30 border-amber-300/40 dark:border-amber-700/40";
       glowColor = "rgba(245,158,11,0.25)";
     } else {
-      statusFr = "Match Modéré — Vigilance";
+      statusFr = "Compatibilité modérée, vigilance";
       statusAr = "تطابق متوسط — يرجى الحذر";
       colorClass = "text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/30 border-rose-300/40 dark:border-rose-700/40";
       glowColor = "rgba(244,63,94,0.25)";
@@ -545,7 +508,9 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 
   // Curated recommendations (same category, different product)
   const recommendedProducts = useMemo(() => {
-    return products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
+    return products
+      .filter(p => p.status === 'live' && Number(p.stock || 0) > 0 && p.category === product.category && p.id !== product.id)
+      .slice(0, 4);
   }, [product, products]);
 
   const shareProduct = () => {
@@ -563,10 +528,10 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 
   return (
     <ShopShell>
-      <main className="max-w-7xl mx-auto px-6 sm:px-10 md:px-16 lg:px-20 xl:px-24 py-12 select-none" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+      <main className={`max-w-7xl mx-auto select-none ${productRedesign ? 'px-4 py-6 sm:px-8 sm:py-9 lg:px-20 lg:py-12 xl:px-24' : 'px-6 sm:px-10 md:px-16 lg:px-20 xl:px-24 py-12'}`} style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
         
         {/* Breadcrumbs */}
-        <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 mb-8 font-medium">
+        <div className={`flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 font-medium ${productRedesign ? 'mb-4 lg:mb-8' : 'mb-8'}`}>
           <Link href="/products" className="hover:text-primary transition-colors">
             {language === 'FR' ? 'Boutique' : 'المتجر'}
           </Link>
@@ -578,6 +543,21 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
           </span>
         </div>
 
+        {productRedesign && (
+          <div className="mb-5 lg:hidden">
+            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-700">{product.vendor}</p>
+            <h1 className="mt-1.5 text-2xl font-black leading-tight tracking-[-0.03em] text-slate-950">
+              {language === 'FR' ? (product.nameFr || product.title) : product.title}
+            </h1>
+            <div className="mt-2 flex items-center gap-2 text-xs font-bold">
+              <span className={`h-2 w-2 rounded-full ${Number(product.stock || 0) > 0 ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+              <span className={Number(product.stock || 0) > 0 ? 'text-emerald-700' : 'text-rose-600'}>
+                {Number(product.stock || 0) > 0 ? (language === 'FR' ? 'Disponible' : 'متوفر') : (language === 'FR' ? 'Rupture de stock' : 'غير متوفر')}
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Layout Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
           
@@ -585,9 +565,9 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
           <div className="lg:col-span-6 xl:col-span-7 space-y-6 lg:sticky lg:top-28">
             
             {/* Main Image Container */}
-            <div className="rounded-[2rem] p-1.5 bg-slate-900/5 dark:bg-white/5 border border-slate-200/40 dark:border-slate-800/40 shadow-sm relative overflow-hidden">
+            <div className={`rounded-[2rem] p-1.5 bg-slate-900/5 dark:bg-white/5 border border-slate-200/40 dark:border-slate-800/40 shadow-sm relative overflow-hidden ${productRedesign ? 'max-lg:mx-auto max-lg:w-full' : ''}`}>
               <div 
-                className="rounded-[calc(2rem-0.375rem)] bg-white dark:bg-slate-950 aspect-square relative flex items-center justify-center overflow-hidden cursor-zoom-in"
+                className={`rounded-[calc(2rem-0.375rem)] bg-white dark:bg-slate-950 relative flex items-center justify-center overflow-hidden cursor-zoom-in ${productRedesign ? 'aspect-[4/3] max-h-[44svh] lg:aspect-square lg:max-h-none' : 'aspect-square'}`}
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
               >
@@ -655,6 +635,29 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 ))}
               </div>
             )}
+
+            {productRedesign && (
+              <div ref={mobilePurchaseRef} className="rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_14px_40px_rgba(15,23,42,0.08)] lg:hidden">
+                <div className="flex items-end justify-between gap-4">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{language === 'FR' ? 'Prix' : 'السعر'}</p>
+                    <p className="mt-1 text-2xl font-black text-slate-950">{convertPrice(currentPrice)}</p>
+                  </div>
+                  {hasDiscount && <p className="text-sm font-bold text-slate-400 line-through">{convertPrice(comparePrice)}</p>}
+                </div>
+                <div className="mt-4 flex items-center gap-3">
+                  <div className="flex h-12 items-center rounded-2xl border border-slate-200 bg-slate-50 px-2">
+                    <button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))} className="p-2" aria-label="Réduire"><Minus className="h-4 w-4" /></button>
+                    <span className="min-w-7 text-center text-sm font-black">{quantity}</span>
+                    <button type="button" onClick={() => setQuantity((value) => Math.min(Number(product.stock || value + 1), value + 1))} className="p-2" aria-label="Augmenter"><Plus className="h-4 w-4" /></button>
+                  </div>
+                  <button type="button" onClick={addCurrentProductToCart} disabled={Number(product.stock || 0) <= 0} className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-[var(--public-action)] px-4 text-sm font-black text-white shadow-[0_10px_24px_oklch(48%_0.135_250_/_0.24)] transition hover:bg-[var(--public-action-hover)] disabled:bg-slate-400">
+                    <ShoppingBag className="h-4 w-4" />
+                    {language === 'FR' ? 'Ajouter au panier' : 'إضافة للسلة'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
 
@@ -662,7 +665,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
           <div className="lg:col-span-6 xl:col-span-5 space-y-8">
             
             {/* Basic metadata */}
-            <div className="space-y-4">
+            <div className={`space-y-4 ${productRedesign ? 'max-lg:hidden' : ''}`}>
               <div className="flex items-center justify-between">
                 <span className="px-3.5 py-1 bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 text-[10px] font-black uppercase tracking-wider rounded-lg border border-amber-200/40">
                   {product.vendor}
@@ -681,26 +684,30 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
               </h1>
 
               {/* Reviews Summary */}
-              <div className="flex items-center gap-3">
+              {ratingStats.count > 0 && ratingStats.average > 0 ? <div className="flex items-center gap-3">
                 <div className="flex items-center gap-0.5 text-amber-500">
                   {[...Array(5)].map((_, i) => (
                     <Star 
                       key={i} 
                       className={`w-4 h-4 fill-current ${
-                        i < Math.floor(product.rating) ? 'text-amber-400' : 'text-slate-200 dark:text-slate-800'
+                        i < Math.floor(ratingStats.average) ? 'text-amber-400' : 'text-slate-200 dark:text-slate-800'
                       }`} 
                     />
                   ))}
-                  <span className="text-xs font-black text-slate-800 dark:text-slate-200 ml-1.5">{product.rating}</span>
+                  <span className="text-xs font-black text-slate-800 dark:text-slate-200 ml-1.5">{ratingStats.average}</span>
                 </div>
                 <span className="text-slate-300">|</span>
                 <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">
-                  {product.reviews} {language === 'FR' ? 'avis vérifiés' : 'تقييمات موثقة'}
+                  {ratingStats.count} {language === 'FR' ? 'avis client' : 'تقييم عميل'}
                 </span>
-              </div>
+              </div> : (
+                <p className="text-xs font-semibold text-slate-500">
+                  {language === 'FR' ? 'Aucun avis client pour le moment' : 'لا توجد تقييمات بعد'}
+                </p>
+              )}
 
               {/* SKIN MATCH COMPATIBILITY BADGE */}
-              {skinMatchInfo ? (
+              {isDiagnosticEligible && (skinMatchInfo ? (
                 <div 
                   className={`rounded-2xl border p-4 backdrop-blur-md transition-all duration-300 flex items-center gap-4 ${skinMatchInfo.colorClass}`}
                   style={{
@@ -710,7 +717,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   <div className="flex-1 space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] font-black uppercase tracking-wider">
-                        {language === 'FR' ? 'Diagnostic Skin Match' : 'تشخيص تطابق البشرة'}
+                        {language === 'FR' ? 'Compatibilité avec votre profil' : 'التوافق مع ملف بشرتك'}
                       </span>
                       <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
                     </div>
@@ -724,7 +731,9 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   
                   {/* Matching score indicator */}
                   <div className="flex flex-col items-center justify-center shrink-0 w-16 h-16 rounded-xl border border-current/25 bg-current/5 select-none relative group overflow-hidden">
-                    <span className="text-[9px] font-black uppercase tracking-widest opacity-60 leading-none">MATCH</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest opacity-60 leading-none">
+                      {language === 'FR' ? 'COMPATIBILITÉ' : 'التوافق'}
+                    </span>
                     <span className="text-2xl font-black tracking-tighter leading-none mt-1">{skinMatchInfo.score}%</span>
                   </div>
                 </div>
@@ -742,7 +751,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                       </span>
                     </div>
                     <h4 className="text-xs font-black text-slate-800 dark:text-slate-100 leading-tight">
-                      {language === 'FR' ? '🧪 Calculez votre Skin Match en 1 min' : '🧪 احسبي نسبة ملاءمة المنتج لبشرتكِ في دقيقة'}
+                      {language === 'FR' ? 'Évaluer la compatibilité avec ma peau' : 'قيّمي ملاءمة المنتج لبشرتك'}
                     </h4>
                     <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
                       {language === 'FR' 
@@ -754,7 +763,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                     <ArrowRight className={`w-4 h-4 ${isRTL ? 'rotate-180 group-hover:-translate-x-1' : ''}`} />
                   </div>
                 </button>
-              )}
+              ))}
 
               {/* Price display with savings highlighted */}
               <div className="p-4 bg-slate-50 dark:bg-slate-900/60 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-wrap items-center gap-4">
@@ -824,7 +833,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
             )}
 
             {/* QUANTITY & REGULAR CART FLOW */}
-            <div className="flex items-center gap-4 pt-2 border-t border-slate-100 dark:border-slate-900">
+            <div className={`items-center gap-4 pt-2 border-t border-slate-100 dark:border-slate-900 ${productRedesign ? 'hidden lg:flex' : 'flex'}`}>
               <div className="flex items-center border border-slate-200 dark:border-slate-800 rounded-2xl px-3 bg-slate-50 dark:bg-slate-900 h-13 shrink-0">
                 <button 
                   onClick={() => setQuantity(p => Math.max(1, p - 1))}
@@ -868,16 +877,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
               </div>
 
               <button
-                onClick={() => {
-                  const finalProduct = {
-                    ...product,
-                    price: currentPrice,
-                    title: activeVariant ? `${product.title} (${activeVariant.title})` : product.title
-                  };
-                  addToCart(finalProduct, quantity);
-                  setIsAddedToCart(true);
-                  setTimeout(() => setIsAddedToCart(false), 1500);
-                }}
+                onClick={addCurrentProductToCart}
                 disabled={isAddedToCart || (product.stock !== undefined && product.stock <= 0)}
                 className={`flex-1 h-13 text-white text-xs font-black uppercase tracking-wider rounded-2xl flex items-center justify-center gap-2.5 cursor-pointer transition-all duration-300 active:scale-97 hover:scale-[1.01] border-0 relative overflow-hidden group shadow-[0_4px_14px_rgba(26,71,49,0.25)] hover:shadow-[0_6px_20px_rgba(26,71,49,0.38)] disabled:opacity-90 disabled:cursor-default ${
                   isAddedToCart 
@@ -963,8 +963,8 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
               </div>
             </div>
 
-            {/* SKIN MATCHER DIAGNOSTIC WIDGET */}
-            <div className="rounded-3xl p-1 bg-gradient-to-br from-emerald-500/10 to-teal-500/15 border border-emerald-200/20 dark:border-slate-800 shadow-md">
+            {/* SKIN MATCHER DIAGNOSTIC WIDGET — restricted to facial-care products. */}
+            {isDiagnosticEligible && <div className="rounded-3xl p-1 bg-gradient-to-br from-emerald-500/10 to-teal-500/15 border border-emerald-200/20 dark:border-slate-800 shadow-md">
               <div className="rounded-[calc(1.5rem-0.25rem)] bg-white dark:bg-slate-950 p-5 relative overflow-hidden space-y-4">
                 {/* Glow effects */}
                 <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-emerald-500/10 blur-xl pointer-events-none" />
@@ -997,7 +997,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   </span>
                 </button>
               </div>
-            </div>
+            </div>}
 
           </div>
         </div>
@@ -1145,7 +1145,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
         </div>
 
         {/* "COMPLETE THE ROUTINE" UPSELL GRID */}
-        <div className="mt-24 border-t border-slate-200/50 dark:border-slate-800 pt-16 space-y-12">
+        {isDiagnosticEligible && <div className="mt-24 border-t border-slate-200/50 dark:border-slate-800 pt-16 space-y-12">
           <div className="text-center max-w-xl mx-auto space-y-3">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest border border-emerald-200/20">
               <Sparkles className="w-3.5 h-3.5" />
@@ -1350,7 +1350,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
               </button>
             </div>
           </div>
-        </div>
+        </div>}
 
         {/* REVIEWS & VERIFIED FEEDBACKS SECTION */}
         <div className="mt-28 pt-16">
@@ -1487,6 +1487,19 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
         )}
 
       </main>
+      {productRedesign && showStickyPurchase && Number(product.stock || 0) > 0 && (
+        <div className="fixed inset-x-0 bottom-[calc(68px+env(safe-area-inset-bottom,0px))] z-[39] border-t border-slate-200 bg-white/95 px-4 py-3 shadow-[0_-10px_35px_rgba(15,23,42,0.10)] backdrop-blur-xl lg:hidden">
+          <div className="mx-auto flex max-w-lg items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-black text-slate-900">{product.nameFr || product.title}</p>
+              <p className="text-sm font-black text-emerald-700">{convertPrice(currentPrice)}</p>
+            </div>
+            <button type="button" onClick={addCurrentProductToCart} className="flex h-11 items-center gap-2 rounded-xl bg-[var(--public-action)] px-5 text-xs font-black text-white transition hover:bg-[var(--public-action-hover)]">
+              <ShoppingBag className="h-4 w-4" />{language === 'FR' ? 'Ajouter' : 'أضف'}
+            </button>
+          </div>
+        </div>
+      )}
     </ShopShell>
   );
 }

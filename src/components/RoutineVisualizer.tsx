@@ -418,7 +418,7 @@ export function RoutineVisualizer() {
       subtitleAr: 'مكونات نشطة مركزة',
       descFr: 'Sérums hautement concentrés formulés pour cibler directement les problématiques cutanées (imperfections, rides, taches ou teint terne).',
       descAr: 'سيروم عالي التركيز مصمم خصيصاً لاستهداف مشاكل محددة (البثور، التجاعيد، البقع الداكنة، أو البهتان).',
-      importanceFr: 'C\'est l\'étape clé de correction clinique. Les molécules actives pénètrent en profondeur pour restructurer les cellules cutanées.',
+      importanceFr: 'C\'est l\'étape ciblée de la routine. Les actifs sélectionnés répondent au besoin indiqué dans votre questionnaire.',
       importanceAr: 'هذه هي المرحلة الأساسية للتصحيح السريري. تتغلغل الجزيئات النشطة بعمق لإعادة بناء وتجديد خلايا البشرة.',
       time: 'Both',
       activesFr: ['Retinol', 'Vitamine C', 'Acide Tranexamique', 'Niacinamide'],
@@ -509,7 +509,7 @@ export function RoutineVisualizer() {
           <p className="text-slate-400 text-xs sm:text-sm font-semibold max-w-2xl text-left">
             {isRTL 
               ? 'تطبيق المستحضرات بالترتيب الصحيح يضمن أقصى استفادة لبشرتك ويحمي حاجزها الطبيعي.' 
-              : 'Appliquer les soins dans le bon ordre clinique maximise leur efficacité sur les différentes couches de la peau.'}
+              : 'Appliquer les soins dans l\'ordre recommandé facilite une routine régulière et limite les associations inadaptées.'}
           </p>
         </div>
       </div>

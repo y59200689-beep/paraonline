@@ -8,6 +8,7 @@ export default defineConfig({
     setupFiles: ['./src/__tests__/setupTests.ts'],
     testTimeout: 30000,
     hookTimeout: 30000,
+    exclude: ['tests/e2e/**', 'node_modules/**', '.next/**'],
   },
   resolve: {
     alias: {

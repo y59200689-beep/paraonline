@@ -23,7 +23,7 @@ function rowToProduct(item: any): Product {
     comparePrice: Number(item.compare_price || item.price),
     category: item.category as string,
     tags: (item.tags as string[]) || [],
-    rating: Number(item.rating || 5),
+    rating: Number(item.rating || 0),
     reviews: Number(item.reviews || 0),
     description: (item.description as string) || '',
     ingredients: (item.ingredients as string) || '',

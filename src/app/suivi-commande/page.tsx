@@ -1,14 +1,18 @@
 import React, { Suspense } from 'react';
 import type { Metadata } from 'next';
 import SuiviCommandeClient from './SuiviCommandeClient';
+import { CmsPageRenderer } from '@/components/CmsPageRenderer';
+import { getCmsPageBySlug } from '@/lib/cms-pages';
 
 export const metadata: Metadata = {
   title: 'Suivi de Commande | Para Officinal Maroc',
-  description: 'Suivez votre commande en temps réel au Maroc. Statut de livraison express, numéro de suivi et assistance WhatsApp 24/7.',
+  description: 'Consultez l’état de votre commande à l’aide de sa référence numérique et de son code de suivi sécurisé.',
   alternates: { canonical: '/suivi-commande' },
 };
 
-export default function SuiviCommandePage() {
+export default async function SuiviCommandePage({ searchParams }: { searchParams?: Promise<{ preview_token?: string }> }) {
+  const page = await getCmsPageBySlug('suivi-commande', (await searchParams)?.preview_token);
+  if (page?.section_order?.length) return <CmsPageRenderer page={page} />;
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">

@@ -9,11 +9,7 @@ import { useUi } from './UiContext';
 import { useProducts } from './ProductsContext';
 import { getCustomerAccessToken } from '@/lib/customer-session';
 import {
-  calculateSubtotal,
-  calculateDiscount,
-  calculateShippingFee,
-  calculateAmountNeededForFreeShipping,
-  calculateTotal
+  calculateCommerceSummary,
 } from '@/lib/pricing';
 
 export interface CartItem {
@@ -391,22 +387,27 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Math calculations
-  const subtotal = calculateSubtotal(cart);
-  // Dynamically resolve tiered free gifts based on subtotal (order value) range
-  const activeGiftRange = settings.giftRanges?.find(
-    r => r.isActive !== false && subtotal >= r.minAmount && subtotal <= r.maxAmount
-  );
-  const isFreeShippingGift = !!(
-    activeGiftRange &&
-    (activeGiftRange.productId === -1 || activeGiftRange.productName === 'Livraison Gratuite')
-  );
-
-  const discountAmount = calculateDiscount(subtotal, appliedCoupon);
-  const shippingThreshold = settings.freeShippingThreshold || 600;
-  const isFreeShipping = !!(appliedCoupon?.freeShipping || isFreeShippingGift || subtotal >= shippingThreshold || subtotal === 0);
-  const shippingFee = calculateShippingFee(subtotal, shippingCity, settings, !!appliedCoupon?.freeShipping || isFreeShippingGift);
-  const amountNeededForFreeShipping = calculateAmountNeededForFreeShipping(subtotal, shippingThreshold);
-  const total = calculateTotal(subtotal, discountAmount, shippingFee);
+  const pricing = calculateCommerceSummary({
+    cart,
+    coupon: appliedCoupon,
+    settings,
+    shippingCity,
+    giftProducts: products.map((product) => ({
+      id: product.id,
+      stock: Number(product.stock || 0),
+      status: product.status,
+      title: product.title,
+    })),
+  });
+  const {
+    subtotal,
+    activeGiftRange,
+    discountAmount,
+    isFreeShipping,
+    shippingFee,
+    amountNeededForFreeShipping,
+    total,
+  } = pricing;
 
   const resolvedGiftName = activeGiftRange 
     ? activeGiftRange.productName 
@@ -490,6 +491,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const data = await res.json();
       
       if (data.success && data.orderId) {
+        const confirmedSubtotal = Number(data.subtotal ?? subtotal);
+        const confirmedDiscount = Number(data.discountAmount ?? discountAmount);
+        const confirmedShipping = Number(data.shippingFee ?? shippingFee);
+        const confirmedTotal = Number(data.total ?? total);
+        const confirmedGift = typeof data.giftItem === 'string' ? data.giftItem : resolvedGiftName;
         // Notify any open admin tab on the same site that a new order is ready.
         // The storage event is delivered across browser tabs without exposing order data.
         localStorage.setItem('admin:orders-updated', String(Date.now()));
@@ -523,9 +529,9 @@ ${orderData.note ? `*Instructions :* ${orderData.note}\n` : ''}
 ${itemsSummary}
 
 ----------------------------------
-*Sous-Total :* ${subtotal} DH
-${discountAmount > 0 ? `*Remise :* -${discountAmount} DH (Code: ${appliedCoupon?.code})\n` : ''}${resolvedGiftName ? `*Cadeau Gratuit :* ${resolvedGiftName}\n` : ''}*Livraison :* ${shippingFee === 0 ? 'GRATUITE' : `${shippingFee} DH`}
-*TOTAL À PAYER (COD) : ${total} DH*
+*Sous-Total :* ${confirmedSubtotal} DH
+${confirmedDiscount > 0 ? `*Remise :* -${confirmedDiscount} DH (Code: ${appliedCoupon?.code})\n` : ''}${confirmedGift ? `*Cadeau Gratuit :* ${confirmedGift}\n` : ''}*Livraison :* ${confirmedShipping === 0 ? 'GRATUITE' : `${confirmedShipping} DH`}
+*TOTAL À PAYER (COD) : ${confirmedTotal} DH*
 ----------------------------------
 Merci pour votre confiance ! Nous confirmons votre livraison le jour même`;
 

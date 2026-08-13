@@ -1,15 +1,18 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { lazy, Suspense, useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import {
   ArrowRight, ArrowLeft, ShieldCheck, AlertTriangle,
   CreditCard, User, Phone, MapPin, ChevronDown, Search,
   MessageSquare, CheckCircle2, X,
 } from 'lucide-react';
-import { Elements } from '@stripe/react-stripe-js';
 import { MOROCCAN_CITIES } from '@/lib/data';
 import { MOROCCAN_PHONE_MAX_DIGITS, MOROCCAN_PHONE_MIN_DIGITS, normalizeMoroccanPhoneInput } from '@/lib/moroccan-phone';
-import { StripeCheckoutForm } from './StripeCheckoutForm';
+
+const StripePaymentElement = lazy(() =>
+  import('./StripePaymentElement').then((module) => ({ default: module.StripePaymentElement }))
+);
 
 interface FormFields {
   name: string;
@@ -36,7 +39,8 @@ interface CheckoutFormProps {
   clientSecret: string;
   setClientSecret: (s: string) => void;
   stripeOrderId: string;
-  stripePromise: any;
+  stripeTrackingToken: string;
+  stripePublishableKey: string;
   total: number;
   onlinePaymentEnabled: boolean;
   testMode: boolean;
@@ -51,6 +55,8 @@ interface CheckoutFormProps {
 
 /* ── Searchable City Combobox ──────────────────────────────────────────── */
 interface CityComboboxProps {
+  id: string;
+  describedBy?: string;
   value: string;
   onChange: (val: string) => void;
   language: string;
@@ -61,7 +67,7 @@ interface CityComboboxProps {
 }
 
 const CityCombobox: React.FC<CityComboboxProps> = ({
-  value, onChange, language, isRTL, hasError, placeholder, citiesList,
+  id, describedBy, value, onChange, language, isRTL, hasError, placeholder, citiesList,
 }) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -147,8 +153,15 @@ const CityCombobox: React.FC<CityComboboxProps> = ({
     <div ref={containerRef} className="relative" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
       {/* Trigger button */}
       <button
+        id={id}
         type="button"
+        role="combobox"
         onClick={handleOpen}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={`${id}-listbox`}
+        aria-invalid={hasError || undefined}
+        aria-describedby={describedBy}
         className={`
           w-full flex items-center justify-between px-4 py-3.5 rounded-xl
           bg-white border transition-all duration-200 text-left
@@ -180,6 +193,11 @@ const CityCombobox: React.FC<CityComboboxProps> = ({
           <div className="flex items-center gap-2.5 px-3.5 py-3 border-b border-slate-100 shrink-0">
             <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             <input
+              aria-label={isFR ? 'Rechercher une ville' : 'البحث عن مدينة'}
+              role="combobox"
+              aria-autocomplete="list"
+              aria-controls={`${id}-listbox`}
+              aria-expanded="true"
               ref={inputRef}
               type="text"
               value={query}
@@ -191,6 +209,7 @@ const CityCombobox: React.FC<CityComboboxProps> = ({
             {query && (
               <button
                 type="button"
+                aria-label={isFR ? 'Effacer la recherche' : 'مسح البحث'}
                 onClick={() => { setQuery(''); setHighlightedIndex(-1); inputRef.current?.focus(); }}
                 className="text-slate-400 hover:text-slate-600"
               >
@@ -200,7 +219,7 @@ const CityCombobox: React.FC<CityComboboxProps> = ({
           </div>
 
           {/* City list */}
-          <ul ref={listRef} className="overflow-y-auto overscroll-contain" style={{ maxHeight: '200px' }}>
+          <ul id={`${id}-listbox`} ref={listRef} role="listbox" className="overflow-y-auto overscroll-contain" style={{ maxHeight: '200px' }}>
             {filtered.length === 0 ? (
               <li className="py-6 text-center text-[11px] text-slate-400 font-medium">
                 {isFR ? 'Aucune ville trouvée' : 'لا توجد مدينة مطابقة'}
@@ -209,6 +228,9 @@ const CityCombobox: React.FC<CityComboboxProps> = ({
               filtered.map((city, idx) => (
                 <li
                   key={city.value}
+                  role="option"
+                  aria-selected={value === city.value}
+                  tabIndex={-1}
                   onMouseEnter={() => setHighlightedIndex(idx)}
                   onMouseDown={() => handleSelect(city.value)}
                   className={`
@@ -238,6 +260,7 @@ const CityCombobox: React.FC<CityComboboxProps> = ({
 
 /* ── Premium Field Wrapper ──────────────────────────────────────────────── */
 interface FieldProps {
+  id: string;
   label: string;
   icon: React.ReactNode;
   error?: string;
@@ -245,16 +268,16 @@ interface FieldProps {
   children: React.ReactNode;
 }
 
-const Field: React.FC<FieldProps> = ({ label, icon, error, required, children }) => (
+const Field: React.FC<FieldProps> = ({ id, label, icon, error, required, children }) => (
   <div className="flex flex-col gap-1.5">
-    <label className="flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-wider text-slate-600">
+    <label htmlFor={id} className="flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-wider text-slate-600">
       <span className="text-[#B09B71]">{icon}</span>
       <span>{label}</span>
       {required && <span className="text-rose-400 ml-0.5">*</span>}
     </label>
     {children}
     {error && (
-      <span className="flex items-center gap-1 text-[10px] font-semibold text-rose-500 mt-0.5">
+      <span id={`${id}-error`} role="alert" className="flex items-center gap-1 text-[10px] font-semibold text-rose-500 mt-0.5">
         <AlertTriangle className="w-3 h-3 shrink-0" />
         {error}
       </span>
@@ -322,7 +345,8 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
   clientSecret,
   setClientSecret,
   stripeOrderId,
-  stripePromise,
+  stripeTrackingToken,
+  stripePublishableKey,
   total,
   onlinePaymentEnabled,
   testMode,
@@ -425,12 +449,16 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
 
           {/* ── Name ──────────────────────────────────────────────────── */}
           <Field
+            id="checkout-name"
             label={isFR ? 'Nom complet' : 'الاسم الكامل'}
             icon={<User className="w-3.5 h-3.5" />}
             error={formErrors.name}
             required
           >
             <input
+              id="checkout-name"
+              aria-invalid={!!formErrors.name}
+              aria-describedby={formErrors.name ? 'checkout-name-error' : undefined}
               type="text"
               placeholder={isFR ? 'Nom complet' : 'الاسم الكامل'}
               value={formFields.name}
@@ -442,6 +470,7 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
 
           {/* ── Phone ─────────────────────────────────────────────────── */}
           <Field
+            id="checkout-phone"
             label={isFR ? 'Téléphone WhatsApp' : 'هاتف واتساب'}
             icon={<Phone className="w-3.5 h-3.5" />}
             error={formErrors.phone}
@@ -457,6 +486,9 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
                 <div className="w-px h-3.5 bg-slate-200" />
               </div>
               <input
+                id="checkout-phone"
+                aria-invalid={!!formErrors.phone}
+                aria-describedby={formErrors.phone ? 'checkout-phone-error' : 'checkout-phone-help'}
                 type="tel"
                 placeholder="0661234567"
                 value={formFields.phone}
@@ -469,6 +501,9 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
                 pattern="[0-9]{9,10}"
                 dir="ltr"
               />
+              <span id="checkout-phone-help" className="sr-only">
+                {isFR ? 'Saisissez 9 ou 10 chiffres pour un numéro marocain.' : 'أدخل 9 أو 10 أرقام لرقم مغربي.'}
+              </span>
             </div>
           </Field>
 
@@ -486,12 +521,15 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
 
           {/* ── City (searchable) ─────────────────────────────────────── */}
           <Field
+            id="checkout-city"
             label={isFR ? 'Ville' : 'المدينة'}
             icon={<MapPin className="w-3.5 h-3.5" />}
             error={formErrors.city}
             required
           >
             <CityCombobox
+              id="checkout-city"
+              describedBy={formErrors.city ? 'checkout-city-error' : undefined}
               value={formFields.city}
               onChange={(val) => {
                 setFormFields(prev => ({ ...prev, city: val }));
@@ -507,12 +545,16 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
 
           {/* ── Address ───────────────────────────────────────────────── */}
           <Field
+            id="checkout-address"
             label={isFR ? 'Adresse complète' : 'العنوان الكامل'}
             icon={<MapPin className="w-3.5 h-3.5" />}
             error={formErrors.address}
             required
           >
             <textarea
+              id="checkout-address"
+              aria-invalid={!!formErrors.address}
+              aria-describedby={formErrors.address ? 'checkout-address-error' : undefined}
               rows={2}
               placeholder={
                 isFR
@@ -528,10 +570,12 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
 
           {/* ── Order note (optional) ─────────────────────────────────── */}
           <Field
+            id="checkout-note"
             label={isFR ? 'Note de commande (optionnel)' : 'ملاحظة للطلب (اختياري)'}
             icon={<MessageSquare className="w-3.5 h-3.5" />}
           >
             <textarea
+              id="checkout-note"
               rows={2}
               placeholder={
                 isFR
@@ -553,9 +597,14 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
               </p>
               <p className="text-[9.5px] text-primary-dark/60 font-medium mt-0.5 leading-relaxed">
                 {isFR
-                  ? 'Expédiés sous 24h · Suivi en temps réel · Retour gratuit sous 7 jours'
-                  : 'شحن خلال 24 ساعة · تتبع مباشر · إرجاع مجاني خلال 7 أيام'}
+                  ? 'Le délai et les frais sont confirmés selon votre ville avant la validation. Consultez les conditions de livraison et de retour.'
+                  : 'يتم تأكيد المدة والتكلفة حسب مدينتك قبل اعتماد الطلب. راجعي شروط التوصيل والإرجاع.'}
               </p>
+              <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[10px] font-bold text-primary">
+                <Link href="/politiques/conditions-vente" className="underline-offset-2 hover:underline">{isFR ? 'Livraison' : 'التوصيل'}</Link>
+                <Link href="/politiques/retours-reclamations" className="underline-offset-2 hover:underline">{isFR ? 'Retours' : 'الإرجاع'}</Link>
+                <Link href="/a-propos#contact" className="underline-offset-2 hover:underline">{isFR ? 'Support' : 'الدعم'}</Link>
+              </div>
             </div>
           </div>
 
@@ -621,21 +670,24 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
               <h4 className="text-xs font-bold uppercase tracking-wide text-slate-800">
                 {isFR ? 'Saisir les coordonnées de carte' : 'أدخل بيانات البطاقة'}
               </h4>
-              {stripePromise && (
-                <Elements
-                  stripe={stripePromise}
-                  options={{ clientSecret, locale: isFR ? 'fr' : 'ar' }}
-                >
-                  <StripeCheckoutForm
-                    clientSecret={clientSecret}
-                    orderId={stripeOrderId}
-                    amount={total}
-                    onSuccess={onStripeSuccess}
-                    onCancel={() => setClientSecret('')}
-                    adminTheme="light"
-                  />
-                </Elements>
-              )}
+              <Suspense
+                fallback={(
+                  <div role="status" className="flex min-h-24 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-500">
+                    {isFR ? 'Chargement du paiement sécurisé…' : 'جاري تحميل الدفع الآمن…'}
+                  </div>
+                )}
+              >
+                <StripePaymentElement
+                  publishableKey={stripePublishableKey}
+                  clientSecret={clientSecret}
+                  orderId={stripeOrderId}
+                  trackingToken={stripeTrackingToken}
+                  amount={total}
+                  locale={isFR ? 'fr' : 'ar'}
+                  onSuccess={onStripeSuccess}
+                  onCancel={() => setClientSecret('')}
+                />
+              </Suspense>
             </div>
           ) : (
             <div className="space-y-4">

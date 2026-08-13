@@ -153,10 +153,11 @@ export async function GET(req: NextRequest) {
   if (!canEditContent(session.role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   try {
-    let { data: questions, error } = await supabaseAdmin
+    const { data: fetchedQuestions, error } = await supabaseAdmin
       .from('cms_diagnostic_questions')
       .select(Q_SELECT)
       .order('display_order', { ascending: true });
+    let questions = fetchedQuestions;
 
     if (error || !questions || questions.length === 0) {
       questions = await seedAndFetch();

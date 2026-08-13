@@ -9,6 +9,7 @@ import { useProducts } from '@/context/ProductsContext';
 import { Zap, ShoppingBag, Star, Clock } from 'lucide-react';
 import { Product } from '@/lib/data';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
+import { safePublicImage } from '@/lib/public-images';
 
 interface FlashSaleBannerProps {
   titleFr?: string;
@@ -68,9 +69,9 @@ export const FlashSaleBanner: React.FC<FlashSaleBannerProps> = ({
   }, []);
 
   // Find product
-  const finalProductId = productId || 17;
+  const finalProductId = productId;
   const originalProduct = products.find((p) => p.id === finalProductId);
-  const finalDiscountPercent = discountPercent !== undefined ? discountPercent : 30;
+  const finalDiscountPercent = discountPercent ?? 0;
 
   const handleAddToCart = () => {
     if (!originalProduct) return;
@@ -92,7 +93,7 @@ export const FlashSaleBanner: React.FC<FlashSaleBannerProps> = ({
     }, 450);
   };
 
-  if (!originalProduct) return null;
+  if (!originalProduct || finalDiscountPercent <= 0) return null;
 
   // Calculate final discounted price
   const discount = finalDiscountPercent / 100;
@@ -101,9 +102,10 @@ export const FlashSaleBanner: React.FC<FlashSaleBannerProps> = ({
   // Determine fallback texts based on the selected product
   const titleFr = propTitleFr || `Le Best-Seller ${originalProduct.nameFr || originalProduct.title} à -${finalDiscountPercent}% Vente Flash`;
   const titleAr = propTitleAr || `${originalProduct.name || originalProduct.title} خصم -${finalDiscountPercent}% فلاش`;
-  const descFr = propDescFr || originalProduct.description || "Profitez de la protection organique culte avec sa formule gel-eau ultra-légère à prix exclusif. Aujourd'hui seulement.";
-  const descAr = propDescAr || "احصل على هذا المنتج الأكثر مبيعاً بتركيبته المتميزة بسعر حصري اليوم فقط.";
-  const finalBgImage = bgImage || "";
+  const descFr = propDescFr || originalProduct.description || `Découvrez cette offre temporaire sur ${originalProduct.nameFr || originalProduct.title}.`;
+  const descAr = propDescAr || `اكتشف هذا العرض المؤقت على ${originalProduct.name || originalProduct.title}.`;
+  const finalBgImage = safePublicImage(bgImage || originalProduct.image);
+  const hasVerifiedRating = originalProduct.reviews > 0 && originalProduct.rating > 0;
 
   const TimeBlock = ({ value, label }: { value: number; label: string }) => {
     const formatted = value.toString().padStart(2, '0');
@@ -148,14 +150,14 @@ export const FlashSaleBanner: React.FC<FlashSaleBannerProps> = ({
                 </h2>
                 
                 {/* Stars Rating */}
-                <div className="flex items-center gap-1.5">
+                {hasVerifiedRating ? <div className="flex items-center gap-1.5" aria-label={`${originalProduct.rating.toFixed(1)} sur 5, ${originalProduct.reviews} avis`}>
                   <div className="flex gap-0.5">
                     {[...Array(5)].map((_, i) => (
                       <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                     ))}
                   </div>
-                  <span className="text-xs text-slate-400 font-medium">5.0 (112 {language === 'AR' ? 'تقييم' : 'avis'})</span>
-                </div>
+                  <span className="text-xs text-slate-400 font-medium">{originalProduct.rating.toFixed(1)} ({originalProduct.reviews} {language === 'AR' ? 'تقييم' : 'avis'})</span>
+                </div> : null}
 
                 <p className="text-sm text-slate-400 leading-relaxed font-medium max-w-[45ch]">
                   <span className="hidden rtl:inline">{descAr}</span>
@@ -218,7 +220,7 @@ export const FlashSaleBanner: React.FC<FlashSaleBannerProps> = ({
                   src={getOptimizedImageUrl(finalBgImage)}
                   alt={titleFr}
                   fill
-                  sizes="(max-w-768px) 100vw, 50vw"
+                  sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-cover object-right transition-transform duration-1000 group-hover:scale-105"
                   priority
                 />

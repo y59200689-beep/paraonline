@@ -6,7 +6,15 @@ import {
   canManageSettings,
   canManageReviews,
   canManageCouriers,
-  canEditOrders
+  canEditOrders,
+  canEditContent,
+  canPublishContent,
+  canManageBrands,
+  canManageDiagnostic,
+  canManageChat,
+  canViewAnalytics,
+  isViewerOnly,
+  type AdminRole,
 } from '../lib/permissions';
 
 describe('Admin Permissions', () => {
@@ -64,5 +72,19 @@ describe('Admin Permissions', () => {
       expect(canEditOrders('logistician')).toBe(true);
       expect(canEditOrders('support')).toBe(false);
     });
+  });
+
+  it('enforces the complete private-product role matrix', () => {
+    const roles: AdminRole[] = ['owner', 'manager', 'content_editor', 'catalogue_editor', 'logistician', 'fulfilment', 'support', 'viewer'];
+
+    expect(roles.filter(canEditContent)).toEqual(['owner', 'manager', 'content_editor']);
+    expect(roles.filter(canPublishContent)).toEqual(['owner', 'manager']);
+    expect(roles.filter(canEditCatalog)).toEqual(['owner', 'manager', 'catalogue_editor']);
+    expect(roles.filter(canEditOrders)).toEqual(['owner', 'manager', 'logistician', 'fulfilment']);
+    expect(roles.filter(canManageBrands)).toEqual(['owner', 'manager', 'content_editor', 'catalogue_editor']);
+    expect(roles.filter(canManageDiagnostic)).toEqual(['owner', 'manager']);
+    expect(roles.filter(canManageChat)).toEqual(['owner', 'manager', 'content_editor']);
+    expect(roles.filter(canViewAnalytics)).toEqual(['owner', 'manager', 'support']);
+    expect(roles.filter(isViewerOnly)).toEqual(['viewer']);
   });
 });

@@ -1,6 +1,11 @@
 @import "tailwindcss";
 
+/* Dark utilities require an explicit theme ancestor. The public storefront is
+   light and must not partially invert when the operating system prefers dark. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @import "./styles/theme.css";
 @import "./styles/base.css";
 @import "./styles/animations.css";
 @import "./styles/dashboard-buttons.css";
+@import "./styles/public-design-system.css";

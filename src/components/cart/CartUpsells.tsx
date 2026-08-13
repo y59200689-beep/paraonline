@@ -6,12 +6,7 @@ import { Plus } from 'lucide-react';
 import { Product } from '@/lib/data';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { useTranslation } from '@/context/LanguageContext';
-
-const placeholderSvg =
-  "data:image/svg+xml;utf8," +
-  encodeURIComponent(
-    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300' width='100%' height='100%'><rect width='100%' height='100%' fill='#f1f5f9'/><path d='M150 100a40 40 0 1 0 40 40 40 40 0 0 0-40-40zm0 60a20 20 0 1 1 20-20 20 20 0 0 1-20 20z' fill='#94a3b8'/><path d='M180 180h-60a10 10 0 0 0-10 10v10h80v-10a10 10 0 0 0-10-10z' fill='#94a3b8'/><text x='150' y='230' font-family='sans-serif' font-size='12' font-weight='bold' fill='#64748b' text-anchor='middle'>Image Indisponible</text></svg>"
-  );
+import { PRODUCT_IMAGE_FALLBACK } from '@/lib/public-images';
 
 const toTitleCase = (str: string) => {
   if (!str) return '';
@@ -58,7 +53,7 @@ export const CartUpsells: React.FC<CartUpsellsProps> = ({
                 src={
                   getOptimizedImageUrl(
                     'https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=320&auto=format&fit=crop'
-                  ) || placeholderSvg
+                  ) || PRODUCT_IMAGE_FALLBACK
                 }
                 alt=""
                 fill
@@ -103,7 +98,7 @@ export const CartUpsells: React.FC<CartUpsellsProps> = ({
               >
                 <div className="w-12 h-12 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center p-1 relative overflow-hidden transition-transform duration-300 group-hover/upsell:scale-105">
                   <Image
-                    src={getOptimizedImageUrl(item.image) || placeholderSvg}
+                    src={getOptimizedImageUrl(item.image) || PRODUCT_IMAGE_FALLBACK}
                     alt=""
                     fill
                     sizes="48px"

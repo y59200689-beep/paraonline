@@ -6,6 +6,7 @@ import { PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
 interface StripeCheckoutFormProps {
   clientSecret: string;
   orderId: string;
+  trackingToken: string;
   amount: number;
   onSuccess: () => void;
   onCancel: () => void;
@@ -15,6 +16,7 @@ interface StripeCheckoutFormProps {
 export const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
   clientSecret,
   orderId,
+  trackingToken,
   amount,
   onSuccess,
   onCancel,
@@ -42,7 +44,7 @@ export const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
       elements,
       clientSecret,
       confirmParams: {
-        return_url: `${window.location.origin}/checkout/success?orderId=${orderId}`,
+        return_url: `${window.location.origin}/checkout/success?orderId=${encodeURIComponent(orderId)}&token=${encodeURIComponent(trackingToken)}`,
       },
       redirect: 'if_required',
     });

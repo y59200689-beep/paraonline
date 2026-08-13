@@ -1,0 +1,95 @@
+/* Public storefront design system. Semantic roles keep CMS branding separate
+   from component behaviour. */
+:root {
+  --public-ink: oklch(20% 0.035 255);
+  --public-ink-soft: oklch(40% 0.025 255);
+  --public-action: oklch(48% 0.135 250);
+  --public-action-hover: oklch(42% 0.145 250);
+  --public-action-pressed: oklch(36% 0.13 250);
+  --public-mint: oklch(65% 0.13 165);
+  --public-mint-weak: oklch(95% 0.035 165);
+  --public-danger: oklch(55% 0.2 25);
+  --public-danger-weak: oklch(96% 0.025 25);
+  --public-gold: oklch(72% 0.13 80);
+  --public-canvas: oklch(98% 0.008 245);
+  --public-surface: oklch(100% 0 0);
+  --public-surface-subtle: oklch(96.5% 0.012 245);
+  --public-surface-muted: oklch(97.5% 0.01 245);
+  --public-border: oklch(89% 0.016 250);
+  --public-border-strong: oklch(78% 0.025 250);
+  --public-font-ui: var(--font-body), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --public-text-xs: 0.75rem;
+  --public-text-sm: 0.875rem;
+  --public-text-base: 1rem;
+  --public-text-lg: 1.25rem;
+  --public-text-xl: 1.5rem;
+  --public-leading-tight: 1.2;
+  --public-leading-body: 1.55;
+  --public-space-1: 0.25rem;
+  --public-space-2: 0.5rem;
+  --public-space-3: 0.75rem;
+  --public-space-4: 1rem;
+  --public-space-6: 1.5rem;
+  --public-space-8: 2rem;
+  --public-space-12: 3rem;
+  --public-content: 78rem;
+  --public-content-wide: 90rem;
+  --public-radius-sm: 0.5rem;
+  --public-radius-md: 0.75rem;
+  --public-radius-lg: 1rem;
+  --public-radius-xl: 1.5rem;
+  --public-shadow-sm: 0 1px 2px oklch(22% 0.03 255 / 0.06), 0 1px 3px oklch(22% 0.03 255 / 0.04);
+  --public-shadow-md: 0 10px 24px oklch(22% 0.03 255 / 0.08), 0 2px 5px oklch(22% 0.03 255 / 0.04);
+  --public-shadow-lg: 0 20px 44px oklch(22% 0.03 255 / 0.14), 0 6px 14px oklch(22% 0.03 255 / 0.06);
+  --public-focus: 0 0 0 3px oklch(68% 0.11 245 / 0.45);
+  --public-motion-fast: 140ms;
+  --public-motion-base: 220ms;
+  --public-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.public-page { color: var(--public-ink); font-family: var(--public-font-ui); }
+.public-page :is(button, a, input, select, textarea, [role="button"], [role="tab"], [role="option"]):focus-visible,
+.po-ui-button:focus-visible { outline: 2px solid var(--public-action); outline-offset: 3px; box-shadow: var(--public-focus); }
+.public-page [aria-disabled="true"], .public-page :disabled { cursor: not-allowed; }
+.public-skip-link { position: fixed; inset-block-start: .75rem; inset-inline-start: .75rem; z-index: 100000; translate: 0 -180%; border-radius: var(--public-radius-md); background: var(--public-ink); color: white; padding: .75rem 1rem; font-size: var(--public-text-sm); font-weight: 800; box-shadow: var(--public-shadow-lg); transition: translate var(--public-motion-fast) var(--public-ease-out); }
+.public-skip-link:focus { translate: 0 0; }
+[dir="rtl"] .public-page { text-align: start; }
+[dir="rtl"] .public-page :is(input, textarea, select) { text-align: start; }
+.public-card { background: var(--public-surface); border: 1px solid var(--public-border); border-radius: var(--public-radius-xl); box-shadow: var(--public-shadow-sm); }
+.public-field, .public-search { min-height: 2.875rem; width: 100%; border: 1px solid var(--public-border-strong); border-radius: var(--public-radius-md); background: var(--public-surface); color: var(--public-ink); font-size: var(--public-text-base); line-height: var(--public-leading-body); transition: border-color var(--public-motion-fast) var(--public-ease-out), box-shadow var(--public-motion-fast) var(--public-ease-out); }
+.public-field::placeholder, .public-search::placeholder { color: var(--public-ink-soft); opacity: .85; }
+.public-field:hover, .public-search:hover { border-color: var(--public-action); }
+.public-field:focus, .public-search:focus { border-color: var(--public-action); outline: none; box-shadow: var(--public-focus); }
+.public-field[aria-invalid="true"] { border-color: var(--public-danger); box-shadow: 0 0 0 3px oklch(55% 0.2 25 / .15); }
+.public-badge { display: inline-flex; align-items: center; gap: var(--public-space-1); min-height: 1.5rem; padding: .125rem var(--public-space-2); border-radius: 999px; background: var(--public-surface-subtle); border: 1px solid var(--public-border); color: var(--public-ink-soft); font-size: var(--public-text-xs); font-weight: 700; line-height: 1.2; }
+.public-badge--success { background: var(--public-mint-weak); border-color: oklch(82% 0.08 165); color: oklch(38% 0.1 165); }
+.public-badge--danger { background: var(--public-danger-weak); border-color: oklch(84% 0.08 25); color: oklch(43% 0.16 25); }
+.public-state { display: grid; place-items: center; min-height: 12rem; padding: var(--public-space-8); text-align: center; color: var(--public-ink-soft); }
+.public-skeleton { background: linear-gradient(90deg, var(--public-surface-subtle), oklch(98% 0.01 245), var(--public-surface-subtle)); background-size: 200% 100%; animation: public-shimmer 1.4s linear infinite; }
+@keyframes public-shimmer { to { background-position: -200% 0; } }
+.po-ui-button { border-radius: var(--public-radius-md); transition: transform var(--public-motion-fast) var(--public-ease-out), background-color var(--public-motion-fast) var(--public-ease-out), border-color var(--public-motion-fast) var(--public-ease-out), box-shadow var(--public-motion-fast) var(--public-ease-out), color var(--public-motion-fast) var(--public-ease-out); }
+.po-ui-button--primary { align-items: center; gap: .5rem; padding: .75rem 1rem; background: var(--public-action); color: white; font-size: var(--public-text-sm); font-weight: 750; box-shadow: 0 8px 18px oklch(48% 0.135 250 / .2); }
+.po-ui-button--primary:hover:not(:disabled):not([aria-disabled="true"]) { background: var(--public-action-hover); }
+.po-ui-button--primary:active:not(:disabled):not([aria-disabled="true"]) { background: var(--public-action-pressed); }
+@media (hover: hover) and (pointer: fine) { .po-ui-button:hover:not(:disabled):not([aria-disabled="true"]) { transform: translateY(-1px); } }
+.po-ui-button:active:not(:disabled):not([aria-disabled="true"]) { transform: translateY(1px); }
+.po-ui-button:disabled, .po-ui-button[aria-disabled="true"] { cursor: not-allowed; opacity: .52; }
+.public-page :is(button, input, select, textarea, [role="button"], [role="tab"]),
+.public-page :is(nav, footer) a { min-block-size: 44px; }
+
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within { scroll-behavior: auto !important; }
+  .public-page *, .public-page *::before, .public-page *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+  .public-skeleton { animation: none; background: var(--public-surface-subtle); }
+}
+
+.public-deferred-section {
+  min-height: 1px;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
+}

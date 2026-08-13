@@ -321,8 +321,13 @@ export const ScratchCard: React.FC<ScratchCardProps> = ({ isOpen, onClose }) => 
             <form onSubmit={handleLeadSubmit} className="space-y-4 pt-2">
               <div className="relative flex items-center">
                 <Mail className="absolute left-3.5 rtl:left-auto rtl:right-3.5 w-4 h-4 text-accent/70" />
+                <label htmlFor="reward-email" className="sr-only">
+                  {language === 'FR' ? 'Adresse e-mail' : 'البريد الإلكتروني'}
+                </label>
                 <input
+                  id="reward-email"
                   type="email"
+                  autoComplete="email"
                   placeholder={t('cro_lead_placeholder_email')}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -332,8 +337,16 @@ export const ScratchCard: React.FC<ScratchCardProps> = ({ isOpen, onClose }) => 
 
               <div className="relative flex items-center">
                 <Phone className="absolute left-3.5 rtl:left-auto rtl:right-3.5 w-4 h-4 text-accent/70" />
+                <label htmlFor="reward-phone" className="sr-only">
+                  {language === 'FR' ? 'Numéro de téléphone' : 'رقم الهاتف'}
+                </label>
                 <input
+                  id="reward-phone"
                   type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  aria-describedby={formError ? 'reward-form-error' : undefined}
+                  aria-invalid={formError ? true : undefined}
                   placeholder={t('cro_lead_placeholder_phone')}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
@@ -342,7 +355,7 @@ export const ScratchCard: React.FC<ScratchCardProps> = ({ isOpen, onClose }) => 
               </div>
 
               {formError && (
-                <span className="text-[10px] font-bold text-rose-500 block leading-tight">{formError}</span>
+                <span id="reward-form-error" role="alert" className="text-[10px] font-bold text-rose-500 block leading-tight">{formError}</span>
               )}
 
               <button
@@ -355,7 +368,7 @@ export const ScratchCard: React.FC<ScratchCardProps> = ({ isOpen, onClose }) => 
 
             <div className="flex items-center justify-center gap-1.5 text-[9px] text-slate-400/80 pt-1">
               <Lock className="w-3 h-3 text-accent" />
-              <span>{language === 'FR' ? 'Informations 100% sécurisées et confidentielles' : 'معلومات آمنة وسرية 100%'}</span>
+              <span>{language === 'FR' ? 'Vos coordonnées servent uniquement à cette offre.' : 'تُستخدم بياناتك فقط لهذا العرض.'}</span>
             </div>
           </div>
         )}

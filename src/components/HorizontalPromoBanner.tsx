@@ -15,11 +15,11 @@ interface HorizontalPromoBannerProps {
 }
 
 export const HorizontalPromoBanner: React.FC<HorizontalPromoBannerProps> = ({ settings }) => {
-  const titleFr = settings?.titleFr || "En magasin ou en ligne, votre santé & sécurité est notre priorité";
-  const titleAr = settings?.titleAr || "في المتجر أو عبر الإنترنت، صحتك وسلامتك هي أولويتنا";
-  const descFr = settings?.descFr || "La seule parapharmacie qui simplifie votre quotidien beauté au Maroc";
-  const descAr = settings?.descAr || "الصيدلية الوحيدة التي تجعل حياتك أسهل وأجمل في المغرب";
-  const discountPercent = settings?.discountPercent !== undefined ? settings.discountPercent : 50;
+  const titleFr = settings?.titleFr || "Une sélection pensée pour votre routine quotidienne";
+  const titleAr = settings?.titleAr || "منتجات مختارة بعناية لروتينك اليومي";
+  const descFr = settings?.descFr || "Découvrez les produits disponibles et leurs conseils d’utilisation.";
+  const descAr = settings?.descAr || "اكتشف المنتجات المتوفرة ونصائح استخدامها.";
+  const discountPercent = settings?.discountPercent;
   const bgImage = settings?.bgImage || "";
   const overlayImage = settings?.overlayImage || "/images/cicaplast_bundle_nobg.png";
 
@@ -62,7 +62,8 @@ export const HorizontalPromoBanner: React.FC<HorizontalPromoBannerProps> = ({ se
           {/* LEFT: Text Block (highly readable with contrast tags) */}
           <div className="relative z-10 flex flex-col justify-center pl-6 sm:pl-8 md:pl-10 pr-4 py-4 flex-1 min-w-0 text-left">
             <span className="inline-flex self-start px-2 py-0.5 bg-emerald-500/15 text-emerald-400 text-[8px] sm:text-[9px] font-black uppercase tracking-wider rounded-md mb-1.5 border border-emerald-500/20">
-              Engagement Santé & Qualité
+              <span className="hidden rtl:inline">اختيار Para Officinal</span>
+              <span className="inline rtl:hidden">{settings?.titleFr || settings?.titleAr ? 'Sélection Para Officinal' : 'Conseils & sélection'}</span>
             </span>
             <h3 className="text-xs sm:text-sm md:text-[17px] font-black text-white leading-snug tracking-tight truncate-two-lines">
               <span className="hidden rtl:inline">{titleAr}</span>
@@ -75,7 +76,7 @@ export const HorizontalPromoBanner: React.FC<HorizontalPromoBannerProps> = ({ se
           </div>
 
           {/* CENTER/RIGHT: Glassmorphic Discount Badge */}
-          <div className="relative z-10 flex items-center shrink-0 pl-2 pr-2 sm:pr-4 select-none">
+          {typeof discountPercent === 'number' && discountPercent > 0 ? <div className="relative z-10 flex items-center shrink-0 pl-2 pr-2 sm:pr-4 select-none" aria-label={`${discountPercent}% de réduction`}>
             <div className="border border-amber-400/20 bg-slate-900/40 backdrop-blur-md shadow-lg shadow-amber-500/5 rounded-full flex flex-col items-center justify-center w-16 h-16 sm:w-20 sm:h-20">
               <span className="font-black leading-none tracking-tight text-amber-400 text-base sm:text-xl md:text-2xl">
                 -{discountPercent}%
@@ -84,14 +85,14 @@ export const HorizontalPromoBanner: React.FC<HorizontalPromoBannerProps> = ({ se
                 RÉDUCTION
               </span>
             </div>
-          </div>
+          </div> : null}
 
           {/* RIGHT: Floating Product Image (3D floating effect with overflow-visible) */}
           <div className="relative z-20 shrink-0 flex items-end justify-end mr-4 sm:mr-6 md:mr-8 w-[90px] sm:w-[110px] md:w-[130px] h-[130px] sm:h-[150px] -mb-2 select-none self-end">
             <div className="relative w-full h-full -top-6 sm:-top-8 drop-shadow-[0_12px_24px_rgba(16,185,129,0.3)] group-hover:-translate-y-1.5 transition-transform duration-500 ease-out">
               <Image
                 src={getOptimizedImageUrl(overlayImage)}
-                alt="Promotion produit"
+                alt="Sélection de produits Para Officinal"
                 fill
                 sizes="(max-width: 640px) 90px, (max-width: 768px) 110px, 130px"
                 className="object-contain"

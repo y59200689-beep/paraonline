@@ -7,6 +7,7 @@ import { Product } from '@/lib/data';
 import { useProducts } from '@/context/ProductsContext';
 import { X, Check, ShoppingBag } from 'lucide-react';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
+import { PRODUCT_IMAGE_FALLBACK } from '@/lib/public-images';
 
 interface RoutineBundleDrawerProps {
   isOpen: boolean;
@@ -212,7 +213,7 @@ export const RoutineBundleDrawer: React.FC<RoutineBundleDrawerProps> = ({ isOpen
                   >
                     {/* Thumbnail */}
                     <img
-                      src={getOptimizedImageUrl(product.image)}
+                      src={getOptimizedImageUrl(product.image) || PRODUCT_IMAGE_FALLBACK}
                       alt={product.title}
                       className="w-16 h-16 object-cover rounded-[8px] bg-slate-50 border border-border/30 shrink-0"
                     />

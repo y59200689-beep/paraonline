@@ -29,14 +29,10 @@ export default function AdviceClient({ initialArticles }: AdviceClientProps) {
 
   return (
     <ShopShell>
-      {/* Visual background decorations */}
-      <div className="absolute top-[10%] left-[-5%] w-[600px] h-[600px] rounded-full bg-teal-500/5 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-[20%] right-[-5%] w-[550px] h-[550px] rounded-full bg-amber-500/5 blur-3xl pointer-events-none" />
-
-      <main className="max-w-7xl mx-auto px-6 pt-32 pb-24 relative z-10">
+      <main className="public-page max-w-7xl mx-auto px-4 sm:px-6 pt-16 pb-24 relative z-10">
         
         {/* Breadcrumbs */}
-        <div className="flex items-center gap-2 text-[11px] text-slate-400 font-semibold mb-8 select-none">
+        <div className="flex items-center gap-2 text-[11px] text-slate-600 font-semibold mb-8 select-none">
           <Link href="/" className="hover:text-primary transition">
             {isRTL ? 'الرئيسية' : 'Accueil'}
           </Link>
@@ -48,19 +44,19 @@ export default function AdviceClient({ initialArticles }: AdviceClientProps) {
 
         {/* Premium Title Section */}
         <div className="max-w-3xl space-y-4 mb-16">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-primary/5 border border-primary/10 rounded-full text-[10px] font-black uppercase tracking-wider text-primary animate-pulse">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-sky-50 border border-sky-200 rounded-full text-[10px] font-black uppercase tracking-wider text-sky-900 animate-pulse">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>{isRTL ? 'نصائح الخبراء والصيادلة' : 'Conseils Cliniques & K-Beauty'}</span>
+            <span>{isRTL ? 'دليل العناية والجمال' : 'Guides soin & beauté'}</span>
           </div>
           <h1 className="text-3.5xl sm:text-5xl font-black text-slate-800 tracking-tight font-heading leading-tight">
             {isRTL 
               ? 'دليلكِ العلمي لبشرة صحية ومشرقة' 
-              : 'Votre Guide Clinique pour une Peau Saine & Radieuse'}
+              : 'Des repères simples pour votre routine'}
           </h1>
           <p className="text-slate-500 text-sm sm:text-base leading-relaxed font-medium">
             {isRTL 
               ? 'اكتشفي أسرار روتين العناية الكوري ومكونات مستحضرات الجلد الطبية المعتمدة من قبل أطباء الجلد.' 
-              : 'Découvrez les rituels de soin de la K-Beauty et les décryptages d\'actifs dermatologiques rédigés par nos pharmaciens experts.'}
+              : 'Retrouvez des articles pratiques sur les routines, les ingrédients et l’utilisation des produits. Ils complètent les informations affichées sur chaque fiche produit.'}
           </p>
         </div>
 
@@ -154,6 +150,7 @@ export default function AdviceClient({ initialArticles }: AdviceClientProps) {
 
                     {/* CTA Link */}
                     <div className="pt-6 border-t border-slate-100 mt-6 flex items-center justify-between">
+                      <span className="text-[10px] font-medium text-slate-600">{isRTL ? 'فريق التحرير' : 'Équipe éditoriale'}</span>
                       <Link 
                         href={`/advice/${art.slug}`}
                         className="text-xs font-black uppercase tracking-wider text-slate-700 group-hover:text-primary transition duration-300 flex items-center gap-1.5"

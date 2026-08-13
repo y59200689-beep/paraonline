@@ -1,5 +1,7 @@
 import { PolicyClient } from './PolicyClient';
 import type { Metadata } from 'next';
+import { CmsPageRenderer } from '@/components/CmsPageRenderer';
+import { getCmsPageBySlug } from '@/lib/cms-pages';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://paraofficinal.ma';
 const SITE_NAME = 'Para Officinal S.A';
@@ -82,8 +84,9 @@ function buildArticleJsonLd(slug: string) {
   };
 }
 
-export default async function Page({ params }: Props) {
+export default async function Page({ params, searchParams }: Props & { searchParams?: Promise<{ preview_token?: string }> }) {
   const { slug } = await params;
+  const cmsPage = await getCmsPageBySlug(`politiques/${slug}`, (await searchParams)?.preview_token);
   const jsonLd = buildArticleJsonLd(slug);
 
   return (
@@ -92,7 +95,7 @@ export default async function Page({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <PolicyClient slug={slug} />
+      {cmsPage?.section_order?.length ? <CmsPageRenderer page={cmsPage} /> : <PolicyClient slug={slug} />}
     </>
   );
 }

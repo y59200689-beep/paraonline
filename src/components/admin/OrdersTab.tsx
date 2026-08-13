@@ -43,7 +43,7 @@ import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 import { PRODUCTS_DB } from '@/lib/data';
 import { useAdminUI } from '@/app/admin/AdminUIContext';
-import { StatusBadge } from '@/components/admin/ui';
+import { ConfirmDialog, StatusBadge } from '@/components/admin/ui';
 
 const ORDER_STATUS_OPTIONS = [
   { value: 'Pending', label: 'En attente', detail: 'Confirmation à effectuer', color: '#d97706', tint: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.28)' },
@@ -211,6 +211,24 @@ export default function OrdersTab() {
   const [mounted, setMounted] = useState<boolean>(false);
   const [isBatchLabelPrintOpen, setIsBatchLabelPrintOpen] = useState<boolean>(false);
   const [isRetryingAtlascom, setIsRetryingAtlascom] = useState<boolean>(false);
+  const [confirmation, setConfirmation] = useState<null | {
+    title: string;
+    description: string;
+    confirmLabel: string;
+    action: () => void | Promise<void>;
+  }>(null);
+  const [confirmationBusy, setConfirmationBusy] = useState(false);
+
+  const runConfirmedAction = async () => {
+    if (!confirmation) return;
+    setConfirmationBusy(true);
+    try {
+      await confirmation.action();
+      setConfirmation(null);
+    } finally {
+      setConfirmationBusy(false);
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -927,7 +945,11 @@ export default function OrdersTab() {
       return;
     }
 
-    if (confirm(`Voulez-vous réconcilier les ${perfectRows.length} commandes parfaites ?`)) {
+    setConfirmation({
+      title: 'Réconcilier les commandes ? ',
+      description: `${perfectRows.length} commande(s) sans écart seront rapprochées et marquées comme traitées.`,
+      confirmLabel: 'Réconcilier',
+      action: async () => {
       const payload = perfectRows.map(r => ({
         orderId: r.matchedOrder.order_id,
         settledAmount: r.fileCod,
@@ -946,7 +968,8 @@ export default function OrdersTab() {
         }));
         showToast(`${perfectRows.length} commandes réconciliées en lot avec succès.`, 'success');
       }
-    }
+      },
+    });
   };
 
   const handleExportDiscrepancies = () => {
@@ -1149,10 +1172,15 @@ export default function OrdersTab() {
               {/* Delete */}
               <button
                 onClick={() => {
-                  if (confirm(`Supprimer définitivement la commande ${selectedOrder.order_id} ?`)) {
+                  setConfirmation({
+                    title: 'Supprimer cette commande ?',
+                    description: `La commande ${selectedOrder.order_id} sera supprimée définitivement. Cette action ne peut pas être annulée.`,
+                    confirmLabel: 'Supprimer la commande',
+                    action: async () => {
                     handleDeleteOrder(selectedOrder.order_id);
                     setSelectedOrder(null);
-                  }
+                    },
+                  });
                 }}
                 className="inline-flex items-center justify-center w-9 h-9 rounded-lg text-rose-500 transition hover:bg-rose-50 active:scale-95 cursor-pointer"
                 style={{
@@ -5438,6 +5466,16 @@ export default function OrdersTab() {
           </form>
         </div>
       )}
+
+      <ConfirmDialog
+        open={Boolean(confirmation)}
+        title={confirmation?.title || ''}
+        description={confirmation?.description || ''}
+        confirmLabel={confirmation?.confirmLabel}
+        busy={confirmationBusy}
+        onConfirm={runConfirmedAction}
+        onClose={() => { if (!confirmationBusy) setConfirmation(null); }}
+      />
 
       {/* Floating Bulk Action Bar for Orders */}
       {selectedOrderIds.length > 0 && (

@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { ArrowRight } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowRight, Banknote, CalendarDays, Headphones, RotateCcw } from 'lucide-react';
 import { AnimatedPrice } from './AnimatedPrice';
 import type { DeliverySettings } from '@/context/SettingsContext';
 
@@ -99,28 +100,16 @@ export const CartFooter: React.FC<CartFooterProps> = ({
 
   const trustBadges = [
     {
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4" stroke="currentColor" strokeWidth={1.8}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
-      ),
+      icon: <Banknote className="h-4 w-4" aria-hidden="true" />,
       label: isFR ? 'Paiement à la livraison' : 'الدفع عند الاستلام',
     },
     {
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4" stroke="currentColor" strokeWidth={1.8}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-        </svg>
-      ),
-      label: isFR ? 'Produits authentiques' : 'منتجات أصلية 100٪',
+      icon: <Headphones className="h-4 w-4" aria-hidden="true" />,
+      label: isFR ? 'Support disponible' : 'خدمة العملاء',
     },
     {
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4" stroke="currentColor" strokeWidth={1.8}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3m9 14V5a2 2 0 00-2-2H6a2 2 0 00-2 2v16l4-2 4 2 4-2 4 2z" />
-        </svg>
-      ),
-      label: isFR ? 'Retour facile sous 7j' : 'إرجاع سهل خلال 7 أيام',
+      icon: <RotateCcw className="h-4 w-4" aria-hidden="true" />,
+      label: isFR ? 'Conditions de retour' : 'شروط الإرجاع',
     },
   ];
 
@@ -190,10 +179,7 @@ export const CartFooter: React.FC<CartFooterProps> = ({
         {/* Estimated Delivery */}
         <div className="flex items-start justify-between pt-2.5 border-t border-dashed border-slate-100">
           <div className="flex items-center gap-2 text-slate-500">
-            <svg viewBox="0 0 24 24" fill="none" className="w-3.5 h-3.5 shrink-0 text-primary/50" stroke="currentColor" strokeWidth={1.8}>
-              <rect x="3" y="4" width="18" height="18" rx="2" />
-              <path strokeLinecap="round" d="M16 2v4M8 2v4M3 10h18" />
-            </svg>
+            <CalendarDays className="h-3.5 w-3.5 shrink-0 text-primary/50" aria-hidden="true" />
             <span className="text-[10.5px] font-semibold">
               {isFR ? 'Livraison estimée' : 'التوصيل المتوقع'}
             </span>
@@ -228,12 +214,20 @@ export const CartFooter: React.FC<CartFooterProps> = ({
 
       {step === 'cart' && (
         <button
+          type="button"
           onClick={onCheckout}
           className="group w-full py-4 bg-gradient-to-r from-primary-dark to-primary text-white text-xs font-bold uppercase tracking-widest rounded-xl hover:shadow-[0_6px_20px_rgba(26,37,93,0.2)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 ease-out flex items-center justify-center gap-2 cursor-pointer"
         >
           <span>{t('cart_checkout')}</span>
           <ArrowRight className={`w-4.5 h-4.5 transition-transform duration-300 group-hover:translate-x-1 ${isRTL ? 'rotate-180 group-hover:-translate-x-1' : ''}`} />
         </button>
+      )}
+      {step === 'cart' && (
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-[10px] font-bold text-slate-500">
+          <Link href="/politiques/conditions-vente" className="hover:text-primary hover:underline">{isFR ? 'Livraison' : 'التوصيل'}</Link>
+          <Link href="/politiques/retours-reclamations" className="hover:text-primary hover:underline">{isFR ? 'Retours' : 'الإرجاع'}</Link>
+          <Link href="/a-propos#contact" className="hover:text-primary hover:underline">{isFR ? 'Support' : 'الدعم'}</Link>
+        </div>
       )}
     </div>
   );

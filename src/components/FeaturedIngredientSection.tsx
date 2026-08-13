@@ -140,7 +140,7 @@ const BRANDS = [
     nameAr: 'يوسيرين',
     subtitleFr: 'Soin Dermatologique Allemand',
     subtitleAr: 'عناية جلدية ألمانية',
-    descFr: 'Fondé sur 130 ans d’expertise clinique allemande, Eucerin développe des formules médicalement éprouvées — Hyaluron-Filler, DermoPure et UreaRepair — pour traiter les problématiques cutanées les plus complexes.',
+    descFr: 'Eucerin propose les gammes Hyaluron-Filler, DermoPure et UreaRepair pour répondre à différents besoins de soin. Consultez chaque fiche pour connaître la formule et les précautions.',
     descAr: 'بخبرة 130 عاماً في علم الجلد الألماني، تطور يوسيرين تركيبات مثبتة طبياً لمعالجة أصعب مشكلات البشرة.',
     image: '/images/eucerin_brand_showcase.webp',
     href: '/brand/eucerin',

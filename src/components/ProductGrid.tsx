@@ -229,7 +229,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, onSele
 
         {/* Skeleton loaders */}
         {isLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 md:gap-6" style={{ marginTop: '36px' }}>
+          <div className="grid grid-cols-1 min-[390px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 md:gap-6" style={{ marginTop: '36px' }}>
             {Array.from({ length: 16 }).map((_, id) => (
               <div key={id} className="w-full bg-white border border-border/40 rounded-[10px] overflow-hidden animate-pulse shadow-sm">
                 <div className="aspect-square bg-slate-100" />
@@ -264,7 +264,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, onSele
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 md:gap-6" style={{ marginTop: '40px' }}>
+            <div className="grid grid-cols-1 min-[390px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 md:gap-6" style={{ marginTop: '40px' }}>
               {filteredProducts.map((product, idx) => (
                 <div
                   key={product.id}

@@ -10,10 +10,14 @@ export function getOptimizedImageUrl(src: string | undefined): string {
   if (!src) return '';
 
   // 1. Local Image Assets & Uploads (including relative paths)
-  if (src.startsWith('/images/') || src.startsWith('/uploads/') || src.startsWith('images/') || src.startsWith('uploads/')) {
+  if (src.startsWith('/images/') || src.startsWith('images/')) {
     // Convert local PNG/JPG references to WebP
     return src.replace(/\.(png|jpg|jpeg)$/i, '.webp');
   }
+
+  // Uploaded files are not guaranteed to have a generated WebP sibling. Let
+  // next/image negotiate the output format instead of rewriting their path.
+  if (src.startsWith('/uploads/') || src.startsWith('uploads/')) return src;
 
   // 2. Shopify CDN Assets (e.g. beautymarket.ma/cdn/...)
   if (src.includes('cdn.shopify.com') || src.includes('beautymarket.ma/cdn/')) {
