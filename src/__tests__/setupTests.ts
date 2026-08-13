@@ -81,7 +81,7 @@ const fetchMock = vi.fn().mockImplementation((url: string, options?: any) => {
         success: true,
         settings: {
           storeName: "Para Officinal S.A",
-          freeShippingThreshold: 600,
+          freeShippingThreshold: 400,
           shippingFee: 35,
           quizDiscountPercent: 15,
           coupons: [

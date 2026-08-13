@@ -347,7 +347,7 @@ export const DEFAULT_SETTINGS: Settings = {
   storeName: "Para Officinal S.A",
   storePhone: "+212 5 22 20 20 20",
   storeWhatsApp: "212660808080",
-  freeShippingThreshold: 600,
+  freeShippingThreshold: 400,
   shippingFee: 35,
   announcementFr: "LIVRAISON AU MAROC — Le délai et les frais sont confirmés avant la validation de votre commande.",
   announcementAr: "التوصيل داخل المغرب — يتم تأكيد المدة والتكلفة قبل إتمام طلبك.",

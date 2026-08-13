@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { FREE_SHIPPING_SUBTOTAL_DH } from '@/lib/pricing';
 import { useTranslation } from '@/context/LanguageContext';
 import { usePathname } from 'next/navigation';
 import { MessageSquare, X, Send, Sparkles, ShieldAlert, CheckCircle, HelpCircle, Search, ShoppingBag, Plus, Minus, MapPin } from 'lucide-react';
@@ -259,7 +260,7 @@ export const AiAssistant: React.FC = () => {
       });
 
       const subtotal = orderItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-      const shippingFee = subtotal >= 600 ? 0 : 35;
+      const shippingFee = subtotal >= FREE_SHIPPING_SUBTOTAL_DH ? 0 : 35;
       const total = subtotal + shippingFee;
 
       const body = {

@@ -55,6 +55,14 @@ export interface CommerceSummary {
   giftItem: string | null;
 }
 
+/** Permanent storefront rule: delivery is free from 400 DH of merchandise. */
+export const FREE_SHIPPING_SUBTOTAL_DH = 400;
+
+export function isLegacyFreeShippingGiftRange(range: Partial<GiftRange>): boolean {
+  return Number(range.productId) === -1 ||
+    String(range.productName || '').trim().toLocaleLowerCase('fr') === 'livraison gratuite';
+}
+
 export const roundMoney = (value: number): number =>
   Math.round((Number(value) + Number.EPSILON) * 100) / 100;
 
@@ -81,7 +89,8 @@ export function calculateDiscount(subtotal: number, coupon: MinimalCoupon | null
 }
 
 /**
- * Calculates shipping fee depending on city shipping overrides and free shipping threshold settings.
+ * Calculates shipping from the merchandise subtotal. The permanent 400 DH
+ * threshold is intentionally not configurable through gift tiers.
  */
 export function calculateShippingFee(
   subtotal: number,
@@ -89,15 +98,8 @@ export function calculateShippingFee(
   settings: ShippingSettings,
   isCouponFreeShipping: boolean
 ): number {
-  const threshold = settings.freeShippingThreshold || 600;
-  const activeGiftRange = settings.giftRanges?.find(
-    (r) => r.isActive !== false && subtotal >= r.minAmount && subtotal <= r.maxAmount
-  );
-  const isGiftFreeShipping = !!(
-    activeGiftRange &&
-    (activeGiftRange.productId === -1 || activeGiftRange.productName === 'Livraison Gratuite')
-  );
-  const isFreeShipping = isCouponFreeShipping || isGiftFreeShipping || subtotal >= threshold || subtotal === 0;
+  const isFreeShipping =
+    isCouponFreeShipping || subtotal >= FREE_SHIPPING_SUBTOTAL_DH || subtotal === 0;
 
   if (isFreeShipping) return 0;
   
@@ -114,8 +116,12 @@ export function calculateShippingFee(
 /**
  * Calculates the amount remaining to qualify for free shipping.
  */
-export function calculateAmountNeededForFreeShipping(subtotal: number, threshold: number = 600): number | false {
-  return subtotal >= threshold ? false : threshold - subtotal;
+export function calculateAmountNeededForFreeShipping(
+  subtotal: number
+): number | false {
+  return subtotal >= FREE_SHIPPING_SUBTOTAL_DH
+    ? false
+    : roundMoney(FREE_SHIPPING_SUBTOTAL_DH - subtotal);
 }
 
 /**
@@ -150,28 +156,24 @@ export function calculateCommerceSummary({
     : null;
   const activeGiftRange = [...(settings.giftRanges || [])]
     .filter((range) => range.isActive !== false)
+    // Legacy pseudo-gifts must never participate in pricing or gift selection.
+    .filter((range) => !isLegacyFreeShippingGiftRange(range))
     .filter((range) => subtotal >= Number(range.minAmount) && subtotal <= Number(range.maxAmount))
     .sort((left, right) => Number(right.minAmount) - Number(left.minAmount))
     .find((range) => {
-      if (Number(range.productId) === -1 || range.productName === 'Livraison Gratuite') return true;
       if (!giftProductsById) return true;
       const product = giftProductsById.get(Number(range.productId));
       return Boolean(product && Number(product.stock) > 0 && (!product.status || product.status === 'live'));
     }) || null;
-  const giftGrantsFreeShipping = Boolean(
-    activeGiftRange &&
-      (Number(activeGiftRange.productId) === -1 || activeGiftRange.productName === 'Livraison Gratuite')
-  );
   const shippingFee = roundMoney(
     calculateShippingFee(
       subtotal,
       shippingCity,
-      { ...settings, giftRanges: activeGiftRange ? [activeGiftRange] : [] },
-      Boolean(coupon?.freeShipping || giftGrantsFreeShipping)
+      settings,
+      Boolean(coupon?.freeShipping)
     )
   );
-  const threshold = Number(settings.freeShippingThreshold || 600);
-  const amountNeededForFreeShipping = calculateAmountNeededForFreeShipping(subtotal, threshold);
+  const amountNeededForFreeShipping = calculateAmountNeededForFreeShipping(subtotal);
   const isFreeShipping = shippingFee === 0;
   const total = calculateTotal(subtotal, discountAmount, shippingFee);
 
@@ -185,8 +187,6 @@ export function calculateCommerceSummary({
     isFreeShipping,
     amountNeededForFreeShipping,
     activeGiftRange,
-    giftItem: activeGiftRange && Number(activeGiftRange.productId) !== -1
-      ? activeGiftRange.productName
-      : null,
+    giftItem: activeGiftRange?.productName || null,
   };
 }

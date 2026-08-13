@@ -282,7 +282,7 @@ if (isPlaceholder) {
           id: 1,
           value: {
             storeName: "Para Officinal S.A",
-            freeShippingThreshold: 600,
+            freeShippingThreshold: 400,
             shippingFee: 35,
             quizDiscountPercent: 15,
             coupons: [

@@ -327,7 +327,7 @@ describe('Context Hooks Tests', () => {
 
       // Settings load should gracefully fall back to default values
       expect(result.current.settings.storeName).toBe('Para Officinal S.A');
-      expect(result.current.settings.freeShippingThreshold).toBe(600);
+      expect(result.current.settings.freeShippingThreshold).toBe(400);
       expect(result.current.settings.shippingFee).toBe(35);
       expect(fetchSpy).toHaveBeenCalled();
     });

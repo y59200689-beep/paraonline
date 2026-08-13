@@ -110,7 +110,7 @@ describe('Skin Diagnostic to Checkout Flow Integration Test', () => {
     const expectedSubtotal = expectedPrice1 + expectedPrice2; // 42 + 59 = 101
     expect(result.current.cart.subtotal).toBe(expectedSubtotal);
 
-    // Shipping rules: subtotal 101 is below free shipping threshold of 600, city Casablanca shipping fee is 20 DH
+    // Shipping rules: subtotal 101 is below free shipping threshold of 400, city Casablanca shipping fee is 20 DH
     // Let's set city to Casablanca
     act(() => {
       result.current.cart.setShippingCity('Casablanca');

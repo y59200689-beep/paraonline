@@ -6,6 +6,7 @@ import {
   calculateAmountNeededForFreeShipping,
   calculateTotal,
   calculateCommerceSummary,
+  FREE_SHIPPING_SUBTOTAL_DH,
   MinimalCartItem,
   MinimalCoupon,
   ShippingSettings
@@ -73,7 +74,7 @@ describe('Pricing Calculations', () => {
 
   describe('calculateShippingFee', () => {
     const settings: ShippingSettings = {
-      freeShippingThreshold: 600,
+      freeShippingThreshold: FREE_SHIPPING_SUBTOTAL_DH,
       shippingFee: 35,
       shippingRules: [
         { city: 'Casablanca', fee: 20 },
@@ -85,8 +86,36 @@ describe('Pricing Calculations', () => {
       expect(calculateShippingFee(100, 'Rabat', settings, true)).toBe(0);
     });
 
-    it('should return 0 if subtotal exceeds free shipping threshold', () => {
-      expect(calculateShippingFee(650, 'Rabat', settings, false)).toBe(0);
+    it.each([400, 400.01, 500, 600, 1000])(
+      'should return 0 at or above the permanent threshold for subtotal %s',
+      (subtotal) => {
+        expect(calculateShippingFee(subtotal, 'Rabat', settings, false)).toBe(0);
+      }
+    );
+
+    it.each([26.4, 100, 399.99])(
+      'should charge delivery below the permanent threshold for subtotal %s',
+      (subtotal) => {
+        expect(calculateShippingFee(subtotal, 'Rabat', settings, false)).toBe(35);
+      }
+    );
+
+    it('should ignore a stale configurable threshold above 400 DH', () => {
+      expect(calculateShippingFee(400, 'Rabat', { ...settings, freeShippingThreshold: 600 }, false)).toBe(0);
+    });
+
+    it('should ignore the legacy free-delivery gift sentinel', () => {
+      const legacySettings: ShippingSettings = {
+        ...settings,
+        giftRanges: [{
+          minAmount: 0,
+          maxAmount: 400,
+          productId: -1,
+          productName: 'Livraison Gratuite',
+          isActive: true,
+        }],
+      };
+      expect(calculateShippingFee(26.4, 'Rabat', legacySettings, false)).toBe(35);
     });
 
     it('should return 0 if subtotal is 0', () => {
@@ -108,19 +137,19 @@ describe('Pricing Calculations', () => {
     });
 
     it('should fallback to default fee of 35 if settings.shippingFee is missing', () => {
-      const minimalSettings: ShippingSettings = { freeShippingThreshold: 600 };
+      const minimalSettings: ShippingSettings = { freeShippingThreshold: FREE_SHIPPING_SUBTOTAL_DH };
       expect(calculateShippingFee(200, 'Rabat', minimalSettings, false)).toBe(35);
     });
   });
 
   describe('calculateAmountNeededForFreeShipping', () => {
     it('should return false if subtotal is equal to or greater than the threshold', () => {
-      expect(calculateAmountNeededForFreeShipping(600, 600)).toBe(false);
-      expect(calculateAmountNeededForFreeShipping(700, 600)).toBe(false);
+      expect(calculateAmountNeededForFreeShipping(400)).toBe(false);
+      expect(calculateAmountNeededForFreeShipping(700)).toBe(false);
     });
 
     it('should return the difference if subtotal is below the threshold', () => {
-      expect(calculateAmountNeededForFreeShipping(450, 600)).toBe(150);
+      expect(calculateAmountNeededForFreeShipping(399.99)).toBeCloseTo(0.01);
     });
   });
 
@@ -137,7 +166,7 @@ describe('Pricing Calculations', () => {
   describe('calculateCommerceSummary', () => {
     const cart = [{ product: { price: 100 }, quantity: 4 }];
     const settings: ShippingSettings = {
-      freeShippingThreshold: 600,
+      freeShippingThreshold: FREE_SHIPPING_SUBTOTAL_DH,
       shippingFee: 35,
       loyaltyPointsPerDh: 1,
       giftRanges: [
@@ -147,9 +176,48 @@ describe('Pricing Calculations', () => {
     };
 
     it('handles below and exact free-delivery thresholds', () => {
-      expect(calculateCommerceSummary({ cart, coupon: null, settings }).shippingFee).toBe(35);
-      const atThreshold = [{ product: { price: 200 }, quantity: 3 }];
+      const belowThreshold = [{ product: { price: 399.99 }, quantity: 1 }];
+      expect(calculateCommerceSummary({ cart: belowThreshold, coupon: null, settings }).shippingFee).toBe(35);
+      const atThreshold = [{ product: { price: 200 }, quantity: 2 }];
       expect(calculateCommerceSummary({ cart: atThreshold, coupon: null, settings }).shippingFee).toBe(0);
+    });
+
+    it('uses the subtotal before discounts for the permanent threshold', () => {
+      const summary = calculateCommerceSummary({
+        cart,
+        coupon: { code: 'SAVE50', discountType: 'fixed', discountValue: 50 },
+        settings,
+      });
+      expect(summary).toMatchObject({
+        subtotal: 400,
+        discountAmount: 50,
+        shippingFee: 0,
+        total: 350,
+      });
+    });
+
+    it('does not select or apply a legacy free-delivery pseudo-gift', () => {
+      const summary = calculateCommerceSummary({
+        cart: [{ product: { price: 26.4 }, quantity: 1 }],
+        coupon: null,
+        settings: {
+          ...settings,
+          giftRanges: [{
+            minAmount: 0,
+            maxAmount: 400,
+            productId: -1,
+            productName: 'Livraison Gratuite',
+            isActive: true,
+          }],
+        },
+      });
+      expect(summary).toMatchObject({
+        subtotal: 26.4,
+        shippingFee: 35,
+        total: 61.4,
+        activeGiftRange: null,
+        giftItem: null,
+      });
     });
 
     it('selects the matching gift tier and excludes disabled gifts', () => {

@@ -3,6 +3,7 @@ import { revalidatePath, revalidateTag } from 'next/cache';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { verifyAdminSession } from '@/lib/session';
 import { PUBLIC_SETTINGS_CACHE_TAG } from '@/lib/get-public-settings';
+import { FREE_SHIPPING_SUBTOTAL_DH, isLegacyFreeShippingGiftRange } from '@/lib/pricing';
 
 export async function GET() {
   try {
@@ -42,17 +43,27 @@ export async function POST(request: Request) {
 
     // Preserve existing galleryOverrides stored in DB row id=1
     let galleryOverrides = settings.galleryOverrides || {};
+    let existingSettings: Record<string, any> = {};
     try {
       const { data: existingData } = await supabase
         .from('settings')
         .select('value')
         .eq('id', 1)
         .single();
-      const existingVal = existingData?.value || {};
-      galleryOverrides = { ...(existingVal.galleryOverrides || {}), ...galleryOverrides };
+      existingSettings = existingData?.value || {};
+      galleryOverrides = { ...(existingSettings.galleryOverrides || {}), ...galleryOverrides };
     } catch {}
 
-    const mergedSettings = { ...settings, galleryOverrides };
+    const requestedGiftRanges = Array.isArray(settings.giftRanges)
+      ? settings.giftRanges
+      : (Array.isArray(existingSettings.giftRanges) ? existingSettings.giftRanges : []);
+    const giftRanges = requestedGiftRanges.filter((range: any) => !isLegacyFreeShippingGiftRange(range));
+    const mergedSettings = {
+      ...settings,
+      galleryOverrides,
+      freeShippingThreshold: FREE_SHIPPING_SUBTOTAL_DH,
+      giftRanges,
+    };
 
     const { error } = await supabase
       .from('settings')

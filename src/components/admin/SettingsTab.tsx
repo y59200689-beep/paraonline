@@ -46,6 +46,7 @@ import { useUi } from '@/context/UiContext';
 import { useAdminUI } from '@/app/admin/AdminUIContext';
 import { useProducts } from '@/context/ProductsContext';
 import { ConfirmDialog } from '@/components/admin/ui';
+import { FREE_SHIPPING_SUBTOTAL_DH, isLegacyFreeShippingGiftRange } from '@/lib/pricing';
 
 export default function SettingsTab() {
   const { settings, saveSettings } = useSettings();
@@ -146,17 +147,16 @@ export default function SettingsTab() {
   const [giftProductQueries, setGiftProductQueries] = useState<Record<number, string>>({});
 
   useEffect(() => {
-    setGiftRangesDraft(settings.giftRanges || []);
+    setGiftRangesDraft((settings.giftRanges || []).filter((range) => !isLegacyFreeShippingGiftRange(range)));
   }, [settings.giftRanges]);
 
   const getGiftProductName = (productId: number) => {
-    if (Number(productId) === -1) return 'Livraison Gratuite';
     const product = products.find((item: any) => Number(item.id) === Number(productId));
     return String(product?.title || product?.nameFr || product?.name || '').trim();
   };
 
   const getGiftProductImage = (product: any) => String(product?.image || product?.image_url || product?.thumbnail || '').trim();
-  const getGiftProductStock = (product: any) => product?.isFreeShipping ? 999999 : Math.max(0, Number(product?.stock || 0));
+  const getGiftProductStock = (product: any) => Math.max(0, Number(product?.stock || 0));
   const eligibleGiftProducts = products
     .filter((product: any) => product?.status !== 'draft' && getGiftProductStock(product) > 0)
     .sort((left: any, right: any) => String(left.title || left.nameFr || left.name || '').localeCompare(String(right.title || right.nameFr || right.name || ''), 'fr'));
@@ -164,13 +164,18 @@ export default function SettingsTab() {
   const addGiftRange = () => {
     const lastRange = giftRangesDraft[giftRangesDraft.length - 1];
     const minAmount = lastRange ? Number(lastRange.maxAmount) + 1 : 400;
+    const initialProduct = eligibleGiftProducts[0];
+    if (!initialProduct) {
+      showToast('Aucun produit publié et en stock ne peut être offert.', 'error');
+      return;
+    }
     setGiftRangesDraft((current) => [
       ...current,
       {
         minAmount,
         maxAmount: minAmount + 199,
-        productId: -1,
-        productName: 'Livraison Gratuite',
+        productId: Number(initialProduct.id),
+        productName: getGiftProductName(Number(initialProduct.id)),
         isActive: true,
       },
     ]);
@@ -203,7 +208,7 @@ export default function SettingsTab() {
       !Number.isFinite(range.maxAmount) ||
       range.minAmount < 0 ||
       range.maxAmount < range.minAmount ||
-      (!range.productId && range.productId !== -1) ||
+      !range.productId ||
       !range.productName
     ));
 
@@ -221,7 +226,6 @@ export default function SettingsTab() {
     }
 
     const unavailableGift = normalized.find((range) => {
-      if (range.productId === -1 || range.productName === 'Livraison Gratuite') return false;
       const product = products.find((item: any) => Number(item.id) === range.productId);
       return !product || product.status === 'draft' || getGiftProductStock(product) <= 0;
     });
@@ -498,7 +502,7 @@ export default function SettingsTab() {
       storeName: String(formData.get('storeName')),
       storePhone: String(formData.get('storePhone')),
       storeWhatsApp: String(formData.get('storeWhatsApp')),
-      freeShippingThreshold: Number(formData.get('freeShippingThreshold')) || 600,
+      freeShippingThreshold: FREE_SHIPPING_SUBTOTAL_DH,
       shippingFee: Number(formData.get('shippingFee')) || 35,
       announcementFr: String(formData.get('announcementFr')),
       announcementAr: String(formData.get('announcementAr')),
@@ -768,7 +772,7 @@ export default function SettingsTab() {
                 { label: 'Code d\'accès Administrateur', name: 'adminPasscode', defaultValue: settings.adminPasscode, type: 'text', font: 'font-mono' },
                 { label: 'Téléphone Magasin', name: 'storePhone', defaultValue: settings.storePhone, type: 'text' },
                 { label: 'WhatsApp Numéro (International format)', name: 'storeWhatsApp', defaultValue: settings.storeWhatsApp, type: 'text', font: 'font-mono' },
-                { label: 'Livraison Gratuite à partir de (DH)', name: 'freeShippingThreshold', defaultValue: settings.freeShippingThreshold, type: 'number', align: 'text-right' },
+                { label: 'Livraison Gratuite à partir de (DH)', name: 'freeShippingThreshold', defaultValue: FREE_SHIPPING_SUBTOTAL_DH, type: 'number', align: 'text-right', readOnly: true },
                 { label: 'Frais de livraison de base (DH)', name: 'shippingFee', defaultValue: settings.shippingFee, type: 'number', align: 'text-right' },
                 { label: 'Discount Diagnostic IA (%)', name: 'quizDiscountPercent', defaultValue: settings.quizDiscountPercent, type: 'number', align: 'text-right' },
                 { label: 'Seuil d\'alerte Stock Bas (Pièces)', name: 'lowStockThreshold', defaultValue: settings.lowStockThreshold ?? 5, type: 'number', align: 'text-right' },
@@ -787,6 +791,7 @@ export default function SettingsTab() {
                         : 'bg-slate-950 border-slate-900 text-slate-200 focus:border-emerald-500/50'
                     }`}
                     required
+                    readOnly={'readOnly' in inp && Boolean(inp.readOnly)}
                   />
                 </div>
               ))}
@@ -3277,23 +3282,12 @@ export default function SettingsTab() {
                       <div className="relative grid min-w-0 gap-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">
                         <span className="md:hidden">Produit offert</span>
                         {(() => {
-                          const FREE_SHIPPING_OPTION = {
-                            id: -1,
-                            title: 'Livraison Gratuite',
-                            nameFr: 'Livraison Gratuite (Frais de livraison offerts)',
-                            name: 'Livraison Gratuite',
-                            isFreeShipping: true,
-                            stock: 999999,
-                            brand: 'Offre Spéciale',
-                            vendor: 'Offre Spéciale',
-                          };
-                          const isFreeShippingSelected = Number(range.productId) === -1 || range.productName === 'Livraison Gratuite';
-                          const selectedProduct = isFreeShippingSelected ? FREE_SHIPPING_OPTION : products.find((product: any) => Number(product.id) === Number(range.productId));
-                          const selectedName = isFreeShippingSelected ? 'Livraison Gratuite (Frais de livraison offerts)' : (selectedProduct ? getGiftProductName(Number(selectedProduct.id)) : range.productName);
+                          const selectedProduct = products.find((product: any) => Number(product.id) === Number(range.productId));
+                          const selectedName = selectedProduct ? getGiftProductName(Number(selectedProduct.id)) : range.productName;
                           const selectedStock = selectedProduct ? getGiftProductStock(selectedProduct) : 0;
                           const query = giftProductQueries[index] || '';
                           const normalizedQuery = query.trim().toLocaleLowerCase('fr');
-                          const matchingProducts = [FREE_SHIPPING_OPTION, ...eligibleGiftProducts].filter((product: any) => {
+                          const matchingProducts = eligibleGiftProducts.filter((product: any) => {
                             const searchable = `${product.title || product.nameFr || product.name || ''} ${product.sku || ''} ${product.brand || product.vendor || ''}`.toLocaleLowerCase('fr');
                             return !normalizedQuery || searchable.includes(normalizedQuery);
                           }).slice(0, 40);
@@ -3308,12 +3302,10 @@ export default function SettingsTab() {
                                 setGiftProductQueries((current) => ({ ...current, [index]: '' }));
                               }}
                               title={selectedName || 'Choisir un cadeau (Produit ou Livraison)'}
-                              className={`flex h-12 min-w-0 w-full items-center gap-3 rounded-xl border px-3 py-2 text-left transition focus:outline-none focus:ring-2 focus:ring-emerald-500/25 ${adminTheme === 'light' ? 'border-slate-200 bg-white hover:border-emerald-300' : 'border-slate-700 bg-slate-950 hover:border-emerald-500/60'} ${!isFreeShippingSelected && selectedStock <= 0 ? 'border-rose-300' : ''}`}
+                              className={`flex h-12 min-w-0 w-full items-center gap-3 rounded-xl border px-3 py-2 text-left transition focus:outline-none focus:ring-2 focus:ring-emerald-500/25 ${adminTheme === 'light' ? 'border-slate-200 bg-white hover:border-emerald-300' : 'border-slate-700 bg-slate-950 hover:border-emerald-500/60'} ${selectedStock <= 0 ? 'border-rose-300' : ''}`}
                             >
                               <span className={`relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border ${adminTheme === 'light' ? 'border-slate-100 bg-slate-50' : 'border-slate-800 bg-slate-900'}`}>
-                                {isFreeShippingSelected ? (
-                                  <Truck className="h-4 w-4 text-emerald-500" aria-hidden="true" />
-                                ) : getGiftProductImage(selectedProduct) ? (
+                                {getGiftProductImage(selectedProduct) ? (
                                   <img src={getGiftProductImage(selectedProduct)} alt="" className="h-full w-full object-cover" />
                                 ) : (
                                   <Gift className="h-4 w-4 text-emerald-500" aria-hidden="true" />
@@ -3321,9 +3313,7 @@ export default function SettingsTab() {
                               </span>
                               <span className="min-w-0 flex-1">
                                 <span className={`block truncate whitespace-nowrap text-sm font-bold normal-case ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-100'}`}>{selectedName || 'Choisir un cadeau (Produit ou Livraison)'}</span>
-                                {isFreeShippingSelected ? (
-                                  <span className="mt-0.5 block text-[10px] font-semibold normal-case text-emerald-600">Offre la livraison gratuite pour ce palier</span>
-                                ) : selectedProduct && (
+                                {selectedProduct && (
                                   <span className={`mt-0.5 block text-[10px] font-semibold normal-case ${selectedStock > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>{selectedStock > 0 ? `${selectedStock} en stock` : 'Rupture de stock, choisissez un autre produit'}</span>
                                 )}
                               </span>
@@ -3344,12 +3334,11 @@ export default function SettingsTab() {
                                       className={`w-full rounded-lg border py-2 pl-9 pr-3 text-xs font-medium normal-case outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 ${adminTheme === 'light' ? 'border-slate-200 bg-white text-slate-800' : 'border-slate-700 bg-slate-950 text-slate-100'}`}
                                     />
                                   </label>
-                                  <p className="mt-2 text-[10px] font-semibold normal-case text-slate-500">Choisissez Livraison Gratuite ou un produit en stock.</p>
+                                  <p className="mt-2 text-[10px] font-semibold normal-case text-slate-500">Choisissez un produit publié et en stock.</p>
                                 </div>
                                 <div role="listbox" aria-label="Cadeaux disponibles" className="max-h-72 overflow-y-auto p-1.5">
                                   {matchingProducts.length > 0 ? matchingProducts.map((product: any) => {
-                                    const isFreeItem = Number(product.id) === -1 || product.isFreeShipping;
-                                    const productName = isFreeItem ? 'Livraison Gratuite (Frais de livraison offerts)' : getGiftProductName(Number(product.id));
+                                    const productName = getGiftProductName(Number(product.id));
                                     const isSelected = Number(product.id) === Number(range.productId);
                                     return <button
                                       type="button"
@@ -3357,16 +3346,14 @@ export default function SettingsTab() {
                                       aria-selected={isSelected}
                                       key={product.id}
                                       onClick={() => {
-                                        updateGiftRange(index, { productId: Number(product.id), productName: isFreeItem ? 'Livraison Gratuite' : getGiftProductName(Number(product.id)) });
+                                        updateGiftRange(index, { productId: Number(product.id), productName: getGiftProductName(Number(product.id)) });
                                         setGiftProductQueries((current) => ({ ...current, [index]: '' }));
                                         setOpenGiftPickerIndex(null);
                                       }}
                                       className={`flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left transition ${isSelected ? (adminTheme === 'light' ? 'bg-emerald-50 text-emerald-900' : 'bg-emerald-500/15 text-emerald-100') : (adminTheme === 'light' ? 'text-slate-700 hover:bg-slate-50' : 'text-slate-200 hover:bg-slate-900')}`}
                                     >
                                       <span className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border ${adminTheme === 'light' ? 'border-slate-100 bg-slate-50' : 'border-slate-800 bg-slate-900'}`}>
-                                        {isFreeItem ? (
-                                          <Truck className="h-4 w-4 text-emerald-500" aria-hidden="true" />
-                                        ) : getGiftProductImage(product) ? (
+                                        {getGiftProductImage(product) ? (
                                           <img src={getGiftProductImage(product)} alt="" className="h-full w-full object-cover" />
                                         ) : (
                                           <Gift className="h-4 w-4 text-emerald-500" aria-hidden="true" />
@@ -3375,11 +3362,11 @@ export default function SettingsTab() {
                                       <span className="min-w-0 flex-1 normal-case">
                                         <span className="block truncate text-xs font-bold">{productName}</span>
                                         <span className="mt-0.5 block truncate text-[10px] font-medium text-slate-500">
-                                          {isFreeItem ? 'Offre Spéciale · Offrir les frais de port' : `${product.brand || product.vendor || 'Catalogue'}${product.sku ? ` · SKU ${product.sku}` : ''}`}
+                                          {`${product.brand || product.vendor || 'Catalogue'}${product.sku ? ` · SKU ${product.sku}` : ''}`}
                                         </span>
                                       </span>
                                       <span className="shrink-0 rounded-md bg-emerald-50 px-2 py-1 text-[10px] font-black normal-case text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
-                                        {isFreeItem ? 'Offert' : `${getGiftProductStock(product)} en stock`}
+                                        {`${getGiftProductStock(product)} en stock`}
                                       </span>
                                       {isSelected && <Check className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />}
                                     </button>;

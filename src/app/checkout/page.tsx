@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { FREE_SHIPPING_SUBTOTAL_DH } from '@/lib/pricing';
 
 export default function CheckoutPage() {
   return (
@@ -305,7 +306,7 @@ function CheckoutPageContent() {
             </h2>
 
             {/* Free Shipping Progress bar */}
-            {settings.freeShippingThreshold && (
+            <>
               <div className="mb-6 p-4 bg-white border border-slate-200/40 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.01)] select-none">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
@@ -327,7 +328,7 @@ function CheckoutPageContent() {
                         <div className="w-full bg-slate-100 rounded-full h-1.5 mt-2 overflow-hidden">
                           <div 
                             className="bg-primary h-full transition-all duration-500 rounded-full"
-                            style={{ width: `${Math.min(100, (subtotal / settings.freeShippingThreshold) * 100)}%` }}
+                            style={{ width: `${Math.min(100, (subtotal / FREE_SHIPPING_SUBTOTAL_DH) * 100)}%` }}
                           />
                         </div>
                       </>
@@ -335,7 +336,7 @@ function CheckoutPageContent() {
                   </div>
                 </div>
               </div>
-            )}
+            </>
 
             {/* Cart Items List */}
             <div className="space-y-4 max-h-[300px] overflow-y-auto pr-1 no-scrollbar mb-6">

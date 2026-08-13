@@ -24,6 +24,7 @@ import { CouponSection } from './cart/CouponSection';
 import { CheckoutForm } from './cart/CheckoutForm';
 import { CartFooter } from './cart/CartFooter';
 import { useModalAccessibility } from '@/hooks/useModalAccessibility';
+import { FREE_SHIPPING_SUBTOTAL_DH } from '@/lib/pricing';
 
 const placeholderSvg = PRODUCT_IMAGE_FALLBACK;
 
@@ -425,9 +426,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     {/* Gift product image or icon */}
                     <div className="relative shrink-0">
                       <div className="w-14 h-14 rounded-xl border-2 border-emerald-400/40 bg-white shadow-md overflow-hidden flex items-center justify-center">
-                        {activeGiftRange.productId === -1 || activeGiftRange.productName === 'Livraison Gratuite' ? (
-                          <Truck className="w-6 h-6 text-emerald-500" />
-                        ) : activeGiftProduct?.image ? (
+                        {activeGiftProduct?.image ? (
                           <Image
                             src={getOptimizedImageUrl(activeGiftProduct.image) || placeholderSvg}
                             alt={activeGiftProduct.nameFr || activeGiftProduct.title}
@@ -449,18 +448,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 mb-1">
                         <span className="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-600 inline-flex items-center gap-1">
-                          {activeGiftRange.productId === -1 || activeGiftRange.productName === 'Livraison Gratuite' ? (
-                            <Truck className="w-3 h-3 text-emerald-600" />
-                          ) : (
-                            <Gift className="w-3 h-3 text-emerald-600" />
-                          )}
+                          <Gift className="w-3 h-3 text-emerald-600" />
                           <span>{language === 'FR' ? 'Cadeau offert' : 'هدية مجانية'}</span>
                         </span>
                       </div>
                       <p className="text-[12px] font-bold text-slate-800 leading-tight line-clamp-2">
-                        {activeGiftRange.productId === -1 || activeGiftRange.productName === 'Livraison Gratuite'
-                          ? (language === 'FR' ? 'Livraison Gratuite (Frais offerts)' : 'توصيل مجاني')
-                          : activeGiftRange.productName}
+                        {activeGiftRange.productName}
                       </p>
                       <p className="text-[10px] text-slate-500 mt-0.5 font-medium">
                         {language === 'FR'
@@ -518,8 +511,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       {isFreeShipping 
                         ? (language === 'FR' ? 'Votre commande sera livrée sans frais.' : 'سيتم توصيل طلبكِ مجاناً بالكامل.')
                         : (language === 'FR' 
-                            ? `Seuil de livraison gratuite : ${settings?.freeShippingThreshold || 600} DH` 
-                            : `حد التوصيل المجاني: ${settings?.freeShippingThreshold || 600} درهم`)}
+                            ? `Seuil de livraison gratuite : ${FREE_SHIPPING_SUBTOTAL_DH} DH`
+                            : `حد التوصيل المجاني: ${FREE_SHIPPING_SUBTOTAL_DH} درهم`)}
                     </span>
                   </div>
                 </div>
@@ -531,7 +524,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                         ? 'bg-gradient-to-r from-emerald-500 to-teal-500 shadow-[0_0_12px_rgba(16,185,129,0.3)]' 
                         : 'bg-gradient-to-r from-primary-dark to-primary shadow-[0_0_12px_rgba(37,115,163,0.2)]'
                     }`}
-                    style={{ width: `${Math.min((subtotal / (settings?.freeShippingThreshold || 600)) * 100, 100)}%` }}
+                    style={{ width: `${Math.min((subtotal / FREE_SHIPPING_SUBTOTAL_DH) * 100, 100)}%` }}
                   />
                 </div>
 
