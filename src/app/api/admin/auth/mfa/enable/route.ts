@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
-import { verifyAdminSession, verifySessionToken, verifyTOTP, createSessionToken, generateRecoveryCodes } from '@/lib/session';
+import { verifySessionToken, verifyTOTP, createSessionToken, generateRecoveryCodes } from '@/lib/session';
+import { getCurrentAdminOperator } from '@/lib/admin-authorization';
 
 export async function POST(request: Request) {
   try {
@@ -20,6 +21,15 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, error: 'Token temporaire invalide ou expiré' }, { status: 401 });
       }
 
+      const { data: operator, error: operatorError } = await supabase
+        .from('operators')
+        .select('id, username, name, role, is_active')
+        .eq('id', tempPayload.id)
+        .maybeSingle();
+      if (operatorError || !operator || operator.is_active !== true) {
+        return NextResponse.json({ success: false, error: 'Utilisateur introuvable ou inactif' }, { status: 401 });
+      }
+
       // Verify TOTP code
       const isValid = verifyTOTP(secret, code);
       if (!isValid) {
@@ -37,7 +47,7 @@ export async function POST(request: Request) {
           mfa_enabled: true,
           mfa_recovery_codes: recoveryCodes.join(',')
         })
-        .eq('id', tempPayload.id);
+        .eq('id', operator.id);
       if (error) throw error;
 
       // Log
@@ -45,16 +55,16 @@ export async function POST(request: Request) {
       await supabase.from('audit_logs').insert({
         id: logId,
         action: 'MFA Activé (Obligatoire)',
-        details: `MFA configuré et activé obligatoirement pour l'opérateur "${tempPayload.name}" (${tempPayload.role}).`,
+        details: `MFA configuré et activé obligatoirement pour l'opérateur "${operator.name}" (${operator.role}).`,
         date: new Date().toISOString()
       });
 
       // Create a full session for the operator
       const sessionPayload = {
-        id: tempPayload.id,
-        username: tempPayload.username,
-        role: tempPayload.role,
-        name: tempPayload.name
+        id: operator.id,
+        username: operator.username,
+        role: operator.role,
+        name: operator.name
       };
       const sessionToken = createSessionToken(sessionPayload);
       const response = NextResponse.json({ success: true, user: sessionPayload, recoveryCodes });
@@ -70,10 +80,9 @@ export async function POST(request: Request) {
 
     // ----- MODE B: Standard in-settings MFA enable -----
     // Operator is already logged in via cookie session.
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
-    }
+    const authorization = await getCurrentAdminOperator();
+    if (!authorization.authorized) return authorization.response;
+    const session = authorization.operator;
 
     // Verify TOTP code
     const isValid = verifyTOTP(secret, code);
@@ -109,4 +118,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: error.message || 'Server error' }, { status: 500 });
   }
 }
-

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
-import { verifyAdminSession } from '@/lib/session';
 import { canManageSnippets } from '@/lib/permissions';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -10,14 +10,9 @@ interface Props {
 export async function PUT(request: Request, { params }: Props) {
   try {
     const { id } = await params;
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé.' }, { status: 401 });
-    }
-
-    if (!canManageSnippets(session.role)) {
-      return NextResponse.json({ success: false, error: 'Accès refusé. Droits insuffisants.' }, { status: 403 });
-    }
+    const authorization = await authorizeAdminMutation({ allow: canManageSnippets });
+    if (!authorization.authorized) return authorization.response;
+    const session = authorization.operator;
 
     const body = await request.json();
     const { name, code, location, active, trigger_type, cron_expression, last_run, last_run_status, last_run_logs } = body;
@@ -75,14 +70,9 @@ export async function PUT(request: Request, { params }: Props) {
 export async function DELETE(request: Request, { params }: Props) {
   try {
     const { id } = await params;
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé.' }, { status: 401 });
-    }
-
-    if (!canManageSnippets(session.role)) {
-      return NextResponse.json({ success: false, error: 'Accès refusé. Droits insuffisants.' }, { status: 403 });
-    }
+    const authorization = await authorizeAdminMutation({ allow: canManageSnippets });
+    if (!authorization.authorized) return authorization.response;
+    const session = authorization.operator;
 
     // Check if snippet exists
     const { data: existing, error: findError } = await supabase

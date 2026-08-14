@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { verifyAdminSession, generateMfaSecret } from '@/lib/session';
+import { generateMfaSecret } from '@/lib/session';
+import { getCurrentAdminOperator } from '@/lib/admin-authorization';
 
 export async function GET() {
   try {
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
-    }
+    const authorization = await getCurrentAdminOperator();
+    if (!authorization.authorized) return authorization.response;
+    const session = authorization.operator;
 
     const secret = generateMfaSecret();
     const issuer = 'Para Officinal S.A';

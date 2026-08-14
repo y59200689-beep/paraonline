@@ -8,7 +8,7 @@ const writeSpy = vi.spyOn(fs, 'writeFileSync').mockImplementation(() => {});
 const mockSession = {
   role: 'owner',
   name: 'Youssef Mahir',
-  id: 'admin-1'
+  id: '1'
 };
 
 vi.mock('@/lib/session', () => ({
@@ -26,11 +26,19 @@ import { GET as publicSlugGet } from '../app/api/advice/[slug]/route';
 describe('Advice CMS Database & API Operations', () => {
   let originalDb: any;
 
+  const setCurrentOperatorRole = (role: string) => {
+    const globalForMock = globalThis as any;
+    mockSession.role = role;
+    const operator = globalForMock.mockDb.operators.find((candidate: any) => candidate.id === mockSession.id);
+    operator.role = role;
+    operator.is_active = true;
+  };
+
   beforeEach(() => {
     // Backup and clone original mock database state
     const globalForMock = globalThis as any;
     originalDb = JSON.parse(JSON.stringify(globalForMock.mockDb));
-    mockSession.role = 'owner'; // reset role to owner
+    setCurrentOperatorRole('owner');
     mockSession.name = 'Youssef Mahir';
     writeSpy.mockClear();
   });
@@ -78,7 +86,7 @@ describe('Advice CMS Database & API Operations', () => {
   });
 
   it('should block non-owner (support or logistician) from creating advice articles', async () => {
-    mockSession.role = 'support'; // downgrade role to support
+    setCurrentOperatorRole('support');
 
     const payload = {
       slug: 'forbidden-article',
@@ -105,6 +113,22 @@ describe('Advice CMS Database & API Operations', () => {
     expect(response.status).toBe(403);
     expect(data.success).toBe(false);
     expect(data.error).toContain('Accès refusé');
+  });
+
+  it('should reject a viewer based on the current database role, even if the session still says owner', async () => {
+    const globalForMock = globalThis as any;
+    globalForMock.mockDb.operators.find((candidate: any) => candidate.id === mockSession.id).role = 'viewer';
+
+    const req = new Request('http://localhost:3000/api/admin/advice', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slug: 'viewer-forbidden', title_fr: 'Forbidden' })
+    });
+
+    const response = await adminPost(req);
+    expect(response.status).toBe(403);
+    const { data: articles } = await supabase.from('advice_articles').select('*').eq('slug', 'viewer-forbidden');
+    expect(articles).toHaveLength(0);
   });
 
   it('should retrieve all articles including drafts via admin GET API', async () => {
@@ -197,7 +221,7 @@ describe('Advice CMS Database & API Operations', () => {
   });
 
   it('should block deleting articles if role is not owner', async () => {
-    mockSession.role = 'logistician'; // downgrade role
+    setCurrentOperatorRole('logistician');
 
     const req = new Request('http://localhost:3000/api/admin/advice/art_2', {
       method: 'DELETE'

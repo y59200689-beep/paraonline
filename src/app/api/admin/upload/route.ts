@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { verifyAdminSession } from '@/lib/session';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
+import { canEditCatalog } from '@/lib/permissions';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 
 import sharp from 'sharp';
@@ -31,10 +32,8 @@ function detectMimeFromBuffer(buf: Buffer): string | null {
 
 export async function POST(request: Request) {
   try {
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
-    }
+    const authorization = await authorizeAdminMutation({ allow: canEditCatalog });
+    if (!authorization.authorized) return authorization.response;
 
     const formData = await request.formData();
     const file = formData.get('file') as File;

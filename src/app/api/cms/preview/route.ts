@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { verifyAdminSession } from '@/lib/session';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { canEditContent } from '@/lib/permissions';
 
 /**
@@ -14,9 +14,9 @@ import { canEditContent } from '@/lib/permissions';
  * Response: { token: string, preview_url: string }
  */
 export async function POST(req: NextRequest) {
-  const session = await verifyAdminSession(req);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (!canEditContent(session.role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  const authorization = await authorizeAdminMutation({ allow: canEditContent });
+  if (!authorization.authorized) return authorization.response;
+  const session = authorization.operator;
 
   const body = await req.json();
   const { entity_type, entity_id, snapshot } = body;

@@ -1,6 +1,8 @@
 import { randomUUID } from 'crypto';
 import { NextResponse } from 'next/server';
 import { verifyAdminSession } from '@/lib/session';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
+import type { AdminRole } from '@/lib/permissions';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 
 type Resource = 'customer-tags' | 'customer-notes' | 'customer-samples' | 'points-adjustments' | 'saved-views' | 'import-runs' | 'sync-runs';
@@ -19,9 +21,9 @@ function getResource(value: string | null): Resource | null {
   return value && value in tableByResource ? value as Resource : null;
 }
 
-function canWrite(resource: Resource, role?: string) {
+function canWrite(resource: Resource, role: AdminRole) {
   if (resource === 'import-runs' || resource === 'sync-runs') return role === 'owner';
-  return role !== 'support';
+  return ['owner', 'manager', 'content_editor', 'catalogue_editor', 'logistician', 'fulfilment'].includes(role);
 }
 
 export async function GET(request: Request) {
@@ -44,8 +46,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const session = await verifyAdminSession();
-  if (!session) return NextResponse.json({ success: false, error: 'Acces non autorise.' }, { status: 401 });
+  const authorization = await authorizeAdminMutation();
+  if (!authorization.authorized) return authorization.response;
+  const session = authorization.operator;
 
   const { resource: resourceValue, record } = await request.json();
   const resource = getResource(resourceValue);
@@ -104,8 +107,9 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const session = await verifyAdminSession();
-  if (!session) return NextResponse.json({ success: false, error: 'Acces non autorise.' }, { status: 401 });
+  const authorization = await authorizeAdminMutation();
+  if (!authorization.authorized) return authorization.response;
+  const session = authorization.operator;
 
   const url = new URL(request.url);
   const resource = getResource(url.searchParams.get('resource'));

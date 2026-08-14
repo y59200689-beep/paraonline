@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { verifyAdminSession } from '@/lib/session';
 import { canManageAdvice } from '@/lib/permissions';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { revalidatePath } from 'next/cache';
 
 const DEFAULT_ADVICE_ARTICLES = [
@@ -52,18 +53,9 @@ export async function GET(request: Request) {
       .order('created_at', { ascending: false });
     let articles = fetchedArticles;
 
-    // Seed default articles if empty or table missing
+    // Reads stay side-effect free. Defaults are returned without writing them.
     if (error || !articles || articles.length === 0) {
-      try {
-        await supabase.from('advice_articles').upsert(DEFAULT_ADVICE_ARTICLES, { onConflict: 'id' });
-        const { data: seeded } = await supabase
-          .from('advice_articles')
-          .select('*')
-          .order('created_at', { ascending: false });
-        articles = seeded || DEFAULT_ADVICE_ARTICLES;
-      } catch {
-        articles = DEFAULT_ADVICE_ARTICLES;
-      }
+      articles = DEFAULT_ADVICE_ARTICLES;
     }
 
     return NextResponse.json({ success: true, articles: articles || DEFAULT_ADVICE_ARTICLES });
@@ -74,14 +66,12 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const session = await verifyAdminSession(request);
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé.' }, { status: 401 });
-    }
-
-    if (!canManageAdvice(session.role)) {
-      return NextResponse.json({ success: false, error: 'Accès refusé. Droits insuffisants.' }, { status: 403 });
-    }
+    const authorization = await authorizeAdminMutation({
+      allow: canManageAdvice,
+      forbiddenMessage: 'Accès refusé. Droits insuffisants.',
+    });
+    if (!authorization.authorized) return authorization.response;
+    const session = authorization.operator;
 
     const body = await request.json();
     const { 

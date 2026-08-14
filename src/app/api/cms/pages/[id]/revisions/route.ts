@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { verifyAdminSession } from '@/lib/session';
 import { canEditContent, canPublishContent } from '@/lib/permissions';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await verifyAdminSession();
@@ -19,9 +20,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await verifyAdminSession();
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (!canPublishContent(session.role)) return NextResponse.json({ error: 'Only managers and owners can restore content.' }, { status: 403 });
+  const authorization = await authorizeAdminMutation({
+    allow: canPublishContent,
+    forbiddenMessage: 'Only managers and owners can restore content.',
+  });
+  if (!authorization.authorized) return authorization.response;
+  const session = authorization.operator;
   const { id } = await params;
   const body = await req.json().catch(() => ({}));
   if (!body.revision_id) return NextResponse.json({ error: 'revision_id is required' }, { status: 400 });

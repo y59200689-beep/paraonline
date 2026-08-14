@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { verifyAdminSession } from '@/lib/session';
 import { canManageDiagnostic, canEditContent } from '@/lib/permissions';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
 
 const DEFAULT_SEED_QUESTIONS = [
   {
@@ -179,9 +180,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await verifyAdminSession(req);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (!canManageDiagnostic(session.role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  const authorization = await authorizeAdminMutation({ allow: canManageDiagnostic });
+  if (!authorization.authorized) return authorization.response;
+  const session = authorization.operator;
 
   const body = await req.json();
   const { question_key, text_fr, text_ar, subtitle_fr, subtitle_ar, question_type, required, display_order } = body;
@@ -209,9 +210,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const session = await verifyAdminSession(req);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (!canManageDiagnostic(session.role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  const authorization = await authorizeAdminMutation({ allow: canManageDiagnostic });
+  if (!authorization.authorized) return authorization.response;
+  const session = authorization.operator;
 
   const body = await req.json();
   const { id, type, ...fields } = body;
@@ -275,9 +276,8 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const session = await verifyAdminSession(req);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (!canManageDiagnostic(session.role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  const authorization = await authorizeAdminMutation({ allow: canManageDiagnostic });
+  if (!authorization.authorized) return authorization.response;
 
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');

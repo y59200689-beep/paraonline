@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { verifyAdminSession } from '@/lib/session';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
+import { canManageSettings } from '@/lib/permissions';
 import { PUBLIC_SETTINGS_CACHE_TAG } from '@/lib/get-public-settings';
 import { FREE_SHIPPING_SUBTOTAL_DH, isLegacyFreeShippingGiftRange } from '@/lib/pricing';
 
@@ -28,13 +30,11 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     // Only authenticated admins may modify settings (payment keys, courier credentials, etc.)
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
-    }
-    if (session.role !== 'owner') {
-      return NextResponse.json({ success: false, error: 'Accès refusé. Propriétaire uniquement.' }, { status: 403 });
-    }
+    const authorization = await authorizeAdminMutation({
+      allow: canManageSettings,
+      forbiddenMessage: 'Accès refusé. Propriétaire uniquement.',
+    });
+    if (!authorization.authorized) return authorization.response;
 
     const { settings } = await request.json();
     if (!settings) {

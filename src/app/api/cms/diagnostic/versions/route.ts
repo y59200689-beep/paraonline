@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { verifyAdminSession } from '@/lib/session';
 import { canManageDiagnostic } from '@/lib/permissions';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
 
 const QUESTION_SELECT = `id, question_key, text_fr, text_ar, subtitle_fr, subtitle_ar, question_type, required, enabled, display_order, cms_diagnostic_answers (id, question_id, value_key, label_fr, label_ar, icon, description_fr, description_ar, display_order, enabled)`;
 
-async function requireManager(req: NextRequest) {
-  const session = await verifyAdminSession(req);
-  if (!session) return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
-  if (!canManageDiagnostic(session.role)) return { error: NextResponse.json({ error: 'Forbidden' }, { status: 403 }) };
-  return { session };
+async function requireManager() {
+  const authorization = await authorizeAdminMutation({ allow: canManageDiagnostic });
+  if (!authorization.authorized) return { error: authorization.response };
+  return { session: authorization.operator };
 }
 
 async function currentSnapshot() {
@@ -18,7 +17,7 @@ async function currentSnapshot() {
 }
 
 export async function GET(req: NextRequest) {
-  const auth = await requireManager(req);
+  const auth = await requireManager();
   if ('error' in auth) return auth.error;
   const { data, error } = await supabaseAdmin.from('cms_diagnostic_versions').select('id,version_number,status,created_by,published_by,created_at,published_at').order('version_number', { ascending: false });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -26,7 +25,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireManager(req);
+  const auth = await requireManager();
   if ('error' in auth) return auth.error;
   const body = await req.json().catch(() => ({}));
   const action = body.action === 'publish' ? 'publish' : 'save_draft';

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { verifyAdminSession } from '@/lib/session';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
+import { canEditCatalog } from '@/lib/permissions';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { PUBLIC_SETTINGS_CACHE_TAG } from '@/lib/get-public-settings';
 import path from 'path';
@@ -536,10 +538,8 @@ export async function GET() {
 export async function POST(request: Request) {
   let imageKey: string | null = null;
   try {
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
-    }
+    const authorization = await authorizeAdminMutation({ allow: canEditCatalog });
+    if (!authorization.authorized) return authorization.response;
 
     const formData = await request.formData();
     const key = formData.get('key') as string;
@@ -682,10 +682,8 @@ export async function POST(request: Request) {
 // ─── DELETE — reset / remove an override by key and purge its storage asset ──────
 export async function DELETE(request: Request) {
   try {
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
-    }
+    const authorization = await authorizeAdminMutation({ allow: canEditCatalog });
+    if (!authorization.authorized) return authorization.response;
 
     const { searchParams } = new URL(request.url);
     const key = searchParams.get('key');

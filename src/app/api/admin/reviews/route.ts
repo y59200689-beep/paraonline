@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { verifyAdminSession } from '@/lib/session';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
+import { canManageReviews } from '@/lib/permissions';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 
 // Helper: sync product reviews stats (rating & count)
@@ -62,9 +64,8 @@ export async function GET() {
 // POST — admin creates a review manually
 export async function POST(request: Request) {
   try {
-    const session = await verifyAdminSession();
-    if (!session) return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
-    if (session.role === 'logistician') return NextResponse.json({ success: false, error: 'Accès refusé' }, { status: 403 });
+    const authorization = await authorizeAdminMutation({ allow: canManageReviews });
+    if (!authorization.authorized) return authorization.response;
 
     const { productId, author, rating, comment, status, reply } = await request.json();
 
@@ -107,9 +108,8 @@ export async function POST(request: Request) {
 // PUT — update an existing review (status, text, reply, or product reassignment)
 export async function PUT(request: Request) {
   try {
-    const session = await verifyAdminSession();
-    if (!session) return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
-    if (session.role === 'logistician') return NextResponse.json({ success: false, error: 'Accès refusé' }, { status: 403 });
+    const authorization = await authorizeAdminMutation({ allow: canManageReviews });
+    if (!authorization.authorized) return authorization.response;
 
     const { id, status, reply, author, comment, rating, productId } = await request.json();
     if (!id) return NextResponse.json({ success: false, error: 'Review ID is required' }, { status: 400 });
@@ -157,9 +157,8 @@ export async function PUT(request: Request) {
 // DELETE — remove a review
 export async function DELETE(request: Request) {
   try {
-    const session = await verifyAdminSession();
-    if (!session) return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
-    if (session.role === 'logistician') return NextResponse.json({ success: false, error: 'Accès refusé' }, { status: 403 });
+    const authorization = await authorizeAdminMutation({ allow: canManageReviews });
+    if (!authorization.authorized) return authorization.response;
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

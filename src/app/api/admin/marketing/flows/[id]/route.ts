@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { verifyAdminSession } from '@/lib/session';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 
 interface RouteContext {
@@ -8,10 +8,8 @@ interface RouteContext {
 
 export async function PUT(request: Request, context: RouteContext) {
   try {
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
-    }
+    const authorization = await authorizeAdminMutation();
+    if (!authorization.authorized) return authorization.response;
 
     const { id } = await context.params;
     const body = await request.json();
@@ -47,10 +45,8 @@ export async function PUT(request: Request, context: RouteContext) {
 
 export async function DELETE(request: Request, context: RouteContext) {
   try {
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
-    }
+    const authorization = await authorizeAdminMutation();
+    if (!authorization.authorized) return authorization.response;
 
     const { id } = await context.params;
 

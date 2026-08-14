@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { verifyAdminSession } from '@/lib/session';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { canEditContent, canPublishContent } from '@/lib/permissions';
 import { canScheduleContent } from '@/lib/permissions';
 import { revalidateTag } from 'next/cache';
@@ -86,9 +87,9 @@ export async function GET(req: NextRequest) {
 
 // ── PATCH — update a CMS page ─────────────────────────────────────────────────
 export async function PATCH(req: NextRequest) {
-  const session = await verifyAdminSession(req);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (!canEditContent(session.role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  const authorization = await authorizeAdminMutation({ allow: canEditContent });
+  if (!authorization.authorized) return authorization.response;
+  const session = authorization.operator;
 
   const body = await req.json();
   const { id, status, approval_action, ...fields } = body;
@@ -197,9 +198,9 @@ export async function PATCH(req: NextRequest) {
 
 // ── POST — create a new CMS page ──────────────────────────────────────────────
 export async function POST(req: NextRequest) {
-  const session = await verifyAdminSession(req);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (!canEditContent(session.role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  const authorization = await authorizeAdminMutation({ allow: canEditContent });
+  if (!authorization.authorized) return authorization.response;
+  const session = authorization.operator;
 
   const body = await req.json();
   const { slug, page_type = 'custom', title_fr, title_ar } = body;

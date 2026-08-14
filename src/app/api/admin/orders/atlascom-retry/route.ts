@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { verifyAdminSession } from '@/lib/session';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
+import { canEditOrders } from '@/lib/permissions';
 import { processAtlascomOrderExport, queueAtlascomOrderExport } from '@/lib/atlascom-orders';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 
@@ -8,10 +9,8 @@ export const maxDuration = 60;
 
 export async function POST(request: Request) {
   try {
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé.' }, { status: 401 });
-    }
+    const authorization = await authorizeAdminMutation({ allow: canEditOrders });
+    if (!authorization.authorized) return authorization.response;
 
     const { orderId } = await request.json();
     if (!orderId || typeof orderId !== 'string') {

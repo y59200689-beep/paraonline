@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
-import { hashPasswordAsync, verifyAdminSession, verifyPassword } from '@/lib/session';
+import { hashPasswordAsync, verifyPassword } from '@/lib/session';
+import { getCurrentAdminOperator } from '@/lib/admin-authorization';
 
 export async function POST(request: Request) {
   try {
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
-    }
+    const authorization = await getCurrentAdminOperator();
+    if (!authorization.authorized) return authorization.response;
+    const session = authorization.operator;
 
     const { oldPassword, newPassword } = await request.json();
     if (!oldPassword || !newPassword) {

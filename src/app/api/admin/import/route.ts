@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { revalidatePath, revalidateTag } from 'next/cache';
-import { verifyAdminSession } from '@/lib/session';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { PUBLIC_SETTINGS_CACHE_TAG } from '@/lib/get-public-settings';
 import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/catalog-cache';
@@ -181,13 +181,11 @@ async function upsertInBatches(products: any[]) {
 
 export async function POST(request: Request) {
   try {
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
-    }
-    if (session.role !== 'owner') {
-      return NextResponse.json({ success: false, error: 'Accès refusé. Propriétaire uniquement.' }, { status: 403 });
-    }
+    const authorization = await authorizeAdminMutation({
+      allow: role => role === 'owner',
+    });
+    if (!authorization.authorized) return authorization.response;
+    const session = authorization.operator;
 
     const { products, updateExisting, fileName, validationErrorCount = 0, validationErrors = [] } = await request.json();
     if (!products || !Array.isArray(products)) {

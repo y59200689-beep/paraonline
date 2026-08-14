@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { isDiagnosticEligibleProduct } from '@/lib/diagnostic-routine';
 import type { Product } from '@/lib/data';
 import { verifyAdminSession } from '@/lib/session';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { canEditCatalog } from '@/lib/permissions';
 
 const supabase = createClient(
@@ -125,9 +126,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await verifyAdminSession(req);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (!canEditCatalog(session.role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  const authorization = await authorizeAdminMutation({ allow: canEditCatalog });
+  if (!authorization.authorized) return authorization.response;
+  const session = authorization.operator;
 
   const body = await req.json();
   const { productId, action, reason, excludedBy } = body;

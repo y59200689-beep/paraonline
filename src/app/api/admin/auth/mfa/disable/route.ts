@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
-import { verifyAdminSession } from '@/lib/session';
+import { getCurrentAdminOperator } from '@/lib/admin-authorization';
+import { canManageOperators } from '@/lib/permissions';
 
 export async function POST(request: Request) {
   try {
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
-    }
+    const authorization = await getCurrentAdminOperator();
+    if (!authorization.authorized) return authorization.response;
+    const session = authorization.operator;
 
     const body = await request.json();
     const { userId } = body;
@@ -17,7 +17,7 @@ export async function POST(request: Request) {
 
     // If Owner is trying to disable MFA for another operator
     if (userId && userId !== session.id) {
-      if (session.role !== 'owner') {
+      if (!canManageOperators(session.role)) {
         return NextResponse.json({ success: false, error: 'Seul le propriétaire peut désactiver le MFA des autres utilisateurs' }, { status: 403 });
       }
       

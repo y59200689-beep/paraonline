@@ -44,6 +44,7 @@ import { useUi } from '@/context/UiContext';
 import { PRODUCTS_DB } from '@/lib/data';
 import { useAdminUI } from '@/app/admin/AdminUIContext';
 import { ConfirmDialog, StatusBadge } from '@/components/admin/ui';
+import { canDeleteOrders, canEditOrders, canManageCouriers, isViewerOnly, type AdminRole } from '@/lib/permissions';
 
 const ORDER_STATUS_OPTIONS = [
   { value: 'Pending', label: 'En attente', detail: 'Confirmation à effectuer', color: '#d97706', tint: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.28)' },
@@ -54,12 +55,24 @@ const ORDER_STATUS_OPTIONS = [
   { value: 'Returned', label: 'Retournée', detail: 'Retour ou échec de livraison', color: '#ea580c', tint: 'rgba(234,88,12,0.10)', border: 'rgba(234,88,12,0.24)' },
 ] as const;
 
-function OrderStatusPicker({ value, onChange, isDark = false, compact = false }: { value: string; onChange: (value: string) => void; isDark?: boolean; compact?: boolean }) {
+function OrderStatusPicker({ value, onChange, isDark = false, compact = false, readOnly = false }: { value: string; onChange: (value: string) => void; isDark?: boolean; compact?: boolean; readOnly?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, placement: 'bottom' as 'top' | 'bottom' });
   const current = ORDER_STATUS_OPTIONS.find(option => option.value === value) || ORDER_STATUS_OPTIONS[0];
+
+  if (readOnly) {
+    return (
+      <span
+        className={`inline-flex items-center gap-2 rounded-lg border font-bold ${compact ? 'px-2 py-1 text-[10px]' : 'px-3 py-2 text-xs'}`}
+        style={{ background: current.tint, borderColor: current.border, color: current.color }}
+      >
+        <span className="h-1.5 w-1.5 rounded-full" style={{ background: current.color }} />
+        {current.label}
+      </span>
+    );
+  }
 
   const positionMenu = useCallback(() => {
     const rect = triggerRef.current?.getBoundingClientRect();
@@ -193,6 +206,11 @@ export default function OrdersTab() {
 
   const { settings } = useSettings();
   const { showToast } = useUi();
+  const role = currentUser?.role as AdminRole | undefined;
+  const canMutateOrders = role ? canEditOrders(role) : false;
+  const canDeleteOrder = role ? canDeleteOrders(role) : false;
+  const canMutateCourier = role ? canManageCouriers(role) : false;
+  const viewerOnly = role ? isViewerOnly(role) : false;
 
   // Reconciliation subtab states
   const [reconciliationFile, setReconciliationFile] = useState<File | null>(null);
@@ -247,6 +265,10 @@ export default function OrdersTab() {
     }
     setSpotlightTarget(null);
   }, [orders, setOrdersSubTab, setSpotlightTarget, spotlightTarget]);
+
+  useEffect(() => {
+    if (viewerOnly && ordersSubTab === 'reconciliation') setOrdersSubTab('list');
+  }, [ordersSubTab, setOrdersSubTab, viewerOnly]);
 
   // ── Sliding pill refs — Orders sub-tab bar ─────────────────────────────────
   const ordersPillRef = useRef<HTMLSpanElement>(null);
@@ -1070,7 +1092,7 @@ export default function OrdersTab() {
               </span>
 
               {/* COD Badge */}
-              {(() => {
+              {canMutateOrders && (() => {
                 const isCodSettled = selectedOrder.reconciled || selectedOrder.payment_status === 'paid' || !!settledOrdersMap[selectedOrder.order_id];
                 return (
                   <button
@@ -1115,7 +1137,7 @@ export default function OrdersTab() {
               </a>
 
               {/* Étiquette A6 */}
-              <button
+              {canMutateCourier && <button
                 onClick={() => {
                   setActiveLabelData({
                     orderId: selectedOrder.order_id,
@@ -1139,7 +1161,7 @@ export default function OrdersTab() {
               >
                 <Printer className="w-3.5 h-3.5" style={{ color: isDark ? '#818cf8' : '#4f46e5' }} />
                 <span>Étiquette A6</span>
-              </button>
+              </button>}
 
               {/* Bon de Livraison */}
               <button
@@ -1170,7 +1192,7 @@ export default function OrdersTab() {
               </button>
 
               {/* Delete */}
-              <button
+              {canDeleteOrder && <button
                 onClick={() => {
                   setConfirmation({
                     title: 'Supprimer cette commande ?',
@@ -1190,7 +1212,7 @@ export default function OrdersTab() {
                 title="Supprimer la commande"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-              </button>
+              </button>}
 
             </div>
           </div>
@@ -1229,6 +1251,7 @@ export default function OrdersTab() {
                 <OrderStatusPicker
                   value={selectedOrder.status}
                   isDark={isDark}
+                  readOnly={!canMutateOrders}
                   onChange={(newStatus) => {
                     setSelectedOrder(prev => prev ? { ...prev, status: newStatus } : null);
                     handleUpdateOrderStatus(selectedOrder.order_id, newStatus);
@@ -1291,15 +1314,15 @@ export default function OrdersTab() {
                       <span className="px-3 py-1 rounded-full text-[11px] font-extrabold font-mono bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
                         {totalUnitsOrdered} {totalUnitsOrdered > 1 ? 'articles' : 'article'} ({selectedOrder.items?.length || 0} {selectedOrder.items?.length === 1 ? 'réf.' : 'réfs.'})
                       </span>
-                      <button
+                      {canMutateOrders && <button
                         type="button"
                         onClick={() => setIsAddGiftModalOpen(true)}
                         className="px-2.5 py-1 rounded-full text-[10.5px] font-extrabold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs"
                       >
                         <Gift className="w-3 h-3" />
                         <span>+ Échantillon Gratuit</span>
-                      </button>
-                      <button
+                      </button>}
+                      {canMutateOrders && <button
                         type="button"
                         onClick={() => { setIsAddProductPanelOpen(true); setAddProductSearch(''); }}
                         className="px-2.5 py-1 rounded-full text-[10.5px] font-extrabold flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs"
@@ -1311,7 +1334,7 @@ export default function OrdersTab() {
                       >
                         <Plus className="w-3 h-3" />
                         <span>Ajouter un article</span>
-                      </button>
+                      </button>}
                     </div>
                     <span className="text-[11px] font-mono font-bold text-emerald-500">
                       Total COD: {selectedOrder.total.toFixed(2)} DH
@@ -1426,7 +1449,7 @@ export default function OrdersTab() {
                               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                                 {/* Interactive Stepper Buttons */}
                                 <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700/50">
-                                  <button
+                                  {canMutateOrders && <button
                                     type="button"
                                     onClick={() => {
                                       const updatedItems = [...(selectedOrder.items || [])];
@@ -1446,13 +1469,13 @@ export default function OrdersTab() {
                                     title="Diminuer la quantité"
                                   >
                                     <Minus className="w-3 h-3" />
-                                  </button>
+                                  </button>}
 
                                   <span className="px-1.5 font-mono font-black text-[11px]" style={{ color: textPrimary }}>
                                     {item.quantity}
                                   </span>
 
-                                  <button
+                                  {canMutateOrders && <button
                                     type="button"
                                     onClick={() => {
                                       const updatedItems = [...(selectedOrder.items || [])];
@@ -1468,14 +1491,14 @@ export default function OrdersTab() {
                                     title="Augmenter la quantité"
                                   >
                                     <Plus className="w-3 h-3" />
-                                  </button>
+                                  </button>}
                                 </div>
 
                                 <span className="text-[11px] font-mono opacity-80" style={{ color: textMuted }}>
                                   {item.price.toFixed(2)} DH/u = <strong className="text-emerald-600 dark:text-emerald-400 font-mono">{(item.price * item.quantity).toFixed(2)} DH</strong>
                                 </span>
 
-                                <button
+                                {canMutateOrders && <button
                                   type="button"
                                   onClick={() => {
                                     const updatedItems = [...(selectedOrder.items || [])];
@@ -1491,7 +1514,7 @@ export default function OrdersTab() {
                                   title="Supprimer cet article"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
-                                </button>
+                                </button>}
                               </div>
                             </div>
                           </div>
@@ -1765,7 +1788,7 @@ export default function OrdersTab() {
                                 ? "Le virement bancaire du transporteur a été reçu et reconcilié sur le compte entreprise." 
                                 : "Fonds collectés par le chauffeur livreur en cours de transfert vers votre compte."}
                             </p>
-                            <button
+                            {canMutateOrders && <button
                               type="button"
                               onClick={() => {
                                 const newStatus = !isCodSettled;
@@ -1779,7 +1802,7 @@ export default function OrdersTab() {
                               }}
                             >
                               {isCodSettled ? 'Marquer Non Encaissé' : 'Marquer COD Encaissé (Virement reçu)'}
-                            </button>
+                            </button>}
                           </div>
                         </div>
                       );
@@ -1790,7 +1813,7 @@ export default function OrdersTab() {
             })()}
 
             {/* WhatsApp Direct Template Buttons */}
-            <div
+            {!viewerOnly && <div
               className="rounded-2xl p-6 space-y-4 transition-all duration-300"
               style={{
                 background: cardBg,
@@ -1848,7 +1871,7 @@ export default function OrdersTab() {
                   </div>
                 ))}
               </div>
-            </div>
+            </div>}
 
             {/* Internal Staff Notes Box Card */}
             <div
@@ -2381,7 +2404,7 @@ export default function OrdersTab() {
                     </div>
 
                     {/* Manage / Register Shipping Button */}
-                    <button
+                    {canMutateCourier && <button
                       type="button"
                       onClick={() => handleOpenShippingPanel(selectedOrder)}
                       className="w-full py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer border hover:bg-slate-50 dark:hover:bg-slate-850"
@@ -2389,7 +2412,7 @@ export default function OrdersTab() {
                     >
                       <Truck className="w-3.5 h-3.5 text-indigo-500" />
                       <span>{selectedOrder.tracking_number ? "Modifier l'expédition" : "Configurer l'expédition livreur"}</span>
-                    </button>
+                    </button>}
                   </div>
                 );
               })()}
@@ -2531,7 +2554,7 @@ export default function OrdersTab() {
                     </div>
                   )}
 
-                  {canRetry && (
+                  {canRetry && canMutateOrders && (
                     <button
                       type="button"
                       onClick={handleRetryAtlascom}
@@ -3182,7 +3205,7 @@ export default function OrdersTab() {
           )}
 
           {/* -------------------- ADD GIFT / SAMPLE MODAL -------------------- */}
-          {mounted && isAddGiftModalOpen && selectedOrder && createPortal(
+          {mounted && canMutateOrders && isAddGiftModalOpen && selectedOrder && createPortal(
             (() => {
               const giftOrder = selectedOrder as Order;
               const isDark = adminTheme === 'dark';
@@ -3328,7 +3351,7 @@ export default function OrdersTab() {
             { id: 'abandoned',      label: 'Paniers Abandonnés', icon: ShoppingCart, count: abandonedCarts.length },
             { id: 'shipping',       label: 'Expéditions & COD',  icon: Truck,        count: orders.filter(o => o.courier).length },
             { id: 'reconciliation', label: 'Rapprochement COD',  icon: DollarSign,   count: orders.filter(o => o.courier && !o.reconciled).length }
-          ] as const).map((tab) => {
+          ] as const).filter(tab => !viewerOnly || tab.id !== 'reconciliation').map((tab) => {
             const TabIcon = tab.icon;
             const isActive = ordersSubTab === tab.id;
             return (
@@ -3745,7 +3768,7 @@ export default function OrdersTab() {
                               <p className={`mt-2 text-[12px] font-black truncate ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-100'}`}>{order.customer_name}</p>
                               <p className="mt-1 text-[10px] text-slate-500 truncate">{order.city || 'Ville non renseignée'} · {order.items?.length || 0} article{(order.items?.length || 0) > 1 ? 's' : ''}</p>
                             </button>
-                            {column.action && <button type="button" onClick={() => handleUpdateOrderStatus(order.order_id, column.action!)} className="mt-3 w-full rounded-lg py-1.5 text-[10px] font-black transition hover:brightness-105" style={{ color: column.accent, background: `${column.accent}14`, border: `1px solid ${column.accent}28` }}>{column.actionLabel}</button>}
+                            {column.action && canMutateOrders && <button type="button" onClick={() => handleUpdateOrderStatus(order.order_id, column.action!)} className="mt-3 w-full rounded-lg py-1.5 text-[10px] font-black transition hover:brightness-105" style={{ color: column.accent, background: `${column.accent}14`, border: `1px solid ${column.accent}28` }}>{column.actionLabel}</button>}
                           </article>
                         ))}
                         {columnOrders.length === 0 && <p className="rounded-xl border border-dashed border-slate-200 p-4 text-center text-[10px] font-semibold text-slate-400">Aucune commande</p>}
@@ -3928,7 +3951,7 @@ export default function OrdersTab() {
                     }}
                   >
                     <th className="py-3.5 px-4 w-10 text-center">
-                      <input
+                      {canMutateOrders && <input
                         type="checkbox"
                         checked={selectedOrderIds.length > 0 && selectedOrderIds.length === filteredOrders.length}
                         onChange={(e) => {
@@ -3939,7 +3962,7 @@ export default function OrdersTab() {
                           }
                         }}
                         className="rounded cursor-pointer w-4 h-4 accent-emerald-500"
-                      />
+                      />}
                     </th>
                     <th className="py-3.5 px-4 whitespace-nowrap">Commande</th>
                     <th className="py-3.5 px-4 whitespace-nowrap">Date & Heure</th>
@@ -3987,7 +4010,7 @@ export default function OrdersTab() {
                       >
                         {/* Checkbox */}
                         <td className="py-4 px-4 text-center" onClick={(e) => e.stopPropagation()}>
-                          <input
+                          {canMutateOrders && <input
                             type="checkbox"
                             checked={isSelected}
                             onChange={(e) => {
@@ -3998,7 +4021,7 @@ export default function OrdersTab() {
                               }
                             }}
                             className="rounded cursor-pointer w-4 h-4 accent-emerald-500"
-                          />
+                          />}
                         </td>
 
                         {/* Order ID — Single Line Badge */}
@@ -4098,6 +4121,7 @@ export default function OrdersTab() {
                             value={order.status}
                             isDark={adminTheme === 'dark'}
                             compact
+                            readOnly={!canMutateOrders}
                             onChange={(newStatus) => handleUpdateOrderStatus(order.order_id, newStatus)}
                           />
                         </td>
@@ -4152,7 +4176,7 @@ export default function OrdersTab() {
           </div>}
 
           {/* Floating Bulk Actions Bar */}
-          {selectedOrderIds.length > 0 && (
+          {canMutateOrders && selectedOrderIds.length > 0 && (
             <div
               className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 px-5 py-3 rounded-2xl backdrop-blur-xl shadow-2xl animate-slide-up"
               style={{
@@ -4733,7 +4757,7 @@ export default function OrdersTab() {
                             {statusBadge}
                           </td>
                           <td className="p-4 text-center">
-                            <button
+                            {canMutateOrders && <button
                               onClick={() => setReconciledOrders(prev => ({ ...prev, [o.order_id]: !isReconciled }))}
                               className={`p-1.5 rounded-lg border transition cursor-pointer ${
                                 isReconciled
@@ -4743,11 +4767,11 @@ export default function OrdersTab() {
                               title={isReconciled ? "Paiement réconcilié avec le livreur" : "Marquer comme réconcilié"}
                             >
                               <CheckCircle className="w-4.5 h-4.5 fill-current" />
-                            </button>
+                            </button>}
                           </td>
                           <td className="p-4 text-right">
                             <div className="flex justify-end gap-1.5">
-                              {o.status === 'Shipped' && (
+                              {canMutateOrders && o.status === 'Shipped' && (
                                 <>
                                   <button
                                     onClick={() => handleUpdateOrderStatus(o.order_id, 'Delivered')}
@@ -4771,7 +4795,7 @@ export default function OrdersTab() {
                                   </button>
                                 </>
                               )}
-                              {o.status !== 'Shipped' && (
+                              {canMutateOrders && o.status !== 'Shipped' && (
                                 <button
                                   onClick={() => handleUpdateOrderStatus(o.order_id, 'Shipped')}
                                   className={`px-2 py-1 text-[9px] uppercase font-bold rounded-lg border cursor-pointer ${
@@ -4783,7 +4807,7 @@ export default function OrdersTab() {
                                   En Transit
                                 </button>
                               )}
-                              <button
+                              {canMutateCourier && <button
                                 onClick={() => handleOpenShippingPanel(o)}
                                 className={`p-1.5 rounded-lg border transition cursor-pointer ${
                                   adminTheme === 'light' ? 'bg-white hover:bg-slate-50 border-slate-200 text-slate-600' : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
@@ -4791,7 +4815,7 @@ export default function OrdersTab() {
                                 title="Imprimer étiquette"
                               >
                                 <Printer className="w-3.5 h-3.5" />
-                              </button>
+                              </button>}
                             </div>
                           </td>
                         </tr>
@@ -4812,7 +4836,7 @@ export default function OrdersTab() {
       )}
 
       {/* ---- SUB-TAB 4: MOROCCAN COD FINANCIAL RECONCILIATION LEDGER ---- */}
-      {ordersSubTab === 'reconciliation' && (
+      {!viewerOnly && ordersSubTab === 'reconciliation' && (
         <div className="space-y-6 t-panel">
           <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-4 ${adminTheme === 'light' ? 'border-slate-100' : 'border-slate-900'}`}>
             <div>
@@ -5281,7 +5305,7 @@ export default function OrdersTab() {
 
 
       {/* -------------------- SHIPPING INTEGRATION REGISTRATION SIDEBAR/MODAL -------------------- */}
-      {isShippingPanelOpen && (
+      {canMutateCourier && isShippingPanelOpen && (
         <div 
           className="fixed inset-0 bg-slate-950/60 backdrop-blur-md flex justify-end z-45 select-none animate-in fade-in duration-200"
           onClick={() => setIsShippingPanelOpen(false)}
@@ -5478,7 +5502,7 @@ export default function OrdersTab() {
       />
 
       {/* Floating Bulk Action Bar for Orders */}
-      {selectedOrderIds.length > 0 && (
+      {canMutateOrders && selectedOrderIds.length > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-2xl px-4 animate-scale-up">
           <div className={`backdrop-blur-2xl border p-4.5 shadow-2xl rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-3.5 transition-all duration-300 ${
             adminTheme === 'light'

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { verifyAdminSession } from '@/lib/session';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { canManageOperators } from '@/lib/permissions';
 
 const ALLOWED_ROLES = new Set([
@@ -33,9 +34,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await verifyAdminSession(req);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (!canManageOperators(session.role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  const authorization = await authorizeAdminMutation({ allow: canManageOperators });
+  if (!authorization.authorized) return authorization.response;
 
   const body = await req.json();
   const { name, email, role = 'content_editor' } = body;
@@ -60,9 +60,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const session = await verifyAdminSession(req);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (!canManageOperators(session.role)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  const authorization = await authorizeAdminMutation({ allow: canManageOperators });
+  if (!authorization.authorized) return authorization.response;
 
   const body = await req.json();
   const { id } = body;

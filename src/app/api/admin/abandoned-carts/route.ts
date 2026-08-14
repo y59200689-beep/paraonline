@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifyAdminSession } from '@/lib/session';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 
 export async function GET() {
@@ -47,10 +48,8 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
-    }
+    const authorization = await authorizeAdminMutation();
+    if (!authorization.authorized) return authorization.response;
 
     const { name, phone, items, total, date } = await request.json();
     if (!phone) {
@@ -79,10 +78,8 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
-    }
+    const authorization = await authorizeAdminMutation();
+    if (!authorization.authorized) return authorization.response;
 
     const { searchParams } = new URL(request.url);
     const phone = searchParams.get('phone');
@@ -105,10 +102,8 @@ export async function DELETE(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
-    }
+    const authorization = await authorizeAdminMutation();
+    if (!authorization.authorized) return authorization.response;
 
     const { phone, recoveryStatus } = await request.json();
     if (!phone || !recoveryStatus) {

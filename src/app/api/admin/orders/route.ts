@@ -3,6 +3,8 @@ import { after } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { verifyAdminSession } from '@/lib/session';
 import { processAtlascomOrderExport, queueAtlascomOrderExport } from '@/lib/atlascom-orders';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
+import { canDeleteOrders, canEditOrders } from '@/lib/permissions';
 
 // GET: Retrieve all orders
 export async function GET() {
@@ -65,10 +67,8 @@ export async function GET() {
 // PUT: Update order status
 export async function PUT(request: Request) {
   try {
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
-    }
+    const authorization = await authorizeAdminMutation({ allow: canEditOrders });
+    if (!authorization.authorized) return authorization.response;
 
     const { orderId, status } = await request.json();
     if (!orderId || !status) {
@@ -117,15 +117,11 @@ export async function PUT(request: Request) {
 // DELETE: Delete an order
 export async function DELETE(request: Request) {
   try {
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
-    }
-
-    // Only owner role can delete orders
-    if (session.role !== 'owner') {
-      return NextResponse.json({ success: false, error: 'Accès refusé. Propriétaire uniquement.' }, { status: 403 });
-    }
+    const authorization = await authorizeAdminMutation({
+      allow: canDeleteOrders,
+      forbiddenMessage: 'Accès refusé. Propriétaire uniquement.',
+    });
+    if (!authorization.authorized) return authorization.response;
 
     const { searchParams } = new URL(request.url);
     const orderId = searchParams.get('id');

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { verifyAdminSession } from '@/lib/session';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
+import { canManageCouriers } from '@/lib/permissions';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 
 function isSupabaseConfigured() {
@@ -10,11 +11,8 @@ function isSupabaseConfigured() {
 
 export async function POST(request: Request) {
   try {
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
-    }
-    if (session.role === 'support') { return NextResponse.json({ success: false, error: 'Accès refusé' }, { status: 403 }); }
+    const authorization = await authorizeAdminMutation({ allow: canManageCouriers });
+    if (!authorization.authorized) return authorization.response;
 
     const { orderId, courierName, codAmount, customerName, phone, city, address } = await request.json();
     

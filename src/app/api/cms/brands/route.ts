@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { verifyAdminSession } from '@/lib/session';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { canManageBrands, canPublishContent, canScheduleContent } from '@/lib/permissions';
 import { BRANDS_DATA, slugify } from '@/lib/brands';
 
@@ -16,11 +16,10 @@ function fallbackBrands() {
   }));
 }
 
-async function requireSession(req: NextRequest) {
-  const session = await verifyAdminSession(req);
-  if (!session) return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
-  if (!canManageBrands(session.role)) return { error: NextResponse.json({ error: 'Forbidden' }, { status: 403 }) };
-  return { session };
+async function requireSession(_req: NextRequest) {
+  const authorization = await authorizeAdminMutation({ allow: canManageBrands });
+  if (!authorization.authorized) return { error: authorization.response };
+  return { session: authorization.operator };
 }
 
 export async function GET(req: NextRequest) {

@@ -44,6 +44,7 @@ import { useUi } from '@/context/UiContext';
 import { useAdminUI } from '@/app/admin/AdminUIContext';
 import { StatusBadge, EmptyState } from '@/components/admin/ui';
 import { getCanonicalCategory } from '@/lib/catalog-categories';
+import { canEditCatalog, type AdminRole } from '@/lib/permissions';
 import {
   ACTIVE_STRENGTH_OPTIONS,
   CONCERN_OPTIONS,
@@ -762,6 +763,7 @@ export default function CatalogTab({
   const {
     products,
     adminTheme,
+    currentUser,
     handleSaveBulkProducts,
     handleCreateProduct,
     handleImportProducts,
@@ -773,6 +775,7 @@ export default function CatalogTab({
   const { settings } = useSettings();
   const { showToast } = useUi();
   const { spotlightTarget, setSpotlightTarget } = useAdminUI();
+  const canMutateCatalog = canEditCatalog((currentUser?.role ?? 'viewer') as AdminRole);
   const lowStockThreshold = settings.lowStockThreshold || 5;
 
   const [isMounted, setIsMounted] = useState(false);
@@ -2795,7 +2798,7 @@ export default function CatalogTab({
 
                   <div className="border-t border-slate-100 dark:border-slate-800 pt-1.5 mt-1.5 select-none">
                     {/* Action: Lot rapide (Bulk Edit Mode) */}
-                    <button
+                    {canMutateCatalog && <button
                       type="button"
                       onClick={() => {
                         setIsCatalogBulkMode(!isCatalogBulkMode);
@@ -2809,7 +2812,7 @@ export default function CatalogTab({
                     >
                       <Table className="w-3.5 h-3.5 text-amber-500" />
                       <span>Mode Édition en Lot (Lot rapide)</span>
-                    </button>
+                    </button>}
                   </div>
                 </div>
               )}
@@ -2819,7 +2822,7 @@ export default function CatalogTab({
           <div className="flex items-center gap-2 shrink-0 xl:ml-auto xl:border-l xl:border-slate-200/80 xl:pl-3 dark:xl:border-slate-800">
 
             {/* Importer */}
-            <button
+            {canMutateCatalog && <button
               type="button"
               onClick={() => { setImportResult(null); setIsImportModalOpen(true); }}
               className={`px-3.5 h-10 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition cursor-pointer ${
@@ -2830,7 +2833,7 @@ export default function CatalogTab({
             >
               <Upload className="w-3.5 h-3.5 text-emerald-500" />
               <span>Importer</span>
-            </button>
+            </button>}
 
             {/* Exporter */}
             <button
@@ -2847,20 +2850,20 @@ export default function CatalogTab({
             </button>
 
             {/* Nouveau Produit CTA */}
-            <button
+            {canMutateCatalog && <button
               type="button"
               onClick={() => setIsNewProductModalOpen(true)}
               className="px-4 h-10 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/15 hover:shadow-emerald-600/25 hover:from-emerald-500 hover:to-teal-500 transition-all duration-200 cursor-pointer flex items-center gap-1.5"
             >
               <Plus className="w-3.5 h-3.5 text-white" />
               <span>Produit</span>
-            </button>
+            </button>}
           </div>
         </div>
       </div>
 
       {/* SPREADSHEET BULK EDITOR VIEW */}
-      {isCatalogBulkMode ? (
+      {canMutateCatalog && isCatalogBulkMode ? (
         <div className={`border rounded-2xl overflow-hidden shadow-xl space-y-4 ${adminTheme === 'light' ? 'bg-white border-slate-200' : 'bg-slate-900/30 border-slate-900'}`}>
           <div className={`p-4 text-xs flex justify-between items-center border-b ${adminTheme === 'light' ? 'bg-amber-50/50 border-slate-200' : 'bg-slate-900/60 border-slate-800'}`}>
             <div className={`flex items-center gap-2 font-bold ${adminTheme === 'light' ? 'text-amber-800' : 'text-amber-400'}`}>
@@ -3013,7 +3016,7 @@ export default function CatalogTab({
       ) : (
         <div className="space-y-4">
           {/* DEDICATED FULL-WIDTH SELECTION BANNER ROW (DIRECT ACTION PILLS & POP-OVER) */}
-          {selectedProductIds.size > 0 && (
+          {canMutateCatalog && selectedProductIds.size > 0 && (
             <div className={`p-3 rounded-2xl border flex flex-wrap items-center justify-between gap-3 shadow-md transition-all duration-200 ${
               adminTheme === 'light'
                 ? 'bg-gradient-to-r from-emerald-50/90 via-teal-50/70 to-emerald-50/90 border-emerald-200 text-slate-800 shadow-emerald-500/5'
@@ -3151,12 +3154,12 @@ export default function CatalogTab({
                     <tr style={{ borderBottom: '1px solid var(--admin-border)', background: 'var(--admin-surface-2)' }}>
                       {/* Checkbox Header */}
                       <th className="p-3 w-10 text-center select-none">
-                        <input 
-                          type="checkbox" 
-                          checked={isAllOnPageSelected} 
-                          onChange={handleSelectAllOnPage} 
-                          className="rounded cursor-pointer accent-emerald-500" 
-                        />
+                        {canMutateCatalog && <input
+                          type="checkbox"
+                          checked={isAllOnPageSelected}
+                          onChange={handleSelectAllOnPage}
+                          className="rounded cursor-pointer accent-emerald-500"
+                        />}
                       </th>
                       {/* Image */}
                       <th className="p-3 font-bold w-12 text-center select-none uppercase tracking-widest text-[9px]" style={{ color: 'var(--admin-text-faint)' }}>Image</th>
@@ -3266,12 +3269,12 @@ export default function CatalogTab({
                       }`}>
                         {/* Checkbox cell */}
                         <td className="p-3 text-center whitespace-nowrap">
-                          <input 
-                            type="checkbox" 
-                            checked={selectedProductIds.has(product.id)} 
+                          {canMutateCatalog && <input
+                            type="checkbox"
+                            checked={selectedProductIds.has(product.id)}
                             onChange={() => handleToggleSelectProduct(product.id)}
-                            className="rounded cursor-pointer accent-emerald-500" 
-                          />
+                            className="rounded cursor-pointer accent-emerald-500"
+                          />}
                         </td>
 
                         {/* Image */}
@@ -3313,70 +3316,6 @@ export default function CatalogTab({
                             <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-[10px] text-slate-400 mt-1.5 flex items-center gap-1.5 font-medium select-none">
                               <span className="text-slate-400 dark:text-slate-500">ID: {product.id}</span>
                               <span className="text-slate-300 dark:text-slate-800">|</span>
-                              <button 
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setProductForm(product);
-                                  setIsNewProductModalOpen(true);
-                                }}
-                                className="text-sky-600 dark:text-sky-400 hover:text-sky-500 dark:hover:text-sky-300 cursor-pointer"
-                              >
-                                Edit
-                              </button>
-                              <span className="text-slate-300 dark:text-slate-800">|</span>
-                              <button 
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setProductForm(product);
-                                  setIsNewProductModalOpen(true);
-                                }}
-                                className="text-sky-600 dark:text-sky-400 hover:text-sky-500 dark:hover:text-sky-300 cursor-pointer"
-                              >
-                                Quick Edit
-                              </button>
-                              <span className="text-slate-300 dark:text-slate-800">|</span>
-                              <button 
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setConfirmDialog({
-                                    title: 'Supprimer le produit ?',
-                                    message: `Voulez-vous vraiment supprimer le produit "${product.nameFr || product.title}" ? Cette action est définitive.`,
-                                    confirmText: 'Supprimer',
-                                    confirmStyle: 'danger',
-                                    openedAt: Date.now(),
-                                    onConfirm: async () => {
-                                      // Instant optimistic removal (0ms delay!)
-                                      setPaginatedProducts(prev => prev.filter(p => p.id !== product.id));
-                                      setTotalProducts((prev: number) => Math.max(0, prev - 1));
-
-                                      try {
-                                        const res = await fetch(`/api/admin/products?id=${product.id}`, {
-                                          method: 'DELETE'
-                                        });
-                                        const data = await res.json();
-                                        if (data.success) {
-                                          showToast('Produit supprimé.', 'success');
-                                        } else {
-                                          showToast(data.error || 'Erreur lors de la suppression.', 'error');
-                                        }
-                                      } catch {
-                                        showToast('Erreur de connexion.', 'error');
-                                      } finally {
-                                        // Quiet background sync without skeleton takeover
-                                        loadProducts();
-                                        fetchPaginatedProducts();
-                                      }
-                                    }
-                                  });
-                                }}
-                                className="text-rose-600 dark:text-rose-400 hover:text-rose-500 dark:hover:text-rose-300 cursor-pointer"
-                              >
-                                Trash
-                              </button>
-                              <span className="text-slate-300 dark:text-slate-800">|</span>
                               <a 
                                 href={`/products/${product.id}`}
                                 target="_blank"
@@ -3386,31 +3325,65 @@ export default function CatalogTab({
                               >
                                 View
                               </a>
-                              <span className="text-slate-300 dark:text-slate-800">|</span>
-                              <button 
-                                type="button"
-                                onClick={async (e) => {
-                                  e.stopPropagation();
-                                  try {
-                                    const { id, ...copyData } = product;
-                                    copyData.title = `${copyData.title} (Copie)`;
-                                    if (copyData.nameFr) copyData.nameFr = `${copyData.nameFr} (Copie)`;
-                                    const success = await handleCreateProduct(copyData);
-                                    if (success) {
-                                      showToast('Produit dupliqué.', 'success');
-                                      await loadProducts();
-                                      await fetchPaginatedProducts();
-                                    } else {
-                                      showToast('Erreur lors de la duplication.', 'error');
+                              {canMutateCatalog && <>
+                                <span className="text-slate-300 dark:text-slate-800">|</span>
+                                <button type="button" onClick={(e) => { e.stopPropagation(); setProductForm(product); setIsNewProductModalOpen(true); }} className="text-sky-600 dark:text-sky-400 hover:text-sky-500 dark:hover:text-sky-300 cursor-pointer">Edit</button>
+                                <span className="text-slate-300 dark:text-slate-800">|</span>
+                                <button type="button" onClick={(e) => { e.stopPropagation(); setProductForm(product); setIsNewProductModalOpen(true); }} className="text-sky-600 dark:text-sky-400 hover:text-sky-500 dark:hover:text-sky-300 cursor-pointer">Quick Edit</button>
+                                <span className="text-slate-300 dark:text-slate-800">|</span>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setConfirmDialog({
+                                      title: 'Supprimer le produit ?',
+                                      message: `Voulez-vous vraiment supprimer le produit "${product.nameFr || product.title}" ? Cette action est définitive.`,
+                                      confirmText: 'Supprimer',
+                                      confirmStyle: 'danger',
+                                      openedAt: Date.now(),
+                                      onConfirm: async () => {
+                                        setPaginatedProducts(prev => prev.filter(p => p.id !== product.id));
+                                        setTotalProducts((prev: number) => Math.max(0, prev - 1));
+                                        try {
+                                          const res = await fetch(`/api/admin/products?id=${product.id}`, { method: 'DELETE' });
+                                          const data = await res.json();
+                                          showToast(data.success ? 'Produit supprimé.' : data.error || 'Erreur lors de la suppression.', data.success ? 'success' : 'error');
+                                        } catch {
+                                          showToast('Erreur de connexion.', 'error');
+                                        } finally {
+                                          loadProducts();
+                                          fetchPaginatedProducts();
+                                        }
+                                      },
+                                    });
+                                  }}
+                                  className="text-rose-600 dark:text-rose-400 hover:text-rose-500 dark:hover:text-rose-300 cursor-pointer"
+                                >Trash</button>
+                                <span className="text-slate-300 dark:text-slate-800">|</span>
+                                <button
+                                  type="button"
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    try {
+                                      const { id: omittedProductId, ...copyData } = product;
+                                      void omittedProductId;
+                                      copyData.title = `${copyData.title} (Copie)`;
+                                      if (copyData.nameFr) copyData.nameFr = `${copyData.nameFr} (Copie)`;
+                                      const success = await handleCreateProduct(copyData);
+                                      if (success) {
+                                        showToast('Produit dupliqué.', 'success');
+                                        await loadProducts();
+                                        await fetchPaginatedProducts();
+                                      } else {
+                                        showToast('Erreur lors de la duplication.', 'error');
+                                      }
+                                    } catch {
+                                      showToast('Erreur de connexion.', 'error');
                                     }
-                                  } catch {
-                                    showToast('Erreur de connexion.', 'error');
-                                  }
-                                }}
-                                className="text-sky-600 dark:text-sky-400 hover:text-sky-500 dark:hover:text-sky-300 cursor-pointer"
-                              >
-                                Duplicate
-                              </button>
+                                  }}
+                                  className="text-sky-600 dark:text-sky-400 hover:text-sky-500 dark:hover:text-sky-300 cursor-pointer"
+                                >Duplicate</button>
+                              </>}
                             </div>
                           </div>
                         </td>
@@ -3549,7 +3522,7 @@ export default function CatalogTab({
                     </div>
 
                     <div className={`pt-2 border-t flex gap-2 justify-end ${adminTheme === 'light' ? 'border-slate-100' : 'border-slate-950'}`}>
-                      <button
+                      {canMutateCatalog && <button
                         onClick={() => {
                           setProductForm(product);
                           setIsNewProductModalOpen(true);
@@ -3558,7 +3531,7 @@ export default function CatalogTab({
                         title="Modifier"
                       >
                         <Edit3 className="w-3.5 h-3.5" />
-                      </button>
+                      </button>}
                     </div>
                   </div>
                 </div>
@@ -3630,7 +3603,7 @@ export default function CatalogTab({
     )}
 
       {/* -------------------- FULL-SCREEN PRODUCT WORKSPACE STUDIO -------------------- */}
-      {isMounted && isNewProductModalOpen && createPortal(
+      {canMutateCatalog && isMounted && isNewProductModalOpen && createPortal(
         <div 
           className="fixed inset-0 bg-slate-950/80 backdrop-blur-2xl flex items-center justify-center p-3 md:p-6 z-[999999] select-none animate-in fade-in duration-200"
           onClick={() => {
@@ -4279,7 +4252,7 @@ export default function CatalogTab({
       )}
 
       {/* -------------------- MODAL: CSV / EXCEL WIZARD IMPORTER -------------------- */}
-      {isMounted && isImportModalOpen && createPortal(
+      {canMutateCatalog && isMounted && isImportModalOpen && createPortal(
       <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-md flex items-center justify-center z-[999999] animate-in fade-in duration-200 select-none">
         <div className={`w-full max-w-3xl rounded-3xl border shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-250 ${
           adminTheme === 'light' ? 'bg-white border-slate-200 text-slate-800' : 'bg-slate-900 border-slate-800 text-slate-200'
@@ -5001,7 +4974,7 @@ export default function CatalogTab({
       )}
 
       {/* FLOATING GLASSMORPHIC BULK ACTIONS DOCK (PORTAL TO DOCUMENT.BODY) */}
-      {isMounted && selectedProductIds.size > 0 && !isCatalogBulkMode && createPortal(
+      {canMutateCatalog && isMounted && selectedProductIds.size > 0 && !isCatalogBulkMode && createPortal(
         <div className={`floating-bulk-bar active ${
           adminTheme === 'light' ? 'floating-bulk-bar-light' : 'floating-bulk-bar-dark'
         }`}>

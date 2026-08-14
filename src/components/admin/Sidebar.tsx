@@ -50,6 +50,7 @@ import {
   canManageOperators,
   canViewAuditLog,
   canManageSnippets,
+  isViewerOnly,
 } from '@/lib/permissions';
 import { AdminUIContextProps } from '@/app/admin/AdminUIContext';
 
@@ -96,6 +97,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const searchParams = useSearchParams();
   const isDark = adminTheme === 'dark';
   const role = (currentUser?.role ?? 'viewer') as any;
+  const viewerReadOnly = isViewerOnly(role);
 
   const pendingOrders = orders.length;
   const pendingReviews = reviews.filter(r => r.status === 'pending').length;
@@ -148,7 +150,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'analytics', label: 'Statistiques', href: '/admin/analytics', icon: BarChart2 },
   ];
 
-  const venteItems: NavItem[] = [
+  const venteItems: NavItem[] = viewerReadOnly ? [] : [
     { id: 'coupons',  label: 'Promotions', href: '/admin/coupons', icon: Ticket },
     { id: 'gifts',    label: 'Cadeaux', href: '/admin/settings?tab=gifts', icon: Gift },
     { id: 'loyalty',  label: 'Fidélité', href: '/admin/loyalty', icon: Award },

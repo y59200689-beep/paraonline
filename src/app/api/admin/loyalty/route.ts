@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifyAdminSession } from '@/lib/session';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 
 export async function GET(request: Request) {
@@ -40,10 +41,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
-    }
+    const authorization = await authorizeAdminMutation();
+    if (!authorization.authorized) return authorization.response;
 
     const { phone, points, reason } = await request.json();
     if (!phone || points === undefined) {

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
-import { verifyAdminSession } from '@/lib/session';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/catalog-cache';
 
@@ -19,10 +19,11 @@ function normalizeCategories(categories: unknown, primaryCategory: unknown): str
 
 export async function POST(request: Request) {
   try {
-    const session = await verifyAdminSession();
-    if (!session || session.role !== 'owner') {
-      return NextResponse.json({ success: false, error: 'Accès refusé. Propriétaire uniquement.' }, { status: 403 });
-    }
+    const authorization = await authorizeAdminMutation({
+      allow: role => role === 'owner',
+    });
+    if (!authorization.authorized) return authorization.response;
+    const session = authorization.operator;
 
     const { products } = await request.json();
     if (!products || !Array.isArray(products)) {

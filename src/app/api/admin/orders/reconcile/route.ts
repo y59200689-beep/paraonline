@@ -1,19 +1,12 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
-import { verifyAdminSession } from '@/lib/session';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
+import { canEditOrders } from '@/lib/permissions';
 
 export async function POST(request: Request) {
   try {
-    // 1. Authentication Check
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
-    }
-
-    // 2. Permission Check (Support role not allowed)
-    if (session.role === 'support') {
-      return NextResponse.json({ success: false, error: 'Accès refusé' }, { status: 403 });
-    }
+    const authorization = await authorizeAdminMutation({ allow: canEditOrders });
+    if (!authorization.authorized) return authorization.response;
 
     const body = await request.json();
     const { reconciliations } = body;

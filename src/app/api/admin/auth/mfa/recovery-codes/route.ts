@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
-import { verifyAdminSession, generateRecoveryCodes } from '@/lib/session';
+import { generateRecoveryCodes } from '@/lib/session';
+import { getCurrentAdminOperator } from '@/lib/admin-authorization';
 
 export async function GET() {
   try {
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
-    }
+    const authorization = await getCurrentAdminOperator();
+    if (!authorization.authorized) return authorization.response;
+    const session = authorization.operator;
 
     const { data: operator, error } = await supabase
       .from('operators')
@@ -34,10 +34,9 @@ export async function GET() {
 
 export async function POST() {
   try {
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
-    }
+    const authorization = await getCurrentAdminOperator();
+    if (!authorization.authorized) return authorization.response;
+    const session = authorization.operator;
 
     const recoveryCodes = generateRecoveryCodes(8);
 

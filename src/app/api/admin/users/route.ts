@@ -1,14 +1,17 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
-import { hashPasswordAsync, verifyAdminSession } from '@/lib/session';
+import { hashPasswordAsync } from '@/lib/session';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
+import { canManageOperators } from '@/lib/permissions';
 
 export async function GET(request: Request) {
   try {
-    const session = await verifyAdminSession();
-
-    if (!session || session.role !== 'owner') {
-      return NextResponse.json({ success: false, error: 'Accès refusé. Propriétaire uniquement.' }, { status: 403 });
-    }
+    const authorization = await authorizeAdminMutation({
+      allow: (role) => role === 'owner',
+      forbiddenMessage: 'Accès refusé. Propriétaire uniquement.',
+    });
+    if (!authorization.authorized) return authorization.response;
+    const session = authorization.operator;
 
     const { data: operators, error } = await supabase
       .from('operators')
@@ -34,11 +37,12 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const session = await verifyAdminSession();
-
-    if (!session || session.role !== 'owner') {
-      return NextResponse.json({ success: false, error: 'Accès refusé. Propriétaire uniquement.' }, { status: 403 });
-    }
+    const authorization = await authorizeAdminMutation({
+      allow: canManageOperators,
+      forbiddenMessage: 'Accès refusé. Propriétaire uniquement.',
+    });
+    if (!authorization.authorized) return authorization.response;
+    const session = authorization.operator;
 
     const body = await request.json();
     const { username, password, name, role, action, userId, isActive } = body;

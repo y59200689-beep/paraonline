@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
-import { verifyAdminSession } from '@/lib/session';
 import { canManageSnippets } from '@/lib/permissions';
 import { runSafeCronAction } from '@/lib/safe-cron-actions';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -11,14 +11,8 @@ interface Props {
 export async function POST(request: Request, { params }: Props) {
   try {
     const { id } = await params;
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé.' }, { status: 401 });
-    }
-
-    if (!canManageSnippets(session.role)) {
-      return NextResponse.json({ success: false, error: 'Accès refusé. Droits insuffisants.' }, { status: 403 });
-    }
+    const authorization = await authorizeAdminMutation({ allow: canManageSnippets });
+    if (!authorization.authorized) return authorization.response;
 
     // Fetch snippet
     const { data: snippet, error: findError } = await supabase

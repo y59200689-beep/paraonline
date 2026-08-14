@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { verifyAdminSession } from '@/lib/session';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { sendWhatsAppMessage, cleanPhoneNumber } from '@/lib/whatsapp';
 
@@ -17,10 +17,9 @@ async function getStoreSettings() {
 
 export async function POST(request: Request) {
   try {
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
-    }
+    const authorization = await authorizeAdminMutation();
+    if (!authorization.authorized) return authorization.response;
+    const session = authorization.operator;
 
     const { phone, message, templateName, orderId } = await request.json();
 

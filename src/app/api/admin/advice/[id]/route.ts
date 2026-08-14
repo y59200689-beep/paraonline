@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
-import { verifyAdminSession } from '@/lib/session';
 import { canManageAdvice } from '@/lib/permissions';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { revalidatePath } from 'next/cache';
 
 interface Props {
@@ -11,14 +11,12 @@ interface Props {
 export async function PUT(request: Request, { params }: Props) {
   try {
     const { id } = await params;
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé.' }, { status: 401 });
-    }
-
-    if (!canManageAdvice(session.role)) {
-      return NextResponse.json({ success: false, error: 'Accès refusé. Droits insuffisants.' }, { status: 403 });
-    }
+    const authorization = await authorizeAdminMutation({
+      allow: canManageAdvice,
+      forbiddenMessage: 'Accès refusé. Droits insuffisants.',
+    });
+    if (!authorization.authorized) return authorization.response;
+    const session = authorization.operator;
 
     const body = await request.json();
     const { 
@@ -82,14 +80,12 @@ export async function PUT(request: Request, { params }: Props) {
 export async function DELETE(request: Request, { params }: Props) {
   try {
     const { id } = await params;
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé.' }, { status: 401 });
-    }
-
-    if (!canManageAdvice(session.role)) {
-      return NextResponse.json({ success: false, error: 'Accès refusé. Droits insuffisants.' }, { status: 403 });
-    }
+    const authorization = await authorizeAdminMutation({
+      allow: canManageAdvice,
+      forbiddenMessage: 'Accès refusé. Droits insuffisants.',
+    });
+    if (!authorization.authorized) return authorization.response;
+    const session = authorization.operator;
 
     // Check if article exists
     const { data: existing, error: findError } = await supabase

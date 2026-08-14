@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
-import { verifyAdminSession } from '@/lib/session';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
+import { canEditCatalog } from '@/lib/permissions';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/catalog-cache';
 
 export async function DELETE(req: NextRequest) {
-  const session = await verifyAdminSession(req);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const authorization = await authorizeAdminMutation({ allow: canEditCatalog });
+  if (!authorization.authorized) return authorization.response;
 
   try {
     const url = new URL(req.url);

@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
-import { verifyAdminSession } from '@/lib/session';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 
 export async function POST(request: Request) {
-  const session = await verifyAdminSession();
-  if (!session) {
-    return NextResponse.json({ success: false, error: 'Accès non autorisé.' }, { status: 401 });
-  }
+  const authorization = await authorizeAdminMutation();
+  if (!authorization.authorized) return authorization.response;
+  const session = authorization.operator;
 
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) {

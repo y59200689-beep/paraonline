@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { verifyAdminSession } from '@/lib/session';
 import { canManageSnippets } from '@/lib/permissions';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
 
 export async function GET(request: Request) {
   try {
@@ -25,14 +26,9 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé.' }, { status: 401 });
-    }
-
-    if (!canManageSnippets(session.role)) {
-      return NextResponse.json({ success: false, error: 'Accès refusé. Droits insuffisants.' }, { status: 403 });
-    }
+    const authorization = await authorizeAdminMutation({ allow: canManageSnippets });
+    if (!authorization.authorized) return authorization.response;
+    const session = authorization.operator;
 
     const body = await request.json();
     const { name, code, location, active, trigger_type, cron_expression } = body;

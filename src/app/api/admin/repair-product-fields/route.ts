@@ -3,7 +3,7 @@ import path from 'path';
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
-import { verifyAdminSession } from '@/lib/session';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -28,20 +28,17 @@ function readSnapshotProducts() {
 }
 
 async function assertOwnerSession() {
-  const session = await verifyAdminSession();
-  if (!session) {
+  const authorization = await authorizeAdminMutation({
+    allow: role => role === 'owner',
+    forbiddenMessage: 'Accès refusé. Propriétaire uniquement.',
+  });
+  if (!authorization.authorized) {
     return {
       session: null,
-      response: NextResponse.json({ success: false, error: 'Accès non autorisé.' }, { status: 401 }),
+      response: authorization.response,
     };
   }
-  if (session.role !== 'owner') {
-    return {
-      session: null,
-      response: NextResponse.json({ success: false, error: 'Accès refusé. Propriétaire uniquement.' }, { status: 403 }),
-    };
-  }
-  return { session, response: null };
+  return { session: authorization.operator, response: null };
 }
 
 async function fetchAllProducts() {

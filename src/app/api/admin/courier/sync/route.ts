@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server';
-import { verifyAdminSession } from '@/lib/session';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
+import { canManageCouriers } from '@/lib/permissions';
 
 export async function POST(request: Request) {
   try {
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
-    }
-    if (session.role === 'support') { return NextResponse.json({ success: false, error: 'Accès refusé' }, { status: 403 }); }
+    const authorization = await authorizeAdminMutation({ allow: canManageCouriers });
+    if (!authorization.authorized) return authorization.response;
 
     const body = await request.json();
     const { orders, credentials } = body;

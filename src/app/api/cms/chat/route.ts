@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { verifyAdminSession } from '@/lib/session';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { canManageChat, canManageDiagnostic, canEditContent } from '@/lib/permissions';
 
 export async function GET(req: NextRequest) {
@@ -34,11 +35,11 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const session = await verifyAdminSession(req);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (!canManageChat(session.role) && !canManageDiagnostic(session.role)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
+  const authorization = await authorizeAdminMutation({
+    allow: (role) => canManageChat(role) || canManageDiagnostic(role),
+  });
+  if (!authorization.authorized) return authorization.response;
+  const session = authorization.operator;
 
   const body = await req.json();
   const { allowed_brands, allowed_brands_enabled, ...otherFields } = body;
