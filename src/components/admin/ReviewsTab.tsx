@@ -32,12 +32,14 @@ import {
 } from 'lucide-react';
 import { useAdmin } from '@/context/AdminContext';
 import { StatusBadge, EmptyState } from '@/components/admin/ui';
+import { canManageReviews } from '@/lib/permissions';
 
 export default function ReviewsTab() {
   const {
     reviews,
     products,
     adminTheme,
+    currentUser,
     handleCreateReview,
     handleUpdateReviewStatus,
     handleBulkUpdateReviewStatus,
@@ -46,6 +48,7 @@ export default function ReviewsTab() {
     handleUpdateReview,
     isReviewsLoading,
   } = useAdmin();
+  const canManageReviewActions = currentUser ? canManageReviews(currentUser.role) : false;
 
   // Local UI state
   const [reviewSearchQuery, setReviewSearchQuery] = useState('');
@@ -444,17 +447,19 @@ export default function ReviewsTab() {
           </p>
         </div>
 
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl font-black text-xs uppercase tracking-wider text-slate-950 transition-all duration-200 shadow-lg hover:shadow-emerald-500/25 hover:scale-[1.02] active:scale-95 cursor-pointer shrink-0"
-          style={{
-            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-            boxShadow: '0 4px 16px rgba(16,185,129,0.35)',
-          }}
-        >
-          <PlusCircle className="w-4 h-4" />
-          Ajouter un avis
-        </button>
+        {canManageReviewActions && (
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl font-black text-xs uppercase tracking-wider text-slate-950 transition-all duration-200 shadow-lg hover:shadow-emerald-500/25 hover:scale-[1.02] active:scale-95 cursor-pointer shrink-0"
+            style={{
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              boxShadow: '0 4px 16px rgba(16,185,129,0.35)',
+            }}
+          >
+            <PlusCircle className="w-4 h-4" />
+            Ajouter un avis
+          </button>
+        )}
       </div>
 
       {/* 📊 Shopify-Grade KPI Cards Grid */}
@@ -731,7 +736,7 @@ export default function ReviewsTab() {
 
           {/* Right Controls: Bulk Select & View Switcher */}
           <div className="flex items-center gap-2.5 shrink-0 justify-end">
-            {filteredReviews.length > 0 && !showNoReviewProducts && (
+            {canManageReviewActions && filteredReviews.length > 0 && !showNoReviewProducts && (
               <button
                 onClick={() => {
                   if (selectedReviewIds.length === filteredReviews.length) {
@@ -970,7 +975,7 @@ export default function ReviewsTab() {
                   {/* 1. Header: Avatar + Author (Left) | Rating + Status (Right) */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <input
+                      {canManageReviewActions && <input
                         type="checkbox"
                         className="rounded-lg cursor-pointer w-4 h-4 text-emerald-600 focus:ring-emerald-500/20 shrink-0"
                         checked={selectedReviewIds.includes(rev.id)}
@@ -981,7 +986,7 @@ export default function ReviewsTab() {
                             setSelectedReviewIds(prev => prev.filter(id => id !== rev.id));
                           }
                         }}
-                      />
+                      />}
                       <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-white font-black text-sm uppercase shadow-md shadow-emerald-500/20 flex items-center justify-center shrink-0">
                         {firstLetter}
                       </div>
@@ -1111,7 +1116,7 @@ export default function ReviewsTab() {
                 </div>
 
                 {/* 5. Footer Action Bar */}
-                <div className={`px-5 py-3 border-t flex flex-wrap items-center justify-between gap-2 shrink-0 ${
+                {canManageReviewActions && <div className={`px-5 py-3 border-t flex flex-wrap items-center justify-between gap-2 shrink-0 ${
                   isDark ? 'bg-slate-950/50 border-slate-800/80' : 'bg-slate-50/60 border-slate-100'
                 }`}>
                   <button
@@ -1178,7 +1183,7 @@ export default function ReviewsTab() {
                       {isHidden ? 'Afficher' : 'Masquer'}
                     </button>
                   </div>
-                </div>
+                </div>}
               </div>
             );
           })}
@@ -1225,7 +1230,7 @@ export default function ReviewsTab() {
                       }`}
                     >
                       <td className="py-3.5 px-4 align-top">
-                        <input
+                        {canManageReviewActions && <input
                           type="checkbox"
                           className="rounded cursor-pointer w-4 h-4"
                           checked={selectedReviewIds.includes(rev.id)}
@@ -1236,7 +1241,7 @@ export default function ReviewsTab() {
                               setSelectedReviewIds(prev => prev.filter(id => id !== rev.id));
                             }
                           }}
-                        />
+                        />}
                       </td>
                       <td className="py-3.5 px-4 align-top">
                         <div className="font-extrabold text-[11px] text-slate-800 dark:text-slate-200 truncate" title={rev.author}>
@@ -1286,31 +1291,33 @@ export default function ReviewsTab() {
                         )}
                       </td>
                       <td className="py-3.5 px-4 align-top text-right space-x-2">
-                        {/* Quick Action links */}
-                        <button
-                          onClick={() => startEdit(rev)}
-                          className="text-slate-500 hover:text-slate-200 font-bold hover:underline"
-                        >
-                          Modifier
-                        </button>
-                        <span>&middot;</span>
-                        <button
-                          onClick={() => handleToggleHide(rev)}
-                          className="text-purple-500 hover:text-purple-400 font-bold hover:underline"
-                        >
-                          {isHidden ? 'Afficher' : 'Masquer'}
-                        </button>
-                        <span>&middot;</span>
-                        <button
-                          onClick={() => {
-                            if (confirm("Supprimer définitivement cet avis ?")) {
-                              handleDeleteReview(rev.id);
-                            }
-                          }}
-                          className="text-rose-500 hover:text-rose-400 font-bold hover:underline"
-                        >
-                          Supprimer
-                        </button>
+                        {canManageReviewActions && <>
+                          {/* Quick Action links */}
+                          <button
+                            onClick={() => startEdit(rev)}
+                            className="text-slate-500 hover:text-slate-200 font-bold hover:underline"
+                          >
+                            Modifier
+                          </button>
+                          <span>&middot;</span>
+                          <button
+                            onClick={() => handleToggleHide(rev)}
+                            className="text-purple-500 hover:text-purple-400 font-bold hover:underline"
+                          >
+                            {isHidden ? 'Afficher' : 'Masquer'}
+                          </button>
+                          <span>&middot;</span>
+                          <button
+                            onClick={() => {
+                              if (confirm("Supprimer définitivement cet avis ?")) {
+                                handleDeleteReview(rev.id);
+                              }
+                            }}
+                            className="text-rose-500 hover:text-rose-400 font-bold hover:underline"
+                          >
+                            Supprimer
+                          </button>
+                        </>}
                       </td>
                     </tr>
                   );
@@ -1816,7 +1823,7 @@ export default function ReviewsTab() {
 
 
       {/* 🎛️ Floating Bulk Action Bar */}
-      {selectedReviewIds.length > 0 && (
+      {canManageReviewActions && selectedReviewIds.length > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-xl px-4 animate-scale-up">
           <div className="bg-slate-950/90 backdrop-blur-xl border border-amber-500/30 rounded-2xl p-4 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="flex items-center gap-2">

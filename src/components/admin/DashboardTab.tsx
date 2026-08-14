@@ -25,6 +25,7 @@ import {
   ShieldAlert,
   Workflow,
 } from 'lucide-react';
+import { isViewerOnly } from '@/lib/permissions';
 
 interface DashboardTabProps {
   setActiveTab: (tab: 'dashboard' | 'analytics' | 'orders' | 'catalog' | 'crm' | 'reviews' | 'settings' | 'loyalty' | 'branding' | 'advice' | 'snippets' | 'cron' | 'audit-logs' | 'coupons' | 'gallery') => void;
@@ -280,6 +281,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   const { settings } = useSettings();
 
   const isDark = adminTheme === 'dark';
+  const canTriggerOperationalRetries = currentUser ? !isViewerOnly(currentUser.role) : false;
 
   const [chartHoverIdx, setChartHoverIdx] = useState<number | null>(null);
   const [lowStockCount, setLowStockCount] = useState<number | null>(null);
@@ -711,10 +713,12 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                   {atlasRetryMessage && <p className={`mt-1 text-[10px] font-semibold ${atlasRetryMessage.includes('Échec') || atlasRetryMessage.includes('configuré') ? 'text-rose-500' : 'text-emerald-600'}`}>{atlasRetryMessage}</p>}
                 </div>
               </div>
-              <button type="button" onClick={() => void retryAtlasSync()} disabled={isRetryingAtlas} className="po-ui-button po-ui-button--primary po-ui-button--md inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-[10px] font-black text-white transition hover:bg-slate-700 disabled:cursor-wait disabled:opacity-60 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400">
-                <RefreshCw className={`h-3.5 w-3.5 ${isRetryingAtlas ? 'animate-spin' : ''}`} />
-                {isRetryingAtlas ? 'Synchronisation...' : 'Relancer'}
-              </button>
+              {canTriggerOperationalRetries && (
+                <button type="button" onClick={() => void retryAtlasSync()} disabled={isRetryingAtlas} className="po-ui-button po-ui-button--primary po-ui-button--md inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-[10px] font-black text-white transition hover:bg-slate-700 disabled:cursor-wait disabled:opacity-60 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400">
+                  <RefreshCw className={`h-3.5 w-3.5 ${isRetryingAtlas ? 'animate-spin' : ''}`} />
+                  {isRetryingAtlas ? 'Synchronisation...' : 'Relancer'}
+                </button>
+              )}
             </div>
           </section>
         );
@@ -1453,19 +1457,21 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                       {itemsCount} article{itemsCount > 1 ? 's' : ''} en attente
                     </span>
 
-                    <a
-                      href={buildCartRecoveryLink(cart, 'Fr')}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 px-3 py-1 rounded-lg text-[10px] font-bold text-white transition active:scale-95"
-                      style={{
-                        background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
-                        boxShadow: '0 2px 8px rgba(37,211,102,0.3)',
-                      }}
-                    >
-                      <MessageSquare className="w-3 h-3" />
-                      Relancer WhatsApp
-                    </a>
+                    {canTriggerOperationalRetries && (
+                      <a
+                        href={buildCartRecoveryLink(cart, 'Fr')}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 px-3 py-1 rounded-lg text-[10px] font-bold text-white transition active:scale-95"
+                        style={{
+                          background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
+                          boxShadow: '0 2px 8px rgba(37,211,102,0.3)',
+                        }}
+                      >
+                        <MessageSquare className="w-3 h-3" />
+                        Relancer WhatsApp
+                      </a>
+                    )}
                   </div>
                 </div>
               );
