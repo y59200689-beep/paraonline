@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useTranslation } from '@/context/LanguageContext';
 import { useSettings } from '@/context/SettingsContext';
-import { useLoyalty } from '@/context/LoyaltyContext';
 import { useUi } from '@/context/UiContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { CheckoutForm } from '@/components/cart/CheckoutForm';
@@ -38,7 +37,6 @@ function CheckoutPageContent() {
   const router = useRouter();
   const { t, language } = useTranslation();
   const { settings } = useSettings();
-  const { earnPoints } = useLoyalty();
   const { 
     showToast,
     setSuccessModalOpen,
@@ -112,12 +110,11 @@ function CheckoutPageContent() {
       const orderTotal = total;
       const res = await submitOrder(formFields);
       if (res.success) {
-        earnPoints(Math.round(orderTotal), 'Nouvelle commande', 'طلب جديد');
+        router.push(`/checkout/success?orderId=${encodeURIComponent(res.orderId ?? '')}&token=${encodeURIComponent(res.trackingToken ?? '')}`);
         setFormFields({ name: '', phone: '', address: '', city: '', note: '' });
         setCheckoutSubStep('info');
         setSuccessOrderId(res.orderId ?? '');
         setSuccessWhatsappUrl(res.whatsappUrl ?? '');
-        setSuccessModalOpen(true);
         clearCart();
       }
     }
@@ -158,12 +155,11 @@ function CheckoutPageContent() {
       const orderTotal = total;
       const res = await submitOrder(formFields);
       if (res.success) {
-        earnPoints(Math.round(orderTotal), 'Nouvelle commande', 'طلب جديد');
+        router.push(`/checkout/success?orderId=${encodeURIComponent(res.orderId ?? '')}&token=${encodeURIComponent(res.trackingToken ?? '')}`);
         setFormFields({ name: '', phone: '', address: '', city: '', note: '' });
         setCheckoutSubStep('info');
         setSuccessOrderId(res.orderId ?? '');
         setSuccessWhatsappUrl(res.whatsappUrl ?? '');
-        setSuccessModalOpen(true);
         clearCart();
       }
     } else if (paymentMethod === 'stripe') {
@@ -201,7 +197,6 @@ function CheckoutPageContent() {
 
   const handleStripeSuccess = () => {
     const savedOrderId = stripeOrderId;
-    earnPoints(Math.round(total), 'Paiement en ligne réussi', 'دفع ناجح عبر الإنترنت');
     clearCart();
     setShippingCity('');
     setFormFields({ name: '', phone: '', address: '', city: '', note: '' });

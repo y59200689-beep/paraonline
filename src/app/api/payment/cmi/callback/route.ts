@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import crypto from 'crypto';
+import { awardOrderLoyalty } from '@/lib/loyalty-awards';
+import { blocksOnlinePaymentSettlement } from '@/lib/payment-lifecycle';
+import { transitionOrderLifecycle } from '@/lib/order-lifecycle-transition';
 
 export async function POST(request: Request) {
   try {
@@ -94,21 +97,35 @@ export async function POST(request: Request) {
         });
       }
 
+      if (blocksOnlinePaymentSettlement(order?.status)) {
+        console.warn(`[CMI Callback] Refusing settlement for terminal order ${orderId}.`);
+        return new Response('ACTION=REJECT', {
+          status: 200,
+          headers: { 'Content-Type': 'text/plain' },
+        });
+      }
+
       if (order?.status === 'Paid') {
         console.log(`Order ${orderId} is already marked as Paid. Skipping duplicate CMI callback.`);
+        const { error: loyaltyError } = await awardOrderLoyalty(orderId, 'online_payment_succeeded');
+        if (loyaltyError) throw loyaltyError;
         return new Response('ACTION=POSTAUTH', {
           status: 200,
           headers: { 'Content-Type': 'text/plain' },
         });
       }
 
-      await supabase
-        .from('orders')
-        .update({
-          status: approved ? 'Paid' : 'Payment Failed',
-          payment_status: approved ? 'paid' : 'failed',
-        })
-        .eq('order_id', orderId);
+      const { error: transitionError } = await transitionOrderLifecycle(
+        orderId,
+        approved ? 'Paid' : 'Payment Failed',
+        approved ? 'paid' : 'failed',
+      );
+      if (transitionError) throw transitionError;
+
+      if (approved) {
+        const { error: loyaltyError } = await awardOrderLoyalty(orderId, 'online_payment_succeeded');
+        if (loyaltyError) throw loyaltyError;
+      }
 
       await supabase.from('audit_logs').insert({
         action: approved ? 'Paiement CMI Réussi' : 'Paiement CMI Échoué',

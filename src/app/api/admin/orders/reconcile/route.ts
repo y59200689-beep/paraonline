@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { canEditOrders } from '@/lib/permissions';
+import { transitionOrderLifecycle } from '@/lib/order-lifecycle-transition';
 
 export async function POST(request: Request) {
   try {
@@ -22,6 +23,12 @@ export async function POST(request: Request) {
       const { orderId, settledAmount, courierFee, status, reconciliationNotes } = entry;
       if (!orderId) continue;
 
+      const targetStatus = status || 'Delivered';
+      if (targetStatus !== 'Delivered') {
+        return NextResponse.json({ success: false, error: 'Le rapprochement COD exige une commande livrée.' }, { status: 409 });
+      }
+      const { error: transitionError } = await transitionOrderLifecycle(orderId, targetStatus, 'paid');
+      if (transitionError) return NextResponse.json({ success: false, error: 'Transition de commande invalide.' }, { status: 409 });
       const { error } = await supabase
         .from('orders')
         .update({
@@ -30,8 +37,7 @@ export async function POST(request: Request) {
           settled_amount: Number(settledAmount) || 0,
           courier_fee: Number(courierFee) || 0,
           reconciliation_notes: reconciliationNotes || '',
-          payment_status: 'paid',
-          status: status || 'Delivered'
+          payment_status: 'paid'
         })
         .eq('order_id', orderId);
 

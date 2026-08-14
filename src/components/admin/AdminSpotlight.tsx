@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { buildWhatsAppUrl } from '@/lib/whatsapp-link';
 import { useAdmin } from '@/context/AdminContext';
 import { useSettings } from '@/context/SettingsContext';
 import {
@@ -245,7 +246,7 @@ export const AdminSpotlight: React.FC<AdminSpotlightProps> = ({
                             Livrée
                           </button>
                           <a
-                            href={`https://wa.me/${o.phone_number.replace(/\D/g, '')}`}
+                            href={buildWhatsAppUrl(o.phone_number) || '#'}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="px-2 py-1 rounded-lg text-[9.5px] font-bold text-white transition bg-emerald-600 hover:bg-emerald-500 cursor-pointer"
@@ -334,7 +335,7 @@ export const AdminSpotlight: React.FC<AdminSpotlightProps> = ({
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
                           <a
-                            href={`https://wa.me/${c.phone.replace(/\D/g, '')}`}
+                            href={buildWhatsAppUrl(c.phone) || '#'}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="px-2 py-1 rounded-lg text-[9.5px] font-bold text-white transition bg-emerald-600 hover:bg-emerald-500 cursor-pointer"

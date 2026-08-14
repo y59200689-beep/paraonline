@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { ShoppingBag, Store, Coins, Sparkles } from 'lucide-react';
+import { buildWhatsAppUrl } from '@/lib/whatsapp-link';
 
 interface MobileBottomNavProps {
   language: string;
@@ -81,7 +82,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
       </button>
 
       <a
-        href={`https://wa.me/${storeWhatsApp || '212660808080'}`}
+        href={buildWhatsAppUrl(storeWhatsApp) || '#'}
         target="_blank"
         rel="noopener noreferrer"
         className="flex flex-col items-center gap-1 text-[10px] font-bold text-whatsapp"

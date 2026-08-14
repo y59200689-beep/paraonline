@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { canManageCouriers } from '@/lib/permissions';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { orderLifecycleTransition } from '@/lib/order-lifecycle';
+import { transitionOrderLifecycle } from '@/lib/order-lifecycle-transition';
 
 function isSupabaseConfigured() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -19,6 +21,9 @@ export async function POST(request: Request) {
     if (!orderId || !courierName) {
       return NextResponse.json({ success: false, error: 'Order ID and Courier are required' }, { status: 400 });
     }
+    const { data: order, error: orderError } = await supabase.from('orders').select('status').eq('order_id', orderId).maybeSingle();
+    if (orderError || !order) return NextResponse.json({ success: false, error: 'Commande introuvable.' }, { status: 404 });
+    if (!orderLifecycleTransition(order.status, 'Shipped').allowed) return NextResponse.json({ success: false, error: 'Transition de commande invalide.' }, { status: 409 });
 
     // Generate simulated tracking details
     const cleanCourier = courierName.toLowerCase();
@@ -31,23 +36,13 @@ export async function POST(request: Request) {
       : `https://www.cathedis.ma/tracking/${trackingNumber}`;
 
     if (isSupabaseConfigured()) {
-      try {
-        const { error } = await supabase
-          .from('orders')
-          .update({ 
-            status: 'Shipped',
-            tracking_number: trackingNumber,
-            tracking_link: trackingLink,
-            courier: courierName
-          })
-          .eq('order_id', orderId);
-        
-        if (error) {
-          console.error("Supabase courier ship update error:", error);
-        }
-      } catch (e) {
-        console.error("Supabase update fail:", e);
-      }
+      const { error: transitionError } = await transitionOrderLifecycle(orderId, 'Shipped');
+      if (transitionError) return NextResponse.json({ success: false, error: 'Transition de commande invalide.' }, { status: 409 });
+      const { error } = await supabase
+        .from('orders')
+        .update({ tracking_number: trackingNumber, tracking_link: trackingLink, courier: courierName })
+        .eq('order_id', orderId);
+      if (error) return NextResponse.json({ success: false, error: 'Impossible d’enregistrer l’expédition.' }, { status: 500 });
     }
 
     return NextResponse.json({

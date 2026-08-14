@@ -4,6 +4,8 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { Product } from '@/lib/data';
 import { useAdminAuth } from './AdminAuthContext';
 import { useSettings } from '@/context/SettingsContext';
+import { normalizeGiftItem } from '@/lib/gift-item';
+import { customerIdentityKey, isRegisteredCustomer } from '@/lib/customer-identity';
 
 export interface DiagnosticData {
   skinType: string;
@@ -55,6 +57,7 @@ export interface Order {
   has_account?: boolean;
   user_id?: string;
   email?: string;
+  customer_id?: string | null;
   atlascom_export?: {
     status: 'queued' | 'sending' | 'sent' | 'failed' | 'blocked';
     attempt_count?: number;
@@ -65,6 +68,42 @@ export interface Order {
     updated_at?: string | null;
   } | null;
   internal_notes?: Array<{ id: string | number; body: string; kind: 'internal' | 'atlascom'; created_at: string }>;
+}
+
+export function mapAdminOrder(o: any): Order {
+  return {
+    order_id: o.order_id,
+    customer_name: o.customer_name,
+    phone_number: o.phone_number,
+    address: o.address,
+    city: o.city,
+    items: o.items || [],
+    subtotal: o.subtotal || 0,
+    discount_amount: o.discount_amount || 0,
+    applied_coupon: o.applied_coupon || null,
+    gift_item: normalizeGiftItem(o.gift_item),
+    customer_id: o.customer_id || null,
+    has_account: isRegisteredCustomer(o.customer_id),
+    total: o.total || 0,
+    status: o.status || 'Pending',
+    created_at: o.created_at || new Date().toISOString(),
+    tracking_number: o.tracking_number || undefined,
+    tracking_link: o.tracking_link || undefined,
+    courier: o.courier || undefined,
+    skin_diagnostic: o.skin_diagnostic || null,
+    notified_at: o.notified_at || undefined,
+    reconciled: o.reconciled || false,
+    reconciled_at: o.reconciled_at || undefined,
+    settled_amount: o.settled_amount || 0,
+    courier_fee: o.courier_fee || 0,
+    reconciliation_notes: o.reconciliation_notes || '',
+    payment_status: o.payment_status || 'unpaid',
+    payment_method: o.payment_method || 'cod',
+    transaction_id: o.transaction_id || undefined,
+    notes: o.notes || undefined,
+    atlascom_export: o.atlascom_export || null,
+    internal_notes: o.internal_notes || [],
+  };
 }
 
 export interface Review {
@@ -178,37 +217,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const res = await fetch('/api/admin/orders');
       const data = await res.json();
       if (data.success && data.orders) {
-        const parsed = data.orders.map((o: any) => ({
-          order_id: o.order_id,
-          customer_name: o.customer_name,
-          phone_number: o.phone_number,
-          address: o.address,
-          city: o.city,
-          items: o.items || [],
-          subtotal: o.subtotal || 0,
-          discount_amount: o.discount_amount || 0,
-          applied_coupon: o.applied_coupon || null,
-          gift_item: o.gift_item || null,
-          total: o.total || 0,
-          status: o.status || 'Pending',
-          created_at: o.created_at || new Date().toISOString(),
-          tracking_number: o.tracking_number || undefined,
-          tracking_link: o.tracking_link || undefined,
-          courier: o.courier || undefined,
-          skin_diagnostic: o.skin_diagnostic || null,
-          notified_at: o.notified_at || undefined,
-          reconciled: o.reconciled || false,
-          reconciled_at: o.reconciled_at || undefined,
-          settled_amount: o.settled_amount || 0,
-          courier_fee: o.courier_fee || 0,
-          reconciliation_notes: o.reconciliation_notes || '',
-          payment_status: o.payment_status || 'unpaid',
-          payment_method: o.payment_method || 'cod',
-          transaction_id: o.transaction_id || undefined,
-          notes: o.notes || undefined,
-          atlascom_export: o.atlascom_export || null,
-          internal_notes: o.internal_notes || [],
-        }));
+        const parsed = data.orders.map(mapAdminOrder);
         setOrders(parsed);
       } else {
         setOrders([]);
@@ -438,20 +447,20 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }> = {};
 
     orders.forEach(o => {
-      const phone = o.phone_number.trim();
-      if (!customersMap[phone]) {
-        customersMap[phone] = {
-          phone,
+      const identity = customerIdentityKey(o.customer_id, o.phone_number);
+      if (!customersMap[identity]) {
+        customersMap[identity] = {
+          phone: o.phone_number.trim(),
           name: o.customer_name,
           orders: [],
           totalSpend: 0
         };
       }
-      customersMap[phone].orders.push(o);
+      customersMap[identity].orders.push(o);
       if (o.status !== 'Cancelled') {
-        customersMap[phone].totalSpend += o.total;
+        customersMap[identity].totalSpend += o.total;
       }
-      customersMap[phone].name = o.customer_name;
+      customersMap[identity].name = o.customer_name;
     });
 
     return Object.values(customersMap).sort((a, b) => b.totalSpend - a.totalSpend);

@@ -28,6 +28,7 @@ const globalForMock = globalThis as unknown as {
     audit_logs: any[];
     abandoned_carts: any[];
     loyalty_overrides: any[];
+    loyalty_transactions: any[];
     customer_profiles: any[];
     advice_articles: any[];
     code_snippets: any[];
@@ -302,6 +303,7 @@ if (isPlaceholder) {
       audit_logs: [],
       abandoned_carts: [],
       loyalty_overrides: [],
+      loyalty_transactions: [],
       customer_profiles: [],
       advice_articles: getInitialAdviceArticles(),
       code_snippets: getInitialCodeSnippets(),
@@ -897,6 +899,58 @@ const mockSupabaseClient = {
   auth: mockAuth,
   from: (table: string) => new MockSupabaseQueryBuilder(table),
   rpc: async (fn: string, args: any) => {
+    if (fn === 'transition_order_lifecycle') {
+      const order = (globalForMock.mockDb.orders || []).find((candidate: any) => candidate.order_id === args?.p_order_id);
+      if (!order) return { data: null, error: { message: 'ORDER_NOT_FOUND' } };
+      const target = args?.p_target_status;
+      if (order.status === target) return { data: { changed: false, idempotent: true, status: order.status }, error: null };
+      const allowed: Record<string, string[]> = {
+        Pending: ['Confirmed', 'Cancelled'], Confirmed: ['Shipped'], Shipped: ['Delivered', 'Returned'], Delivered: ['Returned'],
+        'Pending Payment': ['Paid', 'Payment Failed', 'Cancelled'], Paid: ['Shipped'], Returned: [], Cancelled: [], 'Payment Failed': [],
+      };
+      if (!allowed[order.status]?.includes(target)) return { data: null, error: { message: `INVALID_ORDER_TRANSITION:${order.status}:${target}` } };
+      if ((target === 'Paid' && args?.p_payment_status !== 'paid') || (target === 'Payment Failed' && args?.p_payment_status !== 'failed')) return { data: null, error: { message: 'INVALID_PAYMENT_TRANSITION' } };
+      const restore = order.status === 'Pending' && target === 'Cancelled' && order.payment_method === 'cod';
+      if (restore) {
+        const events = (globalForMock.mockDb as any).order_stock_events || [];
+        if (!events.some((event: any) => event.order_id === order.order_id && event.event_type === 'pending_cod_cancelled_restore')) {
+          for (const item of order.items || []) {
+            const product = (globalForMock.mockDb.products || []).find((candidate: any) => Number(candidate.id) === Number(item.id));
+            if (!product) return { data: null, error: { message: `PRODUCT_NOT_FOUND:${item.id}` } };
+            product.stock += Number(item.quantity || 0);
+          }
+          (globalForMock.mockDb as any).order_stock_events = [...events, { order_id: order.order_id, event_type: 'pending_cod_cancelled_restore' }];
+        }
+      }
+      order.status = target;
+      if (args?.p_payment_status) order.payment_status = args.p_payment_status;
+      return { data: { changed: true, idempotent: false, status: target, stock_restored: restore }, error: null };
+    }
+    if (fn === 'award_order_loyalty_once') {
+      const order = (globalForMock.mockDb.orders || []).find((candidate: any) => candidate.order_id === args?.p_order_id);
+      const transactionType = args?.p_transaction_type;
+      const eligible = order?.customer_id && Number(order?.loyalty_points || 0) > 0
+        && ((transactionType === 'cod_order_created' && order.payment_method === 'cod')
+          || (transactionType === 'online_payment_succeeded' && ['stripe', 'cmi'].includes(order.payment_method) && order.payment_status === 'paid'));
+      if (!eligible) return { data: { awarded: false, reason: 'not_eligible' }, error: null };
+
+      const transactions = globalForMock.mockDb.loyalty_transactions || [];
+      if (transactions.some((transaction: any) => transaction.order_id === order.order_id && transaction.transaction_type === transactionType)) {
+        return { data: { awarded: false, reason: 'duplicate' }, error: null };
+      }
+      const profile = (globalForMock.mockDb.customer_profiles || []).find((candidate: any) => candidate.id === order.customer_id);
+      if (!profile) return { data: { awarded: false, reason: 'not_eligible' }, error: null };
+
+      const points = Number(order.loyalty_points);
+      const entry = { id: `order_${order.order_id}_${transactionType}`, date: new Date().toISOString(), descriptionFr: `Commande ${order.order_id}`, descriptionAr: `طلب ${order.order_id}`, amount: points };
+      profile.points = Number(profile.points || 0) + points;
+      profile.total_earned = Number(profile.total_earned || 0) + points;
+      profile.points_history = [entry, ...(Array.isArray(profile.points_history) ? profile.points_history : [])];
+      profile.updated_at = new Date().toISOString();
+      globalForMock.mockDb.loyalty_transactions = [...transactions, { order_id: order.order_id, customer_id: order.customer_id, points, transaction_type: transactionType, created_at: new Date().toISOString() }];
+      saveToDisk();
+      return { data: { awarded: true, points }, error: null };
+    }
     if (fn === 'create_order_with_stock') {
       const order = args?.p_order;
       const items = Array.isArray(order?.items) ? order.items : [];
@@ -928,6 +982,9 @@ const mockSupabaseClient = {
 
       globalForMock.mockDb.orders = [...orders, persistedOrder];
       globalForMock.mockDb.products = products;
+      if (persistedOrder.customer_id && persistedOrder.payment_method === 'cod' && Number(persistedOrder.loyalty_points || 0) > 0) {
+        await mockSupabaseClient.rpc('award_order_loyalty_once', { p_order_id: orderId, p_transaction_type: 'cod_order_created' });
+      }
       saveToDisk();
       return { data: orderId, error: null };
     }

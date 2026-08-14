@@ -5,6 +5,7 @@ import { verifyAdminSession } from '@/lib/session';
 import { processAtlascomOrderExport, queueAtlascomOrderExport } from '@/lib/atlascom-orders';
 import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { canDeleteOrders, canEditOrders } from '@/lib/permissions';
+import { transitionOrderLifecycle } from '@/lib/order-lifecycle-transition';
 
 // GET: Retrieve all orders
 export async function GET() {
@@ -75,26 +76,15 @@ export async function PUT(request: Request) {
       return NextResponse.json({ success: false, error: 'Order ID and status are required' }, { status: 400 });
     }
 
-    const { data: currentOrder, error: currentOrderError } = await supabase
-      .from('orders')
-      .select('order_id, status')
-      .eq('order_id', orderId)
-      .maybeSingle();
-    if (currentOrderError) throw currentOrderError;
-    if (!currentOrder) {
-      return NextResponse.json({ success: false, error: 'Commande introuvable.' }, { status: 404 });
+    const { data: transition, error } = await transitionOrderLifecycle(orderId, status);
+    if (error) {
+      if (String(error.message).includes('ORDER_NOT_FOUND')) return NextResponse.json({ success: false, error: 'Commande introuvable.' }, { status: 404 });
+      if (String(error.message).includes('INVALID_ORDER_TRANSITION')) return NextResponse.json({ success: false, error: 'Transition de commande invalide.' }, { status: 409 });
+      throw error;
     }
+    const becomesConfirmed = status === 'Confirmed';
 
-    const wasConfirmed = String(currentOrder.status || '').toLowerCase() === 'confirmed';
-    const becomesConfirmed = String(status).toLowerCase() === 'confirmed';
-    const { error } = await supabase
-      .from('orders')
-      .update({ status })
-      .eq('order_id', orderId);
-
-    if (error) throw error;
-
-    if (becomesConfirmed && !wasConfirmed) {
+    if (becomesConfirmed && transition?.changed) {
       const queued = await queueAtlascomOrderExport(orderId);
       if (queued.queued) {
         after(async () => {
@@ -107,7 +97,7 @@ export async function PUT(request: Request) {
       }
     }
 
-    return NextResponse.json({ success: true, atlascomQueued: becomesConfirmed && !wasConfirmed });
+    return NextResponse.json({ success: true, idempotent: Boolean(transition?.idempotent), atlascomQueued: becomesConfirmed && Boolean(transition?.changed) });
   } catch (error: any) {
     console.error('Update order error:', error);
     return NextResponse.json({ success: false, error: error.message || 'Server error' }, { status: 500 });

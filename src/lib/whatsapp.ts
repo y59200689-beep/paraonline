@@ -1,13 +1,7 @@
+import { formatWhatsAppNumber } from '@/lib/whatsapp-link';
+
 export function cleanPhoneNumber(phone: string): string {
-  if (!phone) return '';
-  let cleaned = phone.replace(/\s+/g, '').replace(/[+\-()]/g, '');
-  if (cleaned.startsWith('0')) {
-    cleaned = '212' + cleaned.substring(1);
-  }
-  if (!cleaned.startsWith('212') && cleaned.length === 9) {
-    cleaned = '212' + cleaned;
-  }
-  return cleaned;
+  return formatWhatsAppNumber(phone) || '';
 }
 
 export function interpolateTemplate(template: string, variables: Record<string, string>): string {

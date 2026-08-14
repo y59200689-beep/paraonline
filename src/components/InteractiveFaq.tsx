@@ -10,6 +10,7 @@ import { translations } from './InteractiveFaq/translations';
 import { DeliveryTab } from './InteractiveFaq/DeliveryTab';
 import { ReturnsTab } from './InteractiveFaq/ReturnsTab';
 import { PaymentsTab } from './InteractiveFaq/PaymentsTab';
+import { buildWhatsAppUrl } from '@/lib/whatsapp-link';
 
 const playChime = (freq = 600, type: OscillatorType = 'sine', duration = 0.08) => {
   if (typeof window === 'undefined') return;
@@ -155,7 +156,7 @@ export const InteractiveFaq: React.FC = () => {
                   <p className="text-[11.5px] font-medium text-slate-400 leading-relaxed max-w-[220px]">{text.supDesc}</p>
                 </div>
                 <a
-                  href={`https://wa.me/${settings.storeWhatsApp || '212660808080'}`}
+                  href={buildWhatsAppUrl(settings.storeWhatsApp || '212660808080') || '#'}
                   target="_blank" rel="noopener noreferrer"
                   onClick={() => playChime(900, 'sine', 0.12)}
                   className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#25D366] hover:scale-105 transition-all duration-300 shrink-0 text-white cursor-pointer shadow-sm"
@@ -165,7 +166,7 @@ export const InteractiveFaq: React.FC = () => {
               </div>
 
               <a
-                href={`https://wa.me/${settings.storeWhatsApp || '212660808080'}`}
+                href={buildWhatsAppUrl(settings.storeWhatsApp || '212660808080') || '#'}
                 target="_blank" rel="noopener noreferrer"
                 onClick={() => playChime(900, 'sine', 0.12)}
                 className="w-full mt-2 py-2.5 rounded-[12px] text-[10px] font-black uppercase tracking-wider text-center block transition-all duration-300 cursor-pointer flex items-center justify-center gap-2"

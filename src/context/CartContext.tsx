@@ -11,6 +11,7 @@ import { getCustomerAccessToken } from '@/lib/customer-session';
 import {
   calculateCommerceSummary,
 } from '@/lib/pricing';
+import { buildWhatsAppUrl } from '@/lib/whatsapp-link';
 
 export interface CartItem {
   product: Product;
@@ -437,20 +438,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (e) {}
 
-    let loyaltyPoints = 0;
-    let loyaltyTier = 'Bronze';
-    try {
-      const pointsStr = localStorage.getItem('loyalty_points');
-      if (pointsStr) loyaltyPoints = Number(pointsStr);
-      const totalStr = localStorage.getItem('loyalty_total_earned');
-      if (totalStr) {
-        const totalEarned = Number(totalStr);
-        if (totalEarned >= 1500) loyaltyTier = 'Platinum';
-        else if (totalEarned >= 700) loyaltyTier = 'Gold';
-        else if (totalEarned >= 300) loyaltyTier = 'Silver';
-      }
-    } catch (e) {}
-
     const payload = {
       orderData,
       items: cart.map(item => ({
@@ -465,8 +452,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       giftItem: resolvedGiftName || null,
       total,
       skinDiagnostic,
-      loyaltyPoints,
-      loyaltyTier,
       paymentMethod,
       paymentStatus: 'unpaid'
     };
@@ -535,8 +520,7 @@ ${confirmedDiscount > 0 ? `*Remise :* -${confirmedDiscount} DH (Code: ${appliedC
 ----------------------------------
 Merci pour votre confiance ! Nous confirmons votre livraison le jour même`;
 
-          const encodedMsg = encodeURIComponent(msg);
-          const whatsappUrl = `https://api.whatsapp.com/send?phone=${storeWhatsApp}&text=${encodedMsg}`;
+          const whatsappUrl = buildWhatsAppUrl(storeWhatsApp, msg) || '';
 
           // Reset states after submission
           clearCart();

@@ -18,6 +18,8 @@ import {
 import { ShopShell } from '@/components/ShopShell';
 import { useSettings } from '@/context/SettingsContext';
 import { useTranslation } from '@/context/LanguageContext';
+import { buildWhatsAppUrl } from '@/lib/whatsapp-link';
+import { normalizeGiftItem } from '@/lib/gift-item';
 
 type CompletionMode = 'success' | 'failure';
 
@@ -30,6 +32,12 @@ type SafeOrder = {
   status?: string | null;
   estimated_delivery?: string | null;
   created_at?: string | null;
+  items?: Array<{ title?: string; quantity?: number; price?: number }>;
+  subtotal?: number | null;
+  discount_amount?: number | null;
+  gift_item?: unknown;
+  tracking_number?: string | null;
+  carrier?: string | null;
 };
 
 type LoadState =
@@ -141,7 +149,7 @@ export function OrderCompletionClient({
     const message = isFrench
       ? `Bonjour, j’ai besoin d’aide concernant ma commande ${order ? numericOrderId(order.order_id) : orderId}.`
       : `مرحباً، أحتاج إلى مساعدة بخصوص طلبي ${order ? numericOrderId(order.order_id) : orderId}.`;
-    return `https://wa.me/${number.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+    return buildWhatsAppUrl(number, message);
   }, [isFrench, order, orderId, settings?.storeWhatsApp]);
 
   const isSuccess = mode === 'success';
@@ -256,15 +264,23 @@ export function OrderCompletionClient({
                     </div>
                   </dl>
 
+                  <div className="mb-5 rounded-2xl border border-slate-100 p-4 text-sm text-slate-700">
+                    <p className="font-bold text-slate-950">{isFrench ? 'Récapitulatif' : 'ملخص الطلب'}</p>
+                    {(order.items || []).map((item, index) => <div key={`${item.title}-${index}`} className="mt-2 flex justify-between gap-3"><span>{item.title || '—'} × {item.quantity || 0}</span><span>{Number(item.price || 0).toFixed(2)} DH</span></div>)}
+                    <div className="mt-3 border-t border-slate-100 pt-3 space-y-1"><div className="flex justify-between"><span>{isFrench ? 'Sous-total' : 'المجموع الفرعي'}</span><span>{Number(order.subtotal || 0).toFixed(2)} DH</span></div><div className="flex justify-between"><span>{isFrench ? 'Remise' : 'الخصم'}</span><span>{Number(order.discount_amount || 0).toFixed(2)} DH</span></div><div className="flex justify-between"><span>{isFrench ? 'Livraison' : 'التوصيل'}</span><span>{Math.max(0, Number(order.total || 0) - Number(order.subtotal || 0) + Number(order.discount_amount || 0)).toFixed(2)} DH</span></div><div className="flex justify-between font-bold text-slate-950"><span>{isFrench ? 'Statut' : 'الحالة'}</span><span>{order.status || '—'} · {order.payment_status || '—'}</span></div></div>
+                    {normalizeGiftItem(order.gift_item) && <p className="mt-3">🎁 {normalizeGiftItem(order.gift_item)}</p>}
+                    {order.tracking_number && <p className="mt-2">{isFrench ? 'Suivi' : 'التتبع'}: {order.carrier || '—'} · {order.tracking_number}</p>}
+                  </div>
+
                   <div className="grid gap-2.5 sm:grid-cols-2">
                     <Link href={trackingHref} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-bold text-white shadow-[0_10px_24px_rgba(5,150,105,0.20)] hover:bg-emerald-700">
                       <Truck className="h-4 w-4" />
                       {isFrench ? 'Suivre ma commande' : 'تتبع طلبي'}
                     </Link>
-                    <a href={whatsappHref} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 text-sm font-bold text-emerald-800 hover:bg-emerald-100">
+                    {whatsappHref && <a href={whatsappHref} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 text-sm font-bold text-emerald-800 hover:bg-emerald-100">
                       <MessageCircle className="h-4 w-4" />
                       WhatsApp
-                    </a>
+                    </a>}
                   </div>
                   <Link href={isSuccess ? '/products' : '/checkout'} className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-950">
                     {isSuccess ? <ShoppingBag className="h-4 w-4" /> : <RefreshCw className="h-4 w-4" />}

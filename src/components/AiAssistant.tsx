@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { buildWhatsAppUrl } from '@/lib/whatsapp-link';
 import { FREE_SHIPPING_SUBTOTAL_DH } from '@/lib/pricing';
 import { useTranslation } from '@/context/LanguageContext';
 import { usePathname } from 'next/navigation';
@@ -51,6 +52,18 @@ interface PublicChatConfig {
   suggested_prompts?: Array<{ id?: string; label_fr?: string; label_ar?: string; prompt_fr?: string; prompt_ar?: string }>;
   fallback_replies?: Array<{ text_fr?: string; text_ar?: string }>;
   whatsapp_link?: string;
+}
+
+export function configuredWhatsAppPhone(value: string | undefined) {
+  const configured = String(value || '').trim();
+  if (!configured) return '';
+  try {
+    const url = new URL(configured);
+    if (url.hostname === 'wa.me' || url.hostname.endsWith('.wa.me') || url.hostname.includes('whatsapp.com')) {
+      return url.pathname.split('/').filter(Boolean).pop() || '';
+    }
+  } catch {}
+  return configured;
 }
 
 export const AiAssistant: React.FC = () => {
@@ -626,7 +639,7 @@ export const AiAssistant: React.FC = () => {
                 </p>
                 {verificationToken && (
                   <a
-                    href={`${chatConfig.whatsapp_link || 'https://wa.me/212600000000'}?text=${encodeURIComponent(`Bonjour, je souhaite confirmer ma commande #${lastPlacedOrderId} passée via l'Assistant IA. Lien : https://paraofficinal.ma/api/orders/verify?token=${verificationToken}&action=confirm`)}`}
+                    href={buildWhatsAppUrl(configuredWhatsAppPhone(chatConfig.whatsapp_link), `Bonjour, je souhaite confirmer ma commande #${lastPlacedOrderId} passée via l'Assistant IA. Lien : https://paraofficinal.ma/api/orders/verify?token=${verificationToken}&action=confirm`) || '#'}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] uppercase tracking-wider rounded-lg shadow-sm hover:shadow-md transition active:scale-95 border-0 outline-none w-full text-center"

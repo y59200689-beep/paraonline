@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { ShoppingBag, Home as HomeIcon, Store, Sparkles, Mail, Send, ShieldCheck, Truck, MessageSquare, Lock, CheckCircle2, Award, Package, Crown, FlaskConical, Building2, Coins, CreditCard, Scale } from 'lucide-react';
 import Image from 'next/image';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
+import { buildWhatsAppUrl } from '@/lib/whatsapp-link';
 
 // Component Imports
 import dynamic from 'next/dynamic';
@@ -398,7 +399,7 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
                 </h4>
                 <div className="space-y-3 text-xs">
                   <a
-                    href={`https://wa.me/${whatsappNumber}`}
+                    href={buildWhatsAppUrl(whatsappNumber) || '#'}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 transition flex items-center gap-2.5 group font-mono font-bold"

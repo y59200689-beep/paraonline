@@ -50,7 +50,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const { t, language } = useTranslation();
   const { products } = useProducts();
   const { settings } = useSettings();
-  const { earnPoints, tierMultiplier, points: loyaltyPoints, tier } = useLoyalty();
+  const { tierMultiplier, points: loyaltyPoints, tier } = useLoyalty();
   const {
     cart, clearCart, addToCart, removeFromCart, updateQuantity,
     subtotal, total, discountAmount, shippingFee, isFreeShipping,
@@ -189,11 +189,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       const orderTotal = total;
       const res = await submitOrder(formFields);
       if (res.success) {
-        earnPoints(Math.round(orderTotal), 'Nouvelle commande', 'طلب جديد');
+        window.location.assign(`/checkout/success?orderId=${encodeURIComponent(res.orderId ?? '')}&token=${encodeURIComponent(res.trackingToken ?? '')}`);
         setFormFields({ name: '', phone: '', address: '', city: '', note: '' });
         setSuccessOrderId(res.orderId ?? '');
         setSuccessWhatsappUrl(res.whatsappUrl ?? '');
-        setSuccessModalOpen(true);
         clearCart();
         onClose();
       }
@@ -239,13 +238,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       const orderTotal = total;
       const res = await submitOrder(formFields);
       if (res.success) {
-        earnPoints(Math.round(orderTotal), 'Nouvelle commande', 'طلب جديد');
+        window.location.assign(`/checkout/success?orderId=${encodeURIComponent(res.orderId ?? '')}&token=${encodeURIComponent(res.trackingToken ?? '')}`);
         setFormFields({ name: '', phone: '', address: '', city: '', note: '' });
         setCheckoutSubStep('info');
         setStep('cart');
         setSuccessOrderId(res.orderId ?? '');
         setSuccessWhatsappUrl(res.whatsappUrl ?? '');
-        setSuccessModalOpen(true);
         clearCart();
         onClose();
       }
@@ -309,7 +307,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   // ── Stripe success handler ────────────────────────────────────────────────
   const handleStripeSuccess = () => {
     const completionUrl = `/checkout/success?orderId=${encodeURIComponent(stripeOrderId)}&token=${encodeURIComponent(stripeTrackingToken)}`;
-    earnPoints(Math.round(total), 'Paiement en ligne réussi', 'دفع ناجح عبر الإنترنت');
     clearCart();
     setShippingCity('');
     setFormFields({ name: '', phone: '', address: '', city: '', note: '' });

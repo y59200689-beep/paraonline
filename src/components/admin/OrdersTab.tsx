@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+import { buildWhatsAppUrl } from '@/lib/whatsapp-link';
 import { createPortal } from 'react-dom';
 import { 
   ShoppingBag, 
@@ -644,7 +645,7 @@ export default function OrdersTab() {
       .replace(/{order_id}/g, order.order_id)
       .replace(/{tracking_link}/g, order.tracking_link || order.tracking_number || 'N/A');
     const phone = order.phone_number.replace(/\D/g, '');
-    return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+    return buildWhatsAppUrl(phone, msg) || '#';
   };
 
   const handleNotifyWhatsApp = (order: Order, templateKey: 'pending' | 'shipped' | 'delivered', lang: 'Fr' | 'Ar' = 'Fr') => {
@@ -692,7 +693,7 @@ export default function OrdersTab() {
       .replace(/{recovery_link}/g, recoveryUrl);
       
     const phone = (cart.phone || '').replace(/\D/g, '');
-    return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+    return buildWhatsAppUrl(phone, msg) || '#';
   };
 
   // Courier panels and action triggers
@@ -1126,7 +1127,7 @@ export default function OrdersTab() {
 
               {/* WhatsApp */}
               <a
-                href={`https://wa.me/${selectedOrder.phone_number.replace(/\D/g, '')}`}
+                href={buildWhatsAppUrl(selectedOrder.phone_number) || '#'}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90 active:scale-95"
@@ -2216,7 +2217,7 @@ export default function OrdersTab() {
                           {formattedPhone}
                         </span>
                         <a
-                          href={`https://wa.me/${cleanPhoneDigits}`}
+                          href={buildWhatsAppUrl(cleanPhoneDigits) || '#'}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-1 rounded-md text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 transition"
@@ -2235,7 +2236,7 @@ export default function OrdersTab() {
                     {/* Account Status Row */}
                     <div className="flex items-center justify-between py-1.5 border-t" style={{ borderColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)' }}>
                       <span className="font-medium opacity-70" style={{ color: textMuted }}>Compte Boutique</span>
-                      {selectedOrder.user_id || selectedOrder.has_account ? (
+                      {selectedOrder.customer_id ? (
                         <span className="font-extrabold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                           <CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> Membre Enregistré
                         </span>
@@ -4068,7 +4069,7 @@ export default function OrdersTab() {
                                 <span>•</span>
                                 <span>{order.phone_number}</span>
                                 <a
-                                  href={`https://wa.me/${order.phone_number.replace(/\D/g, '')}`}
+                                  href={buildWhatsAppUrl(order.phone_number) || '#'}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   onClick={(e) => e.stopPropagation()}

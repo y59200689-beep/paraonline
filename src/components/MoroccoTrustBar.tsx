@@ -4,6 +4,7 @@ import React from 'react';
 import { useTranslation } from '@/context/LanguageContext';
 import { useSettings } from '@/context/SettingsContext';
 import { Truck, CreditCard, ShieldCheck, MessageSquare, ArrowUpRight } from 'lucide-react';
+import { buildWhatsAppUrl } from '@/lib/whatsapp-link';
 
 export const MoroccoTrustBar: React.FC = () => {
   const { language } = useTranslation();
@@ -47,7 +48,7 @@ export const MoroccoTrustBar: React.FC = () => {
       descFR: 'Contactez notre équipe pour une question sur un produit, une commande ou une livraison.',
       descAR: 'تواصل مع فريقنا لأي سؤال حول منتج أو طلب أو توصيل.',
       highlight: true,
-      actionUrl: `https://wa.me/${storeWhatsApp}?text=Bonjour, je souhaite avoir des conseils de soin.`,
+      actionUrl: buildWhatsAppUrl(storeWhatsApp, 'Bonjour, je souhaite avoir des conseils de soin.') || '#',
     },
   ];
 

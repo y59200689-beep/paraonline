@@ -26,6 +26,7 @@ import {
   Workflow,
 } from 'lucide-react';
 import { isViewerOnly } from '@/lib/permissions';
+import { buildWhatsAppUrl } from '@/lib/whatsapp-link';
 
 interface DashboardTabProps {
   setActiveTab: (tab: 'dashboard' | 'analytics' | 'orders' | 'catalog' | 'crm' | 'reviews' | 'settings' | 'loyalty' | 'branding' | 'advice' | 'snippets' | 'cron' | 'audit-logs' | 'coupons' | 'gallery') => void;
@@ -495,8 +496,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
       .replace(/{discount_code}/g, discountCode)
       .replace(/{recovery_link}/g, recoveryUrl);
 
-    const phone = (cart.phone || '').replace(/\D/g, '');
-    return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+    return buildWhatsAppUrl(cart.phone, msg) || '#';
   };
 
   const getTodayLabel = () => {

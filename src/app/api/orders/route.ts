@@ -4,6 +4,7 @@ import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { createOrderTrackingToken, createOrderVerificationToken, verifyOrderToken } from '@/lib/order-security';
 import { rateLimit, getClientIp } from '@/lib/rateLimit';
 import { isValidMoroccanPhone, normalizeMoroccanPhoneInput } from '@/lib/moroccan-phone';
+import { normalizeGiftItem } from '@/lib/gift-item';
 import {
   calculateCommerceSummary,
   calculateSubtotal,
@@ -230,7 +231,7 @@ export async function POST(request: Request) {
       subtotal,
       discount_amount: discountAmount,
       applied_coupon: coupon?.code || '',
-      gift_item: pricing.giftItem,
+      gift_item: normalizeGiftItem(pricing.giftItem),
       total,
       status: isCod ? 'Pending' : 'Pending Payment',
       skin_diagnostic: body.skinDiagnostic || null,
@@ -262,7 +263,7 @@ export async function POST(request: Request) {
       discountAmount,
       shippingFee,
       total,
-      giftItem: pricing.giftItem,
+      giftItem: normalizeGiftItem(pricing.giftItem),
       loyaltyPoints: pricing.loyaltyPoints,
       items,
     });

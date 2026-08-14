@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { verifyOrderToken } from '@/lib/order-security';
+import { customerOrderTransition, type CustomerOrderAction } from '@/lib/order-lifecycle';
+import { transitionOrderLifecycle } from '@/lib/order-lifecycle-transition';
 
 export async function GET(request: Request) {
   try {
@@ -31,39 +33,75 @@ export async function GET(request: Request) {
       return renderHtmlResponse(false, 'Commande introuvable.', 'الطلب غير موجود.');
     }
 
-    // Determine target status
-    let targetStatus = 'Confirmed';
-    let titleFr = 'Commande Confirmée !';
-    let titleAr = 'تم تأكيد طلبكِ بنجاح !';
-    let descFr = `Votre commande ${orderId} a été confirmée avec succès. Nous préparons son expédition prioritaire.`;
-    let descAr = `تم تأكيد طلبكِ رقم ${orderId} بنجاح. نحن نعمل على تجهيزه للشحن ذي الأولوية.`;
-
-    if (action === 'cancel') {
-      targetStatus = 'Cancelled';
-      titleFr = 'Commande Annulée';
-      titleAr = 'تم إلغاء الطلب';
-      descFr = `Votre commande ${orderId} a été annulée conformément à votre demande.`;
-      descAr = `تم إلغاء الطلب رقم ${orderId} بناءً على طلبكِ.`;
-    }
-
-    // Update order status in Supabase / Mock database
-    const { error: updateError } = await supabase
-      .from('orders')
-      .update({ status: targetStatus })
-      .eq('order_id', orderId);
-
-    if (updateError) {
-      throw updateError;
-    }
-
-    return renderHtmlResponse(true, titleFr, titleAr, descFr, descAr);
+    const requestedAction = action === 'cancel' ? 'cancel' : 'confirm';
+    return renderHtmlResponse(
+      true,
+      requestedAction === 'cancel' ? 'Annuler votre commande ?' : 'Confirmer votre commande ?',
+      requestedAction === 'cancel' ? 'هل تريدين إلغاء طلبك؟' : 'هل تريدين تأكيد طلبك؟',
+      `Cette page ne modifie pas la commande ${orderId}. Confirmez votre choix avec le bouton ci-dessous.`,
+      `هذه الصفحة لا تعدّل الطلب رقم ${orderId}. أكّدي اختيارك بالزر أدناه.`,
+      { token, action: requestedAction }
+    );
   } catch (error: any) {
     console.error('Order verification endpoint error:', error);
     return renderHtmlResponse(false, 'Une erreur technique est survenue.', 'حدث خطأ تقني غير متوقع.');
   }
 }
 
-function renderHtmlResponse(success: boolean, titleFr: string, titleAr: string, descFr: string = '', descAr: string = '') {
+export async function POST(request: Request) {
+  try {
+    const contentType = request.headers.get('content-type') || '';
+    const values = contentType.includes('application/json')
+      ? await request.json()
+      : Object.fromEntries((await request.formData()).entries());
+    const token = typeof values.token === 'string' ? values.token : '';
+    const action = values.action === 'cancel' ? 'cancel' : values.action === 'confirm' ? 'confirm' : null;
+
+    if (!token || !action || !token.includes('.')) {
+      return renderHtmlResponse(false, 'Demande invalide.', 'طلب غير صالح.', '', '', undefined, 400);
+    }
+    const [orderId, signature] = token.split('.');
+    if (!orderId || !signature || !verifyOrderToken(orderId, signature, 'confirm')) {
+      return renderHtmlResponse(false, 'Signature de sécurité invalide.', 'توقيع الحماية غير صالح.', '', '', undefined, 403);
+    }
+
+    const { data: order, error } = await supabase
+      .from('orders')
+      .select('order_id,status,payment_method,payment_status')
+      .eq('order_id', orderId)
+      .maybeSingle();
+    if (error || !order) return renderHtmlResponse(false, 'Commande introuvable.', 'الطلب غير موجود.', '', '', undefined, 404);
+    if (order.payment_method !== 'cod') {
+      return renderHtmlResponse(false, 'Cette action est indisponible pour cette commande.', 'هذا الإجراء غير متاح لهذا الطلب.', '', '', undefined, 409);
+    }
+
+    const transition = customerOrderTransition(order.status, action as CustomerOrderAction);
+    if (!transition.allowed) {
+      return renderHtmlResponse(false, 'Cette commande ne peut plus être modifiée.', 'لا يمكن تعديل هذا الطلب بعد الآن.', '', '', undefined, 409);
+    }
+    if (!transition.idempotent) {
+      const { error: updateError } = await transitionOrderLifecycle(orderId, transition.target);
+      if (updateError) {
+        if (String(updateError.message).includes('INVALID_ORDER_TRANSITION')) return renderHtmlResponse(false, 'Cette commande ne peut plus être modifiée.', 'لا يمكن تعديل هذا الطلب بعد الآن.', '', '', undefined, 409);
+        throw updateError;
+      }
+    }
+
+    const confirmed = transition.target === 'Confirmed';
+    return renderHtmlResponse(
+      true,
+      confirmed ? 'Commande Confirmée !' : 'Commande Annulée',
+      confirmed ? 'تم تأكيد طلبكِ بنجاح !' : 'تم إلغاء الطلب',
+      confirmed ? `Votre commande ${orderId} a été confirmée avec succès.` : `Votre commande ${orderId} a été annulée conformément à votre demande.`,
+      confirmed ? `تم تأكيد طلبكِ رقم ${orderId} بنجاح.` : `تم إلغاء الطلب رقم ${orderId} بناءً على طلبكِ.`
+    );
+  } catch (error) {
+    console.error('Order verification endpoint error:', error);
+    return renderHtmlResponse(false, 'Une erreur technique est survenue.', 'حدث خطأ تقني غير متوقع.', '', '', undefined, 500);
+  }
+}
+
+function renderHtmlResponse(success: boolean, titleFr: string, titleAr: string, descFr: string = '', descAr: string = '', form?: { token: string; action: CustomerOrderAction }, status = 200) {
   const html = `
     <!DOCTYPE html>
     <html lang="fr" dir="ltr">
@@ -150,6 +188,8 @@ function renderHtmlResponse(success: boolean, titleFr: string, titleAr: string, 
             <p>${descFr}</p>
           </div>
 
+          ${form ? `<form method="post"><input type="hidden" name="token" value="${form.token}"><input type="hidden" name="action" value="${form.action}"><button type="submit">${form.action === 'cancel' ? 'Annuler la commande' : 'Confirmer la commande'}</button></form>` : ''}
+
           <div class="divider"></div>
 
           <div class="rtl">
@@ -162,6 +202,7 @@ function renderHtmlResponse(success: boolean, titleFr: string, titleAr: string, 
   `;
 
   return new NextResponse(html, {
+    status,
     headers: { 'Content-Type': 'text/html; charset=utf-8' }
   });
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { buildWhatsAppUrl } from '@/lib/whatsapp-link';
 import { 
   Users, 
   Sliders, 
@@ -1101,7 +1102,7 @@ export default function CRMTab() {
                   <div className="flex items-center gap-2 shrink-0">
                     {waPhone && (
                       <a
-                        href={`https://wa.me/${waPhone}`}
+                        href={buildWhatsAppUrl(waPhone) || '#'}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={e => e.stopPropagation()}
@@ -2064,7 +2065,7 @@ export default function CRMTab() {
                 </button>
                 {waPhone && (
                   <a
-                    href={`https://wa.me/${waPhone}?text=${waMsg}`}
+                    href={buildWhatsAppUrl(waPhone, decodeURIComponent(waMsg)) || '#'}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="po-ui-button po-ui-button--primary po-ui-button--md flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_12px_rgba(16,185,129,0.3)] transition cursor-pointer active:scale-[0.97]"
@@ -2310,7 +2311,7 @@ export default function CRMTab() {
                               {/* 1-Click WhatsApp Restock CTA */}
                               {cPhone && (
                                 <a
-                                  href={`https://wa.me/${cPhone}?text=${restockMsg}`}
+                                  href={buildWhatsAppUrl(cPhone, decodeURIComponent(restockMsg)) || '#'}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="inline-flex items-center gap-1 text-[9.5px] font-extrabold text-emerald-600 hover:text-emerald-500 dark:text-emerald-400 mt-2 hover:underline cursor-pointer"
@@ -2442,7 +2443,7 @@ export default function CRMTab() {
 
                       {statusBadge.isOverdue && cPhone && (
                         <a
-                          href={`https://wa.me/${cPhone}?text=${encodeURIComponent(`Bonjour ${selectedCustomer.name}, votre rituel de soin Para Officinal touche probablement à sa fin ! Profitez de -10% sur votre réassort aujourd'hui avec le code REASSORT10 : https://paraofficinal.ma`)}`}
+                          href={buildWhatsAppUrl(cPhone, `Bonjour ${selectedCustomer.name}, votre rituel de soin Para Officinal touche probablement à sa fin ! Profitez de -10% sur votre réassort aujourd'hui avec le code REASSORT10 : https://paraofficinal.ma`) || '#'}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="po-ui-button po-ui-button--primary po-ui-button--md flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md transition active:scale-95 cursor-pointer shrink-0"
@@ -2726,7 +2727,7 @@ export default function CRMTab() {
                         </div>
                         {waPhone && (
                           <a
-                            href={`https://wa.me/${waPhone}?text=${encodeURIComponent(`Bonjour ${selectedCustomer.name}, nous préparons votre commande. Merci de confirmer votre disponibilité pour la livraison Cash on Delivery.`)}`}
+                            href={buildWhatsAppUrl(waPhone, `Bonjour ${selectedCustomer.name}, nous préparons votre commande. Merci de confirmer votre disponibilité pour la livraison Cash on Delivery.`) || '#'}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="px-3.5 py-2 rounded-xl text-xs font-black bg-red-500 hover:bg-red-400 text-white shadow-md transition cursor-pointer active:scale-95 whitespace-nowrap"
@@ -2950,7 +2951,7 @@ export default function CRMTab() {
                         </span>
                       ) : (
                         <a
-                          href={`https://wa.me/${cPhone}?text=${encodeURIComponent(`Bonjour ${selectedCustomer.name}, effectuez gratuitement votre diagnostic peau personnalisé ici : https://paraofficinal.ma/skin-diagnostic`)}`}
+                                  href={buildWhatsAppUrl(cPhone, `Bonjour ${selectedCustomer.name}, effectuez gratuitement votre diagnostic peau personnalisé ici : https://paraofficinal.ma/skin-diagnostic`) || '#'}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="po-ui-button po-ui-button--primary po-ui-button--md flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_12px_rgba(16,185,129,0.25)] transition active:scale-95 cursor-pointer"
@@ -2998,7 +2999,7 @@ export default function CRMTab() {
                               </h4>
                               {cPhone && (
                                 <a
-                                  href={`https://wa.me/${cPhone}?text=${encodeURIComponent(`Bonjour ${selectedCustomer.name}, voici votre rituel de soin sur mesure Para Officinal recommandé par nos experts : ${routineProducts.map((p: any) => p.title || p.name).join(', ')}.`)}`}
+                                  href={buildWhatsAppUrl(cPhone, `Bonjour ${selectedCustomer.name}, voici votre rituel de soin sur mesure Para Officinal recommandé par nos experts : ${routineProducts.map((p: any) => p.title || p.name).join(', ')}.`) || '#'}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="text-[10px] font-bold text-emerald-600 hover:text-emerald-500 dark:text-emerald-400 underline cursor-pointer"
@@ -3040,7 +3041,7 @@ export default function CRMTab() {
                         </p>
                         {cPhone && (
                           <a
-                            href={`https://wa.me/${cPhone}?text=${encodeURIComponent(`Bonjour ${selectedCustomer.name}, effectuez gratuitement votre diagnostic peau personnalisé sur Para Officinal pour recevoir votre routine sur mesure : https://paraofficinal.ma/skin-diagnostic`)}`}
+                            href={buildWhatsAppUrl(cPhone, `Bonjour ${selectedCustomer.name}, effectuez gratuitement votre diagnostic peau personnalisé sur Para Officinal pour recevoir votre routine sur mesure : https://paraofficinal.ma/skin-diagnostic`) || '#'}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="po-ui-button po-ui-button--primary po-ui-button--md inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_12px_rgba(16,185,129,0.25)] transition active:scale-95 cursor-pointer"
@@ -3392,7 +3393,7 @@ export default function CRMTab() {
                     </button>
                     {waPhone && (
                       <a
-                        href={`https://wa.me/${waPhone}?text=${waMsg}`}
+                        href={buildWhatsAppUrl(waPhone, decodeURIComponent(waMsg)) || '#'}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="po-ui-button po-ui-button--primary po-ui-button--md w-full flex items-center justify-center gap-2.5 py-3 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_12px_rgba(16,185,129,0.25)] transition cursor-pointer active:scale-[0.97]"
@@ -3993,7 +3994,7 @@ export default function CRMTab() {
                             <td className="py-3 px-4 text-center">
                               {waPhone ? (
                                 <a
-                                  href={`https://wa.me/${waPhone}?text=${encodeURIComponent(waMessage)}`}
+                                  href={buildWhatsAppUrl(waPhone, waMessage) || '#'}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="po-ui-button po-ui-button--primary po-ui-button--md inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-sm transition active:scale-95 whitespace-nowrap"
@@ -4077,7 +4078,7 @@ export default function CRMTab() {
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-semibold">
                     {reminders.map((r, idx) => {
                       const msg = `Bonjour ${r.customerName}, nous espérons que votre produit de soin "${r.productTitle}" vous apporte satisfaction ! S'il commence à se vider, vous pouvez commander son réassort en un clic ici : https://paraofficinal.ma/products/${r.productId}`;
-                      const waLink = `https://wa.me/${r.phone.replace(/[+\s]/g, '')}?text=${encodeURIComponent(msg)}`;
+                      const waLink = buildWhatsAppUrl(r.phone, msg) || '#';
 
                       return (
                         <tr key={idx} className={`admin-row-enter ${adminTheme === 'light' ? 'hover:bg-slate-50/50' : 'hover:bg-slate-950/20'}`}>
@@ -4194,7 +4195,7 @@ export default function CRMTab() {
                 <div className="flex items-center gap-2">
                   {waPhone && (
                     <a
-                      href={`https://wa.me/${waPhone}?text=${waMsg}`}
+                      href={buildWhatsAppUrl(waPhone, decodeURIComponent(waMsg)) || '#'}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="po-ui-button po-ui-button--primary po-ui-button--md flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_12px_rgba(16,185,129,0.3)] transition active:scale-95 cursor-pointer"
@@ -4590,7 +4591,8 @@ export default function CRMTab() {
                         showToast(`Code promo ${newCoupon.code} activé avec succès !`, 'success');
                         setIsPromoModalOpen(false);
                         if (cPhone) {
-                          window.open(`https://wa.me/${cPhone}?text=${promoMessage}`, '_blank');
+                          const whatsappUrl = buildWhatsAppUrl(cPhone, decodeURIComponent(promoMessage));
+                          if (whatsappUrl) window.open(whatsappUrl, '_blank');
                         }
                       } else {
                         showToast('Erreur lors de la création du code promo.', 'error');

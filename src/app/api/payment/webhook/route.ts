@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import Stripe from 'stripe';
+import { awardOrderLoyalty } from '@/lib/loyalty-awards';
+import { blocksOnlinePaymentSettlement } from '@/lib/payment-lifecycle';
+import { transitionOrderLifecycle } from '@/lib/order-lifecycle-transition';
 
 export async function POST(request: Request) {
   const payload = await request.text();
@@ -62,24 +65,27 @@ export async function POST(request: Request) {
           return NextResponse.json({ received: true });
         }
 
+        if (blocksOnlinePaymentSettlement(order?.status)) {
+          console.warn(`Ignoring Stripe settlement for terminal order ${orderId}.`);
+          return NextResponse.json({ received: true });
+        }
+
         if (order?.status === 'Paid') {
           console.log(`Order ${orderId} is already marked as Paid. Skipping duplicate webhook.`);
+          const { error: loyaltyError } = await awardOrderLoyalty(orderId, 'online_payment_succeeded');
+          if (loyaltyError) throw loyaltyError;
           return NextResponse.json({ received: true });
         }
 
         // Update order status in database
-        const { error: updateError } = await supabase
-          .from('orders')
-          .update({
-            status: 'Paid',
-            payment_status: 'paid'
-          })
-          .eq('order_id', orderId);
+        const { error: updateError } = await transitionOrderLifecycle(orderId, 'Paid', 'paid');
 
         if (updateError) {
           console.error(`Failed to update status for order ${orderId}:`, updateError);
           throw updateError;
         }
+        const { error: loyaltyError } = await awardOrderLoyalty(orderId, 'online_payment_succeeded');
+        if (loyaltyError) throw loyaltyError;
 
         // Add audit log entry
         try {
@@ -118,14 +124,16 @@ export async function POST(request: Request) {
           return NextResponse.json({ received: true });
         }
 
-        // Mark the order as payment failed
-        await supabase
-          .from('orders')
-          .update({
-            status: 'Payment Failed',
-            payment_status: 'failed'
-          })
-          .eq('order_id', orderId);
+        if (blocksOnlinePaymentSettlement(order?.status)) {
+          console.warn(`Ignoring Stripe failure for terminal order ${orderId}.`);
+          return NextResponse.json({ received: true });
+        }
+
+        const { error: transitionError } = await transitionOrderLifecycle(orderId, 'Payment Failed', 'failed');
+        if (transitionError) {
+          console.error(`Failed to update payment failure status for order ${orderId}:`, transitionError);
+          throw transitionError;
+        }
 
         // Log the failure for operations visibility
         try {

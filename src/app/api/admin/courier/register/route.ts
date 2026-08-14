@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { canManageCouriers } from '@/lib/permissions';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { orderLifecycleTransition } from '@/lib/order-lifecycle';
+import { transitionOrderLifecycle } from '@/lib/order-lifecycle-transition';
 
 async function getStoreSettings() {
   const { data, error } = await supabase
@@ -25,6 +27,12 @@ export async function POST(request: Request) {
     if (!orderId) {
       return NextResponse.json({ success: false, error: 'Order ID is required' }, { status: 400 });
     }
+    const { data: order, error: orderError } = await supabase.from('orders').select('status').eq('order_id', orderId).maybeSingle();
+    if (orderError || !order) return NextResponse.json({ success: false, error: 'Commande introuvable.' }, { status: 404 });
+    if (!orderLifecycleTransition(order.status, 'Shipped').allowed) return NextResponse.json({ success: false, error: 'Transition de commande invalide.' }, { status: 409 });
+
+    // Provider APIs currently expose no idempotency key, reference lookup, cancellation,
+    // or reservation API, so external creation and this local transition cannot be atomic.
 
     const settings = await getStoreSettings();
     const partner = courierName || settings.courierPartner || 'yalidine';
@@ -78,10 +86,9 @@ export async function POST(request: Request) {
               const trackingNumber = parcelData?.tracking || `YAL${Math.floor(100000000 + Math.random() * 900000000)}`;
               const trackingLink = `https://www.yalidine.com/track/${trackingNumber}`;
 
-              await supabase
-                .from('orders')
-                .update({
-                  status: 'Shipped',
+              const { error: transitionError } = await transitionOrderLifecycle(orderId, 'Shipped');
+              if (transitionError) throw transitionError;
+              await supabase.from('orders').update({
                   tracking_number: trackingNumber,
                   tracking_link: trackingLink,
                   courier: 'Yalidine'
@@ -130,10 +137,9 @@ export async function POST(request: Request) {
               const trackingNumber = result.tracking_number || `CAT${Math.floor(100000000 + Math.random() * 900000000)}`;
               const trackingLink = `https://www.cathedis.ma/tracking/${trackingNumber}`;
 
-              await supabase
-                .from('orders')
-                .update({
-                  status: 'Shipped',
+              const { error: transitionError } = await transitionOrderLifecycle(orderId, 'Shipped');
+              if (transitionError) throw transitionError;
+              await supabase.from('orders').update({
                   tracking_number: trackingNumber,
                   tracking_link: trackingLink,
                   courier: 'Cathedis'
@@ -163,10 +169,9 @@ export async function POST(request: Request) {
       ? `https://www.yalidine.com/track/${trackingNumber}` 
       : `https://www.cathedis.ma/tracking/${trackingNumber}`;
 
-    await supabase
-      .from('orders')
-      .update({ 
-        status: 'Shipped',
+    const { error: transitionError } = await transitionOrderLifecycle(orderId, 'Shipped');
+    if (transitionError) throw transitionError;
+    await supabase.from('orders').update({
         tracking_number: trackingNumber,
         tracking_link: trackingLink,
         courier: isYalidine ? 'Yalidine (Simulation)' : 'Cathedis (Simulation)'
