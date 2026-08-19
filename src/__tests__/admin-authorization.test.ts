@@ -9,6 +9,7 @@ vi.mock('@/lib/session', () => ({
 
 const { supabase } = await vi.importActual<typeof import('@/lib/supabase')>('../lib/supabase');
 const { POST: manageUsers } = await import('../app/api/admin/users/route');
+const { GET: listOperators, POST: createOperator, PATCH: updateOperator } = await import('../app/api/admin/operators/route');
 const { POST: disableMfa } = await import('../app/api/admin/auth/mfa/disable/route');
 const { POST: registerOperator } = await import('../app/api/admin/auth/register/route');
 const { GET: listMarketingFlows, POST: createMarketingFlow } = await import('../app/api/admin/marketing/flows/route');
@@ -93,5 +94,35 @@ describe('DB-authoritative privileged admin mutations', () => {
     expect((await supabase.from('marketing_flows').select('*')).data).toEqual(
       expect.arrayContaining([expect.objectContaining({ name: 'Owner flow' })]),
     );
+  });
+
+  it('uses the deployed operators schema for team management', async () => {
+    const owner = (globalThis as any).mockDb.operators.find((operator: any) => operator.id === mockSession.id);
+    owner.role = 'owner';
+
+    const createResponse = await createOperator(new Request('http://localhost/api/admin/operators', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'QA Viewer', username: 'qa-viewer', password: 'qa-password', role: 'viewer' }),
+    }) as any);
+
+    expect(createResponse.status).toBe(201);
+    const created = (await createResponse.json()).operator;
+    expect(created).toMatchObject({ username: 'qa-viewer', role: 'viewer', is_active: true });
+    expect(created).not.toHaveProperty('password');
+    expect(created).not.toHaveProperty('email');
+    expect(created).not.toHaveProperty('active');
+
+    const listResponse = await listOperators(new Request('http://localhost/api/admin/operators') as any);
+    expect(listResponse.status).toBe(200);
+    expect((await listResponse.json()).operators).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: created.id, username: 'qa-viewer', is_active: true }),
+    ]));
+
+    const disableResponse = await updateOperator(new Request('http://localhost/api/admin/operators', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: created.id, is_active: false }),
+    }) as any);
+    expect(disableResponse.status).toBe(200);
+    expect((await supabase.from('operators').select('*').eq('id', created.id).single()).data.is_active).toBe(false);
   });
 });

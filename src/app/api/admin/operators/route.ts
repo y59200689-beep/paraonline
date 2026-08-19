@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { verifyAdminSession } from '@/lib/session';
+import { hashPasswordAsync, verifyAdminSession } from '@/lib/session';
 import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { canManageOperators } from '@/lib/permissions';
 
@@ -15,10 +15,6 @@ const ALLOWED_ROLES = new Set([
   'viewer',
 ]);
 
-function isValidEmail(value: unknown): value is string {
-  return typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
-}
-
 export async function GET(req: NextRequest) {
   const session = await verifyAdminSession(req);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -26,7 +22,7 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await supabaseAdmin
     .from('operators')
-    .select('id, name, email, role, active, created_at')
+    .select('id, username, name, role, is_active, created_at')
     .order('created_at', { ascending: true });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -38,25 +34,41 @@ export async function POST(req: NextRequest) {
   if (!authorization.authorized) return authorization.response;
 
   const body = await req.json();
-  const { name, email, role = 'content_editor' } = body;
+  const { username, password, name, role = 'content_editor' } = body;
+  const cleanUsername = typeof username === 'string' ? username.trim().toLowerCase() : '';
 
-  if (typeof name !== 'string' || !name.trim() || !isValidEmail(email) || !ALLOWED_ROLES.has(role)) {
-    return NextResponse.json({ error: 'name and email are required' }, { status: 400 });
+  if (typeof name !== 'string' || !name.trim() || cleanUsername.length < 3 || typeof password !== 'string' || password.length < 6 || !ALLOWED_ROLES.has(role)) {
+    return NextResponse.json({ error: 'name, username, password, and role are required' }, { status: 400 });
   }
 
-  const { data, error } = await supabaseAdmin
+  const { data: existingOperator } = await supabaseAdmin
+    .from('operators')
+    .select('id')
+    .eq('username', cleanUsername)
+    .maybeSingle();
+
+  if (existingOperator) {
+    return NextResponse.json({ error: 'Username already exists' }, { status: 409 });
+  }
+
+  const operatorId = `user_${Date.now()}`;
+  const createdAt = new Date().toISOString();
+  const { error } = await supabaseAdmin
     .from('operators')
     .insert({
+      id: operatorId,
       name: name.trim(),
-      email: email.trim().toLowerCase(),
+      username: cleanUsername,
+      password: await hashPasswordAsync(password),
       role,
-      active: true,
-    })
-    .select()
-    .single();
+      is_active: true,
+      created_at: createdAt,
+    });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ operator: data }, { status: 201 });
+  return NextResponse.json({
+    operator: { id: operatorId, name: name.trim(), username: cleanUsername, role, is_active: true, created_at: createdAt },
+  }, { status: 201 });
 }
 
 export async function PATCH(req: NextRequest) {
@@ -75,11 +87,11 @@ export async function PATCH(req: NextRequest) {
     }
     fields.name = body.name.trim();
   }
-  if ('email' in body) {
-    if (!isValidEmail(body.email)) {
-      return NextResponse.json({ error: 'Invalid email' }, { status: 400 });
+  if ('username' in body) {
+    if (typeof body.username !== 'string' || body.username.trim().length < 3) {
+      return NextResponse.json({ error: 'Invalid username' }, { status: 400 });
     }
-    fields.email = body.email.trim().toLowerCase();
+    fields.username = body.username.trim().toLowerCase();
   }
   if ('role' in body) {
     if (!ALLOWED_ROLES.has(body.role)) {
@@ -87,11 +99,11 @@ export async function PATCH(req: NextRequest) {
     }
     fields.role = body.role;
   }
-  if ('active' in body) {
-    if (typeof body.active !== 'boolean') {
+  if ('is_active' in body) {
+    if (typeof body.is_active !== 'boolean') {
       return NextResponse.json({ error: 'Invalid active state' }, { status: 400 });
     }
-    fields.active = body.active;
+    fields.is_active = body.is_active;
   }
 
   if (Object.keys(fields).length === 0) {
@@ -104,7 +116,7 @@ export async function PATCH(req: NextRequest) {
     .eq('id', id)
     .maybeSingle();
 
-  if (target?.role === 'owner' && (fields.role !== undefined || fields.active === false)) {
+  if (target?.role === 'owner' && (fields.role !== undefined || fields.is_active === false)) {
     return NextResponse.json({ error: 'The owner role cannot be removed or disabled here' }, { status: 409 });
   }
 

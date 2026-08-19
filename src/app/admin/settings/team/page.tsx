@@ -3,17 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import { useAdmin } from '@/context/AdminContext';
 import { canManageOperators } from '@/lib/permissions';
-import { UserCog, Plus, Shield, User, Mail, Trash2, Loader2, Check } from 'lucide-react';
-import { StatusBadge } from '@/components/admin/ui/StatusBadge';
+import { Plus, Loader2 } from 'lucide-react';
 import { AsyncState } from '@/components/admin/ui/AsyncState';
 import { requestJson } from '@/lib/request-json';
 
 interface Operator {
   id: string;
   name: string;
-  email: string;
+  username: string;
   role: string;
-  active: boolean;
+  is_active: boolean;
   created_at: string;
 }
 
@@ -42,7 +41,8 @@ export default function SettingsTeamPage() {
 
   // New user form
   const [newName, setNewName] = useState('');
-  const [newEmail, setNewEmail] = useState('');
+  const [newUsername, setNewUsername] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [newRole, setNewRole] = useState('content_editor');
   const [adding, setAdding] = useState(false);
 
@@ -68,14 +68,15 @@ export default function SettingsTeamPage() {
       const res = await fetch('/api/admin/operators', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newName, email: newEmail, role: newRole }),
+        body: JSON.stringify({ name: newName, username: newUsername, password: newPassword, role: newRole }),
       });
       if (res.ok) {
         const { operator } = await res.json();
         setOperators(prev => [...prev, operator]);
         setShowAddModal(false);
         setNewName('');
-        setNewEmail('');
+        setNewUsername('');
+        setNewPassword('');
       }
     } finally {
       setAdding(false);
@@ -86,10 +87,10 @@ export default function SettingsTeamPage() {
     const res = await fetch('/api/admin/operators', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: op.id, active: !op.active }),
+      body: JSON.stringify({ id: op.id, is_active: !op.is_active }),
     });
     if (res.ok) {
-      setOperators(prev => prev.map(o => o.id === op.id ? { ...o, active: !op.active } : o));
+      setOperators(prev => prev.map(o => o.id === op.id ? { ...o, is_active: !op.is_active } : o));
     }
   };
 
@@ -154,7 +155,7 @@ export default function SettingsTeamPage() {
             <div key={op.id || idx} style={{ display: 'grid', gridTemplateColumns: '1fr 180px 100px 100px', alignItems: 'center', padding: '12px 16px', borderBottom: idx < operators.length - 1 ? (isDark ? '1px solid rgba(255,255,255,0.04)' : '1px solid rgba(0,0,0,0.05)') : 'none' }}>
               <div>
                 <p style={{ fontSize: '13px', fontWeight: 700, color: isDark ? '#e2e8f0' : '#0f172a', margin: 0 }}>{op.name}</p>
-                <p style={{ fontSize: '11px', color: isDark ? '#475569' : '#94a3b8', margin: '2px 0 0' }}>{op.email}</p>
+                <p style={{ fontSize: '11px', color: isDark ? '#475569' : '#94a3b8', margin: '2px 0 0' }}>{op.username}</p>
               </div>
 
               <div>
@@ -164,8 +165,8 @@ export default function SettingsTeamPage() {
               </div>
 
               <div>
-                <span style={{ fontSize: '11px', fontWeight: 600, color: op.active ? '#10b981' : '#f43f5e' }}>
-                  {op.active ? 'Actif' : 'Inactif'}
+                <span style={{ fontSize: '11px', fontWeight: 600, color: op.is_active ? '#10b981' : '#f43f5e' }}>
+                  {op.is_active ? 'Actif' : 'Inactif'}
                 </span>
               </div>
 
@@ -175,7 +176,7 @@ export default function SettingsTeamPage() {
                     onClick={() => handleToggleActive(op)}
                     style={{ fontSize: '11px', fontWeight: 600, color: isDark ? '#94a3b8' : '#475569', background: 'none', border: 'none', cursor: 'pointer' }}
                   >
-                    {op.active ? 'Désactiver' : 'Activer'}
+                    {op.is_active ? 'Désactiver' : 'Activer'}
                   </button>
                 )}
               </div>
@@ -208,8 +209,12 @@ export default function SettingsTeamPage() {
                 <input type="text" required value={newName} onChange={e => setNewName(e.target.value)} style={inputStyle} />
               </div>
               <div>
-                <label style={labelStyle}>Adresse Email</label>
-                <input type="email" required value={newEmail} onChange={e => setNewEmail(e.target.value)} style={inputStyle} />
+                <label style={labelStyle}>Nom d&apos;utilisateur</label>
+                <input type="text" minLength={3} required value={newUsername} onChange={e => setNewUsername(e.target.value)} style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Mot de passe temporaire</label>
+                <input type="password" minLength={6} required value={newPassword} onChange={e => setNewPassword(e.target.value)} style={inputStyle} />
               </div>
               <div>
                 <label style={labelStyle}>Rôle attribué</label>
