@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeScript } from "../components/ThemeScript";
 import { AppProviders } from "../context/AppProviders";
@@ -14,16 +13,6 @@ import { PublicWebVitals } from "@/components/PublicWebVitals";
 // The storefront catalogue response is too large for Vercel ISR. Keep the
 // route dynamic, while getPublicSettings remains independently cached.
 export const dynamic = 'force-dynamic';
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://paraofficinal.ma';
 const SITE_NAME = 'Para Officinal S.A';
@@ -141,7 +130,7 @@ export default async function RootLayout({
   const serverThemeVariables = getServerThemeVariables(initialSettings.themeColors);
 
   return (
-    <html lang="fr" dir="ltr" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
+    <html lang="fr" dir="ltr" suppressHydrationWarning>
       <head>
         {serverThemeVariables ? <style id="server-theme-variables">{serverThemeVariables}</style> : null}
       </head>

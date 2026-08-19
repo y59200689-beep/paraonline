@@ -1,11 +1,16 @@
 @import "tailwindcss";
-
-/* Dark utilities require an explicit theme ancestor. The public storefront is
-   light and must not partially invert when the operating system prefers dark. */
-@custom-variant dark (&:where(.dark, .dark *));
-
 @import "./styles/theme.css";
 @import "./styles/base.css";
 @import "./styles/animations.css";
 @import "./styles/dashboard-buttons.css";
 @import "./styles/public-design-system.css";
+
+/* System stacks keep the Geist variable contract without fetching Google Fonts at build time. */
+:root {
+  --font-geist-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-geist-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+/* Dark utilities require an explicit theme ancestor. The public storefront is
+   light and must not partially invert when the operating system prefers dark. */
+@custom-variant dark (&:where(.dark, .dark *));
