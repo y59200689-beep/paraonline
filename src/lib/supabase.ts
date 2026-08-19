@@ -288,8 +288,7 @@ if (isPlaceholder) {
             quizDiscountPercent: 15,
             coupons: [
               { code: "BEAUTY10", discountPercent: 10, freeShipping: false, isActive: true },
-              { code: "CLINICAL15", discountPercent: 15, freeShipping: false, isActive: true },
-              { code: "FREESHIP", discountPercent: 0, freeShipping: true, isActive: true }
+              { code: "CLINICAL15", discountPercent: 15, freeShipping: false, isActive: true }
             ]
           },
           created_at: new Date().toISOString()

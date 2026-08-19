@@ -5435,7 +5435,7 @@ export default function OrdersTab() {
                     if (rule) {
                       return (
                         <p className="text-[9px] text-emerald-500 font-semibold mt-1">
-                          Zone: {rule.fee} DH (Gratuit dès {rule.freeThreshold ? `${rule.freeThreshold} DH` : 'N/A'}).
+                          Zone: {rule.fee} DH.
                         </p>
                       );
                     }

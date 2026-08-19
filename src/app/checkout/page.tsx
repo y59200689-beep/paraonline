@@ -46,7 +46,7 @@ function CheckoutPageContent() {
   const { convertPrice, currentCurrency } = useCurrency();
   const {
     cart, clearCart, removeFromCart, updateQuantity,
-    subtotal, total, discountAmount, shippingFee, isFreeShipping,
+    subtotal, total, discountAmount, discountedSubtotal, shippingFee, isFreeShipping,
     amountNeededForFreeShipping, appliedCoupon, applyCouponCode, removeCoupon,
     submitOrder, isSubmitting, setShippingCity,
     paymentMethod, setPaymentMethod,
@@ -323,7 +323,7 @@ function CheckoutPageContent() {
                         <div className="w-full bg-slate-100 rounded-full h-1.5 mt-2 overflow-hidden">
                           <div 
                             className="bg-primary h-full transition-all duration-500 rounded-full"
-                            style={{ width: `${Math.min(100, (subtotal / FREE_SHIPPING_SUBTOTAL_DH) * 100)}%` }}
+                            style={{ width: `${Math.min(100, (discountedSubtotal / FREE_SHIPPING_SUBTOTAL_DH) * 100)}%` }}
                           />
                         </div>
                       </>

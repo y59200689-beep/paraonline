@@ -53,7 +53,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const { tierMultiplier, points: loyaltyPoints, tier } = useLoyalty();
   const {
     cart, clearCart, addToCart, removeFromCart, updateQuantity,
-    subtotal, total, discountAmount, shippingFee, isFreeShipping,
+    subtotal, total, discountAmount, discountedSubtotal, shippingFee, isFreeShipping,
     amountNeededForFreeShipping, appliedCoupon, applyCouponCode, removeCoupon,
     submitOrder, isSubmitting, setShippingCity, dailyGiftName,
     activeGiftRange, paymentMethod, setPaymentMethod,
@@ -521,7 +521,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                         ? 'bg-gradient-to-r from-emerald-500 to-teal-500 shadow-[0_0_12px_rgba(16,185,129,0.3)]' 
                         : 'bg-gradient-to-r from-primary-dark to-primary shadow-[0_0_12px_rgba(37,115,163,0.2)]'
                     }`}
-                    style={{ width: `${Math.min((subtotal / FREE_SHIPPING_SUBTOTAL_DH) * 100, 100)}%` }}
+                    style={{ width: `${Math.min((discountedSubtotal / FREE_SHIPPING_SUBTOTAL_DH) * 100, 100)}%` }}
                   />
                 </div>
 

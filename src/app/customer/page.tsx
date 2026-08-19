@@ -653,7 +653,7 @@ export default function CustomerDashboard() {
   const activeCoupons = useMemo(() => {
     const now = new Date();
     return (settings.coupons || []).filter((coupon) => {
-      if (!coupon.code || coupon.isActive === false) return false;
+      if (!coupon.code || coupon.isActive === false || coupon.freeShipping === true) return false;
       const startsAt = coupon.startDate ? new Date(coupon.startDate) : null;
       const expiresAt = coupon.expiryDate ? new Date(coupon.expiryDate) : null;
       return (!startsAt || Number.isNaN(startsAt.getTime()) || startsAt <= now)
@@ -1494,7 +1494,7 @@ export default function CustomerDashboard() {
                         <div className="h-full bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-300 rounded-full transition-all duration-700" style={{ width: `${Math.min(100, (points / 500) * 100)}%` }} />
                       </div>
                       <p className="text-xs text-slate-400">
-                        Encore <strong>{pointsToNextTier || 150} points</strong> pour débloquer la livraison gratuite permanente et −15% sur tous vos rituels.
+                        Encore <strong>{pointsToNextTier || 150} points</strong> pour débloquer le prochain avantage fidélité et −15% sur tous vos rituels.
                       </p>
                     </div>
                   </div>
@@ -1524,9 +1524,7 @@ export default function CustomerDashboard() {
                     ) : (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {activeCoupons.map((coupon) => {
-                        const discount = coupon.freeShipping
-                          ? 'Livraison offerte'
-                          : coupon.discountType === 'fixed'
+                        const discount = coupon.discountType === 'fixed'
                             ? `-${coupon.discountValue ?? coupon.discountPercent} MAD`
                             : `-${coupon.discountValue ?? coupon.discountPercent}%`;
                         const minimum = coupon.minPurchase ? `Dès ${coupon.minPurchase} MAD` : 'Sans minimum d’achat';

@@ -8,7 +8,6 @@ interface AppliedCoupon {
   discountType?: 'percent' | 'fixed';
   discountValue?: number;
   discountPercent: number;
-  freeShipping?: boolean;
 }
 
 interface CouponSectionProps {
@@ -64,8 +63,6 @@ export const CouponSection: React.FC<CouponSectionProps> = ({
               {appliedCoupon.discountType === 'fixed'
                 ? `${appliedCoupon.discountValue || 0} DH`
                 : `${appliedCoupon.discountValue !== undefined ? appliedCoupon.discountValue : appliedCoupon.discountPercent}%`}
-              {appliedCoupon.freeShipping &&
-                ` + ${language === 'AR' ? 'شحن مجاني' : 'Port Offert'}`}
               )
             </span>
           </div>

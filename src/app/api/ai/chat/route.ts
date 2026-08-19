@@ -252,7 +252,7 @@ GUIDELINES:
    - Vitamin C + Retinol: Not at same time. Vitamin C in morning, Retinol at night.
    - AHA/BHA + Retinol: Not together, risk of skin barrier damage.
    - Recommend SPF daily when using active ingredients.
-7. Shipping info: Use the configured BUSINESS CONTENT delivery facts and links as the source of truth. If a delivery fact is not configured, use only these conservative defaults: Casablanca / Rabat 24h, other cities 48h–72h, free shipping from 600 DH and 29 DH otherwise.
+7. Shipping info: Use the configured BUSINESS CONTENT delivery facts and links as the source of truth. If a delivery fact is not configured, use only these conservative defaults: Casablanca / Rabat 24h, other cities 48h–72h, free shipping from 400 DH after discounts and the configured city fee otherwise.
 8. If the user wants to ORDER a product ("Je veux commander", "أريد طلب"):
    - Set "type" to "order_collect"
    - Under "orderData", set "items" with the product ID and quantity 1

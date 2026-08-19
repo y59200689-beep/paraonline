@@ -43,7 +43,7 @@ export const ScratchCard: React.FC<ScratchCardProps> = ({ isOpen, onClose }) => 
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [formError, setFormError] = useState('');
-  const [reward, setReward] = useState({ code: 'FREESHIP', name: 'Livraison Gratuite' });
+  const [reward, setReward] = useState({ code: 'BEAUTY10', name: 'Remise Exclusive de 10%' });
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isScratching, setIsScratching] = useState(false);
@@ -51,14 +51,10 @@ export const ScratchCard: React.FC<ScratchCardProps> = ({ isOpen, onClose }) => 
 
   // Dynamically build rewards from settings coupons & daily gift
   const getRewardsList = () => {
-    const list = (settings.coupons || []).map(c => ({
+    const list = (settings.coupons || []).filter(c => !c.freeShipping).map(c => ({
       code: c.code,
-      name_fr: c.freeShipping 
-        ? 'Livraison 100% Gratuite' 
-        : `Remise Exclusive de ${c.discountPercent}%`,
-      name_ar: c.freeShipping 
-        ? 'توصيل مجاني 100%' 
-        : `خصم حصري بقيمة ${c.discountPercent}%`
+      name_fr: `Remise Exclusive de ${c.discountPercent}%`,
+      name_ar: `خصم حصري بقيمة ${c.discountPercent}%`
     }));
 
     if (settings.dailyGiftName) {
@@ -70,7 +66,7 @@ export const ScratchCard: React.FC<ScratchCardProps> = ({ isOpen, onClose }) => 
     }
 
     return list.length > 0 ? list : [
-      { code: 'FREESHIP', name_fr: 'Livraison 100% Gratuite', name_ar: 'توصيل مجاني 100%' }
+      { code: 'BEAUTY10', name_fr: 'Remise Exclusive de 10%', name_ar: 'خصم حصري بقيمة 10%' }
     ];
   };
 
@@ -247,8 +243,8 @@ export const ScratchCard: React.FC<ScratchCardProps> = ({ isOpen, onClose }) => 
       // Hook configurations inside Cart Context
       applyDailyGift(reward.code, reward.name);
       
-      // Auto apply coupon if it corresponds to discount or freeship code
-      if (reward.code === 'BEAUTY10' || reward.code === 'FREESHIP') {
+      // Auto-apply only discount coupons; shipping has no coupon override.
+      if (reward.code === 'BEAUTY10') {
         void applyCouponCode(reward.code);
       }
 

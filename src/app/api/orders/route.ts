@@ -39,7 +39,6 @@ type Coupon = {
 const MOCK_COUPONS: Record<string, Coupon> = {
   BEAUTY10: { code: 'BEAUTY10', discountPercent: 10 },
   CLINICAL15: { code: 'CLINICAL15', discountPercent: 15 },
-  FREESHIP: { code: 'FREESHIP', freeShipping: true, minPurchase: 300 },
   GIFTGLOW: { code: 'GIFTGLOW' },
 };
 
@@ -289,7 +288,9 @@ async function resolveCoupon(code: unknown, subtotal: number, settings: Record<s
   const coupon: Coupon | undefined = settingsCoupons.find((candidate: Coupon) => candidate.code?.toUpperCase() === normalizedCode)
     || MOCK_COUPONS[normalizedCode];
 
-  if (!coupon || coupon.isActive === false) throw new Error('INVALID_COUPON');
+  // Delivery is governed exclusively by the discounted merchandise subtotal.
+  // Legacy delivery-only coupons must never create a second shipping rule.
+  if (!coupon || coupon.isActive === false || coupon.freeShipping === true) throw new Error('INVALID_COUPON');
   const today = new Date().toISOString().slice(0, 10);
   if ((coupon.startDate && coupon.startDate > today) || (coupon.expiryDate && coupon.expiryDate < today)) {
     throw new Error('INVALID_COUPON');

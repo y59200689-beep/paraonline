@@ -510,7 +510,7 @@ export default function AdminBrandingPage() {
                     color: colors.secondary
                   }}
                 >
-                  LIVRAISON GRATUITE SUR TOUT LE MAROC 📦
+                  LIVRAISON PARTOUT AU MAROC 📦
                 </div>
 
                 {/* 2. Header */}

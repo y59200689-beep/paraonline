@@ -45,6 +45,8 @@ export interface GiftProductEligibility {
 export interface CommerceSummary {
   subtotal: number;
   discountAmount: number;
+  /** Merchandise value after the validated promotion, before delivery. */
+  discountedSubtotal: number;
   shippingFee: number;
   total: number;
   totalSavings: number;
@@ -93,13 +95,11 @@ export function calculateDiscount(subtotal: number, coupon: MinimalCoupon | null
  * threshold is intentionally not configurable through gift tiers.
  */
 export function calculateShippingFee(
-  subtotal: number,
+  discountedSubtotal: number,
   shippingCity: string,
   settings: ShippingSettings,
-  isCouponFreeShipping: boolean
 ): number {
-  const isFreeShipping =
-    isCouponFreeShipping || subtotal >= FREE_SHIPPING_SUBTOTAL_DH || subtotal === 0;
+  const isFreeShipping = discountedSubtotal >= FREE_SHIPPING_SUBTOTAL_DH;
 
   if (isFreeShipping) return 0;
   
@@ -107,21 +107,25 @@ export function calculateShippingFee(
     const cityRule = settings.shippingRules?.find(
       (r) => r.city.toLowerCase() === shippingCity.toLowerCase()
     );
-    if (cityRule) return cityRule.fee;
+    if (cityRule && Number.isFinite(Number(cityRule.fee)) && Number(cityRule.fee) > 0) {
+      return Number(cityRule.fee);
+    }
   }
   
-  return settings.shippingFee !== undefined ? settings.shippingFee : 35;
+  return Number.isFinite(Number(settings.shippingFee)) && Number(settings.shippingFee) > 0
+    ? Number(settings.shippingFee)
+    : 35;
 }
 
 /**
  * Calculates the amount remaining to qualify for free shipping.
  */
 export function calculateAmountNeededForFreeShipping(
-  subtotal: number
+  discountedSubtotal: number
 ): number | false {
-  return subtotal >= FREE_SHIPPING_SUBTOTAL_DH
+  return discountedSubtotal >= FREE_SHIPPING_SUBTOTAL_DH
     ? false
-    : roundMoney(FREE_SHIPPING_SUBTOTAL_DH - subtotal);
+    : roundMoney(FREE_SHIPPING_SUBTOTAL_DH - discountedSubtotal);
 }
 
 /**
@@ -151,6 +155,7 @@ export function calculateCommerceSummary({
 }): CommerceSummary {
   const subtotal = calculateSubtotal(cart);
   const discountAmount = calculateDiscount(subtotal, coupon);
+  const discountedSubtotal = roundMoney(Math.max(0, subtotal - discountAmount));
   const giftProductsById = giftProducts
     ? new Map(giftProducts.map((product) => [Number(product.id), product]))
     : null;
@@ -167,19 +172,19 @@ export function calculateCommerceSummary({
     }) || null;
   const shippingFee = roundMoney(
     calculateShippingFee(
-      subtotal,
+      discountedSubtotal,
       shippingCity,
       settings,
-      Boolean(coupon?.freeShipping)
     )
   );
-  const amountNeededForFreeShipping = calculateAmountNeededForFreeShipping(subtotal);
+  const amountNeededForFreeShipping = calculateAmountNeededForFreeShipping(discountedSubtotal);
   const isFreeShipping = shippingFee === 0;
   const total = calculateTotal(subtotal, discountAmount, shippingFee);
 
   return {
     subtotal,
     discountAmount,
+    discountedSubtotal,
     shippingFee,
     total,
     totalSavings: discountAmount,

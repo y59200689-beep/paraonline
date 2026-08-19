@@ -25,7 +25,6 @@ export default function CouponsTab() {
     startDate: '',
     expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     usageLimit: 0,
-    freeShipping: false,
     isActive: true
   });
 
@@ -37,7 +36,6 @@ export default function CouponsTab() {
     startDate: '',
     expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     usageLimit: 0,
-    freeShipping: false,
     isActive: true
   });
 
@@ -236,17 +234,8 @@ export default function CouponsTab() {
               />
             </div>
 
-            {/* Toggles */}
+            {/* Active status */}
             <div className="flex items-center gap-6 pt-6">
-              <label className={`flex items-center gap-2 text-xs font-semibold cursor-pointer ${light ? 'text-slate-700' : 'text-slate-300'}`}>
-                <input
-                  type="checkbox"
-                  checked={couponForm.freeShipping}
-                  onChange={e => setCouponForm({ ...couponForm, freeShipping: e.target.checked })}
-                  className={`rounded text-emerald-500 focus:ring-emerald-500 ${light ? 'bg-slate-50 border-slate-300' : 'bg-slate-950 border-slate-900'}`}
-                />
-                Livraison Gratuite
-              </label>
               <label className={`flex items-center gap-2 text-xs font-semibold cursor-pointer ${light ? 'text-slate-700' : 'text-slate-300'}`}>
                 <input
                   type="checkbox"
@@ -373,12 +362,6 @@ export default function CouponsTab() {
                       <div className="flex justify-between">
                         <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Expire:</span>
                         <span className={`font-bold ${hasExpired ? 'text-rose-500' : (light ? 'text-slate-800' : 'text-slate-200')}`}>{coupon.expiryDate}</span>
-                      </div>
-                    )}
-                    {coupon.freeShipping && (
-                      <div className="flex justify-between">
-                        <span>Livraison:</span>
-                        <span className="font-bold text-emerald-500">GRATUITE</span>
                       </div>
                     )}
                   </div>

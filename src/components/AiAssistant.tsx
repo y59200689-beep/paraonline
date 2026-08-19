@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { buildWhatsAppUrl } from '@/lib/whatsapp-link';
-import { FREE_SHIPPING_SUBTOTAL_DH } from '@/lib/pricing';
+import { calculateShippingFee } from '@/lib/pricing';
 import { useTranslation } from '@/context/LanguageContext';
 import { usePathname } from 'next/navigation';
 import { MessageSquare, X, Send, Sparkles, ShieldAlert, CheckCircle, HelpCircle, Search, ShoppingBag, Plus, Minus, MapPin } from 'lucide-react';
 import { useProducts } from '@/context/ProductsContext';
 import { useUi } from '@/context/UiContext';
 import { useCart } from '@/context/CartContext';
+import { useSettings } from '@/context/SettingsContext';
 import { isValidMoroccanPhone, MOROCCAN_PHONE_MAX_DIGITS, normalizeMoroccanPhoneInput } from '@/lib/moroccan-phone';
 import { getCustomerAccessToken } from '@/lib/customer-session';
 import { useModalAccessibility } from '@/hooks/useModalAccessibility';
@@ -69,6 +70,7 @@ export function configuredWhatsAppPhone(value: string | undefined) {
 export const AiAssistant: React.FC = () => {
   const pathname = usePathname();
   const { language } = useTranslation();
+  const { settings } = useSettings();
   const { isCartOpen } = useCart();
   const { showToast, isDiagnosticOpen, isScratchCardOpen } = useUi();
 
@@ -149,7 +151,11 @@ export const AiAssistant: React.FC = () => {
     const product = getProductDetails(item.productId);
     return total + (product ? (Number(product.price) || 0) * item.quantity : 0);
   }, 0) || 0;
-  const orderShippingEstimate = orderSubtotal >= 600 ? 0 : 35;
+  const orderShippingEstimate = calculateShippingFee(
+    orderSubtotal,
+    activeOrderForm?.city || '',
+    settings,
+  );
 
   const [isOpen, setIsOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -273,7 +279,7 @@ export const AiAssistant: React.FC = () => {
       });
 
       const subtotal = orderItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-      const shippingFee = subtotal >= FREE_SHIPPING_SUBTOTAL_DH ? 0 : 35;
+      const shippingFee = calculateShippingFee(subtotal, form.city, settings);
       const total = subtotal + shippingFee;
 
       const body = {
@@ -406,12 +412,12 @@ export const AiAssistant: React.FC = () => {
         pointsFr: [
           "⚡ Casablanca / Rabat : Livraison express en 24h ouvrées.",
           "📍 Autres Villes (Marrakech, Tanger, Agadir, Fès...) : Livraison sous 48h à 72h.",
-          "💸 Gratuite : Dès 600 DH d'achat (sinon forfait de seulement 29 DH)."
+          "💸 Livraison gratuite dès 400 DH de produits après remise ; sinon, les frais configurés pour votre ville s’appliquent."
         ],
         pointsAr: [
           "⚡ الدار البيضاء / الرباط: توصيل سريع للغاية خلال 24 ساعة فقط.",
           "📍 المدن الأخرى (مراکش، طنجة، أكادير، فاس...): التوصيل خلال 48 إلى 72 ساعة.",
-          "💸 شحن مجاني: عند شرائكِ بـ 600 درهم أو أكثر (وإلا بقيمة 29 درهم فقط)."
+          "💸 الشحن مجاني ابتداءً من 400 درهم من المنتجات بعد الخصم؛ وإلا تُطبَّق رسوم مدينتكِ المُعدّة."
         ]
       }
     }

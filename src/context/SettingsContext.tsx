@@ -91,7 +91,7 @@ export interface Settings {
   }[];
   faq: { q_fr: string; a_fr: string; q_ar: string; a_ar: string }[];
   adminPasscode: string;
-  shippingRules: { city: string; fee: number; freeThreshold?: number }[];
+  shippingRules: { city: string; fee: number }[];
   whatsappFollowUpRules?: {
     enabled: boolean;
     trigger: 'abandoned_cart' | 'order_delivered' | 'order_shipped';
@@ -435,12 +435,12 @@ export const DEFAULT_SETTINGS: Settings = {
   ],
   adminPasscode: "",
   shippingRules: [
-    { city: "Casablanca", fee: 20, freeThreshold: 300 },
-    { city: "Rabat", fee: 20, freeThreshold: 300 },
-    { city: "Salé", fee: 20, freeThreshold: 300 },
-    { city: "Mohammedia", fee: 20, freeThreshold: 300 },
-    { city: "Tanger", fee: 25, freeThreshold: 400 },
-    { city: "Marrakech", fee: 30, freeThreshold: 500 }
+    { city: "Casablanca", fee: 20 },
+    { city: "Rabat", fee: 20 },
+    { city: "Salé", fee: 20 },
+    { city: "Mohammedia", fee: 20 },
+    { city: "Tanger", fee: 25 },
+    { city: "Marrakech", fee: 30 }
   ],
   whatsappFollowUpRules: [
     { enabled: true, trigger: 'abandoned_cart', delayHours: 2 },

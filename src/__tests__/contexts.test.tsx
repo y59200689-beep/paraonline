@@ -228,6 +228,25 @@ describe('Context Hooks Tests', () => {
       expect(result.current.discountAmount).toBe(30); // 15% of 200
     });
 
+    it('recalculates the delivery threshold when a promotion is applied and removed', async () => {
+      const { result } = renderHook(() => useCart(), { wrapper: AllProvidersWrapper });
+
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 20));
+        result.current.addToCart(mockProduct, 4); // 400 DH before promotion
+        result.current.setShippingCity('Casablanca');
+      });
+      expect(result.current).toMatchObject({ subtotal: 400, discountedSubtotal: 400, shippingFee: 0 });
+
+      await act(async () => {
+        await result.current.applyCouponCode('BEAUTY10');
+      });
+      expect(result.current).toMatchObject({ discountedSubtotal: 360, shippingFee: 20 });
+
+      act(() => result.current.removeCoupon());
+      expect(result.current).toMatchObject({ discountedSubtotal: 400, shippingFee: 0 });
+    });
+
     it('should initialize with COD payment method and allow updates', async () => {
       const { result } = renderHook(() => useCart(), { wrapper: AllProvidersWrapper });
 

@@ -58,11 +58,25 @@ export async function POST(request: Request) {
       ? settings.giftRanges
       : (Array.isArray(existingSettings.giftRanges) ? existingSettings.giftRanges : []);
     const giftRanges = requestedGiftRanges.filter((range: any) => !isLegacyFreeShippingGiftRange(range));
+    const shippingRules = Array.isArray(settings.shippingRules)
+      ? settings.shippingRules
+        .filter((rule: any) => typeof rule?.city === 'string' && Number.isFinite(Number(rule?.fee)) && Number(rule.fee) > 0)
+        .map((rule: any) => ({ city: rule.city.trim(), fee: Number(rule.fee) }))
+      : [];
+    // Remove legacy delivery-only coupons when settings are next saved.
+    // Delivery is calculated only in pricing.ts.
+    const coupons = Array.isArray(settings.coupons)
+      ? settings.coupons
+        .filter((coupon: any) => coupon?.freeShipping !== true)
+        .map((coupon: any) => ({ ...coupon, freeShipping: false }))
+      : [];
     const mergedSettings = {
       ...settings,
       galleryOverrides,
       freeShippingThreshold: FREE_SHIPPING_SUBTOTAL_DH,
       giftRanges,
+      shippingRules,
+      coupons,
     };
 
     const { error } = await supabase

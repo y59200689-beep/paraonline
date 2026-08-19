@@ -4,7 +4,6 @@ import { supabaseAdmin as supabase } from '@/lib/supabase';
 const MOCK_COUPONS: Record<string, { code: string; discountPercent: number; freeShipping: boolean; giftItem?: string; discountType?: 'percent' | 'fixed'; discountValue?: number; minPurchase?: number; expiryDate?: string; isActive?: boolean; startDate?: string; usageLimit?: number }> = {
   'BEAUTY10': { code: 'BEAUTY10', discountPercent: 10, freeShipping: false, discountType: 'percent', discountValue: 10, minPurchase: 0, expiryDate: '2026-12-31', isActive: true },
   'CLINICAL15': { code: 'CLINICAL15', discountPercent: 15, freeShipping: false, discountType: 'percent', discountValue: 15, minPurchase: 0, expiryDate: '2026-12-31', isActive: true },
-  'FREESHIP': { code: 'FREESHIP', discountPercent: 0, freeShipping: true, discountType: 'percent', discountValue: 0, minPurchase: 300, expiryDate: '2026-12-31', isActive: true },
   'GIFTGLOW': { code: 'GIFTGLOW', discountPercent: 0, freeShipping: false, giftItem: 'Masque Hydra-Glow Offert', discountType: 'percent', discountValue: 0, minPurchase: 0, expiryDate: '2026-12-31', isActive: true }
 };
 
@@ -44,6 +43,15 @@ export async function POST(request: Request) {
     }
 
     if (!coupon) {
+      return NextResponse.json({
+        success: false,
+        error: language === 'AR' ? 'كود الخصم غير صحيح.' : 'Code promo invalide.'
+      });
+    }
+
+    // A legacy delivery-only coupon is not a valid promotion: shipping has a
+    // single permanent rule based on discounted merchandise subtotal.
+    if (coupon.freeShipping === true) {
       return NextResponse.json({
         success: false,
         error: language === 'AR' ? 'كود الخصم غير صحيح.' : 'Code promo invalide.'

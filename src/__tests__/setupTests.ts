@@ -51,8 +51,7 @@ const fetchMock = vi.fn().mockImplementation((url: string, options?: any) => {
     const code = body.code || '';
     const mockCoupons: Record<string, any> = {
       'BEAUTY10': { code: 'BEAUTY10', discountPercent: 10, freeShipping: false, isActive: true },
-      'CLINICAL15': { code: 'CLINICAL15', discountPercent: 15, freeShipping: false, isActive: true },
-      'FREESHIP': { code: 'FREESHIP', discountPercent: 0, freeShipping: true, isActive: true }
+      'CLINICAL15': { code: 'CLINICAL15', discountPercent: 15, freeShipping: false, isActive: true }
     };
     const coupon = mockCoupons[code.toUpperCase()];
     if (coupon) {
@@ -86,8 +85,7 @@ const fetchMock = vi.fn().mockImplementation((url: string, options?: any) => {
           quizDiscountPercent: 15,
           coupons: [
             { code: "BEAUTY10", discountPercent: 10, freeShipping: false, isActive: true },
-            { code: "CLINICAL15", discountPercent: 15, freeShipping: false, isActive: true },
-            { code: "FREESHIP", discountPercent: 0, freeShipping: true, isActive: true }
+            { code: "CLINICAL15", discountPercent: 15, freeShipping: false, isActive: true }
           ]
         }
       })

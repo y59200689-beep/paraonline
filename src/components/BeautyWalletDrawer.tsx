@@ -65,15 +65,6 @@ export const BeautyWalletDrawer: React.FC<BeautyWalletDrawerProps> = ({ isOpen, 
 
   const rewards: RewardItem[] = [
     {
-      id: 'reward-1',
-      cost: 200,
-      code: 'FREESHIP',
-      nameFr: 'Livraison Gratuite',
-      nameAr: 'توصيل مجاني',
-      descFr: 'Annule les frais de livraison sur votre prochaine commande.',
-      descAr: 'يلغي مصاريف الشحن لطلبكِ القادم بدون حد أدنى.'
-    },
-    {
       id: 'reward-2',
       cost: 300,
       code: 'BEAUTY10',

@@ -41,6 +41,8 @@ interface CartContextProps {
   subtotal: number;
   total: number;
   discountAmount: number;
+  /** Merchandise value after the applied promotion, before delivery. */
+  discountedSubtotal: number;
   isFreeShipping: boolean;
   shippingFee: number;
   amountNeededForFreeShipping: boolean | number;
@@ -69,14 +71,6 @@ interface CartContextProps {
 }
 
 const CartContext = createContext<CartContextProps | undefined>(undefined);
-
-// Available mock coupons for fallback validation
-const MOCK_COUPONS: Record<string, Coupon> = {
-  'BEAUTY10': { code: 'BEAUTY10', discountPercent: 10, freeShipping: false },
-  'CLINICAL15': { code: 'CLINICAL15', discountPercent: 15, freeShipping: false },
-  'FREESHIP': { code: 'FREESHIP', discountPercent: 0, freeShipping: true },
-  'GIFTGLOW': { code: 'GIFTGLOW', discountPercent: 0, freeShipping: false, giftItem: 'Masque Hydra-Glow Offert' }
-};
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { settings } = useSettings();
@@ -404,6 +398,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     subtotal,
     activeGiftRange,
     discountAmount,
+    discountedSubtotal,
     isFreeShipping,
     shippingFee,
     amountNeededForFreeShipping,
@@ -570,6 +565,7 @@ Merci pour votre confiance ! Nous confirmons votre livraison le jour même`;
         subtotal,
         total,
         discountAmount,
+        discountedSubtotal,
         isFreeShipping,
         shippingFee,
         amountNeededForFreeShipping,

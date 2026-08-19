@@ -386,7 +386,6 @@ export default function SettingsTab() {
     discountValue: 10,
     minPurchase: 0,
     expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    freeShipping: false,
     isActive: true
   });
   
@@ -615,7 +614,6 @@ export default function SettingsTab() {
         discountValue: 10,
         minPurchase: 0,
         expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        freeShipping: false,
         isActive: true
       });
       showToast("Coupon sauvegardé avec succès !", 'success');
@@ -3534,20 +3532,6 @@ export default function SettingsTab() {
                     }`}>
                       <input 
                         type="checkbox" 
-                        checked={couponForm.freeShipping} 
-                        onChange={(e) => setCouponForm({...couponForm, freeShipping: e.target.checked})} 
-                        className={`rounded text-emerald-500 focus:ring-emerald-500 ${
-                          adminTheme === 'light' ? 'bg-slate-50 border-slate-300' : 'bg-slate-950 border-slate-900'
-                        }`} 
-                      />
-                      Livraison Gratuite
-                    </label>
-
-                    <label className={`flex items-center gap-2 text-xs font-semibold cursor-pointer ${
-                      adminTheme === 'light' ? 'text-slate-700' : 'text-slate-300'
-                    }`}>
-                      <input 
-                        type="checkbox" 
                         checked={couponForm.isActive} 
                         onChange={(e) => setCouponForm({...couponForm, isActive: e.target.checked})} 
                         className={`rounded text-emerald-500 focus:ring-emerald-500 ${
@@ -3648,10 +3632,6 @@ export default function SettingsTab() {
                             <span className={`font-bold ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-200'}`}>{coupon.expiryDate}</span>
                           </div>
                         )}
-                        <div className="flex justify-between">
-                          <span>Livraison Gratuite:</span>
-                          <span className={`font-bold ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-200'}`}>{coupon.freeShipping ? 'OUI' : 'NON'}</span>
-                        </div>
                       </div>
                     </div>
 
@@ -3815,7 +3795,7 @@ export default function SettingsTab() {
                   Frais d&apos;expédition par ville (Maroc)
                 </h3>
                 <p className={`text-[11px] ${adminTheme === 'light' ? 'text-slate-500' : 'text-slate-500'}`}>
-                  Configurez des frais spécifiques et seuils de livraison gratuite pour chaque ville marocaine.
+                  Configurez les frais de livraison spécifiques à chaque ville marocaine. Le seuil de livraison gratuite est fixe à 400 DH après remise.
                 </p>
               </div>
               <button
@@ -3825,12 +3805,9 @@ export default function SettingsTab() {
                   if (!city) return;
                   const fee = prompt("Frais de livraison (DH) :", "20");
                   if (fee === null) return;
-                  const threshold = prompt("Seuil de livraison gratuite (DH, optionnel) :", "300");
-                  if (threshold === null) return;
-                  
                   const newRules = [
                     ...(settings.shippingRules || []),
-                    { city: city.trim(), fee: Number(fee), freeThreshold: threshold ? Number(threshold) : undefined }
+                    { city: city.trim(), fee: Number(fee) }
                   ];
                   saveSettings({ ...settings, shippingRules: newRules });
                 }}
@@ -3846,7 +3823,6 @@ export default function SettingsTab() {
                   <tr className={`border-b ${adminTheme === 'light' ? 'border-slate-200 text-slate-500' : 'border-slate-800 text-slate-500'} text-[10px] uppercase font-bold`}>
                     <th className="py-2.5 px-3">Ville</th>
                     <th className="py-2.5 px-3 text-right">Frais Standards</th>
-                    <th className="py-2.5 px-3 text-right">Livraison Gratuite Dès</th>
                     <th className="py-2.5 px-3 text-right">Actions</th>
                   </tr>
                 </thead>
@@ -3855,7 +3831,6 @@ export default function SettingsTab() {
                     <tr key={idx} className={`hover:bg-slate-50/50 dark:hover:bg-slate-900/10 transition`}>
                       <td className="py-2.5 px-3 font-semibold">{rule.city}</td>
                       <td className="py-2.5 px-3 text-right font-mono">{rule.fee} DH</td>
-                      <td className="py-2.5 px-3 text-right font-mono text-emerald-400">{rule.freeThreshold ? `${rule.freeThreshold} DH` : '—'}</td>
                       <td className="py-2.5 px-3 text-right">
                         <button
                           type="button"
