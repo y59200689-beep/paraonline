@@ -1050,9 +1050,10 @@ export const supabaseAdmin = isPlaceholder
   ? mockSupabaseClient 
   : typeof window !== 'undefined'
     ? supabase
-    : createClient(supabaseUrl, serviceRoleKey || supabaseAnonKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    });
+  : createClient(supabaseUrl, serviceRoleKey!, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+      detectSessionInUrl: false,
+    },
+  });
