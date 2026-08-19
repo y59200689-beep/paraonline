@@ -25,10 +25,8 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const session = await verifyAdminSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
-    }
+    const authorization = await authorizeAdminMutation();
+    if (!authorization.authorized) return authorization.response;
 
     const { name, description, trigger_type, filters, actions, active } = await request.json();
     if (!name) {

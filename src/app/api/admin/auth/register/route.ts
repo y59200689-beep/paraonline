@@ -2,9 +2,17 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { hashPasswordAsync } from '@/lib/session';
 import { rateLimit, getClientIp } from '@/lib/rateLimit';
+import { authorizeAdminMutation } from '@/lib/admin-authorization';
+import { canManageOperators } from '@/lib/permissions';
 
 export async function POST(request: Request) {
   try {
+    const authorization = await authorizeAdminMutation({
+      allow: canManageOperators,
+      forbiddenMessage: 'Accès refusé. Propriétaire uniquement.',
+    });
+    if (!authorization.authorized) return authorization.response;
+
     // Rate limit: 5 account registration requests per IP per hour
     const ip = getClientIp(request);
     const { allowed } = await rateLimit(`admin-register:${ip}`, 5, 60 * 60_000);
