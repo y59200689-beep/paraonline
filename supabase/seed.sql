@@ -1408,7 +1408,7 @@ Adoptez cette routine quotidiennement pour révéler l''éclat naturel de votre 
   'https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=600&auto=format&fit=crop',
   'kbeauty',
   6,
-  '[1,2,3]'::JSONB,
+  ARRAY[1,2,3]::INTEGER[],
   'published'
 ) ON CONFLICT (id) DO UPDATE SET
   slug = EXCLUDED.slug,
@@ -1452,7 +1452,7 @@ Intégrez-le progressivement (1 à 2 fois par semaine au début) le soir, après
   'https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?q=80&w=600&auto=format&fit=crop',
   'skincare',
   4,
-  '[4,5]'::JSONB,
+  ARRAY[4,5]::INTEGER[],
   'published'
 ) ON CONFLICT (id) DO UPDATE SET
   slug = EXCLUDED.slug,
