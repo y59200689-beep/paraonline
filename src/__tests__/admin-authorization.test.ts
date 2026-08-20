@@ -14,6 +14,7 @@ const { POST: disableMfa } = await import('../app/api/admin/auth/mfa/disable/rou
 const { POST: registerOperator } = await import('../app/api/admin/auth/register/route');
 const { GET: listMarketingFlows, POST: createMarketingFlow } = await import('../app/api/admin/marketing/flows/route');
 const { GET: listCoupons, POST: createCoupon, PATCH: updateCoupon, DELETE: deleteCoupon } = await import('../app/api/admin/coupons/route');
+const { GET: getAdminSettings, POST: updateAdminSettings } = await import('../app/api/admin/settings/route');
 
 describe('DB-authoritative privileged admin mutations', () => {
   let originalDb: any;
@@ -204,5 +205,81 @@ describe('DB-authoritative privileged admin mutations', () => {
     }));
     expect(response.status).toBe(400);
     expect((await response.json()).error).toMatch(/livraison/i);
+  });
+
+  it('lets viewers read sanitized settings but rejects section writes', async () => {
+    const readResponse = await getAdminSettings();
+    expect(readResponse.status).toBe(200);
+    const readBody = await readResponse.json();
+    expect(readBody.settings).not.toHaveProperty('adminPasscode');
+    expect(readBody.settings).not.toHaveProperty('yalidineApiKey');
+
+    const writeResponse = await updateAdminSettings(new Request('http://localhost/api/admin/settings', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'general', settings: { storeName: 'Viewer cannot save' } }),
+    }));
+    expect(writeResponse.status).toBe(403);
+  });
+
+  it('merges owner section updates and normalizes shipping without erasing gifts or coupons', async () => {
+    const owner = (globalThis as any).mockDb.operators.find((operator: any) => operator.id === mockSession.id);
+    owner.role = 'owner';
+    const readResponse = await getAdminSettings();
+    expect(readResponse.status).toBe(200);
+    const settingsRow = (globalThis as any).mockDb.settings.find((setting: any) => setting.id === 1);
+    settingsRow.value = {
+      ...settingsRow.value,
+      freeShippingThreshold: 999,
+      shippingFee: 35,
+      shippingRules: [
+        { city: 'Casablanca', fee: 20, freeThreshold: 111 },
+        { city: 'Rabat', fee: 20, freeThreshold: 222 },
+        { city: 'Salé', fee: 20, freeThreshold: 333 },
+        { city: 'Mohammedia', fee: 20, freeThreshold: 444 },
+        { city: 'Tanger', fee: 25, freeThreshold: 555 },
+        { city: 'Marrakech', fee: 30, freeThreshold: 666 },
+      ],
+      giftRanges: [{ minAmount: 400, maxAmount: 599, productId: 1, isActive: true }, { minAmount: 600, maxAmount: 799, productId: 2, isActive: true }],
+      coupons: [{ code: 'KEEP10', discountPercent: 10, freeShipping: false, isActive: true }],
+      yalidineApiKey: 'private-value',
+      unrelatedSetting: 'keep-me',
+    };
+
+    const response = await updateAdminSettings(new Request('http://localhost/api/admin/settings', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'general', settings: { storeName: 'Para Officinal S.A', shippingFee: 35, yalidineApiKey: '' } }),
+    }));
+    expect(response.status).toBe(200);
+    const responseBody = await response.json();
+    expect(responseBody.settings).not.toHaveProperty('yalidineApiKey');
+
+    const persisted = (await supabase.from('settings').select('*').eq('id', 1).single()).data.value;
+    expect(persisted.freeShippingThreshold).toBe(400);
+    expect(persisted.shippingRules).toEqual([
+      { city: 'Casablanca', fee: 20 }, { city: 'Rabat', fee: 20 }, { city: 'Salé', fee: 20 },
+      { city: 'Mohammedia', fee: 20 }, { city: 'Tanger', fee: 25 }, { city: 'Marrakech', fee: 30 },
+    ]);
+    expect(persisted.giftRanges).toHaveLength(2);
+    expect(persisted.coupons).toEqual([expect.objectContaining({ code: 'KEEP10' })]);
+    expect(persisted.yalidineApiKey).toBe('private-value');
+    expect(persisted.unrelatedSetting).toBe('keep-me');
+  });
+
+  it('rejects unauthenticated and malformed admin settings writes', async () => {
+    const { verifyAdminSession } = await import('@/lib/session');
+    vi.mocked(verifyAdminSession).mockResolvedValueOnce(null as any);
+    const unauthenticated = await updateAdminSettings(new Request('http://localhost/api/admin/settings', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'general', settings: { storeName: 'No session' } }),
+    }));
+    expect(unauthenticated.status).toBe(401);
+
+    const owner = (globalThis as any).mockDb.operators.find((operator: any) => operator.id === mockSession.id);
+    owner.role = 'owner';
+    const malformed = await updateAdminSettings(new Request('http://localhost/api/admin/settings', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'unknown', settings: [] }),
+    }));
+    expect(malformed.status).toBe(400);
   });
 });

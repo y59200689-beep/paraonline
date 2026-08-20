@@ -5,7 +5,7 @@ import { verifyAdminSession } from '@/lib/session';
 import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { canManageSettings } from '@/lib/permissions';
 import { PUBLIC_SETTINGS_CACHE_TAG } from '@/lib/get-public-settings';
-import { FREE_SHIPPING_SUBTOTAL_DH, isLegacyFreeShippingGiftRange } from '@/lib/pricing';
+import { normalizeSettingsForPersistence } from '@/lib/settings-normalization';
 
 export async function GET() {
   try {
@@ -41,8 +41,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Settings object is required' }, { status: 400 });
     }
 
-    // Preserve existing galleryOverrides stored in DB row id=1
-    let galleryOverrides = settings.galleryOverrides || {};
+    // Preserve existing values when a partial settings document is submitted.
     let existingSettings: Record<string, any> = {};
     try {
       const { data: existingData } = await supabase
@@ -51,33 +50,8 @@ export async function POST(request: Request) {
         .eq('id', 1)
         .single();
       existingSettings = existingData?.value || {};
-      galleryOverrides = { ...(existingSettings.galleryOverrides || {}), ...galleryOverrides };
     } catch {}
-
-    const requestedGiftRanges = Array.isArray(settings.giftRanges)
-      ? settings.giftRanges
-      : (Array.isArray(existingSettings.giftRanges) ? existingSettings.giftRanges : []);
-    const giftRanges = requestedGiftRanges.filter((range: any) => !isLegacyFreeShippingGiftRange(range));
-    const shippingRules = Array.isArray(settings.shippingRules)
-      ? settings.shippingRules
-        .filter((rule: any) => typeof rule?.city === 'string' && Number.isFinite(Number(rule?.fee)) && Number(rule.fee) > 0)
-        .map((rule: any) => ({ city: rule.city.trim(), fee: Number(rule.fee) }))
-      : [];
-    // Remove legacy delivery-only coupons when settings are next saved.
-    // Delivery is calculated only in pricing.ts.
-    const coupons = Array.isArray(settings.coupons)
-      ? settings.coupons
-        .filter((coupon: any) => coupon?.freeShipping !== true)
-        .map((coupon: any) => ({ ...coupon, freeShipping: false }))
-      : [];
-    const mergedSettings = {
-      ...settings,
-      galleryOverrides,
-      freeShippingThreshold: FREE_SHIPPING_SUBTOTAL_DH,
-      giftRanges,
-      shippingRules,
-      coupons,
-    };
+    const mergedSettings = normalizeSettingsForPersistence(settings, existingSettings);
 
     const { error } = await supabase
       .from('settings')
