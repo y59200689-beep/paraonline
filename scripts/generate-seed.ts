@@ -13,7 +13,6 @@ const SETTINGS_SEED = {
     coupons: [
       { code: "BEAUTY10", discountPercent: 10, freeShipping: false, isActive: true },
       { code: "CLINICAL15", discountPercent: 15, freeShipping: false, isActive: true },
-      { code: "FREESHIP", discountPercent: 0, freeShipping: true, isActive: true },
       { code: "GIFTGLOW", discountPercent: 0, freeShipping: false, giftItem: 'Masque Hydra-Glow Offert', isActive: true }
     ]
   }
@@ -162,7 +161,9 @@ function generateSeed() {
   // 3. Seed Advice Articles
   sqlLines.push('-- ─── advice articles seed ──────────────────────────────────');
   for (const art of ADVICE_ARTICLES) {
-    const recommendedStr = art.recommended_products ? `'[${art.recommended_products.join(',')}]'::JSONB` : "'[]'::JSONB";
+    const recommendedStr = art.recommended_products?.length
+      ? `ARRAY[${art.recommended_products.join(',')}]::INTEGER[]`
+      : "'{}'::INTEGER[]";
     sqlLines.push(`INSERT INTO advice_articles (id, slug, title_fr, title_ar, summary_fr, summary_ar, content_fr, content_ar, image, category, read_time, recommended_products, status)`);
     sqlLines.push(`VALUES (`);
     sqlLines.push(`  ${escapeSqlString(art.id)},`);

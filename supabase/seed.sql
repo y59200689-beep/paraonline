@@ -5,7 +5,7 @@
 
 -- ─── settings seed ──────────────────────────────────────────
 INSERT INTO settings (id, value)
-VALUES (1, '{"storeName":"Para Officinal S.A","freeShippingThreshold":400,"shippingFee":35,"quizDiscountPercent":15,"coupons":[{"code":"BEAUTY10","discountPercent":10,"freeShipping":false,"isActive":true},{"code":"CLINICAL15","discountPercent":15,"freeShipping":false,"isActive":true},{"code":"FREESHIP","discountPercent":0,"freeShipping":true,"isActive":true},{"code":"GIFTGLOW","discountPercent":0,"freeShipping":false,"giftItem":"Masque Hydra-Glow Offert","isActive":true}]}')
+VALUES (1, '{"storeName":"Para Officinal S.A","freeShippingThreshold":400,"shippingFee":35,"quizDiscountPercent":15,"coupons":[{"code":"BEAUTY10","discountPercent":10,"freeShipping":false,"isActive":true},{"code":"CLINICAL15","discountPercent":15,"freeShipping":false,"isActive":true},{"code":"GIFTGLOW","discountPercent":0,"freeShipping":false,"giftItem":"Masque Hydra-Glow Offert","isActive":true}]}')
 ON CONFLICT (id) DO UPDATE SET value = EXCLUDED.value;
 
 -- ─── products seed ──────────────────────────────────────────

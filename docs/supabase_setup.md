@@ -411,13 +411,12 @@ if (isPlaceholder) {
           id: 1,
           value: {
             storeName: "Para Officinal S.A",
-            freeShippingThreshold: 600,
+            freeShippingThreshold: 400,
             shippingFee: 35,
             quizDiscountPercent: 15,
             coupons: [
               { code: "BEAUTY10", discountPercent: 10, freeShipping: false, isActive: true },
-              { code: "CLINICAL15", discountPercent: 15, freeShipping: false, isActive: true },
-              { code: "FREESHIP", discountPercent: 0, freeShipping: true, isActive: true }
+              { code: "CLINICAL15", discountPercent: 15, freeShipping: false, isActive: true }
             ]
           },
           created_at: new Date().toISOString()
@@ -734,12 +733,11 @@ VALUES (
   '{
     "storeName": "Para Officinal S.A",
     "shippingFee": 35,
-    "freeShippingThreshold": 600,
+    "freeShippingThreshold": 400,
     "quizDiscountPercent": 15,
     "coupons": [
       { "code": "BEAUTY10", "isActive": true, "freeShipping": false, "discountPercent": 10 },
-      { "code": "CLINICAL15", "isActive": true, "freeShipping": false, "discountPercent": 15 },
-      { "code": "FREESHIP", "isActive": true, "freeShipping": true, "discountPercent": 0 }
+      { "code": "CLINICAL15", "isActive": true, "freeShipping": false, "discountPercent": 15 }
     ]
   }'::jsonb
 )
