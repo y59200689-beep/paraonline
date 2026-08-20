@@ -6,6 +6,7 @@ vi.mock('../lib/supabase', async (importOriginal) => {
   return {
     supabase: actual.supabase,
     supabaseAdmin: actual.supabaseAdmin,
+    isSupabaseConfigured: actual.isSupabaseConfigured,
   };
 });
 

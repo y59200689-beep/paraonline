@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useSettings } from './SettingsContext';
-import { supabase } from '@/lib/supabase';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { customerAuthErrorMessage, resolveCustomerIdentity } from '@/lib/customer-auth';
 import type { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
 import {
@@ -54,19 +54,6 @@ interface LoyaltyContextProps {
 }
 
 export const LoyaltyContext = createContext<LoyaltyContextProps | undefined>(undefined);
-
-function isSupabaseConfigured() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  return (
-    url &&
-    url !== 'https://placeholder.supabase.co' &&
-    url !== 'https://your-project-id.supabase.co' &&
-    key &&
-    key !== 'placeholder-key' &&
-    key !== 'your-public-anon-key-placeholder'
-  );
-}
 
 export const LoyaltyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [points, setPoints] = useState<number>(0);

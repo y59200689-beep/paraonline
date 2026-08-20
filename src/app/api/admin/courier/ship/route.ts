@@ -1,15 +1,9 @@
 import { NextResponse } from 'next/server';
 import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { canManageCouriers } from '@/lib/permissions';
-import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { isSupabaseConfigured, supabaseAdmin as supabase } from '@/lib/supabase';
 import { orderLifecycleTransition } from '@/lib/order-lifecycle';
 import { transitionOrderLifecycle } from '@/lib/order-lifecycle-transition';
-
-function isSupabaseConfigured() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  return url && url !== 'https://placeholder.supabase.co' && url !== 'https://your-project-id.supabase.co' && key && key !== 'placeholder-key' && key !== 'your-public-anon-key-placeholder';
-}
 
 export async function POST(request: Request) {
   try {

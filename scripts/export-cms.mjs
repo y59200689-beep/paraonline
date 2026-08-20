@@ -40,7 +40,8 @@ const tables = [
   'cms_chat_config', 'cms_change_log', 'products', 'gallery_assets', 'translations',
 ];
 
-const headers = { apikey: key, Authorization: `Bearer ${key}` };
+// Modern Supabase secret keys are opaque API keys, not JWT bearer tokens.
+const headers = { apikey: key };
 const exported = { exported_at: new Date().toISOString(), tables: {} };
 for (const table of tables) {
   const response = await fetch(`${url}/rest/v1/${table}?select=*`, { headers });

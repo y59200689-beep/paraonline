@@ -4,6 +4,7 @@ const { getSession } = vi.hoisted(() => ({ getSession: vi.fn() }));
 
 vi.mock('@/lib/supabase', () => ({
   supabase: { auth: { getSession } },
+  isSupabaseConfigured: () => true,
 }));
 
 import {

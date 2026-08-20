@@ -1,15 +1,17 @@
 import { createClient } from '@supabase/supabase-js';
 import { PRODUCTS_DB } from './data';
+import { resolveSupabaseClientConfig } from './supabase-client-config';
 
 /* eslint-disable @typescript-eslint/no-require-imports -- Node built-ins are loaded lazily so this shared module remains browser-safe. */
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
+const { supabaseUrl, publishableKey: supabasePublishableKey, isPlaceholder } = resolveSupabaseClientConfig(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+);
 
-const isPlaceholder = 
-  !process.env.NEXT_PUBLIC_SUPABASE_URL || 
-  process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-project-id') || 
-  process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder');
+export function isSupabaseConfigured() {
+  return !isPlaceholder;
+}
 
 if (isPlaceholder && process.env.NODE_ENV === 'production') {
   throw new Error('Supabase must be configured in production. Refusing to start with the local mock database.');
@@ -1035,7 +1037,7 @@ const mockSupabaseClient = {
 // --- Expose Mock or Real client depending on env keys ---
 export const supabase = isPlaceholder 
   ? mockSupabaseClient 
-  : createClient(supabaseUrl, supabaseAnonKey);
+  : createClient(supabaseUrl, supabasePublishableKey!);
 
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 

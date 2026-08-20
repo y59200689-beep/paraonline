@@ -11,7 +11,7 @@ Add the following environment variables to your `.env.local` file at the root of
 ```env
 # Public Supabase credentials for client-side queries
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-public-anon-key-placeholder
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-public-publishable-key-placeholder
 
 # Service Role Key — Server-Side API routes ONLY (bypasses RLS for admin tasks/secure orders)
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-placeholder
@@ -297,13 +297,17 @@ import { createClient } from '@supabase/supabase-js';
 import { PRODUCTS_DB } from './data';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
+const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
 // Detect whether to use real Supabase or run in mock mode
 const isPlaceholder = 
   !process.env.NEXT_PUBLIC_SUPABASE_URL || 
   process.env.NEXT_PUBLIC_SUPABASE_URL.includes('your-project-id') || 
   process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder');
+
+if (!isPlaceholder && !supabasePublishableKey) {
+  throw new Error('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY must be configured for Supabase client access.');
+}
 
 // --- In-Memory Database Mock with File Persistence ---
 const globalForMock = globalThis as unknown as {
@@ -634,10 +638,10 @@ const mockSupabaseClient = {
 // Public client used on client-side React components
 export const supabase = isPlaceholder 
   ? mockSupabaseClient 
-  : createClient(supabaseUrl, supabaseAnonKey);
+  : createClient(supabaseUrl, supabasePublishableKey);
 
 // Admin client used on server-side API endpoints (bypasses RLS)
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseAnonKey;
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 export const supabaseAdmin = isPlaceholder 
   ? mockSupabaseClient 
   : createClient(supabaseUrl, serviceRoleKey, {

@@ -23,10 +23,10 @@ envContent.split('\n').forEach(line => {
 });
 
 const url = env.NEXT_PUBLIC_SUPABASE_URL;
-const key = env.SUPABASE_SERVICE_ROLE_KEY || env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const key = env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!url || !key) {
-  console.error('Supabase URL or Key not found in .env.local');
+  console.error('NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not found in .env.local');
   process.exit(1);
 }
 
@@ -34,8 +34,8 @@ async function test() {
   try {
     const res = await fetch(`${url}/rest/v1/operators?select=*&limit=1`, {
       headers: {
-        'apikey': key,
-        'Authorization': `Bearer ${key}`
+        // Modern Supabase secret keys are opaque API keys, not JWT bearer tokens.
+        'apikey': key
       }
     });
     if (!res.ok) {
