@@ -69,6 +69,19 @@ export const roundMoney = (value: number): number =>
   Math.round((Number(value) + Number.EPSILON) * 100) / 100;
 
 /**
+ * Checkout persists the municipality name, while the UI may display a region
+ * alongside it. Keep the fee lookup exact after safe formatting normalization
+ * so that casing, whitespace, and accents cannot select the default fee.
+ */
+function normalizeShippingCity(value: unknown): string {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .trim()
+    .toLocaleLowerCase('fr');
+}
+
+/**
  * Calculates the subtotal of the cart items.
  */
 export function calculateSubtotal(cart: MinimalCartItem[]): number {
@@ -103,9 +116,10 @@ export function calculateShippingFee(
 
   if (isFreeShipping) return 0;
   
-  if (shippingCity) {
+  const normalizedShippingCity = normalizeShippingCity(shippingCity);
+  if (normalizedShippingCity) {
     const cityRule = settings.shippingRules?.find(
-      (r) => r.city.toLowerCase() === shippingCity.toLowerCase()
+      (rule) => normalizeShippingCity(rule?.city) === normalizedShippingCity,
     );
     if (cityRule && Number.isFinite(Number(cityRule.fee)) && Number(cityRule.fee) > 0) {
       return Number(cityRule.fee);

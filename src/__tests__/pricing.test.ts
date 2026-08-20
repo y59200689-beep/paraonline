@@ -11,6 +11,8 @@ import {
   MinimalCoupon,
   ShippingSettings
 } from '../lib/pricing';
+import { normalizeSettingsForPersistence } from '../lib/settings-normalization';
+import { serializePublicShippingSettings } from '../lib/get-public-settings';
 
 describe('Pricing Calculations', () => {
   describe('calculateSubtotal', () => {
@@ -128,6 +130,12 @@ describe('Pricing Calculations', () => {
       expect(calculateShippingFee(200, 'TANGER', settings)).toBe(25);
     });
 
+    it('normalizes safe city formatting without treating a region-qualified value as a city rule', () => {
+      expect(calculateShippingFee(26.4, ' Casablanca ', settings)).toBe(20);
+      expect(calculateShippingFee(26.4, 'TÁNGER', settings)).toBe(25);
+      expect(calculateShippingFee(26.4, 'Casablanca-Settat - Casablanca', settings)).toBe(35);
+    });
+
     it('should return default shipping fee if no city override matches', () => {
       expect(calculateShippingFee(200, 'Rabat', settings)).toBe(35);
     });
@@ -139,6 +147,35 @@ describe('Pricing Calculations', () => {
     it('should fallback to default fee of 35 if settings.shippingFee is missing', () => {
       const minimalSettings: ShippingSettings = { freeShippingThreshold: FREE_SHIPPING_SUBTOTAL_DH };
       expect(calculateShippingFee(200, 'Rabat', minimalSettings)).toBe(35);
+    });
+
+    it('keeps the production shipping settings shape through normalization and city lookup', () => {
+      const persistedSettings = normalizeSettingsForPersistence({
+        freeShippingThreshold: 999,
+        shippingFee: 35,
+        shippingRules: [
+          { city: 'Casablanca', fee: 20, freeThreshold: 111 },
+          { city: 'Rabat', fee: 20, freeThreshold: 222 },
+          { city: 'Salé', fee: 20, freeThreshold: 333 },
+          { city: 'Mohammedia', fee: 20, freeThreshold: 444 },
+          { city: 'Tanger', fee: 25, freeThreshold: 555 },
+          { city: 'Marrakech', fee: 30, freeThreshold: 666 },
+        ],
+        giftRanges: [{ minAmount: 400, maxAmount: 599, productId: 1, productName: 'Gift' }],
+        coupons: [{ code: 'KEEP10', freeShipping: false }],
+      });
+
+      const storefrontShippingSettings: ShippingSettings = serializePublicShippingSettings(persistedSettings as any);
+
+      expect(storefrontShippingSettings.freeShippingThreshold).toBe(400);
+      expect(storefrontShippingSettings.shippingRules).toEqual([
+        { city: 'Casablanca', fee: 20 }, { city: 'Rabat', fee: 20 }, { city: 'Salé', fee: 20 },
+        { city: 'Mohammedia', fee: 20 }, { city: 'Tanger', fee: 25 }, { city: 'Marrakech', fee: 30 },
+      ]);
+      expect(calculateShippingFee(26.4, 'Casablanca', storefrontShippingSettings)).toBe(20);
+      expect(calculateShippingFee(100, 'Tanger', storefrontShippingSettings)).toBe(25);
+      expect(calculateShippingFee(399, 'Marrakech', storefrontShippingSettings)).toBe(30);
+      expect(calculateShippingFee(200, 'Unknown city', storefrontShippingSettings)).toBe(35);
     });
   });
 

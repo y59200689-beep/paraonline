@@ -66,6 +66,27 @@ interface CityComboboxProps {
   citiesList: Array<{ value: string; labelFr: string; labelAr: string }>;
 }
 
+type CourierZone = { id: string | number; name: string };
+
+/**
+ * Shipping rules and orders use the municipality name as their canonical city
+ * value. The courier region remains a display aid only; storing it in `value`
+ * would make a rule such as "Casablanca" miss and fall back to the default fee.
+ */
+export function mapCourierZonesToCheckoutCities(
+  wilayas: CourierZone[],
+  communes: Array<CourierZone & { wilaya_id: string | number }>,
+): Array<{ value: string; labelFr: string; labelAr: string }> {
+  return communes.flatMap((commune) => {
+    const city = String(commune?.name || '').trim();
+    if (!city) return [];
+    const wilaya = wilayas.find((candidate) => String(candidate.id) === String(commune.wilaya_id));
+    const region = String(wilaya?.name || '').trim();
+    const label = region ? `${city} (${region})` : city;
+    return [{ value: city, labelFr: label, labelAr: label }];
+  });
+}
+
 const CityCombobox: React.FC<CityComboboxProps> = ({
   id, describedBy, value, onChange, language, isRTL, hasError, placeholder, citiesList,
 }) => {
@@ -367,15 +388,7 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
         const res = await fetch('/api/shipping/yalidine/zones');
         const data = await res.json();
         if (data.success && data.wilayas && data.communes) {
-          const mapped = data.communes.map((c: any) => {
-            const w = data.wilayas.find((wil: any) => String(wil.id) === String(c.wilaya_id));
-            const wName = w ? w.name : 'Wilaya';
-            return {
-              value: `${wName} - ${c.name}`,
-              labelFr: `${c.name} (${wName})`,
-              labelAr: `${c.name} (${wName})`,
-            };
-          });
+          const mapped = mapCourierZonesToCheckoutCities(data.wilayas, data.communes);
           if (mapped.length > 0) {
             setCities(mapped);
           }

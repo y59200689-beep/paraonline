@@ -12,7 +12,8 @@ vi.mock('../lib/supabase', async (importOriginal) => {
 // Mock next/cache to prevent revalidatePath from throwing in non-server tests
 vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
-  revalidateTag: vi.fn()
+  revalidateTag: vi.fn(),
+  unstable_cache: (fn: (...args: any[]) => any) => fn,
 }));
 
 // Mock BroadcastChannel (No-op in tests to avoid self-synchronization race conditions)

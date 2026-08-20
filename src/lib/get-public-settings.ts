@@ -12,6 +12,15 @@ type PublicSettings = Omit<Partial<Settings>, 'paymentSettings'> & {
 const SAFE_DELIVERY_FR = 'Les délais et frais de livraison dépendent de la ville et sont confirmés avant la validation de la commande.';
 const SAFE_DELIVERY_AR = 'تختلف مدة وتكلفة التوصيل حسب المدينة، ويتم تأكيدهما قبل إتمام الطلب.';
 
+/** The complete non-sensitive shipping contract consumed by storefront checkout. */
+export function serializePublicShippingSettings(settings: Pick<Settings, 'freeShippingThreshold' | 'shippingFee' | 'shippingRules'>) {
+  return {
+    freeShippingThreshold: settings.freeShippingThreshold,
+    shippingFee: settings.shippingFee,
+    shippingRules: settings.shippingRules,
+  };
+}
+
 function normalizeLegacyStorefrontClaims(settings: Settings): Settings {
   const banners = (settings.banners || []).map((banner) => {
     if (!banner.descFr?.includes('Formules certifiées, résultats prouvés')) return banner;
@@ -104,8 +113,7 @@ async function fetchPublicSettings(): Promise<PublicSettings> {
       storeName: settings.storeName,
       storePhone: settings.storePhone,
       storeWhatsApp: settings.storeWhatsApp,
-      freeShippingThreshold: settings.freeShippingThreshold,
-      shippingFee: settings.shippingFee,
+      ...serializePublicShippingSettings(settings),
       announcementFr: settings.announcementFr,
       announcementAr: settings.announcementAr,
       quizDiscountPercent: settings.quizDiscountPercent,
@@ -117,7 +125,6 @@ async function fetchPublicSettings(): Promise<PublicSettings> {
       customConcerns: settings.customConcerns || [],
       banners,
       faq: settings.faq,
-      shippingRules: settings.shippingRules,
       loyaltyPointsPerDh: settings.loyaltyPointsPerDh,
       loyaltyBronzeMultiplier: settings.loyaltyBronzeMultiplier,
       loyaltySilverMultiplier: settings.loyaltySilverMultiplier,
