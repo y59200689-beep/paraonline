@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { useAdmin } from '@/context/AdminContext';
-import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 import { useAdminUI } from '@/app/admin/AdminUIContext';
 import {
@@ -12,8 +11,7 @@ import {
 } from 'lucide-react';
 
 export default function CouponsTab() {
-  const { handleSaveCoupon, handleDeleteCoupon, handleToggleCouponActive, adminTheme, dashboardStats } = useAdmin();
-  const { settings } = useSettings();
+  const { coupons, handleSaveCoupon, handleDeleteCoupon, handleToggleCouponActive, adminTheme, dashboardStats } = useAdmin();
   const { showToast } = useUi();
   const { isAddingCoupon, setIsAddingCoupon } = useAdminUI();
 
@@ -66,8 +64,6 @@ export default function CouponsTab() {
   };
 
   const light = adminTheme === 'light';
-  const coupons = settings.coupons || [];
-
   const inputCls = `w-full text-xs transition outline-none rounded-xl px-3 py-2.5 border font-mono ${
     light
       ? 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20'

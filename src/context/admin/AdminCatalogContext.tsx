@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useMemo } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Product } from '@/lib/data';
 import { useAdminAuth } from './AdminAuthContext';
 import { useAdminData } from './AdminDataContext';
@@ -8,6 +8,8 @@ import { useSettings, HeroCardConfig } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 
 export interface AdminCatalogContextProps {
+  coupons: AdminCoupon[];
+  loadCoupons: () => Promise<void>;
   handleSaveCoupon: (couponForm: any) => Promise<boolean>;
   handleDeleteCoupon: (code: string) => Promise<boolean>;
   handleToggleCouponActive: (code: string) => Promise<boolean>;
@@ -26,6 +28,19 @@ export interface AdminCatalogContextProps {
   handleImportProducts: (rawProducts: any[], updateExisting: boolean, metadata?: { fileName?: string; validationErrorCount?: number; validationErrors?: Array<{ row: number; errors: Record<string, string>; raw?: Record<string, unknown> }> }) => Promise<{ success: boolean; count: number; error?: string; categories?: string[]; message?: string; createdCount?: number; updatedCount?: number; skippedCount?: number; validationErrorCount?: number }>;
 }
 
+export type AdminCoupon = {
+  code: string;
+  discountPercent: number;
+  freeShipping: false;
+  discountType: 'percent' | 'fixed';
+  discountValue: number;
+  minPurchase: number;
+  startDate?: string;
+  expiryDate?: string;
+  usageLimit: number;
+  isActive: boolean;
+};
+
 const AdminCatalogContext = createContext<AdminCatalogContextProps | undefined>(undefined);
 
 export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -33,6 +48,25 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const { loadProducts, logAdminAction } = useAdminData();
   const { loadSettings } = useSettings();
   const { showToast } = useUi();
+  const [coupons, setCoupons] = useState<AdminCoupon[]>([]);
+
+  const loadCoupons = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/coupons');
+      const data = await res.json();
+      setCoupons(res.ok && data.success && Array.isArray(data.coupons) ? data.coupons : []);
+    } catch {
+      setCoupons([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!currentUser) {
+      setCoupons([]);
+      return;
+    }
+    void loadCoupons();
+  }, [currentUser, loadCoupons]);
 
   const handleSaveCoupon = async (couponForm: any): Promise<boolean> => {
     if (currentUser?.role === 'logistician' || currentUser?.role === 'support') {
@@ -47,7 +81,7 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
       });
       const data = await res.json();
       if (data.success) {
-        await loadSettings();
+        await loadCoupons();
         logAdminAction("Configuration Coupon", `Coupon "${couponForm.code}" configuré.`);
         showToast("Coupon configuré avec succès !", 'success');
         return true;
@@ -69,7 +103,7 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const res = await fetch(`/api/admin/coupons?code=${code}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
-        await loadSettings();
+        await loadCoupons();
         logAdminAction("Suppression Coupon", `Coupon "${code}" supprimé.`);
         showToast("Coupon supprimé !", 'success');
         return true;
@@ -93,7 +127,7 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
       });
       const data = await res.json();
       if (data.success) {
-        await loadSettings();
+        await loadCoupons();
         logAdminAction("Statut Coupon", `Statut du coupon "${code}" basculé.`);
         showToast("Statut du coupon mis à jour !", 'success');
         return true;
@@ -470,6 +504,8 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   const contextValue = useMemo(() => ({
+    coupons,
+    loadCoupons,
     handleSaveCoupon,
     handleDeleteCoupon,
     handleToggleCouponActive,
@@ -488,6 +524,8 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
     handleImportProducts
   }), [
     currentUser,
+    coupons,
+    loadCoupons,
     loadProducts,
     logAdminAction,
     loadSettings

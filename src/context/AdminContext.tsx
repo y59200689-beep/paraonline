@@ -74,6 +74,8 @@ export interface AdminContextProps {
   handleDeleteAdviceArticle: (id: string) => Promise<boolean>;
 
   // Coupon Handlers
+  coupons: import('./admin/AdminCatalogContext').AdminCoupon[];
+  loadCoupons: () => Promise<void>;
   handleSaveCoupon: (couponForm: any) => Promise<boolean>;
   handleDeleteCoupon: (code: string) => Promise<boolean>;
   handleToggleCouponActive: (code: string) => Promise<boolean>;
@@ -281,6 +283,8 @@ export const useAdmin = (): AdminContextProps => {
     shippingStats: orders.shippingStats,
 
     // Catalog Actions
+    coupons: catalog.coupons,
+    loadCoupons: catalog.loadCoupons,
     handleSaveCoupon: catalog.handleSaveCoupon,
     handleDeleteCoupon: catalog.handleDeleteCoupon,
     handleToggleCouponActive: catalog.handleToggleCouponActive,
