@@ -47,7 +47,7 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
       });
       const data = await res.json();
       if (data.success) {
-        await loadProducts();
+        await loadSettings();
         logAdminAction("Configuration Coupon", `Coupon "${couponForm.code}" configuré.`);
         showToast("Coupon configuré avec succès !", 'success');
         return true;
@@ -69,7 +69,7 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const res = await fetch(`/api/admin/coupons?code=${code}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
-        await loadProducts();
+        await loadSettings();
         logAdminAction("Suppression Coupon", `Coupon "${code}" supprimé.`);
         showToast("Coupon supprimé !", 'success');
         return true;
@@ -86,14 +86,14 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
       return false;
     }
     try {
-      const res = await fetch('/api/admin/coupons/toggle', {
-        method: 'POST',
+      const res = await fetch('/api/admin/coupons', {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code })
       });
       const data = await res.json();
       if (data.success) {
-        await loadProducts();
+        await loadSettings();
         logAdminAction("Statut Coupon", `Statut du coupon "${code}" basculé.`);
         showToast("Statut du coupon mis à jour !", 'success');
         return true;

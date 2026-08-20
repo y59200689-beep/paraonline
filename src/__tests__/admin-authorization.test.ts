@@ -13,6 +13,7 @@ const { GET: listOperators, POST: createOperator, PATCH: updateOperator } = awai
 const { POST: disableMfa } = await import('../app/api/admin/auth/mfa/disable/route');
 const { POST: registerOperator } = await import('../app/api/admin/auth/register/route');
 const { GET: listMarketingFlows, POST: createMarketingFlow } = await import('../app/api/admin/marketing/flows/route');
+const { GET: listCoupons, POST: createCoupon, PATCH: updateCoupon, DELETE: deleteCoupon } = await import('../app/api/admin/coupons/route');
 
 describe('DB-authoritative privileged admin mutations', () => {
   let originalDb: any;
@@ -124,5 +125,84 @@ describe('DB-authoritative privileged admin mutations', () => {
     }) as any);
     expect(disableResponse.status).toBe(200);
     expect((await supabase.from('operators').select('*').eq('id', created.id).single()).data.is_active).toBe(false);
+  });
+
+  it('allows viewers to list coupons but rejects all direct coupon writes', async () => {
+    const listResponse = await listCoupons();
+    expect(listResponse.status).toBe(200);
+    expect((await listResponse.json()).coupons).toEqual(expect.any(Array));
+
+    const createResponse = await createCoupon(new Request('http://localhost/api/admin/coupons', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: 'VIEWER10', discountType: 'percent', discountValue: 10, minPurchase: 0, expiryDate: '2099-12-31', usageLimit: 0, isActive: true }),
+    }));
+    const updateResponse = await updateCoupon(new Request('http://localhost/api/admin/coupons', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: 'BEAUTY10', isActive: false }),
+    }));
+    const deleteResponse = await deleteCoupon(new Request('http://localhost/api/admin/coupons?code=BEAUTY10', { method: 'DELETE' }));
+
+    expect(createResponse.status).toBe(403);
+    expect(updateResponse.status).toBe(403);
+    expect(deleteResponse.status).toBe(403);
+    expect((await supabase.from('settings').select('*').eq('id', 1).single()).data.value.coupons)
+      .toEqual(expect.arrayContaining([expect.objectContaining({ code: 'BEAUTY10', isActive: true })]));
+  });
+
+  it('allows an active owner to list, create, disable, and delete a coupon without shipping privileges', async () => {
+    const owner = (globalThis as any).mockDb.operators.find((operator: any) => operator.id === mockSession.id);
+    owner.role = 'owner';
+
+    const listResponse = await listCoupons();
+    expect(listResponse.status).toBe(200);
+
+    const createResponse = await createCoupon(new Request('http://localhost/api/admin/coupons', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: 'QA10SAFE', discountType: 'percent', discountValue: 10, minPurchase: 0, startDate: '', expiryDate: '2099-12-31', usageLimit: 0, isActive: true }),
+    }));
+    expect(createResponse.status).toBe(201);
+    const created = (await createResponse.json()).coupon;
+    expect(created).toMatchObject({ code: 'QA10SAFE', discountType: 'percent', discountValue: 10, freeShipping: false, isActive: true });
+    expect(created).not.toHaveProperty('password');
+    expect(created).not.toHaveProperty('password_hash');
+
+    const disableResponse = await updateCoupon(new Request('http://localhost/api/admin/coupons', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: 'QA10SAFE', isActive: false }),
+    }));
+    expect(disableResponse.status).toBe(200);
+    expect((await disableResponse.json()).coupon).toMatchObject({ code: 'QA10SAFE', isActive: false, freeShipping: false });
+
+    const deleteResponse = await deleteCoupon(new Request('http://localhost/api/admin/coupons?code=QA10SAFE', { method: 'DELETE' }));
+    expect(deleteResponse.status).toBe(200);
+    expect((await supabase.from('settings').select('*').eq('id', 1).single()).data.value.coupons)
+      .not.toEqual(expect.arrayContaining([expect.objectContaining({ code: 'QA10SAFE' })]));
+  });
+
+  it.each([
+    { code: '', discountType: 'percent', discountValue: 10, minPurchase: 0, expiryDate: '2099-12-31' },
+    { code: 'BADPERCENT', discountType: 'percent', discountValue: 101, minPurchase: 0, expiryDate: '2099-12-31' },
+    { code: 'BADFIXED', discountType: 'fixed', discountValue: -1, minPurchase: 0, expiryDate: '2099-12-31' },
+    { code: 'BADDATE', discountType: 'percent', discountValue: 10, minPurchase: 0, startDate: '2099-12-31', expiryDate: '2099-01-01' },
+  ])('rejects malformed owner coupon payload %#', async (payload) => {
+    const owner = (globalThis as any).mockDb.operators.find((operator: any) => operator.id === mockSession.id);
+    owner.role = 'owner';
+
+    const response = await createCoupon(new Request('http://localhost/api/admin/coupons', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+    }));
+    expect(response.status).toBe(400);
+  });
+
+  it('rejects legacy delivery-only and free-shipping coupon payloads', async () => {
+    const owner = (globalThis as any).mockDb.operators.find((operator: any) => operator.id === mockSession.id);
+    owner.role = 'owner';
+
+    const response = await createCoupon(new Request('http://localhost/api/admin/coupons', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: 'FREESHIP', discountType: 'percent', discountValue: 10, minPurchase: 0, expiryDate: '2099-12-31', freeShipping: true }),
+    }));
+    expect(response.status).toBe(400);
+    expect((await response.json()).error).toMatch(/livraison/i);
   });
 });
