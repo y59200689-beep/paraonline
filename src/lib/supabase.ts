@@ -917,7 +917,14 @@ const mockSupabaseClient = {
         if (!events.some((event: any) => event.order_id === order.order_id && event.event_type === 'pending_cod_cancelled_restore')) {
           for (const item of order.items || []) {
             const product = (globalForMock.mockDb.products || []).find((candidate: any) => Number(candidate.id) === Number(item.id));
-            if (!product) return { data: null, error: { message: `PRODUCT_NOT_FOUND:${item.id}` } };
+            const snapshotSku = typeof item.sku === 'string' ? item.sku.trim() : '';
+            const productSku = typeof product?.sku === 'string' ? product.sku.trim() : '';
+            if (!product || !snapshotSku || !productSku || productSku.toLowerCase() !== snapshotSku.toLowerCase()) {
+              return { data: null, error: { message: `PRODUCT_IDENTITY_MISMATCH:${order.order_id}:${item.id}` } };
+            }
+          }
+          for (const item of order.items || []) {
+            const product = (globalForMock.mockDb.products || []).find((candidate: any) => Number(candidate.id) === Number(item.id));
             product.stock += Number(item.quantity || 0);
           }
           (globalForMock.mockDb as any).order_stock_events = [...events, { order_id: order.order_id, event_type: 'pending_cod_cancelled_restore' }];
@@ -960,7 +967,12 @@ const mockSupabaseClient = {
 
       for (const item of items) {
         const product = products.find((candidate: any) => Number(candidate.id) === Number(item.id));
-        if (!product || Number(product.stock || 0) < Number(item.quantity || 0)) {
+        const snapshotSku = typeof item.sku === 'string' ? item.sku.trim() : '';
+        const productSku = typeof product?.sku === 'string' ? product.sku.trim() : '';
+        if (!product || !snapshotSku || !productSku || productSku.toLowerCase() !== snapshotSku.toLowerCase()) {
+          return { data: null, error: { message: `PRODUCT_IDENTITY_MISMATCH:${item.id}` } };
+        }
+        if (Number(product.stock || 0) < Number(item.quantity || 0)) {
           return { data: null, error: { message: `INSUFFICIENT_STOCK:${item.id}` } };
         }
       }

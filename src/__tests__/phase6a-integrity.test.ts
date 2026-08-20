@@ -93,14 +93,14 @@ describe('Phase 6A data integrity', () => {
   it('restores a pending COD order stock exactly once and never restores returns or pending-payment cancellations', async () => {
     const product = globalForMock.mockDb.products[0];
     const initialStock = product.stock;
-    globalForMock.mockDb.orders = [{ order_id: '200005', status: 'Pending', payment_method: 'cod', payment_status: 'unpaid', items: [{ id: product.id, quantity: 2 }] }];
+    globalForMock.mockDb.orders = [{ order_id: '200005', status: 'Pending', payment_method: 'cod', payment_status: 'unpaid', items: [{ id: product.id, sku: product.sku, quantity: 2 }] }];
     const first = await supabase.rpc('transition_order_lifecycle', { p_order_id: '200005', p_target_status: 'Cancelled', p_payment_status: null });
     const second = await supabase.rpc('transition_order_lifecycle', { p_order_id: '200005', p_target_status: 'Cancelled', p_payment_status: null });
     expect(first.data).toMatchObject({ changed: true, stock_restored: true });
     expect(second.data).toMatchObject({ idempotent: true });
     expect(product.stock).toBe(initialStock + 2);
 
-    globalForMock.mockDb.orders = [{ order_id: '200006', status: 'Pending Payment', payment_method: 'stripe', payment_status: 'unpaid', items: [{ id: product.id, quantity: 2 }] }];
+    globalForMock.mockDb.orders = [{ order_id: '200006', status: 'Pending Payment', payment_method: 'stripe', payment_status: 'unpaid', items: [{ id: product.id, sku: product.sku, quantity: 2 }] }];
     await supabase.rpc('transition_order_lifecycle', { p_order_id: '200006', p_target_status: 'Cancelled', p_payment_status: null });
     expect(product.stock).toBe(initialStock + 2);
   });

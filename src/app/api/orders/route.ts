@@ -177,13 +177,17 @@ export async function POST(request: Request) {
       if (!Number.isFinite(Number(product.price)) || Number(product.stock) < quantity) {
         throw new Error('INSUFFICIENT_STOCK');
       }
+      const sku = typeof product.sku === 'string' ? product.sku.trim() : '';
+      if (!sku) {
+        throw new Error('PRODUCT_IDENTITY_UNAVAILABLE');
+      }
       return {
         id: Number(product.id),
         title: product.title,
         price: roundMoney(Number(product.price)),
         quantity,
         image: product.image || undefined,
-        sku: product.sku || undefined,
+        sku,
       };
     });
 
@@ -272,6 +276,9 @@ export async function POST(request: Request) {
     }
     if (error?.message === 'INSUFFICIENT_STOCK') {
       return NextResponse.json({ success: false, error: 'Stock insuffisant pour un ou plusieurs produits.' }, { status: 409 });
+    }
+    if (error?.message === 'PRODUCT_IDENTITY_UNAVAILABLE') {
+      return NextResponse.json({ success: false, error: 'Un produit du panier ne possède pas de référence SKU exploitable.' }, { status: 409 });
     }
     if (error?.message === 'INVALID_COUPON') {
       return NextResponse.json({ success: false, error: 'Code promo invalide ou non applicable.' }, { status: 400 });

@@ -12,7 +12,7 @@ type OrderOptions = {
   paymentMethod?: string;
   paymentStatus?: string;
   loyaltyPoints?: number;
-  items?: Array<{ id: number; quantity: number }>;
+  items?: Array<{ id: number; quantity: number; sku?: string }>;
 };
 
 let database: Pool;
@@ -75,15 +75,16 @@ async function createCustomer() {
   return id;
 }
 
-async function createProduct(stock = 10) {
+async function createProduct(stock = 10, sku?: string) {
   const id = 1_000_000_000 + Math.floor(Math.random() * 1_000_000_000);
+  const productSku = sku ?? `PHASE6-${id}`;
   testProducts.push(id);
   await database.query(
-    `INSERT INTO public.products (id, title, vendor, price, category, stock)
-     VALUES ($1, $2, 'Phase 6 test', 1, 'test', $3)`,
-    [id, `Phase 6 integration product ${id}`, stock],
+    `INSERT INTO public.products (id, title, vendor, price, category, stock, sku)
+     VALUES ($1, $2, 'Phase 6 test', 1, 'test', $3, $4)`,
+    [id, `Phase 6 integration product ${id}`, stock, productSku],
   );
-  return id;
+  return { id, sku: productSku };
 }
 
 async function createOrder(options: OrderOptions = {}) {
@@ -123,6 +124,30 @@ async function customerPoints(customerId: string) {
     [customerId],
   );
   return Number(rows[0].points);
+}
+
+async function orderStatus(orderId: string) {
+  const { rows } = await database.query<{ status: string }>(
+    'SELECT status FROM public.orders WHERE order_id = $1',
+    [orderId],
+  );
+  return rows[0].status;
+}
+
+async function productStock(productId: number) {
+  const { rows } = await database.query<{ stock: number }>(
+    'SELECT stock FROM public.products WHERE id = $1',
+    [productId],
+  );
+  return rows[0]?.stock;
+}
+
+async function stockEventCount(orderId: string) {
+  const { rows } = await database.query<{ count: string }>(
+    'SELECT COUNT(*)::text AS count FROM public.order_stock_events WHERE order_id = $1',
+    [orderId],
+  );
+  return Number(rows[0].count);
 }
 
 describe('Phase 6 real PostgreSQL integration', () => {
@@ -232,31 +257,146 @@ describe('Phase 6 real PostgreSQL integration', () => {
   });
 
   it('rolls back every cancellation side effect when a later stock restoration fails', async () => {
-    const restorableProductId = await createProduct(10);
-    const missingProductId = restorableProductId + 1;
+    const restorableProduct = await createProduct(10);
+    const missingProductId = restorableProduct.id + 1;
     const { orderId } = await createOrder({
       items: [
-        { id: restorableProductId, quantity: 2 },
-        { id: missingProductId, quantity: 1 },
+        { id: restorableProduct.id, quantity: 2, sku: restorableProduct.sku },
+        { id: missingProductId, quantity: 1, sku: 'MISSING-PRODUCT' },
       ],
     });
 
     await expect(
       database.query('SELECT public.transition_order_lifecycle($1, $2, NULL)', [orderId, 'Cancelled']),
-    ).rejects.toThrow(/PRODUCT_NOT_FOUND/);
+    ).rejects.toThrow(/PRODUCT_IDENTITY_MISMATCH/);
 
-    const product = await database.query<{ stock: number }>('SELECT stock FROM public.products WHERE id = $1', [
-      restorableProductId,
-    ]);
-    const order = await database.query<{ status: string }>('SELECT status FROM public.orders WHERE order_id = $1', [orderId]);
-    const stockEvents = await database.query<{ count: string }>(
-      'SELECT COUNT(*)::text AS count FROM public.order_stock_events WHERE order_id = $1',
-      [orderId],
+    expect(await productStock(restorableProduct.id)).toBe(10);
+    expect(await orderStatus(orderId)).toBe('Pending');
+    expect(await stockEventCount(orderId)).toBe(0);
+  });
+
+  it('restores a matching Pending COD order exactly once and keeps retries idempotent', async () => {
+    const product = await createProduct(4);
+    const { orderId } = await createOrder({
+      items: [{ id: product.id, quantity: 2, sku: product.sku.toLowerCase() }],
+    });
+
+    const first = await database.query<{ result: { changed: boolean; stock_restored: boolean } }>(
+      'SELECT public.transition_order_lifecycle($1, $2, NULL) AS result',
+      [orderId, 'Cancelled'],
+    );
+    const retry = await database.query<{ result: { changed: boolean; idempotent: boolean } }>(
+      'SELECT public.transition_order_lifecycle($1, $2, NULL) AS result',
+      [orderId, 'Cancelled'],
     );
 
-    expect(product.rows[0].stock).toBe(10);
-    expect(order.rows[0].status).toBe('Pending');
-    expect(Number(stockEvents.rows[0].count)).toBe(0);
+    expect(first.rows[0].result).toMatchObject({ changed: true, stock_restored: true });
+    expect(retry.rows[0].result).toMatchObject({ changed: false, idempotent: true });
+    expect(await productStock(product.id)).toBe(6);
+    expect(await stockEventCount(orderId)).toBe(1);
+    expect(await orderStatus(orderId)).toBe('Cancelled');
+  });
+
+  it('aborts cancellation when a product ID now belongs to a different SKU', async () => {
+    const product = await createProduct(8, 'ORIGINAL-SKU');
+    const { orderId } = await createOrder({
+      items: [{ id: product.id, quantity: 3, sku: product.sku }],
+    });
+    await database.query('UPDATE public.products SET sku = $2 WHERE id = $1', [product.id, 'REPLACED-SKU']);
+
+    await expect(
+      database.query('SELECT public.transition_order_lifecycle($1, $2, NULL)', [orderId, 'Cancelled']),
+    ).rejects.toThrow(/PRODUCT_IDENTITY_MISMATCH/);
+
+    expect(await productStock(product.id)).toBe(8);
+    expect(await stockEventCount(orderId)).toBe(0);
+    expect(await orderStatus(orderId)).toBe('Pending');
+  });
+
+  it('aborts cancellation when the snapshot SKU is blank', async () => {
+    const product = await createProduct(8);
+    const { orderId } = await createOrder({
+      items: [{ id: product.id, quantity: 1, sku: '  ' }],
+    });
+
+    await expect(
+      database.query('SELECT public.transition_order_lifecycle($1, $2, NULL)', [orderId, 'Cancelled']),
+    ).rejects.toThrow(/PRODUCT_IDENTITY_MISMATCH/);
+
+    expect(await productStock(product.id)).toBe(8);
+    expect(await stockEventCount(orderId)).toBe(0);
+    expect(await orderStatus(orderId)).toBe('Pending');
+  });
+
+  it('prevalidates every item so a multi-item SKU mismatch restores neither item', async () => {
+    const matching = await createProduct(10, 'MATCHING-SKU');
+    const mismatching = await createProduct(11, 'ORIGINAL-MISMATCH-SKU');
+    const { orderId } = await createOrder({
+      items: [
+        { id: matching.id, quantity: 2, sku: matching.sku },
+        { id: mismatching.id, quantity: 3, sku: mismatching.sku },
+      ],
+    });
+    await database.query('UPDATE public.products SET sku = $2 WHERE id = $1', [mismatching.id, 'REPLACED-MISMATCH-SKU']);
+
+    await expect(
+      database.query('SELECT public.transition_order_lifecycle($1, $2, NULL)', [orderId, 'Cancelled']),
+    ).rejects.toThrow(/PRODUCT_IDENTITY_MISMATCH/);
+
+    expect(await productStock(matching.id)).toBe(10);
+    expect(await productStock(mismatching.id)).toBe(11);
+    expect(await stockEventCount(orderId)).toBe(0);
+    expect(await orderStatus(orderId)).toBe('Pending');
+  });
+
+  it('rejects create_order_with_stock when its supplied SKU does not match the product ID', async () => {
+    const product = await createProduct(5, 'CREATE-SKU');
+    const orderPayload = {
+      customer_name: 'Phase 6 Test',
+      phone_number: '0600000000',
+      address: 'Local test address',
+      city: 'Casablanca',
+      items: [{ id: product.id, quantity: 1, sku: 'STALE-SKU', title: 'Stale item', price: 1 }],
+      subtotal: 1,
+      discount_amount: 0,
+      total: 1,
+      status: 'Pending',
+      payment_method: 'cod',
+      payment_status: 'unpaid',
+      loyalty_points: 0,
+    };
+
+    await expect(
+      database.query('SELECT public.create_order_with_stock($1::jsonb)', [JSON.stringify(orderPayload)]),
+    ).rejects.toThrow(/PRODUCT_IDENTITY_MISMATCH/);
+
+    expect(await productStock(product.id)).toBe(5);
+  });
+
+  it('allows create_order_with_stock when its supplied SKU matches after exact normalization', async () => {
+    const product = await createProduct(5, 'CREATE-VALID-SKU');
+    const orderPayload = {
+      customer_name: 'Phase 6 Test',
+      phone_number: '0600000000',
+      address: 'Local test address',
+      city: 'Casablanca',
+      items: [{ id: product.id, quantity: 1, sku: '  create-valid-sku  ', title: 'Matching item', price: 1 }],
+      subtotal: 1,
+      discount_amount: 0,
+      total: 1,
+      status: 'Pending',
+      payment_method: 'cod',
+      payment_status: 'unpaid',
+      loyalty_points: 0,
+    };
+
+    const created = await database.query<{ order_id: string }>(
+      'SELECT public.create_order_with_stock($1::jsonb) AS order_id',
+      [JSON.stringify(orderPayload)],
+    );
+    testOrders.push(created.rows[0].order_id);
+
+    expect(await productStock(product.id)).toBe(4);
   });
 
   it('enforces the ledger and mutation RPC ACLs for local Supabase roles', async () => {

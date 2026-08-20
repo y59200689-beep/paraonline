@@ -89,7 +89,7 @@ describe('Supabase Mock Client', () => {
       phone_number: '0600000000',
       address: 'Test address',
       city: 'Casablanca',
-      items: [{ id: product.id, title: product.title, quantity: 1, price: product.price }],
+      items: [{ id: product.id, title: product.title, sku: product.sku, quantity: 1, price: product.price }],
       subtotal: Number(product.price),
       total: Number(product.price),
       status: 'Pending',

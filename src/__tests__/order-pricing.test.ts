@@ -11,6 +11,7 @@ describe('Order pricing boundary', () => {
     globalForMock.mockDb.products = [{
       id: 987001,
       title: 'Server-priced product',
+      sku: 'SERVER-PRICED-987001',
       price: 420,
       stock: 10,
       status: 'live',
@@ -71,6 +72,35 @@ describe('Order pricing boundary', () => {
       discount_amount: 42,
       total: 400,
       city: 'Casablanca',
+      items: [{
+        id: 987001,
+        title: 'Server-priced product',
+        sku: 'SERVER-PRICED-987001',
+        quantity: 1,
+        price: 420,
+      }],
     });
+  });
+
+  it('refuses checkout when the authoritative product cannot provide an SKU snapshot', async () => {
+    globalForMock.mockDb.products[0].sku = null;
+
+    const response = await POST(new Request('http://localhost/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-forwarded-for': '198.51.100.75' },
+      body: JSON.stringify({
+        orderData: {
+          name: 'SKU Integrity Test',
+          phone: '0612345678',
+          address: '1 Rue de Test',
+          city: 'Casablanca',
+        },
+        items: [{ id: 987001, quantity: 1 }],
+        paymentMethod: 'cod',
+      }),
+    }));
+
+    expect(response.status).toBe(409);
+    expect(globalForMock.mockDb.orders).toHaveLength(0);
   });
 });
