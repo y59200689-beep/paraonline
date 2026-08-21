@@ -270,7 +270,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, onSele
                   key={product.id}
                   className="w-full"
                 >
-                  <ProductCard product={product} onOpenQuickView={onOpenQuickView} priority={idx < 5} />
+                  <ProductCard product={product} onOpenQuickView={onOpenQuickView} priority={idx === 0} />
                 </div>
               ))}
             </div>

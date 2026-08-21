@@ -885,7 +885,7 @@ export default function ProductsClient({
                   <div className="grid grid-cols-1 min-[390px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-4 gap-6">
                     {recommendations.map((product, idx) => (
                       <div key={product.id} className="w-full">
-                        <ProductCard product={product} showMatchScore={true} searchQuery={searchQuery} priority={idx < 2} />
+                        <ProductCard product={product} showMatchScore={true} searchQuery={searchQuery} priority={idx === 0} />
                       </div>
                     ))}
                   </div>
@@ -906,7 +906,7 @@ export default function ProductsClient({
                       containIntrinsicSize: '340px 520px',
                     }}
                   >
-                    <ProductCard product={product} showMatchScore={true} searchQuery={searchQuery} priority={index < 4} />
+                    <ProductCard product={product} showMatchScore={true} searchQuery={searchQuery} priority={index === 0} />
                   </div>
                 ))}
               </div>

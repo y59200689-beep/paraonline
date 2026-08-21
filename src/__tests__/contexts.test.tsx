@@ -8,7 +8,7 @@ import { useSettings, SettingsProvider } from '../context/SettingsContext';
 import { LanguageProvider } from '../context/LanguageContext';
 import { UiProvider } from '../context/UiContext';
 import { ThemeProvider } from '../context/ThemeContext';
-import { CurrencyProvider } from '../context/CurrencyContext';
+import { CurrencyProvider, useCurrency } from '../context/CurrencyContext';
 import { AmPmProvider } from '../context/AmPmContext';
 import { CompareProvider } from '../context/CompareContext';
 import { WishlistProvider } from '../context/WishlistContext';
@@ -377,6 +377,20 @@ describe('Context Hooks Tests', () => {
       expect(result.current.settings.deliverySettings?.defaultDaysMin).toBe(1);
       expect(result.current.settings.deliverySettings?.defaultDaysMax).toBe(2);
       expect(result.current.settings.deliverySettings?.cityRules).toEqual([]);
+    });
+  });
+
+  describe('useCurrency Hook', () => {
+    it('preserves MAD formatting for zero, decimals, and large totals', async () => {
+      const { result } = renderHook(() => useCurrency(), { wrapper: CurrencyProvider });
+
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 20));
+      });
+
+      expect(result.current.convertPrice(0)).toBe('0.00 DH');
+      expect(result.current.convertPrice(12.5)).toBe('12.50 DH');
+      expect(result.current.convertPrice(1234567.89)).toBe('1234567.89 DH');
     });
   });
 });

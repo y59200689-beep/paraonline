@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 
 export type CurrencyCode = 'MAD' | 'EUR' | 'USD';
 
@@ -110,7 +110,10 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch {}
   }, []);
 
-  const currentCurrency = CURRENCIES.find(c => c.id === selectedCurrency) || CURRENCIES[0];
+  const currentCurrency = useMemo(
+    () => CURRENCIES.find(c => c.id === selectedCurrency) || CURRENCIES[0],
+    [selectedCurrency],
+  );
 
   // Converts a MAD price to the selected currency and returns a formatted string
   const convertPrice = useCallback((madPrice: number): string => {
@@ -124,8 +127,7 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return `${symbol}${converted.toFixed(2)}`;
   }, [selectedCurrency, rates, currentCurrency]);
 
-  return (
-    <CurrencyContext.Provider value={{
+  const value = useMemo(() => ({
       selectedCurrency,
       setSelectedCurrency,
       currencies: CURRENCIES,
@@ -133,7 +135,10 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       convertPrice,
       rates,
       isLoading,
-    }}>
+    }), [selectedCurrency, setSelectedCurrency, currentCurrency, convertPrice, rates, isLoading]);
+
+  return (
+    <CurrencyContext.Provider value={value}>
       {children}
     </CurrencyContext.Provider>
   );
