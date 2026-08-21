@@ -43,6 +43,7 @@ import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 import { useAdminUI } from '@/app/admin/AdminUIContext';
 import { StatusBadge, EmptyState } from '@/components/admin/ui';
+import { PoButton } from '@/components/ui/PoButton';
 import { getCanonicalCategory } from '@/lib/catalog-categories';
 import { canEditCatalog, type AdminRole } from '@/lib/permissions';
 import {
@@ -2822,42 +2823,32 @@ export default function CatalogTab({
           <div className="flex items-center gap-2 shrink-0 xl:ml-auto xl:border-l xl:border-slate-200/80 xl:pl-3 dark:xl:border-slate-800">
 
             {/* Importer */}
-            {canMutateCatalog && <button
-              type="button"
+            {canMutateCatalog && <PoButton
+              variant="secondary"
+              leftIcon={<Upload />}
               onClick={() => { setImportResult(null); setIsImportModalOpen(true); }}
-              className={`px-3.5 h-10 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition cursor-pointer ${
-                adminTheme === 'light'
-                  ? 'bg-white border-slate-200/90 text-slate-700 hover:bg-emerald-50/50 hover:border-emerald-200 hover:text-emerald-700 shadow-[0_1px_2px_rgba(15,23,42,0.04)] font-semibold'
-                  : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700 hover:bg-slate-800/50'
-              }`}
             >
-              <Upload className="w-3.5 h-3.5 text-emerald-500" />
-              <span>Importer</span>
-            </button>}
+              Importer
+            </PoButton>}
 
             {/* Exporter */}
-            <button
+            <PoButton
               type="button"
+              variant="secondary"
+              leftIcon={<Download />}
               onClick={handleExportCatalogToCsv}
-              className={`px-3.5 h-10 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition cursor-pointer ${
-                adminTheme === 'light'
-                  ? 'bg-white border-slate-200/90 text-slate-700 hover:bg-sky-50/50 hover:border-sky-200 hover:text-sky-700 shadow-[0_1px_2px_rgba(15,23,42,0.04)] font-semibold'
-                  : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700 hover:bg-slate-800/50'
-              }`}
             >
-              <Download className="w-3.5 h-3.5 text-sky-500" />
-              <span>Exporter</span>
-            </button>
+              Exporter
+            </PoButton>
 
             {/* Nouveau Produit CTA */}
-            {canMutateCatalog && <button
+            {canMutateCatalog && <PoButton
               type="button"
+              leftIcon={<Plus />}
               onClick={() => setIsNewProductModalOpen(true)}
-              className="px-4 h-10 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/15 hover:shadow-emerald-600/25 hover:from-emerald-500 hover:to-teal-500 transition-all duration-200 cursor-pointer flex items-center gap-1.5"
             >
-              <Plus className="w-3.5 h-3.5 text-white" />
-              <span>Produit</span>
-            </button>}
+              Produit
+            </PoButton>}
           </div>
         </div>
       </div>

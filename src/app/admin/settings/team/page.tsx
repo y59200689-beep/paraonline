@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAdmin } from '@/context/AdminContext';
 import { canManageOperators } from '@/lib/permissions';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { AsyncState } from '@/components/admin/ui/AsyncState';
+import { PoButton } from '@/components/ui/PoButton';
 import { requestJson } from '@/lib/request-json';
 
 interface Operator {
@@ -128,16 +129,12 @@ export default function SettingsTeamPage() {
           </p>
         </div>
 
-        <button
+        <PoButton
           onClick={() => setShowAddModal(true)}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px',
-            fontSize: '12px', fontWeight: 700, borderRadius: 'var(--admin-radius)', border: 'none',
-            cursor: 'pointer', background: 'linear-gradient(135deg,#10b981,#059669)', color: '#fff',
-          }}
+          leftIcon={<Plus />}
         >
-          <Plus className="w-4 h-4" /> Ajouter un membre
-        </button>
+          Ajouter un membre
+        </PoButton>
       </div>
 
       {/* Operators list */}
@@ -172,12 +169,13 @@ export default function SettingsTeamPage() {
 
               <div style={{ textAlign: 'right' }}>
                 {op.role !== 'owner' && (
-                  <button
+                  <PoButton
+                    variant="text"
+                    size="sm"
                     onClick={() => handleToggleActive(op)}
-                    style={{ fontSize: '11px', fontWeight: 600, color: isDark ? '#94a3b8' : '#475569', background: 'none', border: 'none', cursor: 'pointer' }}
                   >
                     {op.is_active ? 'Désactiver' : 'Activer'}
-                  </button>
+                  </PoButton>
                 )}
               </div>
             </div>
@@ -225,10 +223,12 @@ export default function SettingsTeamPage() {
                 </select>
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
-                <button type="button" onClick={() => setShowAddModal(false)} style={{ padding: '8px 14px', fontSize: '12px', fontWeight: 600, border: 'none', background: 'none', color: isDark ? '#64748b' : '#94a3b8', cursor: 'pointer' }}>Annuler</button>
-                <button type="submit" disabled={adding} style={{ padding: '8px 16px', fontSize: '12px', fontWeight: 700, borderRadius: 'var(--admin-radius)', border: 'none', background: 'linear-gradient(135deg,#10b981,#059669)', color: '#fff', cursor: adding ? 'default' : 'pointer' }}>
-                  {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Créer le compte'}
-                </button>
+                <PoButton type="button" variant="text" size="sm" onClick={() => setShowAddModal(false)}>
+                  Annuler
+                </PoButton>
+                <PoButton type="submit" disabled={adding} loading={adding} loadingText="Création…">
+                  Créer le compte
+                </PoButton>
               </div>
             </form>
           </div>

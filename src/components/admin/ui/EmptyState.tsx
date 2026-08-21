@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useAdmin } from '@/context/AdminContext';
+import { PoButton } from '@/components/ui/PoButton';
 
 interface EmptyStateProps {
   icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
@@ -40,6 +41,7 @@ export function EmptyState({
     lg: { wrapper: 'py-16 px-8', iconBox: 'w-14 h-14', iconSize: 'w-6 h-6', gap: 'gap-3' },
   };
   const s = sizeMap[size];
+  const ActionIcon = action?.icon;
 
   return (
     <div
@@ -99,21 +101,20 @@ export function EmptyState({
       {(action || secondaryAction) && (
         <div className="flex items-center gap-2.5 mt-5 flex-wrap justify-center">
           {action && (
-            <button
+            <PoButton
               onClick={action.onClick}
-              className="admin-btn admin-btn-primary"
+              leftIcon={ActionIcon ? <ActionIcon /> : undefined}
             >
-              {action.icon && <action.icon className="w-3.5 h-3.5" />}
               {action.label}
-            </button>
+            </PoButton>
           )}
           {secondaryAction && (
-            <button
+            <PoButton
               onClick={secondaryAction.onClick}
-              className="admin-btn admin-btn-secondary"
+              variant="secondary"
             >
               {secondaryAction.label}
-            </button>
+            </PoButton>
           )}
         </div>
       )}
