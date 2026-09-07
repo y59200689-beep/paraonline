@@ -7,9 +7,7 @@ export async function GET() {
   try {
     const { data, error } = await supabaseAdmin
       .from('cms_brands')
-      .select('name,slug,domain,logo_url,is_visible,card_link,display_order')
-      .eq('is_visible', true)
-      .eq('status', 'published')
+      .select('name,slug,domain,logo_url,is_visible,card_link,display_order,status')
       .order('display_order', { ascending: true });
 
     if (error || !data || data.length === 0) {
@@ -26,7 +24,7 @@ export async function GET() {
       }, { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' } });
     }
 
-    return NextResponse.json({ brands: data }, {
+    return NextResponse.json({ brands: data.filter((brand: { is_visible: boolean; status: string }) => brand.is_visible && brand.status === 'published'), source: 'cms' }, {
       headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' },
     });
   } catch {

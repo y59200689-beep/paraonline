@@ -6,16 +6,6 @@ import { BRANDS_DATA, slugify } from '@/lib/brands';
 
 const BRAND_FIELDS = 'id,name,slug,domain,logo_url,tagline_fr,tagline_ar,description_fr,description_ar,intro_fr,intro_ar,status,approval_status,submitted_at,submitted_by,reviewed_at,reviewed_by,review_note,scheduled_at,published_at,display_order,is_visible,card_link,updated_at,seo_title_fr,seo_title_ar,seo_description_fr,seo_description_ar,gallery_images,concerns,ranges,hero_settings,highlights,method_settings,category_filters,page_sections';
 
-function fallbackBrands() {
-  return BRANDS_DATA.map((brand, index) => ({
-    id: `fallback-${slugify(brand.name)}`, name: brand.name, slug: slugify(brand.name), domain: brand.domain ?? null,
-    logo_url: brand.logoUrl ?? null, tagline_fr: brand.taglineFr ?? null, tagline_ar: brand.taglineAr ?? null,
-    description_fr: brand.descriptionFr ?? null, description_ar: brand.descriptionAr ?? null, intro_fr: null, intro_ar: null,
-    status: 'published', approval_status: 'approved', display_order: index + 1, is_visible: true, card_link: null,
-    updated_at: new Date().toISOString(), scheduled_at: null, published_at: null,
-  }));
-}
-
 async function requireSession(_req: NextRequest) {
   const authorization = await authorizeAdminMutation({ allow: canManageBrands });
   if (!authorization.authorized) return { error: authorization.response };
@@ -26,8 +16,8 @@ export async function GET(req: NextRequest) {
   const auth = await requireSession(req);
   if ('error' in auth) return auth.error;
   const { data, error } = await supabaseAdmin.from('cms_brands').select(BRAND_FIELDS).order('display_order', { ascending: true });
-  if (error || !data?.length) return NextResponse.json({ brands: fallbackBrands(), fallback: true });
-  return NextResponse.json({ brands: data });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ brands: data ?? [] });
 }
 
 export async function POST(req: NextRequest) {
@@ -86,19 +76,36 @@ export async function DELETE(req: NextRequest) {
   return NextResponse.json({ success: true });
 }
 
-/** Re-sync missing brand records from the configured hardcoded seed without overwriting edits. */
+/** Import missing catalog vendors without overwriting CMS edits or publishing new brands. */
 export async function PUT(req: NextRequest) {
   const auth = await requireSession(req);
   if ('error' in auth) return auth.error;
-  const { data: existing } = await supabaseAdmin.from('cms_brands').select('slug').limit(1000);
+  const { data: existing, error: existingError } = await supabaseAdmin.from('cms_brands').select('slug').limit(1000);
+  if (existingError) return NextResponse.json({ error: existingError.message }, { status: 500 });
   const known = new Set((existing ?? []).map((row: { slug: string }) => row.slug));
-  const missing = BRANDS_DATA.filter(brand => !known.has(slugify(brand.name))).map((brand, index) => ({
+  const candidates = new Map(BRANDS_DATA.map(brand => [slugify(brand.name), brand]));
+  // The product catalog exceeds the default PostgREST row limit.
+  for (let offset = 0; ; offset += 1000) {
+    const { data: products, error } = await supabaseAdmin.from('products').select('id,vendor').order('id').range(offset, offset + 999);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    for (const product of products ?? []) {
+      const name = String(product.vendor ?? '').trim();
+      const slug = slugify(name);
+      if (slug && !candidates.has(slug)) candidates.set(slug, { name, domain: '', taglineFr: '', taglineAr: '', descriptionFr: '', descriptionAr: '' });
+    }
+    if (!products || products.length < 1000) break;
+  }
+  const missing = [...candidates.values()].filter(brand => !known.has(slugify(brand.name))).map((brand, index) => ({
     name: brand.name, slug: slugify(brand.name), domain: brand.domain ?? null, logo_url: brand.logoUrl ?? null,
     tagline_fr: brand.taglineFr ?? null, tagline_ar: brand.taglineAr ?? null, description_fr: brand.descriptionFr ?? null,
     description_ar: brand.descriptionAr ?? null, status: 'draft', approval_status: 'draft', display_order: index + 1,
     created_by: auth.session.username, updated_by: auth.session.username,
   }));
-  if (missing.length) await supabaseAdmin.from('cms_brands').insert(missing);
-  const { data: brands } = await supabaseAdmin.from('cms_brands').select(BRAND_FIELDS).order('display_order', { ascending: true });
+  if (missing.length) {
+    const { error } = await supabaseAdmin.from('cms_brands').upsert(missing, { onConflict: 'slug', ignoreDuplicates: true });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  const { data: brands, error } = await supabaseAdmin.from('cms_brands').select(BRAND_FIELDS).order('display_order', { ascending: true });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ brands: brands ?? [], imported: missing.length, total: brands?.length ?? 0 });
 }

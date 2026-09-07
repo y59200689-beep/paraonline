@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/admin/ui/EmptyState';
 import { canManageBrands, canPublishContent } from '@/lib/permissions';
 import { AsyncState } from '@/components/admin/ui/AsyncState';
 import { requestJson } from '@/lib/request-json';
+import { BrandLogo } from '@/components/BrandLogo';
 import {
   Tag, Search, ArrowLeft, ChevronRight, Globe, Image, Package, AlertCircle,
   Plus, Eye, EyeOff, Upload, Link2, Trash2, Check, RefreshCw,
@@ -220,11 +221,7 @@ function BrandsList({
                   style={{ width: '48px', height: '48px', borderRadius: '10px', overflow: 'hidden', background: isDark ? 'rgba(255,255,255,0.04)' : '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}
                   onClick={() => onSelect(brand)}
                 >
-                  {brand.logo_url ? (
-                    <img src={brand.logo_url} alt={brand.name} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '6px' }} />
-                  ) : (
-                    <Tag className="w-5 h-5" style={{ color: isDark ? '#334155' : '#cbd5e1' }} />
-                  )}
+                  <BrandLogo name={brand.name} domain={brand.domain} logo={brand.logo_url} />
                 </div>
 
                 {/* Visibility & Delete pill */}
@@ -646,11 +643,7 @@ function BrandEditor({ brand, onBack, isDark, role, onUpdated }: {
               overflow: 'hidden', opacity: isVisible ? 1 : 0.4,
               position: 'relative',
             }}>
-              {logoUrl ? (
-                <img src={logoUrl} alt={name} style={{ maxHeight: '52px', maxWidth: '140px', objectFit: 'contain', padding: '8px', filter: 'grayscale(0.3)', opacity: 0.85 }} />
-              ) : (
-                <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '0.1em', color: '#94a3b8', textTransform: 'uppercase' }}>{name || 'Marque'}</span>
-              )}
+              <BrandLogo name={name || 'Marque'} domain={domain} logo={logoUrl} />
               {!isVisible && (
                 <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.6)' }}>
                   <EyeOff size={16} style={{ color: '#94a3b8' }} />
@@ -722,11 +715,14 @@ export default function ContentBrandsPage() {
     try {
       const res = await fetch('/api/cms/brands', { method: 'PUT' });
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Impossible de synchroniser les marques.');
       if (res.ok) {
         setBrands(data.brands ?? []);
         setSyncResult({ imported: data.imported, total: data.total });
         setTimeout(() => setSyncResult(null), 5000);
       }
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : 'Impossible de synchroniser les marques.');
     } finally {
       setSyncing(false);
     }

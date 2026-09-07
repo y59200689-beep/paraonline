@@ -31,17 +31,23 @@ const FALLBACK_BRANDS: BrandData[] = [
 
 export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands: propBrands }) => {
   const [dbBrands, setDbBrands] = useState<BrandData[]>([]);
+  const [cmsLoaded, setCmsLoaded] = useState(false);
 
   useEffect(() => {
     fetch('/api/brands')
       .then(r => r.ok ? r.json() : null)
       .then(data => {
-        if (data?.brands?.length) setDbBrands(data.brands);
+        if (Array.isArray(data?.brands)) {
+          setDbBrands(data.brands);
+          setCmsLoaded(data.source === 'cms');
+        }
       })
       .catch(() => {}); // keep fallback on error
   }, []);
 
   const brands = React.useMemo(() => {
+    // Once configured, the CMS controls logos, ordering and visibility, including an empty list.
+    if (cmsLoaded) return dbBrands;
     let list: BrandData[] = [];
 
     if (propBrands && Array.isArray(propBrands) && propBrands.length > 0) {
@@ -67,7 +73,7 @@ export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands: propBrands
     }
 
     return list;
-  }, [propBrands, dbBrands]);
+  }, [propBrands, dbBrands, cmsLoaded]);
 
   // Split into 3 marquee rows
   const brandsPerRow = Math.ceil(brands.length / 3);
