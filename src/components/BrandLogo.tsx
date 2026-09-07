@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { brandLogoSrc } from '@/lib/brand-logo';
 
 /** Shared image resolution and failure state for storefront and brand management. */
 export function BrandLogo({ name, domain, logo, className }: {
@@ -9,7 +10,7 @@ export function BrandLogo({ name, domain, logo, className }: {
   logo?: string | null;
   className?: string;
 }) {
-  const src = logo || `https://logos.hunter.io/${domain || `${name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`}`;
+  const src = brandLogoSrc(name, domain, logo);
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   return failedSrc === src
     ? <span className="text-xs font-bold text-slate-400 uppercase text-center" title="Logo indisponible — ajoutez une image dans Carte bannière">{name}</span>

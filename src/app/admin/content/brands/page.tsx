@@ -10,6 +10,8 @@ import { canManageBrands, canPublishContent } from '@/lib/permissions';
 import { AsyncState } from '@/components/admin/ui/AsyncState';
 import { requestJson } from '@/lib/request-json';
 import { BrandLogo } from '@/components/BrandLogo';
+import { brandLogoSrc } from '@/lib/brand-logo';
+import { useBrandImages } from '@/hooks/useBrandImages';
 import {
   Tag, Search, ArrowLeft, ChevronRight, Globe, Image, Package, AlertCircle,
   Plus, Eye, EyeOff, Upload, Link2, Trash2, Check, RefreshCw,
@@ -165,9 +167,14 @@ function BrandsList({
 }) {
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<CmsStatus | 'all'>('all');
+  const [imageFilter, setImageFilter] = useState('all');
+  const logoSource = (brand: CmsBrand) => brandLogoSrc(brand.name, brand.domain, brand.logo_url);
+  const imageResults = useBrandImages(brands.map(logoSource), imageFilter !== 'all');
+  const unchecked = brands.filter(brand => !imageResults[logoSource(brand)] || imageResults[logoSource(brand)] === 'unknown').length;
 
   const filtered = brands.filter(b => {
     if (statusFilter !== 'all' && b.status !== statusFilter) return false;
+    if (imageFilter !== 'all' && imageResults[logoSource(b)] !== imageFilter) return false;
     return !query || b.name.toLowerCase().includes(query.toLowerCase());
   });
 
@@ -201,11 +208,26 @@ function BrandsList({
             {s === 'all' ? 'Toutes' : s === 'draft' ? 'Brouillon' : s === 'published' ? 'Publiées' : 'Archivées'}
           </button>
         ))}
+        <select
+          aria-label="Filtrer les marques par image"
+          value={imageFilter}
+          onChange={event => setImageFilter(event.target.value)}
+          style={{ padding: '7px 12px', fontSize: '12px', borderRadius: '10px', border: '1px solid ' + (isDark ? '#334155' : '#cbd5e1'), background: isDark ? '#0f172a' : '#fff', color: isDark ? '#e2e8f0' : '#334155' }}
+        >
+          <option value="all">Toutes les images</option>
+          <option value="loaded">Avec image</option>
+          <option value="missing">Sans image</option>
+        </select>
       </div>
+      {imageFilter !== 'all' && (
+        <p role="status" style={{ fontSize: '12px', color: isDark ? '#94a3b8' : '#64748b' }}>
+          {filtered.length} marque(s) correspondante(s). {unchecked > 0 && `${unchecked} logo(s) en cours de vérification ou indisponibles — non classés.`}
+        </p>
+      )}
 
       {/* Grid */}
       {filtered.length === 0 ? (
-        <EmptyState title="Aucune marque" description="Créez une nouvelle marque pour commencer." icon={Tag} />
+        <EmptyState title="Aucune marque" description={imageFilter !== 'all' && unchecked > 0 ? 'Certains logos sont en cours de vérification ou sans réponse. Revenez à Toutes les images pour les afficher.' : 'Aucune marque ne correspond aux filtres sélectionnés.'} icon={Tag} />
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '12px' }}>
           {filtered.map(brand => (
