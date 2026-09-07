@@ -4,7 +4,9 @@ import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { canManageBrands, canPublishContent, canScheduleContent } from '@/lib/permissions';
 import { BRANDS_DATA, slugify } from '@/lib/brands';
 
-const BRAND_FIELDS = 'id,name,slug,domain,logo_url,tagline_fr,tagline_ar,description_fr,description_ar,intro_fr,intro_ar,status,approval_status,submitted_at,submitted_by,reviewed_at,reviewed_by,review_note,scheduled_at,published_at,display_order,is_visible,card_link,updated_at,seo_title_fr,seo_title_ar,seo_description_fr,seo_description_ar,gallery_images,concerns,ranges,hero_settings,highlights,method_settings,category_filters,page_sections';
+// CMS deployments may not have the optional approval-workflow columns.
+// This authenticated endpoint returns the actual record instead of requiring them.
+const BRAND_FIELDS = '*';
 
 async function requireSession(_req: NextRequest) {
   const authorization = await authorizeAdminMutation({ allow: canManageBrands });
@@ -28,7 +30,7 @@ export async function POST(req: NextRequest) {
   const slug = slugify(String(body.slug || name));
   if (!name || !slug) return NextResponse.json({ error: 'name is required' }, { status: 400 });
   const { data, error } = await supabaseAdmin.from('cms_brands').insert({
-    name, slug, domain: body.domain || null, status: 'draft', approval_status: 'draft',
+    name, slug, domain: body.domain || null, status: 'draft',
     created_by: auth.session.username, updated_by: auth.session.username,
   }).select(BRAND_FIELDS).single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -47,18 +49,24 @@ export async function PATCH(req: NextRequest) {
   if (approval_action && approval_action !== 'submit_for_approval' && !canPublishContent(auth.session.role)) return NextResponse.json({ error: 'Only managers and owners can review brands.' }, { status: 403 });
   const { data: current } = await supabaseAdmin.from('cms_brands').select('*').eq('id', id).single();
   if (!current) return NextResponse.json({ error: 'Brand not found' }, { status: 404 });
+  const supportsApproval = Object.prototype.hasOwnProperty.call(current, 'approval_status');
+  if (approval_action && !supportsApproval) {
+    return NextResponse.json({ error: 'Approval workflow is not available on this deployment.' }, { status: 409 });
+  }
   const now = new Date().toISOString();
   const payload: Record<string, unknown> = { ...fields, updated_by: auth.session.username };
   if (status) payload.status = status;
-  if (status === 'published') Object.assign(payload, { published_at: now, approval_status: 'approved', reviewed_at: now, reviewed_by: auth.session.username });
-  if (status === 'scheduled') payload.approval_status = 'approved';
+  if (status === 'published') {
+    payload.published_at = now;
+    if (supportsApproval) Object.assign(payload, { approval_status: 'approved', reviewed_at: now, reviewed_by: auth.session.username });
+  }
+  if (status === 'scheduled' && supportsApproval) payload.approval_status = 'approved';
   if (approval_action === 'submit_for_approval') Object.assign(payload, { status: 'draft', approval_status: 'pending_review', submitted_at: now, submitted_by: auth.session.username });
   if (approval_action === 'approve') Object.assign(payload, { approval_status: 'approved', reviewed_at: now, reviewed_by: auth.session.username, review_note: body.review_note ?? null });
   if (approval_action === 'reject') Object.assign(payload, { status: 'draft', approval_status: 'rejected', reviewed_at: now, reviewed_by: auth.session.username, review_note: body.review_note ?? null });
   const { data, error } = await supabaseAdmin.from('cms_brands').update(payload).eq('id', id).select(BRAND_FIELDS).single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  const changedFields = Object.keys(payload).filter(key => JSON.stringify((current as any)[key]) !== JSON.stringify((data as any)?.[key]));
-  await supabaseAdmin.from('cms_brand_revisions').insert({ brand_id: id, snapshot: current, saved_by: auth.session.username, changed_fields: changedFields });
+  await supabaseAdmin.from('cms_brand_revisions').insert({ brand_id: id, snapshot: current, saved_by: auth.session.username });
   await supabaseAdmin.from('cms_change_log').insert({ entity_type: 'brand', entity_id: id, entity_label: current.name, action: approval_action === 'submit_for_approval' ? 'submit_for_approval' : status === 'published' ? 'publish' : status === 'scheduled' ? 'schedule' : 'update', previous: current, next_state: data, changed_by: auth.session.username });
   return NextResponse.json({ brand: data });
 }
@@ -98,7 +106,7 @@ export async function PUT(req: NextRequest) {
   const missing = [...candidates.values()].filter(brand => !known.has(slugify(brand.name))).map((brand, index) => ({
     name: brand.name, slug: slugify(brand.name), domain: brand.domain ?? null, logo_url: brand.logoUrl ?? null,
     tagline_fr: brand.taglineFr ?? null, tagline_ar: brand.taglineAr ?? null, description_fr: brand.descriptionFr ?? null,
-    description_ar: brand.descriptionAr ?? null, status: 'draft', approval_status: 'draft', display_order: index + 1,
+    description_ar: brand.descriptionAr ?? null, status: 'draft', display_order: index + 1,
     created_by: auth.session.username, updated_by: auth.session.username,
   }));
   if (missing.length) {
