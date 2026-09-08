@@ -15,7 +15,7 @@ import { brandLogoSrc } from '@/lib/brand-logo';
 import { useBrandImages } from '@/hooks/useBrandImages';
 import {
   Tag, Search, ArrowLeft, ChevronRight, Globe, Image, Package, AlertCircle,
-  Plus, Eye, EyeOff, Upload, Link2, Trash2, Check, RefreshCw,
+  Plus, Eye, EyeOff, Upload, Link2, Trash2, Check, RefreshCw, FileImage, X,
 } from 'lucide-react';
 
 type CmsStatus = 'draft' | 'scheduled' | 'published' | 'archived';
@@ -426,6 +426,235 @@ function LogoUploader({ currentUrl, isDark, onUploaded }: { currentUrl: string |
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
+// Bulk Image Upload Modal
+// ──────────────────────────────────────────────────────────────────────────────
+
+type BulkResult = { updated: string[]; skipped: string[]; errors: { name: string; error: string }[] } | null;
+
+function BulkImageUploadModal({ isDark, onClose, onDone }: { isDark: boolean; onClose: () => void; onDone: () => void }) {
+  const fileRef = React.useRef<HTMLInputElement>(null);
+  const [files, setFiles] = React.useState<File[]>([]);
+  const [uploading, setUploading] = React.useState(false);
+  const [progress, setProgress] = React.useState(0);
+  const [result, setResult] = React.useState<BulkResult>(null);
+  const [err, setErr] = React.useState('');
+  const [dragging, setDragging] = React.useState(false);
+
+  const addFiles = (incoming: FileList | null) => {
+    if (!incoming) return;
+    const images = Array.from(incoming).filter(f => f.type.startsWith('image/'));
+    setFiles(prev => {
+      const existing = new Set(prev.map(f => f.name));
+      return [...prev, ...images.filter(f => !existing.has(f.name))];
+    });
+  };
+
+  const removeFile = (name: string) => setFiles(prev => prev.filter(f => f.name !== name));
+
+  const handleUpload = async () => {
+    if (!files.length) return;
+    setUploading(true);
+    setErr('');
+    setResult(null);
+    setProgress(0);
+
+    // Upload in batches of 10 to avoid request size limits
+    const BATCH = 10;
+    const allUpdated: string[] = [];
+    const allSkipped: string[] = [];
+    const allErrors: { name: string; error: string }[] = [];
+    const batches = [];
+    for (let i = 0; i < files.length; i += BATCH) batches.push(files.slice(i, i + BATCH));
+
+    try {
+      for (let b = 0; b < batches.length; b++) {
+        const fd = new FormData();
+        for (const f of batches[b]) fd.append('files', f);
+        const res = await fetch('/api/admin/brand-bulk-images', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (!res.ok) { setErr(data.error || 'Erreur serveur.'); setUploading(false); return; }
+        allUpdated.push(...(data.updated ?? []));
+        allSkipped.push(...(data.skipped ?? []));
+        allErrors.push(...(data.errors ?? []));
+        setProgress(Math.round(((b + 1) / batches.length) * 100));
+      }
+      setResult({ updated: allUpdated, skipped: allSkipped, errors: allErrors });
+      if (allUpdated.length > 0) onDone();
+    } catch {
+      setErr('Erreur réseau.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const overlay: React.CSSProperties = {
+    position: 'fixed', inset: 0, zIndex: 100,
+    background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  };
+  const modal: React.CSSProperties = {
+    width: '520px', maxWidth: '95vw', maxHeight: '85vh',
+    borderRadius: '16px',
+    background: isDark ? '#0f172a' : '#fff',
+    border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.09)',
+    padding: '28px',
+    display: 'flex', flexDirection: 'column', gap: '20px',
+    overflowY: 'auto',
+  };
+
+  return (
+    <div style={overlay} onClick={onClose}>
+      <div style={modal} onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <div>
+            <h2 style={{ fontSize: '16px', fontWeight: 800, color: isDark ? '#f1f5f9' : '#0f172a', margin: 0 }}>Importer des logos en masse</h2>
+            <p style={{ fontSize: '12px', color: isDark ? '#475569' : '#94a3b8', marginTop: '4px' }}>
+              Nommez chaque fichier comme la marque — ex. <code>vichy.png</code>, <code>la-roche-posay.jpg</code>.<br />
+              Seules les marques <strong>sans logo existant</strong> seront mises à jour.
+            </p>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: isDark ? '#475569' : '#94a3b8', padding: '2px' }}>
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Drop zone */}
+        {!result && (
+          <div
+            onDragEnter={e => { e.preventDefault(); setDragging(true); }}
+            onDragOver={e => e.preventDefault()}
+            onDragLeave={() => setDragging(false)}
+            onDrop={e => { e.preventDefault(); setDragging(false); addFiles(e.dataTransfer.files); }}
+            onClick={() => fileRef.current?.click()}
+            style={{
+              minHeight: '120px', borderRadius: '12px', cursor: 'pointer',
+              border: dragging
+                ? '2px dashed #10b981'
+                : (isDark ? '2px dashed rgba(255,255,255,0.1)' : '2px dashed rgba(0,0,0,0.12)'),
+              background: dragging
+                ? (isDark ? 'rgba(16,185,129,0.06)' : 'rgba(16,185,129,0.04)')
+                : (isDark ? 'rgba(255,255,255,0.02)' : '#f8fafc'),
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              justifyContent: 'center', gap: '10px', transition: 'all 0.15s',
+            }}
+          >
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              multiple
+              style={{ display: 'none' }}
+              onChange={e => { addFiles(e.target.files); e.target.value = ''; }}
+            />
+            <FileImage size={24} style={{ color: isDark ? '#334155' : '#cbd5e1' }} />
+            <span style={{ fontSize: '12px', color: isDark ? '#475569' : '#94a3b8', textAlign: 'center' }}>
+              Glisser les images ici ou <span style={{ color: '#10b981', fontWeight: 600 }}>cliquer pour sélectionner</span><br />
+              <span style={{ fontSize: '11px' }}>PNG, JPG, WebP — plusieurs fichiers à la fois</span>
+            </span>
+          </div>
+        )}
+
+        {/* File list */}
+        {files.length > 0 && !result && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '200px', overflowY: 'auto' }}>
+            <p style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: isDark ? '#475569' : '#94a3b8', margin: 0 }}>
+              {files.length} fichier{files.length !== 1 ? 's' : ''} sélectionné{files.length !== 1 ? 's' : ''}
+            </p>
+            {files.map(f => (
+              <div key={f.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', borderRadius: '8px', background: isDark ? 'rgba(255,255,255,0.03)' : '#f1f5f9', fontSize: '12px', color: isDark ? '#94a3b8' : '#334155' }}>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
+                {!uploading && (
+                  <button onClick={() => removeFile(f.name)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: isDark ? '#475569' : '#94a3b8', flexShrink: 0, padding: '0 0 0 8px' }}>
+                    <X size={12} />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Progress */}
+        {uploading && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ height: '4px', borderRadius: '4px', background: isDark ? 'rgba(255,255,255,0.07)' : '#e2e8f0', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${progress}%`, background: 'linear-gradient(90deg,#10b981,#0d9488)', transition: 'width 0.3s' }} />
+            </div>
+            <p style={{ fontSize: '11px', color: isDark ? '#475569' : '#94a3b8', textAlign: 'center' }}>Envoi en cours… {progress}%</p>
+          </div>
+        )}
+
+        {/* Error */}
+        {err && (
+          <p style={{ fontSize: '12px', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <AlertCircle size={14} /> {err}
+          </p>
+        )}
+
+        {/* Result summary */}
+        {result && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {result.updated.length > 0 && (
+              <div>
+                <p style={{ fontSize: '11px', fontWeight: 700, color: '#10b981', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <Check size={13} /> {result.updated.length} logo{result.updated.length !== 1 ? 's' : ''} mis à jour
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', maxHeight: '120px', overflowY: 'auto' }}>
+                  {result.updated.map(name => (
+                    <span key={name} style={{ fontSize: '12px', color: isDark ? '#34d399' : '#059669', padding: '3px 8px', borderRadius: '6px', background: isDark ? 'rgba(16,185,129,0.07)' : 'rgba(16,185,129,0.06)' }}>{name}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {result.skipped.length > 0 && (
+              <div>
+                <p style={{ fontSize: '11px', fontWeight: 700, color: isDark ? '#64748b' : '#94a3b8', marginBottom: '6px' }}>
+                  {result.skipped.length} fichier{result.skipped.length !== 1 ? 's' : ''} ignoré{result.skipped.length !== 1 ? 's' : ''} (marque inconnue ou logo déjà présent)
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', maxHeight: '100px', overflowY: 'auto' }}>
+                  {result.skipped.map(name => (
+                    <span key={name} style={{ fontSize: '11px', color: isDark ? '#475569' : '#94a3b8', fontFamily: 'monospace' }}>{name}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {result.errors.length > 0 && (
+              <div>
+                <p style={{ fontSize: '11px', fontWeight: 700, color: '#ef4444', marginBottom: '6px' }}>
+                  {result.errors.length} erreur{result.errors.length !== 1 ? 's' : ''}
+                </p>
+                {result.errors.map(e => (
+                  <p key={e.name} style={{ fontSize: '11px', color: '#ef4444', margin: '2px 0', fontFamily: 'monospace' }}>{e.name}: {e.error}</p>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Actions */}
+        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+          <button
+            onClick={onClose}
+            style={{ padding: '8px 16px', fontSize: '12px', fontWeight: 600, borderRadius: '10px', border: isDark ? '1px solid rgba(255,255,255,0.09)' : '1px solid rgba(0,0,0,0.1)', background: 'transparent', color: isDark ? '#64748b' : '#94a3b8', cursor: 'pointer' }}
+          >
+            {result ? 'Fermer' : 'Annuler'}
+          </button>
+          {!result && (
+            <button
+              onClick={handleUpload}
+              disabled={uploading || files.length === 0}
+              style={{ padding: '8px 18px', fontSize: '12px', fontWeight: 700, borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #10b981, #0d9488)', color: '#fff', cursor: uploading || files.length === 0 ? 'not-allowed' : 'pointer', opacity: uploading || files.length === 0 ? 0.6 : 1, display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              <Upload size={13} /> {uploading ? `Envoi… ${progress}%` : `Importer ${files.length > 0 ? `${files.length} ` : ''}logo${files.length !== 1 ? 's' : ''}`}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
 // Editor
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -753,6 +982,7 @@ function ContentBrands() {
     router.push(`/admin/content/brands${query ? `?${query}` : ''}`, { scroll: false });
   }, [router, searchParams]);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showBulkModal, setShowBulkModal] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<{ imported: number; total: number } | null>(null);
 
@@ -854,6 +1084,9 @@ function ContentBrands() {
       {showAddModal && (
         <AddBrandModal isDark={isDark} onClose={() => setShowAddModal(false)} onCreated={handleCreated} />
       )}
+      {showBulkModal && (
+        <BulkImageUploadModal isDark={isDark} onClose={() => setShowBulkModal(false)} onDone={() => { void loadBrands(); }} />
+      )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
@@ -887,6 +1120,21 @@ function ContentBrands() {
             >
               <RefreshCw size={13} style={{ animation: syncing ? 'spin 1s linear infinite' : 'none' }} />
               {syncing ? 'Sync…' : 'Sync catalogue'}
+            </button>
+            <button
+              onClick={() => setShowBulkModal(true)}
+              title="Importer des logos pour plusieurs marques à la fois"
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                padding: '8px 14px', fontSize: '12px', fontWeight: 600,
+                borderRadius: '10px', cursor: 'pointer',
+                border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)',
+                background: 'transparent',
+                color: isDark ? '#94a3b8' : '#64748b',
+              }}
+            >
+              <FileImage size={13} />
+              Importer logos
             </button>
             <button
               onClick={() => setShowAddModal(true)}
