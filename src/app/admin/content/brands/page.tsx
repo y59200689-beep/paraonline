@@ -658,33 +658,63 @@ function BulkImageUploadModal({ isDark, onClose, onDone }: { isDark: boolean; on
 // CSV Brand Import Modal
 // ──────────────────────────────────────────────────────────────────────────────
 
-type CsvAllowedField = 'logo_url' | 'domain' | 'card_link' | 'tagline_fr' | 'tagline_ar' | 'description_fr' | 'description_ar';
-const CSV_ALLOWED_FIELDS: CsvAllowedField[] = ['logo_url', 'domain', 'card_link', 'tagline_fr', 'tagline_ar', 'description_fr', 'description_ar'];
+type CsvAllowedField = 'name' | 'logo_url' | 'domain' | 'card_link' | 'tagline_fr' | 'tagline_ar' | 'description_fr' | 'description_ar';
+const CSV_ALLOWED_FIELDS: CsvAllowedField[] = ['name', 'logo_url', 'domain', 'card_link', 'tagline_fr', 'tagline_ar', 'description_fr', 'description_ar'];
 const CSV_FIELD_LABELS: Record<CsvAllowedField, string> = {
-  logo_url: 'Logo URL', domain: 'Domaine', card_link: 'Lien carte',
+  name: 'Nom', logo_url: 'Logo URL', domain: 'Domaine', card_link: 'Lien carte',
   tagline_fr: 'Accroche FR', tagline_ar: 'Accroche AR',
   description_fr: 'Description FR', description_ar: 'Description AR',
 };
 
+const FIELD_ALIASES: Record<string, CsvAllowedField> = {
+  // Name
+  name: 'name', nom: 'name', marque: 'name', brand: 'name', brand_name: 'name', title: 'name', titre: 'name',
+  // Logo / Image
+  image: 'logo_url', image_url: 'logo_url', logo: 'logo_url', logo_url: 'logo_url', photo: 'logo_url',
+  picture: 'logo_url', img: 'logo_url', url_logo: 'logo_url', url_image: 'logo_url', icon: 'logo_url',
+  // Domain
+  domain: 'domain', domaine: 'domain', slug: 'domain',
+  // Link
+  card_link: 'card_link', link: 'card_link', lien: 'card_link', url: 'card_link', site: 'card_link', website: 'card_link',
+  // Tagline
+  tagline: 'tagline_fr', tagline_fr: 'tagline_fr', tagline_ar: 'tagline_ar', slogan: 'tagline_fr', accroche: 'tagline_fr',
+  // Description
+  description: 'description_fr', description_fr: 'description_fr', description_ar: 'description_ar', desc: 'description_fr',
+};
+
 interface CsvMatchedEntry { brand: CmsBrand; changes: Partial<Record<CsvAllowedField, string>>; rawName: string; }
-interface CsvUnmatchedEntry { rawName: string; changes: Partial<Record<CsvAllowedField, string>>; resolution: 'skip' | string; }
+interface CsvUnmatchedEntry { rawName: string; changes: Partial<Record<CsvAllowedField, string>>; resolution: 'skip' | string; renameToCsv?: boolean; }
 interface CsvApplyResult { updated: string[]; errors: { id: string; error: string }[]; skipped: number; }
 
 function parseCsvText(text: string): { headers: string[]; rows: Record<string, string>[] } {
   const cleaned = text.replace(/^\uFEFF/, '');
   const lines = cleaned.split(/\r?\n/).filter(l => l.trim());
   if (lines.length < 1) return { headers: [], rows: [] };
+
+  const firstLine = lines[0];
+  const commaCount = (firstLine.match(/,/g) || []).length;
+  const semicolonCount = (firstLine.match(/;/g) || []).length;
+  const tabCount = (firstLine.match(/\t/g) || []).length;
+  const delimiter = tabCount > commaCount && tabCount > semicolonCount ? '\t' : semicolonCount > commaCount ? ';' : ',';
+
   const splitLine = (line: string): string[] => {
     const result: string[] = []; let cur = '', inQ = false;
     for (let i = 0; i < line.length; i++) {
       const ch = line[i];
-      if (ch === '"') { if (inQ && line[i + 1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
-      else if (ch === ',' && !inQ) { result.push(cur.trim()); cur = ''; }
-      else cur += ch;
+      if (ch === '"') {
+        if (inQ && line[i + 1] === '"') { cur += '"'; i++; }
+        else { inQ = !inQ; }
+      } else if (ch === delimiter && !inQ) {
+        result.push(cur.trim()); cur = '';
+      } else {
+        cur += ch;
+      }
     }
     result.push(cur.trim()); return result;
   };
-  const headers = splitLine(lines[0]);
+
+  const rawHeaders = splitLine(lines[0]);
+  const headers = rawHeaders.map(h => h.trim().replace(/^["']|["']$/g, ''));
   const rows = lines.slice(1).map(line => {
     const vals = splitLine(line);
     const row: Record<string, string> = {};
@@ -700,9 +730,14 @@ function BrandCsvImportModal({ isDark, onClose, onDone, brands }: {
   const csvSlugify = (text: string) =>
     text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-');
 
+  const csvStrip = (text: string) =>
+    text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+
   const fileRef = React.useRef<HTMLInputElement>(null);
   const [step, setStep] = React.useState<1 | 2 | 3>(1);
   const [parseErr, setParseErr] = React.useState('');
+  const [detectedCols, setDetectedCols] = React.useState<string[]>([]);
+  const [onlyEmptyLogos, setOnlyEmptyLogos] = React.useState(false);
   const [matched, setMatched] = React.useState<CsvMatchedEntry[]>([]);
   const [unmatched, setUnmatched] = React.useState<CsvUnmatchedEntry[]>([]);
   const [applying, setApplying] = React.useState(false);
@@ -710,10 +745,14 @@ function BrandCsvImportModal({ isDark, onClose, onDone, brands }: {
   const [dragging, setDragging] = React.useState(false);
   const [brandSearch, setBrandSearch] = React.useState<Record<number, string>>({});
 
-  const brandSlugMap = React.useMemo(() => {
-    const map = new Map<string, CmsBrand>();
-    for (const b of brands) map.set(csvSlugify(b.name), b);
-    return map;
+  const { brandSlugMap, brandStripMap } = React.useMemo(() => {
+    const slugMap = new Map<string, CmsBrand>();
+    const stripMap = new Map<string, CmsBrand>();
+    for (const b of brands) {
+      slugMap.set(csvSlugify(b.name), b);
+      stripMap.set(csvStrip(b.name), b);
+    }
+    return { brandSlugMap: slugMap, brandStripMap: stripMap };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [brands]);
 
@@ -722,20 +761,50 @@ function BrandCsvImportModal({ isDark, onClose, onDone, brands }: {
     setParseErr('');
     const text = await file.text();
     const { headers, rows } = parseCsvText(text);
-    if (!headers.includes('name')) { setParseErr('La colonne "name" est requise dans le fichier CSV.'); return; }
+
+    // Map each CSV header to a canonical target field
+    const headerMapping: Record<string, CsvAllowedField> = {};
+    for (const h of headers) {
+      const normalized = h.toLowerCase().trim().replace(/[\s_-]+/g, '_');
+      if (FIELD_ALIASES[normalized]) {
+        headerMapping[h] = FIELD_ALIASES[normalized];
+      }
+    }
+
+    const nameHeader = Object.keys(headerMapping).find(h => headerMapping[h] === 'name');
+    if (!nameHeader) {
+      setParseErr('Colonne marque manquante ("name", "nom", ou "marque" requise dans le fichier CSV).');
+      return;
+    }
     if (rows.length === 0) { setParseErr('Le fichier CSV ne contient aucune ligne de données.'); return; }
-    const fields = CSV_ALLOWED_FIELDS.filter(f => headers.includes(f));
+
+    const detectedInfo = Object.entries(headerMapping).map(([orig, target]) => `"${orig}" → ${CSV_FIELD_LABELS[target]}`);
+    setDetectedCols(detectedInfo);
+
     const newMatched: CsvMatchedEntry[] = [];
     const newUnmatched: CsvUnmatchedEntry[] = [];
+
     for (const row of rows) {
-      const rawName = row['name'] ?? '';
+      const rawName = (row[nameHeader] ?? '').trim();
       if (!rawName) continue;
-      const brand = brandSlugMap.get(csvSlugify(rawName));
+
+      // Try exact slug match, then stripped fuzzy match (ignoring dashes/spaces/accents)
+      const brand = brandSlugMap.get(csvSlugify(rawName)) || brandStripMap.get(csvStrip(rawName));
+
       const changes: Partial<Record<CsvAllowedField, string>> = {};
-      for (const f of fields) { if (row[f]) changes[f] = row[f]; }
-      if (brand) newMatched.push({ brand, changes, rawName });
-      else newUnmatched.push({ rawName, changes, resolution: 'skip' });
+      for (const [origHeader, targetField] of Object.entries(headerMapping)) {
+        if (targetField !== 'name' && (row[origHeader] ?? '').trim()) {
+          changes[targetField] = row[origHeader].trim();
+        }
+      }
+
+      if (brand) {
+        newMatched.push({ brand, changes, rawName });
+      } else {
+        newUnmatched.push({ rawName, changes, resolution: 'skip', renameToCsv: false });
+      }
     }
+
     setMatched(newMatched);
     setUnmatched(newUnmatched);
     setStep(2);
@@ -744,38 +813,88 @@ function BrandCsvImportModal({ isDark, onClose, onDone, brands }: {
   const setUnmatchedResolution = (index: number, resolution: 'skip' | string) =>
     setUnmatched(prev => prev.map((e, i) => i === index ? { ...e, resolution } : e));
 
+  const setUnmatchedRename = (index: number, renameToCsv: boolean) =>
+    setUnmatched(prev => prev.map((e, i) => i === index ? { ...e, renameToCsv } : e));
+
   const handleApply = async () => {
     setApplying(true);
     const updates: { id: string; fields: Record<string, unknown> }[] = [];
+
     for (const entry of matched) {
-      if (Object.keys(entry.changes).length > 0) updates.push({ id: entry.brand.id, fields: entry.changes });
+      if (onlyEmptyLogos && entry.brand.logo_url && entry.changes.logo_url) {
+        continue;
+      }
+      if (Object.keys(entry.changes).length > 0) {
+        updates.push({ id: entry.brand.id, fields: entry.changes });
+      }
     }
+
     let skipped = 0;
     for (const entry of unmatched) {
-      if (entry.resolution === 'skip' || !entry.resolution || Object.keys(entry.changes).length === 0) { skipped++; continue; }
-      updates.push({ id: entry.resolution, fields: entry.changes });
+      if (entry.resolution === 'skip' || !entry.resolution) {
+        skipped++;
+        continue;
+      }
+      const targetBrand = brands.find(b => b.id === entry.resolution);
+      if (onlyEmptyLogos && targetBrand?.logo_url && entry.changes.logo_url) {
+        skipped++;
+        continue;
+      }
+      const fieldsToUpdate: Record<string, unknown> = { ...entry.changes };
+      if (entry.renameToCsv) {
+        fieldsToUpdate.name = entry.rawName;
+      }
+      if (Object.keys(fieldsToUpdate).length === 0) {
+        skipped++;
+        continue;
+      }
+      updates.push({ id: entry.resolution, fields: fieldsToUpdate });
     }
+
     if (updates.length === 0) {
       setResult({ updated: [], errors: [], skipped });
-      setStep(3); setApplying(false); return;
+      setStep(3);
+      setApplying(false);
+      return;
     }
+
     try {
-      const res = await fetch('/api/admin/brand-csv-import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ updates }) });
+      const res = await fetch('/api/admin/brand-csv-import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ updates }),
+      });
       const data = await res.json();
-      if (!res.ok) { setParseErr(data.error || 'Erreur serveur.'); setApplying(false); return; }
+      if (!res.ok) {
+        setParseErr(data.error || 'Erreur serveur.');
+        setApplying(false);
+        return;
+      }
       setResult({ updated: data.updated ?? [], errors: data.errors ?? [], skipped });
       if ((data.updated ?? []).length > 0) onDone();
       setStep(3);
-    } catch { setParseErr('Erreur réseau.'); }
-    finally { setApplying(false); }
+    } catch {
+      setParseErr('Erreur réseau.');
+    } finally {
+      setApplying(false);
+    }
   };
 
   const overlay: React.CSSProperties = { position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center' };
-  const modal: React.CSSProperties = { width: step === 2 ? '660px' : '520px', maxWidth: '95vw', maxHeight: '88vh', borderRadius: '16px', background: isDark ? '#0f172a' : '#fff', border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.09)', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px', overflowY: 'auto', transition: 'width 0.2s' };
+  const modal: React.CSSProperties = { width: step === 2 ? '680px' : '520px', maxWidth: '95vw', maxHeight: '88vh', borderRadius: '16px', background: isDark ? '#0f172a' : '#fff', border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.09)', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px', overflowY: 'auto', transition: 'width 0.2s' };
   const sectionLabel: React.CSSProperties = { fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: isDark ? '#475569' : '#94a3b8', margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: '5px' };
 
-  const remapCount = unmatched.filter(e => e.resolution !== 'skip' && e.resolution).length;
-  const applyCount = matched.filter(e => Object.keys(e.changes).length > 0).length + remapCount;
+  const eligibleMatched = matched.filter(e => {
+    if (onlyEmptyLogos && e.brand.logo_url && e.changes.logo_url) return false;
+    return Object.keys(e.changes).length > 0;
+  });
+  const eligibleRemapped = unmatched.filter(e => {
+    if (e.resolution === 'skip' || !e.resolution) return false;
+    const targetBrand = brands.find(b => b.id === e.resolution);
+    if (onlyEmptyLogos && targetBrand?.logo_url && e.changes.logo_url) return false;
+    return Object.keys(e.changes).length > 0 || e.renameToCsv;
+  });
+  const applyCount = eligibleMatched.length + eligibleRemapped.length;
 
   return (
     <div style={overlay} onClick={onClose}>
@@ -786,7 +905,7 @@ function BrandCsvImportModal({ isDark, onClose, onDone, brands }: {
           <div>
             <h2 style={{ fontSize: '16px', fontWeight: 800, color: isDark ? '#f1f5f9' : '#0f172a', margin: 0 }}>Importer via CSV</h2>
             <p style={{ fontSize: '12px', color: isDark ? '#475569' : '#94a3b8', marginTop: '4px' }}>
-              {step === 1 && 'Colonnes supportées : name, logo_url, domain, card_link, tagline_fr/ar, description_fr/ar'}
+              {step === 1 && 'Colonnes supportées : name / marque, image / logo, domain, card_link, tagline, description'}
               {step === 2 && `${matched.length} correspondance${matched.length !== 1 ? 's' : ''} · ${unmatched.length} non trouvée${unmatched.length !== 1 ? 's' : ''}`}
               {step === 3 && 'Import terminé'}
             </p>
@@ -819,14 +938,14 @@ function BrandCsvImportModal({ isDark, onClose, onDone, brands }: {
               <FileSpreadsheet size={28} style={{ color: isDark ? '#334155' : '#cbd5e1' }} />
               <span style={{ fontSize: '12px', color: isDark ? '#475569' : '#94a3b8', textAlign: 'center' }}>
                 Glisser un fichier CSV ici ou <span style={{ color: '#10b981', fontWeight: 600 }}>cliquer pour sélectionner</span><br />
-                <span style={{ fontSize: '11px' }}>Format .csv — UTF-8 ou Excel</span>
+                <span style={{ fontSize: '11px' }}>Format .csv (virgule ou point-virgule) — ex: name,image</span>
               </span>
             </div>
             <div style={{ padding: '12px 14px', borderRadius: '10px', background: isDark ? 'rgba(255,255,255,0.02)' : '#f8fafc', border: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.07)' }}>
-              <p style={sectionLabel}>Exemple de format</p>
-              <code style={{ fontSize: '10px', color: isDark ? '#475569' : '#94a3b8', lineHeight: 1.8, display: 'block', whiteSpace: 'pre' }}>{`name,logo_url,tagline_fr
-Vichy,https://…/vichy.webp,Santé de la peau active
-La Roche-Posay,https://…/lrp.webp,La vie change la peau`}</code>
+              <p style={sectionLabel}>Exemple de format accepté</p>
+              <code style={{ fontSize: '10px', color: isDark ? '#475569' : '#94a3b8', lineHeight: 1.8, display: 'block', whiteSpace: 'pre' }}>{`name,image
+Vichy,https://kingphar.ma/img/m/1145-small_default.jpg
+A-DERMA,https://kingphar.ma/img/m/1026-small_default.jpg`}</code>
             </div>
             {parseErr && <p style={{ fontSize: '12px', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '6px' }}><AlertCircle size={14} />{parseErr}</p>}
           </>
@@ -836,32 +955,66 @@ La Roche-Posay,https://…/lrp.webp,La vie change la peau`}</code>
         {step === 2 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
+            {/* Detected columns banner & options */}
+            <div style={{ padding: '10px 14px', borderRadius: '10px', background: isDark ? 'rgba(16,185,129,0.08)' : 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: isDark ? '#34d399' : '#059669', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Check size={13} /> Colonnes reconnues : {detectedCols.join(' · ')}
+                </span>
+              </div>
+              <label style={{ fontSize: '11px', color: isDark ? '#cbd5e1' : '#475569', display: 'flex', alignItems: 'center', gap: '7px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={onlyEmptyLogos}
+                  onChange={e => setOnlyEmptyLogos(e.target.checked)}
+                  style={{ accentColor: '#10b981' }}
+                />
+                Ne mettre à jour que les cartes sans logo (conserver les logos existants)
+              </label>
+            </div>
+
             {/* Matched */}
             {matched.length > 0 && (
               <div>
-                <p style={sectionLabel}><Check size={11} />  {matched.length} marque{matched.length !== 1 ? 's' : ''} correspondante{matched.length !== 1 ? 's' : ''}</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '220px', overflowY: 'auto' }}>
-                  {matched.map((entry, i) => (
-                    <div key={i} style={{ padding: '8px 10px', borderRadius: '8px', background: isDark ? 'rgba(16,185,129,0.05)' : 'rgba(16,185,129,0.04)', border: isDark ? '1px solid rgba(16,185,129,0.12)' : '1px solid rgba(16,185,129,0.15)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: Object.keys(entry.changes).length ? '6px' : 0 }}>
-                        <span style={{ fontSize: '12px', fontWeight: 600, color: isDark ? '#34d399' : '#059669' }}>{entry.brand.name}</span>
-                        {entry.rawName !== entry.brand.name && (
-                          <span style={{ fontSize: '10px', color: isDark ? '#475569' : '#94a3b8', fontFamily: 'monospace' }}>← CSV: {entry.rawName}</span>
+                <p style={sectionLabel}><Check size={11} /> {matched.length} marque{matched.length !== 1 ? 's' : ''} correspondante{matched.length !== 1 ? 's' : ''} ({eligibleMatched.length} à mettre à jour)</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '220px', overflowY: 'auto' }}>
+                  {matched.map((entry, i) => {
+                    const hasChanges = Object.keys(entry.changes).length > 0;
+                    const skippedByLogoOption = onlyEmptyLogos && entry.brand.logo_url && entry.changes.logo_url;
+                    return (
+                      <div key={i} style={{ padding: '8px 10px', borderRadius: '8px', background: isDark ? 'rgba(16,185,129,0.05)' : 'rgba(16,185,129,0.04)', border: isDark ? '1px solid rgba(16,185,129,0.12)' : '1px solid rgba(16,185,129,0.15)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        {entry.changes.logo_url && (
+                          <img
+                            src={entry.changes.logo_url}
+                            alt=""
+                            style={{ width: '28px', height: '28px', objectFit: 'contain', borderRadius: '6px', background: '#fff', border: '1px solid rgba(0,0,0,0.1)', flexShrink: 0 }}
+                            onError={e => { (e.currentTarget as HTMLElement).style.display = 'none'; }}
+                          />
                         )}
-                      </div>
-                      {Object.keys(entry.changes).length > 0 ? (
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                          {(Object.entries(entry.changes) as [CsvAllowedField, string][]).map(([field, val]) => (
-                            <span key={field} title={val} style={{ fontSize: '10px', padding: '2px 7px', borderRadius: '6px', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9', color: isDark ? '#94a3b8' : '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '200px', whiteSpace: 'nowrap', display: 'inline-block' }}>
-                              <strong>{CSV_FIELD_LABELS[field]}</strong>: {val}
-                            </span>
-                          ))}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span style={{ fontSize: '12px', fontWeight: 600, color: isDark ? '#34d399' : '#059669' }}>{entry.brand.name}</span>
+                            {entry.rawName.toLowerCase() !== entry.brand.name.toLowerCase() && (
+                              <span style={{ fontSize: '10px', color: isDark ? '#475569' : '#94a3b8', fontFamily: 'monospace' }}>← CSV: {entry.rawName}</span>
+                            )}
+                          </div>
+                          {skippedByLogoOption ? (
+                            <span style={{ fontSize: '10px', color: isDark ? '#64748b' : '#94a3b8', fontStyle: 'italic' }}>Logo déjà présent — ignoré selon option</span>
+                          ) : hasChanges ? (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px' }}>
+                              {(Object.entries(entry.changes) as [CsvAllowedField, string][]).map(([field, val]) => (
+                                <span key={field} title={val} style={{ fontSize: '10px', padding: '2px 7px', borderRadius: '6px', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9', color: isDark ? '#94a3b8' : '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '320px', whiteSpace: 'nowrap', display: 'inline-block' }}>
+                                  <strong>{CSV_FIELD_LABELS[field]}</strong>: {val}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: '10px', color: isDark ? '#334155' : '#94a3b8' }}>Aucune colonne à mettre à jour</span>
+                          )}
                         </div>
-                      ) : (
-                        <span style={{ fontSize: '10px', color: isDark ? '#334155' : '#94a3b8' }}>Aucune colonne reconnue à mettre à jour</span>
-                      )}
-                    </div>
-                  ))}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -869,13 +1022,23 @@ La Roche-Posay,https://…/lrp.webp,La vie change la peau`}</code>
             {/* Unmatched */}
             {unmatched.length > 0 && (
               <div>
-                <p style={sectionLabel}><AlertCircle size={11} />  {unmatched.length} non trouvée{unmatched.length !== 1 ? 's' : ''} — associer ou ignorer</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '340px', overflowY: 'auto' }}>
+                <p style={sectionLabel}><AlertCircle size={11} /> {unmatched.length} non trouvée{unmatched.length !== 1 ? 's' : ''} — associer ou ignorer</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '300px', overflowY: 'auto' }}>
                   {unmatched.map((entry, i) => (
                     <div key={i} style={{ padding: '10px 12px', borderRadius: '10px', background: isDark ? 'rgba(255,255,255,0.02)' : '#f8fafc', border: isDark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.08)' }}>
                       {/* Row header */}
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '8px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 700, color: isDark ? '#e2e8f0' : '#0f172a', fontFamily: 'monospace' }}>{entry.rawName}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                          {entry.changes.logo_url && (
+                            <img
+                              src={entry.changes.logo_url}
+                              alt=""
+                              style={{ width: '24px', height: '24px', objectFit: 'contain', borderRadius: '4px', background: '#fff', border: '1px solid rgba(0,0,0,0.1)', flexShrink: 0 }}
+                              onError={e => { (e.currentTarget as HTMLElement).style.display = 'none'; }}
+                            />
+                          )}
+                          <span style={{ fontSize: '12px', fontWeight: 700, color: isDark ? '#e2e8f0' : '#0f172a', fontFamily: 'monospace' }}>{entry.rawName}</span>
+                        </div>
                         <button
                           onClick={() => setUnmatchedResolution(i, entry.resolution === 'skip' ? '' : 'skip')}
                           style={{ padding: '3px 10px', fontSize: '10px', fontWeight: 600, borderRadius: '999px', flexShrink: 0, border: entry.resolution !== 'skip' ? '1px solid rgba(16,185,129,0.3)' : (isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)'), background: entry.resolution !== 'skip' ? (isDark ? 'rgba(16,185,129,0.1)' : 'rgba(16,185,129,0.07)') : (isDark ? 'rgba(255,255,255,0.03)' : '#f1f5f9'), color: entry.resolution !== 'skip' ? (isDark ? '#34d399' : '#059669') : (isDark ? '#475569' : '#94a3b8'), cursor: 'pointer' }}
@@ -912,11 +1075,22 @@ La Roche-Posay,https://…/lrp.webp,La vie change la peau`}</code>
                           )}
                         </div>
                       )}
-                      {/* Selected brand label */}
+                      {/* Selected brand label & Rename option */}
                       {entry.resolution !== 'skip' && entry.resolution && (
-                        <p style={{ fontSize: '10px', color: isDark ? '#34d399' : '#059669', margin: '6px 0 0', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <Check size={10} /> Données appliquées à : <strong>{brands.find(b => b.id === entry.resolution)?.name}</strong>
-                        </p>
+                        <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <p style={{ fontSize: '10px', color: isDark ? '#34d399' : '#059669', margin: 0, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <Check size={10} /> Données appliquées à : <strong>{brands.find(b => b.id === entry.resolution)?.name}</strong>
+                          </p>
+                          <label style={{ fontSize: '11px', color: isDark ? '#94a3b8' : '#64748b', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                            <input
+                              type="checkbox"
+                              checked={entry.renameToCsv ?? false}
+                              onChange={e => setUnmatchedRename(i, e.target.checked)}
+                              style={{ accentColor: '#10b981' }}
+                            />
+                            Renommer la marque en « <strong>{entry.rawName}</strong> »
+                          </label>
+                        </div>
                       )}
                     </div>
                   ))}

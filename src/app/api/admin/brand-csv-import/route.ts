@@ -4,6 +4,7 @@ import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { canManageBrands } from '@/lib/permissions';
 
 const ALLOWED_FIELDS = new Set([
+  'name',
   'logo_url', 'domain', 'card_link',
   'tagline_fr', 'tagline_ar',
   'description_fr', 'description_ar',
@@ -27,9 +28,15 @@ export async function POST(req: NextRequest) {
   for (const { id, fields } of updates) {
     if (!id) continue;
 
+    // Normalize field aliases (e.g. image -> logo_url)
+    const normalizedInputFields: Record<string, unknown> = { ...fields };
+    if (normalizedInputFields.image && !normalizedInputFields.logo_url) {
+      normalizedInputFields.logo_url = normalizedInputFields.image;
+    }
+
     // Only allow safe, explicitly listed fields — never let CSV overwrite arbitrary columns
     const safeFields: Record<string, unknown> = { updated_by: operator.username };
-    for (const [key, value] of Object.entries(fields)) {
+    for (const [key, value] of Object.entries(normalizedInputFields)) {
       if (ALLOWED_FIELDS.has(key) && value !== '' && value !== null && value !== undefined) {
         safeFields[key] = value;
       }
