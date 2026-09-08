@@ -15,7 +15,7 @@ import { brandLogoSrc } from '@/lib/brand-logo';
 import { useBrandImages } from '@/hooks/useBrandImages';
 import {
   Tag, Search, ArrowLeft, ChevronRight, Globe, Image, Package, AlertCircle,
-  Plus, Eye, EyeOff, Upload, Link2, Trash2, Check, RefreshCw, FileImage, X, FileSpreadsheet,
+  Plus, Eye, EyeOff, Upload, Link2, Trash2, Check, RefreshCw, FileImage, X, FileSpreadsheet, Download,
 } from 'lucide-react';
 
 type CmsStatus = 'draft' | 'scheduled' | 'published' | 'archived';
@@ -672,6 +672,7 @@ const FIELD_ALIASES: Record<string, CsvAllowedField> = {
   // Logo / Image
   image: 'logo_url', image_url: 'logo_url', logo: 'logo_url', logo_url: 'logo_url', photo: 'logo_url',
   picture: 'logo_url', img: 'logo_url', url_logo: 'logo_url', url_image: 'logo_url', icon: 'logo_url',
+  'lien_image': 'logo_url', 'lien image': 'logo_url', 'lien de l\'image': 'logo_url', 'image_link': 'logo_url',
   // Domain
   domain: 'domain', domaine: 'domain', slug: 'domain',
   // Link
@@ -1558,6 +1559,55 @@ function ContentBrands() {
     void loadBrands();
   }, [loadBrands]);
 
+  const handleExportBrands = useCallback(() => {
+    if (!brands || brands.length === 0) {
+      alert('Aucune marque à exporter.');
+      return;
+    }
+
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+
+    const getImageUrl = (brand: CmsBrand): string => {
+      if (brand.logo_url && brand.logo_url.trim() !== '') {
+        const trimmed = brand.logo_url.trim();
+        if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+          return trimmed;
+        }
+        if (trimmed.startsWith('/') && origin) {
+          return `${origin}${trimmed}`;
+        }
+        return trimmed;
+      }
+      return '';
+    };
+
+    const escapeCsv = (val: unknown) => {
+      if (val === null || val === undefined) return '';
+      const str = String(val);
+      if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const headers = ['Nom', "Lien de l'image"];
+    const rows = brands.map(brand => [
+      brand.name,
+      getImageUrl(brand),
+    ]);
+
+    const csvContent = '\uFEFF' + [headers, ...rows].map(row => row.map(escapeCsv).join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `marques_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, [brands]);
+
   const visibleCount = brands.filter(b => b.is_visible && b.status === 'published').length;
 
   const handleDeleteBrand = useCallback(async (brand: CmsBrand) => {
@@ -1650,8 +1700,8 @@ function ContentBrands() {
               Importer CSV
             </button>
             <button
-              onClick={() => setShowBulkModal(true)}
-              title="Importer des logos pour plusieurs marques à la fois"
+              onClick={handleExportBrands}
+              title="Exporter toutes les marques avec le lien de leur image"
               style={{
                 display: 'flex', alignItems: 'center', gap: '6px',
                 padding: '8px 14px', fontSize: '12px', fontWeight: 600,
@@ -1661,8 +1711,8 @@ function ContentBrands() {
                 color: isDark ? '#94a3b8' : '#64748b',
               }}
             >
-              <FileImage size={13} />
-              Importer logos
+              <Download size={13} />
+              Exporter
             </button>
             <button
               onClick={() => setShowAddModal(true)}
