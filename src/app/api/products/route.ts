@@ -3,6 +3,7 @@ import { Product } from '@/lib/data';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { catalogCategoryForConcern, countCatalogConcerns, getCatalogConcerns, matchesCatalogConcern } from '@/lib/catalog-concerns';
 import { catalogCategoryFilter, normalizeCatalogCategoryId } from '@/lib/catalog-categories';
+import { catalogBrandPrefix, sanitizeCatalogSearch } from '@/lib/catalog-brand-match';
 
 // Catalogue data is operational data. Never allow a transient empty response
 // to become a Vercel edge-cache entry for every storefront visitor.
@@ -27,19 +28,12 @@ const PUBLIC_PRODUCT_COLUMNS = '*';
 
 const MAX_CATALOG_PAGE = 10_000;
 const MAX_CATALOG_PAGE_SIZE = 100;
-const MAX_CATALOG_SEARCH_LENGTH = 120;
 
 const boundedPositiveInteger = (value: string | null, fallback: number, maximum: number) => {
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed > 0 ? Math.min(parsed, maximum) : fallback;
 };
 
-const sanitizeCatalogSearch = (value: string) => value
-  .normalize('NFKC')
-  .replace(/[^\p{L}\p{N}\s-]/gu, ' ')
-  .replace(/\s+/g, ' ')
-  .trim()
-  .slice(0, MAX_CATALOG_SEARCH_LENGTH);
 
 const normalizeIngredientKey = (value: string) => value
   .trim()
@@ -304,8 +298,7 @@ export async function GET(request: Request) {
     if (vendor) {
       // Use the first 'word group' to maximize match coverage
       // e.g. "La Roche-Posay" → filter by "la roche%" 
-      const normalizedVendor = vendor.replace(/-/g, ' ').trim();
-      const firstChunk = normalizedVendor.split(' ').slice(0, 2).join(' ');
+      const firstChunk = catalogBrandPrefix(vendor);
       query = query.filter('vendor', 'ilike', `${firstChunk}%`);
     }
 

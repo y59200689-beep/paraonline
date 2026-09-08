@@ -56,7 +56,7 @@ describe('brands compatibility with base CMS schema', () => {
   it('loads actual brands without requiring optional columns', async () => {
     const response = await GET(request('GET'));
     expect(response!.status).toBe(200);
-    expect((await response!.json()).brands).toEqual([state.brand]);
+    expect((await response!.json()).brands).toEqual([{ ...state.brand, product_count: 0 }]);
   });
   it('creates drafts without optional approval fields', async () => {
     expect((await POST(request('POST', { name: 'QA Brand' })))!.status).toBe(201);

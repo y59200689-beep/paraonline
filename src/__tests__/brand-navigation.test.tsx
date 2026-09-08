@@ -8,12 +8,21 @@ vi.mock('next/navigation', () => ({
 }));
 vi.mock('@/context/AdminContext', () => ({ useAdmin: () => ({ currentUser: { role: 'owner' }, adminTheme: 'light' }) }));
 vi.mock('@/lib/request-json', () => ({ requestJson: async () => ({ brands: [
-  { id: '1', name: 'SVR', slug: 'svr', logo_url: navigation.logo, tagline_fr: 'La peau avant tout', status: 'published', is_visible: true, updated_at: '2026-09-08' },
-  { id: '2', name: 'Vichy', slug: 'vichy', status: 'draft', is_visible: false, updated_at: '2026-09-08' },
+  { id: '1', name: 'SVR', slug: 'svr', product_count: 42, logo_url: navigation.logo, tagline_fr: 'La peau avant tout', status: 'published', is_visible: true, updated_at: '2026-09-08' },
+  { id: '2', name: 'Vichy', slug: 'vichy', product_count: 1, status: 'draft', is_visible: false, updated_at: '2026-09-08' },
 ] }) }));
 import Page from '@/app/admin/content/brands/page';
 beforeEach(() => { navigation.query = ''; navigation.logo = undefined; navigation.push.mockClear(); });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+it('shows storefront product counts instead of dates on brand cards', async () => {
+  render(<Page />);
+  expect(await screen.findByText('42 produits')).toBeTruthy();
+  expect(screen.getByText('1 produit')).toBeTruthy();
+  expect(screen.queryByText('8 sept.')).toBeNull();
+  fireEvent.click(screen.getByText('42 produits'));
+  expect(navigation.push).toHaveBeenCalledTimes(1);
+});
 
 it.each([undefined, '/old-logo.png'])('removes an automatic or uploaded logo (%s), saves it and keeps it removed on reload', async (logo) => {
   navigation.query = 'brand=svr';

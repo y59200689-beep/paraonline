@@ -37,6 +37,7 @@ interface CmsBrand {
   is_visible: boolean;
   card_link: string | null;
   updated_at: string;
+  product_count?: number | null;
   seo_title_fr: string | null;
   seo_title_ar: string | null;
   seo_description_fr: string | null;
@@ -313,7 +314,7 @@ function BrandsList({
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
                 <StatusBadge status={brand.status} />
                 <span style={{ fontSize: '10px', color: isDark ? '#334155' : '#94a3b8' }}>
-                  {new Date(brand.updated_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                  {brand.product_count == null ? 'Produits : indisponible' : `${brand.product_count} produit${brand.product_count === 1 ? '' : 's'}`}
                 </span>
               </div>
             </div>
@@ -794,11 +795,13 @@ function ContentBrands() {
     setBrands(prev => [...prev, brand]);
     setShowAddModal(false);
     selectBrand(brand);
-  }, [selectBrand]);
+    void loadBrands();
+  }, [selectBrand, loadBrands]);
 
   const handleUpdated = useCallback((updated: CmsBrand) => {
     setBrands(prev => prev.map(b => b.id === updated.id ? updated : b));
-  }, []);
+    void loadBrands();
+  }, [loadBrands]);
 
   const visibleCount = brands.filter(b => b.is_visible && b.status === 'published').length;
 

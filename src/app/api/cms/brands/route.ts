@@ -4,6 +4,7 @@ import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { canManageBrands, canPublishContent, canScheduleContent } from '@/lib/permissions';
 import { BRANDS_DATA, slugify } from '@/lib/brands';
 import { revalidateTag } from 'next/cache';
+import { withBrandProductCounts } from '@/lib/brand-product-counts';
 
 // CMS deployments may not have the optional approval-workflow columns.
 // This authenticated endpoint returns the actual record instead of requiring them.
@@ -20,7 +21,7 @@ export async function GET(req: NextRequest) {
   if ('error' in auth) return auth.error;
   const { data, error } = await supabaseAdmin.from('cms_brands').select(BRAND_FIELDS).order('display_order', { ascending: true });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ brands: data ?? [] });
+  return NextResponse.json({ brands: await withBrandProductCounts(data ?? []) });
 }
 
 export async function POST(req: NextRequest) {
@@ -118,5 +119,5 @@ export async function PUT(req: NextRequest) {
   }
   const { data: brands, error } = await supabaseAdmin.from('cms_brands').select(BRAND_FIELDS).order('display_order', { ascending: true });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ brands: brands ?? [], imported: missing.length, total: brands?.length ?? 0 });
+  return NextResponse.json({ brands: await withBrandProductCounts(brands ?? []), imported: missing.length, total: brands?.length ?? 0 });
 }
