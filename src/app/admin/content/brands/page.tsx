@@ -15,7 +15,7 @@ import { brandLogoSrc } from '@/lib/brand-logo';
 import { useBrandImages } from '@/hooks/useBrandImages';
 import {
   Tag, Search, ArrowLeft, ChevronRight, Globe, Image, Package, AlertCircle,
-  Plus, Eye, EyeOff, Upload, Link2, Trash2, Check, RefreshCw, FileImage, X,
+  Plus, Eye, EyeOff, Upload, Link2, Trash2, Check, RefreshCw, FileImage, X, FileSpreadsheet,
 } from 'lucide-react';
 
 type CmsStatus = 'draft' | 'scheduled' | 'published' | 'archived';
@@ -655,6 +655,348 @@ function BulkImageUploadModal({ isDark, onClose, onDone }: { isDark: boolean; on
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
+// CSV Brand Import Modal
+// ──────────────────────────────────────────────────────────────────────────────
+
+type CsvAllowedField = 'logo_url' | 'domain' | 'card_link' | 'tagline_fr' | 'tagline_ar' | 'description_fr' | 'description_ar';
+const CSV_ALLOWED_FIELDS: CsvAllowedField[] = ['logo_url', 'domain', 'card_link', 'tagline_fr', 'tagline_ar', 'description_fr', 'description_ar'];
+const CSV_FIELD_LABELS: Record<CsvAllowedField, string> = {
+  logo_url: 'Logo URL', domain: 'Domaine', card_link: 'Lien carte',
+  tagline_fr: 'Accroche FR', tagline_ar: 'Accroche AR',
+  description_fr: 'Description FR', description_ar: 'Description AR',
+};
+
+interface CsvMatchedEntry { brand: CmsBrand; changes: Partial<Record<CsvAllowedField, string>>; rawName: string; }
+interface CsvUnmatchedEntry { rawName: string; changes: Partial<Record<CsvAllowedField, string>>; resolution: 'skip' | string; }
+interface CsvApplyResult { updated: string[]; errors: { id: string; error: string }[]; skipped: number; }
+
+function parseCsvText(text: string): { headers: string[]; rows: Record<string, string>[] } {
+  const cleaned = text.replace(/^\uFEFF/, '');
+  const lines = cleaned.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 1) return { headers: [], rows: [] };
+  const splitLine = (line: string): string[] => {
+    const result: string[] = []; let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') { if (inQ && line[i + 1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
+      else if (ch === ',' && !inQ) { result.push(cur.trim()); cur = ''; }
+      else cur += ch;
+    }
+    result.push(cur.trim()); return result;
+  };
+  const headers = splitLine(lines[0]);
+  const rows = lines.slice(1).map(line => {
+    const vals = splitLine(line);
+    const row: Record<string, string> = {};
+    headers.forEach((h, i) => { row[h] = vals[i] ?? ''; });
+    return row;
+  }).filter(row => headers.some(h => row[h]));
+  return { headers, rows };
+}
+
+function BrandCsvImportModal({ isDark, onClose, onDone, brands }: {
+  isDark: boolean; onClose: () => void; onDone: () => void; brands: CmsBrand[];
+}) {
+  const csvSlugify = (text: string) =>
+    text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-');
+
+  const fileRef = React.useRef<HTMLInputElement>(null);
+  const [step, setStep] = React.useState<1 | 2 | 3>(1);
+  const [parseErr, setParseErr] = React.useState('');
+  const [matched, setMatched] = React.useState<CsvMatchedEntry[]>([]);
+  const [unmatched, setUnmatched] = React.useState<CsvUnmatchedEntry[]>([]);
+  const [applying, setApplying] = React.useState(false);
+  const [result, setResult] = React.useState<CsvApplyResult | null>(null);
+  const [dragging, setDragging] = React.useState(false);
+  const [brandSearch, setBrandSearch] = React.useState<Record<number, string>>({});
+
+  const brandSlugMap = React.useMemo(() => {
+    const map = new Map<string, CmsBrand>();
+    for (const b of brands) map.set(csvSlugify(b.name), b);
+    return map;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [brands]);
+
+  const handleFile = async (file: File) => {
+    if (!file.name.toLowerCase().endsWith('.csv')) { setParseErr('Veuillez sélectionner un fichier .csv'); return; }
+    setParseErr('');
+    const text = await file.text();
+    const { headers, rows } = parseCsvText(text);
+    if (!headers.includes('name')) { setParseErr('La colonne "name" est requise dans le fichier CSV.'); return; }
+    if (rows.length === 0) { setParseErr('Le fichier CSV ne contient aucune ligne de données.'); return; }
+    const fields = CSV_ALLOWED_FIELDS.filter(f => headers.includes(f));
+    const newMatched: CsvMatchedEntry[] = [];
+    const newUnmatched: CsvUnmatchedEntry[] = [];
+    for (const row of rows) {
+      const rawName = row['name'] ?? '';
+      if (!rawName) continue;
+      const brand = brandSlugMap.get(csvSlugify(rawName));
+      const changes: Partial<Record<CsvAllowedField, string>> = {};
+      for (const f of fields) { if (row[f]) changes[f] = row[f]; }
+      if (brand) newMatched.push({ brand, changes, rawName });
+      else newUnmatched.push({ rawName, changes, resolution: 'skip' });
+    }
+    setMatched(newMatched);
+    setUnmatched(newUnmatched);
+    setStep(2);
+  };
+
+  const setUnmatchedResolution = (index: number, resolution: 'skip' | string) =>
+    setUnmatched(prev => prev.map((e, i) => i === index ? { ...e, resolution } : e));
+
+  const handleApply = async () => {
+    setApplying(true);
+    const updates: { id: string; fields: Record<string, unknown> }[] = [];
+    for (const entry of matched) {
+      if (Object.keys(entry.changes).length > 0) updates.push({ id: entry.brand.id, fields: entry.changes });
+    }
+    let skipped = 0;
+    for (const entry of unmatched) {
+      if (entry.resolution === 'skip' || !entry.resolution || Object.keys(entry.changes).length === 0) { skipped++; continue; }
+      updates.push({ id: entry.resolution, fields: entry.changes });
+    }
+    if (updates.length === 0) {
+      setResult({ updated: [], errors: [], skipped });
+      setStep(3); setApplying(false); return;
+    }
+    try {
+      const res = await fetch('/api/admin/brand-csv-import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ updates }) });
+      const data = await res.json();
+      if (!res.ok) { setParseErr(data.error || 'Erreur serveur.'); setApplying(false); return; }
+      setResult({ updated: data.updated ?? [], errors: data.errors ?? [], skipped });
+      if ((data.updated ?? []).length > 0) onDone();
+      setStep(3);
+    } catch { setParseErr('Erreur réseau.'); }
+    finally { setApplying(false); }
+  };
+
+  const overlay: React.CSSProperties = { position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center' };
+  const modal: React.CSSProperties = { width: step === 2 ? '660px' : '520px', maxWidth: '95vw', maxHeight: '88vh', borderRadius: '16px', background: isDark ? '#0f172a' : '#fff', border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.09)', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px', overflowY: 'auto', transition: 'width 0.2s' };
+  const sectionLabel: React.CSSProperties = { fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: isDark ? '#475569' : '#94a3b8', margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: '5px' };
+
+  const remapCount = unmatched.filter(e => e.resolution !== 'skip' && e.resolution).length;
+  const applyCount = matched.filter(e => Object.keys(e.changes).length > 0).length + remapCount;
+
+  return (
+    <div style={overlay} onClick={onClose}>
+      <div style={modal} onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <div>
+            <h2 style={{ fontSize: '16px', fontWeight: 800, color: isDark ? '#f1f5f9' : '#0f172a', margin: 0 }}>Importer via CSV</h2>
+            <p style={{ fontSize: '12px', color: isDark ? '#475569' : '#94a3b8', marginTop: '4px' }}>
+              {step === 1 && 'Colonnes supportées : name, logo_url, domain, card_link, tagline_fr/ar, description_fr/ar'}
+              {step === 2 && `${matched.length} correspondance${matched.length !== 1 ? 's' : ''} · ${unmatched.length} non trouvée${unmatched.length !== 1 ? 's' : ''}`}
+              {step === 3 && 'Import terminé'}
+            </p>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: isDark ? '#475569' : '#94a3b8', padding: '2px' }}><X size={18} /></button>
+        </div>
+
+        {/* Step indicator */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {([1, 2, 3] as const).map((s, i) => (
+            <React.Fragment key={s}>
+              {i > 0 && <div style={{ flex: 1, height: '1px', background: step > i ? '#10b981' : (isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0') }} />}
+              <div style={{ width: '22px', height: '22px', borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700, background: step >= s ? 'linear-gradient(135deg,#10b981,#0d9488)' : (isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9'), color: step >= s ? '#fff' : (isDark ? '#475569' : '#94a3b8') }}>{s}</div>
+            </React.Fragment>
+          ))}
+        </div>
+
+        {/* ── Step 1: Upload ── */}
+        {step === 1 && (
+          <>
+            <div
+              onDragEnter={e => { e.preventDefault(); setDragging(true); }}
+              onDragOver={e => e.preventDefault()}
+              onDragLeave={() => setDragging(false)}
+              onDrop={e => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files?.[0]; if (f) void handleFile(f); }}
+              onClick={() => fileRef.current?.click()}
+              style={{ minHeight: '140px', borderRadius: '12px', cursor: 'pointer', border: dragging ? '2px dashed #10b981' : (isDark ? '2px dashed rgba(255,255,255,0.1)' : '2px dashed rgba(0,0,0,0.12)'), background: dragging ? (isDark ? 'rgba(16,185,129,0.06)' : 'rgba(16,185,129,0.04)') : (isDark ? 'rgba(255,255,255,0.02)' : '#f8fafc'), display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px', transition: 'all 0.15s' }}
+            >
+              <input ref={fileRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) void handleFile(f); e.target.value = ''; }} />
+              <FileSpreadsheet size={28} style={{ color: isDark ? '#334155' : '#cbd5e1' }} />
+              <span style={{ fontSize: '12px', color: isDark ? '#475569' : '#94a3b8', textAlign: 'center' }}>
+                Glisser un fichier CSV ici ou <span style={{ color: '#10b981', fontWeight: 600 }}>cliquer pour sélectionner</span><br />
+                <span style={{ fontSize: '11px' }}>Format .csv — UTF-8 ou Excel</span>
+              </span>
+            </div>
+            <div style={{ padding: '12px 14px', borderRadius: '10px', background: isDark ? 'rgba(255,255,255,0.02)' : '#f8fafc', border: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.07)' }}>
+              <p style={sectionLabel}>Exemple de format</p>
+              <code style={{ fontSize: '10px', color: isDark ? '#475569' : '#94a3b8', lineHeight: 1.8, display: 'block', whiteSpace: 'pre' }}>{`name,logo_url,tagline_fr
+Vichy,https://…/vichy.webp,Santé de la peau active
+La Roche-Posay,https://…/lrp.webp,La vie change la peau`}</code>
+            </div>
+            {parseErr && <p style={{ fontSize: '12px', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '6px' }}><AlertCircle size={14} />{parseErr}</p>}
+          </>
+        )}
+
+        {/* ── Step 2: Review ── */}
+        {step === 2 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+            {/* Matched */}
+            {matched.length > 0 && (
+              <div>
+                <p style={sectionLabel}><Check size={11} />  {matched.length} marque{matched.length !== 1 ? 's' : ''} correspondante{matched.length !== 1 ? 's' : ''}</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '220px', overflowY: 'auto' }}>
+                  {matched.map((entry, i) => (
+                    <div key={i} style={{ padding: '8px 10px', borderRadius: '8px', background: isDark ? 'rgba(16,185,129,0.05)' : 'rgba(16,185,129,0.04)', border: isDark ? '1px solid rgba(16,185,129,0.12)' : '1px solid rgba(16,185,129,0.15)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: Object.keys(entry.changes).length ? '6px' : 0 }}>
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: isDark ? '#34d399' : '#059669' }}>{entry.brand.name}</span>
+                        {entry.rawName !== entry.brand.name && (
+                          <span style={{ fontSize: '10px', color: isDark ? '#475569' : '#94a3b8', fontFamily: 'monospace' }}>← CSV: {entry.rawName}</span>
+                        )}
+                      </div>
+                      {Object.keys(entry.changes).length > 0 ? (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                          {(Object.entries(entry.changes) as [CsvAllowedField, string][]).map(([field, val]) => (
+                            <span key={field} title={val} style={{ fontSize: '10px', padding: '2px 7px', borderRadius: '6px', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9', color: isDark ? '#94a3b8' : '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '200px', whiteSpace: 'nowrap', display: 'inline-block' }}>
+                              <strong>{CSV_FIELD_LABELS[field]}</strong>: {val}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: '10px', color: isDark ? '#334155' : '#94a3b8' }}>Aucune colonne reconnue à mettre à jour</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Unmatched */}
+            {unmatched.length > 0 && (
+              <div>
+                <p style={sectionLabel}><AlertCircle size={11} />  {unmatched.length} non trouvée{unmatched.length !== 1 ? 's' : ''} — associer ou ignorer</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '340px', overflowY: 'auto' }}>
+                  {unmatched.map((entry, i) => (
+                    <div key={i} style={{ padding: '10px 12px', borderRadius: '10px', background: isDark ? 'rgba(255,255,255,0.02)' : '#f8fafc', border: isDark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.08)' }}>
+                      {/* Row header */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '8px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 700, color: isDark ? '#e2e8f0' : '#0f172a', fontFamily: 'monospace' }}>{entry.rawName}</span>
+                        <button
+                          onClick={() => setUnmatchedResolution(i, entry.resolution === 'skip' ? '' : 'skip')}
+                          style={{ padding: '3px 10px', fontSize: '10px', fontWeight: 600, borderRadius: '999px', flexShrink: 0, border: entry.resolution !== 'skip' ? '1px solid rgba(16,185,129,0.3)' : (isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)'), background: entry.resolution !== 'skip' ? (isDark ? 'rgba(16,185,129,0.1)' : 'rgba(16,185,129,0.07)') : (isDark ? 'rgba(255,255,255,0.03)' : '#f1f5f9'), color: entry.resolution !== 'skip' ? (isDark ? '#34d399' : '#059669') : (isDark ? '#475569' : '#94a3b8'), cursor: 'pointer' }}
+                        >
+                          {entry.resolution === 'skip' ? 'Ignorer' : '✓ Associé'}
+                        </button>
+                      </div>
+                      {/* Search input */}
+                      <input
+                        type="text"
+                        placeholder="Rechercher une marque existante à associer…"
+                        value={brandSearch[i] ?? ''}
+                        onChange={e => setBrandSearch(prev => ({ ...prev, [i]: e.target.value }))}
+                        style={{ width: '100%', fontSize: '11px', padding: '6px 10px', borderRadius: '8px', border: isDark ? '1px solid rgba(255,255,255,0.09)' : '1px solid rgba(0,0,0,0.1)', background: isDark ? 'rgba(255,255,255,0.03)' : '#fff', color: isDark ? '#e2e8f0' : '#0f172a', outline: 'none', boxSizing: 'border-box' }}
+                      />
+                      {/* Filtered dropdown */}
+                      {(brandSearch[i] ?? '').length > 0 && (
+                        <div style={{ marginTop: '4px', borderRadius: '8px', border: isDark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.08)', background: isDark ? '#0a1628' : '#fff', overflow: 'hidden' }}>
+                          {brands
+                            .filter(b => b.name.toLowerCase().includes((brandSearch[i] ?? '').toLowerCase()))
+                            .slice(0, 7)
+                            .map(b => (
+                              <button
+                                key={b.id}
+                                onClick={() => { setUnmatchedResolution(i, b.id); setBrandSearch(prev => ({ ...prev, [i]: '' })); }}
+                                style={{ width: '100%', padding: '7px 10px', fontSize: '12px', fontWeight: entry.resolution === b.id ? 700 : 400, textAlign: 'left', background: entry.resolution === b.id ? (isDark ? 'rgba(16,185,129,0.1)' : 'rgba(16,185,129,0.07)') : 'transparent', color: entry.resolution === b.id ? (isDark ? '#34d399' : '#059669') : (isDark ? '#e2e8f0' : '#0f172a'), border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                              >
+                                <span>{b.name}</span>
+                                {b.domain && <span style={{ fontSize: '10px', color: isDark ? '#475569' : '#94a3b8', fontFamily: 'monospace' }}>{b.domain}</span>}
+                              </button>
+                            ))}
+                          {brands.filter(b => b.name.toLowerCase().includes((brandSearch[i] ?? '').toLowerCase())).length === 0 && (
+                            <p style={{ fontSize: '11px', color: isDark ? '#475569' : '#94a3b8', padding: '8px 10px', margin: 0 }}>Aucune marque trouvée</p>
+                          )}
+                        </div>
+                      )}
+                      {/* Selected brand label */}
+                      {entry.resolution !== 'skip' && entry.resolution && (
+                        <p style={{ fontSize: '10px', color: isDark ? '#34d399' : '#059669', margin: '6px 0 0', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Check size={10} /> Données appliquées à : <strong>{brands.find(b => b.id === entry.resolution)?.name}</strong>
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {matched.length === 0 && unmatched.length === 0 && (
+              <p style={{ fontSize: '12px', color: isDark ? '#475569' : '#94a3b8', textAlign: 'center' }}>Aucune ligne trouvée dans le fichier CSV.</p>
+            )}
+
+            {parseErr && <p style={{ fontSize: '12px', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '6px' }}><AlertCircle size={14} />{parseErr}</p>}
+          </div>
+        )}
+
+        {/* ── Step 3: Results ── */}
+        {step === 3 && result && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {result.updated.length > 0 && (
+              <div>
+                <p style={{ fontSize: '11px', fontWeight: 700, color: '#10b981', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <Check size={13} /> {result.updated.length} marque{result.updated.length !== 1 ? 's' : ''} mise{result.updated.length !== 1 ? 's' : ''} à jour
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', maxHeight: '150px', overflowY: 'auto' }}>
+                  {result.updated.map(name => (
+                    <span key={name} style={{ fontSize: '12px', color: isDark ? '#34d399' : '#059669', padding: '3px 8px', borderRadius: '6px', background: isDark ? 'rgba(16,185,129,0.07)' : 'rgba(16,185,129,0.06)' }}>{name}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {result.skipped > 0 && (
+              <p style={{ fontSize: '11px', color: isDark ? '#64748b' : '#94a3b8' }}>
+                {result.skipped} ligne{result.skipped !== 1 ? 's' : ''} ignorée{result.skipped !== 1 ? 's' : ''}
+              </p>
+            )}
+            {result.errors.length > 0 && (
+              <div>
+                <p style={{ fontSize: '11px', fontWeight: 700, color: '#ef4444', marginBottom: '6px' }}>{result.errors.length} erreur{result.errors.length !== 1 ? 's' : ''}</p>
+                {result.errors.map(e => (
+                  <p key={e.id} style={{ fontSize: '11px', color: '#ef4444', margin: '2px 0', fontFamily: 'monospace' }}>{e.id}: {e.error}</p>
+                ))}
+              </div>
+            )}
+            {result.updated.length === 0 && result.errors.length === 0 && (
+              <p style={{ fontSize: '12px', color: isDark ? '#475569' : '#94a3b8' }}>Aucune modification appliquée.</p>
+            )}
+          </div>
+        )}
+
+        {/* Actions */}
+        <div style={{ display: 'flex', gap: '10px', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            {step === 2 && (
+              <button onClick={() => setStep(1)} style={{ fontSize: '12px', fontWeight: 600, color: isDark ? '#475569' : '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <ArrowLeft size={13} /> Retour
+              </button>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button onClick={onClose} style={{ padding: '8px 16px', fontSize: '12px', fontWeight: 600, borderRadius: '10px', border: isDark ? '1px solid rgba(255,255,255,0.09)' : '1px solid rgba(0,0,0,0.1)', background: 'transparent', color: isDark ? '#64748b' : '#94a3b8', cursor: 'pointer' }}>
+              {step === 3 ? 'Fermer' : 'Annuler'}
+            </button>
+            {step === 2 && (
+              <button
+                onClick={() => void handleApply()}
+                disabled={applying || applyCount === 0}
+                style={{ padding: '8px 18px', fontSize: '12px', fontWeight: 700, borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg,#10b981,#0d9488)', color: '#fff', cursor: applying || applyCount === 0 ? 'not-allowed' : 'pointer', opacity: applying || applyCount === 0 ? 0.6 : 1, display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <Check size={13} /> {applying ? 'Application…' : `Appliquer${applyCount > 0 ? ` (${applyCount})` : ''}`}
+              </button>
+            )}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
 // Editor
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -983,6 +1325,7 @@ function ContentBrands() {
   }, [router, searchParams]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showBulkModal, setShowBulkModal] = useState(false);
+  const [showCsvModal, setShowCsvModal] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<{ imported: number; total: number } | null>(null);
 
@@ -1087,6 +1430,9 @@ function ContentBrands() {
       {showBulkModal && (
         <BulkImageUploadModal isDark={isDark} onClose={() => setShowBulkModal(false)} onDone={() => { void loadBrands(); }} />
       )}
+      {showCsvModal && (
+        <BrandCsvImportModal isDark={isDark} onClose={() => setShowCsvModal(false)} onDone={() => { void loadBrands(); }} brands={brands} />
+      )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
@@ -1120,6 +1466,14 @@ function ContentBrands() {
             >
               <RefreshCw size={13} style={{ animation: syncing ? 'spin 1s linear infinite' : 'none' }} />
               {syncing ? 'Sync…' : 'Sync catalogue'}
+            </button>
+            <button
+              onClick={() => setShowCsvModal(true)}
+              title="Importer des données marques via un fichier CSV"
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', fontSize: '12px', fontWeight: 600, borderRadius: '10px', cursor: 'pointer', border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)', background: 'transparent', color: isDark ? '#94a3b8' : '#64748b' }}
+            >
+              <FileSpreadsheet size={13} />
+              Importer CSV
             </button>
             <button
               onClick={() => setShowBulkModal(true)}
