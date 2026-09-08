@@ -159,6 +159,7 @@ function AddBrandModal({ isDark, onClose, onCreated }: { isDark: boolean; onClos
 
 function BrandsList({
   brands, onSelect, onToggleVisible, onDelete, isDark, canManage,
+  query, setQuery, statusFilter, setStatusFilter, imageFilter, setImageFilter,
 }: {
   brands: CmsBrand[];
   onSelect: (b: CmsBrand) => void;
@@ -166,10 +167,13 @@ function BrandsList({
   onDelete?: (b: CmsBrand) => void;
   isDark: boolean;
   canManage: boolean;
+  query: string;
+  setQuery: (value: string) => void;
+  statusFilter: CmsStatus | 'all';
+  setStatusFilter: (value: CmsStatus | 'all') => void;
+  imageFilter: string;
+  setImageFilter: (value: string) => void;
 }) {
-  const [query, setQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<CmsStatus | 'all'>('all');
-  const [imageFilter, setImageFilter] = useState('all');
   const logoSource = (brand: CmsBrand) => brandLogoSrc(brand.name, brand.domain, brand.logo_url);
   const imageResults = useBrandImages(brands.map(logoSource), imageFilter !== 'all');
   const unchecked = brands.filter(brand => !imageResults[logoSource(brand)] || imageResults[logoSource(brand)] === 'unknown').length;
@@ -734,6 +738,10 @@ function ContentBrands() {
   const canManage = canManageBrands(role as any);
 
   const [brands, setBrands] = useState<CmsBrand[]>([]);
+  // Keep list filters alive while the editor or loading state replaces the list.
+  const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<CmsStatus | 'all'>('all');
+  const [imageFilter, setImageFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const selected = brands.find(brand => brand.slug === selectedSlug) ?? null;
@@ -902,6 +910,12 @@ function ContentBrands() {
           onDelete={handleDeleteBrand}
           isDark={isDark}
           canManage={canManage}
+          query={query}
+          setQuery={setQuery}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+          imageFilter={imageFilter}
+          setImageFilter={setImageFilter}
         />
       </div>
     </>

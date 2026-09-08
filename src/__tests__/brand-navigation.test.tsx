@@ -15,6 +15,33 @@ import Page from '@/app/admin/content/brands/page';
 beforeEach(() => { navigation.query = ''; navigation.logo = undefined; navigation.push.mockClear(); });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
+it('preserves list filters after opening, saving and returning from a brand', async () => {
+  navigation.logo = '';
+  vi.stubGlobal('fetch', vi.fn().mockImplementation(async (_url, options) => ({
+    ok: true, json: async () => ({ brand: { ...JSON.parse(options.body), slug: 'svr' } }),
+  })));
+  const { rerender } = render(<Page />);
+  await screen.findByRole('button', { name: 'Ouvrir SVR' });
+  fireEvent.change(screen.getByLabelText('Filtrer les marques par image'), { target: { value: 'missing' } });
+  fireEvent.change(screen.getByPlaceholderText('Rechercher une marque…'), { target: { value: 'SVR' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Publiées' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Ouvrir SVR' }));
+  navigation.query = 'brand=svr';
+  rerender(<Page />);
+  fireEvent.click(screen.getByRole('button', { name: 'Mettre à jour' }));
+  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+  fireEvent.click(await screen.findByRole('button', { name: 'Marques' }));
+  navigation.query = '';
+  rerender(<Page />);
+  await screen.findByRole('button', { name: 'Ouvrir SVR' });
+  expect((screen.getByLabelText('Filtrer les marques par image') as HTMLSelectElement).value).toBe('missing');
+  expect((screen.getByPlaceholderText('Rechercher une marque…') as HTMLInputElement).value).toBe('SVR');
+  // Clear search/image filters: the draft Vichy card must still be excluded.
+  fireEvent.change(screen.getByPlaceholderText('Rechercher une marque…'), { target: { value: '' } });
+  fireEvent.change(screen.getByLabelText('Filtrer les marques par image'), { target: { value: 'all' } });
+  expect(screen.queryByRole('button', { name: 'Ouvrir Vichy' })).toBeNull();
+});
+
 it('shows storefront product counts instead of dates on brand cards', async () => {
   render(<Page />);
   expect(await screen.findByText('42 produits')).toBeTruthy();
