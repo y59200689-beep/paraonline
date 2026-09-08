@@ -331,7 +331,7 @@ function BrandsList({
 function LogoUploader({ currentUrl, isDark, onUploaded }: { currentUrl: string | null; isDark: boolean; onUploaded: (url: string) => void }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
-  const [preview, setPreview] = useState<string | null>(currentUrl);
+  const preview = currentUrl;
   const [success, setSuccess] = useState(false);
   const [err, setErr] = useState('');
 
@@ -345,7 +345,6 @@ function LogoUploader({ currentUrl, isDark, onUploaded }: { currentUrl: string |
       const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
       const data = await res.json();
       if (!res.ok || !data.url) { setErr(data.error || 'Échec de l\'upload.'); return; }
-      setPreview(data.url);
       setSuccess(true);
       onUploaded(data.url);
       setTimeout(() => setSuccess(false), 2000);
@@ -363,6 +362,7 @@ function LogoUploader({ currentUrl, isDark, onUploaded }: { currentUrl: string |
 
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    if (uploading) return;
     const file = e.dataTransfer.files?.[0];
     if (file) handleFile(file);
   };
@@ -371,7 +371,7 @@ function LogoUploader({ currentUrl, isDark, onUploaded }: { currentUrl: string |
     <div
       onDrop={onDrop}
       onDragOver={e => e.preventDefault()}
-      onClick={() => fileRef.current?.click()}
+      onClick={() => { if (!uploading) fileRef.current?.click(); }}
       style={{
         width: '100%', minHeight: '120px', borderRadius: '12px',
         border: isDark ? '2px dashed rgba(255,255,255,0.1)' : '2px dashed rgba(0,0,0,0.12)',
@@ -380,7 +380,7 @@ function LogoUploader({ currentUrl, isDark, onUploaded }: { currentUrl: string |
         gap: '10px', cursor: 'pointer', transition: 'all 0.15s', position: 'relative',
       }}
     >
-      <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onInputChange} />
+      <input ref={fileRef} type="file" aria-label="Importer un logo" accept="image/*" disabled={uploading} style={{ display: 'none' }} onChange={onInputChange} />
 
       {preview ? (
         <img src={preview} alt="Logo" style={{ maxHeight: '72px', maxWidth: '160px', objectFit: 'contain' }} />
@@ -400,6 +400,22 @@ function LogoUploader({ currentUrl, isDark, onUploaded }: { currentUrl: string |
         </span>
       )}
       {err && <span style={{ fontSize: '11px', color: '#ef4444' }}>{err}</span>}
+      {preview && (
+        <button
+          type="button"
+          disabled={uploading}
+          onClick={e => {
+            e.stopPropagation();
+            onUploaded('');
+            setSuccess(false);
+            setErr('');
+            if (fileRef.current) fileRef.current.value = '';
+          }}
+          style={{ color: '#e11d48', fontSize: '12px', padding: '6px 10px', cursor: uploading ? 'not-allowed' : 'pointer', opacity: uploading ? 0.5 : 1 }}
+        >
+          Supprimer le logo
+        </button>
+      )}
     </div>
   );
 }
@@ -565,12 +581,12 @@ function BrandEditor({ brand, onBack, isDark, role, onUpdated }: {
                 <div>
                   <label style={labelStyle}><Upload size={10} style={{ display: 'inline', marginRight: '4px' }} />Logo de la carte</label>
                   <LogoUploader
-                    currentUrl={logoUrl}
+                    currentUrl={brandLogoSrc(name, domain, logoUrl)}
                     isDark={isDark}
                     onUploaded={url => { setLogoUrl(url); markDirty(); }}
                   />
                   <p style={{ fontSize: '10px', color: isDark ? '#334155' : '#94a3b8', marginTop: '6px' }}>
-                    Le logo s'affiche sur la carte défilante de la page d'accueil. Fond blanc recommandé.
+                    {logoUrl === '' ? 'Logo supprimé : le nom sera affiché. Enregistrez pour appliquer ce changement.' : "Le logo s'affiche sur la carte défilante de la page d'accueil. Fond blanc recommandé."}
                   </p>
                 </div>
 

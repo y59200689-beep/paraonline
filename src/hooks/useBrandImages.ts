@@ -16,6 +16,10 @@ export function useBrandImages(sources: string[], enabled: boolean) {
     async function worker() {
       while (!cancelled && queue.length) {
         const src = queue.shift()!;
+        if (!src) {
+          setResults(previous => ({ ...previous, [src]: 'missing' }));
+          continue;
+        }
         await new Promise<void>(resolve => {
           const image = new window.Image();
           const finish = (status: BrandImageStatus) => {

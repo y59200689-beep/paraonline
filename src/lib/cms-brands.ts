@@ -20,7 +20,7 @@ export async function getCmsBrandRecordBySlug(slug: string): Promise<CmsBrandRec
     if (!data) return null;
     return {
       id: data.id, slug: data.slug, name: data.name, domain: data.domain || '',
-      logoUrl: data.logo_url || '', taglineFr: data.tagline_fr || '', taglineAr: data.tagline_ar || '',
+      logoUrl: data.logo_url ?? undefined, taglineFr: data.tagline_fr || '', taglineAr: data.tagline_ar || '',
       descriptionFr: data.description_fr || '', descriptionAr: data.description_ar || '', status: data.status,
       approval_status: data.approval_status, page_sections: data.page_sections, hero_settings: data.hero_settings,
       gallery_images: data.gallery_images,
@@ -48,7 +48,7 @@ async function fetchBrandBySlug(slug: string, fallbackMap: Record<string, BrandC
     return {
       name: data.name,
       domain: data.domain || '',
-      logoUrl: data.logo_url || '',
+      logoUrl: data.logo_url ?? undefined,
       taglineFr: data.tagline_fr || '',
       taglineAr: data.tagline_ar || '',
       descriptionFr: data.description_fr || '',

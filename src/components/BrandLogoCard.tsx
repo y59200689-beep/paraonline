@@ -19,7 +19,7 @@ interface BrandLogoCardProps {
 export const BrandLogoCard: React.FC<BrandLogoCardProps> = ({ brand, decorative = false }) => {
   const brandName = brand.name || 'Marque';
 
-  const logo = brand.logo_url || brand.logoUrl;
+  const logo = brand.logo_url ?? brand.logoUrl;
   const domain = brand.domain || `${brandName.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`;
   const href = brand.card_link || `/products?brand=${encodeURIComponent(brandName)}`;
 

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
+import { revalidateTag } from 'next/cache';
 
 const state = vi.hoisted(() => ({
   brand: { id: 'qa-brand', name: 'QA Brand', slug: 'qa-brand', status: 'draft' } as Record<string, unknown>,
@@ -68,6 +69,11 @@ describe('brands compatibility with base CMS schema', () => {
     expect((await PATCH(request('PATCH', { id: 'qa-brand', status: 'published' })))!.status).toBe(200);
     expect(state.writes.find(write => write.table === 'cms_brands')?.payload).toMatchObject({ status: 'published', published_at: expect.any(String) });
     expect(state.writes.find(write => write.table === 'cms_brand_revisions')?.payload.snapshot).toEqual(state.brand);
+  });
+  it('preserves explicit logo removal and invalidates the brand detail cache', async () => {
+    expect((await PATCH(request('PATCH', { id: 'qa-brand', logo_url: '' })))!.status).toBe(200);
+    expect(state.writes.find(write => write.table === 'cms_brands')?.payload.logo_url).toBe('');
+    expect(revalidateTag).toHaveBeenCalledWith('cms-brand-qa-brand', { expire: 0 });
   });
   it('rejects unsupported approval actions without writing', async () => {
     expect((await PATCH(request('PATCH', { id: 'qa-brand', approval_action: 'approve' })))!.status).toBe(409);

@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
-import { act, cleanup, renderHook } from '@testing-library/react';
+import { act, cleanup, render, renderHook, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { useBrandImages } from '@/hooks/useBrandImages';
 import { brandLogoSrc } from '@/lib/brand-logo';
+import { BrandLogoCard } from '@/components/BrandLogoCard';
 
 class MockImage {
   static instances: MockImage[] = [];
@@ -23,6 +24,18 @@ it('uses the same explicit or automatic image URL as the cards', () => {
   expect(brandLogoSrc('QA', 'qa.com', '/logo.png')).toBe('/logo.png');
   expect(brandLogoSrc('QA', 'qa.com')).toBe('https://logos.hunter.io/qa.com');
   expect(brandLogoSrc('QA Brand')).toBe('https://logos.hunter.io/qabrand.com');
+  expect(brandLogoSrc('QA', 'qa.com', '')).toBe('');
+  expect(brandLogoSrc('QA', 'qa.com', null)).toBe('https://logos.hunter.io/qa.com');
+});
+it('shows the brand name instead of falling back after explicit removal', () => {
+  render(<BrandLogoCard brand={{ name: 'QA', domain: 'qa.com', logo_url: '', logoUrl: '/old.png' }} />);
+  expect(screen.queryByRole('img')).toBeNull();
+  expect(screen.getByText('QA')).toBeTruthy();
+});
+it('classifies removed logos as missing without requesting an empty URL', () => {
+  const { result } = renderHook(() => useBrandImages([''], true));
+  expect(result.current['']).toBe('missing');
+  expect(MockImage.instances).toHaveLength(0);
 });
 it('does no probing until an image filter is selected', () => {
   renderHook(() => useBrandImages(['/a.png'], false));

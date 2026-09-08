@@ -8,6 +8,7 @@ import { ShopShell } from '@/components/ShopShell';
 import { BrandConfig } from '@/lib/brands';
 import { Search, SlidersHorizontal, Check, ArrowUpDown, X, Sparkles, ShieldCheck, Globe, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { brandLogoSrc } from '@/lib/brand-logo';
 
 interface BrandClientProps {
   brand: BrandConfig;
@@ -174,7 +175,7 @@ export default function BrandClient({ brand, initialProducts = [] }: BrandClient
     setSortOption('popular');
   };
 
-  const brandLogoUrl = brand.logoUrl || `https://logos.hunter.io/${brand.domain}`;
+  const brandLogoUrl = brandLogoSrc(brand.name, brand.domain, brand.logoUrl);
 
   return (
     <ShopShell>
@@ -205,7 +206,7 @@ export default function BrandClient({ brand, initialProducts = [] }: BrandClient
               
               {/* Brand Logo Container */}
               <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-[24px] bg-white border border-slate-100 dark:border-slate-800 flex items-center justify-center p-4 shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
-                <img 
+                {brandLogoUrl ? <img
                   src={brandLogoUrl} 
                   alt={brand.name} 
                   className="w-full h-full object-contain"
@@ -220,7 +221,7 @@ export default function BrandClient({ brand, initialProducts = [] }: BrandClient
                       parent.appendChild(textFallback);
                     }
                   }}
-                />
+                /> : <span className="text-xs font-bold text-slate-400 uppercase text-center">{brand.name}</span>}
               </div>
 
               {/* Brand details and bio */}

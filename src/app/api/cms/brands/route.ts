@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { canManageBrands, canPublishContent, canScheduleContent } from '@/lib/permissions';
 import { BRANDS_DATA, slugify } from '@/lib/brands';
+import { revalidateTag } from 'next/cache';
 
 // CMS deployments may not have the optional approval-workflow columns.
 // This authenticated endpoint returns the actual record instead of requiring them.
@@ -66,6 +67,8 @@ export async function PATCH(req: NextRequest) {
   if (approval_action === 'reject') Object.assign(payload, { status: 'draft', approval_status: 'rejected', reviewed_at: now, reviewed_by: auth.session.username, review_note: body.review_note ?? null });
   const { data, error } = await supabaseAdmin.from('cms_brands').update(payload).eq('id', id).select(BRAND_FIELDS).single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  // Brand detail data is cached indefinitely until its tag is invalidated.
+  revalidateTag(`cms-brand-${current.slug}`, { expire: 0 });
   await supabaseAdmin.from('cms_brand_revisions').insert({ brand_id: id, snapshot: current, saved_by: auth.session.username });
   await supabaseAdmin.from('cms_change_log').insert({ entity_type: 'brand', entity_id: id, entity_label: current.name, action: approval_action === 'submit_for_approval' ? 'submit_for_approval' : status === 'published' ? 'publish' : status === 'scheduled' ? 'schedule' : 'update', previous: current, next_state: data, changed_by: auth.session.username });
   return NextResponse.json({ brand: data });
