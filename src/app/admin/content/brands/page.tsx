@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAdmin } from '@/context/AdminContext';
 import { StatusBadge } from '@/components/admin/ui/StatusBadge';
 import { StickyPublishBar } from '@/components/admin/ui/StickyPublishBar';
@@ -703,6 +704,13 @@ function BrandEditor({ brand, onBack, isDark, role, onUpdated }: {
 // ──────────────────────────────────────────────────────────────────────────────
 
 export default function ContentBrandsPage() {
+  return <React.Suspense fallback={<AsyncState kind="loading" />}><ContentBrands /></React.Suspense>;
+}
+
+function ContentBrands() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedSlug = searchParams.get('brand');
   const { currentUser, adminTheme } = useAdmin();
   const isDark = adminTheme === 'dark';
   const role = currentUser?.role ?? 'viewer';
@@ -711,7 +719,14 @@ export default function ContentBrandsPage() {
   const [brands, setBrands] = useState<CmsBrand[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
-  const [selected, setSelected] = useState<CmsBrand | null>(null);
+  const selected = brands.find(brand => brand.slug === selectedSlug) ?? null;
+  const selectBrand = useCallback((brand: CmsBrand | null) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (brand) params.set('brand', brand.slug);
+    else params.delete('brand');
+    const query = params.toString();
+    router.push(`/admin/content/brands${query ? `?${query}` : ''}`, { scroll: false });
+  }, [router, searchParams]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<{ imported: number; total: number } | null>(null);
@@ -762,12 +777,11 @@ export default function ContentBrandsPage() {
   const handleCreated = useCallback((brand: CmsBrand) => {
     setBrands(prev => [...prev, brand]);
     setShowAddModal(false);
-    setSelected(brand);
-  }, []);
+    selectBrand(brand);
+  }, [selectBrand]);
 
   const handleUpdated = useCallback((updated: CmsBrand) => {
     setBrands(prev => prev.map(b => b.id === updated.id ? updated : b));
-    setSelected(updated);
   }, []);
 
   const visibleCount = brands.filter(b => b.is_visible && b.status === 'published').length;
@@ -782,7 +796,6 @@ export default function ContentBrandsPage() {
       });
       if (res.ok) {
         setBrands(prev => prev.filter(b => b.id !== brand.id));
-        setSelected(prev => (prev?.id === brand.id ? null : prev));
       } else {
         alert('Erreur lors de la suppression de la marque.');
       }
@@ -801,8 +814,12 @@ export default function ContentBrandsPage() {
 
   if (loadError) return <AsyncState kind="error" description={loadError} onRetry={loadBrands} />;
 
+  if (selectedSlug && !selected) {
+    return <AsyncState kind="error" description="Cette marque est introuvable." onRetry={() => selectBrand(null)} />;
+  }
+
   if (selected) {
-    return <BrandEditor brand={selected} onBack={() => setSelected(null)} isDark={isDark} role={role} onUpdated={handleUpdated} />;
+    return <BrandEditor key={selected.id} brand={selected} onBack={() => selectBrand(null)} isDark={isDark} role={role} onUpdated={handleUpdated} />;
   }
 
   return (
@@ -861,7 +878,7 @@ export default function ContentBrandsPage() {
 
         <BrandsList
           brands={brands}
-          onSelect={setSelected}
+          onSelect={selectBrand}
           onToggleVisible={handleToggleVisible}
           onDelete={handleDeleteBrand}
           isDark={isDark}
