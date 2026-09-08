@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 const navigation = vi.hoisted(() => ({ query: '', push: vi.fn() }));
 vi.mock('next/navigation', () => ({
@@ -8,12 +8,37 @@ vi.mock('next/navigation', () => ({
 }));
 vi.mock('@/context/AdminContext', () => ({ useAdmin: () => ({ currentUser: { role: 'owner' }, adminTheme: 'light' }) }));
 vi.mock('@/lib/request-json', () => ({ requestJson: async () => ({ brands: [
-  { id: '1', name: 'SVR', slug: 'svr', status: 'published', is_visible: true, updated_at: '2026-09-08' },
+  { id: '1', name: 'SVR', slug: 'svr', tagline_fr: 'La peau avant tout', status: 'published', is_visible: true, updated_at: '2026-09-08' },
   { id: '2', name: 'Vichy', slug: 'vichy', status: 'draft', is_visible: false, updated_at: '2026-09-08' },
 ] }) }));
 import Page from '@/app/admin/content/brands/page';
 beforeEach(() => { navigation.query = ''; navigation.push.mockClear(); });
-afterEach(cleanup);
+afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+it('opens the brand exactly once from the name, description, footer, or card padding', async () => {
+  render(<Page />);
+  const open = await screen.findByRole('button', { name: 'Ouvrir SVR' });
+  const card = open.parentElement!;
+  for (const target of [open, within(card).getByText('La peau avant tout'), within(card).getByText('Publié'), card]) {
+    navigation.push.mockClear();
+    fireEvent.click(target);
+    expect(navigation.push).toHaveBeenCalledTimes(1);
+    expect(navigation.push).toHaveBeenCalledWith('/admin/content/brands?brand=svr', { scroll: false });
+  }
+});
+
+it('keeps visibility and delete actions separate from opening the card', async () => {
+  const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+  vi.stubGlobal('fetch', fetchMock);
+  const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+  render(<Page />);
+  const card = (await screen.findByRole('button', { name: 'Ouvrir SVR' })).parentElement!;
+  fireEvent.click(within(card).getByTitle('Masquer sur le site'));
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+  fireEvent.click(within(card).getByTitle('Supprimer la marque'));
+  expect(confirm).toHaveBeenCalledTimes(1);
+  expect(navigation.push).not.toHaveBeenCalled();
+});
 
 it('changes the URL when selecting a card and preserves other parameters', async () => {
   navigation.query = 'source=admin';

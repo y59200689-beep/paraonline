@@ -235,6 +235,7 @@ function BrandsList({
             <div
               key={brand.id}
               style={cardStyle(brand)}
+              onClick={() => onSelect(brand)}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = isDark ? 'rgba(16,185,129,0.25)' : 'rgba(16,185,129,0.3)'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)'; }}
             >
@@ -242,7 +243,6 @@ function BrandsList({
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div
                   style={{ width: '48px', height: '48px', borderRadius: '10px', overflow: 'hidden', background: isDark ? 'rgba(255,255,255,0.04)' : '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}
-                  onClick={() => onSelect(brand)}
                 >
                   <BrandLogo name={brand.name} domain={brand.domain} logo={brand.logo_url} />
                 </div>
@@ -289,10 +289,10 @@ function BrandsList({
               </div>
 
               {/* Name + domain – clickable to open editor */}
-              <div onClick={() => onSelect(brand)} style={{ cursor: 'pointer' }}>
-                <p style={{ fontSize: '13px', fontWeight: 700, color: isDark ? '#e2e8f0' : '#0f172a', margin: 0 }}>{brand.name}</p>
-                {brand.domain && <p style={{ fontSize: '10px', color: isDark ? '#334155' : '#94a3b8', margin: '2px 0 0', fontFamily: 'monospace' }}>{brand.domain}</p>}
-              </div>
+              <button type="button" aria-label={`Ouvrir ${brand.name}`} style={{ cursor: 'pointer', textAlign: 'left', background: 'transparent', border: 0, padding: 0 }}>
+                <span style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: isDark ? '#e2e8f0' : '#0f172a', margin: 0 }}>{brand.name}</span>
+                {brand.domain && <span style={{ display: 'block', fontSize: '10px', color: isDark ? '#334155' : '#94a3b8', margin: '2px 0 0', fontFamily: 'monospace' }}>{brand.domain}</span>}
+              </button>
 
               {/* Tagline */}
               {brand.tagline_fr && (
