@@ -41,3 +41,10 @@
 @media (max-width: 1023px) { .grid { grid-template-columns: 1fr 1fr; } .featured { grid-column: 1 / -1; grid-row: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; } .featured > .image { aspect-ratio: 1; } .featured .content { justify-content: center; } .card { padding: 14px; gap: 12px; } }
 @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .featured { display: flex; grid-column: auto; grid-row: auto; } .card { min-height: 185px; } .image { width: 30%; } .name { font-size: 13px; } .featured > .image { aspect-ratio: 1.2; } }
 @media (prefers-reduced-motion: reduce) { .grid * { transition: none; } }
+@media (max-width: 767px) {
+  .favorite { width: 44px; min-height: 44px; }
+  .identity { padding-inline-end: 44px; }
+  .card .name { font-size: 14px; padding-inline-end: 38px; }
+  .vendor, .eyebrow, .rating, .featured .rating, .noReviews, .prices del, .discount, .popular { font-size: 13px; }
+  .add { font-size: 14px; }
+}

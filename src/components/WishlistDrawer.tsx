@@ -95,7 +95,7 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
             onClick={onClose}
             data-autofocus
             aria-label={language === 'FR' ? 'Fermer' : 'إغلاق'}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-50 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer border-0 bg-transparent"
+            className="w-11 h-11 md:w-8 md:h-8 flex items-center justify-center rounded-full hover:bg-slate-50 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer border-0 bg-transparent"
           >
             <X className="w-4.5 h-4.5" />
           </button>
@@ -154,23 +154,23 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
                         onSelectProduct(product);
                         onClose();
                       }}
-                      className="text-xs font-bold text-slate-800 hover:text-primary transition-colors cursor-pointer truncate"
+                      className="text-sm md:text-xs font-bold text-slate-800 hover:text-primary transition-colors cursor-pointer truncate"
                     >
                       {toTitleCase(product.nameFr || product.name || product.title)}
                     </h4>
-                    <span data-product-brand className="text-[9px] font-extrabold text-blue-700 uppercase tracking-widest block mt-0.5">
+                    <span data-product-brand className="text-[13px] md:text-[9px] font-extrabold text-blue-700 uppercase tracking-widest block mt-0.5">
                       {product.vendor}
                     </span>
-                    <span className="text-xs font-black text-primary block mt-1">
+                    <span className="text-sm md:text-xs font-black text-primary block mt-1">
                       {product.price.toFixed(2)} DH
                     </span>
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col md:flex-row items-center gap-2">
                     <button
                       onClick={() => handleAddToCart(product)}
-                      className="w-8 h-8 rounded-lg bg-accent/10 hover:bg-accent/20 text-accent flex items-center justify-center transition-colors cursor-pointer border-0"
+                      className="w-11 h-11 md:w-8 md:h-8 rounded-lg bg-accent/10 hover:bg-accent/20 text-accent flex items-center justify-center transition-colors cursor-pointer border-0 shrink-0"
                       title={language === 'FR' ? 'Ajouter au panier' : 'إضافة إلى السلة'}
                       aria-label={language === 'FR' ? 'Ajouter au panier' : 'إضافة إلى السلة'}
                     >
@@ -178,7 +178,7 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
                     </button>
                     <button
                       onClick={() => removeFromWishlist(product.id)}
-                      className="w-8 h-8 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-500 flex items-center justify-center transition-colors cursor-pointer border-0"
+                      className="w-11 h-11 md:w-8 md:h-8 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-500 flex items-center justify-center transition-colors cursor-pointer border-0 shrink-0"
                       title={language === 'FR' ? 'Retirer des favoris' : 'إزالة من المفضلة'}
                       aria-label={language === 'FR' ? 'Retirer des favoris' : 'إزالة من المفضلة'}
                     >

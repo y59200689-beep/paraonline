@@ -99,3 +99,10 @@
   .whatsapp { padding: 10px; flex-wrap: wrap; }
 }
 @media (prefers-reduced-motion: reduce) { .footer *, .footer *::after { transition: none !important; transform: none !important; } }
+@media (max-width: 767px) {
+  .perks li, .form .privacy, .form .notice, .benefit p, .column h3, .hours, .bottom { font-size: 13px; }
+  .column li a, .column li button { font-size: 14px; min-height: 44px; }
+  .socials a { min-height: 44px; font-size: 13px; }
+  .formRow button { font-size: 14px; }
+  .inputWrap input { font-size: 16px; }
+}

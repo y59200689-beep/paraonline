@@ -237,7 +237,7 @@ export const BeautyWalletDrawer: React.FC<BeautyWalletDrawerProps> = ({ isOpen, 
           <button
             onClick={onClose}
             aria-label={language === 'FR' ? 'Fermer' : 'إغلاق'}
-            className="w-9 h-9 rounded-full hover:bg-slate-100/60 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors duration-200"
+            className="w-11 h-11 md:w-9 md:h-9 rounded-full hover:bg-slate-100/60 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors duration-200"
           >
             <X className="w-4.5 h-4.5" />
           </button>

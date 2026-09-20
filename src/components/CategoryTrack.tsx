@@ -29,6 +29,15 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
   const { t, language } = useTranslation();
   const { settings } = useSettings();
   const { getDisplayImage } = useGalleryOverrides();
+  const [isMobile, setIsMobile] = React.useState(false);
+
+  React.useEffect(() => {
+    const media = window.matchMedia('(max-width: 767px)');
+    const update = () => setIsMobile(media.matches);
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
 
   const brandPartnersSection = settings.homepageSections?.sectionOrder?.find(
     (s) => s.type === 'brandPartners'
@@ -185,13 +194,18 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
                    bebe: 'bébé',
                  };
                  const hardcodedCategory = hardcodedCategoryByTag[cat.tag];
-                 const productsHref = adminLink
+                 const desktopHref = adminLink
                    ? adminLink
                    : cat.tag in hardcodedCategoryByTag
                    ? hardcodedCategory
                      ? `/products?category=${hardcodedCategory}`
                      : '/products'
                    : null;
+                 // Keep desktop destinations and intentional admin overrides intact.
+                 const mobileCategory = ({ maquillage: 'maquillage', sport: 'sport', masques: 'masque' } as Record<string, string>)[cat.tag];
+                 const productsHref = isMobile && mobileCategory && (!adminLink || adminLink === '/products')
+                   ? `/products?category=${mobileCategory}`
+                   : desktopHref;
                  
                  // Exact top-down gradient; borderless layout with soft shadow; overflow-hidden to crop bleeding illustrations
                  const cardStyle: React.CSSProperties = {
@@ -226,7 +240,7 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
 
                      {/* Centered Modern Title text in Sans-Serif */}
                      <span
-                       className={`text-[11px] tracking-tight text-center leading-tight transition-colors duration-300 font-bold select-none px-1 h-7 flex items-center justify-center font-sans z-10 ${
+                       className={`text-[13px] md:text-[11px] tracking-tight text-center leading-tight transition-colors duration-300 font-bold select-none px-1 h-8 md:h-7 flex items-center justify-center font-sans z-10 ${
                          isActive ? 'text-slate-800 font-extrabold' : 'text-slate-700 group-hover:text-slate-800'
                        }`}
                      >

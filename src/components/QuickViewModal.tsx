@@ -281,7 +281,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen,
           onClick={onClose} 
           data-autofocus
           aria-label={language === 'FR' ? 'Fermer' : 'إغلاق'}
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100 transition-all z-40 cursor-pointer"
+          className="absolute top-4 right-4 p-3 md:p-2 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100 transition-all z-40 cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>

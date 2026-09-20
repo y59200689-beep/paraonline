@@ -63,3 +63,11 @@
   .ingredient .price { font-size: 16px; }
   .ingredient .vendor { font-size: 12px; letter-spacing: .06em; }
 }
+/* Touch sizing is intentionally limited to phones. */
+@media (max-width: 767px) {
+  .card .wishlist { width: 44px; height: 44px; }
+  .card .vendor, .card .oldPrice { font-size: 13px; }
+  .card .title { font-size: 14px; line-height: 1.45; }
+  .card .purchase { flex-direction: column; align-items: stretch; flex-wrap: nowrap; gap: 10px; }
+  .card .add { width: 100%; flex: 0 0 auto; min-height: 44px; font-size: 13px; }
+}

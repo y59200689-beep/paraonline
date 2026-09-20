@@ -374,7 +374,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             onClick={onClose}
             data-autofocus
             aria-label={language === 'FR' ? 'Fermer' : 'إغلاق'}
-            className="w-9 h-9 rounded-full hover:bg-slate-50 flex items-center justify-center text-slate-400 hover:text-primary-dark transition-all duration-300"
+            className="w-11 h-11 md:w-9 md:h-9 rounded-full hover:bg-slate-50 flex items-center justify-center text-slate-400 hover:text-primary-dark transition-all duration-300"
           >
             <X className="w-4.5 h-4.5" />
           </button>
