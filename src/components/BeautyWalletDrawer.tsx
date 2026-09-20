@@ -276,7 +276,7 @@ export const BeautyWalletDrawer: React.FC<BeautyWalletDrawerProps> = ({ isOpen, 
                   BEAUTY CARD
                 </span>
                 <span style={{ fontSize: '13px', fontWeight: 700, color: 'rgba(255,255,255,0.95)', marginTop: '6px', lineHeight: 1, letterSpacing: '0.04em' }}>
-                  {language === 'FR' ? 'Para Officinal S.A' : 'مستحضراتنا الرسمية'}
+                  {language === 'FR' ? 'Para Divine' : 'مستحضراتنا الرسمية'}
                 </span>
               </div>
               <span style={{ fontSize: '9px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.08em', padding: '6px 12px', borderRadius: '9999px', border: '1px solid rgba(255,255,255,0.3)', background: 'rgba(0,0,0,0.20)', color: 'rgba(255,255,255,0.90)', whiteSpace: 'nowrap' }}>

@@ -118,7 +118,7 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
               </p>
               <button
                 onClick={onClose}
-                className="mt-2 px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-black uppercase tracking-wider rounded-lg transition-colors cursor-pointer border-0"
+                className="mt-2 px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-black uppercase tracking-wider rounded-[11px] transition-colors cursor-pointer border-0"
               >
                 {language === 'FR' ? 'Découvrir nos produits' : 'اكتشاف المنتجات'}
               </button>
@@ -158,7 +158,7 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({
                     >
                       {toTitleCase(product.nameFr || product.name || product.title)}
                     </h4>
-                    <span className="text-[9px] font-extrabold text-blue-700 uppercase tracking-widest block mt-0.5">
+                    <span data-product-brand className="text-[9px] font-extrabold text-blue-700 uppercase tracking-widest block mt-0.5">
                       {product.vendor}
                     </span>
                     <span className="text-xs font-black text-primary block mt-1">

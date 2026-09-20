@@ -9,7 +9,7 @@ export const translations = {
     tabReturns: "Retours",
     tabPayments: "Paiement sécurisé",
 
-    delTitle: "Vérifiez si votre ville est disponible pour la livraison",
+    delTitle: "Frais et délais de livraison par ville",
     delDesc: "Sélectionnez votre ville ci-dessous pour confirmer que nous livrons jusqu'à votre porte et voir les délais estimés.",
     delCityLabel: "Ville de destination",
     delSearchPlaceholder: "Rechercher votre ville...",
@@ -31,8 +31,8 @@ export const translations = {
     delNoticeTitle: "Livraison à domicile uniquement",
     delNoticeDesc: "Le retrait en magasin n'est pas disponible. Votre commande est livrée directement à l'adresse indiquée.",
 
-    retTitle: "Vérifier si mon retour est possible",
-    retDesc: "Répondez à ces questions pour vérifier les conditions de retour de votre produit.",
+    retTitle: "Retours et réclamations",
+    retDesc: "Retrouvez les informations utiles pour préparer votre demande.",
     retQ1: "Le produit est-il encore fermé sous opercule intact ?",
     retQ2: "Délai écoulé depuis la réception :",
     retQ2Label: "jours",
@@ -47,7 +47,7 @@ export const translations = {
     retReset: "Recommencer",
 
     payTitle: "Paiement sécurisé",
-    payDesc: "Choisissez le mode de paiement qui vous convient.",
+    payDesc: "Comprendre le règlement de votre commande.",
     payMethodLabel: "Méthode sélectionnée",
     payCard: "Carte Bancaire Nationale & CMI",
     payCod: "Paiement en Espèces à la livraison",
@@ -70,7 +70,7 @@ export const translations = {
     tabReturns: "سياسة الإرجاع",
     tabPayments: "الأمان والدفع",
 
-    delTitle: "التحقق من توفر الشحن لمدينتكِ",
+    delTitle: "رسوم ومدة التوصيل حسب المدينة",
     delDesc: "اكتشفي ما إذا كانت مدينتكِ مغطاة بخدمة التوصيل المباشر حتى باب منزلكِ والمدة المتوقعة.",
     delCityLabel: "مدينة الوجهة",
     delSearchPlaceholder: "البحث عن مدينتكِ...",
@@ -92,8 +92,8 @@ export const translations = {
     delNoticeTitle: "توصيل حصري إلى باب المنزل مباشرة (لا نوفر الاستلام الشخصي)",
     delNoticeDesc: "لا نوفر حالياً خيار الاستلام من المتجر. يتم توصيل الطلبات إلى عنوانكِ.",
 
-    retTitle: "فحص أهلية إرجاع المنتج",
-    retDesc: "أجيبي عن الأسئلة التالية للتحقق من إمكانية إرجاع المنتج.",
+    retTitle: "الإرجاع والشكايات",
+    retDesc: "المعلومات اللازمة لتحضير طلب الإرجاع أو الشكاية.",
     retQ1: "هل المنتج لا يزال مغلقاً بغلافه الأصلي المحكم ؟",
     retQ2: "المدة المنقضية منذ الاستلام :",
     retQ2Label: "أيام",
@@ -107,8 +107,8 @@ export const translations = {
     retDaysExceededDesc: "تتجاوز مدة الطلب الحد الزمني المحدد للإرجاع وهو 7 أيام بعد الاستلام.",
     retReset: "إعادة الفحص والتشخيص",
 
-    payTitle: "التشفير وبوابات الدفع الآمنة",
-    payDesc: "تراخيص واعتمادات بنكية وطنية ومعايير أمان عالية لتسوق مطمئن.",
+    payTitle: "الدفع عند إتمام الطلب",
+    payDesc: "تعرف على طرق تسديد طلبك المتاحة عند إتمام الطلب.",
     payMethodLabel: "طريقة الدفع المحددة",
     payCard: "بطاقة بنكية مغربية مع CMI",
     payCod: "الدفع نقداً عند الاستلام",

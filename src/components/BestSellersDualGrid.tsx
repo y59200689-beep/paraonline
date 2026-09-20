@@ -12,6 +12,8 @@ import Image from 'next/image';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { PRODUCT_IMAGE_FALLBACK } from '@/lib/public-images';
 import { useSettings } from '@/context/SettingsContext';
+import cardStyles from './TopRatedAsymmetricGrid.module.css';
+import styles from './BestSellersDualGrid.module.css';
 
 const cleanTitle = (title: string) => {
   return title
@@ -70,8 +72,19 @@ export const BestSellersDualGrid: React.FC = () => {
         if (!ids.has(p.id)) { ids.add(p.id); list.push(p); }
       }
     }
-    return list;
-  }, [showBestSellers, showWeeklySales, bestSellingProducts, topSellingProducts]);
+    // Preserve editor selections first, then fill the 12-card layout from the
+    // same review-ranked catalog, adding only available public products.
+    if (showBestSellers || showWeeklySales) {
+      const additional = [...products]
+        .filter(p => p.status !== 'draft' && (p.stock ?? 0) > 0)
+        .sort((a, b) => (b.reviews ?? 0) - (a.reviews ?? 0));
+      for (const p of additional) {
+        if (list.length >= 12) break;
+        if (!ids.has(p.id)) { ids.add(p.id); list.push(p); }
+      }
+    }
+    return list.slice(0, 12);
+  }, [showBestSellers, showWeeklySales, bestSellingProducts, topSellingProducts, products]);
 
   if (allProducts.length === 0) {
     return null;
@@ -112,94 +125,52 @@ export const BestSellersDualGrid: React.FC = () => {
             />
           </div>
           <div className="relative z-20 flex flex-col justify-center">
-            <h2 className="text-[18px] md:text-[22px] font-black text-white tracking-tight leading-snug">
+            <h2 className="public-section-title text-[18px] md:text-[22px] font-black text-white tracking-tight leading-snug">
               {isRTL ? sectionTitleAr : sectionTitleFr}
             </h2>
-            <span className="text-[11px] font-bold text-slate-400 mt-1 uppercase tracking-widest">
+            <span className="text-xs font-bold text-slate-200 mt-1 uppercase tracking-widest">
               {isRTL ? `${allProducts.length} منتجات` : `${allProducts.length} Produits`}
             </span>
           </div>
         </div>
 
-        {/* Product Cards List in Clean 2-Column Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-          {allProducts.map((product) => {
-            const isFav = isInWishlist(product.id);
-            const titleStr = cleanTitle(product.nameFr || product.title);
+        <div className={styles.grid}>
+          {allProducts.map(product => {
+            const title = cleanTitle(isRTL ? product.name || product.title : product.nameFr || product.title);
+            const favorite = isInWishlist(product.id);
+            const unavailable = (product.stock ?? 0) <= 0;
             return (
-              <div 
-                key={product.id}
-                className="bg-white rounded-[20px] border border-slate-100/90 p-4 flex flex-row items-stretch gap-4 hover:shadow-[0_12px_30px_rgba(0,0,0,0.035)] hover:border-slate-200/50 transition-all duration-300 relative group min-h-[128px]"
-              >
-                {/* Heart wishlist button */}
-                <button
-                  onClick={(e) => { e.stopPropagation(); toggleWishlist(product); }}
-                  className={`absolute top-3 right-3 w-7 h-7 rounded-full bg-white border border-slate-100 flex items-center justify-center transition-all shadow-sm z-10 cursor-pointer ${isFav ? 'text-red-500 scale-105' : 'text-slate-400 hover:text-red-500'}`}
-                >
-                  <Heart className={`w-3.5 h-3.5 ${isFav ? 'fill-red-500 text-red-500' : ''}`} />
+              <article key={product.id} className={cardStyles.card}>
+                <button type="button" className={cardStyles.favorite} aria-label={(isRTL ? 'المفضلة: ' : 'Favoris : ') + title} aria-pressed={favorite} onClick={() => toggleWishlist(product)}>
+                  <Heart size={18} fill={favorite ? 'currentColor' : 'none'} />
                 </button>
-
-                {/* Left image container */}
-                <div className="w-[80px] h-[80px] rounded-[14px] bg-[#F8FAF8] flex items-center justify-center shrink-0 overflow-hidden relative self-center">
-                  <Image 
-                    src={getOptimizedImageUrl(product.image) || PRODUCT_IMAGE_FALLBACK}
-                    alt={titleStr} 
-                    fill
-                    sizes="80px"
-                    className="object-cover scale-[1.04] transition-transform duration-500 ease-out group-hover:scale-[1.09]"
-                  />
-                </div>
-
-                {/* Right content */}
-                <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
-                  <div>
-                    {/* Title */}
-                    <h3 
-                      className="text-[12px] font-black text-slate-800 leading-snug line-clamp-1 hover:text-primary transition-colors cursor-pointer pr-8"
-                      onClick={() => handleSelectProduct(product)}
-                    >
-                      {titleStr}
-                    </h3>
-
-                    {/* Attributes: Rating & Brand inline */}
-                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                      <span className="flex items-center gap-0.5 text-amber-600 text-[9.5px] font-black shrink-0">
-                        <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                        <span>{product.rating.toFixed(1)}</span>
-                      </span>
-                      <span className="text-slate-200 text-[9px]">•</span>
-                      <span className="text-[9.5px] font-black uppercase text-primary tracking-widest truncate">
-                        {product.vendor}
-                      </span>
+                <button type="button" className={cardStyles.image} onClick={() => handleSelectProduct(product)} aria-label={(isRTL ? 'عرض ' : 'Voir ') + title}>
+                  <Image src={getOptimizedImageUrl(product.image) || PRODUCT_IMAGE_FALLBACK} alt={title} fill sizes="(max-width: 600px) 100px, 140px" />
+                </button>
+                <div className={cardStyles.content}>
+                  <div className={cardStyles.identity}><span data-product-brand className={cardStyles.vendor}>{product.vendor}</span></div>
+                  <button type="button" className={cardStyles.name} onClick={() => handleSelectProduct(product)}>{title}</button>
+                  {product.reviews > 0 && product.rating > 0 ? (
+                    <div className={cardStyles.rating} aria-label={product.rating.toFixed(1) + ' / 5'}>
+                      <span className={cardStyles.stars} aria-hidden="true">{[1, 2, 3, 4, 5].map(star => <Star key={star} size={14} fill={star <= Math.round(product.rating) ? 'currentColor' : 'none'} />)}</span>
+                      <span>{product.rating.toFixed(1)} ({product.reviews} {isRTL ? 'تقييم' : 'avis'})</span>
                     </div>
-                  </div>
-
-                  {/* Price & Add to Cart */}
-                  <div className="flex items-center justify-between gap-2 mt-3 pt-2 border-t border-slate-50">
-                    <div className="flex items-baseline gap-1.5 flex-wrap">
-                      <span className="text-[14px] font-sans font-black text-primary">{product.price} MAD</span>
-                      {product.comparePrice > product.price && (
-                        <span className="text-[10px] font-sans font-medium text-slate-400 line-through">{product.comparePrice} MAD</span>
-                      )}
+                  ) : <p className={cardStyles.noReviews}>{isRTL ? 'لا توجد تقييمات بعد' : 'Pas encore d’avis'}</p>}
+                  <div className={cardStyles.purchase}>
+                    <div className={cardStyles.prices}>
+                      <strong>{product.price.toFixed(2)} DH</strong>
+                      {product.comparePrice > product.price && <del>{product.comparePrice.toFixed(2)} DH</del>}
                     </div>
-
-                    {/* Custom Add to Cart Button */}
-                    <button
-                      onClick={(e) => handleQuickAdd(product, e)}
-                      className="px-3 py-1.5 text-[9.5px] font-black uppercase tracking-wider rounded-full flex items-center gap-1.5 transition-all duration-300 active:scale-95 cursor-pointer leading-none border-0 outline-none btn-gradient"
-                    >
-                      <span>{isRTL ? 'أضف' : 'Ajouter'}</span>
-                      <div className="w-4 h-4 bg-white/10 rounded-full flex items-center justify-center">
-                        <ShoppingCart className="w-2.5 h-2.5 text-white" />
-                      </div>
+                    <button type="button" className={`${cardStyles.add} public-cta`} disabled={unavailable} onClick={e => handleQuickAdd(product, e)}>
+                      <ShoppingCart size={18} aria-hidden="true" />
+                      {unavailable ? (isRTL ? 'غير متوفر' : 'Rupture de stock') : (isRTL ? 'إضافة إلى السلة' : 'Ajouter au panier')}
                     </button>
                   </div>
                 </div>
-              </div>
+              </article>
             );
           })}
         </div>
-
       </div>
     </section>
   );

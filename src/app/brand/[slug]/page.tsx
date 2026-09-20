@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const brand = getBrandBySlug(slug);
   const name = brand?.name || slug.split('-').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
   const description = slug === 'la-roche-posay'
-    ? 'Découvrez les gammes La Roche-Posay par préoccupation et trouvez les soins disponibles chez Para Officinal au Maroc.'
+    ? 'Découvrez les gammes La Roche-Posay par préoccupation et trouvez les soins disponibles chez Para Divine au Maroc.'
     : slug === 'vichy'
       ? 'Découvrez les soins Vichy par catégorie : Normaderm, Dercos, Capital Soleil, Liftactiv, Pureté Thermale et Vichy Homme, disponibles au Maroc.'
       : slug === 'cerave'
@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         ? 'Découvrez les soins Bioderma par besoin : Sensibio, Sebium, Atoderm, Photoderm, Hydrabio et Cicabio, disponibles au Maroc.'
       : slug === 'eucerin'
         ? 'Découvrez les soins Eucerin par besoin : UreaRepair, DermoPure, Anti-Pigment, Hyaluron-Filler, Aquaphor et protection solaire, disponibles au Maroc.'
-      : brand?.descriptionFr || `Découvrez les produits ${name} disponibles chez Para Officinal.`;
+      : brand?.descriptionFr || `Découvrez les produits ${name} disponibles chez Para Divine.`;
 
   return {
     title: name,

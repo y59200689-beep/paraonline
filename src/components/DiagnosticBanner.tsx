@@ -40,7 +40,7 @@ export const DiagnosticBanner: React.FC = () => {
               {/* Premium Nested CTA Button with Button-in-Button architecture */}
               <button
                 onClick={() => setDiagnosticOpen(true)}
-                className="group relative inline-flex items-center gap-4 pl-6 pr-2 py-2 rounded-full bg-slate-950 dark:bg-white text-white dark:text-slate-950 hover:bg-indigo-600 dark:hover:bg-indigo-500 hover:text-white dark:hover:text-white shadow-lg shadow-slate-950/10 hover:shadow-indigo-500/25 active:scale-[0.98] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer border-0 outline-none"
+                className="group relative inline-flex items-center gap-4 pl-6 pr-2 py-2 rounded-[11px] bg-slate-950 dark:bg-white text-white dark:text-slate-950 hover:bg-indigo-600 dark:hover:bg-indigo-500 hover:text-white dark:hover:text-white shadow-lg shadow-slate-950/10 hover:shadow-indigo-500/25 active:scale-[0.98] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer border-0 outline-none"
               >
                 <span className="text-xs font-black uppercase tracking-wider">
                   Démarrer le diagnostic

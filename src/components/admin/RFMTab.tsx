@@ -58,7 +58,7 @@ export default function RFMTab() {
   // ── Campaign Modal States ──
   const [isCampaignModalOpen, setIsCampaignModalOpen] = useState(false);
   const [campaignMessage, setCampaignMessage] = useState(
-    "Bonjour {NAME},\n\nMerci pour votre fidélité chez Para Officinal ! Pour vous remercier, nous vous offrons 15% de réduction sur votre prochain soin K-Beauty avec le code FIDELITE15.\n\nVotre solde actuel est de {POINTS} points.\n\nA très bientôt !"
+    "Bonjour {NAME},\n\nMerci pour votre fidélité chez Para Divine ! Pour vous remercier, nous vous offrons 15% de réduction sur votre prochain soin K-Beauty avec le code FIDELITE15.\n\nVotre solde actuel est de {POINTS} points.\n\nA très bientôt !"
   );
   
   // Simulation progress states

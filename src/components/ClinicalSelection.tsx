@@ -99,11 +99,11 @@ export const ClinicalSelection: React.FC = () => {
                           alt={title}
                           fill
                           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 22vw"
-                          className="object-contain p-4 transition duration-500 ease-out group-hover:scale-105"
+                          className="object-cover transition duration-500 ease-out group-hover:scale-105"
                         />
                         {hasOffer && <span className="absolute left-2 top-2 bg-[#f273a8] px-2 py-1 text-[9px] font-extrabold uppercase tracking-[0.1em] text-white">-{Math.round((1 - product.price / product.comparePrice) * 100)}%</span>}
                       </Link>
-                      <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#d94f84]">{product.vendor || 'Maybelline New York'}</p>
+                      <p data-product-brand className="text-[10px] font-extrabold uppercase tracking-[0.12em]">{product.vendor || 'Maybelline New York'}</p>
                       <Link href={`/products/${product.id}`} className="mt-1 line-clamp-2 min-h-10 text-sm font-extrabold leading-snug text-slate-900 transition group-hover:text-[#d94f84] dark:text-white">
                         {title}
                       </Link>
@@ -114,7 +114,7 @@ export const ClinicalSelection: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => addToCart(product, 1)}
-                        className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 border border-slate-900 px-3 text-[11px] font-extrabold text-slate-900 transition hover:border-[#ed6d9d] hover:bg-[#ed6d9d] hover:text-white dark:border-white dark:text-white"
+                        className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[11px] border border-slate-900 px-3 text-[11px] font-extrabold text-slate-900 transition hover:border-[#ed6d9d] hover:bg-[#ed6d9d] hover:text-white dark:border-white dark:text-white"
                       >
                         <ShoppingBag className="h-3.5 w-3.5" />
                         {isArabic ? 'أضف' : 'Ajouter'}

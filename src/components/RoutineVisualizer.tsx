@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from '@/context/LanguageContext';
-import { Sparkles, Check, Info, Sun, Moon } from 'lucide-react';
+import { Check, Brain, Sun, Moon, Stethoscope, Bubbles, Droplet, Pipette, Container } from 'lucide-react';
+import styles from './RoutineVisualizer.module.css';
 
 interface Step {
   id: number;
@@ -336,33 +337,9 @@ const MOLECULE_DATABASE: Record<string, MoleculeDetails> = {
 export function RoutineVisualizer() {
   const { language } = useTranslation();
   const [activeStep, setActiveStep] = useState<number>(0);
-  const [sectionVisible, setSectionVisible] = useState(false);
   const [selectedMolecule, setSelectedMolecule] = useState<string | null>(null);
-  const sectionRef = useRef<HTMLElement>(null);
 
   const isRTL = language === 'AR';
-
-  // Reset selected molecule on activeStep change
-  useEffect(() => {
-    setSelectedMolecule(null);
-  }, [activeStep]);
-
-  // Trigger scroll reveal when the section enters the viewport
-  useEffect(() => {
-    const el = sectionRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setSectionVisible(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.12 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
 
   const steps: Step[] = [
     {
@@ -480,270 +457,67 @@ export function RoutineVisualizer() {
 
   const currentStepData = steps[activeStep];
 
+  const icons = [Bubbles, Droplet, Pipette, Container, Sun];
+  const selectStep = (index: number) => { setActiveStep(index); setSelectedMolecule(null); };
+  const molecule = selectedMolecule ? MOLECULE_DATABASE[selectedMolecule] : null;
+
   return (
-    <section
-      ref={sectionRef}
-      className={`bg-[#FAFAFA] border-b border-slate-200/40 relative overflow-hidden py-10 md:py-16 transition-[opacity,transform] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-        sectionVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-      }`}
-    >
-      {/* Soft Ambient Background Orbs */}
-      <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-primary/5 to-transparent blur-3xl pointer-events-none opacity-60" />
-      <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-[#EC4899]/5 to-transparent blur-3xl pointer-events-none opacity-60" />
-
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 relative z-10">
-        <div className="w-full bg-white rounded-[32px] border border-slate-100/80 shadow-[0_16px_40px_rgba(0,0,0,0.015)] p-6 sm:p-8 md:p-10 overflow-hidden">
-      
-      {/* ========================== HEADER ========================== */}
-      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10 sm:mb-14 border-b border-slate-50 pb-6">
-        <div className="space-y-2.5">
-          <div className="flex items-center gap-2 justify-start">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black text-primary bg-[#1a4731]/5 uppercase tracking-widest border border-[#1a4731]/10">
-              <Sparkles className="w-3.5 h-3.5 text-gold animate-pulse" />
-              {isRTL ? 'التسلسل الطبيعي' : 'Ordre Clinique'}
-            </span>
-          </div>
-          <h3 className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight leading-tight font-sans">
-            {isRTL ? 'تسلسل خطوات روتينك اليومي المثالي' : 'L\'Ordre de votre Routine Skincare'}
-          </h3>
-          <p className="text-slate-400 text-xs sm:text-sm font-semibold max-w-2xl text-left">
-            {isRTL 
-              ? 'تطبيق المستحضرات بالترتيب الصحيح يضمن أقصى استفادة لبشرتك ويحمي حاجزها الطبيعي.' 
-              : 'Appliquer les soins dans l\'ordre recommandé facilite une routine régulière et limite les associations inadaptées.'}
-          </p>
+    <section className={styles.section} aria-labelledby="routine-title" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className={styles.decor} aria-hidden="true"><i /><i /><i /><span /></div>
+      <div className={styles.container}>
+        <header className={styles.header}>
+          <span className={styles.eyebrow}><Stethoscope size={19} />{isRTL ? 'التسلسل الطبيعي' : 'Ordre clinique'}</span>
+          <h2 id="routine-title" className="public-section-title">{isRTL ? 'تسلسل خطوات روتينك اليومي المثالي' : <>L’Ordre de votre <em>Routine Skincare</em></>}</h2>
+          <p>{isRTL ? 'تطبيق المستحضرات بالترتيب الصحيح يضمن أقصى استفادة لبشرتك ويحمي حاجزها الطبيعي.' : 'Appliquer les soins dans l’ordre recommandé facilite une routine régulière et limite les associations inadaptées.'}</p>
+        </header>
+        <div className={styles.steps} role="tablist" aria-label={isRTL ? 'خطوات الروتين' : 'Étapes de la routine'}>
+          {steps.map((step, index) => {
+            const Icon = icons[index];
+            return <button type="button" role="tab" key={step.id} id={'routine-tab-' + step.id} aria-controls="routine-panel" aria-selected={index === activeStep} tabIndex={index === activeStep ? 0 : -1}
+              onClick={() => selectStep(index)}
+              onKeyDown={event => {
+                let target = index;
+                if (event.key === 'ArrowRight') target = (index + (isRTL ? 4 : 1)) % 5;
+                else if (event.key === 'ArrowLeft') target = (index + (isRTL ? 1 : 4)) % 5;
+                else if (event.key === 'Home') target = 0;
+                else if (event.key === 'End') target = 4;
+                else return;
+                event.preventDefault(); selectStep(target); document.getElementById('routine-tab-' + (target + 1))?.focus();
+              }}>
+              <span className={styles.circle}><Icon size={32} strokeWidth={1.4} aria-hidden="true" /><b>{step.id}</b></span>
+              <span className={styles.stepName}>{isRTL ? step.nameAr : step.nameFr}</span>
+              <span className={styles.subtitle}>{isRTL ? step.subtitleAr : step.subtitleFr}</span>
+            </button>;
+          })}
         </div>
-      </div>
-
-      {/* ========================== STEP CHAIN TRAIL ========================== */}
-      <div className="relative flex flex-col md:flex-row justify-between items-center gap-8 md:gap-4 my-6">
-        
-        {/* Connection Line (Desktop only) */}
-        <div className="absolute top-[38px] left-[6%] right-[6%] h-[2px] bg-slate-100/70 -z-0 hidden md:block" />
-        
-        {/* Connection Line (Progressive fill desktop only) */}
-        <div 
-          className="absolute top-[38px] h-[2px] bg-gradient-to-r from-primary to-accent transition-all duration-700 ease-[var(--ease-in-out-premium)] -z-0 hidden md:block"
-          style={{ 
-            width: `${(activeStep / (steps.length - 1)) * 88}%`,
-            right: isRTL ? '6%' : 'auto',
-            left: isRTL ? 'auto' : '6%',
-            transformOrigin: isRTL ? 'right center' : 'left center'
-          }}
-        />
-
-        {steps.map((step, idx) => {
-          const isCompleted = idx < activeStep;
-          const isActive = idx === activeStep;
-          
-          return (
-            <button 
-              key={step.id}
-              onClick={() => setActiveStep(idx)}
-              className="flex-1 relative z-10 flex flex-row md:flex-col items-center gap-4 md:gap-3.5 p-3 rounded-2xl w-full md:w-auto hover:bg-slate-50/50 md:hover:bg-transparent transition-all duration-300 group cursor-pointer focus:outline-none btn-press-feedback"
-              style={{
-                direction: isRTL ? 'rtl' : 'ltr',
-                transitionDelay: sectionVisible ? `${idx * 60}ms` : '0ms',
-                opacity: sectionVisible ? 1 : 0,
-                transform: sectionVisible ? 'translateY(0)' : 'translateY(16px)',
-              }}
-            >
-              {/* Step Circle Icon with double bezel */}
-              <div 
-                className={`w-14 h-14 sm:w-[68px] sm:h-[68px] rounded-full flex items-center justify-center border-2 transition-all duration-500 shrink-0 relative ${
-                  isCompleted 
-                    ? 'bg-primary border-primary text-white scale-95 shadow-[0_4px_12px_rgba(26,71,49,0.15)]' 
-                    : isActive 
-                      ? 'bg-white border-accent text-accent scale-105 shadow-lg ring-4 ring-accent/10' 
-                      : 'bg-white border-slate-200 text-slate-400 group-hover:border-slate-300 group-hover:text-slate-600'
-                }`}
-                style={{
-                  boxShadow: isActive ? `0 10px 25px -5px ${step.color}` : ''
-                }}
-              >
-                {isCompleted ? (
-                  <Check className="w-5.5 h-5.5 stroke-[3px]" />
-                ) : (
-                  step.icon
-                )}
-
-                {/* Micro Step Index Badge */}
-                <span className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black border transition-all ${
-                  isActive 
-                    ? 'bg-accent text-white border-accent' 
-                    : isCompleted 
-                      ? 'bg-primary text-white border-primary' 
-                      : 'bg-slate-50 text-slate-400 border-slate-200'
-                }`}>
-                  {step.id}
-                </span>
-              </div>
-
-              {/* Text Blocks */}
-              <div className="flex-1 md:text-center min-w-0 text-left md:text-center">
-                <div className="flex items-center md:justify-center gap-1.5 justify-start">
-                  <span className={`text-sm sm:text-[14.5px] font-black tracking-tight transition-colors duration-300 ${
-                    isActive ? 'text-accent' : 'text-slate-800'
-                  }`}>
-                    {isRTL ? step.nameAr : step.nameFr}
-                  </span>
-                  {step.time === 'AM' && (
-                    <span className="text-[8px] px-1 py-0.5 rounded-[4px] bg-amber-50 text-amber-600 font-bold border border-amber-100 scale-90 uppercase shrink-0">
-                      AM
-                    </span>
-                  )}
-                </div>
-                <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block mt-0.5 md:hidden lg:block text-left md:text-center">
-                  {isRTL ? step.subtitleAr : step.subtitleFr}
-                </span>
-              </div>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* ========================== FOCUS DETAIL SHOWCARD ========================== */}
-      <div 
-        key={activeStep}
-        className="mt-12 bg-gradient-to-br from-white to-slate-50/40 border border-slate-100 rounded-[24px] p-6 sm:p-8 flex flex-col lg:flex-row gap-8 items-stretch shadow-[0_4px_20px_rgba(0,0,0,0.005)] t-panel"
-        style={{ direction: isRTL ? 'rtl' : 'ltr' }}
-      >
-        {/* Left Side: Step Details */}
-        <div className="flex-1 space-y-5 text-left">
-          <div className="space-y-1">
-            <span className="text-[10px] font-black text-[#b5905b] uppercase tracking-[0.25em] block leading-none">
-              {isRTL ? `الخطوة 0${currentStepData.id}` : `Étape 0${currentStepData.id}`}
-            </span>
-            <h4 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight leading-tight">
-              {isRTL ? currentStepData.nameAr : currentStepData.nameFr}
-              <span className="text-slate-400 font-extrabold text-sm ml-2.5 sm:ml-4 font-heading border-l border-slate-200 pl-2.5 sm:pl-4 uppercase tracking-wider">
-                {isRTL ? currentStepData.subtitleAr : currentStepData.subtitleFr}
-              </span>
-            </h4>
-          </div>
-
-          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-semibold">
-            {isRTL ? currentStepData.descAr : currentStepData.descFr}
-          </p>
-
-          {/* Benefits Checkpoints */}
-          <div className="pt-2.5 space-y-2 border-t border-slate-100">
-            <span className="text-[9.5px] font-black text-slate-400 uppercase tracking-widest block mb-3">
-              {isRTL ? 'الفوائد الملموسة للبشرة' : 'Bénéfices cutanés'}
-            </span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {(isRTL ? currentStepData.benefitsAr : currentStepData.benefitsFr).map((benefit, i) => (
-                <div key={i} className="flex items-center gap-2 text-xs text-slate-700 font-extrabold">
-                  <div className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100">
-                    <Check className="w-3 h-3 stroke-[3px]" />
-                  </div>
-                  <span>{benefit}</span>
-                </div>
-              ))}
+        <div id="routine-panel" role="tabpanel" aria-labelledby={'routine-tab-' + currentStepData.id} tabIndex={0} className={styles.panel}>
+          <div className={styles.summary} key={activeStep}>
+            <span className={styles.label}>{isRTL ? 'الخطوة' : 'Étape'} 0{currentStepData.id}</span>
+            <h3>{isRTL ? currentStepData.nameAr : currentStepData.nameFr}<span>{isRTL ? currentStepData.subtitleAr : currentStepData.subtitleFr}</span></h3>
+            <p className={styles.description}>{isRTL ? currentStepData.descAr : currentStepData.descFr}</p>
+            <div className={styles.benefits}>
+              <h4>{isRTL ? 'الفوائد الملموسة للبشرة' : 'Bénéfices cutanés'}</h4>
+              <ul>{(isRTL ? currentStepData.benefitsAr : currentStepData.benefitsFr).map(benefit => <li key={benefit}><span><Check size={22} aria-hidden="true" /></span>{benefit}</li>)}</ul>
             </div>
+            <p className={styles.signature}>{isRTL ? 'لحظة عناية، كل يوم' : 'Un moment pour votre peau, chaque jour'}</p>
           </div>
-        </div>
-
-        {/* Right Side: Scientific Context & Active Ingredients */}
-        <div 
-          onMouseLeave={() => setSelectedMolecule(null)}
-          className="w-full lg:w-[380px] bg-[#fdfcf9] border border-[#eedfd2]/50 rounded-[20px] p-6 flex flex-col justify-between gap-6 text-left shrink-0 shadow-sm relative overflow-hidden"
-        >
-          {/* Subtle design gradient accent */}
-          <div className="absolute -right-6 -bottom-6 w-32 h-32 rounded-full bg-[#eedfd2]/15 blur-xl pointer-events-none" />
-          
-          <div className="space-y-4 relative z-10">
-            <div className="flex items-center gap-2 text-[#b5905b]">
-              <Info className="w-4 h-4" />
-              <span className="text-[10px] font-black uppercase tracking-widest">
-                {isRTL ? 'لماذا هذه الخطوة مهمة؟' : 'Raisonnement Clinique'}
-              </span>
+          <aside className={styles.context}>
+            <h4 className={styles.contextTitle}><span><Brain size={25} strokeWidth={1.5} /></span>{isRTL ? 'لماذا هذه الخطوة مهمة؟' : 'Raisonnement clinique'}</h4>
+            <p>{isRTL ? currentStepData.importanceAr : currentStepData.importanceFr}</p>
+            <div className={styles.actives}>
+              <h4>{isRTL ? 'الجزيئات النشطة الموصى بها' : 'Molécules actives'}</h4>
+              <div className={styles.chips}>{(isRTL ? currentStepData.activesAr : currentStepData.activesFr).map(active => <button type="button" key={active} aria-expanded={selectedMolecule === active} aria-controls="routine-molecule" onClick={() => setSelectedMolecule(selectedMolecule === active ? null : active)}>{active}</button>)}</div>
+              {molecule && <div className={styles.molecule} id="routine-molecule" aria-live="polite">
+                <strong>{selectedMolecule}</strong><span>{isRTL ? molecule.categoryAr : molecule.categoryFr}</span>
+                <p>{isRTL ? molecule.descAr : molecule.descFr}</p>
+                <small>{isRTL ? 'الهدف:' : 'Cible :'} {isRTL ? molecule.targetAr : molecule.targetFr}</small>
+              </div>}
             </div>
-            <p className="text-[11.5px] leading-relaxed text-stone-600 font-semibold">
-              {isRTL ? currentStepData.importanceAr : currentStepData.importanceFr}
-            </p>
-          </div>
-
-          <div className="space-y-4 relative z-10 border-t border-[#eedfd2]/30 pt-4 mt-auto">
-            {/* Actives Molecules recommendations */}
-            <span className="text-[9.5px] font-black text-stone-400 uppercase tracking-widest block">
-              {isRTL ? 'الجزيئات النشطة الموصى بها' : 'Molécules actives'}
-            </span>
-            <div className="flex flex-wrap gap-1.5">
-              {(isRTL ? currentStepData.activesAr : currentStepData.activesFr).map((active, idx) => {
-                const isSelected = selectedMolecule === active;
-                return (
-                  <button 
-                    key={idx}
-                    onClick={() => setSelectedMolecule(isSelected ? null : active)}
-                    onMouseEnter={() => setSelectedMolecule(active)}
-                    className={`px-2.5 py-1 text-[10px] font-extrabold rounded-lg shadow-sm transition-all duration-200 cursor-pointer border ${
-                      isSelected 
-                        ? 'bg-[#b5905b] text-white border-[#b5905b]' 
-                        : 'bg-white border-[#eedfd2]/50 text-[#b5905b] hover:border-[#b5905b]/45 hover:bg-[#b5905b]/5'
-                    }`}
-                  >
-                    {active}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Molecule Detail Popover Box */}
-          {selectedMolecule && MOLECULE_DATABASE[selectedMolecule] && (() => {
-            const details = MOLECULE_DATABASE[selectedMolecule];
-            return (
-              <div className="relative z-10 p-3.5 bg-white border border-[#b5905b]/30 rounded-xl shadow-sm text-left animate-fade-in text-[11px] space-y-2 mt-2">
-                {/* Header Row */}
-                <div className="flex justify-between items-start gap-2 border-b border-stone-100 pb-1.5">
-                  <div>
-                    <span className="text-[9.5px] font-black uppercase text-[#b5905b] block">
-                      {isRTL ? details.categoryAr : details.categoryFr}
-                    </span>
-                    <h5 className="font-black text-slate-800 leading-tight">
-                      {selectedMolecule}
-                    </h5>
-                  </div>
-                  <span className="px-1.5 py-0.5 rounded bg-[#b5905b]/10 text-[#b5905b] text-[8.5px] font-black uppercase whitespace-nowrap">
-                    {details.concentration}
-                  </span>
-                </div>
-                {/* Body Content */}
-                <p className="text-stone-600 font-semibold leading-relaxed">
-                  {isRTL ? details.descAr : details.descFr}
-                </p>
-                {/* Cellular Target */}
-                <div className="flex items-center gap-1.5 pt-1 text-[9px] font-bold text-slate-400">
-                  <span className="uppercase tracking-widest">{isRTL ? 'الهدف الخلوي:' : 'Cible:'}</span>
-                  <span className="text-[#b5905b]">{isRTL ? details.targetAr : details.targetFr}</span>
-                </div>
-              </div>
-            );
-          })()}
-          
-          {/* Routine schedule clock badge */}
-          <div className="flex items-center justify-between border-t border-[#eedfd2]/30 pt-4 relative z-10">
-            <span className="text-[9px] font-black text-stone-400 uppercase tracking-widest">
-              {isRTL ? 'جدول التطبيق' : 'Application'}
-            </span>
-            <div className="flex gap-2">
-              {currentStepData.time !== 'PM' && (
-                <div className="flex items-center gap-1 bg-amber-50 text-amber-600 px-2 py-0.5 rounded-[6px] border border-amber-100 text-[10px] font-black uppercase">
-                  <Sun className="w-3.5 h-3.5" />
-                  <span>{isRTL ? 'صباحاً' : 'Matin'}</span>
-                </div>
-              )}
-              {currentStepData.time !== 'AM' && (
-                <div className="flex items-center gap-1 bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-[6px] border border-indigo-100 text-[10px] font-black uppercase">
-                  <Moon className="w-3.5 h-3.5" />
-                  <span>{isRTL ? 'مساءً' : 'Soir'}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-      
+            <div className={styles.schedule}><h4>{isRTL ? 'جدول التطبيق' : 'Application'}</h4><div>
+              {currentStepData.time !== 'PM' && <span className={styles.morning}><Sun size={20} />{isRTL ? 'صباحاً' : 'Matin'}</span>}
+              {currentStepData.time !== 'AM' && <span className={styles.evening}><Moon size={20} />{isRTL ? 'مساءً' : 'Soir'}</span>}
+            </div></div>
+          </aside>
         </div>
       </div>
     </section>

@@ -98,14 +98,14 @@ export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands: propBrands
           width: max-content;
           gap: 0.75rem;
           will-change: transform;
-          animation: brand-partner-marquee 220s linear infinite;
+          animation: brand-partner-marquee 129s linear infinite;
         }
         .brand-partner-track--reverse {
           animation-direction: reverse;
-          animation-duration: 260s;
+          animation-duration: 154s;
         }
         .brand-partner-track--slow {
-          animation-duration: 300s;
+          animation-duration: 179s;
         }
         @media (min-width: 640px) {
           .brand-partner-track {
@@ -149,7 +149,7 @@ export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands: propBrands
               <span className="hidden rtl:inline">ماركات رسمية</span>
               <span className="inline rtl:hidden">Marques Officielles</span>
             </span>
-            <h2 className="text-base sm:text-lg font-black text-slate-800 tracking-tight leading-none mt-1">
+            <h2 className="public-section-title text-base sm:text-lg font-black text-slate-800 tracking-tight leading-none mt-1">
               <span className="hidden rtl:inline">تسوق ماركاتك المفضلة</span>
               <span className="inline rtl:hidden">Achetez vos marques préférées</span>
             </h2>

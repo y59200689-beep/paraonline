@@ -5,7 +5,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Page Introuvable — 404',
-  description: 'La page que vous recherchez est introuvable. Revenez à la boutique Para Officinal S.A.',
+  description: 'La page que vous recherchez est introuvable. Revenez à la boutique Para Divine',
   robots: { index: false, follow: false },
 };
 
@@ -62,7 +62,7 @@ export default function NotFound() {
 
         {/* Brand footer */}
         <p className="text-[10px] text-slate-300 font-semibold tracking-widest uppercase mt-2">
-          Para Officinal S.A · Maroc
+          Para Divine · Maroc
         </p>
       </div>
     </div>

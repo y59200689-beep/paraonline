@@ -62,8 +62,8 @@ export const HorizontalPromoBanner: React.FC<HorizontalPromoBannerProps> = ({ se
           {/* LEFT: Text Block (highly readable with contrast tags) */}
           <div className="relative z-10 flex flex-col justify-center pl-6 sm:pl-8 md:pl-10 pr-4 py-4 flex-1 min-w-0 text-left">
             <span className="inline-flex self-start px-2 py-0.5 bg-emerald-500/15 text-emerald-400 text-[8px] sm:text-[9px] font-black uppercase tracking-wider rounded-md mb-1.5 border border-emerald-500/20">
-              <span className="hidden rtl:inline">اختيار Para Officinal</span>
-              <span className="inline rtl:hidden">{settings?.titleFr || settings?.titleAr ? 'Sélection Para Officinal' : 'Conseils & sélection'}</span>
+              <span className="hidden rtl:inline">اختيار Para Divine</span>
+              <span className="inline rtl:hidden">{settings?.titleFr || settings?.titleAr ? 'Sélection Para Divine' : 'Conseils & sélection'}</span>
             </span>
             <h3 className="text-xs sm:text-sm md:text-[17px] font-black text-white leading-snug tracking-tight truncate-two-lines">
               <span className="hidden rtl:inline">{titleAr}</span>
@@ -92,7 +92,7 @@ export const HorizontalPromoBanner: React.FC<HorizontalPromoBannerProps> = ({ se
             <div className="relative w-full h-full -top-6 sm:-top-8 drop-shadow-[0_12px_24px_rgba(16,185,129,0.3)] group-hover:-translate-y-1.5 transition-transform duration-500 ease-out">
               <Image
                 src={getOptimizedImageUrl(overlayImage)}
-                alt="Sélection de produits Para Officinal"
+                alt="Sélection de produits Para Divine"
                 fill
                 sizes="(max-width: 640px) 90px, (max-width: 768px) 110px, 130px"
                 className="object-contain"

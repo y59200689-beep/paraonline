@@ -1,161 +1,48 @@
 'use client';
-
-import React, { useState, useRef, useEffect } from 'react';
-import { MapPin, Check, Zap, Truck } from 'lucide-react';
+import Link from 'next/link';
+import React, { useState } from 'react';
+import { MapPin, Check, Package, Truck, Home, Info, ArrowRight } from 'lucide-react';
 import { MOROCCAN_CITIES } from '@/lib/data';
 import type { FaqText } from './translations';
+import styles from './InteractiveFaq.module.css';
+import { useSettings } from '@/context/SettingsContext';
+import { calculateShippingFee, FREE_SHIPPING_SUBTOTAL_DH } from '@/lib/pricing';
+import { formatPriceDH } from '@/lib/format-price';
+import { buildWhatsAppUrl } from '@/lib/whatsapp-link';
 
-// Sound utility
-const playChime = (freq = 600, type: OscillatorType = 'sine', duration = 0.08) => {
-  if (typeof window === 'undefined') return;
-  try {
-    const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (!AudioContextClass) return;
-    const ctx = new AudioContextClass();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, ctx.currentTime);
-    gain.gain.setValueAtTime(0.02, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + duration);
-  } catch { /* ignore audio block */ }
-};
-
-interface DeliveryTabProps {
-  text: FaqText;
-  language: string;
-  isRTL: boolean;
-}
-
-export const DeliveryTab: React.FC<DeliveryTabProps> = ({ text, language, isRTL }) => {
-  const [delCity, setDelCity] = useState('casablanca');
-  const [delSearch, setDelSearch] = useState<string | null>(null);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const matchedCity = MOROCCAN_CITIES.find(c => c.value.toLowerCase() === delCity);
-  const displaySearch = delSearch !== null
-    ? delSearch
-    : (matchedCity ? (language === 'FR' ? matchedCity.labelFr : matchedCity.labelAr) : '');
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const filteredCities = MOROCCAN_CITIES.filter(c => {
-    const q = displaySearch.toLowerCase();
-    return c.value.toLowerCase().includes(q) || c.labelFr.toLowerCase().includes(q) || c.labelAr.toLowerCase().includes(q);
-  });
-
-  const isSameDayCity = ['casablanca', 'rabat', 'tanger', 'fes', 'fès', 'meknes', 'meknès', 'tetouan', 'tétouan'].includes(delCity.toLowerCase());
-  const deliveryStatusText = isSameDayCity ? text.delSameDay : text.delStandard;
-
-  const timelineSteps = [
-    { title: text.delStep1, sub: '0 min', isDone: true },
-    { title: text.delStep2, sub: text.delLabLabel, isDone: true },
-    { title: text.delStep3, sub: text.delTransitLabel, isDone: true },
-    { title: text.delStep4, sub: deliveryStatusText, isHighlight: true, isDone: true },
+export const DeliveryTab: React.FC<{ text: FaqText; language: string; isRTL: boolean }> = ({ text, language, isRTL }) => {
+  const [city, setCity] = useState(MOROCCAN_CITIES.find(c => c.value.toLowerCase() === 'casablanca')?.value || MOROCCAN_CITIES[0]?.value || '');
+  const cityName = MOROCCAN_CITIES.find(c => c.value === city);
+  const { settings } = useSettings();
+  const delivery = settings.deliverySettings;
+  const cityLower = city.toLowerCase();
+  const rule = cityLower ? delivery?.cityRules?.find(r => r.city.trim() && (cityLower.includes(r.city.toLowerCase()) || r.city.toLowerCase().includes(cityLower))) : undefined;
+  const daysMin = rule?.daysMin ?? delivery?.defaultDaysMin;
+  const daysMax = rule?.daysMax ?? delivery?.defaultDaysMax;
+  const hasEstimate = typeof daysMin === 'number' && typeof daysMax === 'number' && daysMin >= 0 && daysMax >= daysMin;
+  const support = buildWhatsAppUrl(settings.storeWhatsApp || '212660808080') || '#footer';
+  const steps = [
+    { icon: Check, title: text.delStep1, sub: isRTL ? 'تأكيد طلبك' : 'Votre commande est confirmée' },
+    { icon: Package, title: text.delStep2, sub: text.delLabLabel },
+    { icon: Truck, title: text.delStep3, sub: isRTL ? 'الطرد في الطريق' : 'Votre colis est en route' },
+    { icon: Home, title: text.delStep4, sub: isRTL ? 'إلى العنوان المحدد' : 'À l’adresse indiquée' },
   ];
-
-  return (
-    <div className="flex-1 flex flex-col justify-between gap-6 animate-[fadeIn_0.4s_ease-out]">
-      {/* City Search */}
-      <div className="flex flex-col gap-2 relative" ref={dropdownRef}>
-        <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">{text.delCityLabel}</label>
-        <div className="relative">
-          <input
-            type="text"
-            value={displaySearch}
-            onChange={e => { setDelSearch(e.target.value); setIsDropdownOpen(true); }}
-            onFocus={() => setIsDropdownOpen(true)}
-            placeholder={text.delSearchPlaceholder}
-            className="w-full px-4 py-3.5 pr-10 rtl:pr-4 rtl:pl-10 bg-slate-50 border border-slate-200 rounded-[14px] text-xs font-bold text-slate-700 focus:outline-none focus:border-teal-500 transition-colors shadow-inner"
-          />
-          <div className="absolute right-3.5 top-1/2 -translate-y-1/2 rtl:right-auto rtl:left-3.5 text-slate-400 pointer-events-none">
-            <MapPin className="w-4 h-4 text-slate-400" />
-          </div>
-        </div>
-
-        {isDropdownOpen && (
-          <div
-            className="absolute left-0 right-0 top-[calc(100%+6px)] bg-white border border-slate-200/80 shadow-[0_12px_36px_rgba(15,23,42,0.08)] rounded-[16px] max-h-[190px] overflow-y-auto z-[60] py-1.5 animate-[fadeIn_0.15s_ease-out] no-scrollbar"
-            style={{ direction: isRTL ? 'rtl' : 'ltr' }}
-          >
-            {filteredCities.length > 0 ? filteredCities.map(c => {
-              const isSelected = delCity === c.value.toLowerCase();
-              return (
-                <button
-                  key={c.value}
-                  type="button"
-                  onClick={() => {
-                    playChime(750, 'sine', 0.05);
-                    setDelCity(c.value.toLowerCase());
-                    setDelSearch(null);
-                    setIsDropdownOpen(false);
-                  }}
-                  className={`w-full text-left rtl:text-right px-4 py-2.5 text-xs font-bold transition-colors cursor-pointer flex items-center justify-between ${
-                    isSelected ? 'bg-teal-500/10 text-teal-800' : 'text-slate-700 hover:bg-slate-50'
-                  }`}
-                >
-                  <span>{language === 'FR' ? c.labelFr : c.labelAr}</span>
-                  {isSelected && <Check className="w-3.5 h-3.5 text-teal-600" />}
-                </button>
-              );
-            }) : (
-              <div className="px-4 py-3 text-xs font-bold text-slate-400 text-center">{text.delNoResults}</div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Home-delivery notice banner */}
-      <div className="bg-teal-500/[0.03] border border-teal-500/15 rounded-[20px] p-4 flex items-start gap-4 text-left rtl:text-right relative overflow-hidden group hover:border-teal-500/30 hover:bg-teal-500/[0.05] transition-all duration-300">
-        <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/10 rounded-full blur-xl pointer-events-none" />
-        <div className="w-9 h-9 rounded-full bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-600 shrink-0 group-hover:scale-105 transition-transform duration-300">
-          <Truck className="w-4.5 h-4.5" />
-        </div>
-        <div className="flex-1">
-          <h4 className="text-[11.5px] font-black text-teal-800 uppercase tracking-wider">{text.delNoticeTitle}</h4>
-          <p className="text-[11px] font-medium text-slate-500 leading-relaxed mt-1">{text.delNoticeDesc}</p>
-        </div>
-      </div>
-
-      {/* Delivery Timeline */}
-      <div className="border-t border-slate-100 pt-6">
-        <span className="block text-[9px] font-black uppercase text-slate-400 tracking-wider mb-5 text-center">
-          {text.delTimelineTitle}
-        </span>
-        <div className="relative w-full py-2">
-          <div className="absolute left-[8%] right-[8%] top-[18px] h-[2px] bg-slate-100 z-0" />
-          <div className="grid grid-cols-4 relative z-10 w-full text-center">
-            {timelineSteps.map((step, idx) => (
-              <div key={idx} className="flex flex-col items-center">
-                <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-500 ${
-                  step.isHighlight
-                    ? 'bg-teal-500 border-teal-500 text-white scale-110 shadow-[0_0_12px_rgba(13,148,136,0.3)] animate-pulse'
-                    : 'bg-teal-50 border-teal-200 text-teal-600 shadow-sm'
-                }`}>
-                  {step.isHighlight ? <Zap className="w-3.5 h-3.5 fill-white text-white" /> : <Check className="w-3.5 h-3.5" />}
-                </div>
-                <span className={`text-[10px] font-black mt-2 tracking-tight ${step.isHighlight ? 'text-teal-600' : 'text-slate-800'}`}>
-                  {step.title}
-                </span>
-                <span className="text-[8px] font-bold text-slate-400 mt-0.5 leading-snug">{step.sub}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+  return <div className={styles.delivery}>
+    <div><label htmlFor="faq-city">{text.delCityLabel}</label><div className={styles.selectWrap}><MapPin size={19} /><select id="faq-city" aria-describedby="faq-delivery-estimate" value={city} onChange={e => setCity(e.target.value)}>{MOROCCAN_CITIES.map(c => <option key={c.value} value={c.value}>{language === 'FR' ? c.labelFr : c.labelAr}</option>)}<option value="">{isRTL ? 'مدينتي غير موجودة' : 'Ma ville n’est pas dans la liste'}</option></select></div></div>
+    <div id="faq-delivery-estimate" className={styles.estimate} role="status" aria-live="polite" aria-atomic="true">
+      <h4>{cityName ? (isRTL ? `تقدير التوصيل إلى ${cityName.labelAr}` : `Estimation pour ${cityName.labelFr}`) : (isRTL ? 'لنؤكد عنوانك معاً' : 'Vérifions votre adresse ensemble')}</h4>
+      {cityName ? <>
+        <dl className={styles.estimateDetails}>
+          <div><dt>{isRTL ? 'رسوم التوصيل' : 'Frais de livraison'}</dt><dd>{formatPriceDH(calculateShippingFee(0, city, settings))}</dd></div>
+          <div><dt>{isRTL ? 'المدة التقديرية' : 'Délai indicatif'}</dt><dd>{hasEstimate ? `${daysMin}–${daysMax} ${isRTL ? 'أيام' : 'jours'}` : (isRTL ? 'يؤكدها فريقنا' : 'À confirmer avec notre équipe')}</dd></div>
+        </dl>
+        <p>{isRTL ? `التوصيل مجاني ابتداءً من ${formatPriceDH(FREE_SHIPPING_SUBTOTAL_DH)} من المنتجات.` : `Livraison offerte dès ${formatPriceDH(FREE_SHIPPING_SUBTOTAL_DH)} de produits.`}</p>
+        <p>{isRTL ? 'المدة تقديرية حسب تأكيد الطلب وتوفر المنتجات وأيام عمل الناقل. يتم تأكيد العنوان والمبلغ النهائي قبل إتمام الطلب.' : 'Le délai reste indicatif : il dépend de la confirmation, du stock et des jours de passage du transporteur. L’adresse et le montant final sont confirmés avant validation.'}</p>
+      </> : <p>{isRTL ? 'تواصل معنا للتحقق من التغطية والمدة والرسوم لعنوانك.' : 'Contactez-nous pour vérifier la couverture, le délai et les frais pour votre adresse.'}</p>}
+      <a href={support} target="_blank" rel="noopener noreferrer" className={styles.policy}>{isRTL ? 'تأكيد التوصيل إلى عنواني' : 'Confirmer la livraison à mon adresse'}<ArrowRight size={16} /></a>
     </div>
-  );
+    <div className={styles.notice}><span className={styles.icon}><Package size={23} /></span><div><strong>{text.delNoticeTitle}</strong><p>{text.delNoticeDesc}</p></div></div>
+    <div className={styles.journey}><h4>{isRTL ? 'مراحل التوصيل' : 'Suivi de votre livraison'}</h4><p>{isRTL ? 'من التأكيد إلى الاستلام، هذه هي المراحل.' : 'De la validation à la réception, voici les différentes étapes.'}</p><ol className={styles.steps}>{steps.map(({ icon: Icon, title, sub }) => <li key={title}><span className={styles.icon}><Icon size={24} /></span><strong>{title}</strong><p>{sub}</p></li>)}</ol></div>
+    <div className={styles.deliveryNote}><Info size={20} /><p role="status">{isRTL ? 'يتم تأكيد مدة التوصيل والتكلفة قبل إتمام الطلب' : 'Délai et frais confirmés avant validation'}{cityName ? ' · ' + (isRTL ? cityName.labelAr : cityName.labelFr) : ''}.</p><Link href="/politiques/conditions-vente">{isRTL ? 'شروط التوصيل' : 'Conditions de livraison'}<ArrowRight size={16} /></Link></div>
+  </div>;
 };

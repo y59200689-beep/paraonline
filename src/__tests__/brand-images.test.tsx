@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
-import { act, cleanup, render, renderHook, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { useBrandImages } from '@/hooks/useBrandImages';
 import { brandLogoSrc } from '@/lib/brand-logo';
 import { BrandLogoCard } from '@/components/BrandLogoCard';
+import logoBounds from '@/lib/brand-logo-bounds.json';
 
 class MockImage {
   static instances: MockImage[] = [];
@@ -31,6 +32,32 @@ it('shows the brand name instead of falling back after explicit removal', () => 
   render(<BrandLogoCard brand={{ name: 'QA', domain: 'qa.com', logo_url: '', logoUrl: '/old.png' }} />);
   expect(screen.queryByRole('img')).toBeNull();
   expect(screen.getByText('QA')).toBeTruthy();
+});
+it('uses a bundled official logo for known brands and a readable fallback on failure', () => {
+  render(<BrandLogoCard brand={{ name: 'CeraVe', domain: 'cerave.com', logo_url: '' }} />);
+  expect(screen.getByRole('img').getAttribute('src')).toBe('/images/brands/cerave-official.svg');
+  fireEvent.error(screen.getByRole('img'));
+  expect(screen.queryByRole('img')).toBeNull();
+  expect(screen.getByText('CeraVe')).toBeTruthy();
+});
+it('fits visible artwork inside the same frame without stretching the source', () => {
+  render(<BrandLogoCard brand={{ name: 'La Roche-Posay', domain: 'laroche-posay.com' }} />);
+  const img = screen.getByRole('img');
+  const frame = img.parentElement!;
+  expect(parseFloat(frame.style.width)).toBeLessThanOrEqual(128);
+  expect(parseFloat(frame.style.height)).toBeLessThanOrEqual(44);
+  expect(img.style.width).toBe(img.style.height); // Original canvas remains square.
+  expect(parseFloat(img.style.top)).toBeLessThan(0); // Blank top margin is compensated.
+});
+it('has valid nonempty artwork bounds within every measured source', () => {
+  for (const [width, height, left, top, artworkWidth, artworkHeight] of Object.values(logoBounds)) {
+    expect(artworkWidth).toBeGreaterThan(0);
+    expect(artworkHeight).toBeGreaterThan(0);
+    expect(left).toBeGreaterThanOrEqual(0);
+    expect(top).toBeGreaterThanOrEqual(0);
+    expect(left + artworkWidth).toBeLessThanOrEqual(width);
+    expect(top + artworkHeight).toBeLessThanOrEqual(height);
+  }
 });
 it('classifies removed logos as missing without requesting an empty URL', () => {
   const { result } = renderHook(() => useBrandImages([''], true));

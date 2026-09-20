@@ -1,7 +1,8 @@
 @theme {
-  --font-heading: var(--font-geist-sans), sans-serif;
-  --font-body: var(--font-geist-sans), sans-serif;
+  --font-heading: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
+
 
   --color-primary: #2573a3;
   --color-primary-dark: #1a255d;

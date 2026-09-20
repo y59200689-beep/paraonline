@@ -155,7 +155,7 @@ function AdminLoginFormInner() {
             <Lock className="w-3.5 h-3.5 text-emerald-400" /> Console Officielle
           </span>
           <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-400 via-teal-200 to-indigo-400 bg-clip-text text-transparent font-sans">
-            Para Officinal S.A
+            Para Divine
           </h1>
           <p className="text-slate-400 text-sm mt-1.5 font-light">
             Portail de Gestion Logistique & Commerciale

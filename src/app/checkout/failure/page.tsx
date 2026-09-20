@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { OrderCompletionClient } from '@/components/checkout/OrderCompletionClient';
 
 export const metadata: Metadata = {
-  title: 'Paiement interrompu | Para Officinal',
+  title: 'Paiement interrompu | Para Divine',
   robots: { index: false, follow: false },
 };
 

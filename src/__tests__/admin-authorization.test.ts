@@ -247,7 +247,7 @@ describe('DB-authoritative privileged admin mutations', () => {
 
     const response = await updateAdminSettings(new Request('http://localhost/api/admin/settings', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'general', settings: { storeName: 'Para Officinal S.A', shippingFee: 35, yalidineApiKey: '' } }),
+      body: JSON.stringify({ type: 'general', settings: { storeName: 'Para Divine', shippingFee: 35, yalidineApiKey: '' } }),
     }));
     expect(response.status).toBe(200);
     const responseBody = await response.json();

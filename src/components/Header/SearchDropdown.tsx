@@ -66,7 +66,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                         <Image src={getOptimizedImageUrl(product.image) || PRODUCT_IMAGE_FALLBACK} alt={product.title} fill sizes="40px" className="object-cover" />
                       </div>
                       <div className={`flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
-                        <span className="text-[8px] font-extrabold uppercase text-[#846f48] block leading-none">{product.vendor}</span>
+                        <span data-product-brand className="text-[8px] font-extrabold uppercase text-[var(--brand-button-fill)] block leading-none">{product.vendor}</span>
                         <span className="text-xs font-bold text-primary-dark truncate block mt-0.5">{product.title}</span>
                         <div className="flex items-center gap-2 mt-0.5">
                           <span className="text-[10px] font-black text-primary">{convertPrice(product.price)}</span>
@@ -81,7 +81,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                     {(product.stock ?? 0) > 0 ? (
                       <button
                         onClick={(e) => onQuickAdd(e, product)}
-                        className="w-8 h-8 rounded-full bg-primary/10 hover:bg-primary text-primary hover:text-white flex items-center justify-center transition-all duration-300 shrink-0 border border-primary/10"
+                        className="w-8 h-8 rounded-full bg-[var(--brand-button-fill)] hover:bg-[var(--brand-button-gradient-light)] text-white [&>svg]:text-white flex items-center justify-center transition-all duration-300 shrink-0 border border-transparent"
                         title="Ajouter au Panier"
                       >
                         <ShoppingBag className="w-3.5 h-3.5" />
@@ -124,7 +124,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                         <Image src={getOptimizedImageUrl(product.image) || PRODUCT_IMAGE_FALLBACK} alt={product.title} fill sizes="40px" className="object-cover" />
                       </div>
                       <div className={`flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
-                        <span className="text-[8px] font-extrabold uppercase text-[#846f48] block leading-none">{product.vendor}</span>
+                        <span data-product-brand className="text-[8px] font-extrabold uppercase text-[var(--brand-button-fill)] block leading-none">{product.vendor}</span>
                         <span className="text-xs font-bold text-primary-dark truncate block mt-0.5">{product.title}</span>
                         <div className="flex items-center gap-2 mt-0.5">
                           <span className="text-[10px] font-black text-primary">{convertPrice(product.price)}</span>
@@ -139,7 +139,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({
                     {(product.stock ?? 0) > 0 ? (
                       <button
                         onClick={(e) => onQuickAdd(e, product)}
-                        className="w-8 h-8 rounded-full bg-primary/10 hover:bg-primary text-primary hover:text-white flex items-center justify-center transition-all duration-300 shrink-0 border border-primary/10"
+                        className="w-8 h-8 rounded-full bg-[var(--brand-button-fill)] hover:bg-[var(--brand-button-gradient-light)] text-white [&>svg]:text-white flex items-center justify-center transition-all duration-300 shrink-0 border border-transparent"
                         title="Ajouter au Panier"
                       >
                         <ShoppingBag className="w-3.5 h-3.5" />

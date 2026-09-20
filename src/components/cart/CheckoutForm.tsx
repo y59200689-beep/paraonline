@@ -797,7 +797,7 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
                   type="button"
                   disabled={isSubmitting || isInitializingStripe}
                   onClick={handleConfirmOrder}
-                  className="w-full py-4 bg-gradient-to-r from-primary-dark to-primary text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-[0_6px_20px_rgba(26,37,93,0.15)] hover:shadow-[0_8px_28px_rgba(26,37,93,0.22)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="w-full py-4 bg-gradient-to-r from-primary-dark to-primary text-white text-[11px] font-black uppercase tracking-widest rounded-[11px] shadow-[0_6px_20px_rgba(26,37,93,0.15)] hover:shadow-[0_8px_28px_rgba(26,37,93,0.22)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   {isInitializingStripe ? (
                     <span className="flex items-center gap-2">

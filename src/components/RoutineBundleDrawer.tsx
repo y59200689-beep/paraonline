@@ -220,7 +220,7 @@ export const RoutineBundleDrawer: React.FC<RoutineBundleDrawerProps> = ({ isOpen
 
                     {/* Meta Info */}
                     <div className="flex-grow min-w-0">
-                      <span className="text-[9px] font-black uppercase text-teal-700 tracking-widest block">{product.vendor}</span>
+                      <span data-product-brand className="text-[9px] font-black uppercase text-teal-700 tracking-widest block">{product.vendor}</span>
                       <h4 className="text-xs font-black truncate text-primary-dark leading-tight mt-0.5">{product.title}</h4>
                       <p className="text-[10px] text-foreground/60 leading-normal line-clamp-2 mt-1">{product.description}</p>
                     </div>
@@ -293,7 +293,7 @@ export const RoutineBundleDrawer: React.FC<RoutineBundleDrawerProps> = ({ isOpen
           <button
             onClick={handleAddRoutineToCart}
             disabled={!isRoutineComplete}
-            className={`w-full py-4 text-xs font-black uppercase tracking-widest rounded-[8px] transition-all duration-300 flex items-center justify-center gap-2 shadow-md cursor-pointer ${
+            className={`w-full py-4 text-xs font-black uppercase tracking-widest rounded-[11px] transition-all duration-300 flex items-center justify-center gap-2 shadow-md cursor-pointer ${
               isRoutineComplete
                 ? 'bg-primary hover:bg-accent text-white active:scale-[0.98]'
                 : 'bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed'

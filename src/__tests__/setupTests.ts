@@ -81,7 +81,7 @@ const fetchMock = vi.fn().mockImplementation((url: string, options?: any) => {
       json: () => Promise.resolve({
         success: true,
         settings: {
-          storeName: "Para Officinal S.A",
+          storeName: "Para Divine",
           freeShippingThreshold: 400,
           shippingFee: 35,
           quizDiscountPercent: 15,

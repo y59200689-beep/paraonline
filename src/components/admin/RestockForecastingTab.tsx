@@ -911,7 +911,7 @@ export default function RestockForecastingTab() {
                 <div className="flex justify-between items-start border-b-2 border-slate-900 pb-8">
                   <div>
                     <h1 className="text-3xl font-black tracking-tight text-slate-900 font-sans">
-                      PARA OFFICINAL S.A
+                      Para Divine
                     </h1>
                     <p className="text-[11px] font-sans font-semibold tracking-wider text-slate-500 uppercase mt-1">
                       PARAPHARMACIE & K-BEAUTY OFFICIEL
@@ -951,7 +951,7 @@ export default function RestockForecastingTab() {
 
                   <div className="border border-slate-200 p-4 rounded bg-slate-50/50">
                     <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Adresse de Livraison</h3>
-                    <p className="text-sm font-bold text-slate-900">Entrepôt Logistique Para Officinal</p>
+                    <p className="text-sm font-bold text-slate-900">Entrepôt Logistique Para Divine</p>
                     <div className="text-xs text-slate-600 space-y-1 mt-1">
                       <p>Zone Industrielle de Bouskoura, Lot 14</p>
                       <p>Casablanca, Maroc</p>
@@ -1034,7 +1034,7 @@ export default function RestockForecastingTab() {
                     <div className="space-y-1">
                       <div className="w-48 border-b border-slate-300 mx-auto" />
                       <p className="text-xs font-bold text-slate-800">Direction Générale / S.A</p>
-                      <p className="text-[10px] text-slate-400">Para Officinal S.A</p>
+                      <p className="text-[10px] text-slate-400">Para Divine</p>
                     </div>
                   </div>
                 </div>

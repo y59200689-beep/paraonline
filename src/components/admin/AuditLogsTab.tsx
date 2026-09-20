@@ -332,7 +332,7 @@ export default function AuditLogsTab() {
         <body>
           <div class="header-container">
             <div class="brand-info">
-              <h1>PARA OFFICINAL S.A</h1>
+              <h1>Para Divine</h1>
               <p>Registre de Conformité Réglementaire & Sécurité</p>
             </div>
             <div class="report-meta">

@@ -85,6 +85,19 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, onSele
 
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [pageSize, setPageSize] = useState(16);
+
+  useEffect(() => {
+    // Match the five-column desktop grid; retain the existing mobile count.
+    const desktop = window.matchMedia('(min-width: 1024px)');
+    const updatePageSize = () => {
+      setPageSize(desktop.matches ? 20 : 16);
+      setPage(1);
+    };
+    updatePageSize();
+    desktop.addEventListener('change', updatePageSize);
+    return () => desktop.removeEventListener('change', updatePageSize);
+  }, []);
 
   // Reset page when filters change
   useEffect(() => {
@@ -104,7 +117,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, onSele
         // If on page 1 and there are pinned products, fetch them first
         if (page === 1 && isDefaultFilter && pinnedProductIds.length > 0) {
           try {
-            const pinnedRes = await fetch(`/api/products?ids=${pinnedProductIds.join(',')}`);
+            const pinnedRes = await fetch(`/api/products?ids=${pinnedProductIds.join(',')}&inStock=true`, { cache: 'no-store' });
             const pinnedData = await pinnedRes.json();
             if (pinnedData.success && pinnedData.products) {
               pinnedList = pinnedData.products;
@@ -116,7 +129,8 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, onSele
 
         const queryParams = new URLSearchParams({
           page: page.toString(),
-          limit: '16',
+          limit: String(pageSize),
+          inStock: 'true',
           category: activeCategory,
           concern: activeConcern,
           ingredient: activeIngredient,
@@ -162,12 +176,12 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, onSele
             const pinnedOrderMap = new Map(pinnedProductIds.map((id, index) => [id, index]));
             pinnedList.sort((a, b) => (pinnedOrderMap.get(a.id) ?? 999) - (pinnedOrderMap.get(b.id) ?? 999));
 
-            if (pinnedProductIds.length >= 16) {
-              list = pinnedList.slice(0, 16);
+            if (pinnedList.length >= pageSize) {
+              list = pinnedList.slice(0, pageSize);
             } else {
               const pinnedIds = new Set(pinnedList.map(p => p.id));
               const filteredFetched = fetchedList.filter(p => !pinnedIds.has(p.id));
-              list = [...pinnedList, ...filteredFetched].slice(0, 16);
+              list = [...pinnedList, ...filteredFetched].slice(0, pageSize);
             }
           } else {
             list = fetchedList;
@@ -187,7 +201,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, onSele
     return () => {
       active = false;
     };
-  }, [activeCategory, amPmState, activeConcern, activeIngredient, page, pinnedProductIds]);
+  }, [activeCategory, amPmState, activeConcern, activeIngredient, page, pageSize, pinnedProductIds]);
 
   return (
     <div
@@ -212,7 +226,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, onSele
                 {language === 'FR' ? 'Offres & Sélection' : 'العروض والمختارات'}
               </span>
             </div>
-            <h2 className="text-2xl md:text-3xl font-black font-heading text-primary-dark tracking-tight leading-tight">
+            <h2 className="public-section-title text-2xl md:text-3xl font-black font-heading text-primary-dark tracking-tight leading-tight">
               {language === 'FR' ? 'Produits Vedettes' : 'المنتجات المميزة'}
             </h2>
           </div>
@@ -230,7 +244,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, onSele
         {/* Skeleton loaders */}
         {isLoading ? (
           <div className="grid grid-cols-1 min-[390px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 md:gap-6" style={{ marginTop: '36px' }}>
-            {Array.from({ length: 16 }).map((_, id) => (
+            {Array.from({ length: pageSize }).map((_, id) => (
               <div key={id} className="w-full bg-white border border-border/40 rounded-[10px] overflow-hidden animate-pulse shadow-sm">
                 <div className="aspect-square bg-slate-100" />
                 <div className="p-4 space-y-3">

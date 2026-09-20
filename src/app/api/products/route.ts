@@ -4,6 +4,7 @@ import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { catalogCategoryForConcern, countCatalogConcerns, getCatalogConcerns, matchesCatalogConcern } from '@/lib/catalog-concerns';
 import { catalogCategoryFilter, normalizeCatalogCategoryId } from '@/lib/catalog-categories';
 import { catalogBrandPrefix, sanitizeCatalogSearch } from '@/lib/catalog-brand-match';
+import { searchStockResults } from '@/lib/search-stock-results';
 
 // Catalogue data is operational data. Never allow a transient empty response
 // to become a Vercel edge-cache entry for every storefront visitor.
@@ -208,6 +209,7 @@ export async function GET(request: Request) {
   const facetsOnly = searchParams.get('facets') === 'true';
   const idStr = searchParams.get('id') || '';
   const idsStr = searchParams.get('ids') || '';
+  const inStockOnly = searchParams.get('inStock') === 'true';
 
   try {
     if (facetsOnly) {
@@ -221,10 +223,12 @@ export async function GET(request: Request) {
     // Batch fetch by comma-separated IDs (used by curated ProductGrid)
     if (idsStr) {
       const ids = idsStr.split(',').map(Number).filter(Boolean).slice(0, 50);
-      const { data, error } = await supabase
+      let batchQuery = supabase
         .from('products')
         .select(PUBLIC_PRODUCT_COLUMNS)
         .in('id', ids);
+      if (inStockOnly) batchQuery = batchQuery.eq('status', 'live').gt('stock', 0);
+      const { data, error } = await batchQuery;
 
       if (error || !data) {
         return NextResponse.json({ success: false, message: 'Products not found' }, { status: 404 });
@@ -234,7 +238,7 @@ export async function GET(request: Request) {
 
       return NextResponse.json(
         { success: true, products },
-        { headers: { 'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=3600' } }
+        { headers: { 'Cache-Control': inStockOnly ? 'no-store, max-age=0' : 'public, max-age=300, s-maxage=300, stale-while-revalidate=3600' } }
       );
     }
 
@@ -263,10 +267,12 @@ export async function GET(request: Request) {
       );
     }
 
+    const buildQuery = () => {
     let query = supabase.from('products').select(PUBLIC_PRODUCT_COLUMNS, { count: 'exact' });
 
     // Filter out drafts on public customer storefront
     query = query.eq('status', 'live');
+    if (inStockOnly) query = query.gt('stock', 0);
 
     if (category !== 'all') {
       if (category === 'offers') {
@@ -321,6 +327,9 @@ export async function GET(request: Request) {
       }
     }
 
+    return query;
+    };
+
     const categoryBackedConcern = catalogCategoryForConcern(concern);
     const customConcerns = concern !== 'all' && !categoryBackedConcern ? await getCatalogConcerns() : [];
     const selectedCustomConcern = customConcerns.find(item => item.id === concern);
@@ -330,9 +339,18 @@ export async function GET(request: Request) {
         ? customConcernFilter(selectedCustomConcern)
         : '';
 
-    if (category === 'all' && concernFilter) {
-      query = query.or(concernFilter);
+    const filteredQuery = () => {
+      const query = buildQuery();
+      return category === 'all' && concernFilter ? query.or(concernFilter) : query;
+    };
+
+    if (search && sort === 'search-stock') {
+      const rows = await searchStockResults(filteredQuery, searchParams.get('search') || '', limit);
+      return NextResponse.json({ success: true, products: rows.map(mapProduct) }, {
+        headers: { 'Cache-Control': 'no-store, max-age=0' },
+      });
     }
+    const query = filteredQuery();
 
     // Concerns are translated to database filters above. This keeps pagination
     // bounded instead of fetching the full catalogue into a serverless worker.
@@ -364,6 +382,7 @@ export async function GET(request: Request) {
       // temporarily unavailable. This is deliberately limited to the default
       // catalogue view so intentional empty search/filter results stay intact.
       const isDefaultCatalogRequest = category === 'all'
+        && !inStockOnly
         && !search
         && !vendor
         && vendors.length === 0

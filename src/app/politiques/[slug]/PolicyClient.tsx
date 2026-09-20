@@ -36,7 +36,7 @@ const POLICIES_DATA: Record<string, PolicyData> = {
   'conditions-vente': {
     titleFr: 'Conditions Générales de Vente',
     titleAr: 'الشروط العامة للبيع (CGV)',
-    subtitleFr: 'Les règles applicables aux commandes, à la livraison et au paiement sur Para Officinal.',
+    subtitleFr: 'Les règles applicables aux commandes, à la livraison et au paiement sur Para Divine.',
     subtitleAr: 'اللوائح الرسمية للطلبات، الشحنات، والمعاملات عند الدفع والاستلام بالمغرب.',
     icon: <FileText className="w-5 h-5 text-emerald-600" />,
     lastUpdatedFr: 'Dernière mise à jour : 12 Mai 2026',
@@ -45,8 +45,8 @@ const POLICIES_DATA: Record<string, PolicyData> = {
       {
         titleFr: '1. Objet et champ d’application',
         titleAr: '1. تمهيد وإطار العمل السريري',
-        descFr: 'Para Officinal S.A propose une sélection de produits de parapharmacie et de beauté. Toute commande réalisée sur ce site est soumise aux présentes conditions de vente.',
-        descAr: 'تعتبر صيدلية Para Officinal S.A الموزع الرسمي المعتمد لمستحضرات التجميل والعناية بالبشرة السريرية في المغرب. تخضع جميع المعاملات على هذا المتجر لشروط البيع التنظيمية المحددة أدناه.'
+        descFr: 'Para Divine propose une sélection de produits de parapharmacie et de beauté. Toute commande réalisée sur ce site est soumise aux présentes conditions de vente.',
+        descAr: 'تعتبر صيدلية Para Divine الموزع الرسمي المعتمد لمستحضرات التجميل والعناية بالبشرة السريرية في المغرب. تخضع جميع المعاملات على هذا المتجر لشروط البيع التنظيمية المحددة أدناه.'
       },
       {
         titleFr: '2. Validation des Commandes et COD (Paiement à la Livraison)',
@@ -128,7 +128,7 @@ const POLICIES_DATA: Record<string, PolicyData> = {
         titleFr: '2. Colis Endommagé ou Produit Non Conforme',
         titleAr: '2. الشحنات المتضررة أو المنتجات غير المطابقة',
         descFr: 'Si un produit est endommagé à la réception ou ne correspond pas à votre commande, contactez-nous avec les informations et photos utiles. Nous examinerons la demande et vous proposerons la suite appropriée.',
-        descAr: 'في حالة استلام منتج متضرر أثناء النقل أو وجود خطأ في نوع المستحضر، تتكفل صيدلية Para Officinal S.A بكافة رسوم الإرجاع والشحن. يتم تنظيم عملية استبدال سريعة فوراً خلال 24 إلى 48 ساعة.'
+        descAr: 'في حالة استلام منتج متضرر أثناء النقل أو وجود خطأ في نوع المستحضر، تتكفل صيدلية Para Divine بكافة رسوم الإرجاع والشحن. يتم تنظيم عملية استبدال سريعة فوراً خلال 24 إلى 48 ساعة.'
       },
       {
         titleFr: '3. Faire une demande',
@@ -335,7 +335,7 @@ export const PolicyClient: React.FC<PolicyClientProps> = ({ slug }) => {
 
                 <div className="text-center sm:text-right shrink-0" style={{ textAlign: isRTL ? 'left' : 'right' }}>
                   <p className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">ÉDITEUR LÉGAL</p>
-                  <p className="text-sm font-black text-slate-900 font-heading">PARA OFFICINAL S.A</p>
+                  <p className="text-sm font-black text-slate-900 font-heading">Para Divine</p>
                   <p className="text-[10px] text-slate-500">Maarif, Casablanca</p>
                 </div>
               </div>

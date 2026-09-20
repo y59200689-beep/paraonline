@@ -43,7 +43,10 @@ function useDermoRail(category: string, fallbackProducts: Product[]) {
       const data = await response.json();
       if (!data.success || !Array.isArray(data.products)) return;
 
-      setProducts((current) => replace ? data.products : [...current, ...data.products]);
+      // Apply the same category rules to API pages and the initial catalogue.
+      // Never fill a concern rail with unrelated products from a broad search.
+      const relevant = (data.products as Product[]).filter(product => matchesCatalogCategoryPhrase(product, category));
+      setProducts((current) => replace ? relevant : [...current, ...relevant.filter(product => !current.some(item => item.id === product.id))]);
       setPage(nextPage);
       setHasMore(nextPage < (data.pagination?.totalPages || nextPage));
     } catch (error) {
@@ -153,7 +156,7 @@ export const DermoCorner: React.FC = () => {
             <Sparkles className="w-3 h-3 text-emerald-500" />
             {isAR ? 'كورنر الجلدية' : 'DERMO CORNER'}
           </div>
-          <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-800 dark:text-white leading-tight">
+          <h2 className="public-section-title text-2xl md:text-3xl font-extrabold tracking-tight text-slate-800 dark:text-white leading-tight">
             {isAR ? (
               <>
                 علاجات سريرية <span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">حسب نوع مشكلتكِ</span>
@@ -196,7 +199,7 @@ export const DermoCorner: React.FC = () => {
                 </p>
                 <div className="pt-3 mt-2 border-t border-white/10">
                   <span
-                    className="inline-flex items-center justify-center gap-1.5 w-full py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 group-hover:bg-slate-100"
+                    className="public-cta-secondary inline-flex items-center justify-center gap-1.5 w-full py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 group-hover:bg-slate-100"
                     style={{ background: '#ffffff', color: '#0f172a' }}
                   >
                     {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
@@ -274,7 +277,7 @@ export const DermoCorner: React.FC = () => {
                 </p>
                 <div className="pt-3 mt-2 border-t border-white/10">
                   <span
-                    className="inline-flex items-center justify-center gap-1.5 w-full py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 group-hover:bg-slate-100"
+                    className="public-cta-secondary inline-flex items-center justify-center gap-1.5 w-full py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 group-hover:bg-slate-100"
                     style={{ background: '#ffffff', color: '#0f172a' }}
                   >
                     {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
@@ -352,7 +355,7 @@ export const DermoCorner: React.FC = () => {
                 </p>
                 <div className="pt-3 mt-2 border-t border-white/10">
                   <span
-                    className="inline-flex items-center justify-center gap-1.5 w-full py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 group-hover:bg-slate-100"
+                    className="public-cta-secondary inline-flex items-center justify-center gap-1.5 w-full py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 group-hover:bg-slate-100"
                     style={{ background: '#ffffff', color: '#0f172a' }}
                   >
                     {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
@@ -430,7 +433,7 @@ export const DermoCorner: React.FC = () => {
                 </p>
                 <div className="pt-3 mt-2 border-t border-white/10">
                   <span
-                    className="inline-flex items-center justify-center gap-1.5 w-full py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 group-hover:bg-slate-100"
+                    className="public-cta-secondary inline-flex items-center justify-center gap-1.5 w-full py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 group-hover:bg-slate-100"
                     style={{ background: '#ffffff', color: '#0f172a' }}
                   >
                     {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
@@ -508,7 +511,7 @@ export const DermoCorner: React.FC = () => {
                 </p>
                 <div className="pt-3 mt-2 border-t border-white/10">
                   <span
-                    className="inline-flex items-center justify-center gap-1.5 w-full py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 group-hover:bg-slate-100"
+                    className="public-cta-secondary inline-flex items-center justify-center gap-1.5 w-full py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 group-hover:bg-slate-100"
                     style={{ background: '#ffffff', color: '#0f172a' }}
                   >
                     {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}
@@ -586,7 +589,7 @@ export const DermoCorner: React.FC = () => {
                 </p>
                 <div className="pt-3 mt-2 border-t border-white/10">
                   <span
-                    className="inline-flex items-center justify-center gap-1.5 w-full py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 group-hover:bg-slate-100"
+                    className="public-cta-secondary inline-flex items-center justify-center gap-1.5 w-full py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 group-hover:bg-slate-100"
                     style={{ background: '#ffffff', color: '#0f172a' }}
                   >
                     {isAR ? 'تصفح كل العلاجات' : 'Voir tous les soins'}

@@ -994,14 +994,14 @@ export default function SuiviCommandeClient() {
                                 <h4 className="text-xs sm:text-sm font-bold text-slate-200 leading-snug">{item.title}</h4>
                                 {item.sku && <p className="text-[11px] font-mono text-slate-500">REF: {item.sku}</p>}
                                 <p className="text-xs text-slate-400">
-                                  {isRTL ? 'الكمية:' : 'Quantité:'} <span className="font-bold text-emerald-400">{item.quantity}</span> × {item.price} MAD
+                                  {isRTL ? 'الكمية:' : 'Quantité:'} <span className="font-bold text-emerald-400">{item.quantity}</span> × {item.price} DH
                                 </p>
                               </div>
                             </div>
 
                             <div className="text-right">
                               <span className="text-base font-black text-slate-100 font-mono">
-                                {(item.quantity * item.price).toFixed(2)} MAD
+                                {(item.quantity * item.price).toFixed(2)} DH
                               </span>
                             </div>
                           </div>
@@ -1035,7 +1035,7 @@ export default function SuiviCommandeClient() {
                       <div className="space-y-2.5 text-xs text-slate-400 font-sans">
                         <div className="flex justify-between">
                           <span>{isRTL ? 'المجموع الفرعي:' : 'Sous-total:'}</span>
-                          <span className="font-mono font-medium text-slate-200">{order.subtotal} MAD</span>
+                          <span className="font-mono font-medium text-slate-200">{order.subtotal} DH</span>
                         </div>
 
                         {order.discount_amount && order.discount_amount > 0 ? (
@@ -1043,21 +1043,21 @@ export default function SuiviCommandeClient() {
                             <span>
                               {isRTL ? 'الخصم المطبق' : 'Remise promo'} {order.applied_coupon ? `(${order.applied_coupon})` : ''}:
                             </span>
-                            <span className="font-mono">-{order.discount_amount} MAD</span>
+                            <span className="font-mono">-{order.discount_amount} DH</span>
                           </div>
                         ) : null}
 
                         <div className="flex justify-between">
                           <span>{isRTL ? 'رسوم الشحن:' : 'Frais de livraison:'}</span>
                           <span className={shippingFee === 0 ? 'text-emerald-400 font-bold uppercase' : 'font-mono font-medium text-slate-200'}>
-                            {shippingFee === 0 ? (isRTL ? 'مجاناً' : 'GRATUIT') : `${shippingFee.toFixed(2)} MAD`}
+                            {shippingFee === 0 ? (isRTL ? 'مجاناً' : 'GRATUIT') : `${shippingFee.toFixed(2)} DH`}
                           </span>
                         </div>
                       </div>
 
                       <div className="pt-3 border-t border-slate-800 flex justify-between items-baseline">
                         <span className="text-sm font-bold text-white">{isRTL ? 'المبلغ الإجمالي (COD):' : 'Total à Payer:'}</span>
-                        <span className="text-2xl font-black text-emerald-400 font-mono">{order.total} MAD</span>
+                        <span className="text-2xl font-black text-emerald-400 font-mono">{order.total} DH</span>
                       </div>
 
                       <div className="pt-2 text-[11px] text-slate-400 flex items-center gap-2.5 bg-slate-900 p-3 rounded-xl border border-slate-800">
@@ -1203,13 +1203,13 @@ export default function SuiviCommandeClient() {
 
               <div className="text-center space-y-1">
                 <h3 className="text-lg font-bold text-white">{isRTL ? 'وثيقة الشحن' : 'Bordereau de Commande'}</h3>
-                <p className="text-xs text-slate-400">Para Officinal Maroc</p>
+                <p className="text-xs text-slate-400">Para Divine Maroc</p>
               </div>
 
               <div className="bg-white text-slate-950 p-6 rounded-2xl font-mono text-xs space-y-4 shadow-xl">
                 <div className="flex justify-between border-b pb-3">
                   <div>
-                    <p className="font-bold text-sm">PARA OFFICINAL</p>
+                    <p className="font-bold text-sm">Para Divine</p>
                     <p className="text-[10px] text-slate-600">Maroc</p>
                   </div>
                   <div className="text-right">
@@ -1228,7 +1228,7 @@ export default function SuiviCommandeClient() {
                   <div>
                     <span className="text-slate-500 block">NUMÉRO SUIVI:</span>
                     <p className="font-bold">{order.tracking_number || order.order_id}</p>
-                    <p>TOTAL COD: <strong className="text-emerald-700">{order.total} MAD</strong></p>
+                    <p>TOTAL COD: <strong className="text-emerald-700">{order.total} DH</strong></p>
                   </div>
                 </div>
               </div>

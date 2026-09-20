@@ -2443,7 +2443,7 @@ export default function CRMTab() {
 
                       {statusBadge.isOverdue && cPhone && (
                         <a
-                          href={buildWhatsAppUrl(cPhone, `Bonjour ${selectedCustomer.name}, votre rituel de soin Para Officinal touche probablement à sa fin ! Profitez de -10% sur votre réassort aujourd'hui avec le code REASSORT10 : https://paraofficinal.ma`) || '#'}
+                          href={buildWhatsAppUrl(cPhone, `Bonjour ${selectedCustomer.name}, votre rituel de soin Para Divine touche probablement à sa fin ! Profitez de -10% sur votre réassort aujourd'hui avec le code REASSORT10 : https://paraofficinal.ma`) || '#'}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="po-ui-button po-ui-button--primary po-ui-button--md flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md transition active:scale-95 cursor-pointer shrink-0"
@@ -2999,7 +2999,7 @@ export default function CRMTab() {
                               </h4>
                               {cPhone && (
                                 <a
-                                  href={buildWhatsAppUrl(cPhone, `Bonjour ${selectedCustomer.name}, voici votre rituel de soin sur mesure Para Officinal recommandé par nos experts : ${routineProducts.map((p: any) => p.title || p.name).join(', ')}.`) || '#'}
+                                  href={buildWhatsAppUrl(cPhone, `Bonjour ${selectedCustomer.name}, voici votre rituel de soin sur mesure Para Divine recommandé par nos experts : ${routineProducts.map((p: any) => p.title || p.name).join(', ')}.`) || '#'}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="text-[10px] font-bold text-emerald-600 hover:text-emerald-500 dark:text-emerald-400 underline cursor-pointer"
@@ -3041,7 +3041,7 @@ export default function CRMTab() {
                         </p>
                         {cPhone && (
                           <a
-                            href={buildWhatsAppUrl(cPhone, `Bonjour ${selectedCustomer.name}, effectuez gratuitement votre diagnostic peau personnalisé sur Para Officinal pour recevoir votre routine sur mesure : https://paraofficinal.ma/skin-diagnostic`) || '#'}
+                            href={buildWhatsAppUrl(cPhone, `Bonjour ${selectedCustomer.name}, effectuez gratuitement votre diagnostic peau personnalisé sur Para Divine pour recevoir votre routine sur mesure : https://paraofficinal.ma/skin-diagnostic`) || '#'}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="po-ui-button po-ui-button--primary po-ui-button--md inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_12px_rgba(16,185,129,0.25)] transition active:scale-95 cursor-pointer"
@@ -3907,7 +3907,7 @@ export default function CRMTab() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setCampaignTemplateText('Bonjour {firstname}, besoin d\'un conseil dermo-cosmétique ? Bénéficiez de -{discount_pct}% avec le code {custom_code} sur Para Officinal ! 🌸')}
+                      onClick={() => setCampaignTemplateText('Bonjour {firstname}, besoin d\'un conseil dermo-cosmétique ? Bénéficiez de -{discount_pct}% avec le code {custom_code} sur Para Divine ! 🌸')}
                       className="px-2.5 py-2 rounded-xl text-[10px] font-mono font-bold border bg-violet-500/10 text-violet-600 border-violet-500/20 hover:bg-violet-500/20 transition cursor-pointer"
                     >
                       Conseil
@@ -4457,7 +4457,7 @@ export default function CRMTab() {
       {/* ── Modal: Générateur de Code Promo WhatsApp Instantané ───────── */}
       {isPromoModalOpen && selectedCustomer && (() => {
         const cPhone = (selectedCustomer.phone || '').replace(/[^0-9]/g, '');
-        const promoMessage = `Bonjour ${selectedCustomer.name} 🎁 ! Pour vous remercier de votre fidélité sur Para Officinal, voici votre code promo exclusif de -${promoDiscountPct}% : *${promoCustomCode}*. Valable pendant ${promoExpiryDays} jours sur tout le site : https://paraofficinal.ma`;
+        const promoMessage = `Bonjour ${selectedCustomer.name} 🎁 ! Pour vous remercier de votre fidélité sur Para Divine, voici votre code promo exclusif de -${promoDiscountPct}% : *${promoCustomCode}*. Valable pendant ${promoExpiryDays} jours sur tout le site : https://paraofficinal.ma`;
 
         return (
           <div

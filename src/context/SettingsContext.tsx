@@ -344,7 +344,7 @@ export const DEFAULT_SETTINGS: Settings = {
       { id: 'trustBar-1', type: 'trustBar', nameFr: 'Barre de Confiance Maroc', visible: true }
     ]
   },
-  storeName: "Para Officinal S.A",
+  storeName: "Para Divine",
   storePhone: "+212 5 22 20 20 20",
   storeWhatsApp: "212660808080",
   freeShippingThreshold: 400,
@@ -466,14 +466,14 @@ export const DEFAULT_SETTINGS: Settings = {
   whatsappCloudAccessToken: "",
   whatsappCloudPhoneNumberId: "",
   notificationTemplates: {
-    pendingFr: "Bonjour {customer_name} 👋 Votre commande Para Officinal #{order_id} a bien été reçue et est en cours de traitement. Nous vous contacterons très bientôt. Merci de votre confiance ! 🌿",
-    pendingAr: "مرحباً {customer_name} 👋 تم استلام طلبك #{order_id} في Para Officinal وهو قيد المعالجة. سنتواصل معك قريباً. شكراً لثقتك! 🌿",
+    pendingFr: "Bonjour {customer_name} 👋 Votre commande Para Divine #{order_id} a bien été reçue et est en cours de traitement. Nous vous contacterons très bientôt. Merci de votre confiance ! 🌿",
+    pendingAr: "مرحباً {customer_name} 👋 تم استلام طلبك #{order_id} في Para Divine وهو قيد المعالجة. سنتواصل معك قريباً. شكراً لثقتك! 🌿",
     shippedFr: "Bonjour {customer_name} 🚚 Excellente nouvelle ! Votre commande #{order_id} vient d'être expédiée. Numéro de suivi : {tracking_link}. Livraison estimée : 24-48h. À très bientôt ! 📦",
     shippedAr: "مرحباً {customer_name} 🚚 أخبار رائعة! تم شحن طلبك #{order_id}. رقم التتبع: {tracking_link}. التسليم المتوقع خلال 24-48 ساعة. نراكم قريباً! 📦",
     deliveredFr: "Bonjour {customer_name} ✅ Nous espérons que votre commande #{order_id} vous a bien été livrée et que vous êtes satisfait(e). N'hésitez pas à nous laisser votre avis. Merci pour votre fidélité ! 💚",
     deliveredAr: "مرحباً {customer_name} ✅ نأمل أن يكون طلبك #{order_id} قد وصلك بسلامة وأنك راضٍ عنه. لا تتردد في مشاركة تقييمك. شكراً لولائك! 💚",
-    recoveryFr: "Bonjour {customer_name} 🛒 Vous avez laissé des articles dans votre panier chez Para Officinal ! Votre panier ({cart_items}) d'une valeur de {cart_total} DH vous attend. Utilisez le code {discount_code} pour bénéficier d'une réduction. Finalisez votre commande ici : {recovery_link} ✨",
-    recoveryAr: "مرحباً {customer_name} 🛒 لقد تركتِ منتجات في سلة التسوق في Para Officinal! سلتك ({cart_items}) بقيمة {cart_total} درهم تنتظرك. استخدمي كود {discount_code} للحصول على خصم. أكملي طلبك من هنا: {recovery_link} ✨"
+    recoveryFr: "Bonjour {customer_name} 🛒 Vous avez laissé des articles dans votre panier chez Para Divine ! Votre panier ({cart_items}) d'une valeur de {cart_total} DH vous attend. Utilisez le code {discount_code} pour bénéficier d'une réduction. Finalisez votre commande ici : {recovery_link} ✨",
+    recoveryAr: "مرحباً {customer_name} 🛒 لقد تركتِ منتجات في سلة التسوق في Para Divine! سلتك ({cart_items}) بقيمة {cart_total} درهم تنتظرك. استخدمي كود {discount_code} للحصول على خصم. أكملي طلبك من هنا: {recovery_link} ✨"
   },
   paymentSettings: {
     onlinePaymentEnabled: false,

@@ -19,9 +19,7 @@ import { HomepageSectionItem, useSettings } from '@/context/SettingsContext';
 // before the customer could interact with the page.
 const BrandPartners = dynamic(() => import('@/components/BrandPartners').then((m) => m.BrandPartners), { ssr: false });
 const DiagnosticBanner = dynamic(() => import('@/components/DiagnosticBanner').then((m) => m.DiagnosticBanner), { ssr: false });
-const SummerSalePromo = dynamic(() => import('@/components/SummerSalePromo').then((m) => m.SummerSalePromo), { ssr: false });
 const HorizontalPromoBanner = dynamic(() => import('@/components/HorizontalPromoBanner').then((m) => m.HorizontalPromoBanner), { ssr: false });
-const MoroccoTrustBar = dynamic(() => import('@/components/MoroccoTrustBar').then((m) => m.MoroccoTrustBar), { ssr: false });
 const CustomerReviews = dynamic(() => import('@/components/CustomerReviews').then((m) => m.CustomerReviews), { ssr: false });
 const TriplePromoBanners = dynamic(() => import('@/components/TriplePromoBanners').then((m) => m.TriplePromoBanners), { ssr: false });
 const TopRatedAsymmetricGrid = dynamic(() => import('@/components/TopRatedAsymmetricGrid').then((m) => m.TopRatedAsymmetricGrid), { ssr: false });
@@ -33,7 +31,6 @@ const FeaturedIngredientSection = dynamic(() => import('@/components/FeaturedIng
 const LaRochePosaySSection = dynamic(() => import('@/components/LaRochePosaySSection').then((m) => m.LaRochePosaySSection), { ssr: false });
 const DermoCorner = dynamic(() => import('@/components/DermoCorner').then((m) => m.DermoCorner), { ssr: false });
 const ActiveIngredients = dynamic(() => import('@/components/ActiveIngredients').then((m) => m.ActiveIngredients), { ssr: false });
-const OfficialDistributorBadge = dynamic(() => import('@/components/OfficialDistributorBadge').then((m) => m.OfficialDistributorBadge), { ssr: false });
 
 interface DynamicSectionRendererProps {
   sections: HomepageSectionItem[];
@@ -215,7 +212,7 @@ export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps
             return deferred(section.id, <DiagnosticBanner />);
 
           case 'summerSale':
-            return deferred(section.id, <SummerSalePromo />);
+            return null;
 
           case 'skinConcerns':
             return null;
@@ -224,7 +221,7 @@ export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps
             return deferred(section.id, <HorizontalPromoBanner settings={section.settings} />);
 
           case 'trustBar':
-            return deferred(section.id, <MoroccoTrustBar />);
+            return null;
 
           case 'customerReviews':
             return deferred(section.id, <CustomerReviews />);
@@ -261,7 +258,7 @@ export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps
             return deferred(section.id, <ActiveIngredients />);
 
           case 'officialDistributor':
-            return deferred(section.id, <OfficialDistributorBadge />);
+            return null;
 
           case 'faq':
             return deferred(section.id, <InteractiveFaqWrapper />);

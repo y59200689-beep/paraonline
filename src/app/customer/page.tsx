@@ -988,7 +988,7 @@ export default function CustomerDashboard() {
                       label={isRTL ? 'رصيد المكافآت' : 'Solde cagnotte'}
                       value={points}
                       unit={isRTL ? 'نقطة' : 'pts'}
-                      description={isRTL ? <>القيمة التقديرية: <strong className="text-emerald-400">{walletMadValue} MAD</strong></> : <>Valeur estimée : <strong className="text-emerald-400">{walletMadValue} MAD</strong></>}
+                      description={isRTL ? <>القيمة التقديرية: <strong className="text-emerald-400">{walletMadValue} DH</strong></> : <>Valeur estimée : <strong className="text-emerald-400">{walletMadValue} DH</strong></>}
                       icon={Coins}
                       tone="emerald"
                       theme={themeMode}
@@ -1072,7 +1072,7 @@ export default function CustomerDashboard() {
                                   {item.title}
                                 </h4>
                                 <p className="text-[11px] font-mono text-slate-400">
-                                  {item.quantity}x • {item.price} MAD
+                                  {item.quantity}x • {item.price} DH
                                 </p>
                               </div>
                             </div>
@@ -1249,7 +1249,7 @@ export default function CustomerDashboard() {
                                   {item.title}
                                 </h4>
                                 <p className="text-xs font-mono font-bold text-emerald-500 mt-1">
-                                  {item.quantity}x • {item.price} MAD
+                                  {item.quantity}x • {item.price} DH
                                 </p>
                               </div>
                             </div>
@@ -1268,7 +1268,7 @@ export default function CustomerDashboard() {
                           <div className="flex items-center gap-3">
                             <span className="text-slate-400">Total payé (COD):</span>
                             <span className={`text-base font-black font-mono ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                              {order.total} MAD
+                              {order.total} DH
                             </span>
                           </div>
                         </div>
@@ -1395,7 +1395,7 @@ export default function CustomerDashboard() {
                                 </div>
                               </div>
                               <div className="flex items-center justify-between pt-2 border-t border-slate-800/60">
-                                <span className={`text-xs font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>{prod.price} MAD</span>
+                                <span className={`text-xs font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>{prod.price} DH</span>
                                 <PoButton
                                   onClick={() => {
                                     if (addRoutineProductToCart(prod)) showToast(`${prod.title} ajouté au panier!`);
@@ -1436,7 +1436,7 @@ export default function CustomerDashboard() {
                                 </div>
                               </div>
                               <div className="flex items-center justify-between pt-2 border-t border-slate-800/60">
-                                <span className={`text-xs font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>{prod.price} MAD</span>
+                                <span className={`text-xs font-bold ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>{prod.price} DH</span>
                                 <PoButton
                                   onClick={() => {
                                     if (addRoutineProductToCart(prod)) showToast(`${prod.title} ajouté au panier!`);
@@ -1525,9 +1525,9 @@ export default function CustomerDashboard() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {activeCoupons.map((coupon) => {
                         const discount = coupon.discountType === 'fixed'
-                            ? `-${coupon.discountValue ?? coupon.discountPercent} MAD`
+                            ? `-${coupon.discountValue ?? coupon.discountPercent} DH`
                             : `-${coupon.discountValue ?? coupon.discountPercent}%`;
-                        const minimum = coupon.minPurchase ? `Dès ${coupon.minPurchase} MAD` : 'Sans minimum d’achat';
+                        const minimum = coupon.minPurchase ? `Dès ${coupon.minPurchase} DH` : 'Sans minimum d’achat';
                         const expiry = coupon.expiryDate
                           ? `Valable jusqu’au ${new Intl.DateTimeFormat('fr-MA', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(coupon.expiryDate))}`
                           : 'Valable dans la limite des conditions de l’offre';
@@ -1636,7 +1636,7 @@ export default function CustomerDashboard() {
 
                           <div className="flex items-center justify-between pt-3 border-t border-slate-800/80">
                             <span className={`text-sm font-black ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                              {product.price} MAD
+                              {product.price} DH
                             </span>
                             <PoButton
                               onClick={() => {

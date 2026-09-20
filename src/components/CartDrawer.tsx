@@ -25,6 +25,7 @@ import { CheckoutForm } from './cart/CheckoutForm';
 import { CartFooter } from './cart/CartFooter';
 import { useModalAccessibility } from '@/hooks/useModalAccessibility';
 import { FREE_SHIPPING_SUBTOTAL_DH } from '@/lib/pricing';
+import styles from './cart/CartDrawer.module.css';
 
 const placeholderSvg = PRODUCT_IMAGE_FALLBACK;
 
@@ -350,7 +351,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className="relative w-full max-w-[460px] h-full bg-[#FAF9F6] border-l border-slate-200/50 shadow-2xl flex flex-col z-10 overflow-hidden"
+        className={styles.drawer}
         style={{
           direction: isRTL ? 'rtl' : 'ltr',
           transform: getDrawerTransformStyle(),
@@ -359,14 +360,15 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         }}
       >
         {/* Header */}
-        <div className="py-5 px-6 border-b border-slate-200/40 bg-white flex items-center justify-between shrink-0 sticky top-0 z-20 backdrop-blur-md bg-white/95">
+        <div className={styles.header}>
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-primary/5 text-primary flex items-center justify-center">
+            <div className={styles.headerIcon}>
               <ShoppingBag className="w-4.5 h-4.5" />
             </div>
-            <h3 id="cart-drawer-title" className="text-base font-heading font-extrabold text-primary-dark leading-none">
+            <div><h3 id="cart-drawer-title" className={styles.title}>
               {step === 'cart' ? t('cart_title') : (language === 'FR' ? 'Validation de commande' : 'تأكيد الطلب')}
             </h3>
+            <p className={styles.subtitle}>{language === 'FR' ? `${cart.reduce((sum, item) => sum + item.quantity, 0)} article(s) dans votre panier` : `${cart.reduce((sum, item) => sum + item.quantity, 0)} منتج في سلتك`}</p></div>
           </div>
           <button
             onClick={onClose}
@@ -379,7 +381,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         </div>
 
         {/* Scrollable Body */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-6 no-scrollbar">
+        <div className={styles.body}>
           {cart.length === 0 ? (
             /* ── Empty State ─────────────────────────────────────────────── */
             <div className="text-center py-20 flex flex-col items-center gap-4">
@@ -387,7 +389,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               <h4 className="text-sm font-black text-slate-700">{t('cart_empty')}</h4>
               <button
                 onClick={onClose}
-                className="px-6 py-3.5 bg-primary-dark text-white text-xs font-black uppercase tracking-widest rounded-lg hover:bg-primary hover:-translate-y-0.5 active:scale-95 transition-all duration-300 shadow-md shadow-primary-dark/10"
+                className="px-6 py-3.5 bg-primary-dark text-white text-xs font-black uppercase tracking-widest rounded-[11px] hover:bg-primary hover:-translate-y-0.5 active:scale-95 transition-all duration-300 shadow-md shadow-primary-dark/10"
               >
                 {language === 'FR' ? 'Faire mes achats' : 'مواصلة التسوق'}
               </button>
@@ -478,7 +480,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               )}
 
               <div 
-                className={`rounded-2xl border p-4 flex flex-col gap-3.5 transition-all duration-500 ${
+                className={`${styles.shipping} rounded-2xl border p-4 flex flex-col gap-3.5 transition-all duration-500 ${
                   isFreeShipping 
                     ? 'border-emerald-500/20 bg-emerald-50/30 shadow-[0_4px_16px_rgba(16,185,129,0.04)]' 
                     : 'border-slate-200/40 bg-white shadow-[0_4px_12px_rgba(26,37,93,0.02)]'
@@ -550,7 +552,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 const tierBadge = tierColors[tier] ?? tierColors.Bronze;
                 return (
                   <div 
-                    className={`relative rounded-2xl border border-amber-200/50 bg-gradient-to-br from-amber-50/80 via-orange-50/40 to-white shadow-[0_4px_20px_rgba(245,158,11,0.06)] px-4 py-3.5 flex items-center gap-3.5 ${
+                    className={`${styles.loyalty} relative rounded-2xl border px-4 py-3.5 flex items-center gap-3.5 ${
                       isOpen ? 'animate-slide-up' : 'opacity-0'
                     }`}
                     style={isOpen ? { animationDelay: `${cart.length * 55 + 200}ms` } : undefined}
@@ -560,10 +562,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
                     {/* Flame icon */}
                     <div className="shrink-0 w-9 h-9 rounded-xl bg-amber-100 border border-amber-200/60 flex items-center justify-center">
-                      <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5 text-amber-500" stroke="currentColor" strokeWidth={1.8}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
-                      </svg>
+                      <Gift className="w-6 h-6" />
                     </div>
 
                     {/* Text */}
@@ -650,8 +649,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               />
             </>
           )}
-        </div>
-
         {/* Footer */}
         {cart.length > 0 && (
           <CartFooter
@@ -671,6 +668,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             deliverySettings={settings?.deliverySettings}
           />
         )}
+        </div>
       </div>
     </div>
   );

@@ -2,7 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ChevronDown, Sparkles } from 'lucide-react';
+import { ChevronDown, Leaf, Package, Truck, Headphones } from 'lucide-react';
+import styles from './Header.module.css';
 import type { CurrencyCode } from '@/context/CurrencyContext';
 import { CURRENCIES } from '@/context/CurrencyContext';
 
@@ -56,26 +57,24 @@ export const TopBar: React.FC<TopBarProps> = ({
   isRTL,
 }) => (
   <div
-    className="hidden lg:block w-full bg-white border-y border-slate-100 shadow-sm"
-    style={{ paddingTop: '10px', paddingBottom: '10px' }}
+    className={`hidden lg:block ${styles.utility}`}
   >
     <div
-      className="max-w-[1400px] mx-auto px-6 md:px-[30px] flex items-center justify-between"
+      className={styles.utilityInner}
     >
-      {/* Left: Shop Links */}
-      <div className="flex items-center gap-6 lg:gap-8 text-[11.5px] font-medium text-slate-500 tracking-wide">
+      <div className={styles.signature}>
+        <Leaf aria-hidden="true" />
+        <span>{language === 'FR' ? 'VOTRE BEAUTÉ • NOTRE EXPERTISE • AU QUOTIDIEN' : 'جمالك • خبرتنا • كل يوم'}</span>
+      </div>
+      <div className={styles.utilityLinks}>
         <Link href="/a-propos" className="hover:text-primary transition-colors duration-200 cursor-pointer">
-          {language === 'FR' ? 'À propos de nous' : 'من نحن'}
+          <Package aria-hidden="true" />
+          {language === 'FR' ? 'À propos' : 'من نحن'}
         </Link>
-        <span className="text-slate-200">|</span>
-        <a href="/customer" className="hover:text-primary transition-colors duration-200 cursor-pointer">
-          {language === 'FR' ? 'Mon Compte' : 'حسابي'}
-        </a>
-        <span className="text-slate-200">|</span>
         <Link href="/suivi-commande" className="hover:text-primary transition-colors duration-200 cursor-pointer">
+          <Truck aria-hidden="true" />
           {language === 'FR' ? 'Suivi de commande' : 'تتبع الطلب'}
         </Link>
-        <span className="text-slate-200">|</span>
         <a
           href="#footer"
           onClick={(e) => {
@@ -89,7 +88,8 @@ export const TopBar: React.FC<TopBarProps> = ({
           }}
           className="hover:text-primary transition-colors duration-200 cursor-pointer"
         >
-          {language === 'FR' ? 'Contactez-nous' : 'اتصل بنا'}
+          <Headphones aria-hidden="true" />
+          {language === 'FR' ? 'Contact' : 'اتصل بنا'}
         </a>
       </div>
 

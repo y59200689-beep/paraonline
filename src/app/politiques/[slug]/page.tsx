@@ -4,7 +4,7 @@ import { CmsPageRenderer } from '@/components/CmsPageRenderer';
 import { getCmsPageBySlug } from '@/lib/cms-pages';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://paraofficinal.ma';
-const SITE_NAME = 'Para Officinal S.A';
+const SITE_NAME = 'Para Divine';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -14,7 +14,7 @@ const POLICY_META: Record<string, { title: string; description: string }> = {
   'conditions-vente': {
     title: 'Conditions Générales de Vente',
     description:
-      'Prenez connaissance des conditions régissant les ventes, livraisons et modes de paiement sur Para Officinal S.A.',
+      'Prenez connaissance des conditions régissant les ventes, livraisons et modes de paiement sur Para Divine',
   },
   confidentialite: {
     title: 'Politique de Confidentialité',
@@ -77,7 +77,7 @@ function buildArticleJsonLd(slug: string) {
       name: SITE_NAME,
       logo: {
         '@type': 'ImageObject',
-        url: `${SITE_URL}/images/logo.png`,
+        url: `${SITE_URL}/para-divine-logo.png`,
       },
     },
     inLanguage: 'fr-MA',

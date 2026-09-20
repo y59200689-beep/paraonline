@@ -185,7 +185,7 @@ function normalizeConcern(value: string | string[] | undefined) {
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string | string[]; brand?: string | string[]; concern?: string | string[] }>;
+  searchParams: Promise<{ category?: string | string[]; brand?: string | string[]; concern?: string | string[]; ingredient?: string | string[] }>;
 }) {
   const params = await searchParams;
   const initialCategory = normalizeCategory(params.category);
@@ -198,12 +198,14 @@ export default async function ProductsPage({
 
   return (
     <ProductsClient
+      key={typeof params.ingredient === 'string' ? params.ingredient : ''}
       initialProducts={products}
       initialPagination={pagination}
       catalogFacets={catalogFacets}
       initialCategory={initialCategory}
       initialBrands={initialBrand ? [initialBrand] : []}
       initialConcerns={initialConcern === 'all' ? [] : [initialConcern]}
+      initialIngredient={typeof params.ingredient === 'string' ? params.ingredient.trim().slice(0, 120) : ''}
     />
   );
 }

@@ -158,6 +158,14 @@ export const AiAssistant: React.FC = () => {
   );
 
   const [isOpen, setIsOpen] = useState(false);
+  const [footerVisible, setFooterVisible] = useState(false);
+  useEffect(() => {
+    const footer = document.getElementById('footer');
+    if (!footer || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(([entry]) => setFooterVisible(entry.isIntersecting));
+    observer.observe(footer);
+    return () => observer.disconnect();
+  }, [pathname]);
   const [isHovered, setIsHovered] = useState(false);
   const [messages, setMessages] = useState<Message[]>( [
     {
@@ -577,8 +585,11 @@ export const AiAssistant: React.FC = () => {
   };
 
 
+  // Footer contact actions take over; never interrupt an already-open conversation.
+  if (footerVisible && !isOpen) return null;
+
   return (
-    <div className={`fixed right-4 sm:right-6 z-50 flex flex-col items-end font-sans ${
+    <div className={`storefront-colors fixed right-4 sm:right-6 z-50 flex flex-col items-end font-sans ${
       isProductDetailRoute ? 'bottom-[9.75rem] lg:bottom-6' : 'bottom-20 lg:bottom-6'
     }`}>
       
@@ -862,7 +873,7 @@ export const AiAssistant: React.FC = () => {
                                       />
                                       <div className="min-w-0 flex-1">
                                         <p className="truncate text-[10px] font-bold text-slate-800">{product.title}</p>
-                                        <p className="mt-0.5 text-[9px] font-semibold text-slate-400">{product.vendor} · {safeFormatPrice(product.price)} DH</p>
+                                        <p className="mt-0.5 text-[9px] font-semibold text-slate-400"><span data-product-brand>{product.vendor}</span> · {safeFormatPrice(product.price)} DH</p>
                                       </div>
                                       <button
                                         type="button"
@@ -1000,7 +1011,7 @@ export const AiAssistant: React.FC = () => {
               disabled={!inputText.trim() || isTyping}
               aria-label={language === 'FR' ? 'Envoyer' : 'إرسال'}
               className="w-8 h-8 rounded-lg flex items-center justify-center text-white hover:opacity-90 transition-all cursor-pointer border-none outline-none disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
-              style={{ backgroundColor: 'var(--color-primary-dark)' }}
+              style={{ backgroundColor: 'var(--brand-primary)', color: 'var(--brand-button-text)' }}
             >
               <Send className="w-3.5 h-3.5" />
             </button>
@@ -1015,7 +1026,8 @@ export const AiAssistant: React.FC = () => {
         onMouseLeave={() => setIsHovered(false)}
         className="w-14 h-14 rounded-full text-white flex items-center justify-center shadow-2xl relative group transition-all duration-300 active:scale-95 border-none outline-none cursor-pointer"
         style={{
-          backgroundColor: isHovered ? 'var(--color-primary)' : 'var(--color-primary-dark)',
+          backgroundColor: isHovered ? 'var(--brand-primary-hover)' : 'var(--brand-primary)',
+          color: 'var(--brand-button-text)',
           boxShadow: '0 12px 32px rgba(26, 37, 93, 0.35), 0 0 10px rgba(197, 168, 128, 0.1)',
           border: '1px solid rgba(255, 255, 255, 0.15)'
         }}
@@ -1027,10 +1039,10 @@ export const AiAssistant: React.FC = () => {
         <div className="absolute inset-0 rounded-full border border-accent opacity-20 group-hover:scale-125 transition-transform duration-700 animate-ping pointer-events-none" />
         
         {isOpen ? (
-          <X className="w-5 h-5 text-white" />
+          <X className="w-5 h-5" />
         ) : (
           <div className="relative">
-            <MessageSquare className="w-5 h-5 text-white" />
+            <MessageSquare className="w-5 h-5" />
             <span 
               className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#10b981] animate-pulse" 
               style={{ border: '2px solid var(--color-primary-dark)' }} 

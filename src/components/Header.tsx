@@ -12,7 +12,6 @@ import { useLoyalty } from '@/context/LoyaltyContext';
 import { BeautyWalletDrawer } from './BeautyWalletDrawer';
 import { useUi } from '@/context/UiContext';
 import Image from 'next/image';
-import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 
@@ -22,6 +21,7 @@ import { TopBar } from './Header/TopBar';
 import { SearchPill } from './Header/SearchPill';
 import { DesktopActions } from './Header/DesktopActions';
 import { MobileHeader } from './Header/MobileHeader';
+import headerStyles from './Header/Header.module.css';
 
 const LANGUAGES = [
   { id: 'FR', label: 'Français', flag: '🇫🇷' },
@@ -166,7 +166,7 @@ export const Header: React.FC = () => {
     let active = true;
     const timer = setTimeout(async () => {
       try {
-        const params = new URLSearchParams({ search: searchQuery, limit: '24', category: selectedCategoryId });
+        const params = new URLSearchParams({ search: searchQuery, limit: '24', category: selectedCategoryId, sort: 'search-stock' });
         const res = await fetch(`/api/products?${params}`);
         const data = await res.json();
         if (active && data.success) setSearchResults(data.products || []);
@@ -270,26 +270,25 @@ export const Header: React.FC = () => {
           isScrolled ? 'scrolled' : ''
         }`}
         style={{
-          paddingTop: isScrolled ? '12px' : '18px',
-          paddingBottom: isScrolled ? '12px' : '18px',
+          paddingTop: isScrolled ? '12px' : 'clamp(18px, 1.95vw, 28px)',
+          paddingBottom: isScrolled ? '12px' : 'clamp(18px, 1.95vw, 28px)',
         }}
       >
         <div
-          className="max-w-[1400px] mx-auto px-6 md:px-[30px]"
+          className={headerStyles.main}
         >
           {/* Desktop grid */}
-          <div className="hidden lg:grid lg:grid-cols-[auto_1fr_auto] items-center gap-8 xl:gap-10">
+          <div className={headerStyles.desktop}>
             {/* Logo */}
             <div className="flex items-center shrink-0">
               <Link href="/" className="flex items-center group active:scale-98 transition-transform duration-300">
                 <Image
-                  src={getOptimizedImageUrl("/images/logo.png")}
-                  alt="Para Officinal S.A"
-                  width={933}
-                  height={257}
+                  src="/para-divine-logo.png"
+                  alt="Para Divine"
+                  width={1920}
+                  height={522}
                   loading="eager"
-                  className="object-contain"
-                  style={{ width: '180px', height: 'auto' }}
+                  className={headerStyles.logo}
                 />
               </Link>
             </div>

@@ -1,17 +1,19 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import Image from 'next/image';
+import { ArrowRight, Check, Droplets, Heart, Leaf, ShoppingCart, Sparkles, Sun } from 'lucide-react';
 import { Product } from '@/lib/data';
 import { useProducts } from '@/context/ProductsContext';
 import { useTranslation } from '@/context/LanguageContext';
 import { useUi } from '@/context/UiContext';
-import { Sparkles, ArrowRight, Star } from 'lucide-react';
-import Image from 'next/image';
-import { getOptimizedImageUrl } from '@/lib/image-optimizer';
-import { PRODUCT_IMAGE_FALLBACK } from '@/lib/public-images';
+import { useCart } from '@/context/CartContext';
 import { useSettings } from '@/context/SettingsContext';
 import { useCurrency } from '@/context/CurrencyContext';
+import { getOptimizedImageUrl } from '@/lib/image-optimizer';
+import { PRODUCT_IMAGE_FALLBACK } from '@/lib/public-images';
 import { useGalleryOverrides } from '@/lib/useGalleryOverrides';
+import styles from './SummerSalePromo.module.css';
 
 export const SummerSalePromo: React.FC = () => {
   const { language } = useTranslation();
@@ -19,451 +21,96 @@ export const SummerSalePromo: React.FC = () => {
   const { settings } = useSettings();
   const { convertPrice } = useCurrency();
   const { getDisplayImage } = useGalleryOverrides();
-  const hp = settings?.homepageSections;
-  const showSummerSale = hp?.showSummerSale ?? true;
-
-  const summerSaleSection = hp?.sectionOrder?.find(
-    (s: any) => s.type === 'summerSale'
-  );
-  const campaignSettings = summerSaleSection?.settings as { endsAt?: string; endDate?: string } | undefined;
-  const campaignDeadline = campaignSettings?.endsAt || campaignSettings?.endDate || null;
-  const leftImageRaw = summerSaleSection?.settings?.leftImage || hp?.summerSaleLeftImage || "/images/cicaplast_bundle.webp";
-  const rightImageRaw = summerSaleSection?.settings?.rightImage || hp?.summerSaleRightImage || "/images/vichy_sunscreen_bundle.webp";
-
-  const leftImage = getDisplayImage(leftImageRaw, 'cicaplast_bundle');
-  const rightImage = getDisplayImage(rightImageRaw, 'vichy_sunscreen_bundle');
-
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const { setSelectedProduct } = useUi();
+  const { addToCart } = useCart();
+  const [addedId, setAddedId] = useState<number | null>(null);
+  const hp = settings?.homepageSections;
+  const section = hp?.sectionOrder?.find(s => s.type === 'summerSale');
+  const campaign = section?.settings as { endsAt?: string; endDate?: string } | undefined;
+  const campaignDeadline = campaign?.endsAt || campaign?.endDate || null;
+  const leftImage = getDisplayImage(section?.settings?.leftImage || hp?.summerSaleLeftImage || '/images/cicaplast_bundle.webp', 'cicaplast_bundle');
+  const rightImage = getDisplayImage(section?.settings?.rightImage || hp?.summerSaleRightImage || '/images/vichy_sunscreen_bundle.webp', 'vichy_sunscreen_bundle');
+  const isAR = language === 'AR';
+  const [remaining, setRemaining] = useState(0);
 
   useEffect(() => {
-    if (!campaignDeadline) {
-      setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-      return;
-    }
-
-    const deadline = new Date(campaignDeadline).getTime();
-    if (!Number.isFinite(deadline)) return;
-
-    const calculateTimeLeft = () => {
-      const remaining = Math.max(0, deadline - Date.now());
-      return {
-        days: Math.floor(remaining / 86_400_000),
-        hours: Math.floor((remaining / 3_600_000) % 24),
-        minutes: Math.floor((remaining / 60_000) % 60),
-        seconds: Math.floor((remaining / 1_000) % 60),
-      };
-    };
-
-    setTimeLeft(calculateTimeLeft());
-
-    const timer = setInterval(() => {
-      const next = calculateTimeLeft();
-      setTimeLeft(next);
-      if (Object.values(next).every(value => value === 0)) clearInterval(timer);
-    }, 1000);
+    const deadline = campaignDeadline ? new Date(campaignDeadline).getTime() : NaN;
+    if (!Number.isFinite(deadline)) { setRemaining(0); return; }
+    const update = () => setRemaining(Math.max(0, deadline - Date.now()));
+    update();
+    const timer = setInterval(update, 1000);
     return () => clearInterval(timer);
   }, [campaignDeadline]);
 
-  const handleSelectProduct = (product: Product) => {
-    setSelectedProduct(product);
-  };
+  useEffect(() => {
+    if (addedId === null) return;
+    const timer = setTimeout(() => setAddedId(null), 1800);
+    return () => clearTimeout(timer);
+  }, [addedId]);
 
-  const summerSaleItems = React.useMemo(() => {
+  const items = useMemo(() => {
     const curatedIds = hp?.summerSaleProductIds || [];
-    const selectedProducts = curatedIds.length > 0
-      ? curatedIds
-        .map(id => products.find(p => p.id === id))
-        .filter((p): p is Product => !!p)
-      : products
-          .filter(p => p.status !== 'draft' && (p.stock ?? 0) > 0 && p.comparePrice > p.price)
-          .slice(0, 4);
-
-    return selectedProducts
-      .filter(p => p.status !== 'draft' && (p.stock ?? 0) > 0)
-      .slice(0, 4)
-      .map(p => ({
-        id: p.id,
-        titleFr: p.nameFr || p.title,
-        titleAr: p.name || p.nameFr || p.title,
-        image: p.image,
-        price: p.price,
-        comparePrice: p.comparePrice || p.price,
-        rating: p.reviews > 0 ? p.rating : 0,
-        reviews: p.reviews,
-        category: p.category,
-        vendor: p.vendor,
-      }));
+    const selection = curatedIds.length
+      ? curatedIds.map(id => products.find(p => p.id === id)).filter((p): p is Product => !!p)
+      : products.filter(p => p.status !== 'draft' && (p.stock ?? 0) > 0 && p.comparePrice > p.price).slice(0, 4);
+    return selection.filter(p => p.status !== 'draft' && (p.stock ?? 0) > 0).slice(0, 4);
   }, [products, hp]);
 
-  if (!showSummerSale || summerSaleItems.length === 0) return null;
+  if (!(hp?.showSummerSale ?? true) || items.length === 0) return null;
 
   return (
-    <section className="bg-[#FAFAFA] border-b border-slate-200/40 relative overflow-hidden py-10 md:py-16 reveal-on-scroll">
-      {/* Premium campaign background */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'linear-gradient(135deg, rgba(255,240,245,0.3) 0%, rgba(255,248,240,0.3) 100%)',
-          opacity: 0.8,
-        }}
-      />
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 relative z-10">
-        
-        {/* Blue Frame Container */}
-        <div className="bg-primary-dark rounded-[32px] p-6 md:p-8 shadow-[0_20px_50px_rgba(26,37,93,0.15)] border border-primary/30 relative overflow-hidden">
-          
-          {/* Ambient emerald glow orb and decorative orbit particles */}
-          <div className="glow-orb glow-orb-emerald -bottom-24 left-1/2 -translate-x-1/2 w-[500px] h-[300px]" />
-          <div className="absolute top-6 left-6 w-24 h-24 pointer-events-none opacity-20 hidden md:block">
-            <div className="orbit-particle orbit-particle-1 top-1/2 left-1/2" />
-            <div className="orbit-particle orbit-particle-2 top-1/2 left-1/2" />
+    <section className={styles.section} aria-labelledby="summer-offer-title" dir={isAR ? 'rtl' : 'ltr'}>
+      <div className={styles.frame}>
+        <div className={styles.campaign}>
+          <div className={styles.photo}>
+            <Image src={getOptimizedImageUrl(leftImage) || PRODUCT_IMAGE_FALLBACK} alt={isAR ? 'مجموعة العناية الصيفية' : 'Sélection de soins pour l’été'} fill sizes="(min-width: 1024px) 28vw, 48vw" className={styles.campaignImage} />
+            <p className={styles.photoCaption}>{isAR ? <>بشرة أجمل<br />هذا الصيف</> : <>Une peau<br />plus belle<br />cet été</>}</p>
           </div>
-
-          {/* ── MOBILE: Stacked promo card ─────────────────────────────── */}
-          <div className="lg:hidden mb-4 relative z-10">
-            <div className="bg-white rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.015)] border border-slate-100/50 p-5 flex flex-col items-center text-center">
-              
-              {/* Images Row at the top */}
-              <div className="flex justify-center gap-4 mb-4 w-full h-[120px]">
-                <div className="relative w-[45%] rounded-[16px] overflow-hidden border border-slate-100">
-                  <Image
-                    src={getOptimizedImageUrl(leftImage)}
-                    alt=""
-                    fill
-                    sizes="40vw"
-                    className="object-cover"
-                  />
-                </div>
-                <div className="relative w-[45%] rounded-[16px] overflow-hidden border border-slate-100">
-                  <Image
-                    src={getOptimizedImageUrl(rightImage)}
-                    alt=""
-                    fill
-                    sizes="40vw"
-                    className="object-cover"
-                  />
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="flex-1 w-full flex flex-col items-center">
-                {/* Badges */}
-                <div className="mb-2 flex items-center justify-center gap-1.5 flex-wrap">
-                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold text-white bg-[#7C3AED]/90 tracking-wide">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    {language === 'AR' ? 'عرض مختار' : 'Offre sélectionnée'}
-                  </span>
-                  <span className="inline-flex items-center gap-0.5 px-2.5 py-0.5 rounded-full text-[10px] font-black text-emerald-500 bg-emerald-50 border border-emerald-100 animate-pulse">
-                    <span>🔥</span>
-                    <span>{language === 'AR' ? 'متاح الآن' : 'Disponible'}</span>
-                  </span>
-                </div>
-
-                {/* Heading */}
-                <h3 className="text-2xl font-black text-slate-800 tracking-tight mb-1 select-none font-heading leading-tight">
-                  {language === 'AR' ? 'عروض الصيف' : 'Offres d’été'}
-                </h3>
-
-                {/* Subtext */}
-                <p className="text-slate-500 text-[12px] leading-relaxed mb-4 font-medium max-w-[240px]">
-                  {language === 'AR'
-                    ? 'خصومات تصل إلى 30% على كل شيء'
-                    : 'Une sélection de produits actuellement remisés'}
-                </p>
-
-                {/* A countdown is shown only when an editor configured a real deadline. */}
-                {campaignDeadline ? <div className="flex items-center gap-2 mb-4 select-none" dir="ltr" aria-label={language === 'AR' ? 'الوقت المتبقي للعرض' : 'Temps restant pour cette offre'}>
-                  <div className="flex flex-col items-center">
-                    <div className="w-12 h-12 rounded-[10px] bg-slate-50 border border-slate-100 shadow-sm flex flex-col items-center justify-center">
-                      <span className="text-base font-black text-primary leading-none">
-                        {String(timeLeft.minutes).padStart(2, '0')}
-                      </span>
-                      <span className="text-[7.5px] font-black text-slate-400 mt-0.5 tracking-wider uppercase">
-                        {language === 'AR' ? 'د' : 'MIN'}
-                      </span>
-                    </div>
-                  </div>
-                  <span className="text-base font-black text-slate-300 animate-pulse">:</span>
-                  <div className="flex flex-col items-center">
-                    <div className="w-12 h-12 rounded-[10px] bg-slate-50 border border-slate-100 shadow-sm flex flex-col items-center justify-center animate-pulse-ring">
-                      <span className="text-base font-black text-primary leading-none">
-                        {String(timeLeft.seconds).padStart(2, '0')}
-                      </span>
-                      <span className="text-[7.5px] font-black text-slate-400 mt-0.5 tracking-wider uppercase">
-                        {language === 'AR' ? 'ث' : 'SEC'}
-                      </span>
-                    </div>
-                  </div>
-                </div> : null}
-
-                {/* CTA */}
-                <button
-                  onClick={() => {
-                    const el = document.getElementById('boutique-grid');
-                    if (el) el.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="font-bold text-xs px-6 py-2.5 rounded-full active:scale-95 transition-all duration-300 flex items-center gap-1.5 border-0 outline-none w-full justify-center max-w-[200px]"
-                  style={{
-                    background: 'linear-gradient(160deg, #1a4731 0%, #2d7a4f 55%, #1f5c3a 100%)',
-                    color: '#ffffff',
-                    boxShadow: '0 4px 12px rgba(30,80,55,0.28)',
-                  }}
-                >
-                  <span style={{ color: '#ffffff' }}>{language === 'AR' ? 'اكتشف المنتجات' : 'Découvrir les produits'}</span>
-                  <ArrowRight className="w-3.5 h-3.5" style={{ color: '#ffffff', stroke: '#ffffff' }} />
-                </button>
-              </div>
-
+          <div className={styles.offer}>
+            <div className={styles.badges}>
+              <span className={styles.selected}><Sparkles size={15} aria-hidden="true" />{isAR ? 'عرض مختار' : 'Offre sélectionnée'}</span>
+              <span className={styles.available}><Droplets size={15} aria-hidden="true" />{isAR ? 'متاح الآن' : 'Disponible'}</span>
             </div>
+            <h2 id="summer-offer-title">{isAR ? 'عروض الصيف' : 'Offres d’été'}</h2>
+            <p className={styles.description}>{isAR ? 'اكتشفي مجموعتنا من المنتجات المخفضة لصيف مليء بالراحة والعناية.' : 'Découvrez notre sélection de produits remisés pour un été tout en bien-être.'}</p>
+            <ul className={styles.benefits}>
+              <li><Leaf aria-hidden="true" /><span>{isAR ? 'عناية للجميع' : <>Des soins<br />pour tous</>}</span></li>
+              <li><Sun aria-hidden="true" /><span>{isAR ? 'بشرة محمية' : <>Une peau<br />protégée</>}</span></li>
+              <li><Heart aria-hidden="true" /><span>{isAR ? 'المزيد من الراحة' : <>Plus de<br />bien-être</>}</span></li>
+            </ul>
+            {campaignDeadline && remaining > 0 && <div className={styles.countdown} dir="ltr" aria-label={isAR ? 'الوقت المتبقي للعرض' : 'Temps restant pour cette offre'}>
+              {Math.floor(remaining / 86400000)}j · {String(Math.floor(remaining / 3600000) % 24).padStart(2, '0')}h · {String(Math.floor(remaining / 60000) % 60).padStart(2, '0')}m · {String(Math.floor(remaining / 1000) % 60).padStart(2, '0')}s
+            </div>}
+            <button type="button" className={styles.discover} onClick={() => document.getElementById('boutique-grid')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })}>
+              {isAR ? 'اكتشف المنتجات' : 'Découvrir les produits'}<ArrowRight size={19} aria-hidden="true" />
+            </button>
           </div>
-
-          {/* ── DESKTOP: Original 3-column card layout ───────────────────── */}
-          <div className="hidden lg:grid lg:grid-cols-12 gap-6 mb-6 relative z-10">
-            
-            {/* Left Card: Cicaplast Duo Pack Image (25% on desktop) */}
-            <div className="lg:col-span-3 bg-white rounded-[24px] relative overflow-hidden group min-h-[320px] shadow-[0_8px_30px_rgba(0,0,0,0.015)] border border-slate-100/50">
-              <Image 
-                src={getOptimizedImageUrl(leftImage)} 
-                alt="Cicaplast Duo Pack" 
-                fill
-                sizes="25vw"
-                preload={true}
-                loading="eager"
-                className="object-cover w-full h-full group-hover:scale-[1.03] transition-transform duration-500 ease-out"
-              />
-              <div className="absolute inset-0 bg-gradient-to-br from-slate-50/20 to-transparent pointer-events-none" />
-            </div>
-
-            {/* Center Card: Countdown & Offer Details (50% on desktop to prevent clipping!) */}
-            <div className="lg:col-span-6 bg-white rounded-[24px] p-6 sm:p-8 flex flex-col items-center justify-center text-center relative overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.015)] border border-slate-100/50 min-h-[320px]">
-              <div className="absolute inset-0 bg-gradient-to-b from-slate-50/30 to-transparent pointer-events-none" />
-              
-              {/* Campaign status */}
-              <div className="mb-4 flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-white bg-[#7C3AED]/90 backdrop-blur-sm shadow-sm tracking-wide">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  {language === 'AR' ? 'عرض مختار' : 'Offre sélectionnée'}
-                </span>
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black text-emerald-500 bg-emerald-50 border border-emerald-100 shadow-sm animate-pulse">
-                  <span>🔥</span>
-                  <span>{language === 'AR' ? 'متاح الآن' : 'Disponible'}</span>
-                </span>
-              </div>
-
-              {/* Summer Sale Heading */}
-              <h3 className="text-3xl sm:text-[36px] font-black text-slate-800 tracking-tight mb-2 select-none font-heading">
-                {language === 'AR' ? 'عروض الصيف' : 'Offres d’été'}
-              </h3>
-              
-              {/* Promo Subtext */}
-              <p className="text-slate-500 text-sm max-w-[280px] leading-relaxed mb-6 font-medium">
-                {language === 'AR' 
-                  ? 'اكتشف مجموعتنا المختارة من المنتجات المخفضة'
-                  : 'Découvrez notre sélection de produits remisés'}
-              </p>
-
-              {/* Square Block Countdown Timer Row */}
-              {campaignDeadline ? <div className="flex items-center gap-1.5 sm:gap-3 mb-6 select-none" dir="ltr" aria-label={language === 'AR' ? 'الوقت المتبقي للعرض' : 'Temps restant pour cette offre'}>
-                {/* Hours */}
-                <div className="flex flex-col items-center">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[12px] bg-white border border-slate-100 shadow-md flex flex-col items-center justify-center">
-                    <span className="text-base sm:text-lg font-black text-primary leading-none">
-                      {String(timeLeft.hours).padStart(2, '0')}
-                    </span>
-                    <span className="text-[7px] sm:text-[8px] font-black text-slate-400 mt-1 tracking-wider uppercase">
-                      {language === 'AR' ? 'ساعة' : 'HEURES'}
-                    </span>
-                  </div>
-                </div>
-
-                <span className="text-lg font-black text-slate-300 animate-pulse">:</span>
-
-                {/* Minutes */}
-                <div className="flex flex-col items-center">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[12px] bg-white border border-slate-100 shadow-md flex flex-col items-center justify-center">
-                    <span className="text-base sm:text-lg font-black text-primary leading-none">
-                      {String(timeLeft.minutes).padStart(2, '0')}
-                    </span>
-                    <span className="text-[7px] sm:text-[8px] font-black text-slate-400 mt-1 tracking-wider uppercase">
-                      {language === 'AR' ? 'دقيقة' : 'MIN'}
-                    </span>
-                  </div>
-                </div>
-
-                <span className="text-lg font-black text-slate-300 animate-pulse">:</span>
-
-                {/* Seconds */}
-                <div className="flex flex-col items-center">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[12px] bg-white border border-slate-100 shadow-md flex flex-col items-center justify-center animate-pulse-ring">
-                    <span className="text-base sm:text-lg font-black text-primary leading-none">
-                      {String(timeLeft.seconds).padStart(2, '0')}
-                    </span>
-                    <span className="text-[7px] sm:text-[8px] font-black text-slate-400 mt-1 tracking-wider uppercase">
-                      {language === 'AR' ? 'ثانية' : 'SEC'}
-                    </span>
-                  </div>
-                </div>
-              </div> : null}
-
-              {/* Shop Now CTA Button */}
-              <button 
-                onClick={() => {
-                  const el = document.getElementById('boutique-grid');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="font-bold text-sm px-8 py-3.5 rounded-full transform active:scale-95 transition-all duration-300 flex items-center gap-2 group border-0 outline-none"
-                style={{
-                  background: 'linear-gradient(160deg, #1a4731 0%, #2d7a4f 55%, #1f5c3a 100%)',
-                  color: '#ffffff',
-                  boxShadow: '0 4px 16px rgba(30,80,55,0.28), inset 0 1px 0 rgba(255,255,255,0.08)',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = 'linear-gradient(160deg, #153b28 0%, #256642 55%, #1a4d30 100%)';
-                  e.currentTarget.style.boxShadow = '0 6px 22px rgba(30,80,55,0.38), inset 0 1px 0 rgba(255,255,255,0.06)';
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = 'linear-gradient(160deg, #1a4731 0%, #2d7a4f 55%, #1f5c3a 100%)';
-                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(30,80,55,0.28), inset 0 1px 0 rgba(255,255,255,0.08)';
-                }}
-              >
-                <span style={{ color: '#ffffff' }}>{language === 'AR' ? 'اكتشف المنتجات' : 'Découvrir les produits'}</span>
-                <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" style={{ color: '#ffffff', stroke: '#ffffff' }} />
-              </button>
-            </div>
-
-            {/* Right Card: Vichy Sunscreen Bundle Pack Image (25% on desktop) */}
-            <div className="lg:col-span-3 bg-white rounded-[24px] relative overflow-hidden group min-h-[320px] shadow-[0_8px_30px_rgba(0,0,0,0.015)] border border-slate-100/50">
-              <Image 
-                src={getOptimizedImageUrl(rightImage)} 
-                alt="Vichy Sunscreen Pack" 
-                fill
-                sizes="25vw"
-                preload={true}
-                loading="eager"
-                className="object-cover w-full h-full group-hover:scale-[1.03] transition-transform duration-500 ease-out"
-              />
-              <div className="absolute inset-0 bg-gradient-to-bl from-slate-50/20 to-transparent pointer-events-none" />
-            </div>
-
+          <div className={styles.photo}>
+            <Image src={getOptimizedImageUrl(rightImage) || PRODUCT_IMAGE_FALLBACK} alt={isAR ? 'العناية الشمسية للصيف' : 'Sélection de soins solaires pour l’été'} fill sizes="(min-width: 1024px) 28vw, 48vw" className={styles.campaignImage} />
+            <p className={styles.photoCaption}>{isAR ? <>الصيف<br />بكل ثقة</> : <>L’été<br />en toute<br />confiance</>}</p>
           </div>
-
-          {/* Bottom Row: Product Cards */}
-          <div className="bg-white rounded-[24px] shadow-[0_8px_30px_rgba(0,0,0,0.015)] border border-slate-100/50 overflow-hidden">
-
-            {/* ── MOBILE: horizontal scroll strip ── */}
-            <div className="flex lg:hidden gap-3 overflow-x-auto scrollbar-none px-4 py-4" style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
-              {summerSaleItems.map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => {
-                    const dbProduct = products.find(p => p.id === item.id);
-                    if (dbProduct) handleSelectProduct(dbProduct);
-                  }}
-                  className="shrink-0 w-[130px] flex flex-col items-center gap-2 p-3 rounded-[14px] bg-slate-50/60 border border-slate-100 cursor-pointer active:scale-95 transition-transform duration-200"
-                  style={{ scrollSnapAlign: 'start' }}
-                >
-                  {/* Thumbnail */}
-                  <div className="w-16 h-16 shrink-0 bg-white rounded-[12px] border border-slate-100 overflow-hidden relative shadow-sm">
-                    <Image
-                      src={getOptimizedImageUrl(item.image) || PRODUCT_IMAGE_FALLBACK}
-                      alt={item.titleFr}
-                      fill
-                      sizes="64px"
-                      className="object-cover"
-                    />
-                  </div>
-                  {/* Title */}
-                  <p className="text-[11px] font-bold text-slate-800 leading-tight text-center line-clamp-2 w-full">
-                    {language === 'AR' ? item.titleAr : item.titleFr}
-                  </p>
-                  {/* Stars */}
-                  {item.reviews > 0 && item.rating > 0 ? <div className="flex items-center gap-0.5" aria-label={`${item.rating.toFixed(1)} sur 5, ${item.reviews} avis`}>
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`w-2.5 h-2.5 fill-current ${
-                          star <= Math.round(item.rating) ? 'text-amber-400' : 'text-slate-200'
-                        }`}
-                      />
-                    ))}
-                  </div> : null}
-                  {/* Price */}
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-xs font-black text-primary">{convertPrice(item.price)}</span>
-                    {item.comparePrice > item.price && (
-                      <span className="text-[9px] font-semibold text-slate-400 line-through">{convertPrice(item.comparePrice)}</span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* ── DESKTOP: horizontal divider list ── */}
-            <div className="hidden lg:grid lg:grid-cols-4 lg:divide-x lg:divide-slate-100 p-8 rtl:lg:divide-x-reverse">
-              {summerSaleItems.map((item) => (
-                <div 
-                  key={item.id} 
-                  onClick={() => {
-                    const dbProduct = products.find(p => p.id === item.id);
-                    if (dbProduct) handleSelectProduct(dbProduct);
-                  }}
-                  className="flex items-center gap-4 px-6 hover:bg-slate-50/80 transition-colors duration-300 cursor-pointer group"
-                >
-                  {/* Thumbnail */}
-                  <div className="w-20 h-20 shrink-0 bg-[#F8FAFC]/80 rounded-[14px] flex items-center justify-center group-hover:scale-105 transition-transform duration-300 border border-slate-100/50 overflow-hidden relative">
-                    <Image 
-                      src={getOptimizedImageUrl(item.image) || PRODUCT_IMAGE_FALLBACK}
-                      alt={item.titleFr} 
-                      fill
-                      sizes="80px"
-                      className="object-cover filter drop-shadow-[0_4px_10px_rgba(0,0,0,0.04)]"
-                    />
-                  </div>
-
-                  {/* Details */}
-                  <div className="flex-1 min-w-0 flex flex-col justify-center text-left">
-                    <h4 className="text-sm font-bold text-slate-800 leading-snug truncate group-hover:text-primary transition-colors duration-200">
-                      {language === 'AR' ? item.titleAr : item.titleFr}
-                    </h4>
-                    
-                    {/* Stars */}
-                    {item.reviews > 0 && item.rating > 0 ? <div className="flex items-center gap-1.5 my-1" aria-label={`${item.rating.toFixed(1)} sur 5, ${item.reviews} avis`}>
-                      <div className="flex items-center gap-0.5">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star 
-                            key={star} 
-                            className={`w-3.5 h-3.5 fill-current ${
-                              star <= Math.round(item.rating) 
-                                ? 'text-amber-400' 
-                                : 'text-slate-200'
-                            }`} 
-                          />
-                        ))}
-                      </div>
-                      <span className="text-[10px] font-black text-slate-400 leading-none mt-0.5">
-                        ({item.rating.toFixed(1)})
-                      </span>
-                    </div> : null}
-
-                    {/* Price */}
-                    <div className="flex items-baseline gap-2 mt-0.5">
-                      <span className="text-base font-black text-primary leading-none">
-                        {convertPrice(item.price)}
-                      </span>
-                      {item.comparePrice > item.price && (
-                        <span className="text-[11px] font-semibold text-slate-400/80 line-through leading-none">
-                          {convertPrice(item.comparePrice)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
         </div>
+        <div className={styles.products}>
+          {items.map(item => {
+            const name = isAR ? item.name || item.nameFr || item.title : item.nameFr || item.title;
+            const discount = item.comparePrice > item.price ? Math.round((1 - item.price / item.comparePrice) * 100) : 0;
+            return <article key={item.id} className={styles.product}>
+              <button type="button" className={styles.productOpen} onClick={() => setSelectedProduct(item)} aria-label={(isAR ? 'عرض ' : 'Voir ') + name}>
+                <span className={styles.productImage}><Image src={getOptimizedImageUrl(item.image) || PRODUCT_IMAGE_FALLBACK} alt="" fill sizes="(min-width: 1280px) 100px, 80px" /></span>
+                <span className={styles.productInfo}>
+                  <span className={styles.productName}>{name}</span>
+                  <span className={styles.price}>{convertPrice(item.price)}</span>
+                  {item.comparePrice > item.price && <del className={styles.oldPrice}>{convertPrice(item.comparePrice)}</del>}
+                </span>
+              </button>
+              {discount > 0 && <span className={styles.discount}>-{discount}%</span>}
+              <button type="button" className={styles.add} onClick={() => { addToCart(item, 1); setAddedId(item.id); }} aria-label={isAR ? 'أضف ' + name + ' إلى السلة' : 'Ajouter ' + name + ' au panier'}>
+                {addedId === item.id ? <Check size={18} /> : <ShoppingCart size={18} />}
+              </button>
+            </article>;
+          })}
+        </div>
+        <span className={styles.srOnly} role="status">{addedId !== null ? (isAR ? 'تمت الإضافة إلى السلة' : 'Produit ajouté au panier') : ''}</span>
       </div>
     </section>
   );

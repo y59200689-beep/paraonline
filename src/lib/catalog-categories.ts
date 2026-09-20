@@ -98,7 +98,7 @@ export const CANONICAL_CATEGORY_MAP: Record<string, string> = {
 const CATEGORY_FILTER_VARIANTS: Record<string, string[]> = {
   acne: ['acne', 'acné'],
   'anti tache': ['anti tache', 'anti-tache', 'tache', 'taches'],
-  'anti age': ['anti age', 'anti-age', 'age', 'ride', 'rides'],
+  'anti age': ['anti age', 'anti-age', 'anti âge', 'anti-âge', 'anti rides', 'anti-rides', 'ride', 'rides'],
   'secheresse & hydratation': ['secheresse & hydratation', 'sécheresse & hydratation', 'secheresse', 'hydratation'],
   'anti rougeur': ['anti rougeur', 'anti-rougeur', 'rougeur', 'rougeurs'],
   orthopedique: ['orthopedique', 'ortopedique', 'orthepedique', 'ortopedie', 'orthopedie', 'orthopedia', 'ortopedia'],
@@ -162,15 +162,23 @@ export function matchesCatalogCategory(product: Pick<Product, 'category' | 'cate
   return categories.some(category => {
     const norm = normalizeCatalogCategoryId(String(category || ''));
     const canon = getCanonicalCategory(String(category || ''));
-    return allTargets.some(v => norm.includes(v) || v.includes(norm) || canon === v);
+    if (!norm) return false;
+    return allTargets.some(v => {
+      const targetPhrase = normalize(v);
+      return targetPhrase && (` ${norm} `.includes(` ${targetPhrase} `) || canon === v);
+    });
   });
 }
 
 export function matchesCatalogCategoryPhrase(product: Pick<Product, 'category' | 'categories'>, phrase: string) {
   const categories = product.categories?.length ? product.categories : [product.category];
   const target = normalize(phrase);
-
-  return categories.some(category => normalize(String(category || '')).includes(target));
+  if (!target) return false;
+  const variants = (CATEGORY_FILTER_VARIANTS[target] || [target]).map(normalize);
+  return categories.some(category => {
+    const value = normalize(String(category || ''));
+    return value && variants.some(variant => ` ${value} `.includes(` ${variant} `));
+  });
 }
 
 export function catalogCategoryFilter(categoryId: string) {

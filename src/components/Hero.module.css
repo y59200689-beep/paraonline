@@ -1,0 +1,42 @@
+.section { padding: 18px 0 30px; background: #fffdfb; color: #153a42; }
+.grid { max-width: 1640px; margin: auto; padding: 0 32px; display: grid; grid-template-columns: 2.4fr 1.04fr 1fr; gap: 18px; }
+.main, .summer, .promotion, .new { position: relative; isolation: isolate; overflow: hidden; border-radius: 17px; background: #eef6f4; box-shadow: 0 3px 9px #3547460b; }
+.main { min-height: clamp(370px, 28vw, 460px); }
+.image { object-fit: cover; object-position: center; z-index: -2; }
+.slide { position: absolute; inset: 0; z-index: -2; animation: fade 350ms ease-out; }
+.wash { position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, #eff9f4b3, #f5faf33b 58%, transparent 74%); pointer-events: none; }
+.mainCopy { max-width: 70%; padding: 46px 30px 70px; }
+.eyebrow { display: block; color: #467f84; font-size: 9px; font-weight: 650; letter-spacing: .22em; text-transform: uppercase; line-height: 1.5; }
+.main h1 { font: 600 clamp(33px, 3.3vw, 54px)/.99 var(--font-heading); letter-spacing: -.045em; color: #103a42; margin: 15px 0; text-wrap: balance; }
+.mainCopy p { max-width: 390px; color: #244b55; font-size: 13px; line-height: 1.6; margin: 0 0 20px; text-wrap: pretty; }
+.cta { display: inline-flex; align-items: center; justify-content: center; gap: 14px; min-height: 43px; padding: 11px 22px; border: 0; border-radius: var(--public-action-radius, 11px); background: #c85c6c; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; transition: background 180ms ease, transform 180ms ease; }
+.cta svg { flex-shrink: 0; transition: transform 180ms ease; }
+.controls { position: absolute; inset-inline: 26px; bottom: 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.dots { display: flex; align-items: center; }
+.dots button { width: 27px; height: 34px; border-radius: 20px; display: grid; place-items: center; cursor: pointer; background: transparent; }
+.dots span { width: 8px; height: 8px; background: #d9d5d0; border-radius: 50%; }
+.dots button[aria-pressed="true"] span { background: #c85c6c; width: 10px; height: 10px; }
+.arrows { display: flex; gap: 10px; }
+.arrows button { display: grid; place-items: center; width: 37px; height: 37px; border-radius: 50%; background: #fff; color: #244b55; cursor: pointer; box-shadow: 0 3px 8px #21464c12; transition: transform 180ms ease; }
+.summerCopy { padding: 54px 22px 28px; max-width: 92%; }
+.summer h2 { color: #173c43; font: 500 clamp(32px, 3.4vw, 53px)/1.02 var(--font-heading); letter-spacing: -.04em; margin: 15px 0 18px; }
+.summerCopy p { font-size: 12px; color: #244b55; line-height: 1.55; max-width: 175px; margin: 0 0 22px; }
+.summer .cta { padding-inline: 17px; font-size: 11px; gap: 10px; }
+.stack { display: grid; grid-template-rows: 1fr 1fr; gap: 14px; }
+.smallCopy { padding: 20px; max-width: 83%; }
+.smallCopy h2 { font: 500 29px/1.05 var(--font-heading); color: #163c44; margin: 5px 0 8px; letter-spacing: -.02em; }
+.promotion h2 { color: #b94557; font: 650 17px/1.2 ui-sans-serif, sans-serif; text-transform: uppercase; letter-spacing: .06em; margin: 0 0 9px; max-width: 180px; }
+.smallCopy p { font-size: 11px; line-height: 1.4; color: #284751; max-width: 155px; margin: 0 0 12px; }
+.smallCopy .cta { min-height: 35px; font-size: 10px; padding: 8px 14px; gap: 8px; }
+.smallCopy .eyebrow { font-size: 8px; }
+.sideWash { position: absolute; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(90deg,#fffaf778,transparent 85%); }
+.section button:focus-visible { outline: 3px solid #216f72; outline-offset: 3px; }
+.section button:active { transform: scale(.97); }
+[dir="rtl"] .wash { background: linear-gradient(270deg, #eff9f4d9, #f5faf34d 58%, transparent 80%); }
+@media (hover:hover) { .cta:hover { background: #b95058; } .cta:hover svg { transform: translateX(3px); } .arrows button:hover { transform: translateY(-2px); } }
+@media (min-width:1500px) { .mainCopy { padding: 60px 46px 80px; } .mainCopy p { font-size: 15px; } .smallCopy { padding: 26px; } .smallCopy h2 { font-size: 36px; } .promotion h2 { font-size: 21px; } .smallCopy p { font-size: 13px; } }
+@media (max-width:1199px) { .grid { gap: 14px; padding-inline: 24px; grid-template-columns: 2.1fr 1fr 1fr; } .mainCopy { padding: 38px 24px 70px; max-width: 75%; } .main h1 { font-size: 36px; } .summerCopy { padding: 45px 18px 22px; } .smallCopy { padding: 18px 14px; max-width: 87%; } .promotion h2 { font-size: 15px; } }
+@media (max-width:1023px) { .grid { grid-template-columns: 1fr 1fr; } .main { grid-column: 1/-1; min-height: 360px; } .mainCopy { max-width: 64%; padding: 42px 32px 70px; } .main h1 { font-size: 46px; } .summer { min-height: 350px; } .summerCopy { padding: 40px 26px; max-width: 80%; } .summer h2 { font-size: 48px; } .smallCopy { max-width: 78%; padding: 22px; } .promotion h2 { font-size: 18px; } }
+@media (max-width:639px) { .grid { padding-inline: 16px; gap: 12px; } .main { min-height: 390px; } .mainCopy { padding: 30px 22px 70px; max-width: 85%; } .main h1 { font-size: 36px; max-width: 270px; } .mainCopy p { max-width: 230px; font-size: 12px; } .wash { background: linear-gradient(90deg,#eff9f4eb,#eff9f480 65%,transparent); } .main .image { object-position: 62% center; } .controls { inset-inline: 18px; } .summer { grid-column: 1/-1; min-height: 280px; } .summerCopy { max-width: 65%; padding: 28px 24px; } .summer h2 { font-size: 43px; } .summer .image { object-position: center 58%; } .stack { grid-column: 1/-1; grid-template-columns: 1fr 1fr; grid-template-rows: auto; gap: 12px; } .smallCopy { max-width: 100%; padding: 20px 13px; min-height: 225px; } .smallCopy p { max-width: 125px; } .smallCopy h2 { font-size: 27px; } .promotion h2 { font-size: 16px; } .smallCopy .cta { padding-inline: 10px; gap: 5px; } .sideWash { background: linear-gradient(90deg,#fffaf7b8, #fffaf730); } }
+@keyframes fade { from { opacity: .4; } to { opacity: 1; } }
+@media (prefers-reduced-motion:reduce) { .slide { animation: none; } .cta, .cta svg, .arrows button { transition: none; } }

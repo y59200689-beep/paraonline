@@ -2612,7 +2612,7 @@ export default function OrdersTab() {
                   {/* Header: Courier info */}
                   <div className="border border-slate-700 p-4 rounded-2xl bg-white text-slate-950 space-y-4 print:border-slate-950">
                     <div className="flex justify-between items-center border-b border-slate-300 pb-2 print:border-slate-400">
-                      <span className="font-black text-sm tracking-tight">{settings?.storeName || 'PARA OFFICINAL S.A'}</span>
+                      <span className="font-black text-sm tracking-tight">{settings?.storeName || 'Para Divine'}</span>
                       <span className="bg-slate-950 text-white font-mono text-[9px] px-2 py-0.5 rounded font-black tracking-widest uppercase print:bg-black print:text-white">
                         {activeLabelData.courier}
                       </span>
@@ -2708,7 +2708,7 @@ export default function OrdersTab() {
                             PO
                           </div>
                           <h2 className="font-black text-lg text-slate-950 uppercase tracking-tight">
-                            {settings?.storeName || 'PARA OFFICINAL S.A'}
+                            {settings?.storeName || 'Para Divine'}
                           </h2>
                         </div>
                         <p className="text-xs text-slate-500 font-medium">
@@ -2739,7 +2739,7 @@ export default function OrdersTab() {
                         <span className="text-[9px] uppercase font-black tracking-wider text-slate-400 block">
                           ENTREPÔT EXPÉDITEUR
                         </span>
-                        <strong className="text-sm font-black text-slate-900 block">{settings?.storeName || 'Para Officinal S.A'}</strong>
+                        <strong className="text-sm font-black text-slate-900 block">{settings?.storeName || 'Para Divine'}</strong>
                         <p className="text-slate-600 font-medium">Boulevard d'Anfa, Maarif</p>
                         <p className="text-slate-600 font-medium">Casablanca, Maroc</p>
                       </div>
@@ -2951,7 +2951,7 @@ export default function OrdersTab() {
                           {/* Header */}
                           <div className="border-b-2 border-black pb-3 flex justify-between items-start">
                             <div>
-                              <span className="text-[10px] font-black tracking-widest uppercase block text-slate-500">EXPE : {settings?.storeName || 'PARA OFFICINAL S.A'}</span>
+                              <span className="text-[10px] font-black tracking-widest uppercase block text-slate-500">EXPE : {settings?.storeName || 'Para Divine'}</span>
                               <strong className="text-xs font-black block">Casablanca, Maroc</strong>
                               <span className="text-[9px] font-mono block text-slate-600">Tél: +212 522-202020</span>
                             </div>
@@ -3024,7 +3024,7 @@ export default function OrdersTab() {
                             PO
                           </div>
                           <h2 className="font-black text-lg text-slate-950 uppercase tracking-tight">
-                            {settings?.storeName || 'PARA OFFICINAL S.A'}
+                            {settings?.storeName || 'Para Divine'}
                           </h2>
                         </div>
                         <p className="text-xs text-slate-500 font-medium">
@@ -3055,7 +3055,7 @@ export default function OrdersTab() {
                         <span className="text-[9px] uppercase font-black tracking-wider text-slate-400 block">
                           EXPÉDITEUR / BOUTIQUE
                         </span>
-                        <strong className="text-sm font-black text-slate-900 block">{settings?.storeName || 'Para Officinal S.A'}</strong>
+                        <strong className="text-sm font-black text-slate-900 block">{settings?.storeName || 'Para Divine'}</strong>
                         <p className="text-slate-600 font-medium">Boulevard d'Anfa, Maarif</p>
                         <p className="text-slate-600 font-medium">Casablanca, Maroc</p>
                         <p className="text-slate-600 font-mono font-bold">Tél: +212 522-202020</p>

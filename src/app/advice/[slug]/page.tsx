@@ -8,7 +8,7 @@ export const dynamicParams = true;
 export const revalidate = 3600; // 1 hour
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://paraofficinal.ma';
-const SITE_NAME = 'Para Officinal S.A';
+const SITE_NAME = 'Para Divine';
 
 function rowToProduct(item: any): Product {
   return {

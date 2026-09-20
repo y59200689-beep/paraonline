@@ -16,8 +16,8 @@ export default function ContentSeoPage() {
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
 
-  const [defaultTitleFr, setDefaultTitleFr] = useState('Para Officinal S.A | Parapharmacie & K-Beauty Maroc');
-  const [defaultTitleAr, setDefaultTitleAr] = useState('بارا أوفيسينال | صيدلية ومستحضرات تجميل كورية بالمغرب');
+  const [defaultTitleFr, setDefaultTitleFr] = useState('Para Divine | Parapharmacie & K-Beauty Maroc');
+  const [defaultTitleAr, setDefaultTitleAr] = useState('Para Divine | صيدلية ومستحضرات تجميل كورية بالمغرب');
   const [defaultDescFr, setDefaultDescFr] = useState('Découvrez notre gamme complète de soins dermatologiques et K-Beauty avec livraison rapide partout au Maroc.');
   const [defaultDescAr, setDefaultDescAr] = useState('اكتشف مجموعتنا الكاملة من منتجات العناية بالبشرة والتجميل الكوري مع توصيل سريع في المغرب.');
   const [canonicalDomain, setCanonicalDomain] = useState('https://paraofficinal.ma');

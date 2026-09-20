@@ -2,7 +2,6 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import Link from 'next/link';
 import { Search, ShoppingBag, Globe, X } from 'lucide-react';
 import { SearchDropdown } from './SearchDropdown';
@@ -77,10 +76,10 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
           className="flex items-center group active:scale-98 transition-transform duration-300 shrink-0"
         >
           <Image
-            src={getOptimizedImageUrl("/images/logo.png")}
-            alt="Para Officinal S.A"
-            width={933}
-            height={257}
+            src="/para-divine-logo.png"
+            alt="Para Divine"
+            width={1920}
+            height={522}
             loading="eager"
             className="object-contain"
             style={{ width: '120px', height: 'auto' }}
@@ -127,7 +126,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
               value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); setShowSearch(true); }}
               onFocus={() => setShowSearch(true)}
-              className="flex-1 bg-transparent text-base text-slate-700 placeholder-slate-400 focus:outline-none min-w-0"
+              className="flex-1 bg-transparent text-base text-slate-700 placeholder-slate-600 focus:outline-none min-w-0"
             />
             {searchQuery && (
               <button

@@ -24,7 +24,7 @@ interface ThemeColorSet {
 
 const PRESETS: { name: string; description: string; colors: ThemeColorSet }[] = [
   {
-    name: 'Para Officinal Classique',
+    name: 'Para Divine Classique',
     description: 'Style original : Bleu ardoise, bleu marine foncé et accents vert dermo-clinique.',
     colors: {
       primary: '#2573a3',
@@ -531,7 +531,7 @@ export default function AdminBrandingPage() {
                       className="text-[11px] font-extrabold tracking-tight"
                       style={{ color: colors.primaryDark }}
                     >
-                      Para Officinal
+                      Para Divine
                     </span>
                   </div>
                   
@@ -664,7 +664,7 @@ export default function AdminBrandingPage() {
                     backgroundColor: colors.secondary
                   }}
                 >
-                  <span style={{ color: colors.textMuted }}>© 2026 Para Officinal S.A.</span>
+                  <span style={{ color: colors.textMuted }}>© 2026 Para Divine</span>
                   
                   {/* Floating WhatsApp CTA */}
                   <div 

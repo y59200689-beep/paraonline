@@ -104,7 +104,7 @@ export const CustomerAuthPortal: React.FC<CustomerAuthPortalProps> = ({
                 <span className={`text-sm font-black tracking-tight font-heading block ${
                   themeMode === 'light' ? 'text-slate-900' : 'text-white'
                 }`}>
-                  PARA OFFICINAL
+                  Para Divine
                 </span>
                 <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block -mt-1">
                   PORTAIL CONCIERGE
@@ -201,7 +201,7 @@ export const CustomerAuthPortal: React.FC<CustomerAuthPortalProps> = ({
               <h2 className={`text-2xl sm:text-3xl font-black font-heading tracking-tight leading-tight ${
                 themeMode === 'light' ? 'text-slate-900' : 'text-white'
               }`}>
-                {isRTL ? 'مرحباً بكِ في حسابكِ الخاص' : 'Votre Portail Privé Para Officinal'}
+                {isRTL ? 'مرحباً بكِ في حسابكِ الخاص' : 'Votre Portail Privé Para Divine'}
               </h2>
               <p className={`text-xs leading-relaxed font-sans ${
                 themeMode === 'light' ? 'text-slate-600' : 'text-slate-400'
@@ -409,7 +409,7 @@ export const CustomerAuthPortal: React.FC<CustomerAuthPortalProps> = ({
                   <button
                     type="submit"
                     disabled={resetLoading || resetSent}
-                    className="flex-1 py-3.5 px-6 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 cursor-pointer border-0"
+                    className="flex-1 py-3.5 px-6 rounded-[11px] brand-cta bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-primary-hover)] hover:from-[var(--brand-primary-hover)] hover:to-[var(--brand-primary-pressed)] text-slate-950 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 cursor-pointer border-0"
                   >
                     <span>{resetLoading ? (isRTL ? 'جارٍ الإرسال…' : 'Envoi…') : (isRTL ? 'إرسال رابط التعيين' : 'Envoyer le lien de réinitialisation')}</span>
                     <ArrowRight className="w-4 h-4" />
@@ -497,7 +497,7 @@ export const CustomerAuthPortal: React.FC<CustomerAuthPortalProps> = ({
                 <button
                   type="submit"
                   disabled={authLoading}
-                  className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.99] cursor-pointer border-0 disabled:opacity-60"
+                  className="w-full py-4 px-6 rounded-[11px] brand-cta bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-primary-hover)] hover:from-[var(--brand-primary-hover)] hover:to-[var(--brand-primary-pressed)] text-slate-950 font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.99] cursor-pointer border-0 disabled:opacity-60"
                 >
                   {authLoading ? (
                     <div className="w-5 h-5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />

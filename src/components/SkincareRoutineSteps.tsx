@@ -8,6 +8,7 @@ import { Check, Sparkles, RefreshCw, ArrowRight } from 'lucide-react';
 import { ProductCard } from './ProductCard';
 import { useUi } from '@/context/UiContext';
 import { Magnetic } from './Magnetic';
+import { RoutineDiagnosticIntro } from './RoutineDiagnosticIntro';
 
 const toTitleCase = (str: string) => {
   if (!str) return '';
@@ -42,7 +43,6 @@ export const SkincareRoutineSteps: React.FC<SkincareRoutineStepsProps> = ({ onOp
   const { products } = useProducts();
   const { diagnostic, setDiagnostic, setDiagnosticOpen, setSelectedProduct } = useUi();
   const [isBtnHovered, setIsBtnHovered] = useState(false);
-  const [isIntroBtnHovered, setIsIntroBtnHovered] = useState(false);
   
   const isTestCompleted = diagnostic !== null;
   const [activeStep, setActiveStep] = useState<number>(-1);
@@ -126,7 +126,7 @@ export const SkincareRoutineSteps: React.FC<SkincareRoutineStepsProps> = ({ onOp
   const isRTL = language === 'AR';
 
   return (
-    <section id="skincare-routine-wizard" className="py-24 relative overflow-hidden bg-[#FAFAFA] border-b border-slate-200/40 text-slate-800 reveal-on-scroll">
+    <section id="skincare-routine-wizard" className="py-12 relative overflow-hidden bg-[#fffdfc] text-slate-800">
       {/* Soft Ambient Background Orbs */}
       <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-primary/5 to-transparent blur-3xl pointer-events-none opacity-60" />
       <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-[#EC4899]/5 to-transparent blur-3xl pointer-events-none opacity-60" />
@@ -185,147 +185,13 @@ export const SkincareRoutineSteps: React.FC<SkincareRoutineStepsProps> = ({ onOp
 
         {/* Unified Luxury Container Module */}
         {activeStep === -1 ? (
-          <div className="w-full bg-white border border-slate-200/60 rounded-[24px] p-8 md:p-12 shadow-[0_15px_40px_rgba(26,37,93,0.04)] grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12 items-center transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] min-h-[480px]">
-            
-            {/* Left Column: Premium Intro */}
-            <div className={`space-y-6 ${isRTL ? 'text-right' : 'text-left'}`}>
-              <div className={`inline-flex items-center gap-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider shadow-sm px-3.5 py-1.5 ${
-                isTestCompleted
-                  ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-700'
-                  : 'bg-[#EC4899]/10 border border-[#EC4899]/15 text-[#EC4899]'
-              }`}>
-                <Sparkles className={`w-3.5 h-3.5 animate-pulse ${isTestCompleted ? 'fill-emerald-600 text-emerald-600' : 'fill-[#EC4899] text-[#EC4899]'}`} />
-                <span>{isTestCompleted
-                  ? (language === 'FR' ? 'Routine Personnalisée Prête ✓' : 'روتينكِ المخصص جاهز ✓')
-                  : (language === 'FR' ? 'Diagnostic IA Disponible' : 'متاح تشخيص الذكاء الاصطناعي')
-                }</span>
-              </div>
-              
-              <h3 className="text-2xl md:text-3.5xl font-black font-heading text-slate-800 leading-tight tracking-tight">
-                {language === 'FR' 
-                  ? 'Découvrez votre routine idéale en 3 étapes'
-                  : 'اكتشفي روتينكِ المثالي في 3 خطوات'}
-              </h3>
-              
-              <p className="text-xs md:text-[13px] text-slate-500 leading-relaxed font-medium">
-                {language === 'FR'
-                  ? 'Notre outil prend en compte votre type de peau, vos besoins et votre exposition au soleil pour vous proposer une routine personnalisée.'
-                  : 'تأخذ أداتنا بعين الاعتبار نوع بشرتكِ واحتياجاتها وتعرّضكِ للشمس لاقتراح روتين عناية مخصص.'}
-              </p>
-
-              <div className="space-y-3 pt-2">
-                {[
-                  { 
-                    fr: "Questions simples sur votre peau",
-                    ar: "أسئلة بسيطة عن بشرتكِ"
-                  },
-                  { 
-                    fr: "Routine personnalisée selon vos réponses",
-                    ar: "روتين مخصص حسب إجاباتكِ"
-                  },
-                  { 
-                    fr: "Produits proposés selon vos besoins",
-                    ar: "منتجات مقترحة حسب احتياجاتكِ"
-                  }
-                ].map((bullet, idx) => (
-                  <div 
-                    key={idx} 
-                    className={`flex items-center gap-3 text-[11.5px] font-semibold ${isRTL ? 'flex-row-reverse' : ''}`}
-                  >
-                    <div className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-sm border border-primary/25">
-                      <Check className="w-3 h-3" />
-                    </div>
-                    <span className="text-slate-600">{language === 'FR' ? bullet.fr : bullet.ar}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="pt-4 flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-                {isTestCompleted ? (
-                  <>
-                    {/* Primary: View routine */}
-                    <button
-                      onClick={() => setActiveStep(0)}
-                      className="group relative inline-flex items-center gap-2.5 px-8 py-3.5 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-0.5 active:scale-95 cursor-pointer shadow-md hover:shadow-emerald-600/20"
-                      style={{ backgroundColor: '#059669', color: '#ffffff' }}
-                    >
-                      <span>{language === 'FR' ? 'Voir ma routine →' : 'عرض روتيني ←'}</span>
-                    </button>
-                    {/* Secondary: Retake */}
-                    <button
-                      onClick={() => { setDiagnostic(null); triggerOpenBundleDrawer(); }}
-                      className="inline-flex items-center gap-2 px-5 py-3.5 text-slate-600 text-xs font-bold rounded-xl border border-slate-200 hover:border-primary/30 hover:text-primary bg-white transition-all duration-200 cursor-pointer"
-                    >
-                      <RefreshCw className="w-3.5 h-3.5" />
-                      <span>{language === 'FR' ? 'Refaire le diagnostic' : 'إعادة التشخيص'}</span>
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    onClick={triggerOpenBundleDrawer}
-                    onMouseEnter={() => setIsIntroBtnHovered(true)}
-                    onMouseLeave={() => setIsIntroBtnHovered(false)}
-                    className="group relative inline-flex items-center gap-2.5 px-8 py-3.5 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-0.5 active:scale-95 cursor-pointer shadow-md hover:shadow-primary/20 animate-fade-in animate-pulse"
-                    style={{
-                      backgroundColor: 'var(--color-primary)',
-                      color: '#ffffff',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    <span>{language === 'FR' ? "Lancer le Diagnostic de Routine 🔬" : 'بدء تشخيص الروتين 🔬'}</span>
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Right Column: Interactive Dermo-IA Diagnostic Console */}
-            <div 
-              onClick={triggerOpenBundleDrawer}
-              className="col-span-1 relative flex flex-col items-center justify-center w-full h-full min-h-[360px] bg-slate-50 border border-slate-200/40 rounded-[24px] p-6 overflow-hidden shadow-sm hover:shadow-[0_20px_50px_rgba(37,115,163,0.08)] transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] group cursor-pointer"
-            >
-              {/* Luxury ambient light leak behind console */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/5 via-transparent to-[#EC4899]/5 rounded-full blur-3xl opacity-70 group-hover:scale-115 transition-transform duration-700 pointer-events-none" />
-              <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-[#38BDF8]/5 via-transparent to-[#10B981]/5 rounded-full blur-3xl opacity-70 group-hover:scale-115 transition-transform duration-700 pointer-events-none" />
-              
-              {/* Scan target grid lines */}
-              <div className="absolute inset-0 bg-[#FAFAFA] opacity-[0.02] border border-slate-200/30" />
-              
-              {/* Glassmorphic console body */}
-              <div className="relative flex flex-col items-center gap-6 z-10 w-full">
-                
-                <div className="relative flex h-52 w-48 flex-col items-center justify-center gap-5 overflow-hidden rounded-2xl border border-sky-100 bg-white p-5 shadow-[0_18px_44px_rgba(15,39,71,0.1)] transition-all duration-300 group-hover:-translate-y-1 group-hover:border-sky-200 group-hover:shadow-[0_24px_56px_rgba(15,39,71,0.14)]">
-                  <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-400 via-sky-500 to-blue-600" />
-                  <div className="flex h-20 w-20 items-center justify-center rounded-3xl border border-sky-100 bg-sky-50 text-sky-700">
-                    <Sparkles className="h-9 w-9" aria-hidden="true" />
-                  </div>
-                  <div className="space-y-1 text-center">
-                    <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-800">Dermo IA</p>
-                    <p className="text-[10px] font-semibold leading-relaxed text-slate-500">
-                      {language === 'FR' ? 'Questionnaire personnalisé' : 'استبيان مخصص'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Status and Action text logs */}
-                <div className="space-y-2 w-full text-center">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 shadow-sm rounded-full">
-                    <span className="h-2 w-2 rounded-full bg-primary" />
-                    <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-700">
-                      {language === 'FR' ? "Lancer le Diagnostic IA" : "بدء تشخيص الذكاء الاصطناعي"}
-                    </span>
-                  </div>
-                  
-                  <p className="text-[11px] font-medium text-slate-500 max-w-[240px] mx-auto leading-relaxed">
-                    {language === 'FR' 
-                      ? "Répondez à quelques questions pour recevoir une routine fondée sur les informations produit disponibles."
-                      : "أجيبي عن بعض الأسئلة للحصول على روتين مبني على معلومات المنتجات المتاحة."}
-                  </p>
-                </div>
-
-              </div>
-            </div>
-
-          </div>
+          <RoutineDiagnosticIntro
+            isRTL={isRTL}
+            completed={isTestCompleted}
+            onStart={triggerOpenBundleDrawer}
+            onView={() => setActiveStep(0)}
+            onRestart={() => { setDiagnostic(null); triggerOpenBundleDrawer(); }}
+          />
         ) : (
           <div className="w-full bg-white border border-slate-200/60 rounded-[24px] p-8 md:p-12 shadow-[0_15px_40px_rgba(26,37,93,0.04)] grid grid-cols-1 lg:grid-cols-4 gap-10 lg:gap-12 items-stretch transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
             
@@ -431,7 +297,7 @@ export const SkincareRoutineSteps: React.FC<SkincareRoutineStepsProps> = ({ onOp
                 onClick={triggerOpenBundleDrawer}
                 onMouseEnter={() => setIsBtnHovered(true)}
                 onMouseLeave={() => setIsBtnHovered(false)}
-                className="group relative inline-flex items-center gap-3 px-10 py-4.5 text-white text-xs md:text-sm font-black uppercase tracking-widest rounded-2xl transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-0.5 active:scale-95 cursor-pointer shadow-lg hover:shadow-primary/20"
+                className="group relative inline-flex items-center gap-3 px-10 py-4.5 text-white text-xs md:text-sm font-black uppercase tracking-widest rounded-[11px] transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-0.5 active:scale-95 cursor-pointer shadow-lg hover:shadow-primary/20"
                 style={{
                   backgroundColor: 'var(--color-primary)',
                   color: '#ffffff',

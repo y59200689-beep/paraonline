@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     url: SITE_URL,
-    title: 'Para Officinal S.A | Parapharmacie & K-Beauty',
+    title: 'Para Divine | Parapharmacie & K-Beauty',
     description: 'Soins, maquillage et produits K-Beauty avec livraison au Maroc.',
     images: [{ url: '/og-image.jpg', width: 1200, height: 630 }],
   },
@@ -21,9 +21,9 @@ export const metadata: Metadata = {
 const organizationJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
-  name: 'Para Officinal S.A',
+  name: 'Para Divine',
   url: SITE_URL,
-  logo: `${SITE_URL}/images/logo.png`,
+  logo: `${SITE_URL}/para-divine-logo.png`,
   description: 'Parapharmacie et soins beauté au Maroc.',
   address: {
     '@type': 'PostalAddress',
@@ -40,7 +40,7 @@ const organizationJsonLd = {
 const websiteJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
-  name: 'Para Officinal S.A',
+  name: 'Para Divine',
   url: SITE_URL,
   potentialAction: {
     '@type': 'SearchAction',
@@ -59,6 +59,7 @@ import { HomepageSectionItem } from '@/context/SettingsContext';
 import { getPublicSettings } from '@/lib/get-public-settings';
 import { getHomepageSections } from '@/lib/cms-homepage';
 import { getCmsPreviewSnapshot } from '@/lib/cms-preview';
+import { orderRoutineSections } from '@/lib/homepage-routine-order';
 
 // Default sections — used only when no CMS homepage record exists.
 // Once the admin publishes the homepage, this array is never consulted.
@@ -95,7 +96,8 @@ export default async function Home({ searchParams }: { searchParams?: Promise<{ 
     getPublicSettings(),
     getHomepageSections(DEFAULT_SECTIONS),
   ]);
-  const sectionsList = preview?.section_order?.length ? preview.section_order : publishedSections;
+  // Preserve preview ordering; apply the requested routine-slot swap to the public homepage.
+  const sectionsList = preview?.section_order?.length ? preview.section_order : orderRoutineSections(publishedSections);
 
   return (
     <ShopShell>

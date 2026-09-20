@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Manrope, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeScript } from "../components/ThemeScript";
 import { AppProviders } from "../context/AppProviders";
@@ -15,7 +16,7 @@ import { PublicWebVitals } from "@/components/PublicWebVitals";
 export const dynamic = 'force-dynamic';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://paraofficinal.ma';
-const SITE_NAME = 'Para Officinal S.A';
+const SITE_NAME = 'Para Divine';
 
 const CSS_COLOR_VALUE = /^(?:#[0-9a-f]{3,8}|(?:rgb|hsl|oklch|oklab)\([0-9a-z\s,./%+-]+\)|transparent|currentcolor)$/i;
 
@@ -114,6 +115,18 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
+const manrope = Manrope({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-manrope",
+});
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-dm-sans",
+});
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -130,7 +143,7 @@ export default async function RootLayout({
   const serverThemeVariables = getServerThemeVariables(initialSettings.themeColors);
 
   return (
-    <html lang="fr" dir="ltr" suppressHydrationWarning>
+    <html lang="fr" dir="ltr" suppressHydrationWarning className={`${manrope.variable} ${dmSans.variable}`}>
       <head>
         {serverThemeVariables ? <style id="server-theme-variables">{serverThemeVariables}</style> : null}
       </head>

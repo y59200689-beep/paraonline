@@ -64,7 +64,7 @@ export default function ContentGlobalPage() {
     try {
       const data = await requestJson<{ global?: Record<string, any> }>('/api/cms/global');
         const g = data.global ?? {};
-        setStoreName(g.store_name ?? 'Para Officinal S.A');
+        setStoreName(g.store_name ?? 'Para Divine');
         setTaglineFr(g.store_tagline_fr ?? '');
         setTaglineAr(g.store_tagline_ar ?? '');
         setAnnouncementFr(g.announcement_fr ?? '');

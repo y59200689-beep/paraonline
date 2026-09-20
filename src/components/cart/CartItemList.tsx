@@ -6,6 +6,7 @@ import { Trash2, Plus, Minus } from 'lucide-react';
 import { Product } from '@/lib/data';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { PRODUCT_IMAGE_FALLBACK } from '@/lib/public-images';
+import styles from './CartDrawer.module.css';
 
 const toTitleCase = (str: string) => {
   if (!str) return '';
@@ -68,7 +69,7 @@ export const CartItemList: React.FC<CartItemListProps> = ({
           <div
             key={item.product.id}
             style={isOpen ? { animationDelay: `${index * 55}ms` } : undefined}
-            className={`group flex gap-4 items-start p-3 bg-white rounded-2xl border shadow-[0_4px_16px_rgba(26,37,93,0.015)] hover:shadow-[0_8px_24px_rgba(26,37,93,0.03)] transition-all duration-300 ease-out ${
+            className={`${styles.item} group flex gap-4 items-start p-3 bg-white rounded-2xl border transition-all duration-300 ease-out ${
               isOpen ? 'animate-slide-up' : 'opacity-0'
             } ${
               isLowStock
@@ -81,12 +82,12 @@ export const CartItemList: React.FC<CartItemListProps> = ({
             }`}
           >
             {/* Thumbnail */}
-            <div className="w-16 h-16 shrink-0 rounded-xl bg-slate-50 border border-slate-100 overflow-hidden flex items-center justify-center p-1 relative transition-transform duration-300 group-hover:scale-[1.02]">
+            <div className={styles.thumbnail}>
               <Image
                 src={getOptimizedImageUrl(item.product.image) || PRODUCT_IMAGE_FALLBACK}
                 alt={item.product.nameFr || item.product.name || item.product.title}
                 fill
-                sizes="64px"
+                sizes="(max-width: 480px) 84px, 124px"
                 className="object-contain p-1"
               />
               {isLowStock && (
@@ -97,15 +98,15 @@ export const CartItemList: React.FC<CartItemListProps> = ({
             {/* Info */}
             <div className="flex-1 min-w-0 flex flex-col gap-2">
               <div>
-                <span className="text-[9px] font-bold text-primary uppercase tracking-widest block mb-0.5">
+                <span data-product-brand className={styles.vendor}>
                   {item.product.vendor}
                 </span>
-                <h4
+                <button type="button"
                   onClick={() => onSelectProduct(item.product)}
-                  className="text-[11.5px] font-semibold text-slate-800 cursor-pointer hover:text-primary transition-colors duration-200 leading-tight line-clamp-2"
+                  className={styles.productName}
                 >
                   {toTitleCase(item.product.nameFr || item.product.name || item.product.title)}
-                </h4>
+                </button>
               </div>
 
               {/* Stock urgency badge */}
@@ -120,9 +121,9 @@ export const CartItemList: React.FC<CartItemListProps> = ({
               )}
 
               {/* Controls */}
-              <div className="flex items-center justify-between">
+              <div className={styles.itemControls}>
                 {/* Quantity */}
-                <div className="flex items-center border border-slate-100 rounded-lg overflow-hidden bg-slate-50/50 shadow-inner">
+                <div className={styles.quantity}>
                   <button
                     onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
                     aria-label={isFR ? 'Diminuer la quantité' : 'تقليل الكمية'}
@@ -166,7 +167,7 @@ export const CartItemList: React.FC<CartItemListProps> = ({
 
                 {/* Price + Remove */}
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-primary">
+                  <span className={styles.itemPrice}>
                     {(item.product.price * item.quantity).toFixed(2)} DH
                   </span>
                   <button

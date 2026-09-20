@@ -198,7 +198,7 @@ export const FlashSaleBanner: React.FC<FlashSaleBannerProps> = ({
               <button
                 onClick={handleAddToCart}
                 disabled={isAdding}
-                className="group relative inline-flex items-center gap-4 pl-6 pr-2 py-2 rounded-full bg-emerald-400 hover:bg-emerald-400 text-slate-950 hover:text-slate-950 shadow-lg shadow-emerald-500/10 hover:shadow-emerald-400/25 active:scale-[0.98] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer w-full md:w-auto justify-between border-0 outline-none"
+                className="group relative inline-flex items-center gap-4 pl-6 pr-2 py-2 rounded-[11px] bg-emerald-400 hover:bg-emerald-400 text-slate-950 hover:text-slate-950 shadow-lg shadow-emerald-500/10 hover:shadow-emerald-400/25 active:scale-[0.98] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer w-full md:w-auto justify-between border-0 outline-none"
               >
                 <span className="text-xs font-black uppercase tracking-wider">
                   {isAdding 

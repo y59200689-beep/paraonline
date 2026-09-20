@@ -208,7 +208,7 @@ export function OrderCompletionClient({
                       ? 'Ouvrez le lien reçu après votre commande ou utilisez la page de suivi avec votre code sécurisé.'
                       : 'افتح الرابط الذي وصلك بعد الطلب أو استخدم صفحة التتبع مع الرمز الآمن.'}
                   </p>
-                  <Link href="/suivi-commande" className="mt-6 inline-flex items-center gap-2 rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-800 hover:bg-slate-50">
+                  <Link href="/suivi-commande" className="mt-6 inline-flex items-center gap-2 rounded-[11px] border border-slate-200 px-5 py-3 text-sm font-bold text-slate-800 hover:bg-slate-50">
                     <Truck className="h-4 w-4" />
                     {isFrench ? 'Ouvrir le suivi' : 'فتح التتبع'}
                   </Link>
@@ -222,7 +222,7 @@ export function OrderCompletionClient({
                     {isFrench ? 'Vérification impossible' : 'تعذر التحقق'}
                   </h2>
                   <p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">{loadState.message}</p>
-                  <button type="button" onClick={() => window.location.reload()} className="mt-6 inline-flex items-center gap-2 rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-800 hover:bg-slate-50">
+                  <button type="button" onClick={() => window.location.reload()} className="mt-6 inline-flex items-center gap-2 rounded-[11px] border border-slate-200 px-5 py-3 text-sm font-bold text-slate-800 hover:bg-slate-50">
                     <RefreshCw className="h-4 w-4" />
                     {isFrench ? 'Réessayer' : 'إعادة المحاولة'}
                   </button>
@@ -248,7 +248,7 @@ export function OrderCompletionClient({
                   <dl className="grid gap-3 py-5 sm:grid-cols-2">
                     <div className="rounded-2xl bg-slate-50 p-4">
                       <dt className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400"><PackageCheck className="h-4 w-4" />{isFrench ? 'Client' : 'العميل'}</dt>
-                      <dd className="mt-2 truncate text-sm font-bold text-slate-900">{order.customer_name || (isFrench ? 'Client Para Officinal' : 'عميل Para Officinal')}</dd>
+                      <dd className="mt-2 truncate text-sm font-bold text-slate-900">{order.customer_name || (isFrench ? 'Client Para Divine' : 'عميل Para Divine')}</dd>
                     </div>
                     <div className="rounded-2xl bg-slate-50 p-4">
                       <dt className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400"><CreditCard className="h-4 w-4" />{isFrench ? 'Paiement' : 'الدفع'}</dt>
@@ -273,16 +273,16 @@ export function OrderCompletionClient({
                   </div>
 
                   <div className="grid gap-2.5 sm:grid-cols-2">
-                    <Link href={trackingHref} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-bold text-white shadow-[0_10px_24px_rgba(5,150,105,0.20)] hover:bg-emerald-700">
+                    <Link href={trackingHref} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[11px] bg-emerald-600 px-4 text-sm font-bold text-white shadow-[0_10px_24px_rgba(5,150,105,0.20)] hover:bg-emerald-700">
                       <Truck className="h-4 w-4" />
                       {isFrench ? 'Suivre ma commande' : 'تتبع طلبي'}
                     </Link>
-                    {whatsappHref && <a href={whatsappHref} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 text-sm font-bold text-emerald-800 hover:bg-emerald-100">
+                    {whatsappHref && <a href={whatsappHref} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[11px] border border-emerald-200 bg-emerald-50 px-4 text-sm font-bold text-emerald-800 hover:bg-emerald-100">
                       <MessageCircle className="h-4 w-4" />
                       WhatsApp
                     </a>}
                   </div>
-                  <Link href={isSuccess ? '/products' : '/checkout'} className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-950">
+                  <Link href={isSuccess ? '/products' : '/checkout'} className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[11px] px-4 text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-950">
                     {isSuccess ? <ShoppingBag className="h-4 w-4" /> : <RefreshCw className="h-4 w-4" />}
                     {isSuccess
                       ? isFrench ? 'Retour à la boutique' : 'العودة إلى المتجر'

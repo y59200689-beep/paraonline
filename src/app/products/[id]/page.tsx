@@ -8,7 +8,7 @@ export const dynamicParams = true;
 export const revalidate = 3600;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://paraofficinal.ma';
-const SITE_NAME = 'Para Officinal S.A';
+const SITE_NAME = 'Para Divine';
 
 function rowToProduct(item: any): Product {
   return {
@@ -94,7 +94,7 @@ export async function generateMetadata({ params }: { params: any }): Promise<Met
 
   const productName = product.nameFr || product.title;
   const description = (product.description || '').substring(0, 160) ||
-    `Achetez ${productName} de ${product.vendor} sur Para Officinal S.A.`;
+    `Achetez ${productName} de ${product.vendor} sur Para Divine`;
   const productUrl = `${SITE_URL}/products/${resolvedParams.id}`;
   // Resolve image: absolute URL if it starts with http, else prepend site URL
   const imageUrl = product.image?.startsWith('http')

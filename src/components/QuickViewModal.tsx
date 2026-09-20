@@ -339,7 +339,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen,
             {/* t-stagger: vendor + title reveal each time product changes */}
             <div className={`t-stagger ${modalState === 'open' ? 'is-shown' : ''}`}>
               <div className="t-stagger-line t-stagger-line--1 flex items-center justify-between text-xs">
-                <span className="text-accent font-black uppercase tracking-widest">{product.vendor}</span>
+                <span data-product-brand className="text-accent font-black uppercase tracking-widest">{product.vendor}</span>
                 {product.reviews > 0 && product.rating > 0 ? (
                   <div className="flex items-center gap-0.5 text-amber-500 font-bold" aria-label={language === 'FR' ? `${product.rating} sur 5, ${product.reviews} avis clients` : `${product.rating} من 5، ${product.reviews} تقييمات عملاء`}>
                     <Star className="w-3.5 h-3.5 fill-amber-400 stroke-none" aria-hidden="true" />
@@ -464,7 +464,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen,
                                   {rev.reply && (
                                     <div className={`mt-2 ${isRTL ? 'pr-3 border-r-2 pl-0' : 'pl-3 border-l-2 pr-0'} border-primary/20 bg-primary/5 p-2 rounded text-[10.5px]`}>
                                       <span className="font-extrabold text-primary-dark block mb-0.5">
-                                        {language === 'FR' ? 'Réponse de Para Officinal' : 'رد الصيدلية'}
+                                        {language === 'FR' ? 'Réponse de Para Divine' : 'رد الصيدلية'}
                                       </span>
                                       <p className="text-slate-600 leading-relaxed">{rev.reply}</p>
                                     </div>
@@ -636,7 +636,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen,
               onClick={handleAddToCart}
               onMouseDown={handleRippleClick}
               disabled={liveStock <= 0}
-              className="btn-gradient flex-1 h-11 text-xs rounded-[8px] relative overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
+              className="btn-gradient flex-1 h-11 text-xs rounded-[11px] relative overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed"
               style={liveStock <= 0 ? { background: '#334155', boxShadow: 'none' } : undefined}
             >
               {ripples.map(ripple => (

@@ -124,6 +124,7 @@ export default function ProductsClient({
   initialCategory,
   initialBrands = [],
   initialConcerns = [],
+  initialIngredient = '',
 }: {
   initialProducts: Product[];
   initialPagination: CatalogPagination;
@@ -131,6 +132,7 @@ export default function ProductsClient({
   initialCategory: string;
   initialBrands?: string[];
   initialConcerns?: string[];
+  initialIngredient?: string;
 }) {
   const { language } = useTranslation();
   const { diagnostic } = useUi();
@@ -191,16 +193,16 @@ export default function ProductsClient({
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [selectedBrands, setSelectedBrands] = useState<string[]>(initialBrands);
   const [selectedConcerns, setSelectedConcerns] = useState<string[]>(initialConcerns);
-  const [ingredientQuery, setIngredientQuery] = useState('');
+  const [ingredientQuery, setIngredientQuery] = useState(initialIngredient);
   const [brandQuery, setBrandQuery] = useState('');
   const [maxPrice, setMaxPrice] = useState(1500);
   const [sortOption, setSortOption] = useState('alphabetical'); // alphabetical, price-asc, price-desc, rating
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [showOnlyMatches, setShowOnlyMatches] = useState(false);
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<Product[]>(initialIngredient ? [] : initialProducts);
   const [pagination, setPagination] = useState<CatalogPagination>(initialPagination);
   const [currentPage, setCurrentPage] = useState(initialPagination.page || 1);
-  const [isPageLoading, setIsPageLoading] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(Boolean(initialIngredient));
   const didHydrate = useRef(false);
 
   const pageSize = initialPagination.limit || 50;

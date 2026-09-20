@@ -7,7 +7,7 @@ test.beforeEach(async ({ page }) => {
 test('admin routes require a verified server session', async ({ page }) => {
   await page.goto('/admin', { waitUntil: 'domcontentloaded' });
   await expect(page).toHaveURL(/\/admin\/login(?:\?|$)/);
-  await expect(page.getByRole('heading', { name: /para officinal/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Para Divine/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /accéder à la console/i })).toBeVisible();
 });
 

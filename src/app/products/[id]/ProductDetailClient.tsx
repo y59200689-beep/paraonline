@@ -545,7 +545,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 
         {productRedesign && (
           <div className="mb-5 lg:hidden">
-            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-700">{product.vendor}</p>
+            <p data-product-brand className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-700">{product.vendor}</p>
             <h1 className="mt-1.5 text-2xl font-black leading-tight tracking-[-0.03em] text-slate-950">
               {language === 'FR' ? (product.nameFr || product.title) : product.title}
             </h1>
@@ -651,7 +651,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                     <span className="min-w-7 text-center text-sm font-black">{quantity}</span>
                     <button type="button" onClick={() => setQuantity((value) => Math.min(Number(product.stock || value + 1), value + 1))} className="p-2" aria-label="Augmenter"><Plus className="h-4 w-4" /></button>
                   </div>
-                  <button type="button" onClick={addCurrentProductToCart} disabled={Number(product.stock || 0) <= 0} className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-[var(--public-action)] px-4 text-sm font-black text-white shadow-[0_10px_24px_oklch(48%_0.135_250_/_0.24)] transition hover:bg-[var(--public-action-hover)] disabled:bg-slate-400">
+                  <button type="button" onClick={addCurrentProductToCart} disabled={Number(product.stock || 0) <= 0} className="flex h-12 flex-1 items-center justify-center gap-2 rounded-[11px] brand-cta bg-[var(--public-action)] px-4 text-sm font-black text-white shadow-[0_10px_24px_oklch(48%_0.135_250_/_0.24)] transition hover:bg-[var(--public-action-hover)] disabled:bg-slate-400">
                     <ShoppingBag className="h-4 w-4" />
                     {language === 'FR' ? 'Ajouter au panier' : 'إضافة للسلة'}
                   </button>
@@ -667,7 +667,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
             {/* Basic metadata */}
             <div className={`space-y-4 ${productRedesign ? 'max-lg:hidden' : ''}`}>
               <div className="flex items-center justify-between">
-                <span className="px-3.5 py-1 bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 text-[10px] font-black uppercase tracking-wider rounded-lg border border-amber-200/40">
+                <span data-product-brand className="px-3.5 py-1 bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 text-[10px] font-black uppercase tracking-wider rounded-lg border border-amber-200/40">
                   {product.vendor}
                 </span>
                 <button 
@@ -879,10 +879,10 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
               <button
                 onClick={addCurrentProductToCart}
                 disabled={isAddedToCart || (product.stock !== undefined && product.stock <= 0)}
-                className={`flex-1 h-13 text-white text-xs font-black uppercase tracking-wider rounded-2xl flex items-center justify-center gap-2.5 cursor-pointer transition-all duration-300 active:scale-97 hover:scale-[1.01] border-0 relative overflow-hidden group shadow-[0_4px_14px_rgba(26,71,49,0.25)] hover:shadow-[0_6px_20px_rgba(26,71,49,0.38)] disabled:opacity-90 disabled:cursor-default ${
+                className={`flex-1 h-13 text-white text-xs font-black uppercase tracking-wider rounded-[11px] flex items-center justify-center gap-2.5 cursor-pointer transition-all duration-300 active:scale-97 hover:scale-[1.01] border-0 relative overflow-hidden group shadow-[0_4px_14px_rgba(26,71,49,0.25)] hover:shadow-[0_6px_20px_rgba(26,71,49,0.38)] disabled:opacity-90 disabled:cursor-default ${
                   isAddedToCart 
                     ? 'bg-emerald-600' 
-                    : 'bg-gradient-to-br from-[#1a4731] via-[#2a6b47] to-[#143d28] hover:from-[#153a28] hover:via-[#22573a] hover:to-[#103020]'
+                    : 'brand-cta bg-gradient-to-br from-[var(--brand-primary)] via-[var(--brand-primary)] to-[var(--brand-primary-hover)] hover:from-[var(--brand-primary-hover)] hover:via-[var(--brand-primary-hover)] hover:to-[var(--brand-primary-pressed)]'
                 }`}
                 style={product.stock !== undefined && product.stock <= 0 ? {
                   background: '#334155',
@@ -917,7 +917,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 <span className="text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 text-center leading-tight mt-0.5">
                   {language === 'FR' ? 'Livraison Express' : 'توصيل سريع'}
                 </span>
-                <p className="text-[8.5px] text-slate-400 dark:text-slate-500 text-center leading-tight font-medium">
+                <p className="text-[8.5px] text-slate-600 dark:text-slate-300 text-center leading-tight font-medium">
                   {language === 'FR' ? '24/48h Maroc' : '24/48 ساعة'}
                 </p>
               </div>
@@ -937,7 +937,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 <span className="text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 text-center leading-tight mt-0.5">
                   {language === 'FR' ? 'Marque sélectionnée' : 'علامة مختارة'}
                 </span>
-                <p className="text-[8.5px] text-slate-400 dark:text-slate-500 text-center leading-tight font-medium">
+                <p className="text-[8.5px] text-slate-600 dark:text-slate-300 text-center leading-tight font-medium">
                   {language === 'FR' ? 'Produit proposé dans notre catalogue' : 'منتج متوفر في كتالوجنا'}
                 </p>
               </div>
@@ -957,7 +957,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 <span className="text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 text-center leading-tight mt-0.5">
                   {language === 'FR' ? 'Paiement COD' : 'الدفع عند الاستلام'}
                 </span>
-                <p className="text-[8.5px] text-slate-400 dark:text-slate-500 text-center leading-tight font-medium">
+                <p className="text-[8.5px] text-slate-600 dark:text-slate-300 text-center leading-tight font-medium">
                   {language === 'FR' ? 'Espèces à livraison' : 'كاش عند التسليم'}
                 </p>
               </div>
@@ -989,7 +989,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 <button
                   type="button"
                   onClick={() => setDiagnosticOpen(true)}
-                  className="w-full py-3.5 bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-950 text-xs font-black uppercase tracking-wider rounded-xl transition-all active:scale-98 flex items-center justify-center gap-2 cursor-pointer relative z-10 border border-transparent dark:border-slate-800"
+                  className="w-full py-3.5 bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-950 text-xs font-black uppercase tracking-wider rounded-[11px] transition-all active:scale-98 flex items-center justify-center gap-2 cursor-pointer relative z-10 border border-transparent dark:border-slate-800"
                 >
                   <Award className="w-4 h-4 shrink-0" />
                   <span>
@@ -1267,7 +1267,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 
                       {/* Product Info */}
                       <div className="space-y-1">
-                        <span className="text-[9px] font-black uppercase tracking-wider text-primary">
+                        <span data-product-brand className="text-[9px] font-black uppercase tracking-wider text-primary">
                           {stepProduct.vendor}
                         </span>
                         <a 
@@ -1494,7 +1494,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
               <p className="truncate text-xs font-black text-slate-900">{product.nameFr || product.title}</p>
               <p className="text-sm font-black text-emerald-700">{convertPrice(currentPrice)}</p>
             </div>
-            <button type="button" onClick={addCurrentProductToCart} className="flex h-11 items-center gap-2 rounded-xl bg-[var(--public-action)] px-5 text-xs font-black text-white transition hover:bg-[var(--public-action-hover)]">
+            <button type="button" onClick={addCurrentProductToCart} className="flex h-11 items-center gap-2 rounded-[11px] bg-[var(--public-action)] px-5 text-xs font-black text-white transition hover:bg-[var(--public-action-hover)]">
               <ShoppingBag className="h-4 w-4" />{language === 'FR' ? 'Ajouter' : 'أضف'}
             </button>
           </div>

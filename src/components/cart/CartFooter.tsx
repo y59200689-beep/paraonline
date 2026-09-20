@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowRight, Banknote, CalendarDays, Headphones, RotateCcw } from 'lucide-react';
 import { AnimatedPrice } from './AnimatedPrice';
 import type { DeliverySettings } from '@/context/SettingsContext';
+import styles from './CartDrawer.module.css';
 
 interface CartFooterProps {
   subtotal: number;
@@ -114,7 +115,7 @@ export const CartFooter: React.FC<CartFooterProps> = ({
   ];
 
   return (
-    <div className="py-5 px-6 border-t border-slate-200/40 bg-white flex flex-col gap-4 shrink-0 shadow-[0_-12px_32px_rgba(26,37,93,0.04)]">
+    <div className={styles.footer}>
       <div className="flex flex-col gap-2.5">
         <div className="flex justify-between text-[11.5px] font-semibold text-slate-500">
           <span>{t('cart_subtotal')}</span>
@@ -152,7 +153,7 @@ export const CartFooter: React.FC<CartFooterProps> = ({
           </div>
         )}
 
-        <div className="flex justify-between items-baseline pt-4 border-t border-slate-100 mt-2">
+        <div className={styles.total}>
           <span className="text-sm font-bold text-slate-700">Total</span>
           <div className="text-lg font-bold text-primary-dark">
             <AnimatedPrice value={displayTotal} />
@@ -197,7 +198,7 @@ export const CartFooter: React.FC<CartFooterProps> = ({
       </div>
 
       {step === 'cart' && (
-        <div className="grid grid-cols-3 gap-1.5">
+        <div className={styles.trust}>
           {trustBadges.map((badge, i) => (
             <div
               key={i}
@@ -216,7 +217,7 @@ export const CartFooter: React.FC<CartFooterProps> = ({
         <button
           type="button"
           onClick={onCheckout}
-          className="group w-full py-4 bg-gradient-to-r from-primary-dark to-primary text-white text-xs font-bold uppercase tracking-widest rounded-xl hover:shadow-[0_6px_20px_rgba(26,37,93,0.2)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 ease-out flex items-center justify-center gap-2 cursor-pointer"
+          className={styles.checkout}
         >
           <span>{t('cart_checkout')}</span>
           <ArrowRight className={`w-4.5 h-4.5 transition-transform duration-300 group-hover:translate-x-1 ${isRTL ? 'rotate-180 group-hover:-translate-x-1' : ''}`} />

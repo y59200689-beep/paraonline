@@ -6,13 +6,16 @@ import { useProducts } from '@/context/ProductsContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useTranslation } from '@/context/LanguageContext';
 import { useCart } from '@/context/CartContext';
-import { Star, Heart, ShoppingCart, Sparkles } from 'lucide-react';
+import { Star, Heart, ShoppingCart, Flame } from 'lucide-react';
 import { useUi } from '@/context/UiContext';
 import Image from 'next/image';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { PRODUCT_IMAGE_FALLBACK } from '@/lib/public-images';
 import { useSettings } from '@/context/SettingsContext';
 import { useGalleryOverrides } from '@/lib/useGalleryOverrides';
+import styles from './TopRatedAsymmetricGrid.module.css';
+import { formatPriceDH } from '@/lib/format-price';
+import { selectReviewedProducts } from '@/lib/reviewed-products';
 
 const cleanTitle = (title: string) => {
   return title
@@ -22,37 +25,41 @@ const cleanTitle = (title: string) => {
     .trim();
 };
 
-const getVolume = (title: string) => {
-  const match = title.match(/(\d+(?:ml|g|ml\b|g\b))/i);
-  return match ? match[1].toLowerCase() : '50ml';
-};
 
 export const TopRatedAsymmetricGrid: React.FC = () => {
   const { language } = useTranslation();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { setSelectedProduct, triggerFlyToCart } = useUi();
-  const { products } = useProducts();
+  const { products, isLoading } = useProducts();
 
   const { settings } = useSettings();
   const { getDisplayImage } = useGalleryOverrides();
   const hp = settings?.homepageSections;
 
   const showSection = hp?.showTopRated ?? true;
+  const [approvedReviews, setApprovedReviews] = React.useState<Array<{ productId: number; rating: number }>>([]);
+  React.useEffect(() => {
+    if (!showSection) return;
+    const controller = new AbortController();
+    // This public endpoint returns approved reviews only.
+    fetch('/api/reviews', { signal: controller.signal })
+      .then(response => response.ok ? response.json() : null)
+      .then(data => {
+        if (!controller.signal.aborted && data?.success && Array.isArray(data.reviews)) {
+          setApprovedReviews(data.reviews);
+        }
+      })
+      .catch(() => { /* No unverified fallback on a review-service failure. */ });
+    return () => controller.abort();
+  }, [showSection]);
 
-  // Dynamically pick the 7 top-rated products or use curated selection
+  // Curated IDs never bypass the review requirement.
   const topRatedProducts = React.useMemo(() => {
-    if (hp?.topRatedProductIds && hp.topRatedProductIds.length > 0) {
-      return hp.topRatedProductIds
-        .map(id => products.find(p => p.id === id))
-        .filter((p): p is Product => !!p);
-    }
-    return [...products]
-      .sort((a, b) => b.rating - a.rating)
-      .slice(0, 7);
-  }, [products, hp]);
+    return selectReviewedProducts(products, approvedReviews, hp?.topRatedProductIds);
+  }, [products, approvedReviews, hp?.topRatedProductIds]);
 
-  if (!showSection || topRatedProducts.length === 0) {
+  if (isLoading || !showSection || topRatedProducts.length === 0) {
     return null;
   }
 
@@ -71,6 +78,46 @@ export const TopRatedAsymmetricGrid: React.FC = () => {
     triggerFlyToCart(product.image, clientX, clientY);
 
     addToCart(product, 1);
+  };
+
+  const renderCard = (product: Product, featured = false) => {
+    const title = cleanTitle(language === 'AR' ? product.name || product.title : product.nameFr || product.title);
+    const favorite = isInWishlist(product.id);
+    const discount = product.comparePrice > product.price ? Math.round((1 - product.price / product.comparePrice) * 100) : 0;
+    const unavailable = (product.stock ?? 0) <= 0;
+    return (
+      <article key={product.id} className={featured ? styles.featured : styles.card}>
+        <button type="button" className={styles.favorite} aria-label={(language === 'AR' ? 'المفضلة: ' : 'Favoris : ') + title} aria-pressed={favorite} onClick={() => toggleWishlist(product)}>
+          <Heart size={18} fill={favorite ? 'currentColor' : 'none'} />
+        </button>
+        <button type="button" className={styles.image} onClick={() => handleSelectProduct(product)} aria-label={(language === 'AR' ? 'عرض ' : 'Voir ') + title}>
+          <Image src={getOptimizedImageUrl(product.image) || PRODUCT_IMAGE_FALLBACK} alt={title} fill sizes={featured ? '(max-width: 1023px) 90vw, 33vw' : '(max-width: 600px) 100px, 140px'} />
+        </button>
+        {featured && <span className={styles.popular}><Flame size={17} />{language === 'AR' ? 'تقييمات العملاء' : 'Avis clients'}</span>}
+        <div className={styles.content}>
+          <div className={styles.identity}>
+            {featured && <span className={styles.eyebrow}>{language === 'AR' ? 'عناية فائقة' : 'Soin premium'}</span>}
+            <span data-product-brand className={styles.vendor}>{product.vendor}</span>
+          </div>
+          <button type="button" className={styles.name} onClick={() => handleSelectProduct(product)}>{title}</button>
+          {product.reviews > 0 && product.rating > 0 ? <div className={styles.rating} aria-label={product.rating.toFixed(1) + ' / 5'}>
+            <span className={styles.stars} aria-hidden="true">{[1, 2, 3, 4, 5].map(n => <Star key={n} size={14} fill={n <= Math.round(product.rating) ? 'currentColor' : 'none'} />)}</span>
+            <span>{product.rating.toFixed(1)} ({product.reviews} {language === 'AR' ? 'تقييم' : 'avis'})</span>
+          </div> : <p className={styles.noReviews}>{language === 'AR' ? 'لا توجد تقييمات بعد' : 'Pas encore d’avis'}</p>}
+          <div className={styles.purchase}>
+            <div className={styles.prices}>
+              <strong>{formatPriceDH(product.price)}</strong>
+              {product.comparePrice > product.price && <del>{formatPriceDH(product.comparePrice)}</del>}
+              {discount > 0 && <span className={styles.discount}>-{discount}%</span>}
+            </div>
+            <button type="button" className={`${styles.add} public-cta`} disabled={unavailable} onClick={e => handleQuickAdd(product, e)}>
+              <ShoppingCart size={18} aria-hidden="true" />
+              {unavailable ? (language === 'AR' ? 'غير متوفر' : 'Rupture de stock') : (language === 'AR' ? 'إضافة إلى السلة' : 'Ajouter au panier')}
+            </button>
+          </div>
+        </div>
+      </article>
+    );
   };
 
   return (
@@ -95,17 +142,17 @@ export const TopRatedAsymmetricGrid: React.FC = () => {
 
           {/* Left: heading block */}
           <div className="relative z-20 flex flex-row items-center gap-4">
-            <h2 className="text-[15px] md:text-[17px] font-black text-white leading-none tracking-tight">
+            <h2 className="public-section-title text-[15px] md:text-[17px] font-black text-white leading-none tracking-tight">
               {language === 'AR' ? titleAr : titleFr}
             </h2>
-            <span className="hidden sm:block text-[10px] font-semibold text-slate-400 border-l border-slate-700 pl-4">
+            <span className="hidden sm:block text-xs font-semibold text-slate-200 border-l border-slate-700 pl-4">
             {language === 'AR' ? `${topRatedProducts.length} منتجات مختارة بعناية` : `${topRatedProducts.length} produits sélectionnés`}
             </span>
           </div>
 
           {/* Right: product count */}
           <div className="relative z-20 flex items-center gap-2 shrink-0">
-            <span className="text-[11px] font-black uppercase tracking-widest text-slate-500">
+            <span className="text-xs font-black uppercase tracking-widest text-slate-200">
               {language === 'AR' ? 'منتجات' : 'PRODUITS'}
             </span>
             <span className="text-[22px] font-heading font-black text-white leading-none">
@@ -114,264 +161,10 @@ export const TopRatedAsymmetricGrid: React.FC = () => {
           </div>
         </div>
 
-        {/* Asymmetric 3-Column Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
-          
-          {/* LEFT COLUMN: 3 Horizontal Cards */}
-          <div className="lg:col-span-4 flex flex-col gap-5 justify-between">
-            {topRatedProducts.slice(0, 3).map((product) => {
-              const isFav = isInWishlist(product.id);
-              const titleStr = cleanTitle(product.nameFr || product.title);
-              const volume = getVolume(product.title);
-              return (
-                <div 
-                  key={product.id}
-                  className="bg-white rounded-[20px] border border-slate-100/90 p-4 flex flex-row items-stretch gap-4 hover:shadow-[0_12px_30px_rgba(0,0,0,0.035)] hover:border-slate-200/50 transition-all duration-300 relative group min-h-[148px]"
-                >
-                  {/* Heart wishlist button */}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); toggleWishlist(product); }}
-                    className={`absolute top-3 right-3 w-7 h-7 rounded-full bg-white border border-slate-100 flex items-center justify-center transition-all shadow-sm z-10 cursor-pointer ${isFav ? 'text-red-500 scale-105' : 'text-slate-400 hover:text-red-500'}`}
-                  >
-                    <Heart className={`w-3.5 h-3.5 ${isFav ? 'fill-red-500 text-red-500' : ''}`} />
-                  </button>
-
-                  {/* Left image container */}
-                  <div className="w-[88px] h-[88px] rounded-[14px] bg-[#F8FAF8] flex items-center justify-center shrink-0 overflow-hidden relative self-center">
-                    <Image 
-                      src={getOptimizedImageUrl(product.image) || PRODUCT_IMAGE_FALLBACK}
-                      alt={titleStr} 
-                      fill
-                      sizes="88px"
-                      className="object-cover scale-[1.04] transition-transform duration-500 ease-out group-hover:scale-[1.09]"
-                    />
-                  </div>
-
-                  {/* Right content */}
-                  <div className="flex-1 min-w-0 flex flex-col justify-between h-full py-0.5">
-                    <div>
-                      {/* Vendor Row */}
-                      <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                        <span className="text-[9px] font-black uppercase text-primary tracking-widest truncate">
-                          {product.vendor}
-                        </span>
-                      </div>
-
-                      {/* Title */}
-                      <h3 className="text-[11.5px] font-black text-slate-800 leading-snug line-clamp-2 hover:text-primary transition-colors cursor-pointer" onClick={() => handleSelectProduct(product)}>
-                        {titleStr}
-                      </h3>
-
-                      {/* Rating (moved below title) */}
-                      <span className="flex items-center gap-0.5 text-amber-600 text-[9.5px] font-black shrink-0 mt-1 block select-none">
-                        <Star className="w-3 h-3 fill-amber-400 text-amber-400 inline mr-0.5" />
-                        <span>{product.rating.toFixed(1)}</span>
-                      </span>
-                    </div>
-
-                    {/* Price & Add to Cart */}
-                    <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-50">
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-[12.5px] font-sans font-black text-primary">{product.price} MAD</span>
-                        {product.comparePrice > product.price && (
-                          <span className="text-[9.5px] font-sans font-medium text-slate-400 line-through">{product.comparePrice} MAD</span>
-                        )}
-                      </div>
-
-                      {/* Premium custom Add to Cart Button */}
-                      <button
-                        onClick={(e) => handleQuickAdd(product, e)}
-                        className="px-2.5 py-1.5 text-[9px] font-black uppercase tracking-wider rounded-full flex items-center gap-1 transition-all duration-300 active:scale-95 cursor-pointer leading-none border-0 outline-none btn-gradient"
-                      >
-                        <span>{language === 'AR' ? 'أضف' : 'Ajouter'}</span>
-                        <ShoppingCart className="w-2.5 h-2.5 text-white" />
-                      </button>
-                    </div>
-
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* CENTER COLUMN: Large Featured Vertical Card */}
-          {topRatedProducts[3] && (() => {
-            const product = topRatedProducts[3];
-            const isFav = isInWishlist(product.id);
-            const titleStr = cleanTitle(product.nameFr || product.title);
-            const volume = getVolume(product.title);
-            return (
-              <div className="lg:col-span-4">
-                <div className="bg-white rounded-[24px] border border-slate-100/90 p-5 flex flex-col justify-between h-full hover:shadow-[0_15px_40px_rgba(0,0,0,0.045)] hover:border-slate-200/50 transition-all duration-300 relative group">
-                  {/* Heart wishlist button */}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); toggleWishlist(product); }}
-                    className={`absolute top-4 right-4 w-9 h-9 rounded-full bg-white border border-slate-100 flex items-center justify-center transition-all shadow-sm z-10 cursor-pointer ${isFav ? 'text-red-500 scale-105' : 'text-slate-400 hover:text-red-500'}`}
-                  >
-                    <Heart className={`w-4 h-4 ${isFav ? 'fill-red-500 text-red-500' : ''}`} />
-                  </button>
-
-                  {/* Image container */}
-                  <div className="w-full aspect-[4/3] rounded-[18px] bg-[#F8FAF8] flex items-center justify-center shrink-0 overflow-hidden relative mb-4">
-                    <Image 
-                      src={getOptimizedImageUrl(product.image) || PRODUCT_IMAGE_FALLBACK}
-                      alt={titleStr} 
-                      fill
-                      sizes="(max-width: 768px) 100vw, 33vw"
-                      className="object-cover scale-[1.04] transition-transform duration-500 ease-out group-hover:scale-[1.09]"
-                    />
-                    
-                    {/* Diagnostic score match indicator */}
-                    <span className="absolute bottom-3 left-3 bg-[#7E57C2]/10 border border-[#7E57C2]/20 text-[#7E57C2] text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md flex items-center gap-1">
-                      <Sparkles className="w-2.5 h-2.5 animate-pulse" />
-                      <span>{language === 'AR' ? 'شهرة واسعة' : 'POPULAIRE'}</span>
-                    </span>
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1 flex flex-col justify-between">
-                    <div>
-                      {/* Category and Vendor Row */}
-                      <div className="flex items-center justify-between gap-2 mb-1.5">
-                        <span className="text-[9.5px] font-black uppercase text-slate-400 tracking-widest">
-                          {language === 'AR' ? 'عناية فائقة' : 'SOIN PREMIUM'}
-                        </span>
-                       <span className="text-[10px] font-black uppercase text-primary tracking-widest">
-                          {product.vendor}
-                        </span>
-                      </div>
-
-                      {/* Title */}
-                      <h3 
-                        className="text-[13.5px] sm:text-[14.5px] font-black text-slate-800 leading-snug line-clamp-2 hover:text-primary transition-colors cursor-pointer" 
-                        onClick={() => handleSelectProduct(product)}
-                      >
-                        {titleStr}
-                      </h3>
-
-                      {/* Rating block */}
-                      <div className="flex items-center gap-1.5 mt-2.5">
-                        <div className="flex gap-0.5">
-                          {[1, 2, 3, 4, 5].map((s) => (
-                            <Star 
-                              key={s} 
-                              className={`w-3.5 h-3.5 ${
-                                s <= Math.round(product.rating)
-                                  ? 'fill-amber-400 text-amber-400'
-                                  : 'fill-slate-100 text-slate-200'
-                              } stroke-none`} 
-                            />
-                          ))}
-                        </div>
-                        <span className="text-[10.5px] font-black text-slate-500 mt-0.5">
-                          {product.rating.toFixed(1)} ({product.reviews} {language === 'AR' ? 'تقييم' : 'avis'})
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Bottom price, volume & button block */}
-                    <div>
-                      <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-4 mt-4">
-                        <div className="flex items-baseline gap-1.5">
-                          <span className="text-[17px] sm:text-[19px] font-sans font-black text-primary">{product.price} MAD</span>
-                          {product.comparePrice > product.price && (
-                            <span className="text-[11px] sm:text-[12px] font-sans font-medium text-slate-400 line-through">{product.comparePrice} MAD</span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Full-width Add to Cart Button */}
-                      <button
-                        onClick={(e) => handleQuickAdd(product, e)}
-                        className="mt-4 w-full py-3 text-[11px] font-black uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 transition-all duration-300 active:scale-[0.98] cursor-pointer border-0 outline-none btn-gradient"
-                      >
-                        <span>{language === 'AR' ? 'إضافة إلى السلة' : 'Ajouter au panier'}</span>
-                        <ShoppingCart className="w-3.5 h-3.5 text-white" />
-                      </button>
-                    </div>
-
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* RIGHT COLUMN: 3 Horizontal Cards */}
-          <div className="lg:col-span-4 flex flex-col gap-5 justify-between">
-            {topRatedProducts.slice(4, 7).map((product) => {
-              const isFav = isInWishlist(product.id);
-              const titleStr = cleanTitle(product.nameFr || product.title);
-              const volume = getVolume(product.title);
-              return (
-                <div 
-                  key={product.id}
-                  className="bg-white rounded-[20px] border border-slate-100/90 p-4 flex flex-row items-stretch gap-4 hover:shadow-[0_12px_30px_rgba(0,0,0,0.035)] hover:border-slate-200/50 transition-all duration-300 relative group min-h-[148px]"
-                >
-                  {/* Heart wishlist button */}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); toggleWishlist(product); }}
-                    className={`absolute top-3 right-3 w-7 h-7 rounded-full bg-white border border-slate-100 flex items-center justify-center transition-all shadow-sm z-10 cursor-pointer ${isFav ? 'text-red-500 scale-105' : 'text-slate-400 hover:text-red-500'}`}
-                  >
-                    <Heart className={`w-3.5 h-3.5 ${isFav ? 'fill-red-500 text-red-500' : ''}`} />
-                  </button>
-
-                  {/* Left image container */}
-                  <div className="w-[88px] h-[88px] rounded-[14px] bg-[#F8FAF8] flex items-center justify-center shrink-0 overflow-hidden relative self-center">
-                    <Image 
-                      src={getOptimizedImageUrl(product.image) || PRODUCT_IMAGE_FALLBACK}
-                      alt={titleStr} 
-                      fill
-                      sizes="88px"
-                      className="object-cover scale-[1.04] transition-transform duration-500 ease-out group-hover:scale-[1.09]"
-                    />
-                  </div>
-
-                  {/* Right content */}
-                  <div className="flex-1 min-w-0 flex flex-col justify-between h-full py-0.5">
-                    <div>
-                      {/* Vendor Row */}
-                      <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                        <span className="text-[9px] font-black uppercase text-primary tracking-widest truncate">
-                          {product.vendor}
-                        </span>
-                      </div>
-
-                      {/* Title */}
-                      <h3 className="text-[11.5px] font-black text-slate-800 leading-snug line-clamp-2 hover:text-primary transition-colors cursor-pointer" onClick={() => handleSelectProduct(product)}>
-                        {titleStr}
-                      </h3>
-
-                      {/* Rating (moved below title) */}
-                      <span className="flex items-center gap-0.5 text-amber-600 text-[9.5px] font-black shrink-0 mt-1 block select-none">
-                        <Star className="w-3 h-3 fill-amber-400 text-amber-400 inline mr-0.5" />
-                        <span>{product.rating.toFixed(1)}</span>
-                      </span>
-                    </div>
-
-                    {/* Price & Add to Cart */}
-                    <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-50">
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-[12.5px] font-sans font-black text-primary">{product.price} MAD</span>
-                        {product.comparePrice > product.price && (
-                          <span className="text-[9.5px] font-sans font-medium text-slate-400 line-through">{product.comparePrice} MAD</span>
-                        )}
-                      </div>
-
-                      <button
-                        onClick={(e) => handleQuickAdd(product, e)}
-                        className="px-2.5 py-1.5 text-[9px] font-black uppercase tracking-wider rounded-full flex items-center gap-1 transition-all duration-300 active:scale-95 cursor-pointer leading-none border-0 outline-none btn-gradient"
-                      >
-                        <span>{language === 'AR' ? 'أضف' : 'Ajouter'}</span>
-                        <ShoppingCart className="w-2.5 h-2.5 text-white" />
-                      </button>
-                    </div>
-
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
+        <div className={styles.grid}>
+          <div className={styles.column}>{topRatedProducts.slice(0, 3).map(product => renderCard(product))}</div>
+          {topRatedProducts[3] && renderCard(topRatedProducts[3], true)}
+          <div className={styles.column}>{topRatedProducts.slice(4, 7).map(product => renderCard(product))}</div>
         </div>
       </div>
     </section>

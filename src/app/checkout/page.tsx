@@ -234,7 +234,7 @@ function CheckoutPageContent() {
         </p>
         <Link 
           href="/" 
-          className="px-8 py-3.5 bg-primary hover:bg-primary-dark text-white text-xs font-black uppercase tracking-widest rounded-full transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-98"
+          className="px-8 py-3.5 bg-primary hover:bg-primary-dark text-white text-xs font-black uppercase tracking-widest rounded-[11px] transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-98"
         >
           {language === 'FR' ? 'Continuer mes achats' : 'العودة للمتجر'}
         </Link>
@@ -441,7 +441,7 @@ function CheckoutPageContent() {
                   />
                   <button
                     type="submit"
-                    className="bg-primary hover:bg-primary-dark text-white text-[10px] font-black uppercase tracking-wider px-5 rounded-xl transition-all duration-300 cursor-pointer active:scale-95 border-none"
+                    className="bg-primary hover:bg-primary-dark text-white text-[10px] font-black uppercase tracking-wider px-5 rounded-[11px] transition-all duration-300 cursor-pointer active:scale-95 border-none"
                   >
                     {language === 'FR' ? 'Appliquer' : 'تطبيق'}
                   </button>

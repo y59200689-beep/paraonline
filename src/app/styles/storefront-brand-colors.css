@@ -1,0 +1,153 @@
+/* Para Divine: paint-only overrides. No layout, typography, or motion changes.
+   Scoped below CMS :root overrides; admin and semantic status palettes stay intact. */
+:where(.public-page, .storefront-colors) {
+  --brand-primary: #e68d8f;
+  --brand-button-text: #ffffff;
+  --brand-button-fill: #b95058;
+  --brand-button-gradient-light: #bd555b;
+  --brand-primary-hover: #df8083;
+  --brand-primary-pressed: #d77579;
+  --brand-primary-ink: #96464b;
+  --brand-secondary: #41abad;
+  --brand-secondary-ink: #216f72;
+  --brand-text: #162327;
+  --brand-text-muted: #58666b;
+  --brand-background: #ffffff;
+  --brand-soft: #faf7f6;
+  --brand-soft-cool: #f7fbfb;
+  --brand-border: #dce5e5;
+
+  --color-primary: var(--brand-primary);
+  --color-primary-dark: var(--brand-text);
+  --color-secondary: var(--brand-background);
+  --color-background: var(--brand-background);
+  --color-bg: var(--brand-background);
+  --color-foreground: var(--brand-text);
+  --color-text: var(--brand-text);
+  --color-text-muted: var(--brand-text-muted);
+  --color-muted: var(--brand-soft);
+  --color-border: var(--brand-border);
+  --color-border-light: var(--brand-soft-cool);
+  --color-accent: var(--brand-secondary);
+  --color-accent-bg: var(--brand-soft-cool);
+  --color-ring: var(--brand-secondary-ink);
+  --color-ivory-dark: var(--brand-soft);
+  --color-section-dark: var(--brand-text);
+  --section-dark-bg: var(--brand-text);
+
+  --public-ink: var(--brand-text);
+  --public-ink-soft: var(--brand-text-muted);
+  --public-action: var(--brand-primary);
+  --public-action-hover: var(--brand-primary-hover);
+  --public-action-pressed: var(--brand-primary-pressed);
+  --public-canvas: var(--brand-background);
+  --public-surface: var(--brand-background);
+  --public-surface-subtle: var(--brand-soft);
+  --public-surface-muted: var(--brand-soft-cool);
+  --public-border: var(--brand-border);
+  --public-border-strong: #98b0b1;
+  --public-focus: 0 0 0 3px rgb(65 171 173 / .25);
+
+  /* Existing teal utilities retain their light/dark hierarchy. */
+  --color-teal-50: #f7fbfb;
+  --color-teal-100: #e5f4f4;
+  --color-teal-200: #bce2e3;
+  --color-teal-300: #85cdcf;
+  --color-teal-400: #60babc;
+  --color-teal-500: #41abad;
+  --color-teal-600: #2c8588;
+  --color-teal-700: #216f72;
+  --color-teal-800: #20575a;
+  --color-teal-900: #1b4145;
+  --color-teal-950: #162327;
+  --color-slate-50: var(--brand-soft-cool);
+  --color-slate-100: #eef3f3;
+  --color-slate-200: var(--brand-border);
+  --color-slate-800: #1f2937;
+  --color-slate-900: var(--brand-text);
+  --color-slate-950: #101b1f;
+  --color-blue-50: var(--color-teal-50);
+  --color-blue-100: var(--color-teal-100);
+  --color-blue-200: var(--color-teal-200);
+  --color-blue-300: var(--color-teal-300);
+  --color-blue-400: var(--color-teal-400);
+  --color-blue-500: var(--color-teal-500);
+  --color-blue-600: var(--color-teal-600);
+  --color-blue-700: var(--color-teal-700);
+  --color-blue-800: var(--color-teal-800);
+  --color-blue-900: var(--color-teal-900);
+  --color-blue-950: var(--color-teal-950);
+}
+
+/* Button-only palette: retain the brand colors on badges and other surfaces. */
+:where(.public-page, .storefront-colors) :is(button, .btn-primary, .btn-gradient, .brand-cta, .po-ui-button--primary, a.bg-primary, a.bg-primary-dark, a.from-primary-dark) {
+  --brand-primary: var(--brand-button-fill);
+  --brand-primary-hover: #bd555b;
+  --brand-primary-pressed: #af4b51;
+  --public-action: var(--brand-primary);
+  --public-action-hover: var(--brand-primary-hover);
+  --public-action-pressed: var(--brand-primary-pressed);
+  --po-btn-green-500: var(--brand-primary);
+  --po-btn-green-600: var(--brand-primary);
+  --po-btn-green-700: var(--brand-primary-hover);
+  --po-btn-green-800: var(--brand-primary-pressed);
+}
+
+/* Small text uses a deeper shade; the requested exact colors remain on fills. */
+.public-page :is(.text-primary, .text-accent) { color: var(--brand-secondary-ink) !important; }
+.public-page :is(input, select, textarea) { accent-color: var(--brand-secondary-ink); }
+.public-page :is(button, a, input, select, textarea):focus-visible {
+  outline-color: var(--brand-secondary-ink);
+}
+.public-page :is(.public-field, .public-search):focus {
+  border-color: var(--brand-secondary-ink);
+}
+
+/* Preserve each CTA's existing geometry, gradient direction, and interaction. */
+.public-page :is(.btn-primary, .btn-gradient, .po-ui-button--primary, .brand-cta),
+.public-page :is(button, a):is(.bg-primary, .bg-primary-dark, .from-primary-dark) {
+  background-color: var(--brand-primary);
+  color: var(--brand-button-text) !important;
+  --tw-gradient-from: var(--brand-primary);
+  --tw-gradient-via: var(--brand-primary);
+  --tw-gradient-to: var(--brand-primary-hover);
+}
+.public-page .btn-gradient { background-image: linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover)); }
+.public-page :is(button, a).bg-primary-dark { background-color: var(--brand-primary) !important; }
+.public-page :is(button, a):is(.bg-primary, .bg-primary-dark):hover:not(:disabled) { background-color: var(--brand-primary-hover) !important; }
+.public-page :is(.btn-primary, .btn-gradient, .po-ui-button--primary, .brand-cta):hover:not(:disabled),
+.public-page :is(button, a):is(.bg-primary, .bg-primary-dark, .from-primary-dark):hover:not(:disabled) {
+  background-color: var(--brand-primary-hover);
+  --tw-gradient-from: var(--brand-primary-hover);
+  --tw-gradient-to: var(--brand-primary-pressed);
+}
+.public-page :is(.btn-primary, .btn-gradient, .po-ui-button--primary, .brand-cta):active:not(:disabled) {
+  background-color: var(--brand-primary-pressed);
+}
+.public-page :is(span, div).bg-primary.text-white { color: var(--brand-text); }
+.public-page .btn-secondary { border-color: var(--brand-secondary-ink); color: var(--brand-secondary-ink); }
+.public-page .btn-secondary:hover { background-color: var(--brand-soft-cool); color: var(--brand-secondary-ink); }
+.public-page .brand-cta { border-color: var(--brand-primary-hover); }
+.public-page .brand-cta:disabled { color: var(--brand-button-text) !important; }
+
+/* Shared authenticated buttons, only inside customer/diagnostic scopes. */
+.public-page :where([data-app-area="client"], [data-app-area="diagnostic"]) {
+  --po-btn-green-500: var(--brand-primary);
+  --po-btn-green-600: var(--brand-primary);
+  --po-btn-green-700: var(--brand-primary-hover);
+  --po-btn-green-800: var(--brand-primary-pressed);
+  --po-btn-focus: rgb(65 171 173 / .25);
+}
+.public-page :is([data-app-area="client"], [data-app-area="diagnostic"]) .po-ui-button--primary {
+  border-color: var(--brand-primary-hover) !important;
+  color: var(--brand-button-text) !important;
+}
+.public-page :is([data-app-area="client"], [data-app-area="diagnostic"]) .po-ui-button--primary:hover:not(:disabled) {
+  background-image: linear-gradient(180deg, var(--brand-primary), var(--brand-primary-hover), var(--brand-primary-pressed)) !important;
+}
+
+/* Shared product brand labels: keep CTA-pink even in legacy teal components. */
+.public-page [data-product-brand],
+.storefront-colors [data-product-brand] {
+  color: var(--brand-primary-ink, #96464b) !important;
+}

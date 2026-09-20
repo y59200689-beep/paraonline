@@ -318,7 +318,7 @@ export const IngredientDictionary: React.FC = () => {
                               />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <span
+                              <span data-product-brand
                                 className="block font-black uppercase text-[8px] tracking-[0.15em] mb-1"
                                 style={{ color: theme.accent }}
                               >

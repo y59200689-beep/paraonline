@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import SuiviCommandeClient from '../suivi-commande/SuiviCommandeClient';
 
 export const metadata: Metadata = {
-  title: 'Suivi de Commande | Para Officinal Maroc',
+  title: 'Suivi de Commande | Para Divine Maroc',
   description: 'Consultez le statut de votre commande au Maroc avec votre numéro de commande et votre code de suivi sécurisé.',
   alternates: { canonical: '/suivi-commande' },
 };

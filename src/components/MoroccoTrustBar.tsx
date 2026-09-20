@@ -3,7 +3,8 @@
 import React from 'react';
 import { useTranslation } from '@/context/LanguageContext';
 import { useSettings } from '@/context/SettingsContext';
-import { Truck, CreditCard, ShieldCheck, MessageSquare, ArrowUpRight } from 'lucide-react';
+import { Truck, CreditCard, ShieldCheck, MessageSquare, ArrowRight, Leaf, Heart } from 'lucide-react';
+import styles from './MoroccoTrustBar.module.css';
 import { buildWhatsAppUrl } from '@/lib/whatsapp-link';
 
 export const MoroccoTrustBar: React.FC = () => {
@@ -20,16 +21,14 @@ export const MoroccoTrustBar: React.FC = () => {
       titleAR: 'التوصيل داخل المغرب',
       descFR: 'Le délai et les frais sont calculés selon votre ville avant la confirmation de la commande.',
       descAR: 'يتم احتساب المدة والتكلفة حسب مدينتك قبل تأكيد الطلب.',
-      highlight: false,
     },
     {
       id: 'cod',
       icon: CreditCard,
-      titleFR: 'Paiement à la Livraison',
+      titleFR: 'Paiement à la livraison',
       titleAR: 'الدفع عند الاستلام',
       descFR: 'Réglez votre commande à la réception lorsque cette option est disponible pour votre zone.',
       descAR: 'يمكنك الدفع عند الاستلام عندما تكون هذه الخدمة متاحة في منطقتك.',
-      highlight: false,
     },
     {
       id: 'authenticity',
@@ -38,7 +37,6 @@ export const MoroccoTrustBar: React.FC = () => {
       titleAR: 'المصدر وإمكانية التتبع',
       descFR: 'Notre équipe peut vous renseigner sur la provenance et les références des produits proposés.',
       descAR: 'يمكن لفريقنا تزويدك بمعلومات حول مصدر المنتجات ومراجعها.',
-      highlight: false,
     },
     {
       id: 'whatsapp',
@@ -47,108 +45,53 @@ export const MoroccoTrustBar: React.FC = () => {
       titleAR: 'دعم و استشارة واتساب',
       descFR: 'Contactez notre équipe pour une question sur un produit, une commande ou une livraison.',
       descAR: 'تواصل مع فريقنا لأي سؤال حول منتج أو طلب أو توصيل.',
-      highlight: true,
-      actionUrl: buildWhatsAppUrl(storeWhatsApp, 'Bonjour, je souhaite avoir des conseils de soin.') || '#',
     },
   ];
 
+  const isArabic = language === 'AR';
+  const supportUrl = buildWhatsAppUrl(storeWhatsApp, isArabic ? 'مرحباً، لدي سؤال قبل تأكيد طلبي.' : 'Bonjour, j’ai une question avant de passer commande.') || '#footer';
+
   return (
-    <section className="relative py-16 md:py-24 overflow-hidden bg-slate-50/50 dark:bg-slate-950/10">
-      {/* Background ambient radial glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-slate-200/20 dark:bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none" />
-
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 relative z-10">
-        
-        {/* Section Header (Vertical stack - Stacked structure) */}
-        <div className="text-center max-w-2xl mx-auto mb-12 md:mb-16 space-y-3">
-          <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-800 dark:text-white leading-tight">
-            {language === 'AR' ? (
-              <>
-                خدماتنا و <span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">ضمانات الثقة المحلية</span>
-              </>
-            ) : (
-              <>
-                Des informations claires <span className="text-emerald-600">avant votre achat</span>
-              </>
-            )}
+    <section className={styles.section} aria-labelledby="purchase-confidence-title" dir={isArabic ? 'rtl' : 'ltr'}>
+      <div className={styles.petals} aria-hidden="true"><i /><i /><i /></div>
+      <div className={styles.container}>
+        <header className={styles.header}>
+          <div className={styles.eyebrow}><Leaf size={18} strokeWidth={1.5} />{isArabic ? 'راحة بالك تهمنا' : 'Votre sérénité compte'}</div>
+          <h2 id="purchase-confidence-title" className={styles.title}>
+            {isArabic ? 'معلومات واضحة' : 'Des informations claires'}
+            <em>{isArabic ? 'قبل إتمام الشراء' : 'avant votre achat'}</em>
           </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
-            {language === 'AR'
-              ? 'نهتم برضاكِ من خلال تقديم تجربة تسوق آمنة وسريعة متوافقة تمامًا مع احتياجاتكِ في المغرب.'
-              : 'Les conditions applicables sont présentées avant la validation, avec un accès direct à notre équipe si vous avez une question.'
-            }
-          </p>
+          <p className={styles.intro}>{isArabic
+            ? 'نعرض الشروط المطبقة قبل تأكيد الطلب، ويمكنك التواصل مباشرة مع فريقنا لأي سؤال.'
+            : 'Les conditions applicables sont présentées avant la validation, avec un accès direct à notre équipe si vous avez une question.'}</p>
+        </header>
+        <div className={styles.note} aria-hidden="true">
+          {isArabic ? 'جمال وثقة كل يوم' : <>Plus qu’une beauté,<br />une confiance au quotidien</>}
+          <Heart size={22} strokeWidth={1.2} />
         </div>
-
-        {/* Dynamic Trust Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {trustItems.map((item) => {
-            const IconComponent = item.icon;
-            const title = language === 'AR' ? item.titleAR : item.titleFR;
-            const desc = language === 'AR' ? item.descAR : item.descFR;
-
-            const CardContent = (
-              <>
-                <div className="flex justify-between items-start mb-4">
-                  {/* Icon outer container */}
-                  <div className={`p-2.5 rounded-xl flex items-center justify-center transition-colors duration-500 ${
-                    item.highlight
-                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-                  } group-hover:bg-emerald-500 group-hover:text-white`}>
-                    <IconComponent className="w-5 h-5 transition-transform duration-500 group-hover:scale-110" strokeWidth={1.5} />
-                  </div>
-                  
-                  {/* Click indicator for interactive cards */}
-                  {item.actionUrl && (
-                    <ArrowUpRight className="w-4 h-4 text-slate-400 dark:text-slate-600 transition-all duration-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-emerald-500" />
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <h3 className="text-sm font-bold text-slate-800 dark:text-white transition-colors duration-300 group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
-                    {title}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                    {desc}
-                  </p>
-                </div>
-              </>
-            );
-
-            // Container class with double-bezel concentric curves styling
-            const cardClasses = `group relative h-full flex flex-col justify-between text-left p-1.5 rounded-[24px] bg-slate-200/40 dark:bg-white/5 border border-slate-200/50 dark:border-white/10 shadow-sm transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1 hover:shadow-md hover:border-emerald-500/20 dark:hover:border-emerald-500/30 ${
-              item.actionUrl ? 'cursor-pointer' : ''
-            }`;
-
-            const innerClasses = "w-full h-full rounded-[calc(24px-6px)] bg-white dark:bg-slate-900 shadow-inner p-5 flex flex-col justify-between transition-colors duration-500";
-
-            if (item.actionUrl) {
-              return (
-                <a
-                  key={item.id}
-                  href={item.actionUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={cardClasses}
-                >
-                  <div className={innerClasses}>
-                    {CardContent}
-                  </div>
-                </a>
-              );
-            }
-
+        <div className={styles.grid}>
+          {trustItems.map((item, index) => {
+            const Icon = item.icon;
+            const external = index > 1 && supportUrl.startsWith('https://wa.me/');
+            const href = index < 2 ? '/politiques/conditions-vente' : supportUrl;
+            const label = index < 2
+              ? (isArabic ? 'عرض الشروط' : 'Voir les conditions')
+              : (isArabic ? 'راسلونا' : 'Nous écrire');
             return (
-              <div key={item.id} className={cardClasses}>
-                <div className={innerClasses}>
-                  {CardContent}
-                </div>
-              </div>
+              <a key={item.id} className={styles.card} href={href}
+                target={external ? '_blank' : undefined}
+                rel={external ? 'noopener noreferrer' : undefined}>
+                <span className={styles.icon} data-tone={index % 2 ? 'teal' : 'pink'}><Icon size={29} strokeWidth={1.6} /></span>
+                <h3>{isArabic ? item.titleAR : item.titleFR}</h3>
+                <p>{isArabic ? item.descAR : item.descFR}</p>
+                <span className={styles.footer}>
+                  <span className={styles.accent} aria-hidden="true" />
+                  <span className={styles.action}>{label}<ArrowRight size={17} aria-hidden="true" /></span>
+                </span>
+              </a>
             );
           })}
         </div>
-
       </div>
     </section>
   );

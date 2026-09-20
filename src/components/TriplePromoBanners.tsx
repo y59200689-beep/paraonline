@@ -115,7 +115,7 @@ export const TriplePromoBanners: React.FC<TriplePromoBannersProps> = ({ cards })
 
                   <div className="mt-auto">
                     <div
-                      className="px-6 py-2 font-sans font-extrabold text-[10px] uppercase tracking-wider rounded-full group-hover:scale-105 group-active:scale-95 transition-all shadow-md w-max cursor-pointer select-none text-center bg-white text-slate-800"
+                      className="public-cta-secondary px-6 py-2 font-sans font-extrabold text-[10px] uppercase tracking-wider rounded-full group-hover:scale-105 group-active:scale-95 transition-all shadow-md w-max cursor-pointer select-none text-center bg-white text-slate-800"
                     >
                       {language === 'AR' ? 'تسوق الآن' : 'Acheter'}
                     </div>

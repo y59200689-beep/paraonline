@@ -7,6 +7,7 @@ import { Product } from '@/lib/data';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { useTranslation } from '@/context/LanguageContext';
 import { PRODUCT_IMAGE_FALLBACK } from '@/lib/public-images';
+import styles from './CartDrawer.module.css';
 
 const toTitleCase = (str: string) => {
   if (!str) return '';
@@ -86,23 +87,22 @@ export const CartUpsells: React.FC<CartUpsellsProps> = ({
 
       {/* Threshold Free-Shipping Upsell Grid */}
       {!isFreeShipping && thresholdItems.length > 0 && (
-        <div className="flex flex-col gap-3">
-          <span className="text-[9.5px] font-bold uppercase tracking-widest text-slate-400">
-            {t('cro_free_shipping_unlock')}
-          </span>
+        <div className={styles.recommendations}>
+          <h4>{language === 'FR' ? 'Complétez votre routine beauté' : 'أكملي روتين جمالك'}</h4>
+          <p>{language === 'FR' ? 'Nos recommandations pour vous' : 'توصياتنا لك'}</p>
           <div className="grid grid-cols-3 gap-3">
             {thresholdItems.map((item) => (
               <div
                 key={item.id}
-                className="group/upsell bg-white border border-slate-200/50 rounded-2xl p-2.5 flex flex-col items-center gap-2 text-center hover:border-primary/20 hover:shadow-[0_8px_20px_rgba(26,37,93,0.03)] transition-all duration-300 ease-out"
+                className={styles.recommendation}
               >
-                <div className="w-12 h-12 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center p-1 relative overflow-hidden transition-transform duration-300 group-hover/upsell:scale-105">
+                <div className={styles.recommendationImage}>
                   <Image
                     src={getOptimizedImageUrl(item.image) || PRODUCT_IMAGE_FALLBACK}
-                    alt=""
+                    alt={item.nameFr || item.name || item.title}
                     fill
-                    sizes="48px"
-                    className="object-contain p-1"
+                    sizes="(max-width: 480px) 100px, 160px"
+                    className="object-cover"
                   />
                 </div>
                 <div className="w-full min-w-0">
@@ -110,12 +110,12 @@ export const CartUpsells: React.FC<CartUpsellsProps> = ({
                     {toTitleCase(item.nameFr || item.name || item.title)}
                   </p>
                   <span className="text-[10.5px] font-bold text-primary mt-1 block">
-                    {item.price} DH
+                    {item.price.toFixed(2)} DH
                   </span>
                 </div>
                 <button
                   onClick={() => addToCart(item, 1)}
-                  className="w-full py-1.5 bg-primary-dark text-white text-[8px] font-bold uppercase tracking-wide rounded-lg flex items-center justify-center gap-1 hover:bg-primary active:scale-95 transition-all duration-300 shadow-sm"
+                  className={styles.addButton}
                 >
                   <Plus className="w-2.5 h-2.5" />
                   <span>{language === 'FR' ? 'Ajouter' : 'إضافة'}</span>

@@ -9,7 +9,7 @@ export async function GET() {
     const session = authorization.operator;
 
     const secret = generateMfaSecret();
-    const issuer = 'Para Officinal S.A';
+    const issuer = 'Para Divine';
     const otpauthUrl = `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(session.username)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}`;
     const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(otpauthUrl)}`;
 

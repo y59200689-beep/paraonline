@@ -498,7 +498,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Compile WhatsApp Message payload
           const storeWhatsApp = settings.storeWhatsApp || '212660808080';
           const itemsSummary = cart.map(item => `${item.product.title} (x${item.quantity}) - ${item.product.price * item.quantity} DH`).join('\n');
-          const msg = `*PARA OFFICINAL S.A - NOUVELLE COMMANDE ${data.orderId}*
+          const msg = `*Para Divine - NOUVELLE COMMANDE ${data.orderId}*
 ----------------------------------
 *Client :* ${orderData.name}
 *Tél :* ${orderData.phone}

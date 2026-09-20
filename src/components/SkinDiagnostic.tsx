@@ -400,7 +400,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                   {isRTL ? 'تقييم شخصي' : 'Évaluation personnalisée'}
                 </p>
                 <h2 id="diagnostic-title" className="truncate text-base font-bold tracking-tight text-slate-950 sm:text-lg">
-                  {isRTL ? 'روتين البشرة Para Officinal' : 'Diagnostic routine Para Officinal'}
+                  {isRTL ? 'روتين البشرة Para Divine' : 'Diagnostic routine Para Divine'}
                 </h2>
               </div>
             </div>
@@ -850,7 +850,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                             </span>
                           )}
                           <p className="truncate text-sm font-semibold text-slate-900">{product.title}</p>
-                          <p className="mt-0.5 text-xs text-slate-500">{product.vendor || product.category}</p>
+                          <p className="mt-0.5 text-xs text-slate-500"><span data-product-brand={product.vendor ? "" : undefined}>{product.vendor || product.category}</span></p>
                           {usage && (
                             <div className="mt-2 space-y-1">
                               <p className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">

@@ -65,8 +65,8 @@ export function AboutClient() {
             {/* Narrative Spine Subtitle */}
             <p className="text-sm sm:text-base lg:text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed font-normal">
               {language === 'AR'
-                ? 'بارا أوفيسينال هو متجركم للعناية بالبشرة والجمال في المغرب، مع اختيارات تناسب روتينكم اليومي.'
-                : 'Para Officinal est votre boutique de soins et de beauté au Maroc, avec une sélection pensée pour vos routines quotidiennes.'}
+                ? 'Para Divine هو متجركم للعناية بالبشرة والجمال في المغرب، مع اختيارات تناسب روتينكم اليومي.'
+                : 'Para Divine est votre boutique de soins et de beauté au Maroc, avec une sélection pensée pour vos routines quotidiennes.'}
             </p>
 
             {/* Key Metrics Deck */}
@@ -144,7 +144,7 @@ export function AboutClient() {
                 {language === 'AR' ? 'فلسفتنا والتزامنا' : 'NOTRE APPROCHE & ENGAGEMENT'}
               </span>
               <h2 className="text-2xl sm:text-4xl font-black text-slate-900 font-heading tracking-tight">
-                {language === 'AR' ? 'لماذا تختار فارما أوفيسينال؟' : 'Pourquoi Choisir Para Officinal S.A ?'}
+                {language === 'AR' ? 'لماذا تختار Para Divine؟' : 'Pourquoi Choisir Para Divine ?'}
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 max-w-xl mx-auto leading-relaxed">
                 {language === 'AR'
@@ -344,7 +344,7 @@ export function AboutClient() {
                   <div className="flex items-start gap-3">
                     <Building2 className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-bold text-slate-900">PARA OFFICINAL S.A</p>
+                      <p className="font-bold text-slate-900">Para Divine</p>
                       <p className="text-slate-500 text-[11px]">Bd Al Massira Al Khadra, Maarif, Casablanca 20330, Maroc</p>
                     </div>
                   </div>

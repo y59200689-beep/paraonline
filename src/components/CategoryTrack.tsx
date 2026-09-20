@@ -91,20 +91,20 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
   };
 
   const CATEGORIES: CategoryItem[] = [
-    { id: 'all',          tag: 'all',          translationKey: 'circle_bestsellers',  image: '', gradientStart: '#FFF0E0', activeColor: '#D97706' },
-    { id: 'offers',       tag: 'offers',       translationKey: 'circle_offers',       image: '', gradientStart: '#FFE5EC', activeColor: '#E11D48' },
-    { id: 'giftbox',      tag: 'giftbox',      translationKey: 'circle_giftbox',      image: '', gradientStart: '#FFF0F5', activeColor: '#DB2777' },
-    { id: 'solaire',      tag: 'solaire',      translationKey: 'circle_solaire',      image: '', gradientStart: '#FFF3D1', activeColor: '#F97316' },
-    { id: 'visage',       tag: 'visage',       translationKey: 'circle_visage',       image: '', gradientStart: '#E0F7FA', activeColor: '#10B981' },
-    { id: 'cheveux',      tag: 'cheveux',      translationKey: 'circle_cheveux',      image: '', gradientStart: '#FBE9E7', activeColor: '#B45309' },
-    { id: 'corps',        tag: 'corps',        translationKey: 'circle_corps',        image: '', gradientStart: '#F3E5F5', activeColor: '#8B5CF6' },
-    { id: 'appareils',    tag: 'appareils',    translationKey: 'circle_appareils',    image: '', gradientStart: '#ECE0FD', activeColor: '#6366F1' },
-    { id: 'complements',  tag: 'complements',  translationKey: 'circle_complements',  image: '', gradientStart: '#E8F5E9', activeColor: '#10B981' },
-    { id: 'maquillage',   tag: 'maquillage',   translationKey: 'circle_maquillage',   image: '', gradientStart: '#FFEBEE', activeColor: '#E11D48' },
-    { id: 'sport',        tag: 'sport',        translationKey: 'circle_sport',        image: '', gradientStart: '#E0F2FE', activeColor: '#0EA5E9' },
-    { id: 'masques',      tag: 'masques',      translationKey: 'circle_masques',      image: '', gradientStart: '#E0F2F1', activeColor: '#0D9488' },
-    { id: 'homme',        tag: 'homme',        translationKey: 'circle_homme',        image: '', gradientStart: '#ECEFF1', activeColor: '#3B82F6' },
-    { id: 'bebe',         tag: 'bebe',         translationKey: 'circle_bebe',         image: '', gradientStart: '#FFFDE7', activeColor: '#F59E0B' },
+    { id: 'all',          tag: 'all',          translationKey: 'circle_bestsellers',  image: '', gradientStart: 'var(--brand-soft-cool)', activeColor: 'var(--brand-secondary-ink)' },
+    { id: 'offers',       tag: 'offers',       translationKey: 'circle_offers',       image: '', gradientStart: 'var(--brand-soft)', activeColor: 'var(--brand-secondary-ink)' },
+    { id: 'giftbox',      tag: 'giftbox',      translationKey: 'circle_giftbox',      image: '', gradientStart: 'var(--brand-soft)', activeColor: 'var(--brand-secondary-ink)' },
+    { id: 'solaire',      tag: 'solaire',      translationKey: 'circle_solaire',      image: '', gradientStart: 'var(--brand-soft-cool)', activeColor: 'var(--brand-secondary-ink)' },
+    { id: 'visage',       tag: 'visage',       translationKey: 'circle_visage',       image: '', gradientStart: 'var(--brand-soft-cool)', activeColor: 'var(--brand-secondary-ink)' },
+    { id: 'cheveux',      tag: 'cheveux',      translationKey: 'circle_cheveux',      image: '', gradientStart: 'var(--brand-soft-cool)', activeColor: 'var(--brand-secondary-ink)' },
+    { id: 'corps',        tag: 'corps',        translationKey: 'circle_corps',        image: '', gradientStart: 'var(--brand-soft-cool)', activeColor: 'var(--brand-secondary-ink)' },
+    { id: 'appareils',    tag: 'appareils',    translationKey: 'circle_appareils',    image: '', gradientStart: 'var(--brand-soft-cool)', activeColor: 'var(--brand-secondary-ink)' },
+    { id: 'complements',  tag: 'complements',  translationKey: 'circle_complements',  image: '', gradientStart: 'var(--brand-soft-cool)', activeColor: 'var(--brand-secondary-ink)' },
+    { id: 'maquillage',   tag: 'maquillage',   translationKey: 'circle_maquillage',   image: '', gradientStart: 'var(--brand-soft)', activeColor: 'var(--brand-secondary-ink)' },
+    { id: 'sport',        tag: 'sport',        translationKey: 'circle_sport',        image: '', gradientStart: 'var(--brand-soft-cool)', activeColor: 'var(--brand-secondary-ink)' },
+    { id: 'masques',      tag: 'masques',      translationKey: 'circle_masques',      image: '', gradientStart: 'var(--brand-soft-cool)', activeColor: 'var(--brand-secondary-ink)' },
+    { id: 'homme',        tag: 'homme',        translationKey: 'circle_homme',        image: '', gradientStart: 'var(--brand-soft-cool)', activeColor: 'var(--brand-secondary-ink)' },
+    { id: 'bebe',         tag: 'bebe',         translationKey: 'circle_bebe',         image: '', gradientStart: 'var(--brand-soft-cool)', activeColor: 'var(--brand-secondary-ink)' },
   ];
 
   const isRTL = language === 'AR';

@@ -1,0 +1,36 @@
+.section { position: relative; isolation: isolate; overflow: hidden; padding: 76px 0 58px; color: #173e47; background: radial-gradient(ellipse at 95% 0%, #f5dedc70, transparent 42%), #fffdfc; border-top: 1px solid #f5e9e6; }
+.container { position: relative; max-width: 1440px; margin: auto; padding: 0 32px; display: grid; grid-template-columns: 1.22fr 1fr 1.12fr; align-items: center; gap: 36px; }
+.identity { display: flex; align-items: center; gap: 24px; min-width: 0; }
+.seal { flex-shrink: 0; display: grid; place-items: center; width: 100px; height: 142px; border: 2px solid #fff; border-radius: 50%; background: linear-gradient(140deg, #ffffffd9, #f3ded943 50%, #ffffffb3); box-shadow: inset 0 0 0 5px #f4e7e580, 0 12px 25px #ad818114; color: #419c9e; transform: rotate(-8deg); }
+.seal svg { width: 76px; height: 92px; filter: drop-shadow(2px 4px 1px #276e6e26); }
+.eyebrow { display: inline-flex; align-items: center; gap: 8px; border-radius: 40px; padding: 10px 14px; background: #e7f3f1; color: #287e80; font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.title { margin: 20px 0 23px; color: #173e47; font: 500 clamp(32px, 2.9vw, 45px)/1.12 var(--font-heading); letter-spacing: -.035em; text-wrap: balance; }
+.title span { display: block; margin-top: 4px; color: #c77379; }
+.accent { display: block; width: 42px; height: 2px; background: #df9296; }
+.details { padding-inline-start: 34px; border-inline-start: 1px solid #f1dedb; }
+.details p { margin: 0 0 22px; font-size: 16px; line-height: 1.65; text-wrap: pretty; }
+.benefits { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.benefits li { display: flex; align-items: center; gap: 18px; font-size: 15px; font-weight: 500; }
+.benefits li > span { display: grid; place-items: center; flex-shrink: 0; width: 48px; height: 48px; border-radius: 50%; color: #c77379; background: #fbebeb; }
+.benefits a { display: inline-flex; gap: 9px; align-items: center; text-decoration: none; }
+.brands { padding: 30px 26px; border: 1px solid #f3dedd; border-radius: 26px; background: #ffffffd9; box-shadow: 0 14px 30px #a781810a; }
+.brands h3 { margin: 0 0 16px; font-size: 12px; font-weight: 700; color: #bd6671; letter-spacing: .12em; text-transform: uppercase; }
+.pills { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 23px; }
+.pills a { display: flex; justify-content: center; align-items: center; min-height: 45px; padding: 10px 17px; flex-grow: 1; border: 1px solid #efebea; border-radius: 30px; background: #fff; box-shadow: 0 5px 12px #87696d09; font-size: 12px; font-weight: 650; letter-spacing: .045em; text-decoration: none; transition: transform 180ms ease, background 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
+.signature { margin: 20px 8px 0; text-align: end; font: italic 22px/1.4 var(--font-body); color: #c77379; }
+.section a:focus-visible { outline: 3px solid #41abad; outline-offset: 4px; }
+.decoration { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+/* Continue MoroccoTrustBar's 460px circle (top -300px, left -210px) across the section boundary. */
+.decoration::before { content: ''; position: absolute; left: -210px; bottom: -160px; width: 460px; height: 460px; border: 1px solid #f0d6d2; border-radius: 50%; }
+.decoration::after { content: ''; position: absolute; right: -120px; top: -215px; width: 540px; height: 310px; border-radius: 50%; background: #f8e9e666; transform: rotate(20deg); }
+.decoration i { position: absolute; width: 110px; height: 36px; border: 1px solid #648a6920; border-radius: 100% 0 100% 0; background: linear-gradient(15deg, #75967b35, #c6d1bc65); }
+.decoration i:nth-child(1) { right: -18px; top: 18px; transform: rotate(75deg); }
+.decoration i:nth-child(2) { right: 30px; top: 8px; transform: rotate(-10deg); }
+.decoration i:nth-child(3) { left: -35px; bottom: 25px; transform: rotate(-50deg); }
+.decoration span { position: absolute; right: 20px; top: 78px; width: 50px; height: 50px; border-radius: 50%; border: 1px solid #fff; background: radial-gradient(circle at 30% 25%, #fff, #ffffff00 65%); box-shadow: inset -2px -3px 6px #b9999920, 3px 5px 8px #b9999910; }
+@media (hover: hover) { .pills a:hover { transform: translateY(-3px); border-color: #99cbca; background: #eff8f6; box-shadow: 0 8px 15px #387d7d12; } .benefits a:hover { color: #b95058; } }
+.pills a:active { transform: translateY(0); }
+@media (max-width: 1199px) { .container { gap: 26px; } .seal { display: none; } .details { padding-inline-start: 26px; } .brands { padding: 26px 20px; } }
+@media (max-width: 1023px) { .container { grid-template-columns: 1fr 1fr; gap: 32px; } .selection { grid-column: 1 / -1; } .section { padding: 52px 0 40px; } .title { font-size: 40px; } .signature { font-size: 20px; } }
+@media (max-width: 639px) { .container { grid-template-columns: 1fr; padding: 0 24px; gap: 30px; } .selection { grid-column: auto; } .identity { gap: 18px; } .seal { display: grid; width: 72px; height: 105px; } .seal svg { width: 52px; height: 65px; } .title { font-size: 33px; } .details { padding: 0; border: 0; } .eyebrow { font-size: 9px; padding: 9px 12px; } .brands { padding: 25px; } .signature { text-align: center; } }
+@media (prefers-reduced-motion: reduce) { .pills a { transition: none; } .pills a:hover { transform: none; } }

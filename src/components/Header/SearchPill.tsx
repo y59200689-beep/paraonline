@@ -1,12 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Search, X, ChevronDown } from 'lucide-react';
+import { Search, X, ChevronDown, LayoutGrid } from 'lucide-react';
+import styles from './Header.module.css';
 import { SearchDropdown } from './SearchDropdown';
 import { Product } from '@/lib/data';
 
 const CATEGORIES = [
-  { id: 'all',     labelFR: 'Toutes catégories',       labelAR: 'جميع الفئات' },
+  { id: 'all',     labelFR: 'Toutes les catégories',       labelAR: 'جميع الفئات' },
   { id: 'bebe',    labelFR: 'Pédiatrie & Maternité',   labelAR: 'صحة الرضيع والأم' },
   { id: 'solaire', labelFR: 'Protections Solaires',    labelAR: 'الوقاية من الشمس' },
   { id: 'visage',  labelFR: 'Soins du Visage',         labelAR: 'العناية بالوجه' },
@@ -80,28 +81,19 @@ export const SearchPill: React.FC<SearchPillProps> = ({
   };
 
   return (
-    <div ref={searchRef} className="flex-1 w-full justify-self-center relative" style={{ maxWidth: '820px' }}>
-      <div
-        className="flex items-center h-[52px] rounded-xl transition-all duration-300"
-        style={{
-          paddingLeft: isRTL ? '16px' : '24px',
-          paddingRight: isRTL ? '24px' : '16px',
-          paddingTop: '6px',
-          paddingBottom: '6px',
-          backgroundColor: '#f1f5f9',
-          border: '1.5px solid #e2e8f0',
-          boxShadow: '0 2px 16px rgba(0,0,0,0.03)',
-        }}
-      >
+    <div ref={searchRef} className={styles.search}>
+      <div className={styles.searchRow}>
         {/* Category selector */}
         <div ref={categoryRef} className="relative shrink-0 flex items-center">
           <button
             type="button"
             onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-            className="bg-transparent hover:bg-slate-100 text-slate-700 hover:text-slate-900 font-bold text-[12.5px] rounded-lg flex items-center gap-2 transition-all cursor-pointer active:scale-97"
-            style={{ paddingLeft: '8px', paddingRight: '14px', paddingTop: '8px', paddingBottom: '8px' }}
+            className={styles.category}
+            aria-expanded={showCategoryDropdown}
+            aria-label={selectedCategoryLabel}
           >
-            <span className="truncate max-w-[110px]">{selectedCategoryLabel}</span>
+            <LayoutGrid className="w-5 h-5 shrink-0" aria-hidden="true" />
+            <span>{selectedCategoryLabel}</span>
             <ChevronDown
               className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200 ${
                 showCategoryDropdown ? 'rotate-180' : ''
@@ -139,7 +131,7 @@ export const SearchPill: React.FC<SearchPillProps> = ({
                       borderRadius: '8px',
                       fontSize: '13px',
                       fontWeight: isActive ? '700' : '500',
-                      color: isActive ? 'var(--color-primary)' : isHovered ? 'var(--color-primary-dark)' : '#475569',
+                      color: isActive ? 'var(--brand-secondary-ink)' : isHovered ? 'var(--color-primary-dark)' : '#475569',
                       backgroundColor: isActive ? 'rgba(15, 30, 54, 0.08)' : isHovered ? '#f8fafc' : 'transparent',
                       marginBottom: idx < CATEGORIES.length - 1 ? '4px' : '0px',
                     }}
@@ -152,18 +144,17 @@ export const SearchPill: React.FC<SearchPillProps> = ({
           )}
         </div>
 
-        {/* Divider */}
-        <div className="w-px h-5 bg-slate-200 mx-2 shrink-0" />
-
         {/* Search input */}
+        <div className={styles.searchField}>
+        <Search className={styles.searchIcon} aria-hidden="true" />
         <input
           type="text"
-          placeholder={language === 'FR' ? 'Rechercher des produits...' : 'بحث عن المنتجات...'}
+          aria-label={language === 'FR' ? 'Rechercher des produits' : 'بحث عن المنتجات'}
+          placeholder={language === 'FR' ? 'Rechercher des produits, marques, soins…' : 'بحث عن المنتجات...'}
           value={searchQuery}
           onChange={(e) => { setSearchQuery(e.target.value); setShowSearch(true); }}
           onFocus={() => setShowSearch(true)}
-          className="flex-1 bg-transparent text-[13.5px] text-slate-700 placeholder-slate-400 focus:outline-none min-w-0 py-2"
-          style={{ paddingLeft: isRTL ? '24px' : '14px', paddingRight: isRTL ? '14px' : '24px' }}
+          className={styles.searchInput}
         />
 
         {searchQuery && (
@@ -179,14 +170,12 @@ export const SearchPill: React.FC<SearchPillProps> = ({
 
         {/* Search button */}
         <button
-          className="w-10 h-10 rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer shrink-0 flex items-center justify-center border-0 outline-none"
+          className={styles.submit}
           aria-label={language === 'FR' ? 'Rechercher' : 'بحث'}
-          style={{ backgroundColor: '#0F1E36', boxShadow: '0 2px 8px rgba(15,30,54,0.25)' }}
-          onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.backgroundColor = '#091120')}
-          onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.backgroundColor = '#0F1E36')}
         >
-          <Search className="w-4 h-4" style={{ color: '#ffffff', stroke: '#ffffff' }} />
+          <Search className="w-6 h-6" aria-hidden="true" />
         </button>
+        </div>
       </div>
 
       {/* Search dropdown */}

@@ -5,7 +5,7 @@ import { CmsPageRenderer } from '@/components/CmsPageRenderer';
 import { getCmsPageBySlug } from '@/lib/cms-pages';
 
 export const metadata: Metadata = {
-  title: 'Suivi de Commande | Para Officinal Maroc',
+  title: 'Suivi de Commande | Para Divine Maroc',
   description: 'Consultez l’état de votre commande à l’aide de sa référence numérique et de son code de suivi sécurisé.',
   alternates: { canonical: '/suivi-commande' },
 };

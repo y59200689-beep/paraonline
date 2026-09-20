@@ -9,14 +9,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'fr_MA',
-    title: 'Catalogue Produits | Para Officinal S.A',
+    title: 'Catalogue Produits | Para Divine',
     description:
       'Dermo-cosmétique, K-Beauty et soins de peau — livraison rapide au Maroc.',
     images: [{ url: '/og-image.jpg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Catalogue Produits | Para Officinal S.A',
+    title: 'Catalogue Produits | Para Divine',
     description: 'Dermo-cosmétique, K-Beauty et soins de peau — livraison rapide au Maroc.',
     images: ['/og-image.jpg'],
   },

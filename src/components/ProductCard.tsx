@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import styles from './ProductCard.module.css';
 import { Product } from '@/lib/data';
 import { useCart } from '@/context/CartContext';
 import { useTranslation } from '@/context/LanguageContext';
@@ -28,6 +29,7 @@ interface ProductCardProps {
   singleImage?: boolean;
   priority?: boolean;
   compact?: boolean;
+  ingredientLayout?: boolean;
   galleryKeyPrefix?: string;
 }
 
@@ -69,6 +71,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   singleImage = false,
   priority = false,
   compact = false,
+  ingredientLayout = false,
   galleryKeyPrefix,
 }) => {
   const { addToCart } = useCart();
@@ -302,7 +305,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   return (
     <div
       ref={cardRef}
-      className={`group relative bg-white border border-slate-100 ${compact ? 'rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.01)]' : 'rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.015)]'} hover:shadow-[0_12px_30px_rgba(13,148,136,0.06)] hover:border-teal-500/20 hover:-translate-y-1.5 transition-all duration-300 flex flex-col h-full cursor-default card-press-feedback ${className || ''}`}
+      className={`group ${styles.card} ${compact ? styles.compact : ''} ${ingredientLayout ? styles.ingredient : ''} ${className || ''}`}
       style={{ ...style }}
     >
       <button
@@ -315,30 +318,28 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         aria-pressed={isFavorite}
         title={language === 'FR' ? (isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris') : (isFavorite ? 'حذف من المفضلة' : 'إضافة للمفضلة')}
         aria-label={language === 'FR' ? (isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris') : (isFavorite ? 'حذف من المفضلة' : 'إضافة للمفضلة')}
-        className={`absolute z-40 ${compact ? 'top-4 right-4' : 'top-5 right-5'} w-8 h-8 rounded-full flex items-center justify-center bg-white border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.05)] transition-all duration-200 ease-out active:scale-90 cursor-pointer ${
-          isFavorite ? 'text-[#F43F5E] border-rose-100 scale-105' : 'text-slate-400 hover:text-rose-500 hover:border-rose-100'
-        }`}
+        className={styles.wishlist}
       >
-        <Heart className={`w-3.5 h-3.5 transition-transform duration-300 ${isFavorite ? 'fill-[#F43F5E] scale-110 text-[#F43F5E]' : ''}`} />
+        <Heart aria-hidden="true" />
       </button>
       <a
         href={`/products/${product.id}`}
         onMouseEnter={() => setShouldLoadAlternateImage(true)}
         onFocus={() => setShouldLoadAlternateImage(true)}
-        className={`bezel-outer bg-[#f8fafc]/90 border border-slate-100/60 block ${compact ? 'm-2 !p-1 w-[calc(100%-16px)] rounded-xl' : 'm-3 !p-2 w-[calc(100%-24px)] rounded-2xl'} aspect-square relative shrink-0 overflow-hidden cursor-pointer group/img`}
+        className={`${styles.imageLink} group/img`}
       >
         
         {product.stock !== undefined && product.stock <= 0 ? (
-          <span className="absolute top-2.5 left-2.5 bg-rose-500/90 backdrop-blur-sm border border-rose-400/30 text-white text-[9px] font-black rounded-[4px] z-30 uppercase tracking-widest shadow-sm px-2 py-1 select-none">
+          <span className={`${styles.badge} ${styles.soldOut}`}>
             {language === 'FR' ? 'Hors Stock' : 'غير متوفر'}
           </span>
         ) : discount ? (
-          <span className="absolute top-2.5 left-2.5 bg-primary text-white text-[10px] font-black rounded-[4px] z-30 uppercase tracking-widest shadow-sm px-2 py-1 select-none">
+          <span className={styles.badge}>
             -{discount}%
           </span>
         ) : null}
 
-        <div className="bezel-inner absolute inset-2 bg-white rounded-xl border-0 flex items-center justify-center overflow-hidden z-0 transition-transform duration-500 ease-out group-hover/img:scale-[1.02]">
+        <div className={styles.imageStage}>
           <Image
             src={primaryImageSrc}
             alt={product.nameFr || product.name || product.title}
@@ -346,7 +347,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             height={300}
             priority={priority}
             unoptimized={shouldBypassNextImageOptimization(primaryImageSrc)}
-            className={`w-full h-full object-cover scale-[1.04] filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.03)] transition-all duration-700 ease-in-out ${
+            className={`${styles.image} ${
               shouldLoadAlternateImage && !singleImage && product.images && product.images.length > 1 ? 'group-hover:opacity-0 group-hover:blur-[1.5px]' : ''
             }`}
             onError={() => setImgError(true)}
@@ -358,7 +359,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               width={300}
               height={300}
               unoptimized={shouldBypassNextImageOptimization(alternateImageSrc)}
-              className="w-full h-full object-cover scale-[1.04] filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.03)] transition-all duration-700 ease-out opacity-0 group-hover:opacity-100 blur-[1.5px] group-hover:blur-0"
+              className={`${styles.image} opacity-0 group-hover:opacity-100`}
               onError={() => setAltImgError(true)}
             />
           )}
@@ -387,7 +388,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {imageOverlay}
       </a>
 
-      <div className={`${compact ? 'px-2.5 pb-2.5 pt-0.5' : 'px-4 pb-4 pt-1'} flex flex-col flex-grow`}>
+      <div className={styles.content}>
+        <div data-product-brand className={styles.vendor}>{product.vendor}</div>
         
         {canShowMatchScore && diagnostic && matchScore && (
           <div className="flex items-center mb-1 select-none">
@@ -398,24 +400,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         )}
 
-        <h3 className={`${compact ? 'text-[10.5px] min-h-[30px] mb-1.5' : 'text-[13.5px] min-h-[38px] mb-2.5'} font-bold text-slate-800 hover:text-primary line-clamp-2 leading-snug transition-colors duration-300 text-left`}>
+        <h3 className={styles.title}>
           <a href={`/products/${product.id}`} className="cursor-pointer block">
             {renderHighlightedTitle(toTitleCase(cleanTitle(product.nameFr || product.name || product.title)), searchQuery)}
           </a>
         </h3>
 
-        <div className="flex items-center gap-1.5 mb-2">
-          <span className={`${compact ? 'text-[12.5px]' : 'text-[15px]'} font-black text-primary tracking-tight whitespace-nowrap`}>
-            {convertPrice(product.price)}
-          </span>
-          {discount && (
-            <span className={`${compact ? 'text-[9.5px]' : 'text-[11px]'} text-slate-600 line-through font-semibold whitespace-nowrap`}>
-              {convertPrice(product.comparePrice)}
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center justify-between border-t border-slate-50 pt-2 mt-auto select-none min-h-6">
+        <div data-product-rating className={styles.rating}>
           {product.reviews > 0 && product.rating > 0 ? <div className="flex items-center gap-1" aria-label={`${product.rating.toFixed(1)} sur 5, ${product.reviews} avis`}>
             <div className="flex items-center gap-0.5">
               {[1, 2, 3, 4, 5].map((star) => (
@@ -430,31 +421,35 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               ))}
             </div>
             <span className={`${compact ? 'text-[8.5px]' : 'text-[10.5px]'} font-bold text-slate-600 mt-0.5`}>
-              ({product.rating.toFixed(1)})
+              ({product.reviews})
             </span>
           </div> : <span className={`${compact ? 'text-[8.5px]' : 'text-[10.5px]'} font-semibold text-slate-600`}>
             {language === 'FR' ? 'Pas encore d’avis' : 'لا توجد تقييمات بعد'}
           </span>}
         </div>
 
+        <div className={styles.purchase}>
+          <div className={styles.prices}>
+            <span className={styles.price}>{convertPrice(product.price)}</span>
+            {discount && <span className={styles.oldPrice}>{convertPrice(product.comparePrice)}</span>}
+          </div>
         <button
           onClick={handleAdd}
           disabled={isAdding || (product.stock !== undefined && product.stock <= 0)}
-          className={`${compact ? 'mt-2 min-h-[28px] rounded-md text-[8px] min-[360px]:text-[8.5px]' : 'mt-3.5 min-h-[38px] rounded-lg text-[9px] min-[360px]:text-[10px] lg:text-[11px]'} w-full font-bold uppercase tracking-normal flex items-center justify-center gap-1 transition-all duration-300 disabled:opacity-70 cursor-pointer px-1 btn-press-feedback ${
-            product.stock !== undefined && product.stock <= 0
-              ? 'bg-slate-700 text-slate-300 cursor-not-allowed opacity-70'
-              : 'btn-gradient'
-          }`}
+          className={`${styles.add} public-cta`}
+          data-adding={isAdding}
+          aria-label={language === 'FR' ? `Ajouter au panier : ${product.nameFr || product.name || product.title}` : `أضف إلى السلة: ${product.title}`}
         >
-          <ShoppingCart className={`${compact ? 'w-2.5 h-2.5' : 'w-3 h-3 min-[360px]:w-3.5 min-[360px]:h-3.5'} shrink-0 ${isAdding ? 'animate-bounce' : ''}`} style={{ color: '#ffffff', stroke: '#ffffff' }} />
-          <span className="whitespace-nowrap text-center" style={{ color: '#ffffff', fontWeight: 800, letterSpacing: '0.01em' }}>
+          <ShoppingCart className={`${compact ? 'w-2.5 h-2.5' : 'w-3 h-3 min-[360px]:w-3.5 min-[360px]:h-3.5'} shrink-0 ${isAdding ? 'animate-bounce' : ''}`} style={{ color: 'inherit', stroke: 'currentColor' }} />
+          <span className="whitespace-nowrap text-center" style={{ color: 'inherit', fontWeight: 800, letterSpacing: '0.01em' }}>
             {product.stock !== undefined && product.stock <= 0
-              ? (compact ? (language === 'FR' ? 'Rupture' : 'غير متوفر') : (language === 'FR' ? 'Rupture de Stock' : 'غير متوفر'))
+              ? (language === 'FR' ? 'Rupture' : 'غير متوفر')
               : isAdding
               ? (language === 'FR' ? 'Ajouté !' : 'تم !')
-              : (compact ? (language === 'FR' ? '+ Ajouter' : '+ أضف') : (language === 'FR' ? 'Ajouter au panier' : 'أضف إلى السلة'))}
+              : (language === 'FR' ? 'Ajouter' : 'أضف')}
           </span>
         </button>
+        </div>
 
       </div>
     </div>
