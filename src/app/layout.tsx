@@ -92,7 +92,7 @@ const fallbackMetadata: Metadata = {
   },
   icons: {
     icon: '/favicon.ico',
-    apple: '/favicon.ico',
+    apple: '/apple-icon.png',
   },
 };
 
