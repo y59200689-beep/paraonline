@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Manrope, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeScript } from "../components/ThemeScript";
@@ -148,6 +149,20 @@ export default async function RootLayout({
         {serverThemeVariables ? <style id="server-theme-variables">{serverThemeVariables}</style> : null}
       </head>
       <body className="antialiased selection:bg-primary/30 selection:text-primary-dark" suppressHydrationWarning>
+        {/* Google tag (gtag.js) */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-2ZEW5MT4T4"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-2ZEW5MT4T4');
+          `}
+        </Script>
         <PublicWebVitals />
         <ThemeScript />
         <AppProviders initialSettings={initialSettings}>
