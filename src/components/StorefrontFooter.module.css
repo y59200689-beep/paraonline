@@ -14,7 +14,7 @@
 .form .signature { display: flex; align-items: center; justify-content: center; gap: 16px; color: #b95068; font: italic 22px/1.4 var(--font-body); margin-bottom: 26px; }
 .formRow { display: flex; gap: 10px; }
 .inputWrap { display: flex; align-items: center; gap: 12px; border: 1px solid #dedee3; background: #fff; border-radius: 13px; padding: 0 16px; flex: 1; min-width: 0; transition: border-color 180ms, box-shadow 180ms; }
-.inputWrap:focus-within { border-color: #41abad; box-shadow: 0 0 0 3px #41abad18; }
+:global(html[data-input-modality="keyboard"]) .inputWrap:focus-within { border-color: #41abad; box-shadow: 0 0 0 3px #41abad18; }
 .inputWrap svg { color: #7a8796; flex-shrink: 0; }
 .inputWrap input { min-width: 0; width: 100%; border: 0; background: transparent; padding: 16px 0; font-size: 14px; color: #203747; outline: none; box-shadow: none; }
 .footer .inputWrap input:focus,

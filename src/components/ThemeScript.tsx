@@ -24,7 +24,10 @@ export function ThemeScript() {
   else{document.documentElement.dir='ltr';document.documentElement.lang='fr';}
   window.__PARA_GALLERY_OVERRIDES__={};
   window.__PARA_SETTINGS_CACHE__=null;
-}catch(e){window.__PARA_GALLERY_OVERRIDES__={};window.__PARA_SETTINGS_CACHE__=null;}`,
+}catch(e){window.__PARA_GALLERY_OVERRIDES__={};window.__PARA_SETTINGS_CACHE__=null;}
+document.documentElement.dataset.inputModality='keyboard';
+document.addEventListener('pointerdown',function(){document.documentElement.dataset.inputModality='pointer';},true);
+document.addEventListener('keydown',function(e){if(e.key==='Tab'){document.documentElement.dataset.inputModality='keyboard';}},true);`,
       }}
     />
   ));

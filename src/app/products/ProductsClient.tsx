@@ -458,7 +458,7 @@ export default function ProductsClient({
               <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-slate-800">
                 <div className="flex items-center gap-3">
                   <span className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-white shadow-sm shadow-primary/20">
-                    <SlidersHorizontal className="h-4 w-4" />
+                    <SlidersHorizontal className="h-4 w-4 text-white" />
                   </span>
                   <div>
                     <h2 className="text-sm font-extrabold text-slate-900 dark:text-white">
@@ -496,7 +496,7 @@ export default function ProductsClient({
                       placeholder={language === 'FR' ? 'Nom, marque, référence' : 'اسم، علامة، مرجع'}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="h-10 w-full rounded-md border border-slate-200 bg-slate-50/70 pl-9 pr-9 text-xs font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/10 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:focus:bg-slate-950"
+                      className="h-10 w-full rounded-md border border-slate-200 bg-slate-50/70 pl-9 pr-9 text-xs font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus-visible:border-teal-700 focus:bg-white focus:ring-2 focus-visible:ring-teal-700/20 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:focus:bg-slate-950"
                     />
                     {searchQuery && (
                       <button
@@ -557,7 +557,7 @@ export default function ProductsClient({
                               name="catalog-concern"
                               checked={isChecked}
                               onChange={() => handleConcernToggle(c.id)}
-                              className="h-4 w-4 shrink-0 border-slate-300 text-primary focus:ring-primary/25 dark:border-slate-700"
+                              className="h-4 w-4 shrink-0 border-slate-300 text-primary focus-visible:ring-teal-700/25 dark:border-slate-700"
                             />
                             <span className="truncate">{language === 'FR' ? c.labelFR : c.labelAR}</span>
                           </span>
@@ -580,7 +580,7 @@ export default function ProductsClient({
                       <button
                         type="button"
                         onClick={() => setIngredientQuery('')}
-                        className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-bold text-primary transition hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                        className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-bold text-primary transition hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-700/25"
                       >
                         <RotateCcw className="h-3 w-3" />
                         {language === 'FR' ? 'Effacer' : 'مسح'}
@@ -594,7 +594,7 @@ export default function ProductsClient({
                         type="button"
                         onClick={() => setIngredientQuery(current => current.toLocaleLowerCase() === ingredient.query ? '' : ingredient.query)}
                         aria-pressed={ingredientQuery.toLocaleLowerCase() === ingredient.query}
-                        className={`group flex min-h-11 items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-[10px] font-bold transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
+                        className={`group flex min-h-11 items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-[10px] font-bold transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-700/25 ${
                           ingredientQuery.toLocaleLowerCase() === ingredient.query
                             ? 'border-primary bg-primary text-white shadow-[0_6px_14px_rgba(14,116,144,0.18)]'
                             : 'border-slate-200/80 bg-slate-50/60 text-slate-600 hover:border-primary/35 hover:bg-white hover:text-slate-900 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:border-primary/50 dark:hover:bg-slate-900 dark:hover:text-white'
@@ -626,7 +626,7 @@ export default function ProductsClient({
                       value={brandQuery}
                       onChange={(event) => setBrandQuery(event.target.value)}
                       placeholder={language === 'FR' ? 'Rechercher une marque…' : 'ابحث عن علامة…'}
-                      className="h-10 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/15 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                      className="h-10 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus-visible:border-teal-700 focus:ring-2 focus-visible:ring-teal-700/20 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                     />
                   </label>
                   <div className="max-h-44 space-y-1 overflow-y-auto pr-1 custom-sidebar-scroll">
@@ -639,7 +639,7 @@ export default function ProductsClient({
                               type="checkbox"
                               checked={isChecked}
                               onChange={() => handleBrandToggle(brand)}
-                              className="h-4 w-4 shrink-0 rounded border-slate-300 text-primary focus:ring-primary/25 dark:border-slate-700"
+                              className="h-4 w-4 shrink-0 rounded border-slate-300 text-primary focus-visible:ring-teal-700/25 dark:border-slate-700"
                             />
                             <span className="truncate">{brand}</span>
                           </span>
@@ -737,7 +737,7 @@ export default function ProductsClient({
                     placeholder={language === 'FR' ? 'Rechercher un produit ou une marque' : 'ابحث عن منتج أو علامة'}
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
-                    className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50/70 pl-10 pr-10 text-base font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                    className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50/70 pl-10 pr-10 text-base font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus-visible:border-teal-700 focus:bg-white focus:ring-4 focus-visible:ring-teal-700/20 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
                   />
                   {searchQuery && (
                     <button
@@ -780,7 +780,7 @@ export default function ProductsClient({
                     aria-label={language === 'FR' ? 'Trier les produits' : 'ترتيب المنتجات'}
                     value={sortOption}
                     onChange={(e) => setSortOption(e.target.value)}
-                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-primary/50 text-slate-700 dark:text-slate-300 text-xs rounded-xl px-3 py-2 outline-none cursor-pointer font-bold select-none"
+                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus-visible:border-teal-700 text-slate-700 dark:text-slate-300 text-xs rounded-xl px-3 py-2 outline-none cursor-pointer font-bold select-none"
                   >
                     <option value="alphabetical">{language === 'FR' ? 'Trier par : Nom A à Z' : 'الترتيب حسب: الاسم من أ إلى ي'}</option>
                     <option value="price-asc">{language === 'FR' ? 'Prix : Croissant' : 'السعر: من الأقل إلى الأكثر'}</option>
@@ -998,7 +998,7 @@ export default function ProductsClient({
                     placeholder={language === 'FR' ? 'Saisir un mot-clé...' : 'اكتب للبحث...'}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 focus:border-primary/50 text-slate-800 dark:text-slate-100 text-base sm:text-xs rounded-xl pl-9 pr-4 py-2.5 outline-none transition"
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 focus-visible:border-teal-700 text-slate-800 dark:text-slate-100 text-base sm:text-xs rounded-xl pl-9 pr-4 py-2.5 outline-none transition"
                   />
                 </div>
               </div>
@@ -1043,7 +1043,7 @@ export default function ProductsClient({
                           name="catalog-mobile-concern"
                           checked={isChecked}
                           onChange={() => handleConcernToggle(c.id)}
-                          className="rounded border-slate-300 dark:border-slate-800 text-primary focus:ring-primary w-4 h-4"
+                          className="rounded border-slate-300 dark:border-slate-800 text-primary focus-visible:ring-teal-700/25 w-4 h-4"
                         />
                         <span>{language === 'FR' ? c.labelFR : c.labelAR}</span>
                       </label>
@@ -1065,7 +1065,7 @@ export default function ProductsClient({
                     <button
                       type="button"
                       onClick={() => setIngredientQuery('')}
-                      className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-bold text-primary transition hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                      className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-bold text-primary transition hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-700/25"
                     >
                       <RotateCcw className="h-3 w-3" />
                       {language === 'FR' ? 'Effacer' : 'مسح'}
@@ -1079,7 +1079,7 @@ export default function ProductsClient({
                       type="button"
                       onClick={() => setIngredientQuery(current => current.toLocaleLowerCase() === ingredient.query ? '' : ingredient.query)}
                       aria-pressed={ingredientQuery.toLocaleLowerCase() === ingredient.query}
-                      className={`flex min-h-12 items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-[10px] font-bold transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
+                      className={`flex min-h-12 items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-[10px] font-bold transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-700/25 ${
                         ingredientQuery.toLocaleLowerCase() === ingredient.query
                           ? 'border-primary bg-primary text-white shadow-[0_6px_14px_rgba(14,116,144,0.18)]'
                           : 'border-slate-200/80 bg-white text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300'
@@ -1111,7 +1111,7 @@ export default function ProductsClient({
                     value={brandQuery}
                     onChange={(event) => setBrandQuery(event.target.value)}
                     placeholder={language === 'FR' ? 'Rechercher une marque…' : 'ابحث عن علامة…'}
-                    className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-base text-slate-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                    className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-base text-slate-900 outline-none focus-visible:border-teal-700 focus:ring-2 focus-visible:ring-teal-700/20 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                   />
                 </label>
                 <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto pr-1">
@@ -1126,7 +1126,7 @@ export default function ProductsClient({
                           type="checkbox"
                           checked={isChecked}
                           onChange={() => handleBrandToggle(brand)}
-                          className="rounded border-slate-300 dark:border-slate-800 text-primary focus:ring-primary w-4 h-4"
+                          className="rounded border-slate-300 dark:border-slate-800 text-primary focus-visible:ring-teal-700/25 w-4 h-4"
                         />
                         <span>{brand}</span>
                       </label>

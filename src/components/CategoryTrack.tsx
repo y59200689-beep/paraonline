@@ -249,7 +249,7 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
                    </>
                  );
 
-                 const cardClassName = `relative flex flex-col items-center justify-between snap-start shrink-0 pt-3 pb-3 px-2 rounded-[20px] transition-all duration-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary overflow-hidden group active:scale-95 cursor-pointer w-[100px] h-[110px] sm:w-[110px] sm:h-[120px] md:w-[115px] md:h-[125px] lg:w-[calc((100%-112px)/8)] lg:h-[128px] animate-slide-up hover:-translate-y-1 ${
+                 const cardClassName = `relative flex flex-col items-center justify-between snap-start shrink-0 pt-3 pb-3 px-2 rounded-[20px] transition-all duration-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-teal-700 overflow-hidden group active:scale-95 cursor-pointer w-[100px] h-[110px] sm:w-[110px] sm:h-[120px] md:w-[115px] md:h-[125px] lg:w-[calc((100%-112px)/8)] lg:h-[128px] animate-slide-up hover:-translate-y-1 ${
                        isActive ? 'scale-[1.03]' : ''
                      }`;
 

@@ -44,7 +44,7 @@ export const CouponSection: React.FC<CouponSectionProps> = ({
           placeholder={language === 'FR' ? 'Entrez votre code…' : 'أدخل الرمز هنا…'}
           value={couponCode}
           onChange={(e) => setCouponCode(e.target.value)}
-          className="flex-1 px-3.5 py-2.5 bg-slate-50/50 border border-slate-200/60 rounded-xl text-xs outline-none focus:border-primary focus:bg-white transition-all duration-300 text-slate-800 shadow-inner"
+          className="flex-1 px-3.5 py-2.5 bg-slate-50/50 border border-slate-200/60 rounded-xl text-xs outline-none focus-visible:border-teal-700 focus:bg-white transition-all duration-300 text-slate-800 shadow-inner"
         />
         <button
           type="submit"

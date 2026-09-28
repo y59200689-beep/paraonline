@@ -99,7 +99,7 @@
 .public-page :is(button, a, input, select, textarea):focus-visible {
   outline-color: var(--brand-secondary-ink);
 }
-.public-page :is(.public-field, .public-search):focus {
+.public-page :is(.public-field, .public-search):focus-visible {
   border-color: var(--brand-secondary-ink);
 }
 

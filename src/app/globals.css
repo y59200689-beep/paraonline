@@ -6,6 +6,17 @@
 @import "./styles/public-design-system.css";
 @import "./styles/storefront-brand-colors.css";
 
+/* Pointer focus keeps the caret and selected state without drawing a ring. */
+html[data-input-modality="pointer"] .public-page :is(button, a, input, select, textarea, [role="button"], [role="tab"], [role="option"]):focus {
+  outline: none !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+  --tw-inset-ring-shadow: 0 0 #0000 !important;
+}
+html[data-input-modality="pointer"] .public-page :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea):focus {
+  border-color: var(--brand-border, #dce5e5) !important;
+  box-shadow: none !important;
+}
+
 /* Font variables: Manrope (headings) + DM Sans (body/UI), loaded via next/font/google. */
 :root {
   --font-geist-sans: var(--font-dm-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;

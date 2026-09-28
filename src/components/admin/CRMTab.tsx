@@ -2568,8 +2568,8 @@ export default function CRMTab() {
                         }}
                         className={`flex-1 text-xs rounded-xl px-3.5 py-2.5 border outline-none transition min-w-[200px] ${
                           adminTheme === 'light'
-                            ? 'bg-white border-slate-200 text-slate-800 focus:border-pink-500 shadow-2xs'
-                            : 'bg-slate-950 border-slate-800 text-slate-100 focus:border-pink-500'
+                            ? 'bg-white border-slate-200 text-slate-800 focus:border-emerald-500 shadow-2xs'
+                            : 'bg-slate-950 border-slate-800 text-slate-100 focus:border-emerald-500'
                         }`}
                       />
                       <select

@@ -437,7 +437,7 @@ function CheckoutPageContent() {
                     placeholder={language === 'FR' ? 'Code promo / coupon' : 'رمز الخصم الكوبون'}
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
-                    className="flex-1 bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-primary text-slate-800 uppercase placeholder-slate-400 font-mono"
+                    className="flex-1 bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus-visible:border-teal-700 text-slate-800 uppercase placeholder-slate-400 font-mono"
                   />
                   <button
                     type="submit"

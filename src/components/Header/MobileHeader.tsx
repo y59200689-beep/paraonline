@@ -118,7 +118,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
       {/* Mobile search bar (hidden on products and checkout routes to avoid duplicate bars) */}
       {!(pathname?.startsWith('/products') || pathname?.startsWith('/checkout')) && (
         <div ref={searchRef} className="relative w-full">
-          <div className="flex items-center gap-2 bg-slate-50/70 border border-slate-200 rounded-2xl px-4 py-2.5 h-[48px] focus-within:border-primary/50 focus-within:bg-white focus-within:ring-4 focus-within:ring-primary/5 transition-all duration-300 shadow-[0_2px_12px_rgba(0,0,0,0.01)]">
+          <div className="flex items-center gap-2 bg-slate-50/70 border border-slate-200 rounded-2xl px-4 py-2.5 h-[48px] transition-all duration-300 shadow-[0_2px_12px_rgba(0,0,0,0.01)]">
             <Search className="w-4 h-4 text-foreground/60 shrink-0" />
             <input
               type="text"

@@ -46,7 +46,7 @@
   border: 1px solid var(--brand-border, #dce5e5); border-radius: 14px;
   background: #fff; transition: border-color .2s, box-shadow .2s;
 }
-.searchField:focus-within { border-color: var(--brand-secondary-ink, #216f72); box-shadow: 0 0 0 3px rgba(65,171,173,.12); }
+:global(html[data-input-modality="keyboard"]) .searchField:focus-within { border-color: var(--brand-secondary-ink, #216f72); box-shadow: 0 0 0 3px rgba(65,171,173,.12); }
 .searchIcon { width: 22px; height: 22px; margin-inline: 15px 10px; flex-shrink: 0; color: var(--brand-text-muted, #58666b); }
 .searchInput { width: 100%; min-width: 0; flex: 1; outline: none; background: transparent; color: var(--brand-text, #162327); font-size: 13px; }
 .searchField .searchInput:focus,
