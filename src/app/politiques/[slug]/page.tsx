@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { CmsPageRenderer } from '@/components/CmsPageRenderer';
 import { getCmsPageBySlug } from '@/lib/cms-pages';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://paraofficinal.ma';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://paradivine.ma';
 const SITE_NAME = 'Para Divine';
 
 interface Props {

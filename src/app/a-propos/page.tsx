@@ -3,7 +3,7 @@ import { AboutClient } from './AboutClient';
 import { CmsPageRenderer } from '@/components/CmsPageRenderer';
 import { getCmsPageBySlug } from '@/lib/cms-pages';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://paraofficinal.ma';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://paradivine.ma';
 
 export const metadata: Metadata = {
   title: 'À propos — Para Divine | Parapharmacie et soins au Maroc',

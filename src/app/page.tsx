@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Metadata } from 'next';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://paraofficinal.ma';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://paradivine.ma';
 
 export const metadata: Metadata = {
   title: 'Parapharmacie et K-Beauty au Maroc',

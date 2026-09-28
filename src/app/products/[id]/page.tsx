@@ -7,7 +7,7 @@ import type { Metadata } from 'next';
 export const dynamicParams = true;
 export const revalidate = 3600;
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://paraofficinal.ma';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://paradivine.ma';
 const SITE_NAME = 'Para Divine';
 
 function rowToProduct(item: any): Product {

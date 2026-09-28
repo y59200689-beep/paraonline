@@ -16,7 +16,7 @@ import { PublicWebVitals } from "@/components/PublicWebVitals";
 // route dynamic, while getPublicSettings remains independently cached.
 export const dynamic = 'force-dynamic';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://paraofficinal.ma';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://paradivine.ma';
 const SITE_NAME = 'Para Divine';
 
 const CSS_COLOR_VALUE = /^(?:#[0-9a-f]{3,8}|(?:rgb|hsl|oklch|oklab)\([0-9a-z\s,./%+-]+\)|transparent|currentcolor)$/i;
