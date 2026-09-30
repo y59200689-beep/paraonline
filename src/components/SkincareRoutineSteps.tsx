@@ -136,7 +136,7 @@ export const SkincareRoutineSteps: React.FC<SkincareRoutineStepsProps> = ({ onOp
 
 
         {/* Stepper Navigation */}
-        {isTestCompleted && (
+        {isTestCompleted && activeStep >= 0 && (
           <div 
             className="relative w-full px-4"
             style={{ maxWidth: '448px', marginLeft: 'auto', marginRight: 'auto', marginBottom: '56px' }}

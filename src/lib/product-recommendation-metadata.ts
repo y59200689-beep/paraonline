@@ -139,8 +139,9 @@ export function parseOptionValues<T extends readonly (readonly [string, string])
     const display = String(raw ?? '').trim();
     if (!display) return;
     const normalized = normalizeKey(display);
-    const aliased = EXTRA_ALIASES[normalized] || normalized;
-    const matched = aliases.get(aliased);
+    // Prefer this field's own vocabulary: some labels (for example
+    // "Protection solaire") are valid in more than one metadata field.
+    const matched = aliases.get(normalized) ?? aliases.get(EXTRA_ALIASES[normalized] || '');
     if (!matched) {
       invalid.push(display);
     } else if (!values.includes(matched)) {

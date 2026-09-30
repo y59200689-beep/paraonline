@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   ACTIVE_STRENGTH_OPTIONS,
+  CONCERN_OPTIONS,
   ROUTINE_ROLE_OPTIONS,
   TIME_OF_DAY_OPTIONS,
   normalizeRecommendationMetadata,
@@ -13,6 +14,24 @@ describe('product recommendation metadata', () => {
     expect(parseOptionValues('Nettoyant | sunscreen; Sérum', ROUTINE_ROLE_OPTIONS)).toEqual({
       values: ['cleanser', 'sunscreen', 'treatment'],
       invalid: [],
+    });
+  });
+
+  it('resolves shared French labels using the spreadsheet column vocabulary', () => {
+    expect(parseOptionValues('Protection solaire', ROUTINE_ROLE_OPTIONS)).toEqual({
+      values: ['sunscreen'],
+      invalid: [],
+    });
+    expect(parseOptionValues('Protection solaire', CONCERN_OPTIONS)).toEqual({
+      values: ['sun_protection'],
+      invalid: [],
+    });
+    expect(normalizeRecommendationMetadata({
+      routineRoles: 'Protection solaire',
+      suitableConcerns: 'Protection solaire',
+    })).toMatchObject({
+      errors: {},
+      metadata: { routineRoles: ['sunscreen'], suitableConcerns: ['sun_protection'] },
     });
   });
 

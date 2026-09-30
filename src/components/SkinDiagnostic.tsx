@@ -37,7 +37,6 @@ import {
 import { useTranslation } from '@/context/LanguageContext';
 import { useCart } from '@/context/CartContext';
 import { useLoyalty } from '@/context/LoyaltyContext';
-import { useProducts } from '@/context/ProductsContext';
 import { useUi } from '@/context/UiContext';
 import { useSettings } from '@/context/SettingsContext';
 import { Product } from '@/lib/data';
@@ -132,7 +131,6 @@ const ICONS: Record<string, React.ComponentType<{ className?: string; 'aria-hidd
 
 export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose, onOpenCart, experience = 'client' }) => {
   const { language } = useTranslation();
-  const { products } = useProducts();
   const { addToCart } = useCart();
   const { earnPoints } = useLoyalty();
   const { setDiagnostic } = useUi();
@@ -149,6 +147,8 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
   const [answers, setAnswers] = useState<DiagnosticAnswers>(EMPTY_ANSWERS);
   const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
   const [recommendedRoutine, setRecommendedRoutine] = useState<RoutineRecommendation[]>([]);
+  const [wasGptReviewed, setWasGptReviewed] = useState(false);
+  const [recommendationError, setRecommendationError] = useState(false);
   const [matchedRule, setMatchedRule] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const dialogRef = useRef<HTMLElement>(null);
@@ -190,6 +190,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
   const isClientExperience = experience === 'client';
   const isIntro = questionIndex === -1;
   const isResults = questionIndex === questions.length;
+  const requestedStepCount = answers.routineDepth === 'complete' ? 5 : answers.routineDepth === 'balanced' ? 4 : 3;
   const currentQuestion = !isIntro && !isResults ? questions[questionIndex] : null;
   const QuestionIcon = currentQuestion ? (ICONS[currentQuestion.options[0]?.icon] || Sparkles) : Sparkles;
   const progress = isIntro ? 0 : isResults ? 100 : Math.round(((questionIndex + 1) / questions.length) * 100);
@@ -268,6 +269,8 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
       answersRef.current = fresh;
       setRecommendedProducts([]);
       setRecommendedRoutine([]);
+      setWasGptReviewed(false);
+      setRecommendationError(false);
       setMatchedRule(null);
       setIsGenerating(false);
     }
@@ -280,7 +283,8 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
     }));
   }, [answers]);
 
-  const buildRecommendations = () => {
+  const buildRecommendations = async () => {
+    setRecommendationError(false);
     // Always read from the ref to avoid stale closure over `answers` state
     const currentAnswers = { ...answersRef.current };
 
@@ -308,13 +312,50 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
       ? bestRule.productIds
       : customConcern?.productIds || [];
 
-    const routine = buildDiagnosticRoutine(products, currentAnswers, {
+    const catalogueResponse = await fetch('/api/diagnostic/catalogue', { cache: 'no-store' });
+    if (!catalogueResponse.ok) throw new Error('Diagnostic catalogue unavailable');
+    const catalogue = await catalogueResponse.json();
+    if (!Array.isArray(catalogue.products)) throw new Error('Invalid diagnostic catalogue');
+
+    const routineOptions = {
       configuredProductIds: configuredIds,
       excludedProductIds,
       extraKeywords: [...(customConcern?.keywords || []), ...(customConcern?.ingredientKeywords || [])],
-    });
-    setRecommendedRoutine(routine);
-    setRecommendedProducts(routine.map((recommendation) => recommendation.product));
+    };
+    const routine = buildDiagnosticRoutine(catalogue.products as Product[], currentAnswers, routineOptions);
+    let finalRoutine = routine;
+    let reviewed = false;
+
+    if (routine.length) {
+      const alternatives = buildDiagnosticRoutine(catalogue.products as Product[], currentAnswers, {
+        ...routineOptions,
+        excludedProductIds: [...excludedProductIds, ...routine.map(item => item.product.id)],
+      });
+      const candidates = [...routine, ...alternatives].map(item => ({ step: item.step, productId: item.product.id }));
+      try {
+        const reviewResponse = await fetch('/api/diagnostic/review', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            answers: currentAnswers,
+            baseline: routine.map(item => ({ step: item.step, productId: item.product.id })),
+            candidates,
+          }),
+        });
+        if (reviewResponse.ok) {
+          const result = await reviewResponse.json();
+          if (Array.isArray(result.routine)) {
+            finalRoutine = result.routine as RoutineRecommendation[];
+            reviewed = result.reviewed === true;
+          }
+        }
+      } catch (error) {
+        console.warn('GPT review unavailable; using catalogue matching.', error);
+      }
+    }
+    setWasGptReviewed(reviewed);
+    setRecommendedRoutine(finalRoutine);
+    setRecommendedProducts(finalRoutine.map((recommendation) => recommendation.product));
 
     fetch('/api/diagnostics', {
       method: 'POST',
@@ -334,11 +375,17 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
     }
 
     setIsGenerating(true);
-    window.setTimeout(() => {
-      buildRecommendations();
-      setQuestionIndex(questions.length);
-      setIsGenerating(false);
-    }, 360);
+    buildRecommendations()
+      .then(() => setQuestionIndex(questions.length))
+      .catch((error) => {
+        console.error('Could not build diagnostic routine:', error);
+        setRecommendationError(true);
+        setRecommendedProducts([]);
+        setRecommendedRoutine([]);
+        setWasGptReviewed(false);
+        setQuestionIndex(questions.length);
+      })
+      .finally(() => setIsGenerating(false));
   };
 
   const handleReset = () => {
@@ -348,6 +395,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
     setQuestionIndex(-1);
     setRecommendedProducts([]);
     setRecommendedRoutine([]);
+    setWasGptReviewed(false);
     setMatchedRule(null);
   };
 
@@ -548,7 +596,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                     </span>
                     <span className={styles.ctaArrow} aria-hidden="true">{isRTL ? <ArrowLeft className="h-5 w-5" /> : <ArrowRight className="h-5 w-5" />}</span>
                   </button>
-                  <p className={styles.privacy}><ShieldCheck className="h-4 w-4" aria-hidden="true" />{isRTL ? 'تبقى إجاباتك سرية وتُستخدم فقط لتخصيص روتينك.' : 'Vos réponses restent confidentielles et servent uniquement à personnaliser votre routine.'}</p>
+                  <p className={styles.privacy}><ShieldCheck className="h-4 w-4" aria-hidden="true" />{isRTL ? 'قد تُرسل إجاباتك واختيارات المنتجات إلى OpenAI لمراجعة الروتين. لا تُرسل أي صورة أو اسم.' : 'Vos réponses et une sélection de produits peuvent être transmises à OpenAI pour vérifier la routine. Aucun nom ni photo n’est transmis.'}</p>
                 </section>
 
                 <div className={styles.trustStrip} aria-label={isRTL ? 'مزايا التشخيص' : 'Garanties du diagnostic'}>
@@ -627,7 +675,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                   {isRTL ? 'بدء التقييم' : 'Commencer le diagnostic'}
                 </PoButton>
                 <p className="mt-3 text-center text-[11px] leading-5 text-slate-500">
-                  {isRTL ? 'هذه توصيات تجميلية ولا تستبدل استشارة طبيب الجلد.' : 'Ces conseils cosmétiques ne remplacent pas l’avis d’un dermatologue.'}
+                  {isRTL ? 'قد تُرسل إجاباتك واختيارات المنتجات إلى OpenAI للمراجعة. هذه توصيات تجميلية ولا تستبدل استشارة طبيب الجلد.' : 'Vos réponses et une sélection de produits peuvent être transmises à OpenAI pour vérification. Ces conseils cosmétiques ne remplacent pas l’avis d’un dermatologue.'}
                 </p>
               </div>
             </div>
@@ -782,26 +830,41 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
             <div className="px-5 py-7 sm:px-8 sm:py-9">
               <div className="flex flex-col gap-4 border-b border-slate-200 pb-7 sm:flex-row sm:items-start sm:justify-between">
                 <div className="max-w-2xl">
-                  <span className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
-                    <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                    {isRTL ? 'اكتمل ملف بشرتك' : 'Votre profil est prêt'}
+                  <span className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold ring-1 ${recommendedProducts.length ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' : 'bg-amber-50 text-amber-800 ring-amber-200'}`}>
+                    {recommendedProducts.length ? <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> : <ShieldAlert className="h-4 w-4" aria-hidden="true" />}
+                    {recommendedProducts.length
+                      ? (isRTL ? 'اكتمل ملف بشرتك' : 'Votre profil est prêt')
+                      : (isRTL ? 'تم حفظ إجاباتك' : 'Vos réponses sont enregistrées')}
                   </span>
                   <h3 className="mt-4 text-2xl font-bold tracking-[-0.03em] text-slate-950 sm:text-3xl">
-                    {matchedRule
+                    {!recommendedProducts.length
+                      ? (isRTL ? 'لم يتم العثور على روتين مناسب حالياً' : 'Aucune routine adaptée disponible actuellement')
+                      : matchedRule
                       ? (isRTL && matchedRule.titleAr ? matchedRule.titleAr : matchedRule.titleFr)
                       : (isRTL ? 'روتين مختار حسب إجاباتك' : 'Une routine sélectionnée selon vos réponses')}
                   </h3>
                   <p className="mt-3 max-w-[65ch] text-sm leading-6 text-slate-600">
-                    {matchedRule
+                    {!recommendedProducts.length
+                      ? (isRTL ? 'لا نعرض منتجات عندما لا تتوفر لدينا خيارات متوافقة مع إجاباتك.' : 'Nous ne proposons pas de produits quand aucun choix compatible avec vos réponses n’est disponible.')
+                      : matchedRule
                       ? (isRTL && matchedRule.descriptionAr ? matchedRule.descriptionAr : matchedRule.descriptionFr)
                       : (isRTL
                         ? 'تم ترتيب المنتجات حسب أولويتك، تحمل بشرتك، تعرضك للشمس والروتين الذي يمكنك اتباعه.'
                         : 'Les produits sont classés selon votre priorité, la tolérance de votre peau, votre exposition et le rythme que vous pourrez suivre.')}
                   </p>
+                  {recommendedProducts.length > 0 && (
+                    <p className="mt-2 text-xs text-slate-500">
+                      {wasGptReviewed
+                        ? (isRTL ? 'تمت مراجعة الاختيار بواسطة الذكاء الاصطناعي ضمن المنتجات المؤهلة.' : 'Sélection vérifiée par IA parmi les produits compatibles.')
+                        : (isRTL ? 'التحقق الإضافي بالذكاء الاصطناعي غير متاح حالياً؛ هذه توصية مبنية على قواعد التوافق.' : 'Vérification IA supplémentaire indisponible ; sélection basée sur les règles de compatibilité.')}
+                    </p>
+                  )}
                 </div>
-                <span className="shrink-0 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600">
-                  {isRTL ? 'خصم الروتين مطبق: 15٪' : 'Avantage routine appliqué : -15 %'}
-                </span>
+                {recommendedProducts.length > 0 && (
+                  <span className="shrink-0 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600">
+                    {isRTL ? 'خصم الروتين مطبق: 15٪' : 'Avantage routine appliqué : -15 %'}
+                  </span>
+                )}
               </div>
 
               <div className="mt-6 grid gap-6 lg:grid-cols-[250px_1fr]">
@@ -824,10 +887,19 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                   <div className="flex items-end justify-between gap-4">
                     <div>
                       <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-700">{isRTL ? 'روتينك المقترح' : 'Routine recommandée'}</p>
-                      <h4 className="mt-1 text-lg font-bold text-slate-950">{isRTL ? `${recommendedProducts.length} خطوات مختارة` : `${recommendedProducts.length} étapes sélectionnées`}</h4>
+                      <h4 className="mt-1 text-lg font-bold text-slate-950">{recommendedProducts.length
+                        ? (isRTL ? `${recommendedProducts.length} خطوات مختارة` : `${recommendedProducts.length} étapes sélectionnées`)
+                        : (isRTL ? 'لا توجد منتجات مختارة' : 'Aucun produit sélectionné')}</h4>
                     </div>
                   </div>
                   <div className="mt-4 divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white">
+                    {!recommendedProducts.length && (
+                      <p className="p-5 text-sm leading-6 text-slate-600">
+                        {recommendationError
+                          ? (isRTL ? 'تعذر تحميل المنتجات حالياً. يرجى المحاولة لاحقاً.' : 'Le catalogue est momentanément indisponible. Veuillez réessayer plus tard.')
+                          : (isRTL ? 'لا يتوفر حالياً منتج متوافق وآمن لهذا الملف. يمكنك طلب نصيحة من فريقنا.' : 'Aucun produit compatible n’est disponible pour ce profil actuellement. Notre équipe peut vous conseiller.')}
+                      </p>
+                    )}
                     {recommendedProducts.map((product, index) => {
                       const routineStep = recommendedRoutine[index]?.step;
                       const stepLabel = routineStep ? ROUTINE_STEP_LABELS[routineStep] : null;
@@ -873,6 +945,13 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                       );
                     })}
                   </div>
+                  {recommendedProducts.length > 0 && recommendedProducts.length < requestedStepCount && (
+                    <p className="mt-3 text-xs leading-5 text-amber-800">
+                      {isRTL
+                        ? 'بعض الخطوات غير معروضة لعدم توفر منتج متوافق مع ملفك حالياً.'
+                        : 'Certaines étapes sont absentes car aucun produit compatible avec votre profil n’est disponible actuellement.'}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

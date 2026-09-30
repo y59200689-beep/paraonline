@@ -3,8 +3,10 @@ import type { Product } from '@/lib/data';
 import {
   buildDiagnosticRoutine,
   classifyRoutineStep,
+  isDiagnosticEligibleProduct,
   type DiagnosticAnswers,
 } from '@/lib/diagnostic-routine';
+import { isInDiagnosticPool, mapDiagnosticProduct } from '@/lib/diagnostic-catalogue';
 
 const product = (overrides: Partial<Product> & Pick<Product, 'id' | 'title'>): Product => {
   const { id, title, ...rest } = overrides;
@@ -115,5 +117,34 @@ describe('diagnostic routine builder', () => {
     const second = buildDiagnosticRoutine(catalogue, acneAnswers);
 
     expect(second.map(item => item.product.id)).toEqual(first.map(item => item.product.id));
+  });
+
+  it('uses the same explicit metadata and exclusion gate for admin and customer catalogues', () => {
+    const approved = mapDiagnosticProduct({ id: 90, title: 'Crème hydratante visage', category: 'visage', stock: 5, status: 'live', routine_roles: ['moisturizer'], recommendation_status: 'approved' });
+    const untagged = product({ id: 91, title: 'Crème hydratante visage' });
+    expect(isInDiagnosticPool(approved, new Set())).toBe(true);
+    expect(isInDiagnosticPool(approved, new Set([90]))).toBe(false);
+    expect(isInDiagnosticPool(untagged, new Set())).toBe(false);
+    expect(isDiagnosticEligibleProduct({ ...approved, recommendationStatus: 'rejected' })).toBe(false);
+    expect(isDiagnosticEligibleProduct({ ...approved, stock: 0 })).toBe(false);
+  });
+
+  it('leaves a step empty when a sensitive beginner has no compatible treatment', () => {
+    const candidates = [
+      product({ id: 101, title: 'Gel nettoyant doux', routineRoles: ['cleanser'], suitableSkinTypes: ['dry'], suitableConcerns: ['dryness'], sensitivityLevels: ['high'], activeStrength: 'gentle' }),
+      product({ id: 102, title: 'Sérum retinol fort', routineRoles: ['treatment'], suitableSkinTypes: ['dry'], suitableConcerns: ['wrinkles'], sensitivityLevels: ['low'], activeStrength: 'strong' }),
+      product({ id: 103, title: 'Crème hydratante visage', routineRoles: ['moisturizer'], suitableSkinTypes: ['dry'], suitableConcerns: ['dryness'], sensitivityLevels: ['high'], activeStrength: 'gentle' }),
+      product({ id: 104, title: 'Solaire SPF50+', routineRoles: ['sunscreen'], suitableSkinTypes: ['dry'], suitableConcerns: ['sun_protection'], sensitivityLevels: ['high'], activeStrength: 'none', timeOfDay: ['morning'] }),
+    ];
+    const routine = buildDiagnosticRoutine(candidates, { ...acneAnswers, skinType: 'dry', concern: 'dryness', sensitivity: 'high', routineDepth: 'balanced' });
+    expect(routine.map(item => item.step)).toEqual(['cleanser', 'moisturizer', 'sunscreen']);
+    expect(routine.some(item => item.product.id === 102)).toBe(false);
+  });
+
+  it('rejects acne products for a non-acne profile even when the catalogue has no alternative', () => {
+    const routine = buildDiagnosticRoutine([
+      product({ id: 110, title: 'Effaclar gel nettoyant anti-imperfections', routineRoles: ['cleanser'], suitableSkinTypes: ['normal'], suitableConcerns: ['acne'] }),
+    ], { ...acneAnswers, skinType: 'normal', concern: 'spots', breakoutFrequency: 'rare' });
+    expect(routine).toEqual([]);
   });
 });

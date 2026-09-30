@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { isDiagnosticEligibleProduct } from '@/lib/diagnostic-routine';
-import type { Product } from '@/lib/data';
+import { isInDiagnosticPool, mapDiagnosticProduct } from '@/lib/diagnostic-catalogue';
 import { verifyAdminSession } from '@/lib/session';
 import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { canEditCatalog } from '@/lib/permissions';
@@ -10,35 +9,6 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
-
-// Map raw Supabase row to Product-like object for eligibility check
-function rowToProduct(row: Record<string, unknown>): Product {
-  return {
-    id: row.id as number,
-    title: (row.title as string) || '',
-    name: (row.name as string) || '',
-    nameFr: (row.name_fr as string) || '',
-    vendor: (row.vendor as string) || '',
-    category: (row.category as string) || '',
-    categories: (row.categories as string[]) || [],
-    price: (row.price as number) || 0,
-    image: (row.image as string) || '',
-    tags: (row.tags as string[]) || [],
-    description: (row.description as string) || '',
-    ingredients: (row.ingredients as string) || '',
-    usage: (row.usage as string) || '',
-    stock: row.stock as number | undefined,
-    status: (row.status as string) || 'live',
-    rating: (row.rating as number) || 0,
-    reviews: (row.reviews as number) || 0,
-    routineRoles: (row.routine_roles as string[]) || [],
-    suitableSkinTypes: (row.suitable_skin_types as string[]) || [],
-    suitableConcerns: (row.suitable_concerns as string[]) || [],
-    sensitivityLevels: (row.sensitivity_levels as string[]) || [],
-    activeStrength: (row.active_strength as string) || undefined,
-    timeOfDay: (row.time_of_day as string[]) || [],
-  } as unknown as Product;
-}
 
 export async function GET(req: NextRequest) {
   const session = await verifyAdminSession(req);
@@ -56,7 +26,7 @@ export async function GET(req: NextRequest) {
   // Fetch all live products
   let query = supabase
     .from('products')
-    .select('id,title,vendor,category,price,image,tags,description,ingredients,usage,stock,status,rating,reviews,routine_roles,suitable_skin_types,suitable_concerns,sensitivity_levels,active_strength,time_of_day,name,name_fr', { count: 'exact' })
+    .select('id,title,vendor,category,price,image,tags,description,ingredients,usage,stock,status,rating,reviews,recommendation_status,routine_roles,suitable_skin_types,suitable_concerns,sensitivity_levels,active_strength,time_of_day,name,name_fr', { count: 'exact' })
     .eq('status', 'live')
     .order('title', { ascending: true });
 
@@ -82,10 +52,10 @@ export async function GET(req: NextRequest) {
   const excludedMap = new Map((excludedRows || []).map((r: { product_id: number; excluded_by: string; reason: string; excluded_at: string }) => [r.product_id, r]));
 
   const products = (allProducts || []).map((row: Record<string, unknown>) => {
-    const product = rowToProduct(row);
+    const product = mapDiagnosticProduct(row);
     const manuallyExcluded = manualExcludedIds.has(product.id);
-    const algorithmEligible = isDiagnosticEligibleProduct(product, { ignoreStock: true });
-    const inDiagnosticPool = algorithmEligible && !manuallyExcluded;
+    const algorithmEligible = isInDiagnosticPool(product, new Set<number>(), { ignoreStock: true });
+    const inDiagnosticPool = isInDiagnosticPool(product, manualExcludedIds);
     const hasExplicitData = (Array.isArray(product.routineRoles) && product.routineRoles.length > 0)
       || (Array.isArray(product.suitableConcerns) && product.suitableConcerns.length > 0)
       || (Array.isArray(product.suitableSkinTypes) && product.suitableSkinTypes.length > 0);

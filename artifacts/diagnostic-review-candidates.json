@@ -1,0 +1,481 @@
+{
+  "generatedAt": "2026-09-29T17:18:07.511Z",
+  "profile": {
+    "skinType": "dry",
+    "concern": "spots",
+    "sensitivity": "medium",
+    "routineDepth": "balanced"
+  },
+  "products": [
+    {
+      "id": 4395,
+      "stepHint": "cleanser",
+      "title": "DADO SENS EXTRODERM NETTOYANT VISAGE",
+      "vendor": "DADO SENS",
+      "category": "visage",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 10714,
+      "stepHint": "cleanser",
+      "title": "NUXE REVE DE MIEL GEL NETTOYANT ET DEMAQUILLANT VISAGE 200 ML",
+      "vendor": "NUXE",
+      "category": "visage",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 8386,
+      "stepHint": "cleanser",
+      "title": "KREME GEL NETTOYANT PEAUX SECHES 200 ML TRANSPARENT",
+      "vendor": "",
+      "category": "secheresse",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 4876,
+      "stepHint": "cleanser",
+      "title": "DERMADOC GEL NETTOYANT SKIN GEL 200 ML",
+      "vendor": "DERMADOC",
+      "category": "visage",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 7816,
+      "stepHint": "cleanser",
+      "title": "HYSEAC GEL NETTOYANT 150 ML",
+      "vendor": "URIAGE",
+      "category": "visage",
+      "description": "",
+      "ingredients": "SALICYLIC ACID,NIACINAMIDE",
+      "usage": ""
+    },
+    {
+      "id": 4463,
+      "stepHint": "cleanser",
+      "title": "DCP DEPI-GEL NETTOYANT ECLAIRCISSANT 200 ML",
+      "vendor": "DCP",
+      "category": "visage",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 13287,
+      "stepHint": "cleanser",
+      "title": "SENSITELIAL GEL NETTOYANT 200 ML",
+      "vendor": "DUCRAY",
+      "category": "visage",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 285,
+      "stepHint": "cleanser",
+      "title": "ACNEX PACK ( CREME ANTI ACNÉ + LOTION TONIQUE + GEL NETTOYANT",
+      "vendor": "ACNEX",
+      "category": "acné",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 5915,
+      "stepHint": "cleanser",
+      "title": "EUCERIN DERMOPURE CLINICAL GEL NETTOYANT OIL CONTROLE 200 ML ( PURIFYING CLEANSER )",
+      "vendor": "EUCERIN",
+      "category": "visage",
+      "description": "",
+      "ingredients": "SALICYLIC ACID,NIACINAMIDE",
+      "usage": ""
+    },
+    {
+      "id": 5504,
+      "stepHint": "cleanser",
+      "title": "ECLIN GEL NETTOYANT MAT PORES ANTI IMPERFECTION 200 ML",
+      "vendor": "ECLIN",
+      "category": "visage",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 9398,
+      "stepHint": "treatment",
+      "title": "MELA B3 SERUM ANTI TACHES ANTI RECIDIVE",
+      "vendor": "",
+      "category": "anti tache",
+      "description": "",
+      "ingredients": "NIACINAMIDE",
+      "usage": ""
+    },
+    {
+      "id": 8080,
+      "stepHint": "treatment",
+      "title": "JONZAC PIGMENT CONTROL SERUM ECLAIRCISSANT ANTI TACHES 30 ML",
+      "vendor": "JONZAC",
+      "category": "anti tache",
+      "description": "",
+      "ingredients": "NIACINAMIDE",
+      "usage": ""
+    },
+    {
+      "id": 8185,
+      "stepHint": "treatment",
+      "title": "KALINE K WHITE SERUM ANTI TACHES 30 ML WHITENING",
+      "vendor": "KALINE",
+      "category": "anti tache",
+      "description": "",
+      "ingredients": "NIACINAMIDE",
+      "usage": ""
+    },
+    {
+      "id": 5367,
+      "stepHint": "treatment",
+      "title": "DUC MELASCREEN SERUM ANTI TACHES ECLAT 40 ML",
+      "vendor": "DUCRAY",
+      "category": "anti tache",
+      "description": "",
+      "ingredients": "NIACINAMIDE",
+      "usage": ""
+    },
+    {
+      "id": 1942,
+      "stepHint": "treatment",
+      "title": "BELFIA AZLABRIGHT SERUM ANTI TACHES 30 ML",
+      "vendor": "BELFIA",
+      "category": "anti tache",
+      "description": "",
+      "ingredients": "NIACINAMIDE",
+      "usage": ""
+    },
+    {
+      "id": 14800,
+      "stepHint": "treatment",
+      "title": "SYSTEM 360 TRANEX SERUM ANTI TACHES 40 ML",
+      "vendor": "",
+      "category": "anti tache",
+      "description": "",
+      "ingredients": "NIACINAMIDE",
+      "usage": ""
+    },
+    {
+      "id": 10762,
+      "stepHint": "treatment",
+      "title": "NUXE WHITE SERUM BLANCHISSANT ANTI TACHE 30 ML",
+      "vendor": "NUXE",
+      "category": "anti tache",
+      "description": "",
+      "ingredients": "NIACINAMIDE",
+      "usage": ""
+    },
+    {
+      "id": 13838,
+      "stepHint": "treatment",
+      "title": "SOSKIN MELADERM SERUM ANTI TACHE ECLAT 30 ML",
+      "vendor": "SOSKIN",
+      "category": "anti tache",
+      "description": "",
+      "ingredients": "NIACINAMIDE",
+      "usage": ""
+    },
+    {
+      "id": 5898,
+      "stepHint": "treatment",
+      "title": "EUCERIN ANTI PIGMENT SERUM  DUO 30 ML",
+      "vendor": "EUCERIN",
+      "category": "visage",
+      "description": "",
+      "ingredients": "NIACINAMIDE",
+      "usage": ""
+    },
+    {
+      "id": 10220,
+      "stepHint": "treatment",
+      "title": "NEORETIN SERUM DISCROM CONTROL PIGMENT NEUTRALIZER SERUM 30 ML",
+      "vendor": "",
+      "category": "visage",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 5899,
+      "stepHint": "treatment",
+      "title": "EUCERIN ANTI PIGMENT SERUM  DUO 30 ML + ECRAN ANTI PIGMENT",
+      "vendor": "EUCERIN",
+      "category": "solaire",
+      "description": "",
+      "ingredients": "NIACINAMIDE",
+      "usage": ""
+    },
+    {
+      "id": 5900,
+      "stepHint": "treatment",
+      "title": "EUCERIN ANTI PIGMENT SKIN PERFECTING SERUM  ECLAT",
+      "vendor": "EUCERIN",
+      "category": "visage",
+      "description": "",
+      "ingredients": "NIACINAMIDE",
+      "usage": ""
+    },
+    {
+      "id": 9179,
+      "stepHint": "treatment",
+      "title": "MARTIDERM PIGMENT ZERO DSP SERUM X 30 ML",
+      "vendor": "",
+      "category": "visage",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 3281,
+      "stepHint": "moisturizer",
+      "title": "CERAVE CREME HYDRATANTE VISAGE 1.75/ 52 ML NUIT",
+      "vendor": "CERAVE",
+      "category": "secheresse",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 3283,
+      "stepHint": "moisturizer",
+      "title": "CERAVE CREME HYDRATANTE VISAGE SPF 50 NOUVEAU",
+      "vendor": "CERAVE",
+      "category": "secheresse",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 2890,
+      "stepHint": "moisturizer",
+      "title": "CAPIDERMA CREME HYDRATANTE VISAGE  PEAUU SECHE ET SENSIBLE 40 ML",
+      "vendor": "CAPIDERMA",
+      "category": "secheresse",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 15666,
+      "stepHint": "moisturizer",
+      "title": "VILARIS CREME HYDRATANTE VISAGE 50 ML",
+      "vendor": "",
+      "category": "secheresse",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 7464,
+      "stepHint": "moisturizer",
+      "title": "HERBACIN MED CREME HYDRATANTE VISAGE 100 ML",
+      "vendor": "HERBACIN",
+      "category": "secheresse",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 3659,
+      "stepHint": "moisturizer",
+      "title": "CLINICEUTICA ECZAMID CREME HYDRATANTE SOIN VISAGE ETT CORPS",
+      "vendor": "CLINICEUTICA",
+      "category": "secheresse",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 13464,
+      "stepHint": "moisturizer",
+      "title": "SESDERMA C-VIT CREME HYDRATANTE POUR VISAGE",
+      "vendor": "SESDERMA",
+      "category": "secheresse",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 15143,
+      "stepHint": "moisturizer",
+      "title": "TOLERIANE SENSITIVE CREME PNM 40 M",
+      "vendor": "LA ROCHE POSAY",
+      "category": "visage",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 15131,
+      "stepHint": "moisturizer",
+      "title": "TOLERIANE DERMALERGO CREME 40 ML",
+      "vendor": "LA ROCHE POSAY",
+      "category": "visage",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 648,
+      "stepHint": "sunscreen",
+      "title": "ANTHELIOS ECRAN SPF 50+ TEINTE BB CREME FONDANTE PSNS",
+      "vendor": "LA ROCHE POSAY",
+      "category": "solaire",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 647,
+      "stepHint": "sunscreen",
+      "title": "ANTHELIOS ECRAN SPF 50+ INVISIBLE CREME FONDANTE PSNS + PROMO",
+      "vendor": "LA ROCHE POSAY",
+      "category": "solaire",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 646,
+      "stepHint": "sunscreen",
+      "title": "ANTHELIOS ECRAN SPF 50+ GEL UV MUNE 400 MATIFIANTE TEINTE 50+ PG",
+      "vendor": "LA ROCHE POSAY",
+      "category": "solaire",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 645,
+      "stepHint": "sunscreen",
+      "title": "ANTHELIOS ECRAN SPF 50+ GEL UV MUNE 400 MATIFIANT INVISIBLE PG 50+",
+      "vendor": "LA ROCHE POSAY",
+      "category": "solaire",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 652,
+      "stepHint": "sunscreen",
+      "title": "ANTHELIOS ECRAN SPF50+ SPRAY ENFANT 400 SPF50",
+      "vendor": "LA ROCHE POSAY",
+      "category": "solaire",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 650,
+      "stepHint": "sunscreen",
+      "title": "ANTHELIOS ECRAN SPF50+ LAIT VISAGE ET CORPS ULTRA LONG 150 ML",
+      "vendor": "LA ROCHE POSAY",
+      "category": "solaire",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 640,
+      "stepHint": "sunscreen",
+      "title": "ANTHELIOS ECRAN 50+ FLUIDE UV MINE PEDIATRIQUE 50 ML",
+      "vendor": "LA ROCHE POSAY",
+      "category": "solaire",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 11410,
+      "stepHint": "sunscreen",
+      "title": "PHOTODERM ECRAN MAX FLUIDE SPF 100 INVISIBLE  40ML",
+      "vendor": "",
+      "category": "solaire",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 11412,
+      "stepHint": "sunscreen",
+      "title": "PHOTODERM ECRAN MAX FLUIDE SPF 100 TEINT TRES CLAIRE 40 ML",
+      "vendor": "",
+      "category": "solaire",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 11408,
+      "stepHint": "sunscreen",
+      "title": "PHOTODERM ECRAN MAX CREME SPF 50+ INVISIBLE  40ML",
+      "vendor": "",
+      "category": "solaire",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 11419,
+      "stepHint": "sunscreen",
+      "title": "PHOTODERM ECRAN XDEFENSE ULTRA FLUIDESPF50+ INVISIBLE",
+      "vendor": "",
+      "category": "solaire",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 11405,
+      "stepHint": "sunscreen",
+      "title": "PHOTODERM ECRAN LAIT ULTRA SPF550+",
+      "vendor": "",
+      "category": "solaire",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 11422,
+      "stepHint": "sunscreen",
+      "title": "PHOTODERM ECRAN XDEFENSE ULTRA FLUIDESPF50+ T03",
+      "vendor": "",
+      "category": "solaire",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 11395,
+      "stepHint": "sunscreen",
+      "title": "PHOTODERM ECRAN AQUAFLUIDE INVISIBLE PS TOUCHER SEC 40 ML SPF 50+",
+      "vendor": "",
+      "category": "solaire",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    },
+    {
+      "id": 11420,
+      "stepHint": "sunscreen",
+      "title": "PHOTODERM ECRAN XDEFENSE ULTRA FLUIDESPF50+ T01 + SEBIUM GEL MOUSSANT 100 ML PACK",
+      "vendor": "",
+      "category": "solaire",
+      "description": "",
+      "ingredients": "",
+      "usage": ""
+    }
+  ]
+}

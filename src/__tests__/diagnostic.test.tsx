@@ -184,6 +184,9 @@ describe('SkinDiagnostic question-only assessment', () => {
       if (url.includes('/api/products')) {
         return Promise.resolve({ ok: true, json: () => Promise.resolve({ success: true, products: mockProducts }) } as Response);
       }
+      if (url.includes('/api/diagnostic/catalogue')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ products: mockProducts }) } as Response);
+      }
       return Promise.resolve({ ok: true, json: () => Promise.resolve({ success: true }) } as Response);
     });
   });

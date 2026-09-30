@@ -9,6 +9,14 @@ import { normalizeRecommendationMetadata } from '@/lib/product-recommendation-me
 
 import { catalogCategoryFilter } from '@/lib/catalog-categories';
 
+const diagnosticCheckboxColumns = [
+  'routine_roles',
+  'suitable_skin_types',
+  'suitable_concerns',
+  'sensitivity_levels',
+  'time_of_day',
+] as const;
+
 function normalizeCategories(categories: unknown, primaryCategory: unknown): string[] {
   const primary = typeof primaryCategory === 'string' && primaryCategory.trim()
     ? primaryCategory.trim().toLowerCase()
@@ -80,6 +88,15 @@ function applyProductFilters(
     }
     if (specialFilters.includes('positive_stock')) {
       query = query.gt('stock', 0);
+    }
+    if (specialFilters.includes('diagnostic_ai')) {
+      query = query.or(diagnosticCheckboxColumns.map(column => `${column}.neq.{}`).join(','));
+    }
+    if (specialFilters.includes('positive_stock_no_diagnostic_ai')) {
+      query = query.gt('stock', 0);
+      diagnosticCheckboxColumns.forEach(column => {
+        query = query.filter(column, 'eq', '{}');
+      });
     }
     if (specialFilters.includes('positive_stock_no_vendor')) {
       query = query.gt('stock', 0).or('vendor.eq.,vendor.eq.-,vendor.is.null');

@@ -158,6 +158,7 @@ const EXCLUDED_PRODUCT_TERMS = [
 
 export function isDiagnosticEligibleProduct(product: Product, options?: { ignoreStock?: boolean }) {
   if (product.status === 'draft') return false;
+  if (product.recommendationStatus === 'rejected' || product.recommendationStatus === 'draft') return false;
   if (!options?.ignoreStock && product.stock !== undefined && product.stock <= 0) return false;
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -670,19 +671,6 @@ export function buildDiagnosticRoutine(
           && isStructuredCompatibilitySafe(product, answers)
           && isTimeCompatible(product, step)
           && isStrictlyEligibleForProfileAndStep(product, answers, step)
-          && routineStepScores(product)[step] >= 1)
-        .map((product) => ({
-          product,
-          score: productFitScore(product, answers, options.extraKeywords || []),
-        }))
-        .sort((a, b) => b.score - a.score || b.product.rating - a.product.rating);
-    }
-
-    // Fallback 3: Guarantee step completion (e.g. essential 3-step routine) if strict safety filters yield 0 candidates
-    if (!candidates.length) {
-      candidates = baseEligible
-        .filter((product) => !usedIds.has(product.id)
-          && isTimeCompatible(product, step)
           && routineStepScores(product)[step] >= 1)
         .map((product) => ({
           product,

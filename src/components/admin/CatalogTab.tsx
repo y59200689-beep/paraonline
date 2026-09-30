@@ -1082,6 +1082,11 @@ export default function CatalogTab({
         currentFilters = currentFilters.filter(f => f !== val);
       } else {
         currentFilters.push(val);
+        if (val === 'diagnostic_ai') {
+          currentFilters = currentFilters.filter(filter => filter !== 'positive_stock_no_diagnostic_ai');
+        } else if (val === 'positive_stock_no_diagnostic_ai') {
+          currentFilters = currentFilters.filter(filter => filter !== 'diagnostic_ai');
+        }
       }
       
       // If no filters are selected, default back to 'all'
@@ -2479,6 +2484,7 @@ export default function CatalogTab({
                       positive_stock_no_vendor: 'Stock sans marque', positive_stock_no_desc: 'Stock sans description',
                       dead_products: 'Produits morts', low_margin: 'Marge faible', no_desc: 'Sans description',
                       out_of_stock: 'En rupture', low_stock: 'Stock critique', on_sale: 'En promotion', needs_review: 'À compléter',
+                      diagnostic_ai: 'Diagnostic IA renseigné', positive_stock_no_diagnostic_ai: 'Stock sans Diagnostic IA',
                     };
                     const activeLabels = filterSpecial.split(',').map(value => labels[value]).filter(Boolean);
                     return activeLabels.length > 1 ? `${activeLabels.length} filtres actifs` : activeLabels[0] || 'Filtres Spéciaux';
@@ -2551,6 +2557,44 @@ export default function CatalogTab({
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] font-mono opacity-60 font-medium">{specialFilterCounts.needsReview}</span>
                         {filterSpecial.split(',').includes('needs_review') && <Check className="w-3 h-3 text-emerald-500" />}
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleFilterSpecialToggle('diagnostic_ai')}
+                      title="Au moins une case cochée dans l’onglet Diagnostic IA"
+                      className={`w-full text-left text-xs px-2.5 py-1.5 rounded-lg transition-colors flex items-center justify-between cursor-pointer ${
+                        filterSpecial.split(',').includes('diagnostic_ai')
+                          ? (adminTheme === 'light' ? 'bg-emerald-50 text-emerald-900 font-bold' : 'bg-emerald-500/15 text-emerald-300 font-bold')
+                          : (adminTheme === 'light' ? 'hover:bg-emerald-50/70 text-slate-600 hover:text-slate-900' : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200')
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+                        <span>Diagnostic IA renseigné</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {filterSpecial.split(',').includes('diagnostic_ai') && <Check className="w-3 h-3 text-emerald-500" />}
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleFilterSpecialToggle('positive_stock_no_diagnostic_ai')}
+                      title="Stock supérieur à zéro et aucune case cochée dans l’onglet Diagnostic IA"
+                      className={`w-full text-left text-xs px-2.5 py-1.5 rounded-lg transition-colors flex items-center justify-between cursor-pointer ${
+                        filterSpecial.split(',').includes('positive_stock_no_diagnostic_ai')
+                          ? (adminTheme === 'light' ? 'bg-amber-50 text-amber-900 font-bold' : 'bg-amber-500/15 text-amber-300 font-bold')
+                          : (adminTheme === 'light' ? 'hover:bg-amber-50/70 text-slate-600 hover:text-slate-900' : 'hover:bg-slate-900 text-slate-400 hover:text-slate-200')
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
+                        <span>Stock sans Diagnostic IA</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {filterSpecial.split(',').includes('positive_stock_no_diagnostic_ai') && <Check className="w-3 h-3 text-emerald-500" />}
                       </div>
                     </button>
 
