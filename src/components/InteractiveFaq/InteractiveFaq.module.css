@@ -43,9 +43,9 @@
 .content > [hidden] { display: none; }
 .delivery { display: flex; flex-direction: column; gap: 22px; }
 .delivery label { display: block; font-size: 13px; font-weight: 600; color: #52647f; margin-bottom: 9px; }
-.selectWrap { display: flex; align-items: center; gap: 12px; padding: 0 14px; border: 1px solid #d9e0e8; border-radius: 13px; background: #fcfdfe; }
-.selectWrap svg { color: #52647f; flex-shrink: 0; }
-.selectWrap select { width: 100%; min-width: 0; background: transparent; padding: 14px 0; border: 0; font-size: 14px; color: #192b3f; }
+.fixedCityLabel { display: block; font-size: 13px; font-weight: 600; color: #52647f; margin-bottom: 9px; }
+.fixedCity { display: flex; align-items: center; gap: 12px; min-height: 51px; padding: 0 15px; border: 1px solid #d9e0e8; border-radius: 13px; background: #fcfdfe; color: #192b3f; font-size: 14px; }
+.fixedCity svg { flex: none; color: #26878a; }
 .notice { display: flex; align-items: center; gap: 14px; background: #f0f8f7; padding: 17px; border-radius: 17px; }
 .notice strong { color: #216f72; font-size: 14px; }
 .notice p, .journey > p { font-size: 13px; line-height: 1.6; color: #62728a; margin-top: 5px; }
@@ -111,5 +111,4 @@
 @media (max-width: 767px) {
   .topicText strong, .cta { font-size: 14px; }
   .help p, .promise strong, .section .steps p, .section .promise p, .section .question p, .deliveryNote, .policy { font-size: 13px; }
-  .section select { font-size: 16px; }
 }

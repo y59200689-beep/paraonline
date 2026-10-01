@@ -8,24 +8,22 @@ vi.mock('@/context/LanguageContext', () => ({ useTranslation: () => ({ language:
 vi.mock('@/context/SettingsContext', () => ({ useSettings: () => ({ settings: { storeWhatsApp: '212660808080', shippingFee: 35, deliverySettings: { defaultDaysMin: 1, defaultDaysMax: 3, cityRules: [] } } }) }));
 afterEach(() => { cleanup(); state.language = 'FR'; });
 describe('Interactive FAQ redesign', () => {
-  it('shows configured estimates in DH and handles an unlisted city', () => {
+  it('shows the Marrakech estimate without a city selector', () => {
     render(<InteractiveFaq />);
+    expect(screen.getByText('Ville de référence')).toBeTruthy();
+    expect(screen.getByText('Estimation pour Marrakech')).toBeTruthy();
     expect(screen.getByText('35.00 DH')).toBeTruthy();
     expect(screen.getByText('1–3 jours')).toBeTruthy();
-    fireEvent.change(screen.getByLabelText('Ville de destination'), { target: { value: '' } });
-    expect(screen.queryByText('35.00 DH')).toBeNull();
-    expect(screen.getByText('Vérifions votre adresse ensemble')).toBeTruthy();
+    expect(screen.queryByRole('combobox')).toBeNull();
   });
-  it('switches all help topics and preserves delivery selection', () => {
+  it('switches all help topics and returns to the Marrakech estimate', () => {
     render(<InteractiveFaq />);
-    const rabat = (screen.getByRole('option', { name: 'Rabat' }) as HTMLOptionElement).value;
-    fireEvent.change(screen.getByLabelText('Ville de destination'), { target: { value: rabat } });
     fireEvent.click(screen.getByRole('button', { name: /Commande.*Suivi/ }));
     expect(screen.getByRole('link', { name: 'Suivre ma commande' }).getAttribute('href')).toBe('/suivi-commande');
     fireEvent.click(screen.getByRole('button', { name: /Produits.*Disponibilité/ }));
     expect(screen.getByRole('link', { name: 'Demander un conseil' }).getAttribute('href')).toContain('wa.me/212660808080');
     fireEvent.click(screen.getByRole('button', { name: /Livraison à domicile.*Délais/ }));
-    expect((screen.getByLabelText('Ville de destination') as HTMLSelectElement).value).toBe(rabat);
+    expect(screen.getByText('Estimation pour Marrakech')).toBeTruthy();
   });
   it('expands and collapses popular answers with accessible state', () => {
     render(<InteractiveFaq />);

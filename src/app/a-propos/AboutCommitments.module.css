@@ -132,7 +132,7 @@
   transition: transform .55s ease;
 }
 
-.commitment2 .coverImage { object-position: 39% center; }
+.commitment2 .coverImage { object-position: center; }
 .commitment3 .coverImage { object-position: 50% 40%; }
 
 .commitment > .coverSpacer,
@@ -214,7 +214,7 @@
   margin: 0 0 .55rem;
   color: var(--ink);
   font-family: var(--font-heading), sans-serif;
-  font-size: clamp(1.05rem, 1.3vw, 1.35rem);
+  font-size: clamp(1.375rem, 1.75vw, 1.75rem);
   font-weight: 800;
   letter-spacing: -.025em;
   line-height: 1.25;
@@ -264,15 +264,36 @@
 
 @media (max-width: 1000px) {
   .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
-  .commitment { min-height: 440px; aspect-ratio: auto; }
+  .commitment { min-height: 0; aspect-ratio: 1; }
   .commitment:last-child { grid-column: 1 / -1; width: min(100%, 390px); justify-self: center; }
+}
+
+@media (max-width: 880px) {
+  .grid { grid-template-columns: 1fr; }
+  .commitment, .commitment:last-child { width: min(100%, 390px); grid-column: auto; }
 }
 
 @media (max-width: 640px) {
   .section { padding: 0 0 1rem; }
-  .heading { margin-bottom: 2.5rem; }
-  .grid { grid-template-columns: 1fr; gap: 2.5rem; }
-  .commitment, .commitment:last-child { width: min(100%, 390px); min-height: 435px; grid-column: auto; justify-self: center; }
+  .heading { margin-bottom: 2rem; }
+  .grid { gap: 2rem; padding-inline: .25rem; }
+  .commitment, .commitment:last-child { min-height: 0; padding: .75rem 1rem 1rem; }
+  .commitment::after { inset: 7px; border-width: 4px; }
+  .coverSpacer { flex-basis: 22%; }
+  .coverImageWrap::after { background: linear-gradient(180deg, rgba(var(--shade-rgb), .18) 0%, rgba(var(--shade-rgb), .42) 30%, rgba(var(--shade-rgb), .77) 58%, rgba(var(--shade-rgb), .94) 100%); }
+  .cardTitle { min-height: 0; margin-bottom: .35rem; font-size: clamp(1.08rem, 4.4vw, 1.25rem); line-height: 1.2; }
+  .cardDescription { max-width: 29ch; font-size: clamp(.69rem, 2.9vw, .8rem); line-height: 1.42; }
+  .commitment .action { width: 3rem; border-width: 3px; }
+  .iconBadge, .numberBadge { border-width: 3px; }
+  .iconBadge { width: 2.8rem; }
+  .numberBadge { width: 2.6rem; font-size: 1rem; }
+}
+
+@media (max-width: 360px) {
+  .commitment, .commitment:last-child { padding: .65rem .8rem .8rem; }
+  .coverSpacer { flex-basis: 16%; }
+  .cardDescription { font-size: .68rem; line-height: 1.35; }
+  .commitment .action { width: 2.7rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

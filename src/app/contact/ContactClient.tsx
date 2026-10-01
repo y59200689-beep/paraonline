@@ -1,7 +1,6 @@
 'use client';
 
-import Link from 'next/link';
-import { ArrowRight, Headset, Mail, MessageCircle, Truck } from 'lucide-react';
+import { ArrowRight, Headset, Mail, MessageCircle } from 'lucide-react';
 import { ShopShell } from '@/components/ShopShell';
 import { useSettings } from '@/context/SettingsContext';
 import { useTranslation } from '@/context/LanguageContext';
@@ -28,20 +27,13 @@ export function ContactClient() {
             </div>
           </div>
 
-          <div className="relative -mt-8 grid gap-5 px-2 md:grid-cols-3 lg:gap-6 lg:px-8">
+          <div className="relative -mt-8 grid gap-5 px-2 md:grid-cols-2 lg:gap-6 lg:px-8">
             <section className="rounded-3xl border border-[#dcebea] bg-white p-6 shadow-[0_18px_45px_rgba(24,62,67,.09)] sm:p-8">
               <div className="mb-7 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#e8f7f5] text-[#238b91]"><MessageCircle size={24} /></div>
               <h2 className="font-heading text-xl font-bold">{ar ? 'تحدثوا مع فريقنا' : 'Parlez à notre équipe'}</h2>
               <p className="mt-3 min-h-20 leading-7 text-slate-600">{ar ? 'للنصائح المتعلقة بالمنتجات ومساعدتكم في اختياراتكم.' : 'Pour un conseil produit ou une aide personnalisée dans vos choix.'}</p>
               {whatsapp && <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex min-h-12 items-center gap-2 rounded-xl bg-[#b94e60] px-5 font-bold !text-white transition hover:bg-[#a93e51] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b94e60]">WhatsApp <ArrowRight size={18} aria-hidden="true" /></a>}
               {number && <p className="mt-4 text-sm font-semibold text-slate-500" dir="ltr">+{number}</p>}
-            </section>
-
-            <section className="rounded-3xl border border-[#dcebea] bg-white p-6 shadow-[0_18px_45px_rgba(24,62,67,.09)] sm:p-8">
-              <div className="mb-7 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#e8f7f5] text-[#238b91]"><Truck size={24} /></div>
-              <h2 className="font-heading text-xl font-bold">{ar ? 'متابعة الطلب' : 'Suivi de commande'}</h2>
-              <p className="mt-3 min-h-20 leading-7 text-slate-600">{ar ? 'اطلعوا على حالة طلبكم ومعلومات التوصيل.' : 'Retrouvez l’état de votre commande et les informations de livraison.'}</p>
-              <Link href="/suivi-commande" className="mt-6 inline-flex min-h-12 items-center gap-2 rounded-xl border border-[#2b858d] px-5 font-bold text-[#246f76] transition hover:bg-[#edf8f7] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2b858d]">{ar ? 'تتبع الطلب' : 'Suivre ma commande'} <ArrowRight size={18} aria-hidden="true" /></Link>
             </section>
 
             <section className="rounded-3xl border border-[#dcebea] bg-white p-6 shadow-[0_18px_45px_rgba(24,62,67,.09)] sm:p-8">

@@ -20,7 +20,7 @@ export const InteractiveFaq: React.FC = () => {
   const [question, setQuestion] = useState<number | null>(null);
   const support = buildWhatsAppUrl(settings.storeWhatsApp || '212660808080') || '#footer';
   const topics = [
-    { icon: Truck, title: text.tabDelivery, sub: ar ? 'المناطق وتتبع الشحن' : 'Délais, zones et suivi', heading: text.delTitle, desc: ar ? 'اختر مدينتك وتعرف على مراحل توصيل طلبك. يتم تأكيد المدة والتكلفة قبل إتمام الطلب.' : 'Sélectionnez votre ville et découvrez les étapes de votre livraison. Le délai et les frais sont confirmés avant validation.' },
+    { icon: Truck, title: text.tabDelivery, sub: ar ? 'المناطق وتتبع الشحن' : 'Délais, zones et suivi', heading: text.delTitle, desc: ar ? 'تقدير التوصيل إلى مراكش ومراحل توصيل طلبك. يتم تأكيد المدة والتكلفة قبل إتمام الطلب.' : 'Consultez une estimation pour Marrakech et les étapes de livraison. Le délai et les frais sont confirmés avant validation.' },
     { icon: Package, title: text.tabReturns, sub: ar ? 'الاستبدال والاسترجاع' : 'Échanges et remboursements', heading: text.retTitle, desc: text.retDesc },
     { icon: CreditCard, title: text.tabPayments, sub: ar ? 'وسائل الدفع' : 'Moyens de paiement', heading: text.payTitle, desc: text.payDesc },
     { icon: FileText, title: ar ? 'الطلب' : 'Commande', sub: ar ? 'التتبع والتعديل' : 'Suivi et modification', heading: ar ? 'متابعة طلبك' : 'Votre commande, étape par étape', desc: ar ? 'تابع طلبك أو تواصل معنا لتعديله.' : 'Consultez votre suivi ou contactez notre équipe pour une modification.' },
@@ -28,13 +28,13 @@ export const InteractiveFaq: React.FC = () => {
   ];
   const questions = ar ? [
     ['ما مدة التوصيل؟', 'تختلف المدة والتكلفة حسب المدينة وتوفر المنتجات، ويتم تأكيدهما قبل إتمام الطلب.'],
-    ['هل توصلون إلى مدينتي؟', 'اختر مدينتك في قسم التوصيل. للشروط الدقيقة تواصل مع فريقنا.'],
+    ['هل توصلون إلى مدينتي؟', 'التقدير المعروض يخص مراكش. تواصل مع فريقنا لتأكيد التوصيل إلى عنوانك.'],
     ['كيف أتابع طلبي؟', 'افتح صفحة تتبع الطلب وأدخل المعلومات المطلوبة.'],
     ['ماذا أفعل إذا كنت غائباً؟', 'تواصل مع الفريق مع رقم طلبك لترتيب الخطوة التالية.'],
     ['هل يمكن تعديل عنواني؟', 'تواصل معنا في أقرب وقت. يعتمد التعديل على مرحلة تجهيز الطلب.'],
   ] : [
     ['Quels sont les délais de livraison ?', 'Le délai et les frais dépendent de votre ville et de la disponibilité des produits. Ils sont confirmés avant la validation de votre commande.'],
-    ['Livrez-vous dans ma ville ?', 'Consultez le sélecteur de ville dans la rubrique Livraison. Notre équipe peut confirmer les conditions pour votre adresse.'],
+    ['Livrez-vous dans ma ville ?', 'L’estimation affichée concerne Marrakech. Notre équipe peut confirmer les conditions de livraison pour votre adresse.'],
     ['Comment suivre ma commande ?', 'Ouvrez la page de suivi de commande et renseignez les informations demandées pour consulter son avancement.'],
     ['Que faire en cas d’absence ?', 'Contactez notre équipe avec votre numéro de commande pour organiser la suite de votre livraison.'],
     ['Puis-je modifier mon adresse ?', 'Prévenez-nous dès que possible. La possibilité de modification dépend de l’avancement de votre commande.'],
@@ -69,7 +69,7 @@ export const InteractiveFaq: React.FC = () => {
           <div id="faq-content" className={styles.panel} role="region" aria-labelledby="faq-panel-title">
             <div className={styles.panelHeading}><span className={styles.icon}><Icon size={26} strokeWidth={1.6} /></span><div><h3 id="faq-panel-title">{topics[active].heading}</h3><p>{topics[active].desc}</p></div></div>
             <div className={styles.content}>
-              <div hidden={active !== 0}><DeliveryTab text={text} language={language} isRTL={ar} /></div>
+              <div hidden={active !== 0}><DeliveryTab text={text} isRTL={ar} /></div>
               {active === 1 && <ReturnsTab text={text} isRTL={ar} support={support} />}
               {active === 2 && <PaymentsTab text={text} isRTL={ar} />}
               {active >= 3 && <div className={styles.guidance}>
@@ -85,7 +85,7 @@ export const InteractiveFaq: React.FC = () => {
               <h3><BookOpen size={21} />{ar ? 'أسئلة متكررة' : 'Articles populaires'}</h3>
               {questions.map(([title, answer], i) => <div className={styles.question} key={title}>
                 <button type="button" aria-expanded={question === i} aria-controls={'faq-answer-' + i} onClick={() => setQuestion(question === i ? null : i)}>{title}<ChevronRight size={16} /></button>
-                <div id={'faq-answer-' + i} hidden={question !== i}><p>{answer}</p>{i === 2 && <Link href="/suivi-commande">{ar ? 'تتبع الطلب' : 'Suivre ma commande'} →</Link>}{i === 1 && <button type="button" onClick={() => { setActive(0); requestAnimationFrame(() => document.getElementById('faq-city')?.focus()); }}>{ar ? 'اختيار المدينة' : 'Choisir ma ville'} →</button>}</div>
+                <div id={'faq-answer-' + i} hidden={question !== i}><p>{answer}</p>{i === 2 && <Link href="/suivi-commande">{ar ? 'تتبع الطلب' : 'Suivre ma commande'} →</Link>}{i === 1 && <a href={support} target={support.startsWith('https:') ? '_blank' : undefined} rel="noopener noreferrer">{ar ? 'تأكيد التوصيل إلى عنواني' : 'Confirmer la livraison à mon adresse'} →</a>}</div>
               </div>)}
             </div>
             <div className={styles.commitment}>

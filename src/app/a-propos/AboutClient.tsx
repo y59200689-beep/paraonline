@@ -63,7 +63,7 @@ export function AboutClient() {
             </h1>
 
             {/* Narrative Spine Subtitle */}
-            <p className="mx-auto max-w-3xl text-base font-medium leading-relaxed text-white drop-shadow-md sm:text-lg lg:text-xl">
+            <p className="mx-auto max-w-5xl text-lg font-medium leading-relaxed text-white drop-shadow-md sm:text-xl lg:text-[30px] lg:leading-[1.45]">
               {language === 'AR'
                 ? 'أنشأنا صيدليتنا الإلكترونية بفكرة بسيطة: أن نجعل العناية بأنفسكم سهلة، مع منتجات عالية الجودة ونصائح من مختصين.'
                 : 'Nous avons créé notre parapharmacie en ligne avec une idée simple : vous permettre de prendre soin de vous facilement, avec des produits de qualité et des conseils de professionnels.'}
@@ -143,7 +143,7 @@ export function AboutClient() {
                   descriptionFr: 'Bénéficiez d’un diagnostic personnalisé de votre peau directement en ligne afin de mieux identifier vos besoins et vous orienter vers une routine adaptée.',
                   descriptionAr: 'استفيدوا من تشخيص مخصص لبشرتكم عبر الإنترنت لتحديد احتياجاتكم بشكل أفضل وإرشادكم إلى روتين مناسب.',
                   icon: Sparkles,
-                  image: '/images/skin_diagnostic_scan.webp',
+                  image: '/images/about-diagnostic-face-scan.webp',
                   actionFr: 'Faire mon diagnostic',
                   actionAr: 'ابدأوا التشخيص',
                   href: null,
