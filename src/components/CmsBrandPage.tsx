@@ -15,7 +15,7 @@ export function CmsBrandPage({ brand }: { brand: CmsBrandRecord }) {
   const sections = brand.page_sections ?? [];
   return <ShopShell>
     <main className="public-page min-h-screen bg-[var(--public-surface-muted)] px-4 py-10 sm:px-6 lg:py-14">
-      <div className="mx-auto max-w-7xl space-y-8">
+      <div className="mx-auto w-full space-y-8">
         <section className="relative isolate overflow-hidden rounded-[var(--public-radius-lg)] bg-[var(--public-ink)] px-6 py-16 text-white shadow-[var(--public-shadow-lg)] sm:px-12">
           {brand.hero_settings?.image ? <Image src={String(brand.hero_settings.image)} alt={brand.name} fill className="-z-10 object-cover opacity-45" sizes="100vw" priority /> : null}
           <div className="relative max-w-3xl space-y-5"><p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-200">{pick(brand.hero_settings ?? {}, 'eyebrow', language) || brand.name}</p><h1 className="text-4xl font-black leading-[1.05] sm:text-6xl">{pick(brand.hero_settings ?? {}, 'title', language) || brand.taglineFr}</h1><p className="max-w-2xl text-base leading-7 text-slate-200">{pick(brand.hero_settings ?? {}, 'description', language) || (language === 'AR' ? brand.descriptionAr : brand.descriptionFr)}</p></div>

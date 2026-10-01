@@ -40,7 +40,9 @@ describe('Redesigned desktop header', () => {
     expect(setShowSearch).toHaveBeenCalledWith(true);
     fireEvent.click(screen.getByRole('button', {name: 'Effacer la recherche'}));
     expect(setSearchQuery).toHaveBeenCalledWith('');
-    fireEvent.click(screen.getByRole('button', {name: 'Soins du Visage'}));
+    expect(screen.getByRole('button', {name: 'Coffrets Cadeaux'})).toBeTruthy();
+    expect(screen.getByRole('button', {name: 'Compléments'})).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', {name: 'Visage'}));
     expect(setSelectedCategoryId).toHaveBeenCalledWith('visage');
     expect(setShowCategoryDropdown).toHaveBeenCalledWith(false);
   });

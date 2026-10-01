@@ -198,7 +198,7 @@ export default async function ProductsPage({
 
   return (
     <ProductsClient
-      key={typeof params.ingredient === 'string' ? params.ingredient : ''}
+      key={`${initialCategory}:${initialBrand}:${initialConcern}:${typeof params.ingredient === 'string' ? params.ingredient : ''}`}
       initialProducts={products}
       initialPagination={pagination}
       catalogFacets={catalogFacets}

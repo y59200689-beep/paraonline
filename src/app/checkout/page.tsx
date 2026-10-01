@@ -220,7 +220,7 @@ function CheckoutPageContent() {
   // ── Render States ────────────────────────────────────────────────────────
   if (cart.length === 0) {
     return (
-      <div className="max-w-[1400px] mx-auto px-6 py-20 flex flex-col items-center justify-center min-h-[60vh] text-center select-none">
+      <div className="w-full mx-auto px-6 py-20 flex flex-col items-center justify-center min-h-[60vh] text-center select-none">
         <div className="w-20 h-20 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 mb-6 shadow-inner">
           <ShoppingBag className="w-8 h-8 stroke-[1.5]" />
         </div>
@@ -243,7 +243,7 @@ function CheckoutPageContent() {
   }
 
   return (
-    <div className="max-w-[1400px] mx-auto px-5 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-12 md:py-20">
+    <div className="w-full mx-auto px-5 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-12 md:py-20">
       
       {/* Page Title */}
       <div className="mb-10 text-center md:text-left select-none font-sans">

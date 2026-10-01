@@ -39,7 +39,7 @@ export const CustomerReviews: React.FC = () => {
 
   return (
     <section className="section-dark border-b border-slate-800/40 py-16 md:py-24" aria-labelledby="customer-reviews-title">
-      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 md:px-8">
+      <div className="mx-auto w-full px-4 sm:px-6 md:px-8">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <span className="eyebrow-tag eyebrow-tag-dark">

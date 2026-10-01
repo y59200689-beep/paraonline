@@ -1,7 +1,7 @@
 .section { padding: 18px 0 30px; background: #fffdfb; color: #153a42; }
-.grid { max-width: 1640px; margin: auto; padding: 0 32px; display: grid; grid-template-columns: 2.4fr 1.04fr 1fr; gap: 18px; }
+.grid { width: 100%; margin: auto; padding: 0 clamp(20px, 3vw, 64px); display: grid; grid-template-columns: 2.4fr 1.04fr 1fr; gap: 18px; }
 .main, .summer, .promotion, .new { position: relative; isolation: isolate; overflow: hidden; border-radius: 17px; background: #eef6f4; box-shadow: 0 3px 9px #3547460b; }
-.main { min-height: clamp(370px, 28vw, 460px); }
+.main { min-height: clamp(370px, 28vw, 680px); }
 .image { object-fit: cover; object-position: center; z-index: -2; }
 .slide { position: absolute; inset: 0; z-index: -2; animation: fade 350ms ease-out; }
 .wash { position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, #eff9f4b3, #f5faf33b 58%, transparent 74%); pointer-events: none; }

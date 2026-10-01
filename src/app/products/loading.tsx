@@ -1,6 +1,6 @@
 export default function ProductsLoading() {
   return (
-    <main className="mx-auto max-w-7xl px-6 pb-12 pt-20 sm:px-10 md:px-16 lg:px-20 xl:px-24 lg:py-12" aria-busy="true" aria-label="Chargement du catalogue">
+    <main className="mx-auto w-full px-6 pb-12 pt-20 sm:px-10 md:px-16 lg:px-20 xl:px-24 lg:py-12" aria-busy="true" aria-label="Chargement du catalogue">
       <div className="mb-12 min-h-[200px] animate-pulse rounded-[2rem] border border-slate-200/60 bg-slate-100" />
       <div className="flex gap-10">
         <aside className="hidden w-[300px] shrink-0 space-y-4 lg:block">

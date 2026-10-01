@@ -5,7 +5,7 @@
   --summer-pink: var(--brand-button-fill, #b95058);
   padding: 48px 24px; background: var(--brand-soft, #faf7f6); color: var(--summer-ink);
 }
-.frame { max-width: 1400px; margin-inline: auto; padding: 20px; border-radius: 26px; background: white; box-shadow: 0 16px 48px #533a3c06; }
+.frame { width: 100%; margin-inline: auto; padding: 20px; border-radius: 26px; background: white; box-shadow: 0 16px 48px #533a3c06; }
 .campaign { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 18px; }
 .photo { position: relative; min-width: 0; overflow: hidden; border-radius: 18px; min-height: 440px; background: #f2eee9; }
 .campaignImage { object-fit: cover; object-position: center; }

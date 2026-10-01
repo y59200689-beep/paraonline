@@ -279,7 +279,7 @@ export const FeaturedIngredientSection: React.FC = () => {
       {/* Soft ambient gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-blue-500/3 via-transparent to-orange-500/3 pointer-events-none" />
 
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 relative z-10 space-y-8 md:space-y-10">
+      <div className="w-full mx-auto px-4 sm:px-6 md:px-8 relative z-10 space-y-8 md:space-y-10">
 
         {/* Section header */}
         <div className="space-y-2">

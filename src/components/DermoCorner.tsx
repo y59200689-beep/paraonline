@@ -148,7 +148,7 @@ export const DermoCorner: React.FC = () => {
       <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-emerald-500/3 dark:bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-indigo-500/3 dark:bg-indigo-500/5 blur-[120px] rounded-full pointer-events-none" />
 
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 relative z-10 space-y-12 md:space-y-16">
+      <div className="w-full mx-auto px-4 sm:px-6 md:px-8 relative z-10 space-y-12 md:space-y-16">
         
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-10 space-y-3">

@@ -969,7 +969,7 @@ export default function LaRochePosayCustomPage({ brand = 'la-roche-posay' }: { b
 
         <section className="relative overflow-hidden border-b border-[#d9e7f0] bg-[#f4f9fc]">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_22%_18%,rgba(14,165,233,0.11),transparent_34%),radial-gradient(circle_at_82%_15%,rgba(255,255,255,0.95),transparent_40%)]" />
-          <div className="relative mx-auto max-w-[1360px] px-5 pb-10 pt-6 sm:px-8 lg:px-12 lg:pb-14">
+          <div className="relative mx-auto w-full px-5 pb-10 pt-6 sm:px-8 lg:px-12 lg:pb-14">
             <nav aria-label="Fil d’Ariane" className="mb-8 flex items-center gap-2 text-xs font-semibold text-slate-500">
               <Link href="/" className="rounded-sm transition-colors hover:text-[#0b75b9] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky-500">Accueil</Link>
               <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -1061,7 +1061,7 @@ export default function LaRochePosayCustomPage({ brand = 'la-roche-posay' }: { b
         <section id="ranges" className="relative overflow-hidden border-b border-[#dce9f1] bg-[#f4f8fb] py-20 lg:py-24">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_8%,rgba(14,165,233,0.09),transparent_28%),radial-gradient(circle_at_88%_34%,rgba(255,255,255,0.95),transparent_30%)]" />
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#9acde7] to-transparent" />
-          <div className="relative mx-auto max-w-[1360px] px-5 sm:px-8 lg:px-12">
+          <div className="relative mx-auto w-full px-5 sm:px-8 lg:px-12">
             <div className="mb-12 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between lg:mb-14">
               <div className="max-w-2xl">
                 <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[#0c79b8]">Choisir selon votre besoin</p>
@@ -1239,7 +1239,7 @@ export default function LaRochePosayCustomPage({ brand = 'la-roche-posay' }: { b
         ══════════════════════════════════════════════════════════ */}
         <section className="relative overflow-hidden border-y border-[#173b5d] bg-[#0b223b] py-20 text-white">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(14,165,233,0.18),transparent_30%),radial-gradient(circle_at_85%_80%,rgba(42,106,153,0.2),transparent_32%)]" />
-          <div className="relative mx-auto grid max-w-[1360px] gap-8 px-5 sm:px-8 lg:grid-cols-[0.8fr_1.2fr] lg:px-12">
+          <div className="relative mx-auto grid w-full gap-8 px-5 sm:px-8 lg:grid-cols-[0.8fr_1.2fr] lg:px-12">
             <div className="relative min-h-[420px] overflow-hidden rounded-[30px] bg-white">
               <Image src={galleryImage(brandConfig.methodImage, 'method')} alt={brandConfig.methodImageAlt} fill sizes="(max-width: 1024px) 100vw, 40vw" className="object-cover object-center" />
               <span className="absolute left-5 top-5 border border-sky-200 bg-sky-50 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[#0c79b8]">Soin emblématique</span>
@@ -1272,7 +1272,7 @@ export default function LaRochePosayCustomPage({ brand = 'la-roche-posay' }: { b
             §9. BRAND TRUST CLAIMS (REDESIGNED)
         ══════════════════════════════════════════════════════════ */}
         <section className="relative overflow-hidden border-t border-slate-100 bg-[#f5f8fa] py-20">
-          <div className="relative mx-auto max-w-[1360px] px-5 sm:px-8 lg:px-12">
+          <div className="relative mx-auto w-full px-5 sm:px-8 lg:px-12">
             <div className="mb-12 grid gap-5 lg:grid-cols-[0.75fr_1.25fr] lg:items-end">
               <div>
                 <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#0c79b8]">
@@ -1324,7 +1324,7 @@ export default function LaRochePosayCustomPage({ brand = 'la-roche-posay' }: { b
             §10. FULL CATALOG
         ══════════════════════════════════════════════════════════ */}
         <section id="catalog" className="scroll-mt-24 border-t border-slate-100 bg-white py-20">
-          <div className="mx-auto max-w-[1360px] px-5 sm:px-8 lg:px-12">
+          <div className="mx-auto w-full px-5 sm:px-8 lg:px-12">
             <div className="mb-9 flex flex-col gap-5 border-b border-slate-200 pb-7 sm:flex-row sm:items-end sm:justify-between">
               <div className="max-w-2xl">
                 <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#0c79b8]">{brandConfig.catalogLabel}</p>

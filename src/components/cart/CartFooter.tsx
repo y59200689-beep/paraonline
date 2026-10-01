@@ -1,8 +1,7 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
-import { ArrowRight, Banknote, CalendarDays, Headphones, RotateCcw } from 'lucide-react';
+import { ArrowRight, CalendarDays } from 'lucide-react';
 import { AnimatedPrice } from './AnimatedPrice';
 import type { DeliverySettings } from '@/context/SettingsContext';
 import styles from './CartDrawer.module.css';
@@ -99,21 +98,6 @@ export const CartFooter: React.FC<CartFooterProps> = ({
 
   const { dayLabel: estDeliveryLabel, cutoffNote, cityLabel } = getEstimatedDelivery();
 
-  const trustBadges = [
-    {
-      icon: <Banknote className="h-4 w-4" aria-hidden="true" />,
-      label: isFR ? 'Paiement à la livraison' : 'الدفع عند الاستلام',
-    },
-    {
-      icon: <Headphones className="h-4 w-4" aria-hidden="true" />,
-      label: isFR ? 'Support disponible' : 'خدمة العملاء',
-    },
-    {
-      icon: <RotateCcw className="h-4 w-4" aria-hidden="true" />,
-      label: isFR ? 'Conditions de retour' : 'شروط الإرجاع',
-    },
-  ];
-
   return (
     <div className={styles.footer}>
       <div className="flex flex-col gap-2.5">
@@ -198,22 +182,6 @@ export const CartFooter: React.FC<CartFooterProps> = ({
       </div>
 
       {step === 'cart' && (
-        <div className={styles.trust}>
-          {trustBadges.map((badge, i) => (
-            <div
-              key={i}
-              className="flex flex-col items-center gap-1.5 px-1.5 py-2.5 rounded-xl bg-slate-50/80 border border-slate-100 text-center"
-            >
-              <span className="text-primary/70">{badge.icon}</span>
-              <span className="text-[9px] font-semibold text-slate-500 leading-tight">
-                {badge.label}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {step === 'cart' && (
         <button
           type="button"
           onClick={onCheckout}
@@ -222,13 +190,6 @@ export const CartFooter: React.FC<CartFooterProps> = ({
           <span>{t('cart_checkout')}</span>
           <ArrowRight className={`w-4.5 h-4.5 transition-transform duration-300 group-hover:translate-x-1 ${isRTL ? 'rotate-180 group-hover:-translate-x-1' : ''}`} />
         </button>
-      )}
-      {step === 'cart' && (
-        <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-[10px] font-bold text-slate-500">
-          <Link href="/politiques/conditions-vente" className="hover:text-primary hover:underline">{isFR ? 'Livraison' : 'التوصيل'}</Link>
-          <Link href="/politiques/retours-reclamations" className="hover:text-primary hover:underline">{isFR ? 'Retours' : 'الإرجاع'}</Link>
-          <Link href="/a-propos#contact" className="hover:text-primary hover:underline">{isFR ? 'Support' : 'الدعم'}</Link>
-        </div>
       )}
     </div>
   );

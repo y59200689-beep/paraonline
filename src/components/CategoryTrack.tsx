@@ -122,7 +122,7 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
     <div className="w-full bg-[#FAFAFA] border-b border-slate-200/40 pt-6 pb-2 md:pt-8 md:pb-3 overflow-hidden">
       
       {/* Centered title & track container */}
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 relative w-full">
+      <div className="w-full mx-auto px-4 sm:px-6 md:px-8 relative w-full">
         {/* Header section aligns exactly with rest of page sections */}
         <div 
           className="mb-4 flex justify-between items-end select-none font-sans"

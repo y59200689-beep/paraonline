@@ -47,7 +47,7 @@ export const LaRochePosaySSection: React.FC = () => {
       {/* Background warm radial glow */}
       <div className="absolute top-1/2 right-1/4 translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-orange-500/4 dark:bg-orange-500/8 blur-[130px] rounded-full pointer-events-none" />
 
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 relative z-10">
+      <div className="w-full mx-auto px-4 sm:px-6 md:px-8 relative z-10">
 
         {/* Section Header */}
         <div className="text-left mb-10 md:mb-14 space-y-2">

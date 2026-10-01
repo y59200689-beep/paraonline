@@ -349,7 +349,7 @@ export const DEFAULT_SETTINGS: Settings = {
   storeWhatsApp: "212660808080",
   freeShippingThreshold: 400,
   shippingFee: 35,
-  announcementFr: "LIVRAISON AU MAROC — Le délai et les frais sont confirmés avant la validation de votre commande.",
+  announcementFr: "LIVRAISON A DOMICILE — LE DÉLAI ET LES FRAIS SONT CONFIRMÉS AVANT LA VALIDATION DE VOTRE COMMANDE",
   announcementAr: "التوصيل داخل المغرب — يتم تأكيد المدة والتكلفة قبل إتمام طلبك.",
   quizDiscountPercent: 15,
   dailyGiftProductId: 22,

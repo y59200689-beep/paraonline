@@ -41,12 +41,13 @@ function normalizeLegacyStorefrontClaims(settings: Settings): Settings {
   });
 
   const legacyAnnouncement = settings.announcementFr?.includes('LIVRAISON GRATUITE LE JOUR MÊME');
+  const previousAnnouncement = settings.announcementFr === 'LIVRAISON AU MAROC — Le délai et les frais sont confirmés avant la validation de votre commande.';
   return {
     ...settings,
     banners,
     faq,
-    announcementFr: legacyAnnouncement
-      ? 'LIVRAISON AU MAROC — Le délai et les frais sont confirmés avant la validation de votre commande.'
+    announcementFr: legacyAnnouncement || previousAnnouncement
+      ? DEFAULT_SETTINGS.announcementFr
       : settings.announcementFr,
     announcementAr: legacyAnnouncement
       ? 'التوصيل داخل المغرب — يتم تأكيد المدة والتكلفة قبل إتمام طلبك.'
@@ -156,7 +157,7 @@ async function fetchPublicSettings(): Promise<PublicSettings> {
 // each page render.
 const getCachedPublicSettings = unstable_cache(
   fetchPublicSettings,
-  ['public-settings'],
+  ['public-settings', 'announcement-home-delivery-v2'],
   { tags: [PUBLIC_SETTINGS_CACHE_TAG], revalidate: false }
 );
 

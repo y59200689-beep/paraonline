@@ -111,14 +111,6 @@ export const LoyaltyProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // ──────────── Supabase Auth Listener ────────────
   useEffect(() => {
-    // Hydrate cached user instantly for 0ms initial load
-    try {
-      const savedUserStr = localStorage.getItem('customer_client_user');
-      if (savedUserStr) {
-        setClientUser(JSON.parse(savedUserStr));
-      }
-    } catch (e) {}
-
     if (!isSupabaseConfigured()) {
       setIsLoadingAuth(false);
       loadFromLocalStorage();

@@ -14,7 +14,7 @@ export const DiagnosticBanner: React.FC = () => {
       {/* Background Subtle Mesh Gradient */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-500/5 dark:bg-indigo-500/10 blur-[120px] rounded-full pointer-events-none" />
 
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8">
+      <div className="w-full mx-auto px-4 sm:px-6 md:px-8">
         {/* Double-Bezel Outer Shell */}
         <div className="p-2 md:p-3 rounded-[32px] bg-slate-200/40 dark:bg-white/5 border border-slate-200/50 dark:border-white/10 shadow-sm">
           {/* Inner Content Core */}

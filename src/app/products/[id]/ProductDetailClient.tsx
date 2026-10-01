@@ -528,7 +528,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 
   return (
     <ShopShell>
-      <main className={`max-w-7xl mx-auto select-none ${productRedesign ? 'px-4 py-6 sm:px-8 sm:py-9 lg:px-20 lg:py-12 xl:px-24' : 'px-6 sm:px-10 md:px-16 lg:px-20 xl:px-24 py-12'}`} style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+      <main className={`w-full mx-auto select-none ${productRedesign ? 'px-4 py-6 sm:px-8 sm:py-9 lg:px-20 lg:py-12 xl:px-24' : 'px-6 sm:px-10 md:px-16 lg:px-20 xl:px-24 py-12'}`} style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
         
         {/* Breadcrumbs */}
         <div className={`flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 font-medium ${productRedesign ? 'mb-4 lg:mb-8' : 'mb-8'}`}>

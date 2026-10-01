@@ -5,7 +5,7 @@ import { useTranslation } from '@/context/LanguageContext';
 import { Product } from '@/lib/data';
 import { ProductCard } from '@/components/ProductCard';
 import { ShopShell } from '@/components/ShopShell';
-import { Search, SlidersHorizontal, Check, ArrowUpDown, X, AlertTriangle, Sparkles, Loader2, ChevronLeft, ChevronRight, RotateCcw, Tags, HeartPulse, CircleDollarSign, FlaskConical } from 'lucide-react';
+import { Search, SlidersHorizontal, Check, ArrowUpDown, X, AlertTriangle, Loader2, ChevronLeft, ChevronRight, RotateCcw, Tags, HeartPulse, CircleDollarSign, FlaskConical } from 'lucide-react';
 import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 import { isDiagnosticProductEligible } from '@/lib/diagnostic-eligibility';
@@ -361,12 +361,6 @@ export default function ProductsClient({
     return result;
   }, [products, showOnlyMatches, diagnostic]);
 
-  const recommendations = useMemo(() => {
-    return [...products]
-      .filter(p => p.rating >= 4.7)
-      .slice(0, 4);
-  }, [products]);
-
   const totalResults = showOnlyMatches ? filteredProducts.length : pagination.total;
   const pageStart = pagination.total > 0 ? ((pagination.page - 1) * pagination.limit) + 1 : 0;
   const pageEnd = Math.min(pagination.page * pagination.limit, pagination.total);
@@ -387,7 +381,7 @@ export default function ProductsClient({
 
   return (
     <ShopShell>
-      <main className="public-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-12 lg:py-12 select-none">
+      <main className="public-page w-full mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-12 lg:py-12 select-none">
         
         {/* Editorial Double-Bezel Header Card */}
         <div className="rounded-[2rem] p-1.5 bg-slate-900/5 dark:bg-white/5 border border-slate-200/40 dark:border-slate-800/40 mb-12">
@@ -680,52 +674,6 @@ export default function ProductsClient({
           {/* Right Column: Grid and Toolbar */}
           <div className="flex-grow w-full min-w-0 space-y-6">
 
-            {/* Skin Diagnostic Profile Banner */}
-            {diagnostic && (
-              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-teal-500/10 via-emerald-500/5 to-transparent border border-teal-500/20 dark:border-teal-500/30 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-[0_4px_20px_rgba(13,148,136,0.03)]">
-                {/* Ambient sparkle graphics */}
-                <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-teal-500/10 blur-2xl pointer-events-none" />
-                
-                <div className="flex items-start gap-3.5 z-10">
-                  <div className="w-10 h-10 rounded-xl bg-teal-500 text-white flex items-center justify-center shadow-md shadow-teal-500/20 shrink-0">
-                    <Sparkles className="w-5 h-5 fill-current text-white animate-pulse" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-1.5 leading-none mb-1">
-                      {language === 'FR' ? 'Diagnostic de Peau Actif' : 'تحليل البشرة مفعل'}
-                      <span className="px-2 py-0.5 rounded-full bg-teal-500 text-white text-[9px] font-black uppercase tracking-widest leading-none">
-                        AI Matches
-                      </span>
-                    </h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                      {language === 'FR' 
-                        ? `Votre profil : Peau ${diagnostic.skinType === 'oily' ? 'Grasse' : diagnostic.skinType === 'dry' ? 'Sèche' : diagnostic.skinType === 'sensitive' ? 'Sensible' : 'Mixte'} • Cible : ${CONCERNS_LIST.find((c: any) => c.id === diagnostic.concern)?.labelFR || diagnostic.concern}`
-                        : `بشرتكِ: ${diagnostic.skinType === 'oily' ? 'دهنية' : diagnostic.skinType === 'dry' ? 'جافة' : diagnostic.skinType === 'sensitive' ? 'حساسة' : 'مختلطة'} • الهدف: ${CONCERNS_LIST.find((c: any) => c.id === diagnostic.concern)?.labelAR || diagnostic.concern}`}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Match Toggle Switch */}
-                <div className="flex items-center gap-3 z-10 shrink-0 self-start md:self-auto pt-2 md:pt-0">
-                  <span className="text-xs font-extrabold text-slate-600 dark:text-slate-300">
-                    {language === 'FR' ? 'Afficher uniquement les produits compatibles' : 'عرض المنتجات المتوافقة فقط'}
-                  </span>
-                  <button
-                    onClick={() => setShowOnlyMatches(!showOnlyMatches)}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out outline-none ${
-                      showOnlyMatches ? 'bg-teal-500' : 'bg-slate-200 dark:bg-slate-800'
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-205 ease-in-out ${
-                        showOnlyMatches ? 'translate-x-5' : 'translate-x-0'
-                      }`}
-                    />
-                  </button>
-                </div>
-              </div>
-            )}
-
             {/* Toolbar: Sorting & Count */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 rounded-2xl shadow-sm">
               <div className="min-w-0 flex-1 space-y-3 sm:space-y-1">
@@ -858,8 +806,7 @@ export default function ProductsClient({
               </div>
             )}
             {filteredProducts.length === 0 ? (
-              <div className="space-y-12">
-                <div className="text-center py-16 bg-white dark:bg-slate-950 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 space-y-4 shadow-sm">
+              <div className="text-center py-16 bg-white dark:bg-slate-950 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 space-y-4 shadow-sm">
                   <AlertTriangle className="w-10 h-10 text-amber-500 mx-auto" />
                   <h3 className="text-base font-black text-slate-800 dark:text-slate-200">
                     {language === 'FR' ? 'Aucun produit ne correspond à ces critères' : 'لم يتم العثور على أي منتج يطابق هذه المعايير'}
@@ -870,33 +817,11 @@ export default function ProductsClient({
                   >
                     {language === 'FR' ? 'Réinitialiser les filtres' : 'إعادة تعيين التصنيفات'}
                   </button>
-                </div>
-
-                {/* Best Sellers Recommendations */}
-                <div className="space-y-6 pt-4 border-t border-slate-100 dark:border-slate-900">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                    <div>
-                      <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 font-sans tracking-tight">
-                        {language === 'FR' ? 'Nos Meilleurs Best-Sellers' : 'أفضل منتجاتنا مبيعاً'}
-                      </h3>
-                      <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-0.5">
-                        {language === 'FR' ? 'Recommandations pour vous' : 'مقترحات مخصصة لكِ'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 min-[390px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-4 gap-6">
-                    {recommendations.map((product, idx) => (
-                      <div key={product.id} className="w-full">
-                        <ProductCard product={product} showMatchScore={true} searchQuery={searchQuery} priority={idx === 0} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
               </div>
             ) : (
               <div 
                 key={`${currentPage}-${selectedCategory}-${selectedBrands.join(',')}-${selectedConcerns.join(',')}-${searchQuery}-${maxPrice}-${showOnlyMatches}-${sortOption}`}
-                className="grid grid-cols-1 min-[390px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5 sm:gap-6"
+                className="grid grid-cols-1 min-[390px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 min-[1800px]:grid-cols-5 min-[2400px]:grid-cols-6 gap-5 sm:gap-6"
               >
                 {filteredProducts.map((product, index) => (
                   <div 

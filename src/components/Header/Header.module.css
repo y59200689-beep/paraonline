@@ -3,10 +3,10 @@
   background: #fff;
 }
 .utilityInner {
-  max-width: 1600px;
+  width: 100%;
   margin: auto;
   min-height: 48px;
-  padding: 2px 30px;
+  padding: 2px clamp(20px, 3vw, 64px);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -27,7 +27,7 @@
 .utilityLinks a + a { border-inline-start: 1px solid var(--brand-border, #dce5e5); padding-inline-start: 20px; }
 .utilityLinks svg { width: 20px; height: 20px; stroke-width: 1.6; }
 .utilityLinks a:hover { color: var(--brand-secondary-ink, #216f72); }
-.main { max-width: 1600px; margin: auto; padding-inline: 30px; }
+.main { width: 100%; margin: auto; padding-inline: clamp(20px, 3vw, 64px); }
 .desktop { display: none; }
 .logo { width: 220px; height: auto; object-fit: contain; }
 .search { min-width: 0; width: 100%; position: relative; }
@@ -67,7 +67,7 @@
   box-shadow: 0 4px 12px rgba(185,80,88,.1);
 }
 .cartIcon { width: 30px; height: 30px; stroke-width: 1.5; }
-.cartText { display: flex; flex-direction: column; gap: 2px; text-align: start; white-space: nowrap; font-size: 12px; line-height: 1.4; }
+.cartText { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; white-space: nowrap; font-size: 12px; line-height: 1.4; }
 .cartText strong { font-size: 16px; font-weight: 700; }
 .category:focus-visible, .submit:focus-visible, .action:focus-visible, .cart:focus-visible, .utility a:focus-visible, .utility button:focus-visible { outline: 2px solid var(--brand-secondary-ink, #216f72); outline-offset: 4px; }
 @media (min-width: 1024px) { .desktop { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 24px; } }

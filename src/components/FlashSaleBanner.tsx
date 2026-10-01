@@ -128,7 +128,7 @@ export const FlashSaleBanner: React.FC<FlashSaleBannerProps> = ({
       {/* Background Subtle Mesh Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/5 dark:bg-emerald-500/10 blur-[130px] rounded-full pointer-events-none" />
 
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8">
+      <div className="w-full mx-auto px-4 sm:px-6 md:px-8">
         {/* Double-Bezel Outer Shell (Contrast Dark Mode) */}
         <div className="p-2 md:p-3 rounded-[32px] bg-slate-950/95 border border-slate-900 shadow-2xl relative overflow-hidden">
           {/* Inner Content Core */}

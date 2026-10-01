@@ -1,5 +1,5 @@
 .section { padding: 60px 0 68px; background: #f8faf9; color: #192b3f; }
-.container { max-width: 1600px; margin: auto; padding: 0 28px; }
+.container { width: 100%; margin: auto; padding: 0 clamp(20px, 3vw, 64px); }
 .header { text-align: center; margin: 0 auto 34px; }
 .badge { display: inline-flex; background: #ecf7f5; color: #216f72; padding: 7px 14px; border-radius: 30px; font-size: 10px; font-weight: 700; letter-spacing: .13em; }
 .header h2 { font: 600 clamp(34px, 3.5vw, 48px)/1.15 var(--font-heading); letter-spacing: -.035em; margin: 14px 0 12px; }

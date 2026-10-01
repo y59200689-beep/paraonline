@@ -64,7 +64,7 @@ export const TopBar: React.FC<TopBarProps> = ({
     >
       <div className={styles.signature}>
         <Leaf aria-hidden="true" />
-        <span>{language === 'FR' ? 'VOTRE BEAUTÉ • NOTRE EXPERTISE • AU QUOTIDIEN' : 'جمالك • خبرتنا • كل يوم'}</span>
+        <span>{language === 'FR' ? 'PRENEZ SOIN DE VOUS, NOUS PRENONS SOIN DE VOS BESOINS' : 'جمالك • خبرتنا • كل يوم'}</span>
       </div>
       <div className={styles.utilityLinks}>
         <Link href="/a-propos" className="hover:text-primary transition-colors duration-200 cursor-pointer">
@@ -75,22 +75,10 @@ export const TopBar: React.FC<TopBarProps> = ({
           <Truck aria-hidden="true" />
           {language === 'FR' ? 'Suivi de commande' : 'تتبع الطلب'}
         </Link>
-        <a
-          href="#footer"
-          onClick={(e) => {
-            e.preventDefault();
-            const footerEl = document.getElementById('footer');
-            if (footerEl) {
-              footerEl.scrollIntoView({ behavior: 'smooth' });
-            } else {
-              window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-            }
-          }}
-          className="hover:text-primary transition-colors duration-200 cursor-pointer"
-        >
+        <Link href="/contact" className="hover:text-primary transition-colors duration-200 cursor-pointer">
           <Headphones aria-hidden="true" />
           {language === 'FR' ? 'Contact' : 'اتصل بنا'}
-        </a>
+        </Link>
       </div>
 
       {/* Right: Language & Currency */}

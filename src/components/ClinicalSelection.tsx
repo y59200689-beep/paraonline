@@ -50,7 +50,7 @@ export const ClinicalSelection: React.FC = () => {
 
   return (
     <section className="border-t border-slate-200/70 bg-[#f7f8f8] py-12 dark:border-slate-800 dark:bg-slate-950 md:py-20">
-      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 md:px-8">
+      <div className="mx-auto w-full px-4 sm:px-6 md:px-8">
         <div className="grid overflow-hidden border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.09)] dark:border-slate-800 dark:bg-slate-900 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)]">
           <div className="flex min-w-0 flex-col p-5 sm:p-8 lg:p-10">
             <div className={`mb-7 flex items-start justify-between gap-5 ${isArabic ? 'flex-row-reverse text-right' : 'text-left'}`}>

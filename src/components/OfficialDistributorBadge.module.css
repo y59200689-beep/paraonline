@@ -1,5 +1,5 @@
 .section { position: relative; isolation: isolate; overflow: hidden; padding: 76px 0 58px; color: #173e47; background: radial-gradient(ellipse at 95% 0%, #f5dedc70, transparent 42%), #fffdfc; border-top: 1px solid #f5e9e6; }
-.container { position: relative; max-width: 1440px; margin: auto; padding: 0 32px; display: grid; grid-template-columns: 1.22fr 1fr 1.12fr; align-items: center; gap: 36px; }
+.container { position: relative; width: 100%; margin: auto; padding: 0 clamp(20px, 3vw, 64px); display: grid; grid-template-columns: 1.22fr 1fr 1.12fr; align-items: center; gap: 36px; }
 .identity { display: flex; align-items: center; gap: 24px; min-width: 0; }
 .seal { flex-shrink: 0; display: grid; place-items: center; width: 100px; height: 142px; border: 2px solid #fff; border-radius: 50%; background: linear-gradient(140deg, #ffffffd9, #f3ded943 50%, #ffffffb3); box-shadow: inset 0 0 0 5px #f4e7e580, 0 12px 25px #ad818114; color: #419c9e; transform: rotate(-8deg); }
 .seal svg { width: 76px; height: 92px; filter: drop-shadow(2px 4px 1px #276e6e26); }

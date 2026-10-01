@@ -1,26 +1,21 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { ShopShell } from '@/components/ShopShell';
 import { useTranslation } from '@/context/LanguageContext';
 import { useUi } from '@/context/UiContext';
+import styles from './AboutCommitments.module.css';
 import {
   ShieldCheck,
   Sparkles,
-  Award,
   Truck,
+  PackageSearch,
+  Headset,
+  Banknote,
   HeartHandshake,
-  Microscope,
-  Lock,
-  Stethoscope,
-  CheckCircle2,
   ArrowRight,
-  MapPin,
-  Clock,
-  Users,
-  Building2,
-  MessageSquareCheck
 } from 'lucide-react';
 
 export function AboutClient() {
@@ -35,68 +30,79 @@ export function AboutClient() {
         style={{ direction: isRTL ? 'rtl' : 'ltr' }}
       >
         {/* Subtle Ambient Top Radial Light */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[500px] bg-[radial-gradient(ellipse_at_top,rgba(16,185,129,0.08)_0%,rgba(14,165,233,0.03)_45%,transparent_70%)] pointer-events-none z-0" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full w-full h-[500px] bg-[radial-gradient(ellipse_at_top,rgba(16,185,129,0.08)_0%,rgba(14,165,233,0.03)_45%,transparent_70%)] pointer-events-none z-0" />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20 space-y-16 lg:space-y-28">
+        <div className="relative z-10 w-full mx-auto px-4 sm:px-6 lg:px-8 pb-12 lg:pb-20 space-y-16 lg:space-y-28">
 
           {/* ──────────────── 1. HERO SECTION ──────────────── */}
-          <section className="text-center space-y-8 pt-4">
+          <section className="relative left-1/2 w-screen -translate-x-1/2 text-center">
+            <div className="relative flex min-h-[520px] flex-col items-center justify-end overflow-hidden px-5 pb-24 pt-48 sm:min-h-[580px] sm:pb-28 lg:min-h-[640px]">
+              <Image
+                src="/images/about-para-divine-storefront.jpg"
+                alt="Façade de la parapharmacie Para Divine"
+                fill
+                priority
+                sizes="100vw"
+                className="object-cover object-top"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-slate-950/10 via-slate-950/10 to-slate-950/80" aria-hidden="true" />
+              <div className="relative z-10 flex flex-col items-center gap-5">
             {/* Micro Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200/80 rounded-full text-emerald-800 text-xs font-mono font-bold tracking-widest uppercase shadow-sm">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/90 px-4 py-2 text-xs font-mono font-bold uppercase tracking-widest text-teal-900 shadow-sm backdrop-blur-md">
+              <Sparkles className="h-3.5 w-3.5 text-teal-700" />
               <span>
                 {language === 'AR' ? 'العناية والجمال' : 'Parapharmacie et soins beauté'}
               </span>
             </div>
 
             {/* Main Headline */}
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black font-heading tracking-tight text-slate-900 max-w-4xl mx-auto leading-[1.15]">
+            <h1 className="mx-auto max-w-4xl font-heading text-4xl font-black leading-[1.1] tracking-tight text-white drop-shadow-lg sm:text-5xl lg:text-6xl">
               {language === 'AR' ? (
                 <>
                   نُعيد تعريف <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent">العناية بالبشرة</span> في المغرب بدقة علمية وأمان تام
                 </>
               ) : (
-                <>
-                  Prendre soin de votre <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent">peau</span> au Maroc
-                </>
+                <>Qui Somme Nous?</>
               )}
             </h1>
 
             {/* Narrative Spine Subtitle */}
-            <p className="text-sm sm:text-base lg:text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed font-normal">
+            <p className="mx-auto max-w-2xl text-sm font-medium leading-relaxed text-white/95 sm:text-base lg:text-lg">
               {language === 'AR'
                 ? 'Para Divine هو متجركم للعناية بالبشرة والجمال في المغرب، مع اختيارات تناسب روتينكم اليومي.'
                 : 'Para Divine est votre boutique de soins et de beauté au Maroc, avec une sélection pensée pour vos routines quotidiennes.'}
             </p>
+              </div>
+            </div>
 
             {/* Key Metrics Deck */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 max-w-5xl mx-auto">
+            <div className="relative z-20 mx-auto -mt-14 grid w-full grid-cols-2 gap-4 px-4 sm:gap-5 sm:px-6 md:grid-cols-4 lg:-mt-16 lg:gap-6 lg:px-8">
               {[
                 {
-                  value: 'Sélection',
+                  value: 'SÉLECTION',
                   labelFr: 'Marques disponibles',
                   labelAr: 'علامات متوفرة',
                   descFr: 'Pour vos routines',
                   descAr: 'لروتينكِ اليومي',
-                  icon: ShieldCheck,
+                  icon: PackageSearch,
                   color: 'text-emerald-600'
                 },
                 {
-                  value: 'Maroc',
-                  labelFr: 'Livraison au Maroc',
+                  value: 'A\u202FDOMICILE',
+                  labelFr: 'Livraison a Domicile',
                   labelAr: 'توصيل في المغرب',
                   descFr: 'Selon la zone de livraison',
                   descAr: 'حسب منطقة التوصيل',
-                  icon: Users,
+                  icon: Truck,
                   color: 'text-teal-600'
                 },
                 {
-                  value: 'Support',
+                  value: 'SUPPORT',
                   labelFr: 'Équipe disponible',
                   labelAr: 'فريق متاح',
                   descFr: 'Pour vous accompagner',
                   descAr: 'لمرافقتكِ',
-                  icon: Truck,
+                  icon: Headset,
                   color: 'text-cyan-600'
                 },
                 {
@@ -105,7 +111,7 @@ export function AboutClient() {
                   labelAr: 'الدفع عند التسليم',
                   descFr: 'Selon les options proposées',
                   descAr: 'حسب الخيارات المتاحة',
-                  icon: Award,
+                  icon: Banknote,
                   color: 'text-amber-600'
                 }
               ].map((stat, idx) => {
@@ -113,15 +119,15 @@ export function AboutClient() {
                 return (
                   <div
                     key={idx}
-                    className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-md hover:shadow-lg transition duration-300 text-left relative overflow-hidden group"
+                    className="group relative min-h-36 overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-4 text-left shadow-[0_16px_40px_rgba(16,41,45,0.14)] transition duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-5"
                     style={{ textAlign: isRTL ? 'right' : 'left' }}
                   >
                     <div className="flex items-center justify-between mb-3" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
                       <span className={`text-2xl sm:text-3xl font-black font-mono tracking-tight ${stat.color}`}>
                         {stat.value}
                       </span>
-                      <div className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 group-hover:scale-110 transition duration-300">
-                        <StatIcon className="w-4.5 h-4.5 text-slate-700" />
+                      <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center group-hover:scale-110 transition duration-300">
+                        <StatIcon className={`w-5 h-5 ${stat.color}`} strokeWidth={1.8} aria-hidden="true" />
                       </div>
                     </div>
                     <p className="text-xs font-bold text-slate-900 font-heading">
@@ -137,229 +143,94 @@ export function AboutClient() {
           </section>
 
 
-          {/* ──────────────── 2. OUR STORY & BRAND PILLARS (BENTO) ──────────────── */}
-          <section className="space-y-10">
-            <div className="text-center space-y-3">
-              <span className="text-[10px] font-mono font-bold tracking-widest text-emerald-700 uppercase bg-emerald-100/70 px-3.5 py-1 rounded-full border border-emerald-200">
-                {language === 'AR' ? 'فلسفتنا والتزامنا' : 'NOTRE APPROCHE & ENGAGEMENT'}
-              </span>
-              <h2 className="text-2xl sm:text-4xl font-black text-slate-900 font-heading tracking-tight">
-                {language === 'AR' ? 'لماذا تختار Para Divine؟' : 'Pourquoi Choisir Para Divine ?'}
+          {/* ──────────────── 2. OUR THREE COMMITMENTS ──────────────── */}
+          <section className={styles.section} aria-labelledby="commitments-title">
+            <div className={styles.heading}>
+              <h2 id="commitments-title" className={styles.title}>
+                {language === 'AR' ? 'التزاماتنا الثلاثة الأساسية' : <>Nos 3 <span>Engagements</span> Majeurs</>}
               </h2>
-              <p className="text-xs sm:text-sm text-slate-600 max-w-xl mx-auto leading-relaxed">
+              <p className={styles.intro}>
                 {language === 'AR'
-                  ? 'ثلاثة ركائز أساسية تجعلنا الخيار الأول والآمن لكل من يبحث عن صحة ونضارة بشرته.'
+                  ? 'ثلاثة التزامات توجه اختيارنا لمنتجاتكم ومرافقتكم في كل خطوة.'
                   : 'Trois engagements qui guident notre sélection et notre accompagnement au quotidien.'}
               </p>
+              <span className={styles.headingRule} aria-hidden="true" />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Pillar 1 */}
-              <div className="p-8 rounded-3xl bg-white border border-slate-200/80 shadow-md flex flex-col justify-between space-y-6 group hover:border-emerald-500/40 hover:shadow-xl transition duration-500">
-                <div className="space-y-4">
-                  <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center group-hover:scale-105 transition duration-300">
-                    <Microscope className="w-7 h-7" />
-                  </div>
-                  <h3 className="text-lg font-black text-slate-900 font-heading tracking-tight">
-                    {language === 'AR' ? '1. حفظ وتخزين طبي صارم' : '1. Chaîne du Froid & Stockage Officinal'}
-                  </h3>
-                  <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                    {language === 'AR'
-                      ? 'نهتم بتجهيز طلباتكم بعناية لحماية المنتجات أثناء الشحن.'
-                      : 'Nous préparons vos commandes avec soin pour protéger les produits pendant le transport.'}
-                  </p>
-                </div>
-                <div className="pt-4 border-t border-slate-100 flex items-center gap-2 text-[11px] font-mono text-emerald-700 font-semibold">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>{language === 'AR' ? 'تجهيز بعناية' : 'Préparation soignée'}</span>
-                </div>
-              </div>
-
-              {/* Pillar 2 */}
-              <div className="p-8 rounded-3xl bg-white border border-slate-200/80 shadow-md flex flex-col justify-between space-y-6 group hover:border-teal-500/40 hover:shadow-xl transition duration-500">
-                <div className="space-y-4">
-                  <div className="w-14 h-14 rounded-2xl bg-teal-50 border border-teal-100 text-teal-600 flex items-center justify-center group-hover:scale-105 transition duration-300">
-                    <Sparkles className="w-7 h-7" />
-                  </div>
-                  <h3 className="text-lg font-black text-slate-900 font-heading tracking-tight">
-                    {language === 'AR' ? '2. تشخيص البشرة' : '2. Diagnostic de peau'}
-                  </h3>
-                  <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                    {language === 'AR'
-                      ? 'أجيبي عن أسئلة بسيطة لتحصلي على اقتراحات تناسب احتياجات بشرتكِ.'
-                      : 'Répondez à quelques questions pour recevoir des suggestions adaptées aux besoins de votre peau.'}
-                  </p>
-                </div>
-                <div className="pt-4 border-t border-slate-100 flex items-center gap-2 text-[11px] font-mono text-teal-700 font-semibold">
-                  <CheckCircle2 className="w-4 h-4 text-teal-600 shrink-0" />
-                  <span>{language === 'AR' ? 'توصيات مخصصة' : 'Recommandations personnalisées'}</span>
-                </div>
-              </div>
-
-              {/* Pillar 3 */}
-              <div className="p-8 rounded-3xl bg-white border border-slate-200/80 shadow-md flex flex-col justify-between space-y-6 group hover:border-cyan-500/40 hover:shadow-xl transition duration-500">
-                <div className="space-y-4">
-                  <div className="w-14 h-14 rounded-2xl bg-cyan-50 border border-cyan-100 text-cyan-600 flex items-center justify-center group-hover:scale-105 transition duration-300">
-                    <ShieldCheck className="w-7 h-7" />
-                  </div>
-                  <h3 className="text-lg font-black text-slate-900 font-heading tracking-tight">
-                    {language === 'AR' ? '3. اختيار واضح' : '3. Sélection transparente'}
-                  </h3>
-                  <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                    {language === 'AR'
-                      ? 'نختار المنتجات من علامات وموردين معروفين ونوضح معلوماتها في صفحاتها.'
-                      : 'Nous sélectionnons les produits auprès de marques et de fournisseurs reconnus, avec des informations claires sur chaque fiche.'}
-                  </p>
-                </div>
-                <div className="pt-4 border-t border-slate-100 flex items-center gap-2 text-[11px] font-mono text-cyan-700 font-semibold">
-                  <CheckCircle2 className="w-4 h-4 text-cyan-600 shrink-0" />
-                  <span>{language === 'AR' ? 'معلومات واضحة عن المنتجات' : 'Informations produits claires'}</span>
-                </div>
-              </div>
-            </div>
-          </section>
-
-
-          {/* ──────────────── 3. CORE VALUES GRID ──────────────── */}
-          <section className="space-y-12">
-            <div className="border-b border-slate-200 pb-6 flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-              <div>
-                <span className="text-[10px] font-mono font-bold tracking-widest text-emerald-700 uppercase">
-                  {language === 'AR' ? 'مبادؤنا الأخلاقية' : 'CHARTE DE CONFIANCE'}
-                </span>
-                <h2 className="text-2xl sm:text-4xl font-black text-slate-900 font-heading tracking-tight mt-1">
-                  {language === 'AR' ? 'قيمنا الأساسية الاربع' : 'Nos 4 Engagements Majeurs'}
-                </h2>
-              </div>
-              <p className="text-xs text-slate-500 max-w-sm">
-                {language === 'AR'
-                  ? 'التزامنا اليومي نحو كل عميلة تبحث عن الجودة والسلامة والنتائج الحقيقية.'
-                  : 'Notre charte éthique appliquée à chaque étape de votre parcours d\'achat.'}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className={styles.grid}>
               {[
                 {
-                  titleFr: '1. Informations utiles',
-                  titleAr: '1. معلومات مفيدة',
-                  descFr: 'Des fiches produits pour vous aider à choisir votre routine.',
-                  descAr: 'معلومات عن المنتجات لمساعدتكِ في اختيار روتينكِ.',
-                  icon: Stethoscope,
-                  gradient: 'bg-emerald-50/50 border-emerald-100',
-                  border: 'hover:border-emerald-400'
+                  number: '01',
+                  titleFr: 'Une large sélection de produits',
+                  titleAr: 'مجموعة واسعة من المنتجات',
+                  descriptionFr: 'Découvrez une gamme variée de produits de parapharmacie soigneusement sélectionnés pour répondre à vos besoins en santé, beauté, hygiène et bien-être.',
+                  descriptionAr: 'اكتشفوا مجموعة متنوعة من منتجات البارافارماسي المختارة بعناية لتلبية احتياجاتكم في الصحة والجمال والنظافة والرفاهية.',
+                  icon: ShieldCheck,
+                  image: '/images/diagnostic/dermo-research-still-life.png',
+                  imageAlt: 'Sérum et soins de parapharmacie',
+                  actionFr: 'Découvrir les produits',
+                  actionAr: 'اكتشفوا المنتجات',
+                  href: '/products',
                 },
                 {
-                  titleFr: '2. Expédition Sécurisée',
-                  titleAr: '2. شحن آمن وسريع',
-                  descFr: 'Des commandes préparées avec soin et un paiement à la livraison disponible.',
-                  descAr: 'تغليف محكم ضد الصدمات مع إمكانية الدفع عند الاستلام.',
-                  icon: Lock,
-                  gradient: 'bg-teal-50/50 border-teal-100',
-                  border: 'hover:border-teal-400'
+                  number: '02',
+                  titleFr: 'Un diagnostic de peau en ligne',
+                  titleAr: 'تشخيص البشرة عبر الإنترنت',
+                  descriptionFr: 'Bénéficiez d’un diagnostic personnalisé de votre peau directement en ligne afin de mieux identifier vos besoins et vous orienter vers une routine adaptée.',
+                  descriptionAr: 'استفيدوا من تشخيص مخصص لبشرتكم عبر الإنترنت لتحديد احتياجاتكم بشكل أفضل وإرشادكم إلى روتين مناسب.',
+                  icon: Sparkles,
+                  image: '/images/skin_diagnostic_scan.webp',
+                  imageAlt: 'Analyse personnalisée de la peau',
+                  actionFr: 'Faire mon diagnostic',
+                  actionAr: 'ابدأوا التشخيص',
+                  href: null,
                 },
                 {
-                  titleFr: '3. Conseil WhatsApp',
-                  titleAr: '3. استشارة واتساب خاصة',
-                  descFr: 'Notre équipe vous accompagne sur WhatsApp pour vos questions.',
-                  descAr: 'فريق مستشارات التجميل متواجد طيلة الأسبوع لإجابة استفساراتكِ.',
-                  icon: MessageSquareCheck,
-                  gradient: 'bg-cyan-50/50 border-cyan-100',
-                  border: 'hover:border-cyan-400'
-                },
-                {
-                  titleFr: '4. Transparence & Équité',
-                  titleAr: '4. شفافية وأسعار عادلة',
-                  descFr: 'Des prix affichés clairement et des offres selon les conditions indiquées.',
-                  descAr: 'أسعار مناسبة، نقاط مكافآت هدايا عينات مع كل طلبية.',
+                  number: '03',
+                  titleFr: 'Un service de qualité, avant et après votre achat',
+                  titleAr: 'خدمة مميزة قبل الشراء وبعده',
+                  descriptionFr: 'Notre équipe vous accompagne à chaque étape, de la prise de conseil et de commande jusqu’au suivi après-vente, pour vous garantir une expérience simple, fiable et satisfaisante.',
+                  descriptionAr: 'يرافقكم فريقنا في كل مرحلة، من الاستشارة وتقديم الطلب إلى المتابعة بعد البيع، لنضمن لكم تجربة سهلة وموثوقة ومُرضية.',
                   icon: HeartHandshake,
-                  gradient: 'bg-amber-50/50 border-amber-100',
-                  border: 'hover:border-amber-400'
-                }
-              ].map((val, idx) => {
-                const ValIcon = val.icon;
+                  image: '/images/about-para-divine-storefront.jpg',
+                  imageAlt: 'Parapharmacie Para Divine',
+                  actionFr: 'Nous contacter',
+                  actionAr: 'اتصلوا بنا',
+                  href: '/contact',
+                },
+              ].map((benefit, index) => {
+                const Icon = benefit.icon;
+                const actionLabel = language === 'AR' ? benefit.actionAr : benefit.actionFr;
                 return (
-                  <div
-                    key={idx}
-                    className={`p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition duration-300 ${val.border} space-y-4 text-left`}
-                    style={{ textAlign: isRTL ? 'right' : 'left' }}
-                  >
-                    <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-emerald-600">
-                      <ValIcon className="w-6 h-6" />
+                  <article key={benefit.number} className={`${styles.commitment} ${styles[`commitment${index + 1}`]}`}>
+                    <div className={styles.portraitWrap}>
+                      <div className={styles.portrait}>
+                        <Image src={benefit.image} alt={benefit.imageAlt} fill sizes="(max-width: 640px) 180px, 220px" className={styles.portraitImage} />
+                      </div>
+                      <span className={styles.iconBadge} aria-hidden="true"><Icon size={30} strokeWidth={1.7} /></span>
+                      <span className={styles.numberBadge} aria-hidden="true">{benefit.number}</span>
                     </div>
-                    <h4 className="text-sm font-bold text-slate-900 font-heading">
-                      {language === 'AR' ? val.titleAr : val.titleFr}
-                    </h4>
-                    <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                      {language === 'AR' ? val.descAr : val.descFr}
+                    <h3 className={styles.cardTitle}>
+                      {language === 'AR' ? benefit.titleAr : benefit.titleFr}
+                    </h3>
+                    <p className={styles.cardDescription}>
+                      {language === 'AR' ? benefit.descriptionAr : benefit.descriptionFr}
                     </p>
-                  </div>
+                    {benefit.href ? (
+                      <Link className={styles.action} href={benefit.href} aria-label={actionLabel} title={actionLabel}>
+                        <ArrowRight size={20} strokeWidth={2} aria-hidden="true" />
+                      </Link>
+                    ) : (
+                      <button className={styles.action} type="button" onClick={() => setDiagnosticOpen(true)} aria-label={actionLabel} title={actionLabel}>
+                        <ArrowRight size={20} strokeWidth={2} aria-hidden="true" />
+                      </button>
+                    )}
+                  </article>
                 );
               })}
             </div>
           </section>
 
-
-          {/* ──────────────── 4. INFRASTRUCTURE & NATIONAL COVERAGE ──────────────── */}
-          <section className="p-8 sm:p-12 rounded-3xl bg-white border border-slate-200/90 shadow-xl relative overflow-hidden space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
-              <div className="lg:col-span-7 space-y-6" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-mono font-bold">
-                  <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>{language === 'AR' ? 'التغطية الوطنية الشاملة' : 'LIVRAISON PARTOUT AU MAROC'}</span>
-                </div>
-                <h3 className="text-2xl sm:text-4xl font-black text-slate-900 font-heading tracking-tight leading-tight">
-                  {language === 'AR'
-                    ? 'من الدار البيضاء إلى العيون: خدماتنا تصل حتى باب بيتكِ'
-                    : 'Une Infrastructure Logistique Sécurisée dans Tout le Maroc'}
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  {language === 'AR'
-                    ? 'نعتمد شباك توزيع سريع محكم التغليف ومغطى ضد الصدمات للوصول إلى كافة مدن المغرب (الرباط، فاس، طنجة، مراكش، أكادير، وجدة والقرى المجاورة) بنفس معايير السرعة والأمان.'
-                    : 'Notre réseau de livraison dessert de nombreuses villes au Maroc. Les délais affichés lors de la commande varient selon votre zone.'}
-                </p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-2">
-                  {[
-                    { labelFr: 'Casablanca & Rabat', labelAr: 'الدار البيضاء والرباط' },
-                    { labelFr: 'Marrakech & Agadir', labelAr: 'مراكش وأكادير' },
-                    { labelFr: 'Tanger & Tétouan', labelAr: 'طنجة وتطوان' },
-                    { labelFr: 'Fès & Meknès', labelAr: 'فاس ومكناس' },
-                    { labelFr: 'Oujda & Nador', labelAr: 'وجدة والناظور' },
-                    { labelFr: 'Provinces du Sud', labelAr: 'الأقاليم الجنوبية' }
-                  ].map((city, idx) => (
-                    <div key={idx} className="flex items-center gap-2 text-xs text-slate-700 font-semibold">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                      <span>{language === 'AR' ? city.labelAr : city.labelFr}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="lg:col-span-5 bg-slate-50 border border-slate-200 rounded-2xl p-6 space-y-4 shadow-inner">
-                <h4 className="text-sm font-bold text-slate-900 font-heading border-b border-slate-200 pb-3 flex items-center gap-2">
-                  <Building2 className="w-4.5 h-4.5 text-emerald-600" />
-                  <span>{language === 'AR' ? 'معلومات المقر الرئيسي' : 'Siège Social & Infoline'}</span>
-                </h4>
-                <div className="space-y-3.5 text-xs text-slate-700 font-normal">
-                  <div className="flex items-start gap-3">
-                    <Building2 className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-bold text-slate-900">Para Divine</p>
-                      <p className="text-slate-500 text-[11px]">Bd Al Massira Al Khadra, Maarif, Casablanca 20330, Maroc</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Clock className="w-4 h-4 text-slate-500 shrink-0" />
-                    <p className="text-[11px] text-slate-600 font-medium">Du Lundi au Samedi: 09h00 – 18h00 (GMT+1)</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <MessageSquareCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <p className="text-[11px] font-mono text-emerald-700 font-bold">Support WhatsApp: +212 6 60 80 80 80</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
 
         </div>
       </div>

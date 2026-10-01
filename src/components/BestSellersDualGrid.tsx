@@ -110,7 +110,7 @@ export const BestSellersDualGrid: React.FC = () => {
 
   return (
     <section className="py-10 bg-[#FAFAFA] border-b border-slate-200/40 relative overflow-hidden reveal-on-scroll">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 relative z-10">
+      <div className="w-full mx-auto px-4 sm:px-6 md:px-8 relative z-10">
         
         {/* Single Unified Header Banner */}
         <div className="relative rounded-[20px] bg-[#111827] overflow-hidden flex flex-row items-center justify-between px-6 border border-slate-800 shadow-md group h-[96px] mb-6 md:mb-8">

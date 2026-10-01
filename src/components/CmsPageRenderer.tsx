@@ -41,5 +41,5 @@ export function CmsPageRenderer({ page }: { page: CmsPublicPage }) {
   const { language } = useTranslation();
   const sections = Array.isArray(page.section_order) ? page.section_order : [];
   if (!sections.length) return null;
-  return <main className="min-h-screen bg-[#f7faf9] px-4 py-10 sm:px-8"><div className="mx-auto max-w-6xl space-y-6">{sections.map(section => <Section key={section.id} section={section} language={language} />)}</div></main>;
+  return <main className="min-h-screen bg-[#f7faf9] px-4 py-10 sm:px-8 2xl:px-14"><div className="mx-auto w-full space-y-6">{sections.map(section => <Section key={section.id} section={section} language={language} />)}</div></main>;
 }

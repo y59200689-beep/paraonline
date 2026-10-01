@@ -89,6 +89,11 @@ export const Header: React.FC = () => {
   const langRef = useRef<HTMLDivElement>(null);
   const prevCountRef = useRef(0);
 
+  useEffect(() => {
+    if (pathname !== '/products') return;
+    setSelectedCategoryId(new URLSearchParams(window.location.search).get('category') || 'all');
+  }, [pathname]);
+
   const currentLang = LANGUAGES.find((l) => l.id === language) || LANGUAGES[0];
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
@@ -298,7 +303,12 @@ export const Header: React.FC = () => {
               searchRef={desktopSearchRef}
               categoryRef={categoryRef}
               selectedCategoryId={selectedCategoryId}
-              setSelectedCategoryId={setSelectedCategoryId}
+              setSelectedCategoryId={(id) => {
+                setSelectedCategoryId(id);
+                setSearchQuery('');
+                setShowSearch(false);
+                router.push(id === 'all' ? '/products' : `/products?category=${encodeURIComponent(id)}`);
+              }}
               showCategoryDropdown={showCategoryDropdown}
               setShowCategoryDropdown={setShowCategoryDropdown}
               hoveredCategoryId={hoveredCategoryId}

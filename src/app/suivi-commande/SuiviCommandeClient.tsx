@@ -342,7 +342,7 @@ export default function SuiviCommandeClient() {
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[450px] bg-emerald-500/10 blur-[150px] pointer-events-none rounded-full" />
           <div className="absolute top-20 right-10 w-96 h-96 bg-cyan-500/10 blur-[140px] pointer-events-none rounded-full" />
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             {/* Header Navigation & Back button */}
             <div className="flex items-center justify-between gap-4 mb-8">
               <Link
@@ -444,7 +444,7 @@ export default function SuiviCommandeClient() {
         </div>
 
         {/* Main Content Area */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-12">
           
           {/* 1. ERROR STATE */}
           {error && (

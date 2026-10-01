@@ -249,7 +249,7 @@ export const CurationClinique: React.FC = () => {
 
   return (
     <section className="w-full py-16 md:py-24 bg-white border-b border-slate-100">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8">
+      <div className="w-full mx-auto px-4 sm:px-6 md:px-8">
 
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">

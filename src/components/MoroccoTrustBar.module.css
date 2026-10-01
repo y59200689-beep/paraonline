@@ -5,7 +5,7 @@
   padding: 64px 0 72px;
   background: #fffdfc;
 }
-.container { position: relative; max-width: 1440px; margin: auto; padding: 0 32px; }
+.container { position: relative; width: 100%; margin: auto; padding: 0 clamp(20px, 3vw, 64px); }
 .header { max-width: 900px; margin: 0 auto 38px; text-align: center; }
 .eyebrow {
   display: inline-flex; align-items: center; gap: 12px;

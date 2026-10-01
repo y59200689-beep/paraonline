@@ -29,7 +29,7 @@ export default function AdviceClient({ initialArticles }: AdviceClientProps) {
 
   return (
     <ShopShell>
-      <main className="public-page max-w-7xl mx-auto px-4 sm:px-6 pt-16 pb-24 relative z-10">
+      <main className="public-page w-full mx-auto px-4 sm:px-6 pt-16 pb-24 relative z-10">
         
         {/* Breadcrumbs */}
         <div className="flex items-center gap-2 text-[11px] text-slate-600 font-semibold mb-8 select-none">

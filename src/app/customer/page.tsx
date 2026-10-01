@@ -769,7 +769,7 @@ export default function CustomerDashboard() {
           </div>
         )}
 
-        <div className={`w-full relative z-10 ${!clientUser ? 'max-w-6xl' : 'max-w-6xl mx-auto space-y-8'}`}>
+        <div className={`w-full relative z-10 ${!clientUser ? 'max-w-6xl' : 'mx-auto space-y-8'}`}>
           
           {/* ── NOT LOGGED IN: RENDERS AUTH PORTAL ── */}
           {!clientUser ? (

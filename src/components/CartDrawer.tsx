@@ -51,7 +51,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const { t, language } = useTranslation();
   const { products } = useProducts();
   const { settings } = useSettings();
-  const { tierMultiplier, points: loyaltyPoints, tier } = useLoyalty();
+  const { tierMultiplier, points: loyaltyPoints, tier, clientUser, isLoadingAuth } = useLoyalty();
   const {
     cart, clearCart, addToCart, removeFromCart, updateQuantity,
     subtotal, total, discountAmount, discountedSubtotal, shippingFee, isFreeShipping,
@@ -539,7 +539,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               </div>
 
               {/* 3. Loyalty Points Preview */}
-              {(() => {
+              {!isLoadingAuth && clientUser && (() => {
                 const pointsPerDh = settings?.loyaltyPointsPerDh ?? 1.0;
                 const pointsToEarn = Math.round(Math.round(subtotal * pointsPerDh) * tierMultiplier);
                 if (pointsToEarn <= 0) return null;

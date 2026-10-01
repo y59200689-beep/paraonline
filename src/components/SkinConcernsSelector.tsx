@@ -117,7 +117,7 @@ export const SkinConcernsSelector: React.FC = () => {
       {/* Background decoration */}
       <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-800 to-transparent" />
       
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8">
+      <div className="w-full mx-auto px-4 sm:px-6 md:px-8">
         
         {/* Section Header */}
         <div className="flex flex-col items-center text-center space-y-4 mb-12">

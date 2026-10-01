@@ -7,12 +7,20 @@ import { SearchDropdown } from './SearchDropdown';
 import { Product } from '@/lib/data';
 
 const CATEGORIES = [
-  { id: 'all',     labelFR: 'Toutes les catégories',       labelAR: 'جميع الفئات' },
-  { id: 'bebe',    labelFR: 'Pédiatrie & Maternité',   labelAR: 'صحة الرضيع والأم' },
-  { id: 'solaire', labelFR: 'Protections Solaires',    labelAR: 'الوقاية من الشمس' },
-  { id: 'visage',  labelFR: 'Soins du Visage',         labelAR: 'العناية بالوجه' },
-  { id: 'cheveux', labelFR: 'Soins Capillaires',       labelAR: 'العناية بالشعر' },
-  { id: 'kbeauty', labelFR: 'K-Beauty',                labelAR: 'الجمال الكوري' },
+  { id: 'all', labelFR: 'Tous les produits', labelAR: 'كل المنتجات' },
+  { id: 'offers', labelFR: 'Meilleures Ventes', labelAR: 'الأكثر مبيعاً' },
+  { id: 'giftbox', labelFR: 'Coffrets Cadeaux', labelAR: 'صناديق الهدايا' },
+  { id: 'solaire', labelFR: 'Solaires', labelAR: 'واقيات الشمس' },
+  { id: 'visage', labelFR: 'Visage', labelAR: 'العناية بالوجه' },
+  { id: 'cheveux', labelFR: 'Cheveux', labelAR: 'العناية بالشعر' },
+  { id: 'corps', labelFR: 'Corps', labelAR: 'العناية بالجسم' },
+  { id: 'appareils', labelFR: 'Accessoires', labelAR: 'أجهزة التجميل' },
+  { id: 'complements', labelFR: 'Compléments', labelAR: 'المكملات الغذائية والغذائيات' },
+  { id: 'maquillage', labelFR: 'Maquillage', labelAR: 'المكياج' },
+  { id: 'sport', labelFR: 'Sport', labelAR: 'الرياضة والنشاط' },
+  { id: 'masques', labelFR: 'Masques & Patches', labelAR: 'أقنعة العناية' },
+  { id: 'homme', labelFR: 'Homme', labelAR: 'مجموعة الرجل' },
+  { id: 'bebe', labelFR: 'Maternité & Bébé', labelAR: 'الأم والرضيع' },
 ];
 
 interface SearchPillProps {
@@ -103,7 +111,7 @@ export const SearchPill: React.FC<SearchPillProps> = ({
 
           {showCategoryDropdown && (
             <div
-              className={`absolute ${isRTL ? 'right-0' : 'left-0'} top-full z-50 w-56 text-left animate-in fade-in slide-in-from-top-2 duration-200`}
+              className={`absolute ${isRTL ? 'right-0' : 'left-0'} top-full z-50 w-56 max-h-[min(70vh,28rem)] overflow-y-auto text-left animate-in fade-in slide-in-from-top-2 duration-200`}
               style={{
                 padding: '6px',
                 marginTop: '8px',

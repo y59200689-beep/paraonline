@@ -164,7 +164,7 @@ export const PolicyClient: React.FC<PolicyClientProps> = ({ slug }) => {
         className="min-h-screen bg-[#FAF9F6] text-slate-900 font-sans selection:bg-emerald-500 selection:text-white relative overflow-hidden"
         style={{ direction: isRTL ? 'rtl' : 'ltr' }}
       >
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-12">
+        <div className="relative z-10 w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-12">
           
           {/* Breadcrumb Navigation */}
           <div className="flex items-center gap-2 text-xs text-slate-500 font-semibold select-none pt-2" style={{ textAlign: isRTL ? 'right' : 'left' }}>

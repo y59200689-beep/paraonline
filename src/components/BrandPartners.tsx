@@ -138,7 +138,7 @@ export const BrandPartners: React.FC<BrandPartnersProps> = ({ brands: propBrands
       <div className="glow-orb glow-orb-teal animate-float-slow -bottom-20 -left-20 w-[300px] h-[300px]" />
       <div className="glow-orb glow-orb-indigo top-0 -right-20 w-[200px] h-[200px]" />
 
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 relative z-10">
+      <div className="w-full mx-auto px-4 sm:px-6 md:px-8 relative z-10">
         
         {/* Main White Parent Container */}
         <div className="bg-white rounded-[24px] shadow-[0_8px_30px_rgba(0,0,0,0.02)] border border-slate-100/80 p-6 md:p-8">

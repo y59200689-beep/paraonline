@@ -1,5 +1,5 @@
 .section { position: relative; isolation: isolate; overflow: hidden; padding: 54px 0 60px; background: #fcfefe; border-bottom: 1px solid #eaf0f1; }
-.container { max-width: 1600px; margin: auto; padding: 0 30px; }
+.container { width: 100%; margin: auto; padding: 0 clamp(20px, 3vw, 64px); }
 .header { position: relative; text-align: center; max-width: 1140px; margin: 0 auto 28px; }
 .badge { display: inline-flex; align-items: center; gap: 10px; border-radius: 30px; padding: 9px 20px; background: #edf7f7; color: #087d84; font-size: 11px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; }
 .header h2 { font: 600 clamp(30px, 3.3vw, 48px)/1.2 var(--font-heading); color: #192c43; letter-spacing: -.035em; margin: 20px 0 12px; text-wrap: balance; }
