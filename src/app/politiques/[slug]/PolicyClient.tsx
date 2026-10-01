@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useTranslation } from '@/context/LanguageContext';
 import { ShopShell } from '@/components/ShopShell';
+import { SITE_CONTACT_EMAIL } from '@/lib/site-contact';
 import { 
   ShieldCheck, 
   FileText, 
@@ -337,6 +338,7 @@ export const PolicyClient: React.FC<PolicyClientProps> = ({ slug }) => {
                   <p className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">ÉDITEUR LÉGAL</p>
                   <p className="text-sm font-black text-slate-900 font-heading">Para Divine</p>
                   <p className="text-[10px] text-slate-500">Maarif, Casablanca</p>
+                  <a href={`mailto:${SITE_CONTACT_EMAIL}`} className="mt-1 inline-block text-xs font-semibold text-teal-700 underline-offset-2 hover:underline" dir="ltr">{SITE_CONTACT_EMAIL}</a>
                 </div>
               </div>
 

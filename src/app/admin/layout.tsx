@@ -382,7 +382,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
                           {currentUser?.name || 'Administrateur'}
                         </span>
                         <span className="block truncate mt-0.5 font-mono text-[9px]" style={{ color: isDark ? '#475569' : '#94a3b8' }}>
-                          {currentUser?.username || 'admin@ecom.ma'}
+                          {currentUser?.username || 'contact@paradivine.ma'}
                         </span>
                       </div>
                     </div>

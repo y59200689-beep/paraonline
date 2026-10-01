@@ -920,7 +920,7 @@ export default function RestockForecastingTab() {
                       <p>Boulevard Zerktouni, Résidence El Bahja, N° 45</p>
                       <p>Casablanca, Maroc</p>
                       <p>Téléphone: +212 522 34 56 78</p>
-                      <p>Email: logistics@paraofficinal.ma</p>
+                      <p>Email: contact@paradivine.ma</p>
                       <p>Patente: 34568912 • RC: Casablanca 98765</p>
                     </div>
                   </div>

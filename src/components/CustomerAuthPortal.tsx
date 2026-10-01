@@ -395,7 +395,7 @@ export const CustomerAuthPortal: React.FC<CustomerAuthPortalProps> = ({
                       value={authEmail}
                       onChange={(e) => setAuthEmail(e.target.value)}
                       required
-                      placeholder="exemple@email.com"
+                      placeholder={isRTL ? 'بريدك الإلكتروني' : 'Votre adresse e-mail'}
                       className={`w-full pl-11 pr-4 py-3.5 rounded-xl text-xs font-sans border transition-all ${
                         themeMode === 'light'
                           ? 'bg-white border-slate-200/90 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 shadow-sm'
@@ -444,7 +444,7 @@ export const CustomerAuthPortal: React.FC<CustomerAuthPortalProps> = ({
                       value={authEmail}
                       onChange={(e) => setAuthEmail(e.target.value)}
                       required
-                      placeholder="exemple@email.com"
+                      placeholder={isRTL ? 'بريدك الإلكتروني' : 'Votre adresse e-mail'}
                       className={`w-full pl-11 pr-4 py-3.5 rounded-xl text-xs font-sans border transition-all ${
                         themeMode === 'light'
                           ? 'bg-white border-slate-200/90 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 shadow-sm'
@@ -574,7 +574,7 @@ export const CustomerAuthPortal: React.FC<CustomerAuthPortalProps> = ({
                         value={authEmail}
                         onChange={(e) => setAuthEmail(e.target.value)}
                         required
-                        placeholder="exemple@email.com"
+                        placeholder={isRTL ? 'بريدك الإلكتروني' : 'Votre adresse e-mail'}
                         className={`w-full pl-11 pr-4 py-3.5 rounded-xl text-xs font-sans border transition-all ${
                           themeMode === 'light'
                             ? 'bg-white border-slate-200/90 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 shadow-sm'

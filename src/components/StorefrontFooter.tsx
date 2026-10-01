@@ -7,6 +7,7 @@ import { Mail, Send, Lock, Check, Truck, MessageCircle, Diamond, Package, Crown,
 import { useTranslation } from '@/context/LanguageContext';
 import { useSettings } from '@/context/SettingsContext';
 import { buildWhatsAppUrl } from '@/lib/whatsapp-link';
+import { SITE_CONTACT_EMAIL } from '@/lib/site-contact';
 import styles from './StorefrontFooter.module.css';
 
 export const StorefrontFooter = ({ onDiagnostic }: { onDiagnostic: () => void }) => {
@@ -50,7 +51,7 @@ export const StorefrontFooter = ({ onDiagnostic }: { onDiagnostic: () => void })
             <div className={styles.inputWrap}><Mail size={21} aria-hidden="true" /><label htmlFor="storefront-newsletter-email" className={styles.srOnly}>{ar ? 'البريد الإلكتروني للاشتراك' : 'Adresse e-mail pour la newsletter'}</label><input id="storefront-newsletter-email" type="email" autoComplete="email" required value={email} onChange={e => { setEmail(e.target.value); setNotice(false); }} placeholder={ar ? 'بريدك الإلكتروني…' : 'Votre adresse email…'} /></div>
             <button className="public-cta" type="submit">{ar ? 'اشتركي الآن' : "S’inscrire"}<Send size={20} /></button>
           </div>
-          {notice && <p className={styles.notice} role="status">{ar ? 'الاشتراك بالبريد غير متاح حالياً. تواصل معنا عبر واتساب.' : 'L’inscription par email n’est pas encore disponible. Contactez-nous sur WhatsApp pour nos actualités.'}</p>}
+          {notice && <p className={styles.notice} role="status">{ar ? 'الاشتراك بالبريد غير متاح حالياً. راسلونا على' : 'L’inscription par email n’est pas encore disponible. Écrivez-nous à'} <a href={`mailto:${SITE_CONTACT_EMAIL}`} dir="ltr" className="font-semibold underline underline-offset-2">{SITE_CONTACT_EMAIL}</a>.</p>}
           <p className={styles.privacy}><Lock size={15} /><span>{ar ? 'نستخدم بريدك فقط لإرسال الرسائل التي اشتركت فيها.' : 'Votre adresse email est uniquement utilisée pour nos communications.'}<br />{ar ? 'يمكنك إلغاء الاشتراك في أي وقت.' : 'Vous pouvez vous désinscrire à tout moment.'}</span></p>
         </form>
       </section>
@@ -79,6 +80,7 @@ export const StorefrontFooter = ({ onDiagnostic }: { onDiagnostic: () => void })
         </>}
         <div className={styles.column}><h3>{ar ? 'تواصل معنا' : 'Contactez-nous'}</h3>
           {whatsapp && <a className={styles.whatsapp} href={whatsapp} target="_blank" rel="noopener noreferrer"><MessageCircle size={28} /><span><strong>WhatsApp</strong><b dir="ltr">+{number}</b></span><ArrowRight size={18} /></a>}
+          <a className={styles.contactEmail} href={`mailto:${SITE_CONTACT_EMAIL}`}><Mail size={19} aria-hidden="true" /><span dir="ltr">{SITE_CONTACT_EMAIL}</span></a>
           <p className={styles.hours}>{ar ? 'من الإثنين إلى السبت: 09:00 – 18:00' : 'Du lundi au samedi : 09h00 – 18h00 (GMT+1)'}</p>
           <p className={styles.brandNote}>{ar ? 'فريقنا هنا لمساعدتك' : 'Notre équipe est là pour vous'} ♡</p>
         </div>

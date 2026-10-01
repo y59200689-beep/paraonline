@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import crypto from 'crypto';
 import { createOrderTrackingToken } from '@/lib/order-security';
+import { SITE_CONTACT_EMAIL } from '@/lib/site-contact';
 
 export async function POST(request: Request) {
   try {
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
       Shopurl: shopUrl,
       symbol: '504', // MAD ISO code
       oid: orderId,
-      email: 'customer@example.com',
+      email: SITE_CONTACT_EMAIL,
       BillToName: order.customer_name,
       tel: order.phone_number,
       rnd: crypto.randomBytes(8).toString('hex'),

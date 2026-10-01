@@ -1,11 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, Headset, MessageCircle, PackageSearch, Truck } from 'lucide-react';
+import { ArrowRight, Headset, Mail, MessageCircle, Truck } from 'lucide-react';
 import { ShopShell } from '@/components/ShopShell';
 import { useSettings } from '@/context/SettingsContext';
 import { useTranslation } from '@/context/LanguageContext';
 import { buildWhatsAppUrl, formatWhatsAppNumber } from '@/lib/whatsapp-link';
+import { SITE_CONTACT_EMAIL } from '@/lib/site-contact';
 
 export function ContactClient() {
   const { language } = useTranslation();
@@ -44,10 +45,11 @@ export function ContactClient() {
             </section>
 
             <section className="rounded-3xl border border-[#dcebea] bg-white p-6 shadow-[0_18px_45px_rgba(24,62,67,.09)] sm:p-8">
-              <div className="mb-7 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#e8f7f5] text-[#238b91]"><PackageSearch size={24} /></div>
-              <h2 className="font-heading text-xl font-bold">{ar ? 'اكتشفوا المنتجات' : 'Découvrir les produits'}</h2>
-              <p className="mt-3 min-h-20 leading-7 text-slate-600">{ar ? 'تصفحوا مجموعتنا المختارة من منتجات العناية والصحة.' : 'Explorez notre sélection de soins, de beauté et de bien-être.'}</p>
-              <Link href="/products" className="mt-6 inline-flex min-h-12 items-center gap-2 rounded-xl border border-[#2b858d] px-5 font-bold text-[#246f76] transition hover:bg-[#edf8f7] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2b858d]">{ar ? 'كل المنتجات' : 'Tous les produits'} <ArrowRight size={18} aria-hidden="true" /></Link>
+              <div className="mb-7 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#e8f7f5] text-[#238b91]"><Mail size={24} /></div>
+              <h2 className="font-heading text-xl font-bold">{ar ? 'راسلونا عبر البريد' : 'Écrivez-nous'}</h2>
+              <p className="mt-3 min-h-20 leading-7 text-slate-600">{ar ? 'لأسئلتكم وطلباتكم، يمكنكم مراسلة فريقنا مباشرة.' : 'Pour vos questions ou demandes, écrivez directement à notre équipe.'}</p>
+              <a href={`mailto:${SITE_CONTACT_EMAIL}`} className="mt-6 inline-flex min-h-12 items-center gap-2 rounded-xl border border-[#2b858d] px-5 font-bold text-[#246f76] transition hover:bg-[#edf8f7] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2b858d]">{ar ? 'إرسال بريد إلكتروني' : 'Envoyer un e-mail'} <ArrowRight size={18} aria-hidden="true" /></a>
+              <p className="mt-4 break-all text-sm font-semibold text-slate-500" dir="ltr">{SITE_CONTACT_EMAIL}</p>
             </section>
           </div>
           <p className="mt-9 text-center text-sm text-slate-500">{ar ? 'من الاثنين إلى السبت: 09:00 – 18:00' : 'Du lundi au samedi : 09h00 – 18h00 (GMT+1)'}</p>
