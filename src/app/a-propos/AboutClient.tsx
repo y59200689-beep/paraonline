@@ -92,15 +92,15 @@ export function AboutClient() {
                   <>
                     <p>تأسست صيدليتنا الإلكترونية على يد فريق من الصيادلة والمستشارين المدربين في مستحضرات العناية بالبشرة. نضع خبرتنا بين أيديكم لمساعدتكم على اختيار المنتجات التي تناسب احتياجاتكم حقًا.</p>
                     <p>نطمح إلى تقديم تجربة تتجاوز بيع المنتجات، تقوم على النصيحة والمرافقة. فريقنا يصغي إليكم، ويساعدكم على فهم احتياجاتكم واختيار المنتجات وروتين العناية الأنسب لكم.</p>
-                    <p>نولي جودة المنتجات وموثوقية النصائح ورضا عملائنا اهتمامًا خاصًا، لتكون تجربتكم بسيطة ومطمئنة وممتعة.</p>
                     <p>ستجدون في موقعنا منتجات للجمال والنظافة والعناية بالوجه والجسم والشعر والحماية من الشمس والرفاهية والأمومة والعناية بالطفل، إلى جانب أساسيات يومية أخرى.</p>
+                    <p>نولي جودة المنتجات وموثوقية النصائح ورضا عملائنا اهتمامًا خاصًا، لتكون تجربتكم بسيطة ومطمئنة وممتعة.</p>
                   </>
                 ) : (
                   <>
                     <p>Notre parapharmacie est créée par une équipe de <strong className="font-semibold text-[#17343C]">pharmaciens et de conseillers formés en dermo-cosmétique.</strong> Nous mettons notre expertise à votre disposition pour vous accompagner dans vos choix et vous aider à trouver les produits qui correspondent réellement à vos besoins.</p>
                     <p className="border-l-2 border-[#DB8292] pl-5">Au-delà de la vente de produits, nous souhaitons vous offrir une véritable expérience de conseil et d’accompagnement. Notre équipe est à votre écoute pour vous aider à mieux comprendre vos besoins, vous orienter vers les produits les plus adaptés et vous accompagner dans le choix de votre routine.</p>
-                    <p>Nous accordons une attention particulière à la qualité des produits, la fiabilité des conseils et la satisfaction de nos clients, afin de créer une expérience simple, rassurante et agréable.</p>
                     <p>Vous trouverez sur notre site une sélection de produits dédiés à la beauté, l’hygiène, les soins du visage et du corps, les cheveux, la protection solaire, le bien-être, la maternité et les soins de bébé, ainsi que de nombreux autres essentiels du quotidien.</p>
+                    <p>Nous accordons une attention particulière à la qualité des produits, la fiabilité des conseils et la satisfaction de nos clients, afin de créer une expérience simple, rassurante et agréable.</p>
                   </>
                 )}
               </div>
