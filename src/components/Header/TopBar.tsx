@@ -56,9 +56,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   currencyRef,
   isRTL,
 }) => (
-  <div
-    className={`hidden lg:block ${styles.utility}`}
-  >
+  <div className={styles.utility}>
     <div
       className={styles.utilityInner}
     >
@@ -73,7 +71,8 @@ export const TopBar: React.FC<TopBarProps> = ({
         </Link>
         <Link href="/suivi-commande" className="hover:text-primary transition-colors duration-200 cursor-pointer">
           <Truck aria-hidden="true" />
-          {language === 'FR' ? 'Suivi de commande' : 'تتبع الطلب'}
+          <span className={styles.trackingFull}>{language === 'FR' ? 'Suivi de commande' : 'تتبع الطلب'}</span>
+          <span className={styles.trackingShort}>{language === 'FR' ? 'Suivi' : 'التتبع'}</span>
         </Link>
         <Link href="/contact" className="hover:text-primary transition-colors duration-200 cursor-pointer">
           <Headphones aria-hidden="true" />
@@ -82,9 +81,9 @@ export const TopBar: React.FC<TopBarProps> = ({
       </div>
 
       {/* Right: Language & Currency */}
-      <div className="flex items-center gap-5 text-[11.5px] text-slate-500">
+      <div className={styles.localeControls}>
         {/* Language Selector */}
-        <div ref={langRef} className="relative">
+        <div ref={langRef} className={styles.languageControl}>
           <button
             type="button"
             aria-haspopup="menu"
@@ -132,7 +131,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           </div>
         </div>
 
-        <div className="w-px h-4 bg-slate-200" />
+        <div className={styles.localeDivider} />
 
         {/* Currency Dropdown */}
         <div ref={currencyRef} className="relative">
