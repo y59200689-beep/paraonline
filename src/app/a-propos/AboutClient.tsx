@@ -10,10 +10,6 @@ import styles from './AboutCommitments.module.css';
 import {
   ShieldCheck,
   Sparkles,
-  Truck,
-  PackageSearch,
-  Headset,
-  Banknote,
   HeartHandshake,
   ArrowRight,
 } from 'lucide-react';
@@ -67,78 +63,47 @@ export function AboutClient() {
             </h1>
 
             {/* Narrative Spine Subtitle */}
-            <p className="mx-auto max-w-2xl text-sm font-medium leading-relaxed text-white/95 sm:text-base lg:text-lg">
+            <p className="mx-auto max-w-3xl text-base font-medium leading-relaxed text-white drop-shadow-md sm:text-lg lg:text-xl">
               {language === 'AR'
-                ? 'Para Divine هو متجركم للعناية بالبشرة والجمال في المغرب، مع اختيارات تناسب روتينكم اليومي.'
-                : 'Para Divine est votre boutique de soins et de beauté au Maroc, avec une sélection pensée pour vos routines quotidiennes.'}
+                ? 'أنشأنا صيدليتنا الإلكترونية بفكرة بسيطة: أن نجعل العناية بأنفسكم سهلة، مع منتجات عالية الجودة ونصائح من مختصين.'
+                : 'Nous avons créé notre parapharmacie en ligne avec une idée simple : vous permettre de prendre soin de vous facilement, avec des produits de qualité et des conseils de professionnels.'}
             </p>
               </div>
             </div>
 
-            {/* Key Metrics Deck */}
-            <div className="relative z-20 mx-auto -mt-14 grid w-full grid-cols-2 gap-4 px-4 sm:gap-5 sm:px-6 md:grid-cols-4 lg:-mt-16 lg:gap-6 lg:px-8">
-              {[
-                {
-                  value: 'SÉLECTION',
-                  labelFr: 'Marques disponibles',
-                  labelAr: 'علامات متوفرة',
-                  descFr: 'Pour vos routines',
-                  descAr: 'لروتينكِ اليومي',
-                  icon: PackageSearch,
-                  color: 'text-emerald-600'
-                },
-                {
-                  value: 'A\u202FDOMICILE',
-                  labelFr: 'Livraison a Domicile',
-                  labelAr: 'توصيل في المغرب',
-                  descFr: 'Selon la zone de livraison',
-                  descAr: 'حسب منطقة التوصيل',
-                  icon: Truck,
-                  color: 'text-teal-600'
-                },
-                {
-                  value: 'SUPPORT',
-                  labelFr: 'Équipe disponible',
-                  labelAr: 'فريق متاح',
-                  descFr: 'Pour vous accompagner',
-                  descAr: 'لمرافقتكِ',
-                  icon: Headset,
-                  color: 'text-cyan-600'
-                },
-                {
-                  value: 'COD',
-                  labelFr: 'Paiement à la livraison',
-                  labelAr: 'الدفع عند التسليم',
-                  descFr: 'Selon les options proposées',
-                  descAr: 'حسب الخيارات المتاحة',
-                  icon: Banknote,
-                  color: 'text-amber-600'
-                }
-              ].map((stat, idx) => {
-                const StatIcon = stat.icon;
-                return (
-                  <div
-                    key={idx}
-                    className="group relative min-h-36 overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-4 text-left shadow-[0_16px_40px_rgba(16,41,45,0.14)] transition duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-5"
-                    style={{ textAlign: isRTL ? 'right' : 'left' }}
-                  >
-                    <div className="flex items-center justify-between mb-3" style={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                      <span className={`text-2xl sm:text-3xl font-black font-mono tracking-tight ${stat.color}`}>
-                        {stat.value}
-                      </span>
-                      <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center group-hover:scale-110 transition duration-300">
-                        <StatIcon className={`w-5 h-5 ${stat.color}`} strokeWidth={1.8} aria-hidden="true" />
-                      </div>
-                    </div>
-                    <p className="text-xs font-bold text-slate-900 font-heading">
-                      {language === 'AR' ? stat.labelAr : stat.labelFr}
-                    </p>
-                    <p className="text-[10px] text-slate-500 mt-0.5 font-medium">
-                      {language === 'AR' ? stat.descAr : stat.descFr}
-                    </p>
-                  </div>
-                );
-              })}
+          </section>
+
+          <section className="mx-auto w-full max-w-[1500px]" aria-labelledby="about-story-title">
+            <div className="grid overflow-hidden rounded-[2rem] border border-teal-900/10 bg-white shadow-[0_24px_70px_rgba(20,55,61,0.08)] lg:grid-cols-[minmax(280px,0.85fr)_minmax(0,1.5fr)]">
+              <div className="relative flex flex-col justify-between overflow-hidden bg-[#EAF5F3] p-8 sm:p-10 lg:p-14">
+                <div className="absolute -bottom-24 -right-24 h-72 w-72 rounded-full border-[28px] border-white/50" aria-hidden="true" />
+                <div className="relative">
+                  <span className="font-mono text-xs font-bold uppercase tracking-[0.22em] text-teal-700">
+                    {language === 'AR' ? 'من نحن' : 'Notre approche'}
+                  </span>
+                  <h2 id="about-story-title" className="mt-5 max-w-sm font-heading text-3xl font-black leading-tight tracking-tight text-[#17343C] sm:text-4xl lg:text-5xl">
+                    {language === 'AR' ? 'اعتنوا بأنفسكم، ونحن نهتم باحتياجاتكم' : <>PRENEZ SOIN DE VOUS, <span className="text-[#3B99A3]">NOUS PRENONS SOIN DE VOS BESOINS</span></>}
+                  </h2>
+                </div>
+                <div className="relative mt-10 h-1 w-20 rounded-full bg-gradient-to-r from-[#3B99A3] to-[#DB8292]" aria-hidden="true" />
+              </div>
+              <div className="space-y-7 p-8 text-[15px] leading-[1.85] text-slate-600 sm:p-10 sm:text-base lg:p-14">
+                {language === 'AR' ? (
+                  <>
+                    <p>تأسست صيدليتنا الإلكترونية على يد فريق من الصيادلة والمستشارين المدربين في مستحضرات العناية بالبشرة. نضع خبرتنا بين أيديكم لمساعدتكم على اختيار المنتجات التي تناسب احتياجاتكم حقًا.</p>
+                    <p>نطمح إلى تقديم تجربة تتجاوز بيع المنتجات، تقوم على النصيحة والمرافقة. فريقنا يصغي إليكم، ويساعدكم على فهم احتياجاتكم واختيار المنتجات وروتين العناية الأنسب لكم.</p>
+                    <p>نولي جودة المنتجات وموثوقية النصائح ورضا عملائنا اهتمامًا خاصًا، لتكون تجربتكم بسيطة ومطمئنة وممتعة.</p>
+                    <p>ستجدون في موقعنا منتجات للجمال والنظافة والعناية بالوجه والجسم والشعر والحماية من الشمس والرفاهية والأمومة والعناية بالطفل، إلى جانب أساسيات يومية أخرى.</p>
+                  </>
+                ) : (
+                  <>
+                    <p>Notre parapharmacie est créée par une équipe de <strong className="font-semibold text-[#17343C]">pharmaciens et de conseillers formés en dermo-cosmétique.</strong> Nous mettons notre expertise à votre disposition pour vous accompagner dans vos choix et vous aider à trouver les produits qui correspondent réellement à vos besoins.</p>
+                    <p className="border-l-2 border-[#DB8292] pl-5">Au-delà de la vente de produits, nous souhaitons vous offrir une véritable expérience de conseil et d’accompagnement. Notre équipe est à votre écoute pour vous aider à mieux comprendre vos besoins, vous orienter vers les produits les plus adaptés et vous accompagner dans le choix de votre routine.</p>
+                    <p>Nous accordons une attention particulière à la qualité des produits, la fiabilité des conseils et la satisfaction de nos clients, afin de créer une expérience simple, rassurante et agréable.</p>
+                    <p>Vous trouverez sur notre site une sélection de produits dédiés à la beauté, l’hygiène, les soins du visage et du corps, les cheveux, la protection solaire, le bien-être, la maternité et les soins de bébé, ainsi que de nombreux autres essentiels du quotidien.</p>
+                  </>
+                )}
+              </div>
             </div>
           </section>
 
@@ -167,7 +132,6 @@ export function AboutClient() {
                   descriptionAr: 'اكتشفوا مجموعة متنوعة من منتجات البارافارماسي المختارة بعناية لتلبية احتياجاتكم في الصحة والجمال والنظافة والرفاهية.',
                   icon: ShieldCheck,
                   image: '/images/diagnostic/dermo-research-still-life.png',
-                  imageAlt: 'Sérum et soins de parapharmacie',
                   actionFr: 'Découvrir les produits',
                   actionAr: 'اكتشفوا المنتجات',
                   href: '/products',
@@ -180,7 +144,6 @@ export function AboutClient() {
                   descriptionAr: 'استفيدوا من تشخيص مخصص لبشرتكم عبر الإنترنت لتحديد احتياجاتكم بشكل أفضل وإرشادكم إلى روتين مناسب.',
                   icon: Sparkles,
                   image: '/images/skin_diagnostic_scan.webp',
-                  imageAlt: 'Analyse personnalisée de la peau',
                   actionFr: 'Faire mon diagnostic',
                   actionAr: 'ابدأوا التشخيص',
                   href: null,
@@ -193,7 +156,6 @@ export function AboutClient() {
                   descriptionAr: 'يرافقكم فريقنا في كل مرحلة، من الاستشارة وتقديم الطلب إلى المتابعة بعد البيع، لنضمن لكم تجربة سهلة وموثوقة ومُرضية.',
                   icon: HeartHandshake,
                   image: '/images/about-para-divine-storefront.jpg',
-                  imageAlt: 'Parapharmacie Para Divine',
                   actionFr: 'Nous contacter',
                   actionAr: 'اتصلوا بنا',
                   href: '/contact',
@@ -203,13 +165,12 @@ export function AboutClient() {
                 const actionLabel = language === 'AR' ? benefit.actionAr : benefit.actionFr;
                 return (
                   <article key={benefit.number} className={`${styles.commitment} ${styles[`commitment${index + 1}`]}`}>
-                    <div className={styles.portraitWrap}>
-                      <div className={styles.portrait}>
-                        <Image src={benefit.image} alt={benefit.imageAlt} fill sizes="(max-width: 640px) 180px, 220px" className={styles.portraitImage} />
-                      </div>
-                      <span className={styles.iconBadge} aria-hidden="true"><Icon size={30} strokeWidth={1.7} /></span>
-                      <span className={styles.numberBadge} aria-hidden="true">{benefit.number}</span>
+                    <div className={styles.coverImageWrap} aria-hidden="true">
+                      <Image src={benefit.image} alt="" fill sizes="(max-width: 640px) 390px, (max-width: 1000px) 480px, 480px" className={styles.coverImage} />
                     </div>
+                    <span className={styles.iconBadge} aria-hidden="true"><Icon size={30} strokeWidth={1.7} /></span>
+                    <span className={styles.numberBadge} aria-hidden="true">{benefit.number}</span>
+                    <div className={styles.coverSpacer} aria-hidden="true" />
                     <h3 className={styles.cardTitle}>
                       {language === 'AR' ? benefit.titleAr : benefit.titleFr}
                     </h3>
