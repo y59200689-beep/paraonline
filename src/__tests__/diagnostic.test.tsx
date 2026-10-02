@@ -224,7 +224,7 @@ describe('SkinDiagnostic question-only assessment', () => {
     answerAndContinue('Grasse');
     fireEvent.click(screen.getByRole('checkbox', { name: /Acné\/Imperfections/i }));
     fireEvent.click(screen.getByRole('button', { name: /Continuer/i }));
-    answerAndContinue('Très facilement');
+    answerAndContinue('Mauvaise');
     answerAndContinue('Souvent');
     answerAndContinue('Exposition modérée');
     answerAndContinue('Rarement ou jamais');

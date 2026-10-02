@@ -16,7 +16,7 @@ const DEFAULT_SEED_QUESTIONS = [
       { value_key: 'oily', label_fr: 'Grasse', label_ar: 'دهنية', icon: 'droplets', display_order: 1, enabled: true },
       { value_key: 'dry', label_fr: 'Sèche', label_ar: 'جافة', icon: 'wind', display_order: 2, enabled: true },
       { value_key: 'mixed', label_fr: 'Mixte', label_ar: 'مختلطة', icon: 'split', display_order: 3, enabled: true },
-      { value_key: 'normal', label_fr: 'Équilibrée', label_ar: 'متوازنة', icon: 'sparkles', display_order: 4, enabled: true },
+      { value_key: 'normal', label_fr: 'Normale', label_ar: 'عادية', icon: 'sparkles', display_order: 4, enabled: true },
     ],
   },
   {
@@ -37,15 +37,14 @@ const DEFAULT_SEED_QUESTIONS = [
   },
   {
     question_key: 'sensitivity',
-    text_fr: 'Votre peau réagit-elle facilement aux nouveaux soins ?',
+    text_fr: 'Comment votre peau réagit-elle aux actifs puissants ?',
     text_ar: 'هل تتفاعل بشرتك بسهولة مع المنتجات الجديدة؟',
     subtitle_fr: "Cela nous aide à doser les actifs et à privilégier la douceur.",
     subtitle_ar: 'يساعدنا ذلك على اختيار تركيز المكونات والعناية اللطيفة.',
     question_type: 'single', required: true, enabled: true, display_order: 3,
     answers: [
-      { value_key: 'high', label_fr: 'Très facilement', label_ar: 'بسهولة كبيرة', icon: 'shield-alert', display_order: 1, enabled: true },
-      { value_key: 'medium', label_fr: 'Parfois', label_ar: 'أحياناً', icon: 'shield', display_order: 2, enabled: true },
-      { value_key: 'low', label_fr: 'Rarement', label_ar: 'نادراً', icon: 'shield-check', display_order: 3, enabled: true },
+      { value_key: 'high', label_fr: 'Mauvaise', label_ar: 'سيئة', icon: 'shield-alert', display_order: 1, enabled: true },
+      { value_key: 'low', label_fr: 'Bonne', label_ar: 'جيدة', icon: 'shield-check', display_order: 2, enabled: true },
     ],
   },
   {
@@ -109,7 +108,7 @@ const DEFAULT_SEED_QUESTIONS = [
     question_type: 'single', required: true, enabled: true, display_order: 8,
     answers: [
       { value_key: 'essential', label_fr: "L'essentiel", label_ar: 'الأساسيات', icon: 'list', display_order: 1, enabled: true },
-      { value_key: 'balanced', label_fr: 'Équilibrée', label_ar: 'متوازن', icon: 'layout', display_order: 2, enabled: true },
+      { value_key: 'balanced', label_fr: 'Personnalisée', label_ar: 'مخصصة', icon: 'layout', display_order: 2, enabled: true },
       { value_key: 'complete', label_fr: 'Complète', label_ar: 'كامل', icon: 'rows', display_order: 3, enabled: true },
     ],
   },

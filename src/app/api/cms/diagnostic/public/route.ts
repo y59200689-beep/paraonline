@@ -12,10 +12,34 @@ const Q_SELECT = `
 
 function mapQuestions(questions: any[]) {
   return questions.map((q: any) => {
-    const activeAnswers = (q.answers || q.cms_diagnostic_answers || [])
+    let activeAnswers = (q.answers || q.cms_diagnostic_answers || [])
       .filter((a: any) => a.enabled !== false)
       .sort((a: any, b: any) => (a.display_order ?? 99) - (b.display_order ?? 99));
     const fallback = (defaultQuestions.questions as any[]).find((def: any) => def.field === q.question_key);
+    if (q.question_key === 'sensitivity' && fallback) {
+      const canonicalOptions = fallback.options as any[];
+      activeAnswers = canonicalOptions.map((option, index) => ({
+        value_key: option.val,
+        label_fr: option.labelFr,
+        label_ar: option.labelAr,
+        description_fr: option.descFr,
+        description_ar: option.descAr,
+        icon: option.icon,
+        display_order: index + 1,
+      }));
+    }
+    if (q.question_key === 'routineDepth' && fallback) {
+      const canonicalOptions = fallback.options as any[];
+      activeAnswers = canonicalOptions.map((option, index) => ({
+        value_key: option.val,
+        label_fr: option.labelFr,
+        label_ar: option.labelAr,
+        description_fr: option.descFr,
+        description_ar: option.descAr,
+        icon: option.icon,
+        display_order: index + 1,
+      }));
+    }
     // Keep the public multi-select concern question in sync with the matching engine,
     // including the new under-eye concern, even for older published CMS snapshots.
     if (q.question_key === 'concern' && fallback) return fallback;
@@ -23,12 +47,16 @@ function mapQuestions(questions: any[]) {
       field: q.question_key,
       eyebrowFr: fallback?.eyebrowFr || 'ÉVALUATION PERSONNALISÉE',
       eyebrowAr: fallback?.eyebrowAr || 'تقييم شخصي',
-      questionFr: q.text_fr || fallback?.questionFr || '',
+      questionFr: q.question_key === 'sensitivity'
+        ? 'Comment votre peau réagit-elle aux actifs puissants ?'
+        : (q.text_fr || fallback?.questionFr || ''),
       questionAr: q.text_ar || fallback?.questionAr || '',
       helperFr: q.subtitle_fr || fallback?.helperFr || '',
       helperAr: q.subtitle_ar || fallback?.helperAr || '',
       options: activeAnswers.map((a: any) => ({
-        val: a.value_key, labelFr: a.label_fr, labelAr: a.label_ar || a.label_fr,
+        val: a.value_key,
+        labelFr: q.question_key === 'skinType' && a.value_key === 'normal' ? 'Normale' : a.label_fr,
+        labelAr: q.question_key === 'skinType' && a.value_key === 'normal' ? 'عادية' : (a.label_ar || a.label_fr),
         descFr: a.description_fr || a.desc_fr || '', descAr: a.description_ar || a.desc_ar || '', icon: a.icon || 'sparkles',
       })),
     };

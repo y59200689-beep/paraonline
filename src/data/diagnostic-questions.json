@@ -36,14 +36,13 @@
       "field": "sensitivity",
       "eyebrowFr": "Tolérance cutanée",
       "eyebrowAr": "تحمل البشرة",
-      "questionFr": "Votre peau est-elle sensible ?",
+      "questionFr": "Comment votre peau réagit-elle aux actifs puissants ?",
       "questionAr": "هل بشرتك حساسة؟",
       "helperFr": "Cela nous aide à doser les actifs et à privilégier la douceur.",
       "helperAr": "يساعدنا ذلك على اختيار تركيز المكونات والعناية اللطيفة.",
       "options": [
-        { "val": "high", "labelFr": "Très facilement", "labelAr": "بسهولة كبيرة", "descFr": "Picotements, rougeurs ou inconfort fréquents", "descAr": "وخز أو احمرار أو انزعاج متكرر", "icon": "shield-alert" },
-        { "val": "medium", "labelFr": "Parfois", "labelAr": "أحياناً", "descFr": "Réaction à certains parfums ou actifs", "descAr": "تفاعل مع بعض العطور أو المكونات", "icon": "shield" },
-        { "val": "low", "labelFr": "Rarement", "labelAr": "نادراً", "descFr": "Bonne tolérance générale", "descAr": "تحمل جيد بشكل عام", "icon": "shield-check" }
+        { "val": "high", "labelFr": "Mauvaise", "labelAr": "سيئة", "descFr": "Votre peau tolère mal les actifs puissants", "descAr": "بشرتك لا تتحمل المكونات الفعالة القوية جيداً", "icon": "shield-alert" },
+        { "val": "low", "labelFr": "Bonne", "labelAr": "جيدة", "descFr": "Votre peau tolère bien les actifs puissants", "descAr": "بشرتك تتحمل المكونات الفعالة القوية جيداً", "icon": "shield-check" }
       ]
     },
     {
