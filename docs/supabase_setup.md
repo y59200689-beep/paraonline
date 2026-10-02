@@ -410,7 +410,7 @@ if (isPlaceholder) {
         {
           id: 1,
           value: {
-            storeName: "Para Officinal S.A",
+            storeName: "Para Divine",
             freeShippingThreshold: 400,
             shippingFee: 35,
             quizDiscountPercent: 15,
@@ -731,7 +731,7 @@ INSERT INTO settings (id, value)
 VALUES (
   1,
   '{
-    "storeName": "Para Officinal S.A",
+    "storeName": "Para Divine",
     "shippingFee": 35,
     "freeShippingThreshold": 400,
     "quizDiscountPercent": 15,

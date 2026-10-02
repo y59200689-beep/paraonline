@@ -1,4 +1,4 @@
-# Para Officinal — Public Website Product Design Audit
+# Para Divine — Public Website Product Design Audit
 
 Date: 10 August 2026
 Scope: Public storefront only. Admin Dashboard and Customer Panel were excluded.

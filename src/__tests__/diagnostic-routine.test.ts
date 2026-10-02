@@ -3,6 +3,7 @@ import type { Product } from '@/lib/data';
 import {
   buildDiagnosticRoutine,
   classifyRoutineStep,
+  getSelectedConcerns,
   isDiagnosticEligibleProduct,
   type DiagnosticAnswers,
 } from '@/lib/diagnostic-routine';
@@ -117,6 +118,40 @@ describe('diagnostic routine builder', () => {
     const second = buildDiagnosticRoutine(catalogue, acneAnswers);
 
     expect(second.map(item => item.product.id)).toEqual(first.map(item => item.product.id));
+  });
+
+  it('matches multiple selected concerns and only admits eye care when cernes is selected', () => {
+    const eyeCare = product({ id: 44, title: 'Sérum contour des yeux anti-cernes', routineRoles: ['eye_care'], suitableSkinTypes: ['oily'], suitableConcerns: ['dark_circles'], sensitivityLevels: ['medium'], activeStrength: 'gentle' });
+    const products = [...catalogue, eyeCare];
+    const withCircles = buildDiagnosticRoutine(products, { ...acneAnswers, concern: 'acne,dark_circles', routineDepth: 'complete' });
+    const withoutCircles = buildDiagnosticRoutine(products, { ...acneAnswers, concern: 'acne', routineDepth: 'complete' });
+    expect(getSelectedConcerns('acne,dark_circles')).toEqual(['acne', 'dark_circles']);
+    expect(withCircles.some(item => item.product.id === 44)).toBe(true);
+    expect(withoutCircles.some(item => item.product.id === 44)).toBe(false);
+  });
+
+  it('adds a compatible preparation product for a five-product personalized routine', () => {
+    const products = [
+      ...catalogue,
+      product({ id: 40, title: 'Lotion tonique purifiante', routineRoles: ['toner'], suitableSkinTypes: ['oily'], suitableConcerns: ['acne'], sensitivityLevels: ['medium'], activeStrength: 'gentle' }),
+    ];
+    const routine = buildDiagnosticRoutine(products, { ...acneAnswers, routineDepth: 'balanced' });
+    expect(routine).toHaveLength(5);
+    expect(routine.find(item => item.step === 'toner')?.product.id).toBe(40);
+  });
+
+  it('adds a second concern-matched treatment for a complete routine without forcing irrelevant products', () => {
+    const products = [
+      ...catalogue,
+      product({ id: 41, title: 'Sérum apaisant niacinamide imperfections', routineRoles: ['treatment'], suitableSkinTypes: ['oily'], suitableConcerns: ['acne'], sensitivityLevels: ['medium'], activeStrength: 'gentle' }),
+      product({ id: 42, title: 'Sérum anti-rides retinol', routineRoles: ['treatment'], suitableSkinTypes: ['oily'], suitableConcerns: ['wrinkles'], sensitivityLevels: ['medium'], activeStrength: 'strong' }),
+      product({ id: 43, title: 'Lotion tonique purifiante', routineRoles: ['toner'], suitableSkinTypes: ['oily'], suitableConcerns: ['acne'], sensitivityLevels: ['medium'], activeStrength: 'gentle' }),
+    ];
+    const routine = buildDiagnosticRoutine(products, { ...acneAnswers, routineDepth: 'complete' });
+    expect(routine).toHaveLength(6);
+    expect(routine.filter(item => item.step === 'treatment')).toHaveLength(2);
+    expect(routine.some(item => item.product.id === 42)).toBe(false);
+    expect(new Set(routine.map(item => item.product.id)).size).toBe(6);
   });
 
   it('uses the same explicit metadata and exclusion gate for admin and customer catalogues', () => {

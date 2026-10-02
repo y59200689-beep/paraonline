@@ -3471,7 +3471,7 @@ export default function OrdersTab() {
                         .replace(/{cart_items}/g, 'vos produits')
                         .replace(/{cart_total}/g, '—')
                         .replace(/{discount_code}/g, settings?.coupons?.[0]?.code || 'BEAUTY10')
-                        .replace(/{recovery_link}/g, 'https://para-officinal.ma/checkout?recover=…');
+                        .replace(/{recovery_link}/g, 'https://paradivine.ma/checkout?recover=…');
                     })()}
                   </div>
 

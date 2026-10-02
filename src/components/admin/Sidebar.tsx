@@ -392,7 +392,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-white text-[13px] shrink-0 tracking-tight"
               style={{ background: 'linear-gradient(135deg, #10b981 0%, #0891b2 100%)', boxShadow: isDark ? '0 4px 16px rgba(16,185,129,0.35), 0 0 0 1px rgba(16,185,129,0.2)' : '0 4px 12px rgba(16,185,129,0.30)' } as React.CSSProperties}
             >
-              PO
+              PD
             </div>
             {!sidebarCollapsed && (
               <div className="min-w-0">

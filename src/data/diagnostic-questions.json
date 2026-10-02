@@ -4,39 +4,40 @@
       "field": "skinType",
       "eyebrowFr": "Votre peau au quotidien",
       "eyebrowAr": "بشرتك يومياً",
-      "questionFr": "Comment votre peau se comporte-t-elle en fin de journée ?",
-      "questionAr": "كيف تبدو بشرتك في نهاية اليوم؟",
+      "questionFr": "Quel est votre type de peau ?",
+      "questionAr": "ما نوع بشرتك؟",
       "helperFr": "Choisissez la description qui vous ressemble le plus.",
       "helperAr": "اختاري الوصف الأقرب إلى بشرتك.",
       "options": [
         { "val": "oily", "labelFr": "Grasse", "labelAr": "دهنية", "descFr": "Brillance diffuse et pores visibles", "descAr": "لمعان واضح ومسام ظاهرة", "icon": "droplets" },
         { "val": "dry", "labelFr": "Sèche", "labelAr": "جافة", "descFr": "Tiraillements ou zones qui desquament", "descAr": "شد أو تقشر في بعض المناطق", "icon": "wind" },
         { "val": "mixed", "labelFr": "Mixte", "labelAr": "مختلطة", "descFr": "Zone T brillante, joues plus sèches", "descAr": "منطقة T دهنية والخدان أكثر جفافاً", "icon": "split" },
-        { "val": "normal", "labelFr": "Équilibrée", "labelAr": "متوازنة", "descFr": "Confortable avec peu de variations", "descAr": "مريحة مع تغيرات قليلة", "icon": "sparkles" }
+        { "val": "normal", "labelFr": "Normale", "labelAr": "عادية", "descFr": "Confortable avec peu de variations", "descAr": "مريحة مع تغيرات قليلة", "icon": "sparkles" }
       ]
     },
     {
       "field": "concern",
       "eyebrowFr": "Votre priorité",
       "eyebrowAr": "أولويتك",
-      "questionFr": "Quel résultat souhaitez-vous cibler en premier ?",
-      "questionAr": "ما النتيجة التي ترغبين في استهدافها أولاً؟",
-      "helperFr": "La routine sera organisée autour de cette priorité.",
-      "helperAr": "سيتم تنظيم الروتين حول هذه الأولوية.",
+      "questionFr": "Quelle est votre principale préoccupation cutanée ?",
+      "questionAr": "ما هو اهتمامك الرئيسي ببشرتك؟",
+      "helperFr": "Choisissez une ou plusieurs préoccupations (au moins une).",
+      "helperAr": "اختاري مشكلة واحدة أو أكثر (واحدة على الأقل).",
       "options": [
-        { "val": "acne", "labelFr": "Imperfections", "labelAr": "الشوائب", "descFr": "Boutons, points noirs ou pores obstrués", "descAr": "حبوب أو رؤوس سوداء أو مسام مسدودة", "icon": "target" },
+        { "val": "acne", "labelFr": "Acné/Imperfections", "labelAr": "حب الشباب والشوائب", "descFr": "Boutons, points noirs ou pores obstrués", "descAr": "حبوب أو رؤوس سوداء أو مسام مسدودة", "icon": "target" },
         { "val": "spots", "labelFr": "Taches et éclat", "labelAr": "البقع والإشراقة", "descFr": "Teint irrégulier ou marques persistantes", "descAr": "تفاوت اللون أو آثار مستمرة", "icon": "sun" },
-        { "val": "wrinkles", "labelFr": "Premiers signes de l’âge", "labelAr": "علامات التقدم في السن", "descFr": "Ridules, fermeté ou texture", "descAr": "خطوط رفيعة أو تماسك أو ملمس", "icon": "clock" },
+        { "val": "wrinkles", "labelFr": "Rides et ridules", "labelAr": "التجاعيد والخطوط الدقيقة", "descFr": "Ridules, fermeté ou texture", "descAr": "خطوط رفيعة أو تماسك أو ملمس", "icon": "clock" },
         { "val": "dryness", "labelFr": "Hydratation et confort", "labelAr": "الترطيب والراحة", "descFr": "Déshydratation, inconfort ou manque de souplesse", "descAr": "جفاف أو انزعاج أو نقص المرونة", "icon": "droplet" },
-        { "val": "redness", "labelFr": "Rougeurs", "labelAr": "الاحمرار", "descFr": "Réactivité visible et besoin d’apaisement", "descAr": "تفاعل واضح وحاجة للتهدئة", "icon": "heart" }
+        { "val": "redness", "labelFr": "Rougeurs", "labelAr": "الاحمرار", "descFr": "Réactivité visible et besoin d’apaisement", "descAr": "تفاعل واضح وحاجة للتهدئة", "icon": "heart" },
+        { "val": "dark_circles", "labelFr": "Cernes", "labelAr": "الهالات السوداء", "descFr": "Ombres ou poches sous les yeux", "descAr": "هالات أو انتفاخ تحت العينين", "icon": "eye" }
       ]
     },
     {
       "field": "sensitivity",
       "eyebrowFr": "Tolérance cutanée",
       "eyebrowAr": "تحمل البشرة",
-      "questionFr": "Votre peau réagit-elle facilement aux nouveaux soins ?",
-      "questionAr": "هل تتفاعل بشرتك بسهولة مع المنتجات الجديدة؟",
+      "questionFr": "Votre peau est-elle sensible ?",
+      "questionAr": "هل بشرتك حساسة؟",
       "helperFr": "Cela nous aide à doser les actifs et à privilégier la douceur.",
       "helperAr": "يساعدنا ذلك على اختيار تركيز المكونات والعناية اللطيفة.",
       "options": [
@@ -49,8 +50,8 @@
       "field": "breakoutFrequency",
       "eyebrowFr": "Fréquence des imperfections",
       "eyebrowAr": "تكرار الشوائب",
-      "questionFr": "À quelle fréquence voyez-vous apparaître des imperfections ?",
-      "questionAr": "كم مرة تظهر لديك الشوائب؟",
+      "questionFr": "À quelle fréquence avez-vous des boutons ?",
+      "questionAr": "كم مرة تظهر لديك الحبوب؟",
       "helperFr": "Même une peau sèche peut présenter des imperfections occasionnelles.",
       "helperAr": "حتى البشرة الجافة قد تظهر عليها شوائب أحياناً.",
       "options": [
@@ -63,8 +64,8 @@
       "field": "sunExposure",
       "eyebrowFr": "Exposition quotidienne",
       "eyebrowAr": "التعرض اليومي",
-      "questionFr": "Combien de temps passez-vous au soleil la plupart des jours ?",
-      "questionAr": "كم من الوقت تقضين تحت الشمس في معظم الأيام؟",
+      "questionFr": "Quel est votre niveau d’exposition au soleil ?",
+      "questionAr": "ما مستوى تعرضك للشمس؟",
       "helperFr": "Pensez aux trajets, aux fenêtres et aux activités extérieures.",
       "helperAr": "فكري في التنقل والنوافذ والأنشطة الخارجية.",
       "options": [
@@ -77,8 +78,8 @@
       "field": "spfHabit",
       "eyebrowFr": "Protection solaire",
       "eyebrowAr": "الحماية من الشمس",
-      "questionFr": "À quelle fréquence appliquez-vous une protection SPF ?",
-      "questionAr": "كم مرة تستخدمين واقي الشمس؟",
+      "questionFr": "Utilisez-vous de la crème solaire quotidiennement ?",
+      "questionAr": "هل تستخدمين واقي الشمس يومياً؟",
       "helperFr": "Une protection régulière influence l’ordre de priorité de la routine.",
       "helperAr": "الاستعمال المنتظم يؤثر على ترتيب أولويات الروتين.",
       "options": [
@@ -91,27 +92,26 @@
       "field": "activeTolerance",
       "eyebrowFr": "Expérience des actifs",
       "eyebrowAr": "خبرتك مع المكونات الفعالة",
-      "questionFr": "Quel est votre niveau avec les actifs concentrés ?",
-      "questionAr": "ما مستوى خبرتك مع المكونات الفعالة المركزة؟",
+      "questionFr": "Comment votre peau réagit-elle aux actifs puissants ?",
+      "questionAr": "كيف تتفاعل بشرتك مع المكونات الفعالة القوية؟",
       "helperFr": "Par exemple les acides exfoliants, la vitamine C ou le rétinol.",
       "helperAr": "مثل أحماض التقشير أو فيتامين C أو الريتينول.",
       "options": [
-        { "val": "beginner", "labelFr": "Je débute", "labelAr": "مبتدئة", "descFr": "Je préfère une introduction progressive", "descAr": "أفضل البدء تدريجياً", "icon": "sprout" },
-        { "val": "intermediate", "labelFr": "J’en utilise déjà", "labelAr": "أستخدمها بالفعل", "descFr": "Ma peau tolère quelques actifs", "descAr": "بشرتي تتحمل بعض المكونات", "icon": "flask" },
-        { "val": "advanced", "labelFr": "Je suis habitué(e)", "labelAr": "لدي خبرة", "descFr": "Je connais mes concentrations et associations", "descAr": "أعرف التركيزات والتركيبات المناسبة", "icon": "layers" }
+        { "val": "beginner", "labelFr": "Mauvaise", "labelAr": "سيئة", "descFr": "Ma peau réagit ou s’irrite facilement", "descAr": "تتفاعل بشرتي أو تتهيج بسهولة", "icon": "shield-alert" },
+        { "val": "advanced", "labelFr": "Bonne", "labelAr": "جيدة", "descFr": "Ma peau tolère généralement ces actifs", "descAr": "تتحمل بشرتي هذه المكونات عادةً", "icon": "shield-check" }
       ]
     },
     {
       "field": "routineDepth",
       "eyebrowFr": "Votre rythme idéal",
       "eyebrowAr": "روتينك المثالي",
-      "questionFr": "Quel format de routine pourrez-vous suivre régulièrement ?",
-      "questionAr": "ما نوع الروتين الذي يمكنك الالتزام به بانتظام؟",
+      "questionFr": "Quelle est la complexité de votre routine souhaitée ?",
+      "questionAr": "ما مستوى تعقيد الروتين الذي ترغبين فيه؟",
       "helperFr": "La meilleure routine reste celle que vous utilisez avec constance.",
       "helperAr": "أفضل روتين هو الذي يمكنك الالتزام به باستمرار.",
       "options": [
         { "val": "essential", "labelFr": "L’essentiel", "labelAr": "الأساسيات", "descFr": "3 étapes, simple et rapide", "descAr": "3 خطوات بسيطة وسريعة", "icon": "list" },
-        { "val": "balanced", "labelFr": "Équilibrée", "labelAr": "متوازن", "descFr": "4 étapes ciblées au quotidien", "descAr": "4 خطوات يومية موجهة", "icon": "layout" },
+        { "val": "balanced", "labelFr": "Personnalisée", "labelAr": "مخصصة", "descFr": "4 étapes ciblées au quotidien", "descAr": "4 خطوات يومية موجهة", "icon": "layout" },
         { "val": "complete", "labelFr": "Complète", "labelAr": "كامل", "descFr": "Jusqu’à 5 étapes pour un rituel détaillé", "descAr": "حتى 5 خطوات لروتين مفصل", "icon": "rows" }
       ]
     }

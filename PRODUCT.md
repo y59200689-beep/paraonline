@@ -1,4 +1,4 @@
-# Para Officinal
+# Para Divine
 
 ## Register
 
@@ -6,7 +6,7 @@ product
 
 ## Users
 
-Authenticated Para Officinal customers managing orders, delivery tracking, favourites, support, profiles, and addresses; and internal administrators operating catalogue, customer, fulfilment, loyalty, reporting, and configuration workflows.
+Authenticated Para Divine customers managing orders, delivery tracking, favourites, support, profiles, and addresses; and internal administrators operating catalogue, customer, fulfilment, loyalty, reporting, and configuration workflows.
 
 ## Product Purpose
 

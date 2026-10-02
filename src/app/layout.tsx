@@ -88,8 +88,6 @@ const fallbackMetadata: Metadata = {
     description:
       'Parapharmacie en ligne au Maroc : dermo-cosmétique, K-Beauty, diagnostic personnalisé et livraison confirmée avant commande.',
     images: ['/og-image.jpg'],
-    creator: '@paraofficinal',
-    site: '@paraofficinal',
   },
   icons: {
     icon: '/favicon.ico',

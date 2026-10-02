@@ -6,7 +6,7 @@ import { PRODUCTS_DB } from '../src/lib/data';
 const SETTINGS_SEED = {
   id: 1,
   value: {
-    storeName: "Para Officinal S.A",
+    storeName: "Para Divine",
     freeShippingThreshold: 400,
     shippingFee: 35,
     quizDiscountPercent: 15,

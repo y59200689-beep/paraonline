@@ -9,7 +9,7 @@ const role = args[3] || 'owner'; // default to owner role
 
 if (!password) {
   console.log('\x1b[33m%s\x1b[0m', '=====================================================================');
-  console.log('\x1b[36m%s\x1b[0m', '      Para Officinal S.A — Admin Password Hashing CLI Tool');
+  console.log('\x1b[36m%s\x1b[0m', '      Para Divine — Admin Password Hashing CLI Tool');
   console.log('\x1b[33m%s\x1b[0m', '=====================================================================');
   console.log('Usage:');
   console.log('  node scripts/generate-admin-hash.js <username> <password> ["Full Name"] [role]');

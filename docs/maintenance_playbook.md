@@ -1,4 +1,4 @@
-# Para Officinal — Developer Maintenance Playbook
+# Para Divine — Developer Maintenance Playbook
 
 > **Audience**: Any developer picking up this project.  
 > **Last updated**: 2026-06-14

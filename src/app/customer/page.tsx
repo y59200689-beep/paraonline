@@ -636,7 +636,7 @@ export default function CustomerDashboard() {
     const url = URL.createObjectURL(file);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `para-officinal-mes-donnees-${new Date().toISOString().slice(0, 10)}.json`;
+    link.download = `para-divine-mes-donnees-${new Date().toISOString().slice(0, 10)}.json`;
     link.click();
     URL.revokeObjectURL(url);
     showToast('Votre fichier de données a été téléchargé.');

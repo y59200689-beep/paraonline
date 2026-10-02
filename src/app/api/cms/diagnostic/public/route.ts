@@ -16,6 +16,9 @@ function mapQuestions(questions: any[]) {
       .filter((a: any) => a.enabled !== false)
       .sort((a: any, b: any) => (a.display_order ?? 99) - (b.display_order ?? 99));
     const fallback = (defaultQuestions.questions as any[]).find((def: any) => def.field === q.question_key);
+    // Keep the public multi-select concern question in sync with the matching engine,
+    // including the new under-eye concern, even for older published CMS snapshots.
+    if (q.question_key === 'concern' && fallback) return fallback;
     return {
       field: q.question_key,
       eyebrowFr: fallback?.eyebrowFr || 'ÉVALUATION PERSONNALISÉE',

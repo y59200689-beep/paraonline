@@ -15,6 +15,7 @@ import {
   CloudSun,
   Droplet,
   Droplets,
+  Eye,
   FlaskConical,
   Heart,
   House,
@@ -42,6 +43,7 @@ import { useSettings } from '@/context/SettingsContext';
 import { Product } from '@/lib/data';
 import {
   buildDiagnosticRoutine,
+  getSelectedConcerns,
   ROUTINE_STEP_LABELS,
   ROUTINE_STEP_USAGE,
   type DiagnosticAnswers,
@@ -110,6 +112,7 @@ const ICONS: Record<string, React.ComponentType<{ className?: string; 'aria-hidd
   'cloud-sun': CloudSun,
   droplet: Droplet,
   droplets: Droplets,
+  eye: Eye,
   flask: FlaskConical,
   heart: Heart,
   house: House,
@@ -190,7 +193,20 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
   const isClientExperience = experience === 'client';
   const isIntro = questionIndex === -1;
   const isResults = questionIndex === questions.length;
-  const requestedStepCount = answers.routineDepth === 'complete' ? 5 : answers.routineDepth === 'balanced' ? 4 : 3;
+  const selectedConcerns = getSelectedConcerns(answers.concern);
+  const hasAnswer = (field: AnswerField) => field === 'concern' ? selectedConcerns.length > 0 : Boolean(answers[field]);
+  const isSelected = (field: AnswerField, value: string) => field === 'concern'
+    ? selectedConcerns.includes(value)
+    : answers[field] === value;
+  const chooseOption = (field: AnswerField, value: string) => {
+    setAnswers(current => {
+      if (field !== 'concern') return { ...current, [field]: value };
+      const selected = getSelectedConcerns(current.concern);
+      const next = selected.includes(value) ? selected.filter(item => item !== value) : [...selected, value];
+      return { ...current, concern: next.join(',') };
+    });
+  };
+  const requestedProductCount = answers.routineDepth === 'complete' ? 6 : answers.routineDepth === 'balanced' ? 5 : 3;
   const currentQuestion = !isIntro && !isResults ? questions[questionIndex] : null;
   const QuestionIcon = currentQuestion ? (ICONS[currentQuestion.options[0]?.icon] || Sparkles) : Sparkles;
   const progress = isIntro ? 0 : isResults ? 100 : Math.round(((questionIndex + 1) / questions.length) * 100);
@@ -279,7 +295,8 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
   const answerSummary = useMemo(() => {
     return (['skinType', 'concern', 'sensitivity', 'routineDepth'] as AnswerField[]).map((field) => ({
       field,
-      option: optionFor(field, answers[field]),
+      options: (field === 'concern' ? getSelectedConcerns(answers.concern) : [answers[field]])
+        .map(value => optionFor(field, value)).filter((option): option is DiagnosticOption => Boolean(option)),
     }));
   }, [answers]);
 
@@ -291,12 +308,15 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
     const rules = settings?.diagnosticRules || [];
     let bestRule: any = null;
     let highestRuleScore = -1;
+    const matchingRules: any[] = [];
+    const concerns = getSelectedConcerns(currentAnswers.concern);
 
     for (const rule of rules) {
-      const matchConcern = rule.concern === 'any' || rule.concern === currentAnswers.concern;
+      const matchConcern = rule.concern === 'any' || concerns.includes(rule.concern);
       const matchSkinType = rule.skinType === 'any' || rule.skinType === currentAnswers.skinType;
       const matchSunExposure = rule.sunExposure === 'any' || rule.sunExposure === currentAnswers.sunExposure;
       if (!matchConcern || !matchSkinType || !matchSunExposure) continue;
+      matchingRules.push(rule);
 
       const ruleScore = Number(rule.concern !== 'any') + Number(rule.skinType !== 'any') + Number(rule.sunExposure !== 'any');
       if (ruleScore > highestRuleScore) {
@@ -307,10 +327,11 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
 
     setMatchedRule(bestRule);
 
-    const customConcern = (settings.customConcerns || []).find((concern: any) => concern.id === currentAnswers.concern);
-    const configuredIds: number[] = bestRule?.productIds?.length
-      ? bestRule.productIds
-      : customConcern?.productIds || [];
+    const matchingCustomConcerns = (settings.customConcerns || []).filter((concern: any) => concerns.includes(concern.id));
+    const configuredIds: number[] = [...new Set([
+      ...matchingRules.flatMap(rule => rule.productIds || []),
+      ...matchingCustomConcerns.flatMap((concern: any) => concern.productIds || []),
+    ])] as number[];
 
     const catalogueResponse = await fetch('/api/diagnostic/catalogue', { cache: 'no-store' });
     if (!catalogueResponse.ok) throw new Error('Diagnostic catalogue unavailable');
@@ -320,7 +341,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
     const routineOptions = {
       configuredProductIds: configuredIds,
       excludedProductIds,
-      extraKeywords: [...(customConcern?.keywords || []), ...(customConcern?.ingredientKeywords || [])],
+      extraKeywords: matchingCustomConcerns.flatMap((concern: any) => [...(concern.keywords || []), ...(concern.ingredientKeywords || [])]),
     };
     const routine = buildDiagnosticRoutine(catalogue.products as Product[], currentAnswers, routineOptions);
     let finalRoutine = routine;
@@ -331,14 +352,19 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
         ...routineOptions,
         excludedProductIds: [...excludedProductIds, ...routine.map(item => item.product.id)],
       });
-      const candidates = [...routine, ...alternatives].map(item => ({ step: item.step, productId: item.product.id }));
+      const baseline = routine.map((item, slot) => ({ slot, step: item.step, productId: item.product.id }));
+      const candidates = baseline.flatMap(item => [
+        item,
+        ...alternatives.filter(alternative => alternative.step === item.step)
+          .map(alternative => ({ slot: item.slot, step: item.step, productId: alternative.product.id })),
+      ]);
       try {
         const reviewResponse = await fetch('/api/diagnostic/review', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             answers: currentAnswers,
-            baseline: routine.map(item => ({ step: item.step, productId: item.product.id })),
+            baseline,
             candidates,
           }),
         });
@@ -368,7 +394,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
   };
 
   const handleContinue = () => {
-    if (!currentQuestion || !answers[currentQuestion.field]) return;
+    if (!currentQuestion || !hasAnswer(currentQuestion.field)) return;
     if (questionIndex < questions.length - 1) {
       setQuestionIndex((current) => current + 1);
       return;
@@ -440,11 +466,11 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
             </div>
           ) : (
             <div className="flex min-w-0 items-center gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-teal-200 bg-teal-50 text-teal-700">
                 <Sparkles className="h-5 w-5" aria-hidden="true" />
               </span>
               <div className="min-w-0">
-                <p id="diagnostic-subtitle" className="text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-700">
+                <p id="diagnostic-subtitle" className="text-[11px] font-semibold uppercase tracking-[0.14em] text-teal-700">
                   {isRTL ? 'تقييم شخصي' : 'Évaluation personnalisée'}
                 </p>
                 <h2 id="diagnostic-title" className="truncate text-base font-bold tracking-tight text-slate-950 sm:text-lg">
@@ -475,11 +501,11 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
               <span className="text-slate-600">
                 {isRTL ? `السؤال ${questionIndex + 1} من ${questions.length}` : `Question ${questionIndex + 1} sur ${questions.length}`}
               </span>
-              <span className="font-mono text-emerald-700 tabular-nums">{progress}%</span>
+              <span className="font-mono text-teal-700 tabular-nums">{progress}%</span>
             </div>
             <div className={isClientExperience ? styles.progressTrack : 'h-1.5 overflow-hidden rounded-full bg-slate-100'} aria-hidden="true">
               <div
-                className={isClientExperience ? styles.progressValue : 'h-full rounded-full bg-emerald-600 transition-[width] duration-300 ease-out'}
+                className={isClientExperience ? styles.progressValue : 'h-full rounded-full bg-teal-600 transition-[width] duration-300 ease-out'}
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -576,12 +602,12 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                         <li key={step.number} className={`${styles.step} ${step.tone}`}>
                           <span className={styles.stepIcon} aria-hidden="true">
                             <StepIcon className="h-6 w-6" />
-                            <span className={styles.stepNumber}>{step.number}</span>
                           </span>
                           <div className={styles.stepCopy}>
                             <strong>{step.title}</strong>
                             <p>{step.description}</p>
                           </div>
+                          <span className={styles.stepNumber} aria-hidden="true">{step.number}</span>
                           <span className={styles.timeBadge}><Clock3 className="h-3.5 w-3.5" aria-hidden="true" />{step.time}</span>
                         </li>
                       );
@@ -596,7 +622,6 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                     </span>
                     <span className={styles.ctaArrow} aria-hidden="true">{isRTL ? <ArrowLeft className="h-5 w-5" /> : <ArrowRight className="h-5 w-5" />}</span>
                   </button>
-                  <p className={styles.privacy}><ShieldCheck className="h-4 w-4" aria-hidden="true" />{isRTL ? 'قد تُرسل إجاباتك واختيارات المنتجات إلى OpenAI لمراجعة الروتين. لا تُرسل أي صورة أو اسم.' : 'Vos réponses et une sélection de produits peuvent être transmises à OpenAI pour vérifier la routine. Aucun nom ni photo n’est transmis.'}</p>
                 </section>
 
                 <div className={styles.trustStrip} aria-label={isRTL ? 'مزايا التشخيص' : 'Garanties du diagnostic'}>
@@ -620,7 +645,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
             <div className="grid min-h-[610px] lg:grid-cols-[1.08fr_0.92fr]">
               <div className="flex flex-col justify-between bg-slate-950 px-6 py-8 text-slate-100 sm:px-10 sm:py-10">
                 <div>
-                  <span className="inline-flex items-center gap-2 rounded-lg border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-xs font-semibold text-emerald-300">
+                  <span className="inline-flex items-center gap-2 rounded-lg border border-teal-400/20 bg-teal-400/10 px-3 py-2 text-xs font-semibold text-teal-300">
                     <ShieldCheck className="h-4 w-4" aria-hidden="true" />
                     {isRTL ? 'بدون كاميرا أو صورة' : 'Sans caméra, sans photo'}
                   </span>
@@ -644,7 +669,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
               </div>
 
               <div className="flex flex-col justify-center px-6 py-8 sm:px-10 sm:py-10">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-teal-700">
                   {isRTL ? 'ما سنأخذه بعين الاعتبار' : 'Ce que nous allons prendre en compte'}
                 </p>
                 <div className="mt-5 divide-y divide-slate-200 border-y border-slate-200">
@@ -658,7 +683,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                     const ItemIcon = Icon as React.ComponentType<{ className?: string }>;
                     return (
                       <div key={String(label)} className="flex items-center gap-3 py-3.5 text-sm font-medium text-slate-700">
-                        <ItemIcon className="h-4 w-4 shrink-0 text-emerald-600" />
+                        <ItemIcon className="h-4 w-4 shrink-0 text-teal-600" />
                         <span>{String(label)}</span>
                       </div>
                     );
@@ -720,7 +745,9 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                   </p>
                   <div className={styles.questionHint}>
                     <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-                    <span>{isRTL ? 'اختاري الإجابة الأقرب إلى بشرتك.' : 'Choisissez la réponse la plus proche de votre réalité.'}</span>
+                    <span>{currentQuestion.field === 'concern'
+                      ? (isRTL ? 'اختاري مشكلة واحدة على الأقل، ويمكنك اختيار عدة مشاكل.' : 'Choisissez au moins une préoccupation. Plusieurs choix sont possibles.')
+                      : (isRTL ? 'اختاري الإجابة الأقرب إلى بشرتك.' : 'Choisissez la réponse la plus proche de votre réalité.')}</span>
                   </div>
                 </section>
 
@@ -728,21 +755,23 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                   <div className={styles.answersHeading}>
                     <div>
                       <span>{isRTL ? currentQuestion.eyebrowAr : currentQuestion.eyebrowFr}</span>
-                      <strong>{isRTL ? 'إجابة واحدة' : 'Une seule réponse'}</strong>
+                      <strong>{currentQuestion.field === 'concern'
+                        ? (isRTL ? 'اختيارات متعددة' : 'Plusieurs réponses possibles')
+                        : (isRTL ? 'إجابة واحدة' : 'Une seule réponse')}</strong>
                     </div>
                     <span className={styles.answerCount}>{currentQuestion.options.length} {isRTL ? 'خيارات' : 'choix'}</span>
                   </div>
-                  <div className={styles.answersGrid} role="radiogroup" aria-label={isRTL ? currentQuestion.questionAr : currentQuestion.questionFr}>
+                  <div className={styles.answersGrid} role={currentQuestion.field === 'concern' ? 'group' : 'radiogroup'} aria-label={isRTL ? currentQuestion.questionAr : currentQuestion.questionFr}>
                     {currentQuestion.options.map((option) => {
-                      const selected = answers[currentQuestion.field] === option.val;
+                      const selected = isSelected(currentQuestion.field, option.val);
                       const OptionIcon = ICONS[option.icon] || Sparkles;
                       return (
                         <button
                           key={option.val}
                           type="button"
-                          role="radio"
+                          role={currentQuestion.field === 'concern' ? 'checkbox' : 'radio'}
                           aria-checked={selected}
-                          onClick={() => setAnswers((current) => ({ ...current, [currentQuestion.field]: option.val }))}
+                          onClick={() => chooseOption(currentQuestion.field, option.val)}
                           className={`${styles.answerCard} ${selected ? styles.answerCardSelected : ''}`}
                         >
                           <span className={`${styles.answerIcon} ${selected ? styles.answerIconSelected : ''}`}>
@@ -770,11 +799,11 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                 </p>
                 <ol className="mt-5 space-y-1.5">
                   {questions.map((question, index) => {
-                    const complete = Boolean(answers[question.field]);
+                    const complete = hasAnswer(question.field);
                     const active = index === questionIndex;
                     return (
-                      <li key={question.field} className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-medium ${active ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200' : complete ? 'text-emerald-700' : 'text-slate-500'}`}>
-                        <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[11px] font-bold ${complete ? 'bg-emerald-100 text-emerald-700' : active ? 'bg-slate-950 text-white' : 'bg-slate-200 text-slate-500'}`}>
+                      <li key={question.field} className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-medium ${active ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200' : complete ? 'text-teal-700' : 'text-slate-500'}`}>
+                        <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[11px] font-bold ${complete ? 'bg-teal-100 text-teal-700' : active ? 'bg-slate-950 text-white' : 'bg-slate-200 text-slate-500'}`}>
                           {complete ? <Check className="h-3.5 w-3.5" /> : index + 1}
                         </span>
                         <span className="truncate">{isRTL ? question.eyebrowAr : question.eyebrowFr}</span>
@@ -785,7 +814,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
               </aside>
 
               <main key={currentQuestion.field} className="animate-in fade-in slide-in-from-right-2 px-5 py-7 duration-200 sm:px-8 sm:py-9">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-teal-700">
                   {isRTL ? currentQuestion.eyebrowAr : currentQuestion.eyebrowFr}
                 </p>
                 <h3 className="mt-3 max-w-2xl text-2xl font-bold leading-tight tracking-[-0.025em] text-slate-950 sm:text-[30px]">
@@ -795,27 +824,27 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                   {isRTL ? currentQuestion.helperAr : currentQuestion.helperFr}
                 </p>
 
-                <div className={`mt-7 grid gap-3 ${currentQuestion.options.length >= 4 ? 'sm:grid-cols-2' : ''}`} role="radiogroup" aria-label={isRTL ? currentQuestion.questionAr : currentQuestion.questionFr}>
+                <div className={`mt-7 grid gap-3 ${currentQuestion.options.length >= 4 ? 'sm:grid-cols-2' : ''}`} role={currentQuestion.field === 'concern' ? 'group' : 'radiogroup'} aria-label={isRTL ? currentQuestion.questionAr : currentQuestion.questionFr}>
                   {currentQuestion.options.map((option) => {
-                    const selected = answers[currentQuestion.field] === option.val;
+                    const selected = isSelected(currentQuestion.field, option.val);
                     const OptionIcon = ICONS[option.icon] || Sparkles;
                     return (
                       <button
                         key={option.val}
                         type="button"
-                        role="radio"
+                        role={currentQuestion.field === 'concern' ? 'checkbox' : 'radio'}
                         aria-checked={selected}
-                        onClick={() => setAnswers((current) => ({ ...current, [currentQuestion.field]: option.val }))}
-                        className={`group flex min-h-[92px] items-start gap-3 rounded-xl border p-4 text-start transition-[border-color,background-color,box-shadow,transform] duration-160 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-500/20 ${selected ? 'border-emerald-500 bg-emerald-50/80 shadow-[0_4px_12px_rgba(5,150,105,0.10)]' : 'border-slate-200 bg-white hover:-translate-y-px hover:border-slate-300 hover:shadow-sm'}`}
+                        onClick={() => chooseOption(currentQuestion.field, option.val)}
+                        className={`group flex min-h-[92px] items-start gap-3 rounded-xl border p-4 text-start transition-[border-color,background-color,box-shadow,transform] duration-160 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-teal-500/20 ${selected ? 'border-teal-500 bg-teal-50/80 shadow-[0_4px_12px_rgba(33,111,114,0.10)]' : 'border-slate-200 bg-white hover:-translate-y-px hover:border-slate-300 hover:shadow-sm'}`}
                       >
-                        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border ${selected ? 'border-emerald-200 bg-emerald-100 text-emerald-700' : 'border-slate-200 bg-slate-50 text-slate-500 group-hover:text-slate-700'}`}>
+                        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border ${selected ? 'border-teal-200 bg-teal-100 text-teal-700' : 'border-slate-200 bg-slate-50 text-slate-500 group-hover:text-slate-700'}`}>
                           <OptionIcon className="h-4 w-4" aria-hidden />
                         </span>
                         <span className="min-w-0 flex-1">
                           <strong className="block text-sm font-semibold text-slate-900">{isRTL ? option.labelAr : option.labelFr}</strong>
                           <span className="mt-1 block text-xs leading-5 text-slate-500">{isRTL ? option.descAr : option.descFr}</span>
                         </span>
-                        <span className={`mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${selected ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-300 text-transparent'}`}>
+                        <span className={`mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${selected ? 'border-teal-600 bg-teal-600 text-white' : 'border-slate-300 text-transparent'}`}>
                           <Check className="h-3 w-3" aria-hidden="true" />
                         </span>
                       </button>
@@ -830,7 +859,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
             <div className="px-5 py-7 sm:px-8 sm:py-9">
               <div className="flex flex-col gap-4 border-b border-slate-200 pb-7 sm:flex-row sm:items-start sm:justify-between">
                 <div className="max-w-2xl">
-                  <span className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold ring-1 ${recommendedProducts.length ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' : 'bg-amber-50 text-amber-800 ring-amber-200'}`}>
+                  <span className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold ring-1 ${recommendedProducts.length ? 'bg-teal-50 text-teal-700 ring-teal-200' : 'bg-amber-50 text-amber-800 ring-amber-200'}`}>
                     {recommendedProducts.length ? <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> : <ShieldAlert className="h-4 w-4" aria-hidden="true" />}
                     {recommendedProducts.length
                       ? (isRTL ? 'اكتمل ملف بشرتك' : 'Votre profil est prêt')
@@ -871,10 +900,10 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                 <aside>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">{isRTL ? 'ملخص الملف' : 'Synthèse du profil'}</p>
                   <dl className="mt-3 divide-y divide-slate-200 border-y border-slate-200">
-                    {answerSummary.map(({ field, option }) => option && (
+                    {answerSummary.map(({ field, options }) => options.length > 0 && (
                       <div key={field} className="py-3">
                         <dt className="text-[11px] text-slate-500">{isRTL ? questions.find((q) => q.field === field)?.eyebrowAr : questions.find((q) => q.field === field)?.eyebrowFr}</dt>
-                        <dd className="mt-1 text-sm font-semibold text-slate-900">{isRTL ? option.labelAr : option.labelFr}</dd>
+                        <dd className="mt-1 text-sm font-semibold text-slate-900">{options.map(option => isRTL ? option.labelAr : option.labelFr).join(' · ')}</dd>
                       </div>
                     ))}
                   </dl>
@@ -886,7 +915,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                 <div>
                   <div className="flex items-end justify-between gap-4">
                     <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-700">{isRTL ? 'روتينك المقترح' : 'Routine recommandée'}</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-teal-700">{isRTL ? 'روتينك المقترح' : 'Routine recommandée'}</p>
                       <h4 className="mt-1 text-lg font-bold text-slate-950">{recommendedProducts.length
                         ? (isRTL ? `${recommendedProducts.length} خطوات مختارة` : `${recommendedProducts.length} étapes sélectionnées`)
                         : (isRTL ? 'لا توجد منتجات مختارة' : 'Aucun produit sélectionné')}</h4>
@@ -904,6 +933,9 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                       const routineStep = recommendedRoutine[index]?.step;
                       const stepLabel = routineStep ? ROUTINE_STEP_LABELS[routineStep] : null;
                       const usage = routineStep ? ROUTINE_STEP_USAGE[routineStep] : null;
+                      const eyeCareTip = routineStep === 'treatment' && (product.routineRoles?.includes('eye_care') || /cernes|contour (des )?yeux|eye contour/i.test(product.title))
+                        ? { fr: 'Tapoter délicatement une petite quantité sur le contour des yeux, selon la notice du produit.', ar: 'ضعي كمية صغيرة برفق حول العينين حسب تعليمات المنتج.' }
+                        : null;
                       // Dynamic sunscreen tip: if user is frequently exposed, emphasize re-application
                       const sunscreenTip = routineStep === 'sunscreen' && answers.sunExposure === 'intense'
                         ? { fr: "Appliquer 15 min avant exposition. Renouveler toutes les 2 heures \u2014 vous \u00eates souvent expos\u00e9(e) au soleil.", ar: '\u0636\u0639\u064a\u0647 \u0642\u0628\u0644 15 \u062f\u0642\u064a\u0642\u0629 \u0645\u0646 \u0627\u0644\u062a\u0639\u0631\u0636. \u0643\u0631\u0631\u064a \u0627\u0644\u062a\u0637\u0628\u064a\u0642 \u0643\u0644 \u0633\u0627\u0639\u062a\u064a\u0646 \u2014 \u062a\u0639\u0631\u0636\u0643\u0650 \u0644\u0644\u0634\u0645\u0633 \u0645\u0631\u062a\u0641\u0639.' }
@@ -917,7 +949,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                         </div>
                         <div className="min-w-0 flex-1">
                           {stepLabel && (
-                            <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-700">
+                            <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.12em] text-teal-700">
                               {isRTL ? stepLabel.ar : stepLabel.fr}
                             </span>
                           )}
@@ -931,25 +963,25 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                               </p>
                               <p className="text-[11px] leading-relaxed text-slate-500">
                                 {isRTL
-                                  ? (sunscreenTip?.ar ?? usage.tip.ar)
-                                  : (sunscreenTip?.fr ?? usage.tip.fr)}
+                                  ? (eyeCareTip?.ar ?? sunscreenTip?.ar ?? usage.tip.ar)
+                                  : (eyeCareTip?.fr ?? sunscreenTip?.fr ?? usage.tip.fr)}
                               </p>
                             </div>
                           )}
                         </div>
                         <div className="shrink-0 text-end">
-                          <strong className="block text-sm text-emerald-700">{Math.round(product.price * 0.85)} DH</strong>
+                          <strong className="block text-sm text-teal-700">{Math.round(product.price * 0.85)} DH</strong>
                           <span className="text-[11px] text-slate-400 line-through">{product.price} DH</span>
                         </div>
                       </article>
                       );
                     })}
                   </div>
-                  {recommendedProducts.length > 0 && recommendedProducts.length < requestedStepCount && (
+                  {recommendedProducts.length > 0 && recommendedProducts.length < requestedProductCount && (
                     <p className="mt-3 text-xs leading-5 text-amber-800">
                       {isRTL
-                        ? 'بعض الخطوات غير معروضة لعدم توفر منتج متوافق مع ملفك حالياً.'
-                        : 'Certaines étapes sont absentes car aucun produit compatible avec votre profil n’est disponible actuellement.'}
+                        ? 'نعرض فقط المنتجات المتوافقة مع بشرتك والمتوفرة حالياً.'
+                        : 'Nous affichons uniquement les produits disponibles et adaptés à votre profil.'}
                     </p>
                   )}
                 </div>
@@ -975,7 +1007,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                 size="md"
                 loading={isGenerating}
                 loadingText={isRTL ? 'جارٍ إعداد الروتين...' : 'Création de la routine...'}
-                disabled={!answers[currentQuestion.field]}
+                disabled={!hasAnswer(currentQuestion.field)}
                 rightIcon={isRTL ? <ArrowLeft /> : <ArrowRight />}
                 onClick={handleContinue}
               >

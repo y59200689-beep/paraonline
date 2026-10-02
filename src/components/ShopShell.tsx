@@ -18,6 +18,7 @@ import { Header } from './Header';
 import { StorefrontFooter } from './StorefrontFooter';
 import { CartBubbleCoordinator } from './CartBubbleCoordinator';
 import { OrderSuccessModal } from './OrderSuccessModal';
+import { DiagnosticWelcome } from './DiagnosticWelcome';
 
 const CartDrawer = dynamic(() => import('./CartDrawer').then(m => m.CartDrawer), { ssr: false });
 const WishlistDrawer = dynamic(() => import('./WishlistDrawer').then(m => m.WishlistDrawer), { ssr: false });
@@ -209,6 +210,10 @@ export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hide
       )}
 
       {/* Drawers & Modals */}
+      <DiagnosticWelcome
+        blocked={isCartOpen || isWishlistOpen || isDiagnosticOpen || isScratchCardOpen || selectedProduct !== null}
+        onStart={() => setDiagnosticOpen(true)}
+      />
       {isCartOpen && (
         <CartDrawer
           isOpen

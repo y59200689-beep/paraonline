@@ -44,7 +44,7 @@ export function ContactClient() {
               <p className="mt-4 break-all text-sm font-semibold text-slate-500" dir="ltr">{SITE_CONTACT_EMAIL}</p>
             </section>
           </div>
-          <p className="mt-9 text-center text-sm text-slate-500">{ar ? 'من الاثنين إلى السبت: 09:00 – 18:00' : 'Du lundi au samedi : 09h00 – 18h00 (GMT+1)'}</p>
+          <p className="mt-9 text-center text-sm text-slate-500">{ar ? 'مفتوحون على مدار الساعة، 7 أيام في الأسبوع' : 'Ouvert 24h/24, 7j/7'}</p>
         </div>
       </main>
     </ShopShell>

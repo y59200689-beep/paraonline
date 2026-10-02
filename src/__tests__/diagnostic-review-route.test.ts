@@ -31,8 +31,8 @@ const answers = {
 };
 const body = {
   answers,
-  baseline: [{ step: 'cleanser', productId: 1 }],
-  candidates: [{ step: 'cleanser', productId: 1 }, { step: 'cleanser', productId: 2 }],
+  baseline: [{ slot: 0, step: 'cleanser', productId: 1 }],
+  candidates: [{ slot: 0, step: 'cleanser', productId: 1 }, { slot: 0, step: 'cleanser', productId: 2 }],
 };
 
 function request() {
@@ -43,7 +43,7 @@ function request() {
 
 function modelResult(productId: number | null) {
   return { ok: true, json: async () => ({
-    output: [{ content: [{ type: 'output_text', text: JSON.stringify({ selections: [{ step: 'cleanser', productId, reason: 'Routine compatible' }] }) }] }],
+    output: [{ content: [{ type: 'output_text', text: JSON.stringify({ selections: [{ slot: 0, productId, reason: 'Routine compatible' }] }) }] }],
   }) } as Response;
 }
 
@@ -82,7 +82,7 @@ describe('GPT diagnostic review endpoint', () => {
     vi.stubGlobal('fetch', vi.fn(async () => modelResult(3)));
     const unsafeRequest = new Request('http://localhost/api/diagnostic/review', {
       method: 'POST',
-      body: JSON.stringify({ ...body, candidates: [...body.candidates, { step: 'cleanser', productId: 3 }] }),
+      body: JSON.stringify({ ...body, candidates: [...body.candidates, { slot: 0, step: 'cleanser', productId: 3 }] }),
     });
     const result = await POST(unsafeRequest);
     const data = await result.json();
@@ -107,5 +107,19 @@ describe('GPT diagnostic review endpoint', () => {
     expect(data.reviewed).toBe(false);
     expect(data.routine.map((item: { product: { id: number } }) => item.product.id)).toEqual([1]);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('accepts a valid multi-concern answer and rejects an empty or unknown concern', async () => {
+    process.env.OPENAI_DIAGNOSTIC_REVIEW_ENABLED = 'false';
+    const multi = new Request('http://localhost/api/diagnostic/review', {
+      method: 'POST', body: JSON.stringify({ ...body, answers: { ...answers, concern: 'dryness,dark_circles' } }),
+    });
+    expect((await POST(multi)).status).toBe(200);
+    for (const concern of ['', 'dryness,unknown']) {
+      const invalid = new Request('http://localhost/api/diagnostic/review', {
+        method: 'POST', body: JSON.stringify({ ...body, answers: { ...answers, concern } }),
+      });
+      expect((await POST(invalid)).status).toBe(400);
+    }
   });
 });

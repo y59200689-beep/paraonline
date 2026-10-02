@@ -81,7 +81,7 @@ export const StorefrontFooter = ({ onDiagnostic }: { onDiagnostic: () => void })
         <div className={styles.column}><h3>{ar ? 'تواصل معنا' : 'Contactez-nous'}</h3>
           {whatsapp && <a className={styles.whatsapp} href={whatsapp} target="_blank" rel="noopener noreferrer"><MessageCircle size={28} /><span><strong>WhatsApp</strong><b dir="ltr">+{number}</b></span><ArrowRight size={18} /></a>}
           <a className={styles.contactEmail} href={`mailto:${SITE_CONTACT_EMAIL}`}><Mail size={19} aria-hidden="true" /><span dir="ltr">{SITE_CONTACT_EMAIL}</span></a>
-          <p className={styles.hours}>{ar ? 'من الإثنين إلى السبت: 09:00 – 18:00' : 'Du lundi au samedi : 09h00 – 18h00 (GMT+1)'}</p>
+          <p className={styles.hours}>{ar ? 'مفتوحون على مدار الساعة، 7 أيام في الأسبوع' : 'Ouvert 24h/24, 7j/7'}</p>
           <p className={styles.brandNote}>{ar ? 'فريقنا هنا لمساعدتك' : 'Notre équipe est là pour vous'} ♡</p>
         </div>
       </div>

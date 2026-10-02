@@ -656,7 +656,7 @@ export const AiAssistant: React.FC = () => {
                 </p>
                 {verificationToken && (
                   <a
-                    href={buildWhatsAppUrl(configuredWhatsAppPhone(chatConfig.whatsapp_link), `Bonjour, je souhaite confirmer ma commande #${lastPlacedOrderId} passée via l'Assistant IA. Lien : https://paraofficinal.ma/api/orders/verify?token=${verificationToken}&action=confirm`) || '#'}
+                    href={buildWhatsAppUrl(configuredWhatsAppPhone(chatConfig.whatsapp_link), `Bonjour, je souhaite confirmer ma commande #${lastPlacedOrderId} passée via l'Assistant IA. Lien : https://paradivine.ma/api/orders/verify?token=${verificationToken}&action=confirm`) || '#'}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] uppercase tracking-wider rounded-lg shadow-sm hover:shadow-md transition active:scale-95 border-0 outline-none w-full text-center"

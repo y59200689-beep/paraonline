@@ -13,6 +13,10 @@ export type DiagnosticAnswerField =
 
 export type DiagnosticAnswers = Record<DiagnosticAnswerField, string>;
 
+export function getSelectedConcerns(value: string): string[] {
+  return [...new Set(value.split(',').map(concern => concern.trim()).filter(Boolean))];
+}
+
 export type RoutineStep = 'cleanser' | 'toner' | 'treatment' | 'moisturizer' | 'sunscreen';
 
 export type RoutineRecommendation = {
@@ -238,7 +242,7 @@ function routineStepScores(product: Product): Record<RoutineStep, number> {
     + countMatches(text, ['nettoy', 'cleanser', 'cleansing', 'moussant', 'micell', 'demaquill']) * 2;
 
   // Toner: must NOT be a sunscreen spray – exclude SPF-containing products from toner slot
-  const tonerRaw = countMatches(titleText, ['toner', 'tonique', 'essence', 'lotion preparatrice', 'eau micellaire']) * 8
+  const tonerRaw = countMatches(titleText, ['toner', 'tonique', 'essence', 'lotion preparatrice', 'eau micellaire', 'eau thermale', 'brume thermale']) * 8
     + countMatches(text, ['toner', 'tonique', 'essence', 'lotion preparatrice']) * 2
     + (titleText.includes('lotion') && !titleText.includes('spf') && !titleText.includes('solaire') ? 4 : 0);
   const toner = sunscreen >= 10 ? 0 : tonerRaw;
@@ -251,6 +255,7 @@ function routineStepScores(product: Product): Record<RoutineStep, number> {
       'correcteur taches', 'correcteur teint', 'correcteur imperfection',
       'anti tache', 'anti taches', 'depigment', 'anti acne', 'anti imperfection', 'anti ride', 'antiride',
       'retinol', 'retinal', 'peel', 'vitamine c', 'vitamin c', 'niacinamide', 'azelaic',
+      'contour yeux', 'contour des yeux', 'cernes', 'anti cernes', 'eye contour', 'eye cream',
       'peptide', 'acide hyaluronique', 'filler', 'soin lissant', 'soin eclat', 'cica', 'cicalfate', 'cicaplast',
     ]) * 10
     + (category.includes('acne') || category.includes('anti tache') || category.includes('anti age') ? 4 : 0)
@@ -305,7 +310,7 @@ const CONCERN_TERMS: Record<string, string[]> = {
     'ceramide', 'hyaluron', 'glycerin', 'squalane', 'panthenol', 'uree',
     'nourri', 'nourrissant', 'nourrissante', 'emollient', 'baume', 'beurre',
     'barriere cutanee', 'barriere', 'reparateur', 'reparatrice', 'reconstruct',
-    'creme riche', 'fluide hydratant', 'gel hydratant', 'intensif', 'aqua',
+    'creme riche', 'fluide hydratant', 'gel hydratant', 'intensif', 'aqua', 'eau thermale', 'brume thermale',
   ],
   redness: [
     'rougeur', 'rougeurs', 'rosace', 'rosacee', 'couperose', 'erythrose',
@@ -314,6 +319,7 @@ const CONCERN_TERMS: Record<string, string[]> = {
     'apaisante', 'anti irritat', 'irritat', 'cicalfate', 'cicavit', 'cicaplast',
     'rosaliac', 'toleriane', 'tolederm', 'thermale', 'douceur',
   ],
+  dark_circles: ['cerne', 'cernes', 'anti cernes', 'anti cerne', 'contour yeux', 'contour des yeux', 'regard', 'eye contour', 'dark circle', 'poches sous les yeux', 'puffiness'],
 };
 
 // Strong signals that a product is specifically targeted at a given concern.
@@ -342,6 +348,7 @@ const CONCERN_ANTITERMS: Record<string, string[]> = {
     'anti rougeur', 'rosacee', 'couperose', 'erythrose',
     'toleriane', 'rosaliac', 'tolederm', 'cicalfate', 'cicaplast', 'peau reactive',
   ],
+  dark_circles: ['anti cernes', 'anti cerne', 'cernes', 'dark circle', 'poches sous les yeux'],
 };
 
 // Skin type mismatch penalties (e.g. oil-control / matifying products MUST NOT be given to dry skin)
@@ -379,6 +386,7 @@ const ANSWER_CONCERNS: Record<string, SuitableConcern[]> = {
   wrinkles: ['wrinkles', 'loss_of_firmness', 'uneven_texture'],
   dryness: ['dryness', 'dehydration', 'barrier_damage'],
   redness: ['redness', 'sensitivity', 'barrier_damage'],
+  dark_circles: ['dark_circles', 'puffiness'],
 };
 
 function isStructuredCompatibilitySafe(product: Product, answers: DiagnosticAnswers) {
@@ -421,15 +429,17 @@ function productFitScore(product: Product, answers: DiagnosticAnswers, extraKeyw
   }
 
   // TITLE-FIRST CONCERN BOOST: Heavy priority when the product TITLE explicitly names the concern
-  const titleConcernMatches = countMatches(titleText, CONCERN_TERMS[answers.concern] || []);
+  const selectedConcerns = getSelectedConcerns(answers.concern);
+  const concernTerms = [...new Set(selectedConcerns.flatMap(concern => CONCERN_TERMS[concern] || []))];
+  const titleConcernMatches = countMatches(titleText, concernTerms);
   score += titleConcernMatches * 20;
 
   // Primary concern match in full product text
-  score += countMatches(text, CONCERN_TERMS[answers.concern] || []) * 9;
+  score += countMatches(text, concernTerms) * 9;
   
   // Cross-concern mismatch penalty — subtract if product strongly signals a different concern
   for (const [otherConcern, antiterms] of Object.entries(CONCERN_ANTITERMS)) {
-    if (otherConcern === answers.concern) continue;
+    if (selectedConcerns.includes(otherConcern)) continue;
     const antiMatches = countMatches(text, (CONCERN_TERMS[otherConcern] || []));
     const antiSignal = countMatches(text, antiterms);
     if (antiSignal >= 2 || antiMatches >= 4) score -= 35; // heavy mismatch
@@ -445,7 +455,7 @@ function productFitScore(product: Product, answers: DiagnosticAnswers, extraKeyw
   score += countMatches(text, SKIN_TYPE_TERMS[answers.skinType] || []) * 4;
   score += countMatches(text, extraKeywords.map(normalize)) * 3;
 
-  const requestedConcerns = ANSWER_CONCERNS[answers.concern] || [];
+  const requestedConcerns = [...new Set(selectedConcerns.flatMap(concern => ANSWER_CONCERNS[concern] || []))];
   if (product.suitableConcerns?.length) {
     const concernMatches = product.suitableConcerns.filter(concern => requestedConcerns.includes(concern)).length;
     score += concernMatches * 18;
@@ -489,10 +499,29 @@ function routineStepsFor(answers: DiagnosticAnswers): RoutineStep[] {
   if (answers.routineDepth === 'balanced') {
     return ['cleanser', 'treatment', 'moisturizer', 'sunscreen'];
   }
-  if (answers.concern === 'dryness' || answers.concern === 'redness') {
+  if (getSelectedConcerns(answers.concern).some(concern => concern === 'dryness' || concern === 'redness')) {
     return ['cleanser', 'moisturizer', 'sunscreen'];
   }
   return ['cleanser', 'treatment', 'sunscreen'];
+}
+
+function complementaryStepFor(answers: DiagnosticAnswers): RoutineStep | null {
+  if (answers.routineDepth === 'balanced') return 'toner';
+  if (answers.routineDepth === 'complete') return 'treatment';
+  return null;
+}
+
+export function isRelevantComplement(product: Product, answers: DiagnosticAnswers, step: RoutineStep): boolean {
+  const selectedConcerns = getSelectedConcerns(answers.concern);
+  const concerns = [...new Set(selectedConcerns.flatMap(concern => ANSWER_CONCERNS[concern] || []))];
+  const title = productTitleText(product);
+  const matchesConcern = product.suitableConcerns?.some(concern => concerns.includes(concern))
+    || selectedConcerns.some(concern => countMatches(title, CONCERN_TERMS[concern] || []) > 0);
+  if (!matchesConcern) return false;
+  if (step === 'treatment' && product.activeStrength === 'strong') return false;
+  if (step === 'toner') return routineStepScores(product).toner >= 3;
+  if (step === 'treatment') return routineStepScores(product).treatment >= 3;
+  return false;
 }
 
 type RoutineBuilderOptions = {
@@ -507,7 +536,8 @@ function isStrictlyEligibleForProfileAndStep(product: Product, answers: Diagnost
   const fullText = productText(product);
 
   // 1. HARD GATE: Non-acne profiles CANNOT receive explicit anti-acne line products
-  const isAcneProfile = answers.concern === 'acne' || answers.breakoutFrequency === 'frequent';
+  const selectedConcerns = getSelectedConcerns(answers.concern);
+  const isAcneProfile = selectedConcerns.includes('acne') || answers.breakoutFrequency === 'frequent';
   if (!isAcneProfile) {
     const acneLines = [
       'acniben', 'actipur', 'acnilia', 'keracnyl', 'effaclar', 'acnewin', 'teen derm',
@@ -533,7 +563,7 @@ function isStrictlyEligibleForProfileAndStep(product: Product, answers: Diagnost
   }
 
   // 3b. HARD GATE: Redness and dry skin concerns CANNOT receive peels/exfoliants in treatment slot
-  if ((answers.concern === 'redness' || answers.skinType === 'dry') && step === 'treatment') {
+  if ((selectedConcerns.includes('redness') || answers.skinType === 'dry') && step === 'treatment') {
     const peelTerms = ['peeling', 'peel', 'scrub', 'acide glycolique', 'glycolic acid', 'exfoliant', 'gommage'];
     if (includesAny(titleAndCategory, peelTerms)) return false;
   }
@@ -566,13 +596,15 @@ function isStrictlyEligibleForProfileAndStep(product: Product, answers: Diagnost
   if (step === 'treatment') {
     // Exclude body sprays, itch sprays, eye contours and deodorant-style spray formats from face treatment slot
     const titleLower = productTitleText(product);
-    const isBadTreatment = includesAny(titleLower, [
+    const isNonFacialTreatment = includesAny(titleLower, [
       'spray sos', 'sos grattage', 'grattage', 'spray corps', 'deodorant', 'deo spray',
       'spray buccal', 'spray nasal',
-      'contour yeux', 'contour des yeux', 'eye contour', 'eye cream', 'contour eye',
-      'creme yeux', 'soin yeux', 'regard', 'yeux fatigues',
     ]);
-    if (isBadTreatment) return false;
+    const isEyeTreatment = includesAny(titleLower, [
+      'contour yeux', 'contour des yeux', 'eye contour', 'eye cream', 'contour eye',
+      'creme yeux', 'soin yeux', 'regard', 'yeux fatigues', 'cerne', 'dark circle',
+    ]);
+    if (isNonFacialTreatment || (isEyeTreatment && !selectedConcerns.includes('dark_circles'))) return false;
     // Must have at least one proper facial treatment indicator in title or text.
     // NOTE: 'correcteur' removed — too generic, matches orthopaedic correctors.
     const hasTreatmentIndicator = includesAny(titleLower, [
@@ -581,6 +613,7 @@ function isStrictlyEligibleForProfileAndStep(product: Product, answers: Diagnost
       'anti tache', 'anti ride', 'anti age', 'anti rougeur', 'cica', 'cicalfate', 'cicaplast',
       'sensibio', 'rosaliac', 'retinol', 'niacinamide', 'vitamine c', 'hyalur', 'peptide',
       'soin', 'traitement', 'solution', 'complexe', 'depigment',
+      'cerne', 'contour yeux', 'contour des yeux', 'eye contour', 'eye cream', 'regard',
     ]) || includesAny(fullText, ['serum', 'concentre', 'traitement localise', 'soin cible']);
     if (!hasTreatmentIndicator) return false;
   }
@@ -634,12 +667,18 @@ export function buildDiagnosticRoutine(
   const usedIds = new Set<number>();
   const usedVendors = new Set<string>();
 
-  for (const step of routineStepsFor(answers)) {
+  const coreSteps = routineStepsFor(answers);
+  const complementaryStep = complementaryStepFor(answers);
+  for (const { step, complementary } of [
+    ...coreSteps.map(step => ({ step, complementary: false })),
+    ...(complementaryStep ? [{ step: complementaryStep, complementary: true }] : []),
+  ]) {
     const filterCandidates = (sourcePool: Product[]) => sourcePool
       .filter((product) => !usedIds.has(product.id)
         && isStructuredCompatibilitySafe(product, answers)
         && isTimeCompatible(product, step)
         && isStrictlyEligibleForProfileAndStep(product, answers, step)
+        && (!complementary || isRelevantComplement(product, answers, step))
         && (step === 'sunscreen' || routineStepScores(product).sunscreen < 14)
         && routineStepScores(product)[step] >= 3)
       .map((product) => {
@@ -665,7 +704,7 @@ export function buildDiagnosticRoutine(
     }
 
     // Fallback 2: If strict rules yield 0 candidates for step, relax minimum score threshold but STILL enforce strict profile safety
-    if (!candidates.length) {
+    if (!candidates.length && !complementary) {
       candidates = baseEligible
         .filter((product) => !usedIds.has(product.id)
           && isStructuredCompatibilitySafe(product, answers)
@@ -689,5 +728,6 @@ export function buildDiagnosticRoutine(
     if (winner.product.vendor) usedVendors.add(normalize(winner.product.vendor));
   }
 
-  return selected;
+  const displayOrder: RoutineStep[] = ['cleanser', 'toner', 'treatment', 'moisturizer', 'sunscreen'];
+  return selected.sort((a, b) => displayOrder.indexOf(a.step) - displayOrder.indexOf(b.step));
 }

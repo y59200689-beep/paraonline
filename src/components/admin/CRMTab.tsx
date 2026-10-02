@@ -2275,7 +2275,7 @@ export default function CRMTab() {
                     {/* Grid of Top Purchased Products */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                       {topPurchasedProducts.slice(0, 6).map((prod, idx) => {
-                        const restockMsg = encodeURIComponent(`Bonjour ${selectedCustomer.name}, souhaitez-vous réapprovisionner votre soin habituel "${prod.title}" (${prod.price.toFixed(0)} DH) ? Vous pouvez commander en 1 clic ici : https://paraofficinal.ma`);
+                        const restockMsg = encodeURIComponent(`Bonjour ${selectedCustomer.name}, souhaitez-vous réapprovisionner votre soin habituel "${prod.title}" (${prod.price.toFixed(0)} DH) ? Vous pouvez commander en 1 clic ici : https://paradivine.ma`);
                         return (
                           <div key={idx} className={`group relative rounded-2xl border p-4 flex items-center gap-4 transition-all duration-200 hover:scale-[1.01] ${
                             adminTheme === 'light'
@@ -2443,7 +2443,7 @@ export default function CRMTab() {
 
                       {statusBadge.isOverdue && cPhone && (
                         <a
-                          href={buildWhatsAppUrl(cPhone, `Bonjour ${selectedCustomer.name}, votre rituel de soin Para Divine touche probablement à sa fin ! Profitez de -10% sur votre réassort aujourd'hui avec le code REASSORT10 : https://paraofficinal.ma`) || '#'}
+                          href={buildWhatsAppUrl(cPhone, `Bonjour ${selectedCustomer.name}, votre rituel de soin Para Divine touche probablement à sa fin ! Profitez de -10% sur votre réassort aujourd'hui avec le code REASSORT10 : https://paradivine.ma`) || '#'}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="po-ui-button po-ui-button--primary po-ui-button--md flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md transition active:scale-95 cursor-pointer shrink-0"
@@ -2951,7 +2951,7 @@ export default function CRMTab() {
                         </span>
                       ) : (
                         <a
-                                  href={buildWhatsAppUrl(cPhone, `Bonjour ${selectedCustomer.name}, effectuez gratuitement votre diagnostic peau personnalisé ici : https://paraofficinal.ma/skin-diagnostic`) || '#'}
+                                  href={buildWhatsAppUrl(cPhone, `Bonjour ${selectedCustomer.name}, effectuez gratuitement votre diagnostic peau personnalisé ici : https://paradivine.ma/skin-diagnostic`) || '#'}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="po-ui-button po-ui-button--primary po-ui-button--md flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_12px_rgba(16,185,129,0.25)] transition active:scale-95 cursor-pointer"
@@ -3041,7 +3041,7 @@ export default function CRMTab() {
                         </p>
                         {cPhone && (
                           <a
-                            href={buildWhatsAppUrl(cPhone, `Bonjour ${selectedCustomer.name}, effectuez gratuitement votre diagnostic peau personnalisé sur Para Divine pour recevoir votre routine sur mesure : https://paraofficinal.ma/skin-diagnostic`) || '#'}
+                            href={buildWhatsAppUrl(cPhone, `Bonjour ${selectedCustomer.name}, effectuez gratuitement votre diagnostic peau personnalisé sur Para Divine pour recevoir votre routine sur mesure : https://paradivine.ma/skin-diagnostic`) || '#'}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="po-ui-button po-ui-button--primary po-ui-button--md inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_4px_12px_rgba(16,185,129,0.25)] transition active:scale-95 cursor-pointer"
@@ -4077,7 +4077,7 @@ export default function CRMTab() {
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-semibold">
                     {reminders.map((r, idx) => {
-                      const msg = `Bonjour ${r.customerName}, nous espérons que votre produit de soin "${r.productTitle}" vous apporte satisfaction ! S'il commence à se vider, vous pouvez commander son réassort en un clic ici : https://paraofficinal.ma/products/${r.productId}`;
+                      const msg = `Bonjour ${r.customerName}, nous espérons que votre produit de soin "${r.productTitle}" vous apporte satisfaction ! S'il commence à se vider, vous pouvez commander son réassort en un clic ici : https://paradivine.ma/products/${r.productId}`;
                       const waLink = buildWhatsAppUrl(r.phone, msg) || '#';
 
                       return (
@@ -4457,7 +4457,7 @@ export default function CRMTab() {
       {/* ── Modal: Générateur de Code Promo WhatsApp Instantané ───────── */}
       {isPromoModalOpen && selectedCustomer && (() => {
         const cPhone = (selectedCustomer.phone || '').replace(/[^0-9]/g, '');
-        const promoMessage = `Bonjour ${selectedCustomer.name} 🎁 ! Pour vous remercier de votre fidélité sur Para Divine, voici votre code promo exclusif de -${promoDiscountPct}% : *${promoCustomCode}*. Valable pendant ${promoExpiryDays} jours sur tout le site : https://paraofficinal.ma`;
+        const promoMessage = `Bonjour ${selectedCustomer.name} 🎁 ! Pour vous remercier de votre fidélité sur Para Divine, voici votre code promo exclusif de -${promoDiscountPct}% : *${promoCustomCode}*. Valable pendant ${promoExpiryDays} jours sur tout le site : https://paradivine.ma`;
 
         return (
           <div

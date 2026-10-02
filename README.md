@@ -1,6 +1,6 @@
-# Para Officinal S.A — E-Commerce & Skincare Clinic Platform
+# Para Divine — E-Commerce & Skincare Clinic Platform
 
-Para Officinal S.A is a premium, high-performance skincare clinical and K-Beauty e-commerce platform built using Next.js. It features a fully-integrated AI-assisted Skin Diagnostic tool, a loyalty points engine, automated logictics and carrier integrations (Yalidine/Cathedis), financial ledger reconciliation, and a comprehensive admin control center.
+Para Divine is a premium, high-performance skincare clinical and K-Beauty e-commerce platform built using Next.js. It features a fully-integrated AI-assisted Skin Diagnostic tool, a loyalty points engine, automated logictics and carrier integrations (Yalidine/Cathedis), financial ledger reconciliation, and a comprehensive admin control center.
 
 ---
 
@@ -119,7 +119,7 @@ Vercel sends `Authorization: Bearer <CRON_SECRET>` when it invokes the scheduled
 
 ### 7. Atlascom order export (COD)
 
-When an operator moves an order from **En attente** to **Confirmée**, the server queues an immediate Atlascom export. It is idempotent: each Para Officinal order has one export record, so a double click or later status update cannot submit it twice. The payload contains only order/account codes, monetary totals, and product lines; it excludes customer identity, contact, delivery, and note data. A private Atlascom note is shown in the order detail after every successful send or failed attempt.
+When an operator moves an order from **En attente** to **Confirmée**, the server queues an immediate Atlascom export. It is idempotent: each Para Divine order has one export record, so a double click or later status update cannot submit it twice. The payload contains only order/account codes, monetary totals, and product lines; it excludes customer identity, contact, delivery, and note data. A private Atlascom note is shown in the order detail after every successful send or failed attempt.
 
 Apply the migration `20260801000000_add_atlascom_order_exports.sql`, then configure these production variables:
 

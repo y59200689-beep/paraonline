@@ -20,7 +20,7 @@ export default function ContentSeoPage() {
   const [defaultTitleAr, setDefaultTitleAr] = useState('Para Divine | صيدلية ومستحضرات تجميل كورية بالمغرب');
   const [defaultDescFr, setDefaultDescFr] = useState('Découvrez notre gamme complète de soins dermatologiques et K-Beauty avec livraison rapide partout au Maroc.');
   const [defaultDescAr, setDefaultDescAr] = useState('اكتشف مجموعتنا الكاملة من منتجات العناية بالبشرة والتجميل الكوري مع توصيل سريع في المغرب.');
-  const [canonicalDomain, setCanonicalDomain] = useState('https://paraofficinal.ma');
+  const [canonicalDomain, setCanonicalDomain] = useState('https://paradivine.ma');
 
   const handleSave = () => {
     setSaving(true);

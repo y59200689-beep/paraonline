@@ -222,12 +222,13 @@ describe('SkinDiagnostic question-only assessment', () => {
     };
 
     answerAndContinue('Grasse');
-    answerAndContinue('Imperfections');
+    fireEvent.click(screen.getByRole('checkbox', { name: /Acné\/Imperfections/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Continuer/i }));
     answerAndContinue('Très facilement');
     answerAndContinue('Souvent');
     answerAndContinue('Exposition modérée');
     answerAndContinue('Rarement ou jamais');
-    answerAndContinue('Je débute');
+    answerAndContinue('Mauvaise');
 
     expect(screen.getByText('Question 8 sur 8')).toBeDefined();
     answerAndContinue('L’essentiel');
@@ -240,6 +241,29 @@ describe('SkinDiagnostic question-only assessment', () => {
     expect(screen.getAllByText('Nettoyer')).toHaveLength(1);
     expect(screen.getByText(/ne constitue pas un diagnostic médical/i)).toBeDefined();
     expect(getUserMedia).not.toHaveBeenCalled();
+  });
+
+  it('requires one concern and allows several selected concerns', async () => {
+    await act(async () => {
+      render(<SkinDiagnostic isOpen onClose={vi.fn()} experience="client" />, { wrapper: AllProvidersWrapper });
+    });
+    fireEvent.click(screen.getByRole('button', { name: /COMMENCER MON DIAGNOSTIC/i }));
+    fireEvent.click(screen.getByRole('radio', { name: /Grasse/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Continuer/i }));
+
+    const continueButton = screen.getByRole('button', { name: /Continuer/i });
+    expect(continueButton.hasAttribute('disabled')).toBe(true);
+    const spots = screen.getByRole('checkbox', { name: /Taches et éclat/i });
+    const circles = screen.getByRole('checkbox', { name: /Cernes/i });
+    fireEvent.click(spots);
+    fireEvent.click(circles);
+    expect(spots.getAttribute('aria-checked')).toBe('true');
+    expect(circles.getAttribute('aria-checked')).toBe('true');
+    fireEvent.click(spots);
+    expect(spots.getAttribute('aria-checked')).toBe('false');
+    expect(circles.getAttribute('aria-checked')).toBe('true');
+    fireEvent.click(circles);
+    expect(continueButton.hasAttribute('disabled')).toBe(true);
   });
 
   it('keeps the premium entry isolated from the storefront experience', async () => {

@@ -1247,7 +1247,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                     </div>
                     <div className="min-w-0">
                       <p className="font-extrabold text-[12.5px] truncate transition-colors group-hover:text-emerald-500" style={{ color: textPrimary }}>
-                        {order.customer_name || 'Client Officinal'}
+                        {order.customer_name || 'Client Para Divine'}
                       </p>
                       <p className="text-[10px] font-mono truncate opacity-70" style={{ color: textMuted }}>
                         {order.city || 'Maroc'}
