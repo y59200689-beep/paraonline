@@ -1,15 +1,64 @@
+import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { Product } from '@/lib/data';
 import { supabase } from '@/lib/supabase';
 import ProductsClient from './ProductsClient';
 import { unstable_cache } from 'next/cache';
 import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/catalog-cache';
-import { catalogCategoryForConcern, countCatalogConcerns, getCatalogConcerns } from '@/lib/catalog-concerns';
+import { catalogCategoryForConcern, countCatalogConcerns, getCatalogConcerns, type CatalogConcern } from '@/lib/catalog-concerns';
 import { catalogCategoryFilter, normalizeCatalogCategoryId } from '@/lib/catalog-categories';
+import { catalogBrandPrefix } from '@/lib/catalog-brand-match';
+import {
+  applyCatalogSort,
+  buildCatalogPageHref,
+  catalogPageRange,
+  catalogCanonicalHref,
+  CATALOG_PAGE_SIZE,
+  normalizeCatalogRouteState,
+  type CatalogRouteState,
+} from '@/lib/catalog-pagination';
 
 // A full product card carries images, controls, and rich product metadata.
 // Keep the first catalogue view compact; pagination provides the rest without
 // blocking navigation or hydration with 50 cards at once.
-const PAGE_SIZE = 24;
+const PAGE_SIZE = CATALOG_PAGE_SIZE;
+
+const INGREDIENT_ALIASES: Record<string, string[]> = {
+  niacinamide: ['niacinamide'],
+  acide_hyaluronique: ['hyaluron'],
+  retinol: ['retinol', 'rétinol'],
+  vitamine_c: ['vitamine c', 'vitamin c', 'ascorb', 'ascorbyl'],
+  acide_salicylique: ['salicyl'],
+  centella_asiatica: ['centella', 'madecassoside', 'madécassoside'],
+  acide_tranexamique: ['tranexamic', 'tranexamique'],
+  squalane: ['squalane'],
+};
+
+const normalizeIngredientKey = (value: string) => value
+  .trim()
+  .toLowerCase()
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .replace(/[^a-z0-9]+/g, '_')
+  .replace(/^_|_$/g, '');
+
+function customConcernFilter(concern: CatalogConcern) {
+  const escapeValue = (value: string) => value.replace(/[,.()]/g, ' ').trim();
+  const textKeywords = [...(concern.keywords || []), ...(concern.ingredientKeywords || [])]
+    .map(escapeValue)
+    .filter(Boolean)
+    .slice(0, 20);
+  const clauses = textKeywords.flatMap(keyword => [
+    `title.ilike.%${keyword}%`,
+    `name.ilike.%${keyword}%`,
+    `name_fr.ilike.%${keyword}%`,
+    `description.ilike.%${keyword}%`,
+    `ingredients.ilike.%${keyword}%`,
+  ]);
+  const productIds = (concern.productIds || []).filter(Number.isInteger).slice(0, 100);
+  if (productIds.length > 0) clauses.push(`id.in.(${productIds.join(',')})`);
+  return clauses.join(',');
+}
 
 function rowToProduct(item: any): Product {
   return {
@@ -117,9 +166,9 @@ const getCachedCatalogFacets = unstable_cache(
   { tags: [PUBLIC_CATALOG_CACHE_TAG], revalidate: 3600 }
 );
 
-async function loadCatalogPage(category: string, brand = '', concern = 'all') {
+async function loadCatalogPage(state: CatalogRouteState) {
   let products: Product[] = [];
-  let pagination = { total: 0, page: 1, limit: PAGE_SIZE, totalPages: 1 };
+  let pagination = { total: 0, page: state.page, limit: PAGE_SIZE, totalPages: 1 };
 
   try {
     let query = supabase
@@ -127,32 +176,63 @@ async function loadCatalogPage(category: string, brand = '', concern = 'all') {
       .select('*', { count: 'exact' })
       .eq('status', 'live');
 
-    if (brand) {
-      query = query.ilike('vendor', brand);
-    } else if (category === 'offers') {
+    if (state.brand) {
+      const brandPrefix = catalogBrandPrefix(state.brand);
+      query = query.filter('vendor', 'ilike', `${brandPrefix}%`);
+    }
+
+    if (state.category === 'offers') {
       query = query.gt('compare_price', 'price');
-    } else if (category !== 'all') {
-      query = query.or(catalogCategoryFilter(category));
+    } else if (state.category !== 'all') {
+      query = query.or(catalogCategoryFilter(state.category));
     }
 
-    const categoryBackedConcern = category === 'all' ? catalogCategoryForConcern(concern) : undefined;
-    if (categoryBackedConcern) {
-      query = query.or(catalogCategoryFilter(categoryBackedConcern));
+    if (state.search) {
+      if (!Number.isNaN(Number(state.search)) && state.search.split(/\s+/).length === 1) {
+        query = query.or(`id.eq.${state.search},title.ilike."%${state.search}%",name.ilike."%${state.search}%",name_fr.ilike."%${state.search}%",sku.ilike."%${state.search}%",vendor.ilike."%${state.search}%"`);
+      } else {
+        const fields = ['title', 'name', 'name_fr', 'sku', 'vendor', 'category', 'description'];
+        state.search.split(/\s+/).filter(Boolean).forEach(word => {
+          query = query.or(fields.map(field => `${field}.ilike."%${word}%"`).join(','));
+        });
+      }
     }
 
-    const { data, count, error } = await query
-      .order('stock', { ascending: false })
-      .order('title', { ascending: true })
-      .order('id', { ascending: true })
-      .range(0, PAGE_SIZE - 1);
+    if (state.vendors.length > 0) query = query.in('vendor', state.vendors);
+    if (state.maxPrice > 0) query = query.lte('price', state.maxPrice);
+
+    if (state.ingredient) {
+      const ingredientKey = normalizeIngredientKey(state.ingredient);
+      const aliases = INGREDIENT_ALIASES[ingredientKey];
+      if (aliases) {
+        query = query.or(aliases.map(value => `ingredients.ilike.%${value}%`).join(','));
+      } else {
+        const escapedIngredient = state.ingredient.replace(/[%_]/g, '\\$&');
+        query = query.filter('ingredients', 'ilike', `%${escapedIngredient}%`);
+      }
+    }
+
+    const categoryBackedConcern = state.category === 'all' ? catalogCategoryForConcern(state.concern) : undefined;
+    let concernFilter = categoryBackedConcern ? catalogCategoryFilter(categoryBackedConcern) : '';
+    if (!categoryBackedConcern && state.concern !== 'all') {
+      const configuredConcerns = await getCatalogConcerns();
+      const selectedConcern = configuredConcerns.find(item => item.id === state.concern);
+      if (selectedConcern) concernFilter = customConcernFilter(selectedConcern);
+    }
+    if (state.category === 'all' && concernFilter) query = query.or(concernFilter);
+
+    const { from, to } = catalogPageRange(state.page, PAGE_SIZE);
+    const { data, count, error } = await applyCatalogSort(query, state.sort).range(from, to);
 
     if (error) throw error;
     products = (data || []).map(rowToProduct);
+    const total = count || products.length;
+
     pagination = {
-      total: count || products.length,
-      page: 1,
+      total,
+      page: state.page,
       limit: PAGE_SIZE,
-      totalPages: Math.max(1, Math.ceil((count || products.length) / PAGE_SIZE)),
+      totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)),
     };
   } catch (err) {
     console.error("Error loading products on server:", err);
@@ -167,45 +247,41 @@ const getCachedCatalogPage = unstable_cache(
   { tags: [PUBLIC_CATALOG_CACHE_TAG], revalidate: 3600 }
 );
 
-function normalizeCategory(value: string | string[] | undefined) {
-  const category = typeof value === 'string' ? value.trim().toLowerCase() : 'all';
-  return /^[a-z0-9_\- &]+$/.test(category) ? normalizeCatalogCategoryId(category) : 'all';
-}
-
-function normalizeBrand(value: string | string[] | undefined) {
-  if (typeof value !== 'string') return '';
-  return value.trim().slice(0, 100);
-}
-
-function normalizeConcern(value: string | string[] | undefined) {
-  if (typeof value !== 'string') return 'all';
-  return catalogCategoryForConcern(value) ? value : 'all';
+export async function generateMetadata({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }): Promise<Metadata> {
+  const state = normalizeCatalogRouteState(await searchParams);
+  return { alternates: { canonical: catalogCanonicalHref(state) } };
 }
 
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string | string[]; brand?: string | string[]; concern?: string | string[]; ingredient?: string | string[] }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const initialCategory = normalizeCategory(params.category);
-  const initialBrand = normalizeBrand(params.brand);
-  const initialConcern = normalizeConcern(params.concern);
+  const state = normalizeCatalogRouteState(params);
   const [{ products, pagination }, catalogFacets] = await Promise.all([
-    getCachedCatalogPage(initialCategory, initialBrand, initialConcern),
+    getCachedCatalogPage(state),
     getCachedCatalogFacets(),
   ]);
+  if (state.page > pagination.totalPages) {
+    redirect(buildCatalogPageHref(pagination.totalPages, state));
+  }
 
   return (
     <ProductsClient
-      key={`${initialCategory}:${initialBrand}:${initialConcern}:${typeof params.ingredient === 'string' ? params.ingredient : ''}`}
+      key={buildCatalogPageHref(state.page, state)}
       initialProducts={products}
       initialPagination={pagination}
       catalogFacets={catalogFacets}
-      initialCategory={initialCategory}
-      initialBrands={initialBrand ? [initialBrand] : []}
-      initialConcerns={initialConcern === 'all' ? [] : [initialConcern]}
-      initialIngredient={typeof params.ingredient === 'string' ? params.ingredient.trim().slice(0, 120) : ''}
+      initialCategory={state.category}
+      initialBrands={state.vendors.length > 0 ? state.vendors : state.brand ? [state.brand] : []}
+      initialConcerns={state.concern === 'all' ? [] : [state.concern]}
+      initialIngredient={state.ingredient}
+      initialSearch={state.search}
+      initialMaxPrice={state.maxPrice}
+      initialSort={state.sort}
+      initialPage={pagination.page}
+      routeState={state}
     />
   );
 }

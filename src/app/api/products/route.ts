@@ -5,6 +5,7 @@ import { catalogCategoryForConcern, countCatalogConcerns, getCatalogConcerns, ma
 import { catalogCategoryFilter, normalizeCatalogCategoryId } from '@/lib/catalog-categories';
 import { catalogBrandPrefix, sanitizeCatalogSearch } from '@/lib/catalog-brand-match';
 import { searchStockResults } from '@/lib/search-stock-results';
+import { applyCatalogSort, type CatalogSort } from '@/lib/catalog-pagination';
 
 // Catalogue data is operational data. Never allow a transient empty response
 // to become a Vercel edge-cache entry for every storefront visitor.
@@ -153,19 +154,6 @@ async function buildCatalogFacets() {
       .sort((a, b) => a.name.localeCompare(b.name)),
     concerns: countCatalogConcerns(rows.map(mapProduct), concerns),
   };
-}
-
-function applySort(query: any, sort: string) {
-  if (sort === 'price-asc') {
-    return query.order('price', { ascending: true }).order('title', { ascending: true });
-  }
-  if (sort === 'price-desc') {
-    return query.order('price', { ascending: false }).order('title', { ascending: true });
-  }
-  if (sort === 'rating') {
-    return query.order('rating', { ascending: false }).order('title', { ascending: true });
-  }
-  return query.order('title', { ascending: true }).order('id', { ascending: true });
 }
 
 function customConcernFilter(concern: { keywords?: string[]; ingredientKeywords?: string[]; productIds?: number[] }) {
@@ -365,7 +353,7 @@ export async function GET(request: Request) {
 
       for (let from = 0; ; from += pageSize) {
         const to = from + pageSize - 1;
-        const { data, error } = await applySort(query, sort).range(from, to);
+        const { data, error } = await applyCatalogSort(query, normalizeSort(sort)).range(from, to);
         if (error || !data) throw error || new Error('No products returned');
         const batch = (data as Array<Record<string, unknown>>).map(mapProduct);
         allRows.push(...batch);
@@ -376,7 +364,7 @@ export async function GET(request: Request) {
     } else {
       const from = (page - 1) * limit;
       const to = from + limit - 1;
-      let { data, count, error } = await applySort(query, sort).range(from, to);
+      let { data, count, error } = await applyCatalogSort(query, normalizeSort(sort)).range(from, to);
 
       // The storefront must remain usable even if a database ordering index is
       // temporarily unavailable. This is deliberately limited to the default
@@ -436,4 +424,10 @@ export async function GET(request: Request) {
     console.error("Products catalog GET error:", error);
     return NextResponse.json({ success: false, error: error.message || 'Server error' }, { status: 500 });
   }
+}
+
+function normalizeSort(sort: string): CatalogSort {
+  return sort === 'price-asc' || sort === 'price-desc' || sort === 'rating' || sort === 'alphabetical'
+    ? sort
+    : 'popular';
 }

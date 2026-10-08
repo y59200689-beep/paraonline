@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
-import { PRODUCTS_DB } from '@/lib/data';
 import { supabase } from '@/lib/supabase';
 import { BRANDS_DATA, slugify } from '@/lib/brands';
+import { loadSitemapProducts } from '@/lib/sitemap-products';
 
 export const revalidate = 3600;
 
@@ -44,36 +44,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Error loading advice articles for sitemap:', error);
   }
 
-  let productPages: MetadataRoute.Sitemap = [];
-  try {
-    const products: { id: number; updated_at: string | null }[] = [];
-    for (let offset = 0; ; offset += PAGE_SIZE) {
+  const products = await loadSitemapProducts(
+    async (from, to) => {
       const { data, error } = await supabase
         .from('products')
         .select('id, updated_at')
         .eq('status', 'live')
         .order('id', { ascending: true })
-        .range(offset, offset + PAGE_SIZE - 1);
+        .range(from, to);
 
-      if (error) throw error;
-      products.push(...(data ?? []));
-      if (!data || data.length < PAGE_SIZE) break;
-    }
-
-    productPages = products.map((product) => ({
-      url: `${SITE_URL}/products/${product.id}`,
-      ...(product.updated_at ? { lastModified: new Date(product.updated_at) } : {}),
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    }));
-  } catch (error) {
-    console.error('Error loading products for sitemap:', error);
-    productPages = PRODUCTS_DB.filter((product) => product.status === 'live').map((product) => ({
-      url: `${SITE_URL}/products/${product.id}`,
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    }));
-  }
+      return { data, error };
+    },
+    PAGE_SIZE,
+  );
+  const productPages: MetadataRoute.Sitemap = products.map((product) => ({
+    url: `${SITE_URL}/products/${product.id}`,
+    ...(product.updated_at ? { lastModified: new Date(product.updated_at) } : {}),
+    changeFrequency: 'weekly',
+    priority: 0.7,
+  }));
 
   return [...staticPages, ...brandPages, ...advicePages, ...productPages];
 }
