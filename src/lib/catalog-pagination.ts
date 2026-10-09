@@ -15,7 +15,7 @@ export type CatalogRouteState = {
   concern: string;
   ingredient: string;
   search: string;
-  maxPrice: number;
+  maxPrice: number | null;
   sort: CatalogSort;
 };
 
@@ -28,15 +28,23 @@ const boundedInteger = (value: string | undefined, fallback: number, maximum: nu
   return Number.isInteger(parsed) && parsed > 0 ? Math.min(parsed, maximum) : fallback;
 };
 
+export function isValidCatalogPageParam(value: string | undefined | null) {
+  if (value == null) return true;
+  if (!/^\d+$/.test(value)) return false;
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) && parsed > 0 && parsed <= MAX_CATALOG_PAGE;
+}
+
 export function normalizeCatalogRouteState(params: CatalogSearchParams = {}): CatalogRouteState {
   const rawSort = first(params.sort);
   const sort: CatalogSort = rawSort === 'price-asc' || rawSort === 'price-desc' || rawSort === 'rating' || rawSort === 'alphabetical'
     ? rawSort
     : 'popular';
-  const parsedMaxPrice = Number(first(params.maxPrice));
+  const rawMaxPrice = first(params.maxPrice);
+  const parsedMaxPrice = rawMaxPrice === undefined ? Number.NaN : Number(rawMaxPrice);
   const maxPrice = Number.isFinite(parsedMaxPrice) && parsedMaxPrice >= 30
     ? Math.min(parsedMaxPrice, DEFAULT_CATALOG_MAX_PRICE)
-    : DEFAULT_CATALOG_MAX_PRICE;
+    : null;
   const vendors = [...new Set(
     (Array.isArray(params.vendors) ? params.vendors.join(',') : params.vendors || '')
       .split(',')
@@ -124,7 +132,7 @@ export function buildCatalogPageHref(page: number, state: CatalogRouteState) {
   if (state.concern !== 'all') params.set('concern', state.concern);
   if (state.ingredient) params.set('ingredient', state.ingredient);
   if (state.search) params.set('search', state.search);
-  if (state.maxPrice < DEFAULT_CATALOG_MAX_PRICE) params.set('maxPrice', String(state.maxPrice));
+  if (state.maxPrice !== null) params.set('maxPrice', String(state.maxPrice));
   if (state.sort !== 'popular') params.set('sort', state.sort);
 
   const query = params.toString();

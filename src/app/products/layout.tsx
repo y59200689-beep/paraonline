@@ -4,7 +4,6 @@ export const metadata: Metadata = {
   title: 'Catalogue Produits — Parapharmacie & K-Beauty',
   description:
     'Découvrez notre catalogue complet de produits dermo-cosmétiques, K-Beauty et soins de peau disponibles en livraison rapide au Maroc.',
-  alternates: { canonical: '/products' },
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',

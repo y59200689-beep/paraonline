@@ -1,6 +1,6 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 
-const state = vi.hoisted(() => ({ rows: [] as Record<string, any>[], queries: 0 }));
+const state = vi.hoisted(() => ({ rows: [] as Record<string, any>[], queries: 0, error: null as { code: string; message: string } | null }));
 vi.mock('@/lib/supabase', () => ({ supabaseAdmin: { from: () => {
   state.queries++;
   let rows = [...state.rows];
@@ -12,7 +12,7 @@ vi.mock('@/lib/supabase', () => ({ supabaseAdmin: { from: () => {
     in(key: string, values: unknown[]) { rows = rows.filter(row => values.includes(row[key])); return this; },
     order() { return this; },
     range(from: number, to: number) { start = from; end = to; return this; },
-    then(resolve: (value: unknown) => unknown) { return Promise.resolve({ data: rows.slice(start, end + 1), count: rows.length, error: null }).then(resolve); },
+    then(resolve: (value: unknown) => unknown) { return Promise.resolve({ data: state.error ? null : rows.slice(start, end + 1), count: state.error ? null : rows.length, error: state.error }).then(resolve); },
   };
   return query;
 } } }));
@@ -21,6 +21,7 @@ import { GET } from '../app/api/products/route';
 
 beforeEach(() => {
   state.queries = 0;
+  state.error = null;
   state.rows = [0, -1, null, 3, 5].map((stock, index) => ({ id: index + 1, title: `Product ${index}`, stock, status: 'live', category: 'visage', price: 20 }));
   state.rows.push({ id: 6, title: 'Draft', stock: 10, status: 'draft' });
 });
@@ -48,4 +49,17 @@ it('does not fall back to unavailable products when none are in stock', async ()
 it('keeps unavailable products in ordinary catalog requests', async () => {
   const response = await GET(new Request('http://localhost/api/products'));
   expect((await response.json()).products).toHaveLength(5);
+});
+
+it('returns a generic server error instead of exposing database failure details', async () => {
+  const logError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  state.error = { code: 'XX000', message: 'private database connection detail' };
+
+  const response = await GET(new Request('http://localhost/api/products'));
+  const body = await response.json();
+
+  expect(response.status).toBe(500);
+  expect(body.error).toBe('Server error');
+  expect(JSON.stringify(body)).not.toContain('private database connection detail');
+  logError.mockRestore();
 });

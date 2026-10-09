@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { Product } from '@/lib/data';
 import { supabase } from '@/lib/supabase';
 import ProductsClient from './ProductsClient';
@@ -14,6 +14,7 @@ import {
   catalogPageRange,
   catalogCanonicalHref,
   CATALOG_PAGE_SIZE,
+  isValidCatalogPageParam,
   normalizeCatalogRouteState,
   type CatalogRouteState,
 } from '@/lib/catalog-pagination';
@@ -167,13 +168,18 @@ const getCachedCatalogFacets = unstable_cache(
 );
 
 async function loadCatalogPage(state: CatalogRouteState) {
-  let products: Product[] = [];
-  let pagination = { total: 0, page: state.page, limit: PAGE_SIZE, totalPages: 1 };
+  const categoryBackedConcern = state.category === 'all' ? catalogCategoryForConcern(state.concern) : undefined;
+  let concernFilter = categoryBackedConcern ? catalogCategoryFilter(categoryBackedConcern) : '';
+  if (!categoryBackedConcern && state.concern !== 'all') {
+    const configuredConcerns = await getCatalogConcerns();
+    const selectedConcern = configuredConcerns.find(item => item.id === state.concern);
+    if (selectedConcern) concernFilter = customConcernFilter(selectedConcern);
+  }
 
-  try {
+  const buildQuery = (countOnly = false) => {
     let query = supabase
       .from('products')
-      .select('*', { count: 'exact' })
+      .select(countOnly ? 'id' : '*', countOnly ? { count: 'exact', head: true } : { count: 'exact' })
       .eq('status', 'live');
 
     if (state.brand) {
@@ -199,7 +205,7 @@ async function loadCatalogPage(state: CatalogRouteState) {
     }
 
     if (state.vendors.length > 0) query = query.in('vendor', state.vendors);
-    if (state.maxPrice > 0) query = query.lte('price', state.maxPrice);
+    if (state.maxPrice !== null) query = query.lte('price', state.maxPrice);
 
     if (state.ingredient) {
       const ingredientKey = normalizeIngredientKey(state.ingredient);
@@ -212,31 +218,47 @@ async function loadCatalogPage(state: CatalogRouteState) {
       }
     }
 
-    const categoryBackedConcern = state.category === 'all' ? catalogCategoryForConcern(state.concern) : undefined;
-    let concernFilter = categoryBackedConcern ? catalogCategoryFilter(categoryBackedConcern) : '';
-    if (!categoryBackedConcern && state.concern !== 'all') {
-      const configuredConcerns = await getCatalogConcerns();
-      const selectedConcern = configuredConcerns.find(item => item.id === state.concern);
-      if (selectedConcern) concernFilter = customConcernFilter(selectedConcern);
-    }
     if (state.category === 'all' && concernFilter) query = query.or(concernFilter);
+    return query;
+  };
 
-    const { from, to } = catalogPageRange(state.page, PAGE_SIZE);
-    const { data, count, error } = await applyCatalogSort(query, state.sort).range(from, to);
+  const { from, to } = catalogPageRange(state.page, PAGE_SIZE);
+  const { data, count, error } = await applyCatalogSort(buildQuery(), state.sort).range(from, to);
 
-    if (error) throw error;
-    products = (data || []).map(rowToProduct);
-    const total = count || products.length;
-
-    pagination = {
+  if (error?.code === 'PGRST103' && state.page > 1) {
+    // Only the successful filtered count can establish that this range is
+    // genuinely past the end. A count failure is allowed to propagate.
+    const { count: filteredTotal, error: countError } = await buildQuery(true);
+    if (countError) throw countError;
+    if (filteredTotal === null) throw error;
+    const total = filteredTotal;
+    const pagination = {
       total,
       page: state.page,
       limit: PAGE_SIZE,
       totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)),
     };
-  } catch (err) {
-    console.error("Error loading products on server:", err);
+    if (state.page > pagination.totalPages) return { products: [], pagination };
   }
+
+  if (error) throw error;
+
+  let confirmedTotal = count;
+  if (confirmedTotal === null) {
+    const { count: filteredTotal, error: countError } = await buildQuery(true);
+    if (countError) throw countError;
+    if (filteredTotal === null) throw new Error('Unable to confirm catalogue result count');
+    confirmedTotal = filteredTotal;
+  }
+
+  const products = (data || []).map(rowToProduct);
+  const total = confirmedTotal;
+  const pagination = {
+    total,
+    page: state.page,
+    limit: PAGE_SIZE,
+    totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)),
+  };
 
   return { products, pagination };
 }
@@ -258,14 +280,14 @@ export default async function ProductsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
+  const rawPage = Array.isArray(params.page) ? params.page[0] : params.page;
+  if (!isValidCatalogPageParam(rawPage)) notFound();
   const state = normalizeCatalogRouteState(params);
   const [{ products, pagination }, catalogFacets] = await Promise.all([
     getCachedCatalogPage(state),
     getCachedCatalogFacets(),
   ]);
-  if (state.page > pagination.totalPages) {
-    redirect(buildCatalogPageHref(pagination.totalPages, state));
-  }
+  if (state.page > pagination.totalPages) notFound();
 
   return (
     <ProductsClient

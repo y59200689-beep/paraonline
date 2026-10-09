@@ -5,7 +5,7 @@ import { catalogCategoryForConcern, countCatalogConcerns, getCatalogConcerns, ma
 import { catalogCategoryFilter, normalizeCatalogCategoryId } from '@/lib/catalog-categories';
 import { catalogBrandPrefix, sanitizeCatalogSearch } from '@/lib/catalog-brand-match';
 import { searchStockResults } from '@/lib/search-stock-results';
-import { applyCatalogSort, type CatalogSort } from '@/lib/catalog-pagination';
+import { applyCatalogSort, isValidCatalogPageParam, type CatalogSort } from '@/lib/catalog-pagination';
 
 // Catalogue data is operational data. Never allow a transient empty response
 // to become a Vercel edge-cache entry for every storefront visitor.
@@ -28,7 +28,6 @@ const INGREDIENT_ALIASES: Record<string, string[]> = {
 // while optional recommendation governance columns are being migrated.
 const PUBLIC_PRODUCT_COLUMNS = '*';
 
-const MAX_CATALOG_PAGE = 10_000;
 const MAX_CATALOG_PAGE_SIZE = 100;
 
 const boundedPositiveInteger = (value: string | null, fallback: number, maximum: number) => {
@@ -176,7 +175,11 @@ function customConcernFilter(concern: { keywords?: string[]; ingredientKeywords?
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const page = boundedPositiveInteger(searchParams.get('page'), 1, MAX_CATALOG_PAGE);
+  const rawPage = searchParams.get('page');
+  if (!isValidCatalogPageParam(rawPage)) {
+    return NextResponse.json({ success: false, error: 'Invalid page number' }, { status: 400 });
+  }
+  const page = rawPage === null ? 1 : Number(rawPage);
   const limit = boundedPositiveInteger(searchParams.get('limit'), 15, MAX_CATALOG_PAGE_SIZE);
   const category = normalizeCatalogCategoryId(searchParams.get('category') || 'all');
   const search = sanitizeCatalogSearch(searchParams.get('search') || '');
@@ -255,8 +258,10 @@ export async function GET(request: Request) {
       );
     }
 
-    const buildQuery = () => {
-    let query = supabase.from('products').select(PUBLIC_PRODUCT_COLUMNS, { count: 'exact' });
+    const buildQuery = (countOnly = false) => {
+    let query = countOnly
+      ? supabase.from('products').select('id', { count: 'exact', head: true })
+      : supabase.from('products').select(PUBLIC_PRODUCT_COLUMNS, { count: 'exact' });
 
     // Filter out drafts on public customer storefront
     query = query.eq('status', 'live');
@@ -327,8 +332,8 @@ export async function GET(request: Request) {
         ? customConcernFilter(selectedCustomConcern)
         : '';
 
-    const filteredQuery = () => {
-      const query = buildQuery();
+    const filteredQuery = (countOnly = false) => {
+      const query = buildQuery(countOnly);
       return category === 'all' && concernFilter ? query.or(concernFilter) : query;
     };
 
@@ -366,6 +371,17 @@ export async function GET(request: Request) {
       const to = from + limit - 1;
       let { data, count, error } = await applyCatalogSort(query, normalizeSort(sort)).range(from, to);
 
+      if (error && page > 1) {
+        // PostgREST may reject a range past its configured row window. Check
+        // the filtered total separately so an ordinary out-of-range request
+        // gets a 404 instead of being surfaced as a server failure.
+        const { count: filteredTotal, error: countError } = await filteredQuery(true);
+        if (countError) throw countError;
+        if (filteredTotal !== null && page > Math.max(1, Math.ceil(filteredTotal / limit))) {
+          return NextResponse.json({ success: false, error: 'Catalogue page not found' }, { status: 404 });
+        }
+      }
+
       // The storefront must remain usable even if a database ordering index is
       // temporarily unavailable. This is deliberately limited to the default
       // catalogue view so intentional empty search/filter results stay intact.
@@ -391,7 +407,17 @@ export async function GET(request: Request) {
         throw error || new Error('No products returned');
       }
       products = (data as Array<Record<string, unknown>>).map(mapProduct);
-      total = count || products.length;
+      let confirmedTotal = count;
+      if (confirmedTotal === null) {
+        const { count: filteredTotal, error: countError } = await filteredQuery(true);
+        if (countError) throw countError;
+        if (filteredTotal === null) throw new Error('Unable to confirm catalogue result count');
+        confirmedTotal = filteredTotal;
+      }
+      total = confirmedTotal;
+      if (page > Math.max(1, Math.ceil(total / limit))) {
+        return NextResponse.json({ success: false, error: 'Catalogue page not found' }, { status: 404 });
+      }
     }
 
     if (needsPostFilter) {
@@ -411,7 +437,7 @@ export async function GET(request: Request) {
           total,
           page,
           limit,
-          totalPages: Math.ceil(total / limit)
+          totalPages: Math.max(1, Math.ceil(total / limit))
         }
       },
       {
@@ -422,7 +448,7 @@ export async function GET(request: Request) {
     );
   } catch (error: any) {
     console.error("Products catalog GET error:", error);
-    return NextResponse.json({ success: false, error: error.message || 'Server error' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
   }
 }
 

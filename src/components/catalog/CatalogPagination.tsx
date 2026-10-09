@@ -1,7 +1,6 @@
 'use client';
 
-import Link from 'next/link';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import {
   buildCatalogPageHref,
   type CatalogRouteState,
@@ -27,6 +26,7 @@ export function CatalogPagination({
   const currentPage = Math.min(pagination.page, totalPages);
   const start = Math.max(1, Math.min(currentPage - 2, totalPages - 4));
   const visiblePages = Array.from({ length: Math.min(5, totalPages) }, (_, index) => start + index);
+  const end = visiblePages.at(-1) || 1;
   const isFrench = language === 'FR';
   const buttonClass = 'h-9 px-3 rounded-xl border border-slate-200 bg-white text-xs font-black text-slate-600 transition hover:border-primary/30 hover:text-primary dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300';
   const pageClass = 'h-9 min-w-9 rounded-xl border px-3 text-xs font-black transition';
@@ -44,15 +44,23 @@ export function CatalogPagination({
             : `الصفحة ${currentPage} / ${totalPages}`}
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
+          {start > 1 && (
+            <a
+              href={buildCatalogPageHref(1, routeState)}
+              aria-label={isFrench ? 'Première page' : 'الصفحة الأولى'}
+              className={buttonClass}
+            >
+              <ChevronsLeft className="h-4 w-4" />
+            </a>
+          )}
           {currentPage > 1 ? (
-            <Link
+            <a
               href={buildCatalogPageHref(currentPage - 1, routeState)}
-              prefetch={false}
               aria-label={isFrench ? 'Page précédente' : 'الصفحة السابقة'}
               className={buttonClass}
             >
               <ChevronLeft className="h-4 w-4" />
-            </Link>
+            </a>
           ) : (
             <span aria-disabled="true" className={`${buttonClass} cursor-not-allowed opacity-40`}>
               <ChevronLeft className="h-4 w-4" />
@@ -68,30 +76,37 @@ export function CatalogPagination({
               {page}
             </span>
           ) : (
-            <Link
+            <a
               key={page}
               href={buildCatalogPageHref(page, routeState)}
-              prefetch={false}
               aria-label={isFrench ? `Page ${page}` : `الصفحة ${page}`}
               className={`${pageClass} border-slate-200 bg-white text-slate-600 hover:border-primary/30 hover:text-primary dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300`}
             >
               {page}
-            </Link>
+            </a>
           ))}
 
           {currentPage < totalPages ? (
-            <Link
+            <a
               href={buildCatalogPageHref(currentPage + 1, routeState)}
-              prefetch={false}
               aria-label={isFrench ? 'Page suivante' : 'الصفحة التالية'}
               className={buttonClass}
             >
               <ChevronRight className="h-4 w-4" />
-            </Link>
+            </a>
           ) : (
             <span aria-disabled="true" className={`${buttonClass} cursor-not-allowed opacity-40`}>
               <ChevronRight className="h-4 w-4" />
             </span>
+          )}
+          {end < totalPages && (
+            <a
+              href={buildCatalogPageHref(totalPages, routeState)}
+              aria-label={isFrench ? 'Dernière page' : 'الصفحة الأخيرة'}
+              className={buttonClass}
+            >
+              <ChevronsRight className="h-4 w-4" />
+            </a>
           )}
         </div>
       </div>

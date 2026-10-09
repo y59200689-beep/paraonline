@@ -56,24 +56,12 @@ const ORDER_STATUS_OPTIONS = [
   { value: 'Returned', label: 'Retournée', detail: 'Retour ou échec de livraison', color: '#ea580c', tint: 'rgba(234,88,12,0.10)', border: 'rgba(234,88,12,0.24)' },
 ] as const;
 
-function OrderStatusPicker({ value, onChange, isDark = false, compact = false, readOnly = false }: { value: string; onChange: (value: string) => void; isDark?: boolean; compact?: boolean; readOnly?: boolean }) {
+export function OrderStatusPicker({ value, onChange, isDark = false, compact = false, readOnly = false }: { value: string; onChange: (value: string) => void; isDark?: boolean; compact?: boolean; readOnly?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, placement: 'bottom' as 'top' | 'bottom' });
   const current = ORDER_STATUS_OPTIONS.find(option => option.value === value) || ORDER_STATUS_OPTIONS[0];
-
-  if (readOnly) {
-    return (
-      <span
-        className={`inline-flex items-center gap-2 rounded-lg border font-bold ${compact ? 'px-2 py-1 text-[10px]' : 'px-3 py-2 text-xs'}`}
-        style={{ background: current.tint, borderColor: current.border, color: current.color }}
-      >
-        <span className="h-1.5 w-1.5 rounded-full" style={{ background: current.color }} />
-        {current.label}
-      </span>
-    );
-  }
 
   const positionMenu = useCallback(() => {
     const rect = triggerRef.current?.getBoundingClientRect();
@@ -90,6 +78,8 @@ function OrderStatusPicker({ value, onChange, isDark = false, compact = false, r
   }, []);
 
   useEffect(() => {
+    if (readOnly) return;
+
     const closeOnOutsideClick = (event: MouseEvent) => {
       const target = event.target as Node;
       if (!triggerRef.current?.contains(target) && !menuRef.current?.contains(target)) setIsOpen(false);
@@ -103,10 +93,10 @@ function OrderStatusPicker({ value, onChange, isDark = false, compact = false, r
       document.removeEventListener('mousedown', closeOnOutsideClick);
       document.removeEventListener('keydown', closeOnEscape);
     };
-  }, []);
+  }, [readOnly]);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (readOnly || !isOpen) return;
     positionMenu();
     window.addEventListener('resize', positionMenu);
     window.addEventListener('scroll', positionMenu, true);
@@ -114,7 +104,19 @@ function OrderStatusPicker({ value, onChange, isDark = false, compact = false, r
       window.removeEventListener('resize', positionMenu);
       window.removeEventListener('scroll', positionMenu, true);
     };
-  }, [isOpen, positionMenu]);
+  }, [isOpen, positionMenu, readOnly]);
+
+  if (readOnly) {
+    return (
+      <span
+        className={`inline-flex items-center gap-2 rounded-lg border font-bold ${compact ? 'px-2 py-1 text-[10px]' : 'px-3 py-2 text-xs'}`}
+        style={{ background: current.tint, borderColor: current.border, color: current.color }}
+      >
+        <span className="h-1.5 w-1.5 rounded-full" style={{ background: current.color }} />
+        {current.label}
+      </span>
+    );
+  }
 
   return (
     <div ref={triggerRef} className="inline-flex" onClick={(event) => event.stopPropagation()}>

@@ -13,6 +13,7 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     ".agents/**",
+    "supabase/.temp/**",
     // Experimental snippets and captured output, not application source.
     "scratch/**",
   ]),

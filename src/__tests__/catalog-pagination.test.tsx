@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { CatalogPagination } from '@/components/catalog/CatalogPagination';
 import {
   applyCatalogSort,
@@ -9,15 +9,9 @@ import {
   catalogCanonicalHref,
   catalogPageRange,
   catalogSortOrders,
+  isValidCatalogPageParam,
   normalizeCatalogRouteState,
 } from '@/lib/catalog-pagination';
-
-vi.mock('next/link', () => ({
-  default: ({ href, children, prefetch, ...props }: React.PropsWithChildren<{ href: string; prefetch?: boolean; [key: string]: unknown }>) => {
-    void prefetch;
-    return <a href={href} {...props}>{children}</a>;
-  },
-}));
 
 afterEach(cleanup);
 
@@ -60,6 +54,14 @@ describe('catalog pagination URLs and ranges', () => {
       '/products?category=visage&vendors=Vichy%2CLa+Roche-Posay&concern=spots&search=s%C3%A9rum+%C3%A9clat&maxPrice=750&sort=rating',
     );
     expect(buildCatalogPageHref(2, normalizeCatalogRouteState())).toBe('/products?page=2');
+    expect(buildCatalogPageHref(2, normalizeCatalogRouteState({ maxPrice: '1500' }))).toBe('/products?page=2&maxPrice=1500');
+  });
+
+  it('leaves an absent maximum price unfiltered and preserves an explicit budget', () => {
+    expect(normalizeCatalogRouteState().maxPrice).toBeNull();
+    expect(normalizeCatalogRouteState({ maxPrice: '1500' }).maxPrice).toBe(1500);
+    expect(normalizeCatalogRouteState({ maxPrice: '2500' }).maxPrice).toBe(1500);
+    expect(normalizeCatalogRouteState({ maxPrice: 'invalid' }).maxPrice).toBeNull();
   });
 
   it('uses a distinct canonical for each meaningful page while normalizing page one', () => {
@@ -75,6 +77,17 @@ describe('catalog pagination URLs and ranges', () => {
       sort: 'popular',
       category: 'all',
     });
+  });
+
+  it('validates page parameters and rejects malformed or unbounded values', () => {
+    expect(isValidCatalogPageParam(null)).toBe(true);
+    expect(isValidCatalogPageParam('1')).toBe(true);
+    expect(isValidCatalogPageParam('10000')).toBe(true);
+    expect(isValidCatalogPageParam('0')).toBe(false);
+    expect(isValidCatalogPageParam('-2')).toBe(false);
+    expect(isValidCatalogPageParam('2.5')).toBe(false);
+    expect(isValidCatalogPageParam('2e3')).toBe(false);
+    expect(isValidCatalogPageParam('1000000000000000000000')).toBe(false);
   });
 
   it('preserves the former stock-prioritized default order', () => {
@@ -148,5 +161,25 @@ describe('catalog pagination URLs and ranges', () => {
     expect(href.searchParams.get('vendors')).toBe('Vichy');
     expect(href.searchParams.get('search')).toBe('serum');
     expect(href.searchParams.get('sort')).toBe('price-asc');
+  });
+
+  it('renders bounded first and last page jump links while preserving route state', () => {
+    const routeState = normalizeCatalogRouteState({ page: '320', maxPrice: '900', sort: 'price-desc' });
+    render(
+      <CatalogPagination
+        pagination={{ total: 24 * 660, page: 320, limit: 24, totalPages: 660 }}
+        routeState={routeState}
+        language="FR"
+      />,
+    );
+
+    const firstPage = screen.getByRole('link', { name: 'Première page' });
+    const lastPage = screen.getByRole('link', { name: 'Dernière page' });
+    expect(firstPage.getAttribute('href')).toBe('/products?maxPrice=900&sort=price-desc');
+    expect(lastPage.getAttribute('href')).toBe('/products?page=660&maxPrice=900&sort=price-desc');
+    expect(screen.getAllByRole('link').every(link => {
+      const page = Number(new URL(link.getAttribute('href')!, 'https://paradivine.ma').searchParams.get('page') || '1');
+      return page >= 1 && page <= 660;
+    })).toBe(true);
   });
 });

@@ -11,14 +11,27 @@ function productIds(page: Page) {
 
 test('JavaScript pagination supports direct loads, navigation, refresh, filters, and stable product subsets', async ({ page, request }) => {
   await page.goto('/products');
+  const diagnosticWelcomeClose = page.getByRole('button', { name: 'Fermer la fenêtre' });
+  await expect(diagnosticWelcomeClose).toBeVisible();
+  await diagnosticWelcomeClose.click();
   const navigation = page.locator('nav[data-testid="catalog-pagination"]:visible').first();
   await expect(navigation).toBeVisible();
+
+  const priceLimit = page.getByRole('checkbox', { name: 'Limiter le prix maximum' }).first();
+  await expect(priceLimit).not.toBeChecked();
+  await priceLimit.check();
+  await expect(priceLimit).toBeChecked();
+  await expect(page.getByText('Max 1500 DH', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Effacer tout' }).click();
+  await expect(priceLimit).not.toBeChecked();
+  await expect(page.getByText('Max 1500 DH', { exact: true })).toHaveCount(0);
 
   const pageOneIds = await productIds(page);
   expect(pageOneIds).toHaveLength(24);
 
   await page.goto('/products?page=2');
   await expect(page.locator('nav[data-testid="catalog-pagination"]:visible [aria-current="page"]').first()).toHaveText('2');
+  await expect.poll(async () => (await productIds(page)).length).toBe(24);
   const directPageTwoIds = await productIds(page);
   expect(directPageTwoIds).toHaveLength(24);
   expect(pageOneIds.some(id => directPageTwoIds.includes(id))).toBe(false);
@@ -27,7 +40,9 @@ test('JavaScript pagination supports direct loads, navigation, refresh, filters,
 
   await navigation.getByRole('link', { name: 'Page 2' }).click();
   await expect(page).toHaveURL(/\/products\?page=2$/);
+  await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://paradivine.ma/products?page=2');
+  await expect.poll(async () => (await productIds(page)).length).toBe(24);
   const pageTwoIds = await productIds(page);
   expect(pageTwoIds).toHaveLength(24);
   expect(pageTwoIds).toEqual(directPageTwoIds);
@@ -40,6 +55,7 @@ test('JavaScript pagination supports direct loads, navigation, refresh, filters,
   await page.locator('nav[data-testid="catalog-pagination"]:visible').first()
     .getByRole('link', { name: 'Page suivante' }).click();
   await expect(page).toHaveURL(/\/products\?page=3$/);
+  await expect.poll(async () => (await productIds(page)).length).toBe(24);
   const pageThreeIds = await productIds(page);
   expect(pageThreeIds).toHaveLength(24);
   expect([...pageOneIds, ...pageTwoIds, ...pageThreeIds].length).toBe(72);
@@ -63,25 +79,60 @@ test('JavaScript pagination supports direct loads, navigation, refresh, filters,
   await expect(filteredNext).toHaveAttribute('href', '/products?page=2&category=visage&sort=price-asc');
   await filteredNext.click();
   await expect(page).toHaveURL(/\/products\?page=2&category=visage&sort=price-asc$/);
+  await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     'href',
     'https://paradivine.ma/products?page=2&category=visage&sort=price-asc',
   );
+  await expect.poll(async () => (await productIds(page)).length).toBe(24);
   const filteredPageTwoIds = await productIds(page);
   expect(filteredPageTwoIds).toHaveLength(24);
   expect(filteredPageOneIds.some(id => filteredPageTwoIds.includes(id))).toBe(false);
 
+  await page.goto('/products');
+  const catalogSummaryResponse = await request.get('/api/products?page=1&limit=24');
+  const catalogSummary = await catalogSummaryResponse.json();
+  const finalPage = catalogSummary.pagination.totalPages as number;
+  const lastPageLink = page.getByRole('link', { name: 'Dernière page' });
+  await expect(lastPageLink).toHaveAttribute('href', `/products?page=${finalPage}`);
+  await lastPageLink.click();
+  await expect(page).toHaveURL(new RegExp(`\\/products\\?page=${finalPage}$`));
+  await expect(page.locator('nav[data-testid="catalog-pagination"]:visible [aria-current="page"]')).toHaveText(String(finalPage));
+  await expect.poll(async () => (await productIds(page)).length).toBeGreaterThan(0);
+  expect(await productIds(page)).toHaveLength(catalogSummary.pagination.total % catalogSummary.pagination.limit || catalogSummary.pagination.limit);
+
   for (const [path, expectedIds] of [
-    ['/api/products?page=1&limit=24&maxPrice=1500&sort=popular', pageOneIds],
-    ['/api/products?page=2&limit=24&maxPrice=1500&sort=popular', pageTwoIds],
-    ['/api/products?page=3&limit=24&maxPrice=1500&sort=popular', pageThreeIds],
-    ['/api/products?page=1&limit=24&category=visage&maxPrice=1500&sort=price-asc', filteredPageOneIds],
-    ['/api/products?page=2&limit=24&category=visage&maxPrice=1500&sort=price-asc', filteredPageTwoIds],
+    ['/api/products?page=1&limit=24&sort=popular', pageOneIds],
+    ['/api/products?page=2&limit=24&sort=popular', pageTwoIds],
+    ['/api/products?page=3&limit=24&sort=popular', pageThreeIds],
+    ['/api/products?page=1&limit=24&category=visage&sort=price-asc', filteredPageOneIds],
+    ['/api/products?page=2&limit=24&category=visage&sort=price-asc', filteredPageTwoIds],
   ] as const) {
     const apiResponse = await request.get(path);
     expect(apiResponse.status()).toBe(200);
     const payload = await apiResponse.json();
     expect(payload.success).toBe(true);
     expect(payload.products.map((product: { id: number | string }) => String(product.id))).toEqual(expectedIds);
+  }
+
+  const unfiltered = await request.get('/api/products?page=1&limit=24&sort=price-desc');
+  const unfilteredBody = await unfiltered.json();
+  const explicitCap = await request.get('/api/products?page=1&limit=24&maxPrice=1500&sort=price-desc');
+  const explicitCapBody = await explicitCap.json();
+  expect(unfiltered.status()).toBe(200);
+  expect(explicitCap.status()).toBe(200);
+  expect(unfilteredBody.pagination.total).toBeGreaterThanOrEqual(explicitCapBody.pagination.total);
+  expect(unfilteredBody.products.some((product: { price: number }) => product.price > 1500)).toBe(true);
+
+  for (const [path, status] of [
+    ['/products?page=0', 404],
+    ['/products?page=not-a-number', 404],
+    ['/products?page=1000000000000000000000', 404],
+    ['/api/products?page=0', 400],
+    ['/api/products?page=2.5', 400],
+    ['/api/products?page=1000000000000000000000', 400],
+    ['/api/products?page=10000&limit=24', 404],
+  ] as const) {
+    expect((await request.get(path)).status()).toBe(status);
   }
 });

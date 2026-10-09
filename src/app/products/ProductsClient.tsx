@@ -128,7 +128,7 @@ export default function ProductsClient({
   initialConcerns = [],
   initialIngredient = '',
   initialSearch = '',
-  initialMaxPrice = 1500,
+  initialMaxPrice = null,
   initialSort = 'popular',
   initialPage = 1,
   routeState,
@@ -141,7 +141,7 @@ export default function ProductsClient({
   initialConcerns?: string[];
   initialIngredient?: string;
   initialSearch?: string;
-  initialMaxPrice?: number;
+  initialMaxPrice?: number | null;
   initialSort?: CatalogSort;
   initialPage?: number;
   routeState: CatalogRouteState;
@@ -242,7 +242,7 @@ export default function ProductsClient({
     selectedConcerns.length +
     (ingredientQuery.trim() ? 1 : 0) +
     (searchQuery.trim() ? 1 : 0) +
-    (maxPrice < 1500 ? 1 : 0) +
+    (maxPrice !== null ? 1 : 0) +
     (showOnlyMatches ? 1 : 0);
 
   const displayedCategories = useMemo(() => {
@@ -324,7 +324,7 @@ export default function ProductsClient({
         params.set('page', String(currentPage));
         params.set('limit', String(pageSize));
         params.set('sort', sortOption);
-        params.set('maxPrice', String(maxPrice));
+        if (maxPrice !== null) params.set('maxPrice', String(maxPrice));
         if (selectedCategory !== 'all') params.set('category', selectedCategory);
         if (searchQuery.trim()) params.set('search', searchQuery.trim());
         if (selectedBrands.length > 0) params.set('vendors', selectedBrands.join(','));
@@ -372,7 +372,7 @@ export default function ProductsClient({
     setSelectedBrands([]);
     setSelectedConcerns([]);
     setIngredientQuery('');
-    setMaxPrice(1500);
+    setMaxPrice(null);
     setShowOnlyMatches(false);
     setCurrentPage(1);
   };
@@ -666,16 +666,26 @@ export default function ProductsClient({
                       <CircleDollarSign className="h-3.5 w-3.5 text-primary" />
                       {language === 'FR' ? 'Budget maximum' : 'الحد الأقصى للسعر'}
                     </div>
-                    <output className="rounded-md bg-primary/10 px-2 py-1 text-[11px] font-extrabold tabular-nums text-primary">{maxPrice} DH</output>
+                    <output className="rounded-md bg-primary/10 px-2 py-1 text-[11px] font-extrabold tabular-nums text-primary">{maxPrice === null ? (language === 'FR' ? 'Sans limite' : 'بلا حد') : `${maxPrice} DH`}</output>
                   </div>
+                  <label className="mb-3 flex cursor-pointer items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                    <input
+                      type="checkbox"
+                      checked={maxPrice !== null}
+                      onChange={(event) => setMaxPrice(event.target.checked ? 1500 : null)}
+                      className="h-4 w-4 rounded border-slate-300 text-primary focus-visible:ring-teal-700/25 dark:border-slate-700"
+                    />
+                    {language === 'FR' ? 'Limiter le prix maximum' : 'تحديد السعر الأقصى'}
+                  </label>
                   <input
                     type="range"
                     min="30"
                     max="1500"
                     step="10"
-                    value={maxPrice}
+                    value={maxPrice ?? 1500}
+                    disabled={maxPrice === null}
                     onChange={(e) => setMaxPrice(Number(e.target.value))}
-                    className="h-1.5 w-full cursor-pointer appearance-none rounded bg-slate-200 accent-primary dark:bg-slate-800"
+                    className="h-1.5 w-full cursor-pointer appearance-none rounded bg-slate-200 accent-primary disabled:cursor-not-allowed disabled:opacity-40 dark:bg-slate-800"
                     aria-label={language === 'FR' ? 'Prix maximum' : 'أقصى سعر'}
                   />
                   <div className="mt-2 flex justify-between text-[10px] font-medium tabular-nums text-slate-400 dark:text-slate-500">
@@ -757,7 +767,7 @@ export default function ProductsClient({
             </div>
 
             {/* Active Filter Tags */}
-            {(selectedCategory !== 'all' || selectedBrands.length > 0 || selectedConcerns.length > 0 || ingredientQuery.trim() || searchQuery || maxPrice < 1500) && (
+            {(selectedCategory !== 'all' || selectedBrands.length > 0 || selectedConcerns.length > 0 || ingredientQuery.trim() || searchQuery || maxPrice !== null) && (
               <div className="flex flex-wrap gap-2 items-center">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{language === 'FR' ? 'Filtres actifs :' : 'التصفيات النشطة:'}</span>
                 
@@ -796,10 +806,10 @@ export default function ProductsClient({
                   </span>
                 )}
 
-                {maxPrice < 1500 && (
+                {maxPrice !== null && (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-50 border border-slate-100 rounded-lg text-xs font-bold text-slate-600">
                     Max {maxPrice} DH
-                    <X className="w-3.5 h-3.5 text-slate-400 hover:text-slate-600 cursor-pointer" onClick={() => setMaxPrice(1500)} />
+                    <X className="w-3.5 h-3.5 text-slate-400 hover:text-slate-600 cursor-pointer" onClick={() => setMaxPrice(null)} />
                   </span>
                 )}
 
@@ -1044,16 +1054,26 @@ export default function ProductsClient({
                   <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                     {language === 'FR' ? 'Prix Maximum' : 'السعر الأقصى'}
                   </label>
-                  <span className="text-xs font-mono font-bold text-primary">{maxPrice} DH</span>
+                  <span className="text-xs font-mono font-bold text-primary">{maxPrice === null ? (language === 'FR' ? 'Sans limite' : 'بلا حد') : `${maxPrice} DH`}</span>
                 </div>
+                <label className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  <input
+                    type="checkbox"
+                    checked={maxPrice !== null}
+                    onChange={(event) => setMaxPrice(event.target.checked ? 1500 : null)}
+                    className="h-4 w-4 rounded border-slate-300 text-primary focus-visible:ring-teal-700/25 dark:border-slate-700"
+                  />
+                  {language === 'FR' ? 'Limiter le prix maximum' : 'تحديد السعر الأقصى'}
+                </label>
                 <input 
                   type="range"
                   min="30"
                   max="1500"
                   step="10"
-                  value={maxPrice}
+                  value={maxPrice ?? 1500}
+                  disabled={maxPrice === null}
                   onChange={(e) => setMaxPrice(Number(e.target.value))}
-                  className="w-full accent-primary bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none h-1.5"
+                  className="w-full accent-primary bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none h-1.5 disabled:opacity-40"
                 />
               </div>
             </div>

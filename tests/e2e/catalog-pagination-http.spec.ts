@@ -1,22 +1,49 @@
 import { expect, test } from '@playwright/test';
 
 test('raw catalogue responses contain product links, real pagination hrefs, and page-specific canonicals', async ({ request }) => {
-  for (const [path, expectedCanonical] of [
-    ['/products', 'https://paradivine.ma/products'],
-    ['/products?page=2', 'https://paradivine.ma/products?page=2'],
-  ]) {
+  const totalResponse = await request.get('/api/products?page=1&limit=24');
+  expect(totalResponse.status()).toBe(200);
+  const { pagination: catalogPagination } = await totalResponse.json();
+  const lastPage = catalogPagination.totalPages as number;
+  expect(lastPage).toBeGreaterThan(1);
+
+  const pages = [...new Set([1, 2, 10, 100, lastPage].filter(page => page <= lastPage))];
+  for (const page of pages) {
+    const path = page === 1 ? '/products' : `/products?page=${page}`;
+    const expectedCanonical = `https://paradivine.ma${path}`;
     const response = await request.get(path);
     expect(response.status()).toBe(200);
 
     const html = await response.text();
     const productLinks = Array.from(html.matchAll(/href="\/products\/(\d+)"/g), match => match[1]);
     const productIds = [...new Set(productLinks)];
-    expect(productLinks.length).toBeGreaterThanOrEqual(24);
-    expect(productIds).toHaveLength(24);
+    const expectedProducts = page === lastPage
+      ? catalogPagination.total % catalogPagination.limit || catalogPagination.limit
+      : catalogPagination.limit;
+    expect(productLinks.length).toBeGreaterThanOrEqual(expectedProducts);
+    expect(productIds).toHaveLength(expectedProducts);
 
-    const pagination = html.match(/<nav[^>]*data-testid="catalog-pagination"[\s\S]*?<\/nav>/)?.[0];
-    expect(pagination).toBeDefined();
-    expect(pagination).toContain(path === '/products' ? 'href="/products?page=2"' : 'href="/products?page=3"');
+    const paginationNav = html.match(/<nav[^>]*data-testid="catalog-pagination"[\s\S]*?<\/nav>/)?.[0];
+    expect(paginationNav).toBeDefined();
+    if (page < lastPage) expect(paginationNav).toContain(`href="/products?page=${page + 1}"`);
+    if (page > 1) expect(paginationNav).toContain(`href="${page - 1 === 1 ? '/products' : `/products?page=${page - 1}`}"`);
+    if (page > 3) expect(paginationNav).toContain('aria-label="Première page"');
+    if (page < lastPage - 2) expect(paginationNav).toContain(`href="/products?page=${lastPage}"`);
+    expect(Array.from(html.matchAll(/<link[^>]*rel="canonical"/g))).toHaveLength(1);
     expect(html.match(/<link[^>]*rel="canonical"[^>]*href="([^"]+)"/)?.[1]).toBe(expectedCanonical);
+  }
+
+  const firstPageHtml = await (await request.get('/products')).text();
+  expect(firstPageHtml).toContain(`href="/products?page=${lastPage}"`);
+  const lastPageResponse = await request.get(`/products?page=${lastPage}`);
+  expect(lastPageResponse.status()).toBe(200);
+  const lastPageHtml = await lastPageResponse.text();
+  expect(lastPageHtml.match(/href="\/products\/\d+"/g)?.length).toBeGreaterThan(0);
+  expect(lastPageHtml).toContain(`href="/products?page=${lastPage - 1}"`);
+
+  for (const path of ['/products?page=0', '/products?page=not-a-number', '/products?page=1000000000000000000000', `/products?page=${lastPage + 1}`]) {
+    const response = await request.get(path);
+    expect(response.status(), path).toBe(404);
+    expect(await response.text()).toContain('name="robots" content="noindex"');
   }
 });
