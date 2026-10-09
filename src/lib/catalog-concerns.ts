@@ -1,5 +1,5 @@
 import type { Product } from '@/lib/data';
-import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { supabaseAdmin as supabase } from '@/lib/supabase-server';
 import { matchesCatalogCategoryPhrase } from '@/lib/catalog-categories';
 
 export type CatalogConcern = {

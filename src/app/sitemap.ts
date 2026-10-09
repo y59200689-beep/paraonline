@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin as supabase } from '@/lib/supabase-server';
 import { BRANDS_DATA, slugify } from '@/lib/brands';
 import { loadSitemapProducts } from '@/lib/sitemap-products';
 

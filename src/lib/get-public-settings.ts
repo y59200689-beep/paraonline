@@ -1,4 +1,4 @@
-import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { supabaseAdmin as supabase } from '@/lib/supabase-server';
 import { DEFAULT_SETTINGS, type HeroCardConfig, type Settings } from '@/context/SettingsContext';
 import { unstable_cache } from 'next/cache';
 

@@ -1,4 +1,4 @@
-import { supabaseAdmin } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-server';
 import { unstable_cache } from 'next/cache';
 import type { HomepageSectionItem } from '@/context/SettingsContext';
 

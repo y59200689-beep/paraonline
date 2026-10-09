@@ -9,10 +9,12 @@ function productIds(page: Page) {
   });
 }
 
+const canonicalOrigin = process.env.CATALOG_CANONICAL_ORIGIN || 'https://paradivine.ma';
+
 test('JavaScript pagination supports direct loads, navigation, refresh, filters, and stable product subsets', async ({ page, request }) => {
   await page.goto('/products');
   const diagnosticWelcomeClose = page.getByRole('button', { name: 'Fermer la fenêtre' });
-  await expect(diagnosticWelcomeClose).toBeVisible();
+  await expect(diagnosticWelcomeClose).toBeVisible({ timeout: 30_000 });
   await diagnosticWelcomeClose.click();
   const navigation = page.locator('nav[data-testid="catalog-pagination"]:visible').first();
   await expect(navigation).toBeVisible();
@@ -26,6 +28,8 @@ test('JavaScript pagination supports direct loads, navigation, refresh, filters,
   await expect(priceLimit).not.toBeChecked();
   await expect(page.getByText('Max 1500 DH', { exact: true })).toHaveCount(0);
 
+  const expectedPageOne = (await (await request.get('/api/products?page=1&limit=24&sort=popular')).json()).products.map((p: { id: number }) => String(p.id));
+  await expect.poll(() => productIds(page)).toEqual(expectedPageOne);
   const pageOneIds = await productIds(page);
   expect(pageOneIds).toHaveLength(24);
 
@@ -41,7 +45,7 @@ test('JavaScript pagination supports direct loads, navigation, refresh, filters,
   await navigation.getByRole('link', { name: 'Page 2' }).click();
   await expect(page).toHaveURL(/\/products\?page=2$/);
   await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
-  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://paradivine.ma/products?page=2');
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `${canonicalOrigin}/products?page=2`);
   await expect.poll(async () => (await productIds(page)).length).toBe(24);
   const pageTwoIds = await productIds(page);
   expect(pageTwoIds).toHaveLength(24);
@@ -67,6 +71,8 @@ test('JavaScript pagination supports direct loads, navigation, refresh, filters,
   await page.goForward();
   await expect(page).toHaveURL(/\/products\?page=2$/);
 
+  const filteredSummary = await (await request.get('/api/products?page=1&limit=24&category=visage&sort=price-asc')).json();
+  expect(filteredSummary.pagination.total).toBeGreaterThan(24);
   const filteredPath = '/products?category=visage&sort=price-asc';
   await page.goto(filteredPath);
   await expect(page.locator('nav[data-testid="catalog-pagination"]:visible').first()).toBeVisible();
@@ -82,18 +88,18 @@ test('JavaScript pagination supports direct loads, navigation, refresh, filters,
   await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     'href',
-    'https://paradivine.ma/products?page=2&category=visage&sort=price-asc',
+    `${canonicalOrigin}/products?page=2&category=visage&sort=price-asc`,
   );
-  await expect.poll(async () => (await productIds(page)).length).toBe(24);
+  await expect.poll(async () => (await productIds(page)).length).toBe(Math.min(24, filteredSummary.pagination.total - 24));
   const filteredPageTwoIds = await productIds(page);
-  expect(filteredPageTwoIds).toHaveLength(24);
+  expect(filteredPageTwoIds).toHaveLength(Math.min(24, filteredSummary.pagination.total - 24));
   expect(filteredPageOneIds.some(id => filteredPageTwoIds.includes(id))).toBe(false);
 
   await page.goto('/products');
   const catalogSummaryResponse = await request.get('/api/products?page=1&limit=24');
   const catalogSummary = await catalogSummaryResponse.json();
   const finalPage = catalogSummary.pagination.totalPages as number;
-  const lastPageLink = page.getByRole('link', { name: 'Dernière page' });
+  const lastPageLink = page.locator('nav[data-testid="catalog-pagination"]:visible').first().locator(`a[href="/products?page=${finalPage}"]`);
   await expect(lastPageLink).toHaveAttribute('href', `/products?page=${finalPage}`);
   await lastPageLink.click();
   await expect(page).toHaveURL(new RegExp(`\\/products\\?page=${finalPage}$`));

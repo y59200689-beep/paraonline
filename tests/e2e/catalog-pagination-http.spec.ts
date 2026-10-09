@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+const canonicalOrigin = process.env.CATALOG_CANONICAL_ORIGIN || 'https://paradivine.ma';
+
 test('raw catalogue responses contain product links, real pagination hrefs, and page-specific canonicals', async ({ request }) => {
   const totalResponse = await request.get('/api/products?page=1&limit=24');
   expect(totalResponse.status()).toBe(200);
@@ -10,7 +12,7 @@ test('raw catalogue responses contain product links, real pagination hrefs, and 
   const pages = [...new Set([1, 2, 10, 100, lastPage].filter(page => page <= lastPage))];
   for (const page of pages) {
     const path = page === 1 ? '/products' : `/products?page=${page}`;
-    const expectedCanonical = `https://paradivine.ma${path}`;
+    const expectedCanonical = `${canonicalOrigin}${path}`;
     const response = await request.get(path);
     expect(response.status()).toBe(200);
 
@@ -27,7 +29,7 @@ test('raw catalogue responses contain product links, real pagination hrefs, and 
     expect(paginationNav).toBeDefined();
     if (page < lastPage) expect(paginationNav).toContain(`href="/products?page=${page + 1}"`);
     if (page > 1) expect(paginationNav).toContain(`href="${page - 1 === 1 ? '/products' : `/products?page=${page - 1}`}"`);
-    if (page > 3) expect(paginationNav).toContain('aria-label="Première page"');
+    if (page > 1) expect(paginationNav).toContain('href="/products"');
     if (page < lastPage - 2) expect(paginationNav).toContain(`href="/products?page=${lastPage}"`);
     expect(Array.from(html.matchAll(/<link[^>]*rel="canonical"/g))).toHaveLength(1);
     expect(html.match(/<link[^>]*rel="canonical"[^>]*href="([^"]+)"/)?.[1]).toBe(expectedCanonical);

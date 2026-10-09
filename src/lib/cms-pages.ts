@@ -1,4 +1,4 @@
-import { supabaseAdmin } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-server';
 
 export type CmsPageSection = {
   id: string;

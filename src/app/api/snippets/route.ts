@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin as supabase } from '@/lib/supabase-server';
 
 export async function GET() {
   try {
@@ -13,7 +13,7 @@ export async function GET() {
     if (error) throw error;
 
     return NextResponse.json({ success: true, snippets });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message || 'Erreur serveur' }, { status: 500 });
+  } catch {
+    return NextResponse.json({ success: false, error: 'Erreur serveur' }, { status: 500 });
   }
 }

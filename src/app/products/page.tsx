@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Product } from '@/lib/data';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin as supabase } from '@/lib/supabase-server';
 import ProductsClient from './ProductsClient';
 import { unstable_cache } from 'next/cache';
 import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/catalog-cache';
@@ -84,7 +84,6 @@ function rowToProduct(item: any): Product {
     usage: (item.usage as string) || '',
     stock: item.stock != null ? Number(item.stock) : 100,
     sku: (item.sku as string) || undefined,
-    buyingCost: item.buying_cost != null ? Number(item.buying_cost) : undefined,
     points: item.points != null ? Number(item.points) : 0,
     status: item.status === 'live' ? 'live' : 'draft',
     isFaceProduct: item.is_face_product === true || [item.category, ...(Array.isArray(item.categories) ? item.categories : [])]

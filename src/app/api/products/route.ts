@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Product } from '@/lib/data';
-import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { supabaseAdmin as supabase } from '@/lib/supabase-server';
 import { catalogCategoryForConcern, countCatalogConcerns, getCatalogConcerns, matchesCatalogConcern } from '@/lib/catalog-concerns';
 import { catalogCategoryFilter, normalizeCatalogCategoryId } from '@/lib/catalog-categories';
 import { catalogBrandPrefix, sanitizeCatalogSearch } from '@/lib/catalog-brand-match';

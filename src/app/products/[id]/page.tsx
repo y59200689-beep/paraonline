@@ -1,5 +1,5 @@
-import { PRODUCTS_DB, Product } from '@/lib/data';
-import { supabase } from '@/lib/supabase';
+import { Product } from '@/lib/data';
+import { supabaseAdmin as supabase } from '@/lib/supabase-server';
 import ProductDetailClient from './ProductDetailClient';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
@@ -30,7 +30,6 @@ function rowToProduct(item: any): Product {
     usage: (item.usage as string) || '',
     stock: item.stock != null ? Number(item.stock) : 100,
     sku: (item.sku as string) || undefined,
-    buyingCost: item.buying_cost != null ? Number(item.buying_cost) : undefined,
     points: item.points != null ? Number(item.points) : 0,
     status: item.status === 'live' ? 'live' : 'draft',
     isFaceProduct: item.is_face_product === true || [item.category, ...(Array.isArray(item.categories) ? item.categories : [])]
@@ -56,35 +55,20 @@ async function getProduct(id: string): Promise<Product | null> {
       .from('products')
       .select('*')
       .eq('id', parseInt(id))
-      .single();
+      .maybeSingle();
     
-    if (error || !data) {
-      return PRODUCTS_DB.find((p) => p.id.toString() === id) || null;
-    }
+    if (error) throw error;
+    if (!data) return null;
     return rowToProduct(data);
-  } catch (err) {
-    return PRODUCTS_DB.find((p) => p.id.toString() === id) || null;
+  } catch {
+    throw new Error('Unable to load product.');
   }
 }
 
 export async function generateStaticParams() {
-  try {
-    const { data } = await supabase
-      .from('products')
-      .select('id')
-      .limit(20);
-    
-    if (!data || data.length === 0) {
-      return PRODUCTS_DB.slice(0, 20).map((product) => ({
-        id: product.id.toString(),
-      }));
-    }
-    return data.map((item: any) => ({
-      id: item.id.toString(),
-    }));
-  } catch (err) {
-    return [];
-  }
+  const { data, error } = await supabase.from('products').select('id').limit(20);
+  if (error) throw new Error('Unable to load product routes.');
+  return (data || []).map((item: { id: number }) => ({ id: item.id.toString() }));
 }
 
 export async function generateMetadata({ params }: { params: any }): Promise<Metadata> {

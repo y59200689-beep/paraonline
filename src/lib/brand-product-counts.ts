@@ -1,4 +1,4 @@
-import { supabaseAdmin } from './supabase';
+import { supabaseAdmin } from './supabase-server';
 import { catalogBrandPrefix } from './catalog-brand-match';
 
 /** Read only vendor names, paginated beyond the database's default row cap. */

@@ -1,4 +1,4 @@
-import { supabaseAdmin } from './supabase';
+import { supabaseAdmin } from './supabase-server';
 import { unstable_cache } from 'next/cache';
 import type { BrandConfig } from './brands';
 
