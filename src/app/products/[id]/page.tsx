@@ -55,6 +55,7 @@ async function getProduct(id: string): Promise<Product | null> {
       .from('products')
       .select('*')
       .eq('id', parseInt(id))
+      .eq('status', 'live')
       .maybeSingle();
     
     if (error) throw error;
@@ -66,7 +67,7 @@ async function getProduct(id: string): Promise<Product | null> {
 }
 
 export async function generateStaticParams() {
-  const { data, error } = await supabase.from('products').select('id').limit(20);
+  const { data, error } = await supabase.from('products').select('id').eq('status', 'live').limit(20);
   if (error) throw new Error('Unable to load product routes.');
   return (data || []).map((item: { id: number }) => ({ id: item.id.toString() }));
 }
