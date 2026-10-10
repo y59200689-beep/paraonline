@@ -51,6 +51,19 @@ async function verifySessionToken(token: string): Promise<any> {
 
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
+  const productMatch = /^\/products\/([^/]+)$/.exec(path);
+  if (productMatch) {
+    const id = productMatch[1];
+    if (!/^\d+$/.test(id) || !Number.isSafeInteger(Number(id)) || Number(id) < 1 || Number(id) > 2147483647) {
+      return new NextResponse('Product not found.', { status: 404, headers: { 'X-Robots-Tag': 'noindex' } });
+    }
+    const normalized = String(Number(id));
+    if (id !== normalized) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/products/${normalized}`;
+      return NextResponse.redirect(url, 308);
+    }
+  }
   
   // We only intercept paths starting with /admin
   // but we do NOT intercept /admin/login
@@ -83,7 +96,7 @@ export async function proxy(request: NextRequest) {
 
 // Match all routes starting with /admin
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: ['/admin/:path*', '/products/:id'],
 };
 
 export default proxy;

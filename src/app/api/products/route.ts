@@ -217,8 +217,9 @@ export async function GET(request: Request) {
       let batchQuery = supabase
         .from('products')
         .select(PUBLIC_PRODUCT_COLUMNS)
-        .in('id', ids);
-      if (inStockOnly) batchQuery = batchQuery.eq('status', 'live').gt('stock', 0);
+        .in('id', ids)
+        .eq('status', 'live');
+      if (inStockOnly) batchQuery = batchQuery.gt('stock', 0);
       const { data, error } = await batchQuery;
 
       if (error || !data) {

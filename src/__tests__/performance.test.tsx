@@ -86,9 +86,11 @@ describe('Performance, Leak Prevention & Lifecycle Tests', () => {
       // 2. Render and unmount WishlistProvider
       const { unmount: unmountWishlist } = renderHook(() => {}, {
         wrapper: ({ children }) => (
-          <ProductsProvider>
-            <WishlistProvider>{children}</WishlistProvider>
-          </ProductsProvider>
+          <SettingsProvider>
+            <ProductsProvider>
+              <WishlistProvider>{children}</WishlistProvider>
+            </ProductsProvider>
+          </SettingsProvider>
         )
       });
       

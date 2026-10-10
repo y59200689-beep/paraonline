@@ -1,10 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { useSettings } from './SettingsContext';
+import { sectionProductIds } from '@/lib/section-product-ids';
 import { Product, PRODUCTS_DB } from '@/lib/data';
 
 interface ProductsContextProps {
-  /** Full live product catalogue from Supabase. Falls back to static PRODUCTS_DB on error. */
+  /** Initial catalogue plus explicitly selected section products. Falls back to static PRODUCTS_DB on error. */
   products: Product[];
   /** True while the initial fetch is in-flight */
   isLoading: boolean;
@@ -25,10 +27,14 @@ const ProductsContext = createContext<ProductsContextProps | undefined>(undefine
 
 
 export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { settings } = useSettings();
+  const selectedIds = sectionProductIds(settings).join(',');
   const [products, setProducts] = useState<Product[]>(PRODUCTS_DB);
   const [isLoading, setIsLoading] = useState(true);
 
+  const requestGeneration = useRef(0);
   const fetchProducts = useCallback(async () => {
+    const generation = ++requestGeneration.current;
     setIsLoading(true);
     try {
       // The public API deliberately caps a catalogue request at 100 products.
@@ -37,7 +43,17 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (data.success && Array.isArray(data.products) && data.products.length > 0) {
-        setProducts(data.products);
+        const selected: Product[] = [];
+        const ids = selectedIds ? selectedIds.split(',') : [];
+        for (let offset = 0; offset < ids.length; offset += 50) {
+          const response = await fetch(`/api/products?limit=100&ids=${ids.slice(offset, offset + 50).join(',')}`, { cache: 'no-store' });
+          if (!response.ok) throw new Error('Section products unavailable.');
+          const result = await response.json();
+          if (!result.success || !Array.isArray(result.products)) throw new Error('Section products unavailable.');
+          selected.push(...result.products);
+        }
+        if (generation !== requestGeneration.current) return;
+        setProducts([...new Map([...data.products, ...selected].map((product: Product) => [product.id, product])).values()]);
       } else {
         // API returned empty or error — keep static fallback
         console.warn('[ProductsContext] API returned no products, using static fallback.');
@@ -46,9 +62,9 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // Network error or Supabase down — silently fall back
       console.warn('[ProductsContext] Failed to load products from Supabase, using static fallback.', err);
     } finally {
-      setIsLoading(false);
+      if (generation === requestGeneration.current) setIsLoading(false);
     }
-  }, []);
+  }, [selectedIds]);
 
   useEffect(() => {
     fetchProducts();

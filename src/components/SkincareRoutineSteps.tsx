@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '@/context/LanguageContext';
 import { Product } from '@/lib/data';
+import { useSettings } from '@/context/SettingsContext';
 import { useProducts } from '@/context/ProductsContext';
 import { Check, Sparkles, RefreshCw } from 'lucide-react';
 import { ProductCard } from './ProductCard';
@@ -13,17 +14,8 @@ import { RoutineDiagnosticIntro } from './RoutineDiagnosticIntro';
 
 
 const getProductBadge = (id: number, lang: string): string => {
-  const badges: Record<number, { fr: string, ar: string }> = {
-    15: { fr: "Étape 1: Huile Purifiante", ar: "الخطوة 1: زيت مطهر" },
-    22: { fr: "Étape 1: Mousse Active", ar: "الخطوة 1: رغوة منظفة" },
-    14: { fr: "Étape 2: Sérum Anti-Taches", ar: "الخطوة 2: سيروم للبقع" },
-    7: { fr: "Étape 2: Lotion Hydratante", ar: "الخطوة 2: لوشن مرطب" },
-    3: { fr: "Étape 2: Éclat Vitamine C", ar: "الخطوة 2: سيروم فيتامين C" },
-    13: { fr: "Étape 3: Écran Riz + Probiotiques", ar: "الخطوة 3: واقي بالأرز" },
-    17: { fr: "Étape 3: Sérum Solaire Fluide", ar: "الخطوة 3: سيروم واقي" },
-    1: { fr: "Étape 3: Gel Solaire Frais", ar: "الخطوة 3: جل واقي شمس" }
-  };
-  return lang === 'FR' ? (badges[id]?.fr || "Soin ciblé") : (badges[id]?.ar || "عناية مخصصة");
+  void id;
+  return lang === 'FR' ? "Soin ciblé" : "عناية مخصصة";
 };
 
 interface SkincareRoutineStepsProps {
@@ -34,6 +26,8 @@ interface SkincareRoutineStepsProps {
 export const SkincareRoutineSteps: React.FC<SkincareRoutineStepsProps> = ({ onOpenQuickView, onOpenBundleDrawer }) => {
   const { language } = useTranslation();
   const { products } = useProducts();
+  const { settings } = useSettings();
+  const routine = settings.homepageSections?.routineProductIds;
   const { diagnostic, setDiagnostic, setDiagnosticOpen, setSelectedProduct } = useUi();
   const [, setIsBtnHovered] = useState(false);
   
@@ -74,7 +68,7 @@ export const SkincareRoutineSteps: React.FC<SkincareRoutineStepsProps> = ({ onOp
       shortDescFr: "Purifiez votre peau en profondeur sans altérer sa barrière protectrice.",
       shortDescAr: "تنظيف عميق لبشرتكِ دون التأثير على حاجزها الطبيعي.",
       icon: "🧼",
-      productIds: [15, 22],
+      productIds: routine?.cleanse || [],
       benefits: [
         "Élimine l'excès de sébum et le maquillage",
         "Aide à désincruster les pores et à réduire les impuretés",
@@ -89,7 +83,7 @@ export const SkincareRoutineSteps: React.FC<SkincareRoutineStepsProps> = ({ onOp
       shortDescFr: "Ciblez précisément vos imperfections, taches et ridules avec nos actifs concentrés.",
       shortDescAr: "استهدفي الشوائب والبقع والخطوط الدقيقة بدقة عالية.",
       icon: "🧪",
-      productIds: [14, 7, 3],
+      productIds: routine?.treat || [],
       benefits: [
         "Hydrate intensément les couches épidermiques",
         "Estompe les taches d'hyperpigmentation",
@@ -104,7 +98,7 @@ export const SkincareRoutineSteps: React.FC<SkincareRoutineStepsProps> = ({ onOp
       shortDescFr: "Défendez votre capital jeunesse contre les UVA/UVB avec un fini invisible.",
       shortDescAr: "احمي بشرتكِ من الشيخوخة المبكرة والأشعة فوق البنفسجية.",
       icon: "☀️",
-      productIds: [13, 17, 1],
+      productIds: routine?.protect || [],
       benefits: [
         "Bloque efficacement les rayons UVA/UVB",
         "Fini transparent sans aucun film blanc",

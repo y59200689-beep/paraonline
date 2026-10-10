@@ -50,11 +50,12 @@ function rowToProduct(item: any): Product {
 }
 
 async function getProduct(id: string): Promise<Product | null> {
+  if (!/^\d+$/.test(id) || !Number.isSafeInteger(Number(id)) || Number(id) < 1 || Number(id) > 2147483647) notFound();
   try {
     const { data, error } = await supabase
       .from('products')
       .select('*')
-      .eq('id', parseInt(id))
+      .eq('id', Number(id))
       .eq('status', 'live')
       .maybeSingle();
     
@@ -80,7 +81,7 @@ export async function generateMetadata({ params }: { params: any }): Promise<Met
   const productName = product.nameFr || product.title;
   const description = (product.description || '').substring(0, 160) ||
     `Achetez ${productName} de ${product.vendor} sur Para Divine`;
-  const productUrl = `${SITE_URL}/products/${resolvedParams.id}`;
+  const productUrl = `${SITE_URL}/products/${Number(resolvedParams.id)}`;
   // Resolve image: absolute URL if it starts with http, else prepend site URL
   const imageUrl = product.image?.startsWith('http')
     ? product.image
@@ -90,7 +91,7 @@ export async function generateMetadata({ params }: { params: any }): Promise<Met
     title: productName,
     description,
     keywords: [productName, product.vendor, product.category, 'parapharmacie maroc', 'k-beauty'],
-    alternates: { canonical: `/products/${resolvedParams.id}` },
+    alternates: { canonical: `/products/${Number(resolvedParams.id)}` },
     robots: { index: true, follow: true },
     openGraph: {
       type: 'website',

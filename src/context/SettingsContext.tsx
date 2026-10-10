@@ -269,6 +269,7 @@ export interface HomepageSectionConfig {
   weeklySalesTitleAr?: string;
   weeklySalesProductIds?: number[];
 
+  routineProductIds?: { cleanse: number[]; treat: number[]; protect: number[] };
   summerSaleProductIds?: number[];
   summerSaleLeftImage?: string;
   summerSaleRightImage?: string;
@@ -297,6 +298,7 @@ export interface HomepageSectionConfig {
 export const DEFAULT_SETTINGS: Settings = {
   mfaEnforcedRoles: [],
   homepageSections: {
+    routineProductIds: { cleanse: [711, 865], treat: [565, 600, 605], protect: [645, 647, 650] },
     showHero: true,
     showCategoryTrack: true,
     showProductGrid: true,

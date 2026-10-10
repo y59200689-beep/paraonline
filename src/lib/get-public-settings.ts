@@ -57,13 +57,14 @@ function normalizeLegacyStorefrontClaims(settings: Settings): Settings {
 
 async function fetchPublicSettings(): Promise<PublicSettings> {
   try {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('settings')
       .select('*')
       .eq('id', 1)
       .single();
 
-    const dbSettings = data?.value || {};
+    if (error || !data) throw new Error("Public settings unavailable.");
+    const dbSettings = data.value || {};
     const settings = normalizeLegacyStorefrontClaims({
       ...DEFAULT_SETTINGS,
       ...dbSettings,
@@ -76,15 +77,16 @@ async function fetchPublicSettings(): Promise<PublicSettings> {
     // Fetch dedicated gallery overrides row (id=99) — authoritative source
     let dbGalleryOverrides: Record<string, string> = {};
     try {
-      const { data: data99 } = await supabase
+      const { data: data99, error: galleryError } = await supabase
         .from('settings')
         .select('value')
         .eq('id', 99)
         .maybeSingle();
+      if (galleryError) throw new Error('Gallery settings unavailable.');
       if (data99?.value && typeof data99.value === 'object') {
         dbGalleryOverrides = data99.value as Record<string, string>;
       }
-    } catch {}
+    } catch { throw new Error('Gallery settings unavailable.'); }
 
     // Gallery row 99 is the sole mutable image source. The settings row provides
     // only the built-in defaults when a gallery key has never been replaced.
@@ -146,19 +148,18 @@ async function fetchPublicSettings(): Promise<PublicSettings> {
         testMode: settings.paymentSettings.testMode,
       } : undefined,
     };
-  } catch (e) {
-    console.error('[getPublicSettings] failed:', e);
-    return {};
+  } catch {
+    console.error('[getPublicSettings] database read failed');
+    throw new Error('Public settings unavailable.');
   }
 }
 
-// Settings are shared by every storefront visitor. Cache them until an admin
-// mutation explicitly invalidates this tag, rather than querying Supabase for
-// each page render.
+// Cache successful reads for five minutes and invalidate immediately on admin
+// changes. Rejected reads never become cached fallback settings.
 const getCachedPublicSettings = unstable_cache(
   fetchPublicSettings,
-  ['public-settings', 'announcement-home-delivery-v2'],
-  { tags: [PUBLIC_SETTINGS_CACHE_TAG], revalidate: false }
+  ['public-settings', 'verified-settings-v3', process.env.NEXT_PUBLIC_SUPABASE_URL || 'unconfigured'],
+  { tags: [PUBLIC_SETTINGS_CACHE_TAG], revalidate: 300 }
 );
 
 export async function getPublicSettings(): Promise<PublicSettings> {

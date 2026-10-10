@@ -33,12 +33,13 @@ async function fetchMergedPublicSettings() {
   const base = await getBasePublicSettings();
 
   try {
-    const { data: cmsGlobal } = await supabaseAdmin
+    const { data: cmsGlobal, error } = await supabaseAdmin
       .from('cms_global')
       .select('*')
       .eq('id', 1)
       .maybeSingle();
 
+    if (error) throw new Error('CMS settings unavailable.');
     if (!cmsGlobal) return base;
 
     return {
@@ -66,14 +67,15 @@ async function fetchMergedPublicSettings() {
       ogDefaultImage: cmsGlobal.og_default_image || '',
     };
   } catch {
-    return base;
+    console.error('[getMergedPublicSettings] database read failed');
+    throw new Error('CMS settings unavailable.');
   }
 }
 
 export function getMergedPublicSettings() {
   return unstable_cache(
     () => fetchMergedPublicSettings(),
-    ['cms-merged-public-settings'],
-    { tags: [PUBLIC_SETTINGS_CACHE_TAG], revalidate: false }
+    ['cms-merged-public-settings-v3', process.env.NEXT_PUBLIC_SUPABASE_URL || 'unconfigured'],
+    { tags: [PUBLIC_SETTINGS_CACHE_TAG], revalidate: 300 }
   )();
 }

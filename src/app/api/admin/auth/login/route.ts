@@ -19,11 +19,13 @@ export async function POST(request: Request) {
 
     // 1. Brute-force protection: check failed attempts in the last 15 minutes
     const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-    const { data: recentAttempts } = await supabase
+    const { data: recentAttempts, error: attemptsError } = await supabase
       .from('audit_logs')
       .select('*')
       .eq('action', 'Connexion échouée')
       .gt('date', fifteenMinutesAgo);
+
+    if (attemptsError) throw new Error('Authentication database unavailable.');
 
     const failedAttemptsCount = recentAttempts 
       ? recentAttempts.filter((log: any) => 
@@ -45,9 +47,10 @@ export async function POST(request: Request) {
       .from('operators')
       .select('*')
       .eq('username', cleanUsername)
-      .single();
+      .maybeSingle();
 
-    if (error || !operator) {
+    if (error) throw new Error('Authentication database unavailable.');
+    if (!operator) {
       // Log failed attempt
       const logId = 'log_' + Math.random().toString(36).substring(2, 11);
       await supabase.from('audit_logs').insert({
@@ -186,8 +189,8 @@ export async function POST(request: Request) {
     });
 
     return response;
-  } catch (error: any) {
-    console.error('Login error:', error);
-    return NextResponse.json({ success: false, error: error.message || 'Erreur serveur' }, { status: 500 });
+  } catch {
+    console.error('[admin login] authentication service failed');
+    return NextResponse.json({ success: false, error: 'Service de connexion temporairement indisponible. Réessayez plus tard.' }, { status: 503 });
   }
 }

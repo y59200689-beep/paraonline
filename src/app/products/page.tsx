@@ -162,7 +162,7 @@ async function loadCatalogFacets() {
 
 const getCachedCatalogFacets = unstable_cache(
   loadCatalogFacets,
-  ['catalog-facets'],
+  ['catalog-facets-v2', process.env.NEXT_PUBLIC_SUPABASE_URL || 'unconfigured'],
   { tags: [PUBLIC_CATALOG_CACHE_TAG], revalidate: 3600 }
 );
 
@@ -264,7 +264,7 @@ async function loadCatalogPage(state: CatalogRouteState) {
 
 const getCachedCatalogPage = unstable_cache(
   loadCatalogPage,
-  ['catalog-page'],
+  ['catalog-page-v2', process.env.NEXT_PUBLIC_SUPABASE_URL || 'unconfigured'],
   { tags: [PUBLIC_CATALOG_CACHE_TAG], revalidate: 3600 }
 );
 
