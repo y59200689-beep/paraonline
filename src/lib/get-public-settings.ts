@@ -1,5 +1,6 @@
 import { supabaseAdmin as supabase } from '@/lib/supabase-server';
-import { DEFAULT_SETTINGS, type HeroCardConfig, type Settings } from '@/context/SettingsContext';
+import type { HeroCardConfig, Settings } from '@/context/SettingsContext';
+import { DEFAULT_SETTINGS } from '@/lib/default-settings';
 import { unstable_cache } from 'next/cache';
 
 const BANNER_KEYS = ['hero_bestsellers', 'hero_summersale', 'hero_weeklypromo', 'hero_newarrivals'];
@@ -158,7 +159,7 @@ async function fetchPublicSettings(): Promise<PublicSettings> {
 // changes. Rejected reads never become cached fallback settings.
 const getCachedPublicSettings = unstable_cache(
   fetchPublicSettings,
-  ['public-settings', 'verified-settings-v3', process.env.NEXT_PUBLIC_SUPABASE_URL || 'unconfigured'],
+  ['public-settings', 'verified-settings-v4', process.env.NEXT_PUBLIC_SUPABASE_URL || 'unconfigured'],
   { tags: [PUBLIC_SETTINGS_CACHE_TAG], revalidate: 300 }
 );
 

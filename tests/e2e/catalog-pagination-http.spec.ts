@@ -3,6 +3,12 @@ import { expect, test } from '@playwright/test';
 const canonicalOrigin = process.env.CATALOG_CANONICAL_ORIGIN || 'https://paradivine.ma';
 
 test('raw catalogue responses contain product links, real pagination hrefs, and page-specific canonicals', async ({ request }) => {
+  const settingsResponse = await request.get('/api/settings/public');
+  expect(settingsResponse.status()).toBe(200);
+  const settingsPayload = await settingsResponse.json();
+  expect(settingsPayload.settings.homepageSections.routineProductIds).toBeDefined();
+  expect(settingsPayload.settings.homepageSections.routineProductIds.cleanse.length).toBeGreaterThan(0);
+
   const normalizedProduct = await request.get('/products/00073?test=1', { maxRedirects: 0 });
   expect(normalizedProduct.status()).toBe(308);
   expect(normalizedProduct.headers().location).toContain('/products/73?test=1');

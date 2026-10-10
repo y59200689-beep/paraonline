@@ -75,7 +75,7 @@ async function fetchMergedPublicSettings() {
 export function getMergedPublicSettings() {
   return unstable_cache(
     () => fetchMergedPublicSettings(),
-    ['cms-merged-public-settings-v3', process.env.NEXT_PUBLIC_SUPABASE_URL || 'unconfigured'],
+    ['cms-merged-public-settings-v4', process.env.NEXT_PUBLIC_SUPABASE_URL || 'unconfigured'],
     { tags: [PUBLIC_SETTINGS_CACHE_TAG], revalidate: 300 }
   )();
 }

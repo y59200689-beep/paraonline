@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 const state = vi.hoisted(() => ({ failure: '' }));
-vi.mock('@/context/SettingsContext', () => ({ DEFAULT_SETTINGS: { homepageSections: {} } }));
 vi.mock('@/lib/supabase-server', () => ({ supabaseAdmin: { from: (table: string) => {
   let id: number;
   const query = {
@@ -25,6 +24,7 @@ describe('settings failures never become successful cache entries', () => {
     state.failure = '';
     const result = await getMergedPublicSettings();
     expect(result.storeName).toBe('Configured');
+    expect(result.homepageSections?.routineProductIds).toEqual({ cleanse: [711, 865], treat: [565, 600, 605], protect: [645, 647, 650] });
     expect(result.galleryOverrides).toEqual({ category: '/configured.webp' });
   });
 });
