@@ -3,6 +3,12 @@ import { expect, test } from '@playwright/test';
 const canonicalOrigin = process.env.CATALOG_CANONICAL_ORIGIN || 'https://paradivine.ma';
 
 test('raw catalogue responses contain product links, real pagination hrefs, and page-specific canonicals', async ({ request }) => {
+  const robotsResponse = await request.get('/robots.txt');
+  expect(robotsResponse.status()).toBe(200);
+  const robotsText = await robotsResponse.text();
+  expect(robotsText).toContain('Allow: /products');
+  expect(robotsText).not.toContain('Disallow: /_next/');
+
   const totalResponse = await request.get('/api/products?page=1&limit=24');
   expect(totalResponse.status()).toBe(200);
   const { pagination: catalogPagination } = await totalResponse.json();

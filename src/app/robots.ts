@@ -15,7 +15,6 @@ export default function robots(): MetadataRoute.Robots {
           '/checkout',     // Checkout + success/failure pages
           '/customer',     // Auth-gated customer portal
           '/audit',        // Internal audit log
-          '/_next/',       // Next.js internals
         ],
       },
     ],
