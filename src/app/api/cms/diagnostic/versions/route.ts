@@ -16,7 +16,7 @@ async function currentSnapshot() {
   return { questions: (data ?? []).map((q: any) => ({ ...q, answers: (q.cms_diagnostic_answers ?? []).sort((a: any, b: any) => a.display_order - b.display_order) })) };
 }
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   const auth = await requireManager();
   if ('error' in auth) return auth.error;
   const { data, error } = await supabaseAdmin.from('cms_diagnostic_versions').select('id,version_number,status,created_by,published_by,created_at,published_at').order('version_number', { ascending: false });

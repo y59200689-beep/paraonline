@@ -53,6 +53,7 @@ const websiteJsonLd = {
 };
 
 // Component Imports
+// Component Imports
 import { ShopShell } from '@/components/ShopShell';
 import { DynamicSectionRenderer } from '@/components/DynamicSectionRenderer';
 import { HomepageSectionItem } from '@/context/SettingsContext';
@@ -92,7 +93,7 @@ export default async function Home({ searchParams }: { searchParams?: Promise<{ 
   // first deploy before any admin interaction.
   const previewToken = (await searchParams)?.preview_token;
   const preview = await getCmsPreviewSnapshot<{ section_order?: HomepageSectionItem[] }>(previewToken, 'page', 'page-home');
-  const [settings, publishedSections] = await Promise.all([
+  const [, publishedSections] = await Promise.all([
     getPublicSettings(),
     getHomepageSections(DEFAULT_SECTIONS),
   ]);

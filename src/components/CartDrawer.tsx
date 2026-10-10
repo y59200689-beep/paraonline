@@ -1,15 +1,13 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import React, { useState, useEffect, useRef } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useTranslation } from '@/context/LanguageContext';
 import { useLoyalty } from '@/context/LoyaltyContext';
-import { Product, MOROCCAN_CITIES } from '@/lib/data';
+import { Product } from '@/lib/data';
 import { useProducts } from '@/context/ProductsContext';
-import {
-  X, ShoppingBag, ArrowRight, ShieldCheck, Tag, Plus,
-  Truck, ArrowLeft, AlertTriangle, CreditCard, Sparkles, Gift
-} from 'lucide-react';
+import { X, ShoppingBag, Truck, Sparkles, Gift } from 'lucide-react';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { PRODUCT_IMAGE_FALLBACK } from '@/lib/public-images';
 import { validateCheckoutFields } from '@/lib/checkout-validation';
@@ -17,6 +15,7 @@ import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 import Image from 'next/image';
 
+// Sub-components
 // Sub-components
 import { CartItemList } from './cart/CartItemList';
 import { CartUpsells } from './cart/CartUpsells';
@@ -29,10 +28,7 @@ import styles from './cart/CartDrawer.module.css';
 
 const placeholderSvg = PRODUCT_IMAGE_FALLBACK;
 
-const toTitleCase = (str: string) => {
-  if (!str) return '';
-  return str.toLowerCase().split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-};
+
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -47,6 +43,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   onSelectProduct,
   onOpenScratchCard,
 }) => {
+  const router = useRouter();
   const drawerRef = useModalAccessibility<HTMLDivElement>(isOpen, onClose);
   const { t, language } = useTranslation();
   const { products } = useProducts();
@@ -64,12 +61,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const activeGiftProduct = activeGiftRange
     ? products.find(p => p.id === activeGiftRange.productId) ?? null
     : null;
-  const { 
-    showToast,
-    setSuccessModalOpen,
-    setSuccessOrderId,
-    setSuccessWhatsappUrl
-  } = useUi();
+  const { showToast, setSuccessOrderId, setSuccessWhatsappUrl } = useUi();
 
   // ── Step & form state ────────────────────────────────────────────────────
   const [step, setStep] = useState<'cart' | 'checkout'>('cart');
@@ -187,10 +179,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     if (settings.paymentSettings?.onlinePaymentEnabled) {
       setCheckoutSubStep('payment');
     } else {
-      const orderTotal = total;
+
       const res = await submitOrder(formFields);
       if (res.success) {
-        window.location.assign(`/checkout/success?orderId=${encodeURIComponent(res.orderId ?? '')}&token=${encodeURIComponent(res.trackingToken ?? '')}`);
+        router.push(`/checkout/success?orderId=${encodeURIComponent(res.orderId ?? '')}&token=${encodeURIComponent(res.trackingToken ?? '')}`);
         setFormFields({ name: '', phone: '', address: '', city: '', note: '' });
         setSuccessOrderId(res.orderId ?? '');
         setSuccessWhatsappUrl(res.whatsappUrl ?? '');
@@ -202,7 +194,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
   // Keep these as no-ops so CheckoutForm prop types are satisfied
   const proceedToDelivery = () => {};
-  const handleCheckoutSubmit = async (e: React.FormEvent) => { e.preventDefault(); };
+
 
   const handleCmiPayment = async (orderId: string) => {
     try {
@@ -236,10 +228,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
   const handleConfirmPayment = async () => {
     if (paymentMethod === 'cod') {
-      const orderTotal = total;
+
       const res = await submitOrder(formFields);
       if (res.success) {
-        window.location.assign(`/checkout/success?orderId=${encodeURIComponent(res.orderId ?? '')}&token=${encodeURIComponent(res.trackingToken ?? '')}`);
+        router.push(`/checkout/success?orderId=${encodeURIComponent(res.orderId ?? '')}&token=${encodeURIComponent(res.trackingToken ?? '')}`);
         setFormFields({ name: '', phone: '', address: '', city: '', note: '' });
         setCheckoutSubStep('info');
         setStep('cart');
@@ -321,7 +313,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         : 'تم الدفع بنجاح! تم تسجيل طلبك بنجاح.',
       'success',
     );
-    window.location.assign(completionUrl);
+    router.push(completionUrl);
   };
 
   return (

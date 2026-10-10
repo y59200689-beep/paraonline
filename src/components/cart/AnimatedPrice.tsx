@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 export const AnimatedPrice: React.FC<{ value: number }> = ({ value }) => {
   const [displayValue, setDisplayValue] = useState(value);
+  const currentValue = useRef(value);
 
   useEffect(() => {
-    const start = displayValue;
+    const start = currentValue.current;
     const end = value;
     if (start === end) return;
 
@@ -19,11 +20,13 @@ export const AnimatedPrice: React.FC<{ value: number }> = ({ value }) => {
       const progress = Math.min(elapsed / duration, 1);
       const ease = progress * (2 - progress); // ease out quad
       const current = start + (end - start) * ease;
+      currentValue.current = current;
       setDisplayValue(current);
 
       if (progress < 1) {
         animationFrameId = requestAnimationFrame(animate);
       } else {
+        currentValue.current = end;
         setDisplayValue(end);
       }
     };

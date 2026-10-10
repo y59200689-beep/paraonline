@@ -1,6 +1,7 @@
-/* eslint-disable react-hooks/set-state-in-effect */
+
 'use client';
 
+import { useCallback } from 'react';
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from '@/context/LanguageContext';
 import { useCart } from '@/context/CartContext';
@@ -50,7 +51,7 @@ export const ScratchCard: React.FC<ScratchCardProps> = ({ isOpen, onClose }) => 
   const [scratchedPercent, setScratchedPercent] = useState(0);
 
   // Dynamically build rewards from settings coupons & daily gift
-  const getRewardsList = () => {
+  const getRewardsList = useCallback(() => {
     const list = (settings.coupons || []).filter(c => !c.freeShipping).map(c => ({
       code: c.code,
       name_fr: `Remise Exclusive de ${c.discountPercent}%`,
@@ -68,7 +69,7 @@ export const ScratchCard: React.FC<ScratchCardProps> = ({ isOpen, onClose }) => 
     return list.length > 0 ? list : [
       { code: 'BEAUTY10', name_fr: 'Remise Exclusive de 10%', name_ar: 'خصم حصري بقيمة 10%' }
     ];
-  };
+  }, [settings.coupons, settings.dailyGiftName]);
 
   // Pick a random reward on mounting
   useEffect(() => {
@@ -78,9 +79,9 @@ export const ScratchCard: React.FC<ScratchCardProps> = ({ isOpen, onClose }) => 
       code: selected.code,
       name: language === 'FR' ? selected.name_fr : selected.name_ar,
     });
-  }, [language, isOpen, settings]);
+  }, [language, isOpen, settings, getRewardsList]);
 
-  const initCanvas = () => {
+  const initCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -122,14 +123,14 @@ export const ScratchCard: React.FC<ScratchCardProps> = ({ isOpen, onClose }) => 
     ctx.strokeStyle = 'rgba(16, 31, 61, 0.12)';
     ctx.lineWidth = 1.5;
     ctx.strokeRect(6, 6, canvas.width - 12, canvas.height - 12);
-  };
+  }, [language]);
 
   // Canvas context setups when scratch stage starts
   useEffect(() => {
     if (step === 1 && canvasRef.current) {
       initCanvas();
     }
-  }, [step]);
+  }, [initCanvas, step]);
 
   const handleLeadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

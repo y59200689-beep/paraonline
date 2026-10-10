@@ -201,7 +201,7 @@ export default function AdminBrandingPage() {
       } else {
         showToast('Erreur lors de l\'enregistrement des couleurs.', 'error');
       }
-    } catch (err) {
+    } catch {
       showToast('Erreur serveur.', 'error');
     } finally {
       setIsSaving(false);

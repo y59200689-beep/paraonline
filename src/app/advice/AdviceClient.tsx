@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useTranslation } from '@/context/LanguageContext';
 import { ShopShell } from '@/components/ShopShell';
 import Link from 'next/link';
-import { BookOpen, Clock, ArrowRight, Tag, Sparkles, AlertCircle } from 'lucide-react';
+import { Clock, ArrowRight, Tag, Sparkles, AlertCircle } from 'lucide-react';
 
 interface AdviceClientProps {
   initialArticles: any[];

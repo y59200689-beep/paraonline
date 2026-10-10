@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useTranslation } from '@/context/LanguageContext';
@@ -10,17 +10,7 @@ import { useCurrency } from '@/context/CurrencyContext';
 import { CheckoutForm } from '@/components/cart/CheckoutForm';
 import { ShopShell } from '@/components/ShopShell';
 import { validateCheckoutFields } from '@/lib/checkout-validation';
-import { 
-  ShoppingBag, 
-  Trash2, 
-  Plus, 
-  Minus, 
-  ArrowLeft, 
-  Sparkles, 
-  ShieldCheck, 
-  Info,
-  Gift
-} from 'lucide-react';
+import { ShoppingBag, Trash2, Plus, Minus, Sparkles, Gift } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { FREE_SHIPPING_SUBTOTAL_DH } from '@/lib/pricing';
@@ -37,13 +27,8 @@ function CheckoutPageContent() {
   const router = useRouter();
   const { t, language } = useTranslation();
   const { settings } = useSettings();
-  const { 
-    showToast,
-    setSuccessModalOpen,
-    setSuccessOrderId,
-    setSuccessWhatsappUrl
-  } = useUi();
-  const { convertPrice, currentCurrency } = useCurrency();
+  const { showToast, setSuccessOrderId, setSuccessWhatsappUrl } = useUi();
+  const { convertPrice } = useCurrency();
   const {
     cart, clearCart, removeFromCart, updateQuantity,
     subtotal, total, discountAmount, discountedSubtotal, shippingFee, isFreeShipping,
@@ -55,7 +40,7 @@ function CheckoutPageContent() {
   const isRTL = language === 'AR';
 
   // ── Step & form state ────────────────────────────────────────────────────
-  const [step, setStep] = useState<'cart' | 'checkout'>('checkout');
+  (useState<'cart' | 'checkout'>('checkout'));
   const [checkoutSubStep, setCheckoutSubStep] = useState<'info' | 'delivery' | 'payment'>('info');
   const [couponCode, setCouponCode] = useState('');
   const [couponMessage, setCouponMessage] = useState({ text: '', isError: false });
@@ -107,7 +92,7 @@ function CheckoutPageContent() {
     if (settings.paymentSettings?.onlinePaymentEnabled) {
       setCheckoutSubStep('payment');
     } else {
-      const orderTotal = total;
+
       const res = await submitOrder(formFields);
       if (res.success) {
         router.push(`/checkout/success?orderId=${encodeURIComponent(res.orderId ?? '')}&token=${encodeURIComponent(res.trackingToken ?? '')}`);
@@ -152,7 +137,7 @@ function CheckoutPageContent() {
 
   const handleConfirmPayment = async () => {
     if (paymentMethod === 'cod') {
-      const orderTotal = total;
+
       const res = await submitOrder(formFields);
       if (res.success) {
         router.push(`/checkout/success?orderId=${encodeURIComponent(res.orderId ?? '')}&token=${encodeURIComponent(res.trackingToken ?? '')}`);

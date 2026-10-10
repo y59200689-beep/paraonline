@@ -21,7 +21,7 @@ export const AdminCartsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         body: JSON.stringify({ phone, recoveryStatus: status })
       });
       logAdminAction('Relance Panier', `Statut de relance mis à jour: ${phone} → ${status}`);
-    } catch (e) {}
+    } catch {}
   };
 
   return (

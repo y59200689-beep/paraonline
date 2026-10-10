@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import {
   ArrowLeft,
@@ -90,7 +90,7 @@ type DiagnosticQuestion = {
   options: DiagnosticOption[];
 };
 
-const QUESTIONS = diagnosticQuestions.questions as DiagnosticQuestion[];
+
 const EMPTY_ANSWERS: DiagnosticAnswers = {
   skinType: '',
   concern: '',
@@ -185,9 +185,9 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
     }
   }, [isOpen]);
 
-  function optionFor(field: AnswerField, value: string) {
+  const optionFor = useCallback((field: AnswerField, value: string) => {
     return questions.find((q) => q.field === field)?.options.find((option) => option.val === value);
-  }
+  }, [questions]);
 
   const isRTL = language === 'AR';
   const isClientExperience = experience === 'client';
@@ -298,7 +298,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
       options: (field === 'concern' ? getSelectedConcerns(answers.concern) : [answers[field]])
         .map(value => optionFor(field, value)).filter((option): option is DiagnosticOption => Boolean(option)),
     }));
-  }, [answers]);
+  }, [answers, optionFor]);
 
   const buildRecommendations = async () => {
     setRecommendationError(false);

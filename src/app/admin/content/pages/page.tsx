@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+
 import { useAdmin } from '@/context/AdminContext';
 import { StatusBadge } from '@/components/admin/ui/StatusBadge';
 import { StickyPublishBar } from '@/components/admin/ui/StickyPublishBar';
@@ -11,22 +11,7 @@ import { EmptyState } from '@/components/admin/ui/EmptyState';
 import { AsyncState } from '@/components/admin/ui/AsyncState';
 import { requestJson } from '@/lib/request-json';
 import { canEditContent, canPublishContent } from '@/lib/permissions';
-import {
-  Layout,
-  Plus,
-  Eye,
-  Globe,
-  Search,
-  FileText,
-  ChevronRight,
-  ArrowLeft,
-  Settings,
-  List,
-  Smartphone,
-  Monitor,
-  Clock,
-  RotateCcw,
-} from 'lucide-react';
+import { Plus, Eye, Globe, Search, FileText, ChevronRight, ArrowLeft, List, Smartphone, Monitor, RotateCcw } from 'lucide-react';
 
 type CmsStatus = 'draft' | 'scheduled' | 'published' | 'archived';
 
@@ -87,7 +72,7 @@ const SECTION_TYPE_OPTIONS = [
 // List view
 // ──────────────────────────────────────────────────────────────────────────────
 
-function PagesList({ pages, onSelect, isDark, role }: {
+function PagesList({ pages, onSelect, isDark }: {
   pages: CmsPage[];
   onSelect: (p: CmsPage) => void;
   isDark: boolean;

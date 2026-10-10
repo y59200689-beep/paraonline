@@ -4,7 +4,7 @@ import { verifyAdminSession } from '@/lib/session';
 import { canManageSnippets } from '@/lib/permissions';
 import { authorizeAdminMutation } from '@/lib/admin-authorization';
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const session = await verifyAdminSession();
     if (!session) {

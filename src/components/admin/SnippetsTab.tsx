@@ -3,21 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAdmin } from '@/context/AdminContext';
 import { useUi } from '@/context/UiContext';
-import { 
-  Plus, 
-  Edit2, 
-  Trash2, 
-  Code, 
-  AlertCircle, 
-  Loader2, 
-  Check, 
-  X,
-  HelpCircle,
-  Eye,
-  FileCode2,
-  ToggleLeft,
-  ToggleRight
-} from 'lucide-react';
+import { Plus, Edit2, Trash2, Code, AlertCircle, Loader2, X, HelpCircle, FileCode2, ToggleLeft, ToggleRight } from 'lucide-react';
 
 interface Snippet {
   id: string;
@@ -169,7 +155,7 @@ export default function SnippetsTab() {
       } else {
         setError(data.error || 'Erreur lors du chargement des snippets.');
       }
-    } catch (err: any) {
+    } catch {
       setError('Impossible de se connecter au serveur.');
     } finally {
       setLoading(false);
@@ -211,7 +197,7 @@ export default function SnippetsTab() {
       } else {
         showToast(data.error || 'Impossible de mettre à jour le statut.', 'error');
       }
-    } catch (err) {
+    } catch {
       showToast('Erreur réseau lors de la mise à jour.', 'error');
     }
   };
@@ -282,7 +268,7 @@ export default function SnippetsTab() {
       } else {
         setFormError(data.error || 'Une erreur est survenue lors de la sauvegarde.');
       }
-    } catch (err) {
+    } catch {
       setFormError('Erreur de connexion réseau.');
     } finally {
       setSaving(false);
@@ -301,7 +287,7 @@ export default function SnippetsTab() {
       } else {
         showToast(data.error || 'Erreur lors de la suppression.', 'error');
       }
-    } catch (err) {
+    } catch {
       showToast('Erreur réseau lors de la suppression.', 'error');
     }
   };

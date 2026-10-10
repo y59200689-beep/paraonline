@@ -5,7 +5,7 @@ import { buildWhatsAppUrl } from '@/lib/whatsapp-link';
 import { calculateShippingFee } from '@/lib/pricing';
 import { useTranslation } from '@/context/LanguageContext';
 import { usePathname } from 'next/navigation';
-import { MessageSquare, X, Send, Sparkles, ShieldAlert, CheckCircle, HelpCircle, Search, ShoppingBag, Plus, Minus, MapPin } from 'lucide-react';
+import { MessageSquare, X, Send, Sparkles, ShieldAlert, CheckCircle, HelpCircle, Search, ShoppingBag, Plus, MapPin } from 'lucide-react';
 import { useProducts } from '@/context/ProductsContext';
 import { useUi } from '@/context/UiContext';
 import { useCart } from '@/context/CartContext';
@@ -431,30 +431,7 @@ export const AiAssistant: React.FC = () => {
     }
   ];
 
-  const handleSelectPreset = (preset: typeof PRESETS[0]) => {
-    // Add user message
-    const userMsg: Message = {
-      sender: 'user',
-      textFr: preset.qFr,
-      textAr: preset.qAr
-    };
     
-    setMessages(prev => [...prev, userMsg]);
-    setIsTyping(true);
-
-    // Simulate AI response
-    setTimeout(() => {
-      setIsTyping(false);
-      const aiMsg: Message = {
-        sender: 'ai',
-        textFr: preset.responseFr,
-        textAr: preset.responseAr,
-        type: preset.hasCard ? 'card' : 'text',
-        cardData: preset.cardData
-      };
-      setMessages(prev => [...prev, aiMsg]);
-    }, 1800);
-  };
 
   const handleFallback = (query: string) => {
     const qLower = query.toLowerCase();

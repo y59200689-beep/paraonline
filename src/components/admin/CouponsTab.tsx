@@ -4,11 +4,7 @@ import React, { useState } from 'react';
 import { useAdmin } from '@/context/AdminContext';
 import { useUi } from '@/context/UiContext';
 import { useAdminUI } from '@/app/admin/AdminUIContext';
-import {
-  Ticket, Plus, Trash2, ToggleLeft, ToggleRight, Tag,
-  TrendingUp, ShoppingCart, Calendar, AlertCircle, Percent,
-  DollarSign, CheckCircle, XCircle, Clock, Users
-} from 'lucide-react';
+import { Ticket, Plus, Trash2, TrendingUp, ShoppingCart, Calendar, Percent, DollarSign, CheckCircle, Clock, Users } from 'lucide-react';
 
 export default function CouponsTab() {
   const { coupons, handleSaveCoupon, handleDeleteCoupon, handleToggleCouponActive, adminTheme, dashboardStats } = useAdmin();

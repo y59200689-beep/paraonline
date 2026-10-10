@@ -1,13 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAdmin } from '@/context/AdminContext';
 import Link from 'next/link';
-import {
-  Brain, Search, Shield, ShieldOff, ShieldCheck, Package,
-  AlertCircle, CheckCircle2, Loader2, Filter, RefreshCw,
-  Sparkles, Eye, X, ChevronLeft, ChevronRight, Info, PackageCheck,
-} from 'lucide-react';
+import { Brain, Search, Shield, ShieldOff, ShieldCheck, Package, AlertCircle, CheckCircle2, Loader2, RefreshCw, Sparkles, Eye, X, ChevronLeft, ChevronRight, Info, PackageCheck } from 'lucide-react';
 
 interface CatalogueProduct {
   id: number;
@@ -273,7 +269,7 @@ export default function DiagnosticCataloguePage() {
   const [totalPages, setTotalPages] = useState(1);
   const [toggling, setToggling] = useState<number | null>(null);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
-  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
   const LIMIT = 48;
 
   const fetchProducts = useCallback(async (pg: number, q: string, f: FilterType) => {
@@ -297,17 +293,18 @@ export default function DiagnosticCataloguePage() {
   }, []);
 
   useEffect(() => {
-    fetchProducts(page, search, filter);
-  }, [page, filter, fetchProducts]); // search handled separately with debounce
+    fetchProducts(page, debouncedSearch, filter);
+  }, [page, filter, fetchProducts, debouncedSearch]);
 
-  const handleSearchChange = (val: string) => {
-    setSearch(val);
-    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-    searchTimerRef.current = setTimeout(() => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
       setPage(1);
-      fetchProducts(1, val, filter);
+      setDebouncedSearch(search);
     }, 400);
-  };
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const handleSearchChange = (val: string) => setSearch(val);
 
   const handleFilterChange = (f: FilterType) => {
     setFilter(f);

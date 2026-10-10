@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
-import { hashPassword, hashPasswordAsync, verifyPassword, createSessionToken, getAdminSessionSecret } from '@/lib/session';
+import { hashPasswordAsync, verifyPassword, createSessionToken, getAdminSessionSecret } from '@/lib/session';
 
 export async function POST(request: Request) {
   try {
@@ -125,7 +125,7 @@ export async function POST(request: Request) {
       if (settingsRow?.value?.mfaEnforcedRoles) {
         mfaEnforcedRoles = settingsRow.value.mfaEnforcedRoles;
       }
-    } catch (e) {
+    } catch {
       // Non-fatal — if settings unavailable, skip enforcement
     }
 

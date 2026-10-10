@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback } from 'react';
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toThemeColorVariable } from '@/lib/theme-colors';
 
@@ -621,7 +622,7 @@ let settingsCache: Settings | null = null;
 let lastFetchedTime: number = 0;
 const CACHE_EXPIRY = 60000; // 60 seconds cache
 // Bump this version whenever DEFAULT_SETTINGS changes to invalidate stale browser caches
-const SETTINGS_CACHE_VERSION = 'v3';
+
 
 export class SettingsErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
@@ -682,14 +683,14 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode; initialSett
           } catch {}
           return source;
         }
-      } catch (e) {}
+      } catch {}
     }
     if (baseSettings) return baseSettings;
     return DEFAULT_SETTINGS;
   });
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadSettings = async (force: boolean = false) => {
+  const loadSettings = useCallback(async (force: boolean = false) => {
     const now = Date.now();
     // If server-provided initialSettings exist, they are already applied as state.
     // Only use the stale module-level cache if we have NO initialSettings (e.g. error fallback).
@@ -753,7 +754,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode; initialSett
         if (typeof window !== 'undefined') {
           try {
             localStorage.setItem('para_settings_cache', JSON.stringify(merged));
-          } catch (e) {}
+          } catch {}
         }
       }
     } catch (e) {
@@ -766,7 +767,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode; initialSett
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [hasInitialSettings]);
 
   const saveSettings = async (newSettings: Settings) => {
     try {
@@ -783,7 +784,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode; initialSett
         if (typeof window !== 'undefined') {
           try {
             localStorage.setItem('para_settings_cache', JSON.stringify(newSettings));
-          } catch (e) {}
+          } catch {}
         }
         return true;
       }
@@ -828,11 +829,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode; initialSett
       window.removeEventListener('gallery_overrides_updated', handleGalleryUpdate);
       window.removeEventListener('settings_updated', handleSettingsUpdate);
     };
-  }, []);
+  }, [loadSettings]);
 
   useEffect(() => {
     loadSettings();
-  }, []);
+  }, [loadSettings]);
 
   return (
     <SettingsContext.Provider value={{ settings, loadSettings, saveSettings, isLoading }}>

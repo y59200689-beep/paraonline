@@ -15,6 +15,10 @@ import { AmPmProvider } from '../context/AmPmContext';
 import { CompareProvider } from '../context/CompareContext';
 import { WishlistProvider } from '../context/WishlistContext';
 
+// Standalone provider tests supply the App Router available in the application.
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+
+
 const AllProvidersWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <SettingsProvider>
     <UiProvider>

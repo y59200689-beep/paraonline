@@ -15,6 +15,9 @@ import { WishlistProvider } from '../context/WishlistContext';
 import { ProductsProvider } from '../context/ProductsContext';
 import { Product } from '../lib/data';
 
+// Standalone provider tests supply the App Router available in the application.
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+
 const mockShowToast = vi.fn();
 const mockSetIsCartOpen = vi.fn();
 

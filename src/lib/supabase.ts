@@ -520,7 +520,7 @@ class MockSupabaseQueryBuilder {
     this.table = table;
   }
 
-  select(columns: string = '*', options?: any) {
+  select() {
     return this;
   }
 
@@ -679,7 +679,7 @@ class MockSupabaseQueryBuilder {
     return { data: inserted, error: null };
   }
 
-  async upsert(data: any, options?: any) {
+  async upsert(data: any) {
     const list = globalForMock.mockDb[this.table as keyof typeof globalForMock.mockDb] || [];
     const records = Array.isArray(data) ? data : [data];
 
@@ -1017,8 +1017,8 @@ const mockSupabaseClient = {
     return { data: null, error: { message: `Function ${fn} not mocked` } };
   },
   storage: {
-    from: (bucket: string) => ({
-      upload: async (filename: string, buffer: Buffer, options?: any) => {
+    from: () => ({
+      upload: async (filename: string, buffer: Buffer) => {
         if (typeof window === 'undefined') {
           try {
             const fs = require('fs');

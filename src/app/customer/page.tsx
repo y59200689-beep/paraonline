@@ -1,21 +1,13 @@
 'use client';
 
+import NextImage from 'next/image';
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useTranslation } from '@/context/LanguageContext';
-import { useLoyalty, LoyaltyTier } from '@/context/LoyaltyContext';
+import { useLoyalty } from '@/context/LoyaltyContext';
 import { useSettings } from '@/context/SettingsContext';
 import { supabase } from '@/lib/supabase';
-import { 
-  Search, ShoppingBag, ArrowLeft, ArrowRight, Clock, MapPin, 
-  Award, Coins, Ticket, Copy, Calendar, Plus,
-  Smile, Meh, Frown, Sparkles, Camera, X,
-  Image as ImageIcon, Heart, Trash2, Sun, Moon, ShieldCheck,
-  User, Settings, FileText, Printer, Truck, MessageCircle,
-  ExternalLink, Activity, RefreshCw, ChevronRight, Zap, Gift,
-  Percent, Compass, Droplet, Star, CheckCircle2, AlertCircle,
-  Box, CreditCard, ChevronDown, SlidersHorizontal, Edit3, Save, Layers, KeyRound
-} from 'lucide-react';
-import { Product, PRODUCTS_DB } from '@/lib/data';
+import { Search, ShoppingBag, ArrowRight, Award, Coins, Ticket, Copy, Plus, Sparkles, X, Heart, Trash2, Sun, Moon, User, FileText, Truck, MessageCircle, RefreshCw, ChevronRight, CheckCircle2, AlertCircle, Box, Save, KeyRound } from 'lucide-react';
+import { PRODUCTS_DB } from '@/lib/data';
 import { useUi } from '@/context/UiContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCart } from '@/context/CartContext';
@@ -120,7 +112,7 @@ export default function CustomerDashboard() {
   useEffect(() => {
     try {
       localStorage.removeItem('customer_portal_theme');
-    } catch (e) {}
+    } catch {}
   }, []);
 
   const toggleThemeMode = () => {
@@ -129,23 +121,7 @@ export default function CustomerDashboard() {
   };
 
   // Loyalty states
-  const {
-    points,
-    totalEarned,
-    tier,
-    pointsHistory,
-    redeemReward,
-    tierMultiplier,
-    pointsToNextTier,
-    clientUser,
-    isLoadingAuth,
-    loginClient,
-    signUpClient,
-    requestPasswordReset,
-    updateClientPassword,
-    updateClientProfile,
-    logoutClient,
-  } = useLoyalty();
+  const { points, tier, tierMultiplier, pointsToNextTier, clientUser, loginClient, signUpClient, requestPasswordReset, updateClientPassword, updateClientProfile, logoutClient } = useLoyalty();
   const { showToast, setDiagnosticOpen, diagnostic } = useUi();
 
   const { wishlist, removeFromWishlist } = useWishlist();
@@ -186,7 +162,7 @@ export default function CustomerDashboard() {
   const tabsRef = useRef<HTMLDivElement>(null);
 
   // Auth form states
-  const [showAuthPanel, setShowAuthPanel] = useState(false);
+  (useState(false));
   const [authView, setAuthView] = useState<'login' | 'signup'>('login');
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
@@ -1065,7 +1041,7 @@ export default function CustomerDashboard() {
                               themeMode === 'dark' ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-slate-200/80'
                             }`}>
                               <div className="w-12 h-12 rounded-xl bg-white p-1 border border-slate-200 shrink-0">
-                                <img src={resolveCustomerProductImage(item)} onError={applyCustomerImageFallback} alt={item.title} className="w-full h-full object-contain" />
+                                <NextImage unoptimized width={96} height={96} src={resolveCustomerProductImage(item)} onError={applyCustomerImageFallback} alt={item.title} className="w-full h-full object-contain" />
                               </div>
                               <div className="min-w-0 flex-1 text-start">
                                 <h4 className={`text-xs font-bold truncate ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
@@ -1242,7 +1218,7 @@ export default function CustomerDashboard() {
                               themeMode === 'dark' ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-slate-200/80'
                             }`}>
                               <div className="w-14 h-14 rounded-xl bg-white p-1 border border-slate-200 shrink-0">
-                                <img src={resolveCustomerProductImage(item)} onError={applyCustomerImageFallback} alt={item.title} className="w-full h-full object-contain" />
+                                <NextImage unoptimized width={96} height={96} src={resolveCustomerProductImage(item)} onError={applyCustomerImageFallback} alt={item.title} className="w-full h-full object-contain" />
                               </div>
                               <div className="min-w-0 flex-1 text-left">
                                 <h4 className={`text-xs font-bold truncate ${themeMode === 'dark' ? 'text-white' : 'text-slate-900'}`}>
@@ -1385,7 +1361,7 @@ export default function CustomerDashboard() {
                             }`}>
                               <div className="space-y-3">
                                 <div className="w-full h-32 rounded-xl bg-white p-2 border border-slate-200 relative overflow-hidden">
-                                  <img src={resolveCustomerProductImage(prod)} onError={applyCustomerImageFallback} alt={prod.title} className="w-full h-full object-contain" />
+                                  <NextImage unoptimized width={96} height={96} src={resolveCustomerProductImage(prod)} onError={applyCustomerImageFallback} alt={prod.title} className="w-full h-full object-contain" />
                                 </div>
                                 <div>
                                   <span className="text-[9px] font-mono font-bold text-emerald-500 uppercase">{prod.brand}</span>
@@ -1426,7 +1402,7 @@ export default function CustomerDashboard() {
                             }`}>
                               <div className="space-y-3">
                                 <div className="w-full h-32 rounded-xl bg-white p-2 border border-slate-200 relative overflow-hidden">
-                                  <img src={resolveCustomerProductImage(prod)} onError={applyCustomerImageFallback} alt={prod.title} className="w-full h-full object-contain" />
+                                  <NextImage unoptimized width={96} height={96} src={resolveCustomerProductImage(prod)} onError={applyCustomerImageFallback} alt={prod.title} className="w-full h-full object-contain" />
                                 </div>
                                 <div>
                                   <span className="text-[9px] font-mono font-bold text-cyan-400 uppercase">{prod.brand}</span>
@@ -1618,9 +1594,9 @@ export default function CustomerDashboard() {
 
                           <div className="space-y-3">
                             <div className="relative w-full h-44 rounded-xl overflow-hidden bg-white p-2 border border-slate-200">
-                              <img
+                              <NextImage unoptimized width={96} height={96}
                                 src={product.image}
-                                alt={product.name}
+                                alt={product.name || product.title}
                                 className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                               />
                             </div>

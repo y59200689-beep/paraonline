@@ -81,7 +81,7 @@ export default function CronTab() {
       } else {
         setError(data.error || 'Erreur lors du chargement des tâches.');
       }
-    } catch (err: any) {
+    } catch {
       setError('Impossible de se connecter au serveur.');
     } finally {
       setLoading(false);
@@ -123,7 +123,7 @@ export default function CronTab() {
       } else {
         showToast(data.error || 'Impossible de mettre à jour le statut.', 'error');
       }
-    } catch (err) {
+    } catch {
       showToast('Erreur réseau.', 'error');
     }
   };
@@ -152,7 +152,7 @@ export default function CronTab() {
       } else {
         showToast(data.error || 'Échec de l\'exécution.', 'error');
       }
-    } catch (err) {
+    } catch {
       showToast('Erreur réseau lors de l\'exécution.', 'error');
     } finally {
       setRunningId(null);
@@ -206,7 +206,7 @@ export default function CronTab() {
       } else {
         setFormError(data.error || 'Erreur lors de la sauvegarde.');
       }
-    } catch (err) {
+    } catch {
       setFormError('Erreur de connexion.');
     } finally {
       setSaving(false);
@@ -225,7 +225,7 @@ export default function CronTab() {
       } else {
         showToast(data.error || 'Erreur lors de la suppression.', 'error');
       }
-    } catch (err) {
+    } catch {
       showToast('Erreur réseau.', 'error');
     }
   };

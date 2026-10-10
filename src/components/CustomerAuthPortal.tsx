@@ -31,28 +31,7 @@ interface CustomerAuthPortalProps {
   onToggleTheme?: () => void;
 }
 
-export const CustomerAuthPortal: React.FC<CustomerAuthPortalProps> = ({
-  authView,
-  setAuthView,
-  authEmail,
-  setAuthEmail,
-  authPassword,
-  setAuthPassword,
-  authName,
-  setAuthName,
-  authPhone,
-  setAuthPhone,
-  authError,
-  authNotice,
-  authLoading,
-  handleLogin,
-  handleSignup,
-  handlePasswordReset,
-  onClose,
-  isModal = false,
-  themeMode = 'dark',
-  onToggleTheme,
-}) => {
+export const CustomerAuthPortal: React.FC<CustomerAuthPortalProps> = ({ authView, setAuthView, authEmail, setAuthEmail, authPassword, setAuthPassword, authName, setAuthName, authPhone, setAuthPhone, authError, authNotice, authLoading, handleLogin, handleSignup, handlePasswordReset, isModal = false, themeMode = 'dark', onToggleTheme }) => {
   const { language, toggleLanguage } = useTranslation();
   const isRTL = language === 'AR';
   const [showPassword, setShowPassword] = useState(false);

@@ -82,7 +82,7 @@ it('allows uploading a replacement after removing a logo', async () => {
   fireEvent.click(await screen.findByRole('button', { name: 'Supprimer le logo' }));
   fireEvent.change(screen.getByLabelText('Importer un logo'), { target: { files: [new File(['image'], 'logo.png', { type: 'image/png' })] } });
   await waitFor(() => expect(screen.getByAltText('Logo').getAttribute('src')).toBe('/new-logo.png'));
-  expect(screen.getByAltText('SVR').getAttribute('src')).toBe('/new-logo.png');
+  expect(new URL(screen.getByAltText('SVR').getAttribute('src')!, window.location.origin).pathname).toBe('/new-logo.png');
   expect(screen.getByRole('button', { name: 'Supprimer le logo' })).toBeTruthy();
 });
 

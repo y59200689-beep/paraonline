@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Product, INGREDIENTS_GLOSSARY } from '@/lib/data';
 import { useProducts } from '@/context/ProductsContext';
@@ -11,11 +12,7 @@ import { useWishlist } from '@/context/WishlistContext';
 import { ProductCard } from '@/components/ProductCard';
 import { ShopShell } from '@/components/ShopShell';
 import { useUi } from '@/context/UiContext';
-import { 
-  Star, ShoppingBag, Plus, Minus, Info, ShieldCheck, Sparkles, Coins, 
-  Heart, Truck, ChevronDown, ChevronUp, Share2, Award, Sparkle,
-  Check, ArrowRight, ArrowLeft, ThumbsUp, MessageSquare, AlertCircle, Loader2
-} from 'lucide-react';
+import { Star, ShoppingBag, Plus, Minus, Info, ShieldCheck, Sparkles, Coins, Heart, Truck, ChevronDown, Share2, Award, Sparkle, Check, ArrowRight, Loader2 } from 'lucide-react';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -30,7 +27,8 @@ interface ProductDetailClientProps {
 const placeholderSvg = PRODUCT_IMAGE_FALLBACK;
 
 export default function ProductDetailClient({ product }: ProductDetailClientProps) {
-  const { language, t } = useTranslation();
+  const router = useRouter();
+  const { language } = useTranslation();
   const { products } = useProducts();
   const { convertPrice } = useCurrency();
   const { settings } = useSettings();
@@ -67,18 +65,18 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   // Reviews breakdown states
   const [reviewsList, setReviewsList] = useState<any[]>([]);
   const [isLoadingReviews, setIsLoadingReviews] = useState(true);
-  const [canReview, setCanReview] = useState(false);
-  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [submitError, setSubmitError] = useState('');
+  const [, setCanReview] = useState(false);
+  (useState(false));
+  (useState(false));
+  (useState(''));
   const [isAddedToCart, setIsAddedToCart] = useState(false);
   const [showStickyPurchase, setShowStickyPurchase] = useState(false);
   const mobilePurchaseRef = useRef<HTMLDivElement>(null);
 
   // Form states
-  const [newAuthor, setNewAuthor] = useState('');
-  const [newRating, setNewRating] = useState(5);
-  const [newComment, setNewComment] = useState('');
+  (useState(''));
+  (useState(5));
+  (useState(''));
 
   const { diagnostic: diagnosticResults, setDiagnosticOpen, showToast } = useUi();
 
@@ -111,49 +109,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
     };
   }, [product.id]);
 
-  const handleSubmitReview = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newAuthor.trim() || !newComment.trim()) {
-      setSubmitError(language === 'FR' ? 'Veuillez remplir tous les champs.' : 'يرجى ملء جميع الحقول.');
-      return;
-    }
     
-    setIsSubmittingReview(true);
-    setSubmitError('');
-    setSubmitSuccess(false);
-
-    try {
-      const response = await fetch('/api/reviews', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          productId: product.id,
-          author: newAuthor,
-          rating: newRating,
-          comment: newComment
-        })
-      });
-      const data = await response.json();
-      if (data.success) {
-        setSubmitSuccess(true);
-        setNewAuthor('');
-        setNewComment('');
-        setNewRating(5);
-        
-        showToast(language === 'FR'
-          ? 'Votre avis a été envoyé et sera publié après vérification.'
-          : 'تم إرسال تقييمكِ وسيُنشر بعد المراجعة.',
-          'success'
-        );
-      } else {
-        setSubmitError(data.error || 'Failed to submit review');
-      }
-    } catch (err: any) {
-      setSubmitError(err.message || 'Error submitting review');
-    } finally {
-      setIsSubmittingReview(false);
-    }
-  };
 
   const getAvatarGradient = (name: string) => {
     const gradients = [
@@ -1477,7 +1433,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                     product={p} 
                     onOpenQuickView={(prod) => {
                       // Redirect to product detail page directly or open quickview
-                      window.location.href = `/products/${prod.id}`;
+                      router.push(`/products/${prod.id}`);
                     }} 
                   />
                 </div>

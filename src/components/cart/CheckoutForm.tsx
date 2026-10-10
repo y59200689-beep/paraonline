@@ -349,36 +349,7 @@ const StepDivider = () => (
 );
 
 /* ── Main Component ────────────────────────────────────────────────────── */
-export const CheckoutForm: React.FC<CheckoutFormProps> = ({
-  language,
-  isRTL,
-  checkoutSubStep,
-  setCheckoutSubStep,
-  setStep,
-  formFields,
-  setFormFields,
-  formErrors,
-  setShippingCity,
-  isSubmitting,
-  isInitializingStripe,
-  paymentMethod,
-  setPaymentMethod,
-  clientSecret,
-  setClientSecret,
-  stripeOrderId,
-  stripeTrackingToken,
-  stripePublishableKey,
-  total,
-  onlinePaymentEnabled,
-  testMode,
-  stripeEnabled,
-  cmiEnabled,
-  proceedToDelivery,
-  handleCheckoutSubmit,
-  handleConfirmOrder,
-  onStripeSuccess,
-  t,
-}) => {
+export const CheckoutForm: React.FC<CheckoutFormProps> = ({ language, isRTL, checkoutSubStep, setCheckoutSubStep, setStep, formFields, setFormFields, formErrors, setShippingCity, isSubmitting, isInitializingStripe, paymentMethod, setPaymentMethod, clientSecret, setClientSecret, stripeOrderId, stripeTrackingToken, stripePublishableKey, total, onlinePaymentEnabled, testMode, stripeEnabled, cmiEnabled, handleCheckoutSubmit, handleConfirmOrder, onStripeSuccess, t }) => {
   const isFR = language === 'FR';
   const [cities, setCities] = useState<Array<{ value: string; labelFr: string; labelAr: string }>>(MOROCCAN_CITIES);
 
@@ -401,17 +372,9 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
   }, []);
 
   // Steps for indicator
-  const steps = onlinePaymentEnabled
-    ? [
-        { key: 'info', labelFr: 'Coordonnées', labelAr: 'معلوماتكِ', step: 1 },
-        { key: 'payment', labelFr: 'Paiement', labelAr: 'الدفع', step: 2 },
-      ]
-    : [
-        { key: 'info', labelFr: 'Coordonnées', labelAr: 'معلوماتكِ', step: 1 },
-        { key: 'done', labelFr: 'Confirmation', labelAr: 'التأكيد', step: 2 },
-      ];
 
-  const currentStepIndex = checkoutSubStep === 'payment' ? 1 : 0;
+
+
 
 
 

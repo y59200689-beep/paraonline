@@ -25,7 +25,7 @@ function AdminLoginFormInner() {
     completeMfaSetupConfirm
   } = useAdmin();
 
-  const router = useRouter();
+  (useRouter());
   const searchParams = useSearchParams();
   const fromPath = searchParams.get('from') || '/admin';
 

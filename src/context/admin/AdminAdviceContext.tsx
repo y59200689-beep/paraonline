@@ -40,7 +40,7 @@ export const AdminAdviceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       } else {
         showToast("Erreur: " + data.error, 'error');
       }
-    } catch (e) {
+    } catch {
       showToast("Erreur de communication.", 'error');
     }
     return false;
@@ -67,7 +67,7 @@ export const AdminAdviceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       } else {
         showToast("Erreur: " + data.error, 'error');
       }
-    } catch (e) {
+    } catch {
       showToast("Erreur de communication.", 'error');
     }
     return false;
@@ -91,7 +91,7 @@ export const AdminAdviceProvider: React.FC<{ children: React.ReactNode }> = ({ c
       } else {
         showToast("Erreur: " + data.error, 'error');
       }
-    } catch (e) {
+    } catch {
       showToast("Erreur de communication.", 'error');
     }
     return false;

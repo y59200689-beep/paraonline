@@ -1,5 +1,6 @@
 'use client';
 
+import NextImage from 'next/image';
 import React, { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useTranslation } from '@/context/LanguageContext';
@@ -212,7 +213,7 @@ export const RoutineBundleDrawer: React.FC<RoutineBundleDrawerProps> = ({ isOpen
                     }`}
                   >
                     {/* Thumbnail */}
-                    <img
+                    <NextImage unoptimized width={96} height={96}
                       src={getOptimizedImageUrl(product.image) || PRODUCT_IMAGE_FALLBACK}
                       alt={product.title}
                       className="w-16 h-16 object-cover rounded-[8px] bg-slate-50 border border-border/30 shrink-0"

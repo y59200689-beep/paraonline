@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useAdmin } from '@/context/AdminContext';
 import { canEditContent } from '@/lib/permissions';
-import { SearchCode, Save, Loader2, Globe, Image, Check } from 'lucide-react';
+import { Save, Loader2, Check } from 'lucide-react';
 import { BilingualField } from '@/components/admin/ui/BilingualField';
 
 export default function ContentSeoPage() {
@@ -14,7 +14,7 @@ export default function ContentSeoPage() {
   const canEdit = canEditContent(role as any);
 
   const [saving, setSaving] = useState(false);
-  const [dirty, setDirty] = useState(false);
+  const [, setDirty] = useState(false);
 
   const [defaultTitleFr, setDefaultTitleFr] = useState('Para Divine | Parapharmacie & K-Beauty Maroc');
   const [defaultTitleAr, setDefaultTitleAr] = useState('Para Divine | صيدلية ومستحضرات تجميل كورية بالمغرب');

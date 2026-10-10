@@ -3,28 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { useAdmin } from '@/context/AdminContext';
 import { canManageAdvice } from '@/lib/permissions';
-import { 
-  Plus, 
-  Search, 
-  Edit2, 
-  Trash2, 
-  FileText, 
-  Globe, 
-  BookOpen, 
-  Check, 
-  X, 
-  Eye, 
-  AlertCircle,
-  Clock,
-  Tag,
-  ArrowUpDown,
-  Bold,
-  Italic,
-  Heading,
-  List,
-  Link as LinkIcon,
-  Code
-} from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Check, X, Clock, Tag, Bold, Italic, Heading, List, Link as LinkIcon, Code } from 'lucide-react';
 
 interface MarkdownEditorProps {
   value: string;
@@ -245,7 +224,7 @@ export default function AdminAdvicePage() {
     if (loadAdviceArticles) {
       loadAdviceArticles();
     }
-  }, []);
+  }, [loadAdviceArticles]);
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');

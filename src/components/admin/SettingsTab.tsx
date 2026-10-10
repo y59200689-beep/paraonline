@@ -1,45 +1,8 @@
 'use client';
 
+import NextImage from 'next/image';
 import React, { useState, useEffect } from 'react';
-import { 
-  Sliders, 
-  Percent, 
-  Truck, 
-  Star, 
-  HelpCircle, 
-  FileText, 
-  Bell, 
-  Users, 
-  AlertTriangle, 
-  Trash2, 
-  ChevronUp, 
-  ChevronDown, 
-  X, 
-  Upload, 
-  Calendar,
-  CreditCard,
-  Lock,
-  ShieldCheck,
-  ShieldAlert,
-  Key,
-  ArrowRight,
-  Layout,
-  Layers,
-  Package,
-  Terminal,
-  Search,
-  Copy,
-  Check,
-  RefreshCw,
-  Plus,
-  Zap,
-  BookOpen,
-  Heart,
-  Activity,
-  Gift,
-  Eye,
-  FlaskConical
-} from 'lucide-react';
+import { Sliders, Percent, Truck, Star, HelpCircle, FileText, Bell, Users, AlertTriangle, Trash2, ChevronUp, ChevronDown, X, Upload, Calendar, CreditCard, Lock, ShieldCheck, ShieldAlert, Key, Layout, Layers, Package, Terminal, Search, Check, RefreshCw, Plus, BookOpen, Heart, Activity, Gift, Eye, FlaskConical } from 'lucide-react';
 import { useAdmin } from '@/context/AdminContext';
 import { useSettings, GiftRange, HeroCardConfig } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
@@ -484,7 +447,7 @@ export default function SettingsTab() {
       } else {
         showToast('Échec du téléversement: ' + data.error, 'error');
       }
-    } catch (err) {
+    } catch {
       showToast('Erreur réseau lors du téléversement.', 'error');
     } finally {
       setIsUploading(false);
@@ -1471,7 +1434,7 @@ export default function SettingsTab() {
                                         </div>
 
                                         <div className="w-9 h-9 rounded-lg overflow-hidden shrink-0 bg-slate-100 ring-1 ring-black/5">
-                                          {prod.image && <img src={prod.image} alt="" className="w-full h-full object-cover" />}
+                                          {prod.image && <NextImage unoptimized width={96} height={96} src={prod.image} alt="" className="w-full h-full object-cover" />}
                                         </div>
                                         <div className="min-w-0 flex-1">
                                           <p className={`text-xs font-bold truncate ${adminTheme === 'light' ? 'text-slate-800' : 'text-slate-200'}`}>
@@ -1567,7 +1530,7 @@ export default function SettingsTab() {
                                             }`}
                                           >
                                             <div className="w-8 h-8 rounded overflow-hidden bg-slate-100 shrink-0">
-                                              {p.image && <img src={p.image} alt="" className="w-full h-full object-cover" />}
+                                              {p.image && <NextImage unoptimized width={96} height={96} src={p.image} alt="" className="w-full h-full object-cover" />}
                                             </div>
                                             <span className="flex-1 truncate font-medium">{p.nameFr || p.title}</span>
                                             <span className="text-[10px] font-bold text-slate-400 shrink-0">{p.price} DH</span>
@@ -1598,7 +1561,7 @@ export default function SettingsTab() {
                                 </label>
                                 {(activeSection.settings?.leftImage || "/images/cicaplast_bundle_nobg.png") && (
                                   <div className="relative w-full h-36 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 mb-2 flex items-center justify-center p-2">
-                                    <img 
+                                    <NextImage unoptimized width={96} height={96} style={{ width: 'auto', height: 'auto' }}
                                       src={activeSection.settings?.leftImage || "/images/cicaplast_bundle_nobg.png"} 
                                       alt="Aperçu Gauche" 
                                       className="max-w-full max-h-full object-contain rounded"
@@ -1654,7 +1617,7 @@ export default function SettingsTab() {
                                 </label>
                                 {(activeSection.settings?.rightImage || "/images/vichy_sunscreen_bundle_nobg.png") && (
                                   <div className="relative w-full h-36 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 mb-2 flex items-center justify-center p-2">
-                                    <img 
+                                    <NextImage unoptimized width={96} height={96} style={{ width: 'auto', height: 'auto' }}
                                       src={activeSection.settings?.rightImage || "/images/vichy_sunscreen_bundle_nobg.png"} 
                                       alt="Aperçu Droite" 
                                       className="max-w-full max-h-full object-contain rounded"
@@ -2091,7 +2054,7 @@ export default function SettingsTab() {
                                   >
                                     <div className="flex gap-2">
                                       <div className="w-10 h-10 rounded bg-white flex items-center justify-center border p-1 shrink-0">
-                                        <img
+                                        <NextImage unoptimized width={96} height={96} style={{ width: 'auto', height: 'auto' }}
                                           src={brand.logoUrl || `https://logos.hunter.io/${brand.domain}`}
                                           alt=""
                                           className="max-h-full max-w-full object-contain"
@@ -3304,7 +3267,7 @@ export default function SettingsTab() {
                             >
                               <span className={`relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border ${adminTheme === 'light' ? 'border-slate-100 bg-slate-50' : 'border-slate-800 bg-slate-900'}`}>
                                 {getGiftProductImage(selectedProduct) ? (
-                                  <img src={getGiftProductImage(selectedProduct)} alt="" className="h-full w-full object-cover" />
+                                  <NextImage unoptimized width={96} height={96} src={getGiftProductImage(selectedProduct)} alt="" className="h-full w-full object-cover" />
                                 ) : (
                                   <Gift className="h-4 w-4 text-emerald-500" aria-hidden="true" />
                                 )}
@@ -3352,7 +3315,7 @@ export default function SettingsTab() {
                                     >
                                       <span className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border ${adminTheme === 'light' ? 'border-slate-100 bg-slate-50' : 'border-slate-800 bg-slate-900'}`}>
                                         {getGiftProductImage(product) ? (
-                                          <img src={getGiftProductImage(product)} alt="" className="h-full w-full object-cover" />
+                                          <NextImage unoptimized width={96} height={96} src={getGiftProductImage(product)} alt="" className="h-full w-full object-cover" />
                                         ) : (
                                           <Gift className="h-4 w-4 text-emerald-500" aria-hidden="true" />
                                         )}
@@ -5251,8 +5214,8 @@ export default function SettingsTab() {
                   </p>
                   {mfaQrCode && (
                     <div className="flex justify-center">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={mfaQrCode} alt="QR Code MFA" className="w-48 h-48 rounded-xl border border-slate-300" />
+                      { }
+                      <NextImage unoptimized width={96} height={96} src={mfaQrCode} alt="QR Code MFA" className="w-48 h-48 rounded-xl border border-slate-300" />
                     </div>
                   )}
                   {mfaSecret && (

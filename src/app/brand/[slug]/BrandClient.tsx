@@ -1,12 +1,13 @@
 'use client';
 
+import NextImage from 'next/image';
 import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from '@/context/LanguageContext';
 import { Product } from '@/lib/data';
 import { ProductCard } from '@/components/ProductCard';
 import { ShopShell } from '@/components/ShopShell';
 import { BrandConfig } from '@/lib/brands';
-import { Search, SlidersHorizontal, Check, ArrowUpDown, X, Sparkles, ShieldCheck, Globe, Loader2 } from 'lucide-react';
+import { Search, SlidersHorizontal, Check, ArrowUpDown, X, Sparkles, ShieldCheck, Globe } from 'lucide-react';
 import Link from 'next/link';
 import { brandLogoSrc } from '@/lib/brand-logo';
 
@@ -40,7 +41,7 @@ export default function BrandClient({ brand, initialProducts = [] }: BrandClient
   // Brand-specific product fetch — queries vendor directly so we get all products
   // regardless of how many total products exist in the DB
   const [brandProducts, setBrandProducts] = useState<Product[]>(initialProducts);
-  const [isLoading, setIsLoading] = useState(true);
+  const [, setIsLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -206,7 +207,7 @@ export default function BrandClient({ brand, initialProducts = [] }: BrandClient
               
               {/* Brand Logo Container */}
               <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-[24px] bg-white border border-slate-100 dark:border-slate-800 flex items-center justify-center p-4 shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
-                {brandLogoUrl ? <img
+                {brandLogoUrl ? <NextImage unoptimized width={96} height={96}
                   src={brandLogoUrl} 
                   alt={brand.name} 
                   className="w-full h-full object-contain"

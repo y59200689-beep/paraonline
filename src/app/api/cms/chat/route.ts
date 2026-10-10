@@ -70,6 +70,8 @@ export async function PATCH(req: NextRequest) {
 
   // Filter out any schema-invalid top-level keys before upserting into cms_chat_config
   const { allowed_brands: _ab, allowed_brands_enabled: _abe, ...cleanOtherFields } = otherFields;
+  void _ab;
+  void _abe;
 
   const payload: Record<string, any> = {
     id: 1,

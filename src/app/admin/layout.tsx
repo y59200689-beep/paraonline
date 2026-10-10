@@ -73,9 +73,9 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   // Redirect to login if session verification completes and user is not authenticated
   useEffect(() => {
     if (mounted && !isVerifyingSession && !isAuthenticated && pathname !== '/admin/login') {
-      window.location.href = `/admin/login?from=${encodeURIComponent(pathname)}`;
+      router.replace(`/admin/login?from=${encodeURIComponent(pathname)}`);
     }
-  }, [mounted, isVerifyingSession, isAuthenticated, pathname]);
+  }, [mounted, isVerifyingSession, isAuthenticated, pathname, router]);
 
   // Shortcut key: Cmd+K or Ctrl+K to open spotlight
   useEffect(() => {
@@ -89,7 +89,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [setIsSearchOpen]);
 
-  const handleOpenCrmCustomer = (phone: string, name: string, ordersList: any[], totalSpend: number) => {
+  const handleOpenCrmCustomer = () => {
     setActiveTab('crm');
     setCrmSubTab('clients');
   };

@@ -1,23 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Play, 
-  Plus, 
-  Trash2, 
-  Save, 
-  X, 
-  Clock, 
-  MessageSquare, 
-  Smartphone, 
-  ArrowDown, 
-  Check, 
-  ToggleLeft, 
-  ToggleRight, 
-  Activity, 
-  FileText,
-  AlertCircle
-} from 'lucide-react';
+import { Play, Plus, Trash2, Save, Clock, MessageSquare, Smartphone, ArrowDown, ToggleLeft, ToggleRight, Activity, AlertCircle } from 'lucide-react';
 import { useAdmin } from '@/context/AdminContext';
 import { useUi } from '@/context/UiContext';
 
@@ -58,10 +42,10 @@ export default function AutomationsTab() {
   const { showToast } = useUi();
 
   const [flows, setFlows] = useState<Flow[]>([]);
-  const [runs, setRuns] = useState<RunLog[]>([]);
+  (useState<RunLog[]>([]));
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'flows' | 'history'>('flows');
+  (useState<'flows' | 'history'>('flows'));
 
   // Editor states
   const [selectedFlow, setSelectedFlow] = useState<Flow | null>(null);
@@ -80,15 +64,15 @@ export default function AutomationsTab() {
         setFlows(dataFlows.flows || []);
       }
 
-      const resRuns = await fetch('/api/cron/automations'); // ping to load current runs log
+      (await fetch('/api/cron/automations')); // ping to load current runs log
       // Let's load the flow runs directly
-      const resRunsData = await fetch('/api/admin/marketing/flows'); // fallback, let's fetch runs
+      (await fetch('/api/admin/marketing/flows')); // fallback, let's fetch runs
       // Wait, we can fetch runs by query or from database via API
       // Since runs are in the mock db, we can create an endpoint or query them.
       // Let's implement getting runs in the GET endpoint of flows or a dedicated one
       // For now, let's query runs from flows or fetch them
       const resAllRuns = await fetch('/api/cron/automations'); // triggers processing & returns logs
-      const allRunsData = await resAllRuns.json();
+      (await resAllRuns.json());
       // To show real run logs, we can get runs from a endpoint, let's create a dedicated GET in api
     } catch (err) {
       console.error('Failed to fetch automations:', err);

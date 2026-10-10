@@ -4,29 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { buildWhatsAppUrl } from '@/lib/whatsapp-link';
 import { useAdmin } from '@/context/AdminContext';
 import { useSettings } from '@/context/SettingsContext';
-import {
-  Search,
-  Sun,
-  BarChart2,
-  ShoppingCart,
-  Truck,
-  Package,
-  ClipboardList,
-  Award,
-  Sliders,
-  FileText,
-  MessageSquare,
-  Tag,
-  Bell,
-  HelpCircle,
-  Save,
-  Upload,
-  Command,
-  Gift,
-  Layers,
-  Users,
-  Shield
-} from 'lucide-react';
+import { Search, Sun, BarChart2, ShoppingCart, Truck, Package, ClipboardList, Sliders, MessageSquare, Tag, Save, Upload, Command, Layers, Users } from 'lucide-react';
 
 interface AdminSpotlightProps {
   isSearchOpen: boolean;
@@ -44,21 +22,7 @@ interface AdminSpotlightProps {
   setLoyaltySubTab: (sub: 'product_points' | 'bulk_points' | 'logs') => void;
 }
 
-export const AdminSpotlight: React.FC<AdminSpotlightProps> = ({
-  isSearchOpen,
-  setIsSearchOpen,
-  setActiveTab,
-  setOrdersSubTab,
-  setCrmSubTab,
-  setActiveSettingsSubTab,
-  setIsAddingCoupon,
-  setIsNewProductModalOpen,
-  setSelectedOrder,
-  setProductForm,
-  setSpotlightTarget,
-  handleOpenCrmCustomer,
-  setLoyaltySubTab
-}) => {
+export const AdminSpotlight: React.FC<AdminSpotlightProps> = ({ isSearchOpen, setIsSearchOpen, setActiveTab, setOrdersSubTab, setCrmSubTab, setIsAddingCoupon, setIsNewProductModalOpen, setSpotlightTarget, handleOpenCrmCustomer }) => {
   const {
     orders,
     products,
@@ -68,9 +32,9 @@ export const AdminSpotlight: React.FC<AdminSpotlightProps> = ({
     handleUpdateOrderStatus,
     logAdminAction
   } = useAdmin();
-  const { settings } = useSettings();
+  (useSettings());
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [, setSelectedIndex] = useState(0);
 
   // Clear query & reset index on open/close
   useEffect(() => {
@@ -81,7 +45,7 @@ export const AdminSpotlight: React.FC<AdminSpotlightProps> = ({
   }, [isSearchOpen]);
 
   // Copy helper
-  const handleCopy = (text: string, label: string) => {
+  const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
   };
 
@@ -344,7 +308,7 @@ export const AdminSpotlight: React.FC<AdminSpotlightProps> = ({
                           </a>
                           <button
                             type="button"
-                            onClick={() => handleCopy(c.phone, 'Téléphone')}
+                            onClick={() => handleCopy(c.phone)}
                             className="px-2 py-1 rounded-lg text-[9.5px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 transition cursor-pointer"
                           >
                             Copier Tél

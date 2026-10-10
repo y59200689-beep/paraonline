@@ -2,38 +2,17 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
-import { 
-  Users, 
-  Package, 
-  Layers, 
-  FileText, 
-  Award, 
-  TrendingUp, 
-  Edit3, 
-  Search, 
-  X,
-  ChevronLeft,
-  ChevronRight
-} from 'lucide-react';
+import { Package, Layers, FileText, Search, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAdmin, Order } from '@/context/AdminContext';
 import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 import { useAdminUI } from '@/app/admin/AdminUIContext';
-import { StatusBadge, EmptyState } from '@/components/admin/ui';
+import { StatusBadge } from '@/components/admin/ui';
 
 export default function LoyaltyTab() {
-  const {
-    products,
-    crmCustomers,
-    loyaltyOverrides,
-    parsedLoyaltyLogs,
-    adminTheme,
-    handleAdjustPoints,
-    handleSaveProductPoints,
-    handleBulkSavePoints
-  } = useAdmin();
+  const { products, crmCustomers, parsedLoyaltyLogs, adminTheme, handleAdjustPoints, handleSaveProductPoints, handleBulkSavePoints } = useAdmin();
 
-  const { settings } = useSettings();
+  useSettings();
   const { showToast } = useUi();
 
   // Local UI sub-tab
@@ -54,7 +33,7 @@ export default function LoyaltyTab() {
   const [isBulkSaving, setIsBulkSaving] = useState(false);
 
   // CRM Customer members filter
-  const [crmSearchQuery, setCrmSearchQuery] = useState('');
+  const [crmSearchQuery, ] = useState('');
 
   // Selected CRM customer profile modal local state
   const [selectedCustomer, setSelectedCustomer] = useState<{
@@ -68,17 +47,17 @@ export default function LoyaltyTab() {
   const [loyaltyPointsAdjustment, setLoyaltyPointsAdjustment] = useState<number>(0);
   const [loyaltyAdjustmentReason, setLoyaltyAdjustmentReason] = useState<string>('');
   const [isAdjustingPoints, setIsAdjustingPoints] = useState<boolean>(false);
-  const [isDataLoading, setIsDataLoading] = useState<boolean>(false);
+  (useState<boolean>(false));
 
-  const pointsPerDh = settings.loyaltyPointsPerDh || 1;
+
 
   // Filtered members list
-  const filteredCrmCustomers = useMemo(() => {
+  (useMemo(() => {
     return crmCustomers.filter((c: any) => {
       const q = crmSearchQuery.toLowerCase();
       return (c.name || '').toLowerCase().includes(q) || (c.phone || '').includes(crmSearchQuery);
     });
-  }, [crmCustomers, crmSearchQuery]);
+  }, [crmCustomers, crmSearchQuery]));
 
   // Vendors and Categories lists from products
   const allVendors = useMemo(() => {
@@ -130,37 +109,7 @@ export default function LoyaltyTab() {
   }, [bpFiltered, bulkSelectedIds]);
 
   // Handlers
-  const handleOpenCrmCustomer = async (customerPhone: string, customerName: string, customerOrders: Order[], totalSpend: number) => {
-    setIsDataLoading(true);
-    try {
-      const res = await fetch(`/api/admin/loyalty?phone=${customerPhone}`);
-      const data = await res.json();
       
-      let points = 0;
-      let reason = '';
-      if (data.success && data.loyaltyOverride) {
-        points = data.loyaltyOverride.points;
-        reason = data.loyaltyOverride.reason || '';
-      } else {
-        points = Math.round(totalSpend * pointsPerDh);
-      }
-
-      setSelectedCustomer({
-        phone: customerPhone,
-        name: customerName,
-        orders: customerOrders,
-        totalSpend,
-        points,
-        pointsOverrideReason: reason
-      });
-      setLoyaltyPointsAdjustment(0);
-      setLoyaltyAdjustmentReason('');
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsDataLoading(false);
-    }
-  };
 
   const handleAdjustPointsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

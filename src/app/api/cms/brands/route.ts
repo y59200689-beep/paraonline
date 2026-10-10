@@ -10,7 +10,8 @@ import { withBrandProductCounts } from '@/lib/brand-product-counts';
 // This authenticated endpoint returns the actual record instead of requiring them.
 const BRAND_FIELDS = '*';
 
-async function requireSession(_req: NextRequest) {
+async function requireSession(req?: Request) {
+  void req;
   const authorization = await authorizeAdminMutation({ allow: canManageBrands });
   if (!authorization.authorized) return { error: authorization.response };
   return { session: authorization.operator };

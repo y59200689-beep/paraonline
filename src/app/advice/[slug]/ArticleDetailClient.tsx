@@ -6,17 +6,7 @@ import { ShopShell } from '@/components/ShopShell';
 import { useCart } from '@/context/CartContext';
 import { useUi } from '@/context/UiContext';
 import Link from 'next/link';
-import { 
-  Clock, 
-  Tag, 
-  ArrowLeft, 
-  ShoppingBag, 
-  Star, 
-  Calendar, 
-  Share2,
-  Sparkles,
-  AlertCircle
-} from 'lucide-react';
+import { Clock, Tag, ArrowLeft, ShoppingBag, Star, Calendar, Share2, Sparkles } from 'lucide-react';
 
 interface ArticleDetailClientProps {
   article: any;
@@ -29,7 +19,7 @@ export default function ArticleDetailClient({ article, initialRecommendedProduct
   const { showToast, setSelectedProduct } = useUi();
   const isRTL = language === 'AR';
 
-  const [copied, setCopied] = useState(false);
+  const [, setCopied] = useState(false);
 
   // Simple Markdown parser
   const parseMarkdownToReact = (text: string) => {

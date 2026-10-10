@@ -20,7 +20,7 @@ export const SkinConcernsSelector: React.FC = () => {
   const { getDisplayImage } = useGalleryOverrides();
 
   const activeSection = settings.homepageSections?.sectionOrder?.find(s => s.type === 'skinConcerns');
-  const customConcerns = settings.customConcerns || [];
+  const customConcerns = useMemo(() => settings.customConcerns || [], [settings.customConcerns]);
 
   const concernsList = useMemo(() => {
     if (customConcerns.length > 0) {

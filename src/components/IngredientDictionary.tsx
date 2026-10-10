@@ -1,11 +1,12 @@
 'use client';
 
+import NextImage from 'next/image';
 import React, { useState } from 'react';
 import { useTranslation } from '@/context/LanguageContext';
 import { useCart } from '@/context/CartContext';
 import { INGREDIENTS_GLOSSARY, Product } from '@/lib/data';
 import { useProducts } from '@/context/ProductsContext';
-import { ShieldCheck, ShoppingBag, Check, Sparkles, FlaskConical, Zap } from 'lucide-react';
+import { ShoppingBag, Check, Sparkles, FlaskConical, Zap } from 'lucide-react';
 import { useUi } from '@/context/UiContext';
 
 export const IngredientDictionary: React.FC = () => {
@@ -309,7 +310,7 @@ export const IngredientDictionary: React.FC = () => {
                           {/* Top row: image + concentration */}
                           <div className="flex items-start gap-2.5">
                             <div className="bg-white border border-slate-200 rounded-[10px] shrink-0 shadow-sm overflow-hidden">
-                              <img
+                              <NextImage unoptimized width={96} height={96}
                                 src={product.image}
                                 alt={product.title}
                                 className="object-cover"

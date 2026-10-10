@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLoyalty, LoyaltyTier } from '@/context/LoyaltyContext';
 import { useTranslation } from '@/context/LanguageContext';
-import { X, Award, Coins, ArrowRight, Check, ShieldCheck, Clock, Ticket, Copy } from 'lucide-react';
+import { X, Award, Coins, ShieldCheck, Clock, Ticket } from 'lucide-react';
 import { useModalAccessibility } from '@/hooks/useModalAccessibility';
 
 interface BeautyWalletDrawerProps {
@@ -43,7 +43,7 @@ export const BeautyWalletDrawer: React.FC<BeautyWalletDrawerProps> = ({ isOpen, 
     }
   }, [isOpen, clientUser, onClose, router]);
 
-  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  (useState<string | null>(null));
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -113,11 +113,7 @@ export const BeautyWalletDrawer: React.FC<BeautyWalletDrawerProps> = ({ isOpen, 
     }
   };
 
-  const handleCopy = (code: string) => {
-    navigator.clipboard.writeText(code);
-    setCopiedCode(code);
-    setTimeout(() => setCopiedCode(null), 2000);
-  };
+
 
   // Get color gradient configurations for the dynamic Loyalty Card
   const getCardStyles = (activeTier: LoyaltyTier) => {

@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffectEvent } from 'react';
+import NextImage from 'next/image';
 import React, { useState, useEffect } from 'react';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { useUi } from '@/context/UiContext';
@@ -17,6 +19,8 @@ interface FloatingBubble {
 export const CartBubbleCoordinator: React.FC = () => {
   const [bubbles, setBubbles] = useState<FloatingBubble[]>([]);
   const { flyToCartTarget, triggerCartJiggle } = useUi();
+
+  const triggerCartJiggleInEffect = useEffectEvent((...args: Parameters<typeof triggerCartJiggle>) => triggerCartJiggle(...args));
 
   useEffect(() => {
     if (!flyToCartTarget) return;
@@ -66,7 +70,7 @@ export const CartBubbleCoordinator: React.FC = () => {
       setBubbles((prev) => prev.filter((b) => b.id !== id));
       
       // Trigger absorption jiggle bounce
-      triggerCartJiggle();
+      triggerCartJiggleInEffect();
     }, 820);
   }, [flyToCartTarget]);
 
@@ -94,7 +98,7 @@ export const CartBubbleCoordinator: React.FC = () => {
             }}
           >
             {getOptimizedImageUrl(bubble.image) ? (
-              <img
+              <NextImage unoptimized width={96} height={96}
                 src={getOptimizedImageUrl(bubble.image)}
                 alt=""
                 className="w-full h-full object-cover rounded-full"

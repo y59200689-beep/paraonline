@@ -4,20 +4,13 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from '@/context/LanguageContext';
 import { Product } from '@/lib/data';
 import { useProducts } from '@/context/ProductsContext';
-import { Check, Sparkles, RefreshCw, ArrowRight } from 'lucide-react';
+import { Check, Sparkles, RefreshCw } from 'lucide-react';
 import { ProductCard } from './ProductCard';
 import { useUi } from '@/context/UiContext';
 import { Magnetic } from './Magnetic';
 import { RoutineDiagnosticIntro } from './RoutineDiagnosticIntro';
 
-const toTitleCase = (str: string) => {
-  if (!str) return '';
-  return str
-    .toLowerCase()
-    .split(/\s+/)
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-};
+
 
 const getProductBadge = (id: number, lang: string): string => {
   const badges: Record<number, { fr: string, ar: string }> = {
@@ -42,7 +35,7 @@ export const SkincareRoutineSteps: React.FC<SkincareRoutineStepsProps> = ({ onOp
   const { language } = useTranslation();
   const { products } = useProducts();
   const { diagnostic, setDiagnostic, setDiagnosticOpen, setSelectedProduct } = useUi();
-  const [isBtnHovered, setIsBtnHovered] = useState(false);
+  const [, setIsBtnHovered] = useState(false);
   
   const isTestCompleted = diagnostic !== null;
   const [activeStep, setActiveStep] = useState<number>(-1);

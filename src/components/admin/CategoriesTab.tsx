@@ -1,5 +1,6 @@
 'use client';
 
+import NextImage from 'next/image';
 import React, { useState, useMemo } from 'react';
 import { useSettings } from '@/context/SettingsContext';
 import { useAdmin } from '@/context/AdminContext';
@@ -56,10 +57,10 @@ export default function CategoriesTab() {
   const [formLogoUrl, setFormLogoUrl] = useState('');
   const [isUploading, setIsUploading] = useState(false);
 
-  const customCategories = settings.customCategories || [];
+  const customCategories = useMemo(() => settings.customCategories || [], [settings.customCategories]);
   const customConcerns = settings.customConcerns || [];
   const brandSection = settings.homepageSections?.sectionOrder?.find((s: any) => s.type === 'brandPartners');
-  const customBrands = brandSection?.settings?.brands || [];
+  const customBrands = useMemo(() => brandSection?.settings?.brands || [], [brandSection?.settings?.brands]);
 
   const categoryLabelFromId = (id: string) => id
     .split(/[-_\s]+/)
@@ -187,7 +188,7 @@ export default function CategoriesTab() {
       } else {
         showToast("Erreur lors de l'importation de l'image.", 'error');
       }
-    } catch (err) {
+    } catch {
       showToast("Erreur de connexion lors de l'importation.", 'error');
     } finally {
       setIsUploading(false);
@@ -331,7 +332,7 @@ export default function CategoriesTab() {
           showToast('Erreur lors de la sauvegarde.', 'error');
         }
       }
-    } catch (err) {
+    } catch {
       showToast('Erreur serveur.', 'error');
     } finally {
       setIsSaving(false);
@@ -419,7 +420,7 @@ export default function CategoriesTab() {
           showToast('Erreur lors de la sauvegarde.', 'error');
         }
       }
-    } catch (err) {
+    } catch {
       showToast('Erreur de connexion.', 'error');
     } finally {
       setIsSaving(false);
@@ -466,7 +467,7 @@ export default function CategoriesTab() {
         await loadProducts();
         showToast('Préoccupation supprimée avec succès.', 'success');
       }
-    } catch (err) {
+    } catch {
       showToast('Erreur lors de la suppression.', 'error');
     }
   };
@@ -616,7 +617,7 @@ export default function CategoriesTab() {
           }
         }
       }
-    } catch (err) {
+    } catch {
       showToast('Erreur lors de la modification de la liaison.', 'error');
     } finally {
       setIsSaving(false);
@@ -1192,7 +1193,7 @@ export default function CategoriesTab() {
                   <div className="flex items-center gap-3">
                     {brand.logoUrl ? (
                       <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 p-1 flex items-center justify-center overflow-hidden shrink-0">
-                        <img src={brand.logoUrl} alt={brand.name} className="object-contain w-full h-full" />
+                        <NextImage unoptimized width={96} height={96} src={brand.logoUrl} alt={brand.name} className="object-contain w-full h-full" />
                       </div>
                     ) : (
                       <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 font-extrabold flex items-center justify-center shrink-0">
@@ -1591,7 +1592,7 @@ export default function CategoriesTab() {
                         adminTheme === 'light' ? 'border-slate-100' : 'border-slate-800'
                       }`}>
                         {p.image ? (
-                          <img src={p.image} alt="" className="w-full h-full object-cover" />
+                          <NextImage unoptimized width={96} height={96} src={p.image} alt="" className="w-full h-full object-cover" />
                         ) : (
                           <Tag className="w-3.5 h-3.5 text-slate-300" />
                         )}

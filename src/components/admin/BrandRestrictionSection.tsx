@@ -1,9 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  Search, Check, Sparkles, AlertCircle, RefreshCw, Layers, ShieldCheck, CheckCircle2, X
-} from 'lucide-react';
+import { Search, Check, AlertCircle, RefreshCw, Layers, ShieldCheck, CheckCircle2, X } from 'lucide-react';
 
 interface BrandItem {
   name: string;
@@ -15,21 +13,7 @@ interface BrandRestrictionSectionProps {
   onSaveSuccess?: () => void;
 }
 
-const TOP_DERMO_BRANDS = [
-  'LA ROCHE POSAY',
-  'VICHY',
-  'EUCERIN',
-  'BIODERMA',
-  'AVENE',
-  'SVR',
-  'URIAGE',
-  'ISDIN',
-  'CERA VE',
-  'MUSTELA',
-  'NOREVA',
-  'ACM',
-  'A-DERMA'
-];
+
 
 export const BrandRestrictionSection: React.FC<BrandRestrictionSectionProps> = ({
   isDark = false,
@@ -108,14 +92,7 @@ export const BrandRestrictionSection: React.FC<BrandRestrictionSectionProps> = (
     setIsDirty(true);
   };
 
-  const selectTopDermo = () => {
-    const matched = allBrands
-      .filter(b => TOP_DERMO_BRANDS.some(top => b.name.toUpperCase().includes(top)))
-      .map(b => b.name);
-    setSelectedBrands(matched.length > 0 ? matched : TOP_DERMO_BRANDS);
-    setIsEnabled(true);
-    setIsDirty(true);
-  };
+
 
   const selectAll = () => {
     setSelectedBrands(allBrands.map(b => b.name));

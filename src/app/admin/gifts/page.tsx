@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+
 import { redirect } from 'next/navigation';
 
 // Redirect /admin/gifts → /admin/loyalty (Cadeaux section)

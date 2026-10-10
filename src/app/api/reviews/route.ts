@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { supabaseAdmin as supabase } from '@/lib/supabase-server';
 import { rateLimit, getClientIp } from '@/lib/rateLimit';
 
 export async function GET(request: Request) {
@@ -31,8 +31,9 @@ export async function GET(request: Request) {
       reply: item.reply
     }));
     return NextResponse.json({ success: true, reviews: formatted });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message || 'Erreur serveur' }, { status: 500 });
+  } catch {
+    console.error('[Reviews] Unable to load approved reviews.');
+    return NextResponse.json({ success: false, error: 'Erreur serveur' }, { status: 500 });
   }
 }
 

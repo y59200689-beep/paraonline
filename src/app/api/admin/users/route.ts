@@ -4,14 +4,14 @@ import { hashPasswordAsync } from '@/lib/session';
 import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { canManageOperators } from '@/lib/permissions';
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const authorization = await authorizeAdminMutation({
       allow: (role) => role === 'owner',
       forbiddenMessage: 'Accès refusé. Propriétaire uniquement.',
     });
     if (!authorization.authorized) return authorization.response;
-    const session = authorization.operator;
+
 
     const { data: operators, error } = await supabase
       .from('operators')

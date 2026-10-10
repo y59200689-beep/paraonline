@@ -5,7 +5,7 @@ import { rateLimit, getClientIp } from '@/lib/rateLimit';
 
 const MAX_MESSAGES = 12;
 const MAX_MESSAGE_LENGTH = 2_000;
-const MAX_CATALOG_PRODUCTS = 300;
+
 
 type ChatMessage = {
   sender?: unknown;

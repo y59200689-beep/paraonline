@@ -1,6 +1,7 @@
-/* eslint-disable react-hooks/set-state-in-effect */
+
 'use client';
 
+import { useEffectEvent } from 'react';
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Product } from '@/lib/data';
 import { useSettings } from './SettingsContext';
@@ -128,6 +129,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   // Load recovery cart from URL if present
+  const showToastInEffect = useEffectEvent((...args: Parameters<typeof showToast>) => showToast(...args));
+
   useEffect(() => {
     if (!isLoaded || productsLoading || typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
@@ -149,7 +152,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (restoredCart.length > 0) {
           saveCartToStorage(restoredCart);
-          showToast(
+          showToastInEffect(
             language === 'AR' ? 'تم استرجاع السلة بنجاح!' : 'Panier récupéré avec succès !',
             'success'
           );
@@ -431,7 +434,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           sunExposure: parsed.sunExposure || ''
         };
       }
-    } catch (e) {}
+    } catch {}
 
     const payload = {
       orderData,

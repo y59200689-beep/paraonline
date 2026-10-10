@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAdmin } from '@/context/AdminContext';
 import { canManageGlobalContent, canEditContent } from '@/lib/permissions';
-import { Navigation, Save, Loader2, Plus, Trash2, Globe } from 'lucide-react';
+import { Save, Loader2, Plus, Trash2 } from 'lucide-react';
 import { BilingualField } from '@/components/admin/ui/BilingualField';
 import { AsyncState } from '@/components/admin/ui/AsyncState';
 import { requestJson } from '@/lib/request-json';
@@ -15,12 +15,7 @@ interface HeaderNavItem {
   href: string;
 }
 
-interface FooterColumn {
-  id: string;
-  heading_fr: string;
-  heading_ar: string;
-  links: { label_fr: string; label_ar: string; href: string }[];
-}
+
 
 export default function ContentGlobalPage() {
   const { currentUser, adminTheme } = useAdmin();
@@ -33,7 +28,7 @@ export default function ContentGlobalPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [saving, setSaving] = useState(false);
-  const [dirty, setDirty] = useState(false);
+  const [, setDirty] = useState(false);
 
   // Form states
   const [storeName, setStoreName] = useState('');

@@ -228,7 +228,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, []);
 
-  const loadProducts = async () => {
+  const loadProducts = useCallback(async () => {
     setIsProductsLoading(true);
     try {
       const res = await fetch('/api/admin/products?limit=20000');
@@ -245,9 +245,9 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } finally {
       setIsProductsLoading(false);
     }
-  };
+  }, []);
 
-  const loadReviews = async () => {
+  const loadReviews = useCallback(async () => {
     setIsReviewsLoading(true);
     try {
       const res = await fetch('/api/admin/reviews');
@@ -257,14 +257,14 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       } else {
         setReviews([]);
       }
-    } catch (e) {
+    } catch {
       setReviews([]);
     } finally {
       setIsReviewsLoading(false);
     }
-  };
+  }, []);
 
-  const loadAuditLogs = async () => {
+  const loadAuditLogs = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/audit-logs');
       const data = await res.json();
@@ -273,10 +273,10 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       } else {
         setAuditLogs([]);
       }
-    } catch (e) {}
-  };
+    } catch {}
+  }, []);
 
-  const loadAbandonedCarts = async () => {
+  const loadAbandonedCarts = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/abandoned-carts');
       const data = await res.json();
@@ -287,10 +287,10 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setAbandonedCarts([]);
         syncRecoveryStatusMap([]);
       }
-    } catch (e) {}
-  };
+    } catch {}
+  }, []);
 
-  const loadDiagnostics = async () => {
+  const loadDiagnostics = useCallback(async () => {
     try {
       const res = await fetch('/api/diagnostics');
       const data = await res.json();
@@ -302,9 +302,9 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } catch (e) {
       console.error("Failed to load diagnostics:", e);
     }
-  };
+  }, []);
 
-  const loadLeads = async () => {
+  const loadLeads = useCallback(async () => {
     try {
       const res = await fetch('/api/leads');
       const data = await res.json();
@@ -316,9 +316,9 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } catch (e) {
       console.error("Failed to load leads:", e);
     }
-  };
+  }, []);
 
-  const loadLoyaltyOverrides = async () => {
+  const loadLoyaltyOverrides = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/loyalty');
       const data = await res.json();
@@ -330,7 +330,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } catch (e) {
       console.error("Failed to load loyalty overrides:", e);
     }
-  };
+  }, []);
 
   const loadOperatorsList = useCallback(async () => {
     if (!currentUser || currentUser.role !== 'owner') return;
@@ -347,7 +347,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [currentUser]);
 
-  const loadAdviceArticles = async () => {
+  const loadAdviceArticles = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/advice');
       const data = await res.json();
@@ -360,9 +360,9 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       console.error("Failed to load advice articles:", e);
       setAdviceArticles([]);
     }
-  };
+  }, []);
 
-  const loadAllData = async () => {
+  const loadAllData = useCallback(async () => {
     setIsDataLoading(true);
     try {
       // 1. Fetch primary orders data first for sub-100ms UI display
@@ -389,7 +389,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         console.error("Background data fetch error:", e);
       });
     }, 50);
-  };
+  }, [loadAbandonedCarts, loadAdviceArticles, loadAuditLogs, loadDiagnostics, loadLeads, loadLoyaltyOverrides, loadOperatorsList, loadOrders, loadProducts, loadReviews]);
 
   useEffect(() => {
     if (isAuthenticated && currentUser?.role === 'owner') {
@@ -422,7 +422,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
   }, [isAuthenticated, loadOrders]);
 
-  const logAdminAction = async (action: string, details: string) => {
+  const logAdminAction = useCallback(async (action: string, details: string) => {
     try {
       const res = await fetch('/api/admin/audit-logs', {
         method: 'POST',
@@ -435,7 +435,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } catch (e) {
       console.error("Failed to write audit log:", e);
     }
-  };
+  }, [loadAuditLogs]);
 
   // ── Memos / Computed Stats definitions ──
   const crmCustomers = useMemo(() => {

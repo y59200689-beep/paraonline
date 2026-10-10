@@ -65,7 +65,7 @@ export const AdminReviewsProvider: React.FC<{ children: React.ReactNode }> = ({ 
       } else {
         showToast(result.error || "Erreur lors de la création de l'avis.", 'error');
       }
-    } catch (e) {
+    } catch {
       showToast("Erreur de connexion lors de la création de l'avis.", 'error');
     }
     return false;
@@ -87,7 +87,7 @@ export const AdminReviewsProvider: React.FC<{ children: React.ReactNode }> = ({ 
         await loadReviews();
         logAdminAction("Modération Avis", `Avis ${id} est passé au statut ${newStatus}.`);
       }
-    } catch (e) {}
+    } catch {}
   };
 
   const handleBulkUpdateReviewStatus = async (status: string, selectedIds: string[]) => {
@@ -111,7 +111,7 @@ export const AdminReviewsProvider: React.FC<{ children: React.ReactNode }> = ({ 
       await loadReviews();
       logAdminAction("Bulk Modération Avis", `${successCount} avis passés au statut ${status}.`);
       showToast(`${successCount} avis mis à jour avec succès.`, 'success');
-    } catch (e) {
+    } catch {
       showToast("Erreur lors de la modération en lot.", 'error');
     } finally {
       setIsDataLoading(false);
@@ -135,7 +135,7 @@ export const AdminReviewsProvider: React.FC<{ children: React.ReactNode }> = ({ 
         logAdminAction("Réponse à un Avis", `Réponse ajoutée à l'avis ${reviewId}.`);
         return true;
       }
-    } catch (e) {}
+    } catch {}
     return false;
   };
 
@@ -151,7 +151,7 @@ export const AdminReviewsProvider: React.FC<{ children: React.ReactNode }> = ({ 
         await loadReviews();
         logAdminAction("Suppression Avis", `Avis ${id} supprimé.`);
       }
-    } catch (e) {}
+    } catch {}
   };
 
   const handleUpdateReview = async (
@@ -183,7 +183,7 @@ export const AdminReviewsProvider: React.FC<{ children: React.ReactNode }> = ({ 
       } else {
         showToast(data.error || "Erreur lors de la modification de l'avis.", 'error');
       }
-    } catch (e) {
+    } catch {
       showToast("Erreur de connexion lors de la modification de l'avis.", 'error');
     }
     return false;

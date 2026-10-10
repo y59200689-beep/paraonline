@@ -4,7 +4,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useCart, CartProvider } from '../context/CartContext';
 import { useLoyalty, LoyaltyProvider } from '../context/LoyaltyContext';
-import { useSettings, SettingsProvider } from '../context/SettingsContext';
+import { SettingsProvider } from '../context/SettingsContext';
 import { useUi, UiProvider } from '../context/UiContext';
 import { LanguageProvider } from '../context/LanguageContext';
 import { ThemeProvider } from '../context/ThemeContext';
@@ -14,6 +14,9 @@ import { CompareProvider } from '../context/CompareContext';
 import { WishlistProvider } from '../context/WishlistContext';
 import { ProductsProvider } from '../context/ProductsContext';
 import { PRODUCTS_DB } from '../lib/data';
+
+// Standalone provider tests supply the App Router available in the application.
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 // Helper to wrap providers
 const AllProvidersWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {

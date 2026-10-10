@@ -2,28 +2,10 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
-import { 
-  TrendingUp, 
-  AlertTriangle, 
-  CheckCircle2, 
-  Printer, 
-  ArrowLeft, 
-  FileText, 
-  Settings, 
-  Filter, 
-  Plus, 
-  Search, 
-  DollarSign, 
-  AlertCircle, 
-  Truck, 
-  Percent,
-  Calendar,
-  X,
-  FileDown
-} from 'lucide-react';
+import { TrendingUp, Printer, ArrowLeft, FileText, Search, AlertCircle, X, FileDown } from 'lucide-react';
 import { useAdmin } from '@/context/AdminContext';
 import { Product } from '@/lib/data';
-import { StatusBadge, EmptyState } from '@/components/admin/ui';
+import { StatusBadge } from '@/components/admin/ui';
 
 interface RestockProduct extends Omit<Product, 'status'> {
   totalSold: number;
@@ -35,21 +17,12 @@ interface RestockProduct extends Omit<Product, 'status'> {
 }
 
 export default function RestockForecastingTab() {
-  const { 
-    products, 
-    orders, 
-    currentUser, 
-    adminTheme, 
-    isDataLoading,
-    logAdminAction,
-    loadOrders,
-    loadProducts
-  } = useAdmin();
+  const { products, orders, currentUser, adminTheme, logAdminAction, loadOrders, loadProducts } = useAdmin();
 
   useEffect(() => {
     loadOrders();
     loadProducts();
-  }, []);
+  }, [loadOrders, loadProducts]);
 
   // Role safety permission
   const isReadOnly = currentUser?.role === 'support';

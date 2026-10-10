@@ -1,50 +1,16 @@
 'use client';
 
+import NextImage from 'next/image';
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { buildWhatsAppUrl } from '@/lib/whatsapp-link';
 import { createPortal } from 'react-dom';
-import { 
-  ShoppingBag, 
-  ShoppingCart, 
-  Truck, 
-  TrendingUp, 
-  BarChart2, 
-  ClipboardList, 
-  Search, 
-  FileText, 
-  MessageSquare, 
-  RefreshCw, 
-  DollarSign, 
-  AlertTriangle, 
-  CheckCircle, 
-  ExternalLink, 
-  Printer, 
-  X, 
-  Command, 
-  Trash2,
-  ArrowLeft,
-  Phone,
-  User,
-  Copy,
-  Plus,
-  Minus,
-  Gift,
-  CreditCard,
-  Wallet,
-  Zap,
-  Activity,
-  Send,
-  KanbanSquare,
-  List,
-  ChevronDown,
-  Check
-} from 'lucide-react';
+import { ShoppingBag, ShoppingCart, Truck, TrendingUp, BarChart2, ClipboardList, Search, FileText, MessageSquare, RefreshCw, DollarSign, AlertTriangle, CheckCircle, ExternalLink, Printer, X, Trash2, ArrowLeft, User, Copy, Plus, Minus, Gift, CreditCard, Wallet, Zap, Activity, Send, KanbanSquare, List, ChevronDown, Check } from 'lucide-react';
 import { useAdmin, Order, AbandonedCart } from '@/context/AdminContext';
 import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 import { PRODUCTS_DB } from '@/lib/data';
 import { useAdminUI } from '@/app/admin/AdminUIContext';
-import { ConfirmDialog, StatusBadge } from '@/components/admin/ui';
+import { ConfirmDialog } from '@/components/admin/ui';
 import { canDeleteOrders, canEditOrders, canManageCouriers, isViewerOnly, type AdminRole } from '@/lib/permissions';
 
 const ORDER_STATUS_OPTIONS = [
@@ -216,7 +182,7 @@ export default function OrdersTab() {
   const viewerOnly = role ? isViewerOnly(role) : false;
 
   // Reconciliation subtab states
-  const [reconciliationFile, setReconciliationFile] = useState<File | null>(null);
+  const [, setReconciliationFile] = useState<File | null>(null);
   const [reconciliationRows, setReconciliationRows] = useState<any[]>([]);
   const [reconciliationFilter, setReconciliationFilter] = useState<'ALL' | 'PERFECT' | 'DISCREPANCY' | 'NOT_FOUND'>('ALL');
   const [isDragOver, setIsDragOver] = useState(false);
@@ -1369,7 +1335,7 @@ export default function OrdersTab() {
                                 background: isDark ? 'rgba(255,255,255,0.04)' : '#f8fafc',
                               }}
                             >
-                              <img
+                              <NextImage unoptimized width={96} height={96}
                                 src={itemImg}
                                 alt={item.title}
                                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
@@ -1400,7 +1366,7 @@ export default function OrdersTab() {
                                 const stock = matchingProd?.stock;
                                 const isOutOfStock = stock !== undefined && stock <= 0;
                                 const isLowStock = stock !== undefined && stock > 0 && stock <= 3;
-                                const isGoodStock = stock !== undefined && stock > 3;
+
                                 const stockColor = isOutOfStock
                                   ? (isDark ? '#fca5a5' : '#dc2626')
                                   : isLowStock
@@ -1615,7 +1581,7 @@ export default function OrdersTab() {
                               >
                                 {/* Thumbnail */}
                                 {prodImg ? (
-                                  <img src={prodImg} alt={prodName} className="w-8 h-8 rounded-lg object-cover shrink-0" />
+                                  <NextImage unoptimized width={96} height={96} src={prodImg} alt={prodName} className="w-8 h-8 rounded-lg object-cover shrink-0" />
                                 ) : (
                                   <div className="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center text-[10px]" style={{ background: isDark ? 'rgba(255,255,255,0.06)' : '#e5e7eb' }}>
                                     📦
@@ -2945,7 +2911,7 @@ export default function OrdersTab() {
 
                     {/* A6 Printable Cards Grid */}
                     <div className="space-y-8 print:space-y-0 print:block">
-                      {selectedOrdersList.map((ord, idx) => (
+                      {selectedOrdersList.map((ord) => (
                         <div
                           key={ord.order_id}
                           className="bg-white text-slate-950 rounded-2xl p-6 border-2 border-slate-900 shadow-md max-w-[400px] mx-auto print:max-w-none print:w-[100mm] print:h-[150mm] print:m-0 print:p-4 print:rounded-none print:border-2 print:border-black print:page-break-after-always flex flex-col justify-between"

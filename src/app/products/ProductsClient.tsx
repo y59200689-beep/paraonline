@@ -57,17 +57,7 @@ const categoryLabelFromId = (id: string) => id
   .map(part => part.charAt(0).toUpperCase() + part.slice(1))
   .join(' ');
 
-const productCategoryIds = (product: Product) => {
-  const categories = Array.isArray(product.categories) && product.categories.length > 0
-    ? product.categories
-    : [product.category];
 
-  return Array.from(new Set(
-    categories
-      .map(category => String(category || '').trim().toLowerCase())
-      .filter(Boolean)
-  ));
-};
 
 const getProductMatchScore = (product: Product, diagnostic: any) => {
   if (!diagnostic || !isDiagnosticProductEligible(product)) return null;
@@ -150,8 +140,8 @@ export default function ProductsClient({
   const { diagnostic } = useUi();
   const { settings } = useSettings();
 
-  const customCategories = settings.customCategories || [];
-  const customConcerns = settings.customConcerns || [];
+  const customCategories = useMemo(() => settings.customCategories || [], [settings.customCategories]);
+  const customConcerns = useMemo(() => settings.customConcerns || [], [settings.customConcerns]);
 
   const CATEGORIES_LIST = useMemo(() => {
     const categoryCountsById = new Map(

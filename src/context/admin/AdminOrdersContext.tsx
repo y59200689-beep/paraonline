@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback } from 'react';
 import React, { createContext, useContext, useMemo } from 'react';
 import { useAdminAuth } from './AdminAuthContext';
 import { useAdminData } from './AdminDataContext';
@@ -39,7 +40,7 @@ export const AdminOrdersProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const { orders, setOrders, loadOrders, logAdminAction, setIsDataLoading } = useAdminData();
   const { settings } = useSettings();
 
-  const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
+  const handleUpdateOrderStatus = useCallback(async (orderId: string, newStatus: string) => {
     try {
       const res = await fetch('/api/admin/orders', {
         method: 'PUT',
@@ -58,12 +59,12 @@ export const AdminOrdersProvider: React.FC<{ children: React.ReactNode }> = ({ c
       } else {
         alert("Erreur: " + data.error);
       }
-    } catch (e) {
+    } catch {
       alert("Erreur réseau");
     }
-  };
+  }, [loadOrders, logAdminAction]);
 
-  const handleBulkUpdateOrderStatus = async (status: string, selectedIds: string[]) => {
+  const handleBulkUpdateOrderStatus = useCallback(async (status: string, selectedIds: string[]) => {
     if (selectedIds.length === 0) return;
     setIsDataLoading(true);
     try {
@@ -87,14 +88,14 @@ export const AdminOrdersProvider: React.FC<{ children: React.ReactNode }> = ({ c
       await loadOrders();
       logAdminAction("Bulk Statut Commande Modifié", `${successCount} commandes passées au statut ${status}.`);
       alert(`${successCount} commandes mises à jour avec succès.`);
-    } catch (e) {
+    } catch {
       alert("Erreur lors de la mise à jour en lot.");
     } finally {
       setIsDataLoading(false);
     }
-  };
+  }, [loadOrders, logAdminAction, setIsDataLoading]);
 
-  const handleDeleteOrder = async (orderId: string) => {
+  const handleDeleteOrder = useCallback(async (orderId: string) => {
     if (currentUser?.role !== 'owner') {
       alert("Permission refusée : Seul le propriétaire de la boutique (Owner) peut supprimer des commandes.");
       return;
@@ -113,12 +114,12 @@ export const AdminOrdersProvider: React.FC<{ children: React.ReactNode }> = ({ c
       } else {
         alert("Erreur: " + data.error);
       }
-    } catch (e) {
+    } catch {
       alert("Erreur réseau");
     }
-  };
+  }, [currentUser?.role, loadOrders, logAdminAction]);
 
-  const handleRegisterShipping = async (shippingData: {
+  const handleRegisterShipping = useCallback(async (shippingData: {
     orderId: string;
     courierName: 'yalidine' | 'cathedis';
     codAmount: number;
@@ -163,13 +164,13 @@ export const AdminOrdersProvider: React.FC<{ children: React.ReactNode }> = ({ c
         alert("Erreur lors de l'enregistrement de l'expédition : " + data.error);
         return null;
       }
-    } catch (err) {
+    } catch {
       alert("Erreur de communication.");
       return null;
     }
-  };
+  }, [currentUser?.role, loadOrders, logAdminAction]);
 
-  const handleSyncCourierStatuses = async () => {
+  const handleSyncCourierStatuses = useCallback(async () => {
     const activeShippedOrders = orders.filter(
       (o) => o.status === 'Shipped' && o.tracking_number && o.courier
     );
@@ -249,9 +250,9 @@ export const AdminOrdersProvider: React.FC<{ children: React.ReactNode }> = ({ c
     } finally {
       setIsDataLoading(false);
     }
-  };
+  }, [logAdminAction, orders, setIsDataLoading, setOrders, settings.cathedisApiKey, settings.courierMode, settings.yalidineApiId, settings.yalidineApiKey]);
 
-  const handleReconcileOrders = async (reconciliations: any[]): Promise<boolean> => {
+  const handleReconcileOrders = useCallback(async (reconciliations: any[]): Promise<boolean> => {
     setIsDataLoading(true);
     try {
       const res = await fetch('/api/admin/orders/reconcile', {
@@ -299,7 +300,7 @@ export const AdminOrdersProvider: React.FC<{ children: React.ReactNode }> = ({ c
     } finally {
       setIsDataLoading(false);
     }
-  };
+  }, [loadOrders, logAdminAction, setIsDataLoading]);
 
   const shippingStats = useMemo(() => {
     const shippedOrders = orders.filter(o => o.courier);

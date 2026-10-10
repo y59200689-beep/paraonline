@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   try {
     const authorization = await authorizeAdminMutation();
     if (!authorization.authorized) return authorization.response;
-    const session = authorization.operator;
+
 
     const { phone, message, templateName, orderId } = await request.json();
 

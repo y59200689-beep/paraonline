@@ -1,6 +1,7 @@
-/* eslint-disable react-hooks/set-state-in-effect */
+
 'use client';
 
+import { useEffectEvent } from 'react';
 import React, { useState, useEffect, useRef } from 'react';
 import { Product, INGREDIENTS_GLOSSARY } from '@/lib/data';
 import { useCart } from '@/context/CartContext';
@@ -40,7 +41,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen,
   const modalRef = useModalAccessibility<HTMLDivElement>(isVisible && modalState !== 'closing', onClose);
 
   const [liveProduct, setLiveProduct] = useState<Product | null>(null);
-  const [isLiveLoading, setIsLiveLoading] = useState(false);
+  const [, setIsLiveLoading] = useState(false);
 
   // Reviews states and functions
   const [reviews, setReviews] = useState<any[]>([]);
@@ -95,9 +96,11 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen,
     }
   };
 
+  const fetchReviewsInEffect = useEffectEvent((...args: Parameters<typeof fetchReviews>) => fetchReviews(...args));
+
   useEffect(() => {
     if (activeTab === 'reviews' && product) {
-      fetchReviews();
+      fetchReviewsInEffect();
     }
   }, [activeTab, product]);
 

@@ -35,7 +35,7 @@ it('shows the brand name instead of falling back after explicit removal', () => 
 });
 it('uses a bundled official logo for known brands and a readable fallback on failure', () => {
   render(<BrandLogoCard brand={{ name: 'CeraVe', domain: 'cerave.com', logo_url: '' }} />);
-  expect(screen.getByRole('img').getAttribute('src')).toBe('/images/brands/cerave-official.svg');
+  expect(new URL(screen.getByRole('img').getAttribute('src')!, window.location.origin).pathname).toBe('/images/brands/cerave-official.svg');
   fireEvent.error(screen.getByRole('img'));
   expect(screen.queryByRole('img')).toBeNull();
   expect(screen.getByText('CeraVe')).toBeTruthy();

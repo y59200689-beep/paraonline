@@ -124,7 +124,7 @@ export function verifySessionToken(token: string): any {
       }
       return payload;
     }
-  } catch (e) {}
+  } catch {}
   return null;
 }
 
@@ -132,7 +132,9 @@ export function verifySessionToken(token: string): any {
  * Extract, verify, and return user profile details from the session cookie.
  * This function automatically rotates the session token if more than half of its lifetime has elapsed.
  */
-export async function verifyAdminSession(req?: any) {
+export async function verifyAdminSession(req?: Request) {
+  // Sessions are cookie-based; keep the request argument for existing callers.
+  void req;
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('admin_session')?.value;
@@ -146,6 +148,7 @@ export async function verifyAdminSession(req?: any) {
     const remaining = payload.exp - Date.now();
     if (remaining > 0 && remaining < 3.5 * 24 * 60 * 60 * 1000) {
       const { exp, ...cleanPayload } = payload;
+      void exp;
       const newToken = createSessionToken(cleanPayload);
       cookieStore.set('admin_session', newToken, {
         httpOnly: true,
@@ -157,7 +160,7 @@ export async function verifyAdminSession(req?: any) {
     }
 
     return payload;
-  } catch (e) {
+  } catch {
     return null;
   }
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import NextImage from 'next/image';
 import { useState } from 'react';
 import { brandLogoSrc } from '@/lib/brand-logo';
 
@@ -22,8 +23,8 @@ export function BrandLogo({ name, domain, logo, className, fallbackSrc, artworkB
     const scale = Math.min(128 / artworkWidth, 44 / artworkHeight);
     // Frame the artwork, not the source canvas. Only empty outer margins are hidden.
     return <span style={{ position: 'relative', display: 'block', flexShrink: 0, overflow: 'hidden', width: artworkWidth * scale, height: artworkHeight * scale }}>
-      <img src={displaySrc} alt={name} loading="lazy" onError={onError} style={{ position: 'absolute', width: width * scale, height: height * scale, maxWidth: 'none', left: -left * scale, top: -top * scale }} />
+      <NextImage unoptimized width={width} height={height} src={displaySrc} alt={name} loading="lazy" onError={onError} style={{ position: 'absolute', width: width * scale, height: height * scale, maxWidth: 'none', left: -left * scale, top: -top * scale }} />
     </span>;
   }
-  return <img src={displaySrc} alt={name} className={className || 'w-full h-full object-contain p-2'} loading="lazy" onError={onError} />;
+  return <NextImage unoptimized width={96} height={96} src={displaySrc} alt={name} className={className || 'w-full h-full object-contain p-2'} loading="lazy" onError={onError} />;
 }

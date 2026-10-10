@@ -35,7 +35,7 @@ export const AdminOperatorsProvider: React.FC<{ children: React.ReactNode }> = (
       } else {
         showToast("Erreur: " + data.error, 'error');
       }
-    } catch (e) {
+    } catch {
       showToast("Erreur de communication.", 'error');
     }
     return false;
@@ -58,7 +58,7 @@ export const AdminOperatorsProvider: React.FC<{ children: React.ReactNode }> = (
       } else {
         showToast("Erreur: " + data.error, 'error');
       }
-    } catch (e) {
+    } catch {
       showToast("Erreur de communication.", 'error');
     }
   };

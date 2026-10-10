@@ -1,3 +1,4 @@
+import NextImage from 'next/image';
 import React from 'react';
 import Image from 'next/image';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
@@ -44,7 +45,7 @@ export const HorizontalPromoBanner: React.FC<HorizontalPromoBannerProps> = ({ se
             ) : (
               // Custom background with left-to-right gradient overlay to ensure text contrast
               <div className="w-full h-full relative">
-                <img
+                <NextImage unoptimized width={96} height={96}
                   src={getOptimizedImageUrl(bgImage)}
                   alt=""
                   aria-hidden

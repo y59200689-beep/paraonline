@@ -59,30 +59,16 @@ const renderHighlightedTitle = (title: string, query?: string) => {
   );
 };
 
-export const ProductCard: React.FC<ProductCardProps> = ({ 
-  product, 
-  onOpenQuickView,
-  className,
-  style,
-  customBadge,
-  imageOverlay,
-  showMatchScore = false,
-  searchQuery,
-  singleImage = false,
-  priority = false,
-  compact = false,
-  ingredientLayout = false,
-  galleryKeyPrefix,
-}) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickView, className, style, imageOverlay, showMatchScore = false, searchQuery, singleImage = false, priority = false, compact = false, ingredientLayout = false, galleryKeyPrefix }) => {
   const { addToCart } = useCart();
   const { language } = useTranslation();
   const { convertPrice } = useCurrency();
-  const { settings } = useSettings();
+  (useSettings());
   const { getDisplayImage } = useGalleryOverrides();
-  const lowStockThreshold = settings.lowStockThreshold || 5;
+
   const { toggleWishlist, isInWishlist } = useWishlist();
   const isFavorite = isInWishlist(product.id);
-  const { amPmState } = useAmPm();
+  useAmPm();
   const { diagnostic, triggerFlyToCart, setSelectedProduct } = useUi();
 
   const [imgError, setImgError] = useState(false);
@@ -101,14 +87,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     }
   }, [ripples]);
 
-  const handleRippleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    const button = e.currentTarget;
-    const rect = button.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const size = Math.max(rect.width, rect.height) * 2;
-    setRipples(prev => [...prev, { id: Date.now() + Math.random(), x: x - size / 2, y: y - size / 2, size }]);
-  };
+
 
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -192,9 +171,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   };
 
   const matchScore = getMatchScore();
-  const matchReason = getMatchReason();
+  (getMatchReason());
   const canShowMatchScore = showMatchScore && isDiagnosticProductEligible(product);
-  const isRTL = language === 'AR';
+
 
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -213,29 +192,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     ? Math.round((1 - product.price / product.comparePrice) * 100)
     : null;
 
-  const vendorLower = (product.vendor || '').toLowerCase();
-  const isKBeauty = ['anua', 'beauty of joseon', 'skin1004', 'hada labo tokyo'].includes(vendorLower);
-  const isBestSeller = product.rating >= 4.8;
-  const isSolaire = product.tags.includes('solaire') || product.nameFr?.toLowerCase().includes('solaire') || product.name?.toLowerCase().includes('sun');
 
-  const highlightTag = isKBeauty 
-    ? (language === 'FR' ? 'K-Beauty' : 'جمال كوري')
-    : isBestSeller 
-      ? (language === 'FR' ? 'Best-Seller' : 'الأكثر مبيعاً')
-      : isSolaire
-        ? (language === 'FR' ? 'Solaire' : 'واqui شمس')
-        : (language === 'FR' ? 'Nouveau' : 'جديد');
 
-  const isUrgent = discount && discount >= 20;
-  const isAMState = amPmState === 'am';
 
-  const isDayProduct = isSolaire || product.tags.includes('jour') || product.nameFr?.toLowerCase().includes('jour') || product.nameFr?.toLowerCase().includes('bright') || product.nameFr?.toLowerCase().includes('vitamine c') || product.id === 3 || product.id === 7 || product.id === 14 || product.id === 17 || product.id === 13 || product.id === 1;
-  const isNightProduct = product.tags.includes('nuit') || product.nameFr?.toLowerCase().includes('nuit') || product.nameFr?.toLowerCase().includes('night') || product.id === 8 || product.id === 5 || product.id === 22 || product.id === 15 || product.id === 16 || product.id === 6;
 
-  const routineLabelFr = isDayProduct && isNightProduct ? 'Jour & Nuit' : isDayProduct ? 'Soin de Jour' : 'Soin de Nuit';
-  const routineLabelAr = isDayProduct && isNightProduct ? 'نهاراً وليلاً' : isDayProduct ? 'عناية نهارية' : 'عناية ليلية';
 
-  const isMatchingTime = (isAMState && isDayProduct) || (!isAMState && isNightProduct);
+
+
+
+
+
+
+
+
+
+
+
 
   const getKeyIngredients = () => {
     if (!product.ingredients) return [];
@@ -260,7 +232,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     
     return found.slice(0, 2);
   };
-  const keyIngredients = getKeyIngredients();
+  (getKeyIngredients());
 
   const getCategoryLabel = () => {
     const cat = product.category.toLowerCase();
@@ -272,7 +244,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     return product.vendor;
   };
 
-  const categoryLabel = getCategoryLabel();
+  (getCategoryLabel());
 
   const primaryImageSrc = (!product.image || imgError)
     ? placeholderSvg

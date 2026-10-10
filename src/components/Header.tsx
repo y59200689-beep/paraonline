@@ -1,4 +1,4 @@
-/* eslint-disable react-hooks/set-state-in-effect */
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -195,7 +195,7 @@ export const Header: React.FC = () => {
     };
     document.addEventListener('mousedown', handle);
     return () => document.removeEventListener('mousedown', handle);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, []);
 
   // ── Handlers ───────────────────────────────────────────────────────────────
@@ -335,7 +335,7 @@ export const Header: React.FC = () => {
                 // The portal tab is initialized from the URL. A document
                 // navigation keeps this reliable even when the header is
                 // clicked while the customer portal is already mounted.
-                window.location.assign('/customer?tab=favoris');
+                router.push('/customer?tab=favoris');
               }}
             />
           </div>

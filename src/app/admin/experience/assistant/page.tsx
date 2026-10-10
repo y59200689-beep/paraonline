@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAdmin } from '@/context/AdminContext';
 import { canManageChat, canEditContent } from '@/lib/permissions';
-import { MessageSquare, Save, Loader2, Sparkles, Plus, Trash2, HelpCircle } from 'lucide-react';
+import { Save, Loader2, Plus, Trash2 } from 'lucide-react';
 import { BilingualField } from '@/components/admin/ui/BilingualField';
 import { BrandRestrictionSection } from '@/components/admin/BrandRestrictionSection';
 import { AsyncState } from '@/components/admin/ui/AsyncState';

@@ -1,16 +1,12 @@
 'use client';
 
+import { useEffectEvent } from 'react';
+import NextImage from 'next/image';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+
 import { useSearchParams } from 'next/navigation';
-import { 
-  Search, PackageCheck, Sparkles, Truck, MapPin, ShieldCheck, 
-  Copy, Check, PhoneCall, RefreshCw, FileText, 
-  Clock, AlertCircle, ArrowLeft, ChevronRight, MessageCircle,
-  QrCode, SlidersHorizontal, Printer, User,
-  Calendar, CheckCircle2, X, Navigation, Shield, Activity, Compass, Box
-} from 'lucide-react';
+import { Search, PackageCheck, Sparkles, Truck, MapPin, ShieldCheck, Copy, Check, RefreshCw, FileText, Clock, AlertCircle, ArrowLeft, ChevronRight, MessageCircle, QrCode, SlidersHorizontal, Printer, User, Calendar, CheckCircle2, X, Navigation, Activity, Compass, Box } from 'lucide-react';
 import { ShopShell } from '@/components/ShopShell';
 import { PRODUCTS_DB } from '@/lib/data';
 import { useTranslation } from '@/context/LanguageContext';
@@ -148,6 +144,8 @@ export default function SuiviCommandeClient() {
 
   const isRTL = language === 'AR';
 
+  const handleSearchInEffect = useEffectEvent((...args: Parameters<typeof handleSearch>) => handleSearch(...args));
+
   useEffect(() => {
     const savedToken = initialQuery && typeof window !== 'undefined'
       ? sessionStorage.getItem(`orderTrackingToken:${initialQuery}`)
@@ -157,7 +155,7 @@ export default function SuiviCommandeClient() {
     const token = initialToken || savedToken;
     if (initialQuery) {
       setTrackingToken(token);
-      handleSearch(initialQuery, token);
+      handleSearchInEffect(initialQuery, token);
     } else {
       setOrder(null);
     }
@@ -980,7 +978,7 @@ export default function SuiviCommandeClient() {
                           <div key={idx} className="py-4 first:pt-0 last:pb-0 flex items-center justify-between gap-4">
                             <div className="flex items-center gap-4">
                               <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden relative shrink-0 flex items-center justify-center p-1 shadow-inner">
-                                <img
+                                <NextImage unoptimized width={96} height={96}
                                   src={imgUrl}
                                   alt={item.title}
                                   className="w-full h-full object-contain rounded-xl"

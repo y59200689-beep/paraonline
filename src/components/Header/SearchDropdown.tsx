@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-import { Search, ShoppingBag, X } from 'lucide-react';
+import { ShoppingBag, X } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Product, INGREDIENTS_GLOSSARY } from '@/lib/data';
+import { Product } from '@/lib/data';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { PRODUCT_IMAGE_FALLBACK } from '@/lib/public-images';
 
@@ -23,20 +23,7 @@ interface SearchDropdownProps {
   onSetSearchQuery: (q: string) => void;
 }
 
-export const SearchDropdown: React.FC<SearchDropdownProps> = ({
-  showSearch,
-  searchQuery,
-  searchResults,
-  matchedIngredients,
-  language,
-  isRTL,
-  convertPrice,
-  onSuggestionClick,
-  onIngredientClick,
-  onQuickAdd,
-  onOpenDiagnostic,
-  onSetSearchQuery,
-}) => {
+export const SearchDropdown: React.FC<SearchDropdownProps> = ({ showSearch, searchQuery, searchResults, language, isRTL, convertPrice, onSuggestionClick, onQuickAdd }) => {
   if (!showSearch || !searchQuery.trim()) return null;
 
   return (

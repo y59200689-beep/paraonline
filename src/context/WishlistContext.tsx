@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { Product, PRODUCTS_DB } from '@/lib/data';
 import { supabase } from '@/lib/supabase';
@@ -25,6 +26,7 @@ const WishlistContext = createContext<WishlistContextProps | undefined>(undefine
 const STORAGE_KEY = 'wishlistBM';
 
 export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const router = useRouter();
   const [wishlist, setWishlist] = useState<Product[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isAuthPromptOpen, setIsAuthPromptOpen] = useState(false);
@@ -246,7 +248,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 onClick={() => {
                   setIsAuthPromptOpen(false);
                   if (typeof window !== 'undefined') {
-                    window.location.href = '/customer';
+                    router.push('/customer');
                   }
                 }}
                 className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xs uppercase tracking-widest transition-all duration-300 shadow-lg active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer border-0"

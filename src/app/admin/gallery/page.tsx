@@ -1,20 +1,9 @@
 'use client';
 
+import NextImage from 'next/image';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAdmin } from '@/context/AdminContext';
-import {
-  Images,
-  Upload,
-  Camera,
-  CheckCircle2,
-  X,
-  RefreshCw,
-  AlertCircle,
-  Filter,
-  ChevronDown,
-  Layers,
-  Maximize2,
-} from 'lucide-react';
+import { Images, Upload, Camera, CheckCircle2, X, RefreshCw, AlertCircle, Filter, Layers, Maximize2 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -110,7 +99,7 @@ interface ImageCardProps {
   onCancelPending: (key: string) => void;
 }
 
-function ImageCard({ image, isDark, pending, uploading, onPick, onCancelPending }: ImageCardProps) {
+function ImageCard({ image, isDark, pending, onPick, onCancelPending }: ImageCardProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [imgError, setImgError] = useState(false);
@@ -171,7 +160,7 @@ function ImageCard({ image, isDark, pending, uploading, onPick, onCancelPending 
       >
         {/* Actual image */}
         {!imgError ? (
-          <img
+          <NextImage unoptimized width={96} height={96}
             src={displayUrl}
             alt={image.label}
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-500"

@@ -3,16 +3,17 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '@/context/LanguageContext';
 import { useCart } from '@/context/CartContext';
-import { useWishlist } from '@/context/WishlistContext';
+
 import { useUi } from '@/context/UiContext';
 import { useLoyalty } from '@/context/LoyaltyContext';
 import { usePathname, useRouter } from 'next/navigation';
-import { Product } from '@/lib/data';
+
 import { ShoppingBag, Home as HomeIcon, Store, Sparkles } from 'lucide-react';
 
 // Component Imports
 import dynamic from 'next/dynamic';
 
+// Component Imports
 // Component Imports
 import { Header } from './Header';
 import { StorefrontFooter } from './StorefrontFooter';
@@ -35,8 +36,8 @@ interface ShopShellProps {
 }
 
 export const ShopShell: React.FC<ShopShellProps> = ({ children, hideHeader, hideFooter, hideMobileNav = false }) => {
-  const { t, language } = useTranslation();
-  const { clientUser } = useLoyalty();
+  const { language } = useTranslation();
+  (useLoyalty());
   const { cart, isCartOpen, setIsCartOpen } = useCart();
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const pathname = usePathname();

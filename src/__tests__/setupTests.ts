@@ -29,7 +29,7 @@ class BroadcastChannelMock {
     BroadcastChannelMock.instances.push(this);
   }
 
-  postMessage(_data: any) {
+  postMessage() {
     // No-op to avoid message loops within the same test context
   }
 

@@ -5,42 +5,7 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useAdmin } from '@/context/AdminContext';
 import { useSettings } from '@/context/SettingsContext';
-import {
-  LayoutDashboard,
-  ShoppingBag,
-  Package,
-  Users,
-  Star,
-  Sliders,
-  Award,
-  LogOut,
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-  BarChart2,
-  Ticket,
-  Images,
-  FileText,
-  Layers,
-  Globe,
-  Navigation,
-  Languages,
-  SearchCode,
-  Brain,
-  MessageSquare,
-  Truck,
-  CreditCard,
-  Plug,
-  UserCog,
-  ScrollText,
-  Gift,
-  Tag,
-  BookOpen,
-  Shield,
-  Code,
-  PackageCheck,
-  Clock,
-} from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Package, Users, Star, Sliders, Award, LogOut, ChevronLeft, ChevronRight, ChevronDown, BarChart2, Ticket, Images, FileText, Layers, Navigation, Languages, SearchCode, Brain, MessageSquare, Truck, CreditCard, Plug, UserCog, ScrollText, Gift, Tag, BookOpen, Code, PackageCheck, Clock } from 'lucide-react';
 import {
   canEditContent,
   canManageBrands,
@@ -74,23 +39,9 @@ interface NavItem {
   roleCheck?: boolean;
 }
 
-interface NavGroup {
-  label?: string;
-  items: NavItem[];
-  collapsible?: boolean;
-  defaultOpen?: boolean;
-  groupId?: string;
-}
 
-export const Sidebar: React.FC<SidebarProps> = ({
-  activeTab,
-  setActiveTab,
-  sidebarCollapsed,
-  setSidebarCollapsed,
-  isMobileDrawerOpen,
-  setIsMobileDrawerOpen,
-  mobileTriggerRef,
-}) => {
+
+export const Sidebar: React.FC<SidebarProps> = ({ setActiveTab, sidebarCollapsed, setSidebarCollapsed, isMobileDrawerOpen, setIsMobileDrawerOpen, mobileTriggerRef }) => {
   const { orders, reviews, currentUser, adminTheme, handleLogout } = useAdmin();
   const { settings } = useSettings();
   const pathname = usePathname();
@@ -123,12 +74,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
   useEffect(() => {
     if (!isMobileDrawerOpen) return;
     const previousOverflow = document.body.style.overflow;
+    const mobileTrigger = mobileTriggerRef?.current;
     document.body.style.overflow = 'hidden';
     const firstLink = document.querySelector<HTMLElement>('[data-admin-mobile-nav] a, [data-admin-mobile-nav] button');
     window.setTimeout(() => firstLink?.focus(), 0);
     return () => {
       document.body.style.overflow = previousOverflow;
-      mobileTriggerRef?.current?.focus();
+      mobileTrigger?.focus();
     };
   }, [isMobileDrawerOpen, mobileTriggerRef]);
 

@@ -2,26 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAdmin } from '@/context/AdminContext';
-import {
-  Shield,
-  ShieldAlert,
-  Search,
-  Users,
-  Calendar,
-  FileSpreadsheet,
-  RefreshCw,
-  Lock,
-  AlertCircle,
-  X,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  ListFilter,
-  Clock,
-  LayoutGrid,
-  History,
-  Activity
-} from 'lucide-react';
+import { Shield, ShieldAlert, Search, Users, Calendar, FileSpreadsheet, RefreshCw, Lock, X, ChevronLeft, ChevronRight, Eye, ListFilter, Clock, LayoutGrid, History, Activity } from 'lucide-react';
 import { StatusBadge, EmptyState } from '@/components/admin/ui';
 
 export default function AuditLogsTab() {

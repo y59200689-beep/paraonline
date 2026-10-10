@@ -143,22 +143,7 @@ const HARD_STOP_TERMS = [
   'gelules', 'comprimes', 'capsules', 'sirop', 'cachet',
 ];
 
-const EXCLUDED_PRODUCT_TERMS = [
-  // Hair & scalp only
-  'shampoo', 'shampoing', 'apres shampoing', 'masque capillaire',
-  // Medications / supplements (oral only)
-  'gelule', 'gélule', 'capsule', 'comprime', 'sirop', 'cachet', 'ampoule buvable',
-  // Extremities & body specific
-  'creme main', 'creme mains', 'soin mains', 'hand cream', 'creme pied', 'soin pieds', 'foot cream',
-  // Baby products
-  'bebe', 'baby',
-  // Deodorant / anti-perspirant
-  'deodorant', 'anti transpirant', 'antitranspirant', 'deo bille', 'deo stick',
-  // Bulk chemical raw materials & industrial items
-  'condor', 'le condor', '1 kg', 'solvant', 'matiere premiere',
-  // Body itch/scratch sprays – not facial treatments
-  'sos grattage', 'spray sos',
-];
+
 
 export function isDiagnosticEligibleProduct(product: Product, options?: { ignoreStock?: boolean }) {
   if (product.status === 'draft') return false;

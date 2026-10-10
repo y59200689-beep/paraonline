@@ -757,21 +757,8 @@ function CategoryMultiSelect({
   );
 }
 
-export default function CatalogTab({
-  catalogStockFilter: propCatalogStockFilter,
-  setCatalogStockFilter: propSetCatalogStockFilter
-}: CatalogTabProps = {}) {
-  const {
-    products,
-    adminTheme,
-    currentUser,
-    handleSaveBulkProducts,
-    handleCreateProduct,
-    handleImportProducts,
-    loadProducts,
-    orders,
-    setIsDataLoading
-  } = useAdmin();
+export default function CatalogTab({ setCatalogStockFilter: propSetCatalogStockFilter }: CatalogTabProps = {}) {
+  const { products, adminTheme, currentUser, handleSaveBulkProducts, handleCreateProduct, handleImportProducts, loadProducts, orders } = useAdmin();
 
   const { settings } = useSettings();
   const { showToast } = useUi();
@@ -789,10 +776,10 @@ export default function CatalogTab({
 
   // Search & Filters
   const [productSearchQuery, setProductSearchQuery] = useState('');
-  const [localCatalogStockFilter, setLocalCatalogStockFilter] = useState(false);
+  const [, setLocalCatalogStockFilter] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
-  const catalogStockFilter = propCatalogStockFilter !== undefined ? propCatalogStockFilter : localCatalogStockFilter;
+
   const setCatalogStockFilter = propSetCatalogStockFilter !== undefined ? propSetCatalogStockFilter : setLocalCatalogStockFilter;
 
   // Dropdown filter states
@@ -893,7 +880,7 @@ export default function CatalogTab({
 
   // Local busy state for inline product actions (delete, duplicate, bulk) —
   // keeps a small per-card spinner without triggering the full-page skeleton.
-  const [isCatalogBusy, setIsCatalogBusy] = useState(false);
+  (useState(false));
 
   const [selectedProductIds, setSelectedProductIds] = useState<Set<number>>(new Set());
 
@@ -919,8 +906,8 @@ export default function CatalogTab({
   });
   const [isUploading, setIsUploading] = useState(false);
   const [isSavingProduct, setIsSavingProduct] = useState(false);
-  const [isSeoExpanded, setIsSeoExpanded] = useState(false);
-  const [isVariantsExpanded, setIsVariantsExpanded] = useState(false);
+  (useState(false));
+  (useState(false));
 
   // CSV Importer States
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -1272,7 +1259,7 @@ export default function CatalogTab({
       console.error(e);
     }
     loadProducts();
-  }, []);
+  }, [loadProducts]);
 
   const handleSaveProfile = (name: string) => {
     if (!name.trim()) return;
@@ -1544,71 +1531,7 @@ export default function CatalogTab({
     return '';
   };
 
-  const parseCSVData = (text: string, delimiter: string) => {
-    const lines: string[][] = [];
-    let row: string[] = [];
-    let inQuotes = false;
-    let currentValue = '';
 
-    let separator = ',';
-    if (delimiter === 'auto') {
-      const firstLine = text.split('\n')[0] || '';
-      const commas = (firstLine.match(/,/g) || []).length;
-      const semicolons = (firstLine.match(/;/g) || []).length;
-      const tabs = (firstLine.match(/\t/g) || []).length;
-      if (semicolons > commas && semicolons > tabs) {
-        separator = ';';
-      } else if (tabs > commas && tabs > semicolons) {
-        separator = '\t';
-      }
-    } else {
-      separator = delimiter;
-    }
-
-    for (let i = 0; i < text.length; i++) {
-      const char = text[i];
-      const nextChar = text[i + 1];
-
-      if (inQuotes) {
-        if (char === '"') {
-          if (nextChar === '"') {
-            currentValue += '"';
-            i++;
-          } else {
-            inQuotes = false;
-          }
-        } else {
-          currentValue += char;
-        }
-      } else {
-        if (char === '"') {
-          inQuotes = true;
-        } else if (char === separator) {
-          row.push(currentValue.trim());
-          currentValue = '';
-        } else if (char === '\r' || char === '\n') {
-          if (char === '\r' && nextChar === '\n') {
-            i++;
-          }
-          row.push(currentValue.trim());
-          if (row.length > 0 && row.some(cell => cell !== '')) {
-            lines.push(row);
-          }
-          row = [];
-          currentValue = '';
-        } else {
-          currentValue += char;
-        }
-      }
-    }
-    if (row.length > 0 || currentValue !== '') {
-      row.push(currentValue.trim());
-      if (row.some(cell => cell !== '')) {
-        lines.push(row);
-      }
-    }
-    return lines;
-  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -2191,7 +2114,7 @@ export default function CatalogTab({
       } else {
         showToast('Échec du téléversement: ' + data.error, 'error');
       }
-    } catch (err) {
+    } catch {
       showToast('Erreur réseau lors du téléversement.', 'error');
     } finally {
       setIsUploading(false);

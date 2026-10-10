@@ -79,7 +79,7 @@ export async function generateStaticParams() {
     return data.map((item: any) => ({
       slug: item.slug
     }));
-  } catch (err) {
+  } catch {
     return [];
   }
 }

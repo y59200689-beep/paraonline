@@ -46,7 +46,7 @@ function pingCronEndpoint() {
             `\x1b[31m[${timestamp}] Failure:\x1b[0m ${parsed.error || 'Unknown endpoint error.'}`
           );
         }
-      } catch (err) {
+      } catch {
         console.log(`\x1b[33m[${timestamp}] Responded with status ${res.statusCode} (Non-JSON payload).\x1b[0m`);
       }
     });

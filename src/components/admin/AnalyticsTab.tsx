@@ -42,7 +42,7 @@ interface AnalyticsKpiCardProps {
   theme?: 'light' | 'dark';
 }
 
-function AnalyticsKpiCard({ label, value, suffix, icon: Icon, pctChange, inverse = false, color, bg, theme }: AnalyticsKpiCardProps) {
+function AnalyticsKpiCard({ label, value, suffix, icon: Icon, pctChange, inverse = false, color, theme }: AnalyticsKpiCardProps) {
   const [animatedValue, setAnimatedValue] = React.useState(0);
   React.useEffect(() => {
     let start = 0;
@@ -252,7 +252,7 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
 
   const cohorts = getCohortData();
 
-  const [funnelHoverIdx, setFunnelHoverIdx] = React.useState<number | null>(null);
+  (React.useState<number | null>(null));
 
   // Helper to filter orders and abandoned carts by range for conversion funnel
   const getFilteredData = () => {
@@ -306,28 +306,28 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
     { label: 'Paniers à récupérer', count: abandonedCheckouts, pctOfStarts: Math.round((abandonedCheckouts / Math.max(1, checkoutStarts)) * 100), pctOfPrev: Math.round((abandonedCheckouts / Math.max(1, checkoutStarts)) * 100), desc: 'Relance commerciale possible' },
   ];
 
-  const cx = 300;
+
   const funnelInnerW = 320;
-  const w0 = funnelInnerW;
-  const w1 = Math.max(40, (funnelSteps[1].pctOfStarts / 100) * funnelInnerW);
-  const w2 = Math.max(30, (funnelSteps[2].pctOfStarts / 100) * funnelInnerW);
-  const w3 = Math.max(20, (funnelSteps[2].pctOfStarts / 100) * funnelInnerW);
 
-  const x_start_0 = cx - w0 / 2;
-  const x_end_0 = cx + w0 / 2;
-  const y_0 = 10;
+  (Math.max(40, (funnelSteps[1].pctOfStarts / 100) * funnelInnerW));
+  (Math.max(30, (funnelSteps[2].pctOfStarts / 100) * funnelInnerW));
+  (Math.max(20, (funnelSteps[2].pctOfStarts / 100) * funnelInnerW));
 
-  const x_start_1 = cx - w1 / 2;
-  const x_end_1 = cx + w1 / 2;
-  const y_1 = 82;
 
-  const x_start_2 = cx - w2 / 2;
-  const x_end_2 = cx + w2 / 2;
-  const y_2 = 154;
 
-  const x_start_3 = cx - w3 / 2;
-  const x_end_3 = cx + w3 / 2;
-  const y_3 = 226;
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

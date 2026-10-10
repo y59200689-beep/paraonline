@@ -10,6 +10,9 @@ import { WishlistProvider } from '../context/WishlistContext';
 import { UiProvider } from '../context/UiContext';
 import { ProductsProvider } from '../context/ProductsContext';
 
+// Standalone provider tests supply the App Router available in the application.
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+
 // Simple wrappers for testing individual providers in isolation
 const SettingsWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <SettingsProvider>{children}</SettingsProvider>

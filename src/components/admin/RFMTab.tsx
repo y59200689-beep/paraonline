@@ -1,27 +1,8 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { 
-  Users, 
-  Target, 
-  TrendingUp, 
-  Copy, 
-  Send, 
-  Percent, 
-  Calendar, 
-  DollarSign, 
-  Search, 
-  AlertTriangle, 
-  Loader2, 
-  CheckCircle2, 
-  MessageSquare, 
-  HelpCircle, 
-  Lock, 
-  Play,
-  X,
-  Sparkles
-} from 'lucide-react';
-import { useAdmin, Order, AdminUser } from '@/context/AdminContext';
+import { Target, Copy, Send, Search, Loader2, CheckCircle2, MessageSquare, Play, X, Sparkles } from 'lucide-react';
+import { useAdmin, Order } from '@/context/AdminContext';
 import { useSettings } from '@/context/SettingsContext';
 
 interface RFMCustomer {
@@ -431,7 +412,7 @@ export default function RFMTab() {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
               {Object.entries(segmentConfig).map(([key, config]) => {
                 const count = segmentStats[key as keyof typeof segmentStats] || 0;
-                const pct = statsPct(count, rfmCustomersList.length);
+                (statsPct(count, rfmCustomersList.length));
                 const isSelected = selectedSegmentFilter === key;
                 return (
                   <button

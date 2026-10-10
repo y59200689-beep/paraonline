@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
-import { cleanPhoneNumber, sendWhatsAppMessage } from '@/lib/whatsapp';
+import { sendWhatsAppMessage } from '@/lib/whatsapp';
 import { requireCronSecret } from '@/lib/cron-auth';
 
 // Helper: Calculate RFM segments server-side for all customers
@@ -110,7 +110,7 @@ function computeCrmCustomers(orders: any[], profiles: any[]) {
     const points = profile ? Number(profile.points || 0) : 0;
 
     // Find diagnostics skinType
-    const matchedDiag = profile?.diary_logs?.[0] || null; // fallback or from diagnostics table
+     // fallback or from diagnostics table
 
     return {
       phone: c.phone,
@@ -147,7 +147,7 @@ export async function GET(request: Request) {
     // 2. Fetch base data for evaluating customer filters
     const { data: orders } = await supabase.from('orders').select('*');
     const { data: profiles } = await supabase.from('customer_profiles').select('*');
-    const { data: diagnostics } = await supabase.from('diagnostics').select('*');
+    (await supabase.from('diagnostics').select('*'));
     const { data: settingsRow } = await supabase.from('settings').eq('id', 1).single();
     
     const settings = settingsRow?.value || {};

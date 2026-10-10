@@ -1,5 +1,6 @@
 'use client';
 
+import NextImage from 'next/image';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAdmin } from '@/context/AdminContext';
@@ -14,7 +15,7 @@ import { BrandLogo } from '@/components/BrandLogo';
 import { brandLogoSrc } from '@/lib/brand-logo';
 import { useBrandImages } from '@/hooks/useBrandImages';
 import {
-  Tag, Search, ArrowLeft, ChevronRight, Globe, Image, Package, AlertCircle,
+  Tag, Search, ArrowLeft, ChevronRight, Globe, Image as ImageIcon, Package, AlertCircle,
   Plus, Eye, EyeOff, Upload, Link2, Trash2, Check, RefreshCw, FileImage, X, FileSpreadsheet, Download,
 } from 'lucide-react';
 
@@ -388,7 +389,7 @@ function LogoUploader({ currentUrl, isDark, onUploaded }: { currentUrl: string |
       <input ref={fileRef} type="file" aria-label="Importer un logo" accept="image/*" disabled={uploading} style={{ display: 'none' }} onChange={onInputChange} />
 
       {preview ? (
-        <img src={preview} alt="Logo" style={{ maxHeight: '72px', maxWidth: '160px', objectFit: 'contain' }} />
+        <NextImage unoptimized width={96} height={96} src={preview} alt="Logo" style={{ maxHeight: '72px', maxWidth: '160px', objectFit: 'contain' , width: 'auto', height: 'auto'}} />
       ) : (
         <Upload size={22} style={{ color: isDark ? '#334155' : '#cbd5e1' }} />
       )}
@@ -659,7 +660,7 @@ function BulkImageUploadModal({ isDark, onClose, onDone }: { isDark: boolean; on
 // ──────────────────────────────────────────────────────────────────────────────
 
 type CsvAllowedField = 'name' | 'logo_url' | 'domain' | 'card_link' | 'tagline_fr' | 'tagline_ar' | 'description_fr' | 'description_ar';
-const CSV_ALLOWED_FIELDS: CsvAllowedField[] = ['name', 'logo_url', 'domain', 'card_link', 'tagline_fr', 'tagline_ar', 'description_fr', 'description_ar'];
+
 const CSV_FIELD_LABELS: Record<CsvAllowedField, string> = {
   name: 'Nom', logo_url: 'Logo URL', domain: 'Domaine', card_link: 'Lien carte',
   tagline_fr: 'Accroche FR', tagline_ar: 'Accroche AR',
@@ -754,7 +755,7 @@ function BrandCsvImportModal({ isDark, onClose, onDone, brands }: {
       stripMap.set(csvStrip(b.name), b);
     }
     return { brandSlugMap: slugMap, brandStripMap: stripMap };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [brands]);
 
   const handleFile = async (file: File) => {
@@ -985,7 +986,7 @@ A-DERMA,https://kingphar.ma/img/m/1026-small_default.jpg`}</code>
                     return (
                       <div key={i} style={{ padding: '8px 10px', borderRadius: '8px', background: isDark ? 'rgba(16,185,129,0.05)' : 'rgba(16,185,129,0.04)', border: isDark ? '1px solid rgba(16,185,129,0.12)' : '1px solid rgba(16,185,129,0.15)', display: 'flex', alignItems: 'center', gap: '10px' }}>
                         {entry.changes.logo_url && (
-                          <img
+                          <NextImage unoptimized width={96} height={96}
                             src={entry.changes.logo_url}
                             alt=""
                             style={{ width: '28px', height: '28px', objectFit: 'contain', borderRadius: '6px', background: '#fff', border: '1px solid rgba(0,0,0,0.1)', flexShrink: 0 }}
@@ -1031,7 +1032,7 @@ A-DERMA,https://kingphar.ma/img/m/1026-small_default.jpg`}</code>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '8px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
                           {entry.changes.logo_url && (
-                            <img
+                            <NextImage unoptimized width={96} height={96}
                               src={entry.changes.logo_url}
                               alt=""
                               style={{ width: '24px', height: '24px', objectFit: 'contain', borderRadius: '4px', background: '#fff', border: '1px solid rgba(0,0,0,0.1)', flexShrink: 0 }}
@@ -1287,7 +1288,7 @@ function BrandEditor({ brand, onBack, isDark, role, onUpdated }: {
         <div style={{ borderRadius: '14px', border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.07)', background: isDark ? 'rgba(255,255,255,0.01)' : '#fafafa', overflow: 'hidden' }}>
           {/* Tabs */}
           <div style={{ display: 'flex', gap: '4px', padding: '8px 12px', borderBottom: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.06)' }}>
-            <button style={tabStyle(activeTab === 'card')} onClick={() => setActiveTab('card')}><Image className="w-3 h-3 inline mr-1" />Carte bannière</button>
+            <button style={tabStyle(activeTab === 'card')} onClick={() => setActiveTab('card')}><ImageIcon className="w-3 h-3 inline mr-1" />Carte bannière</button>
             <button style={tabStyle(activeTab === 'identity')} onClick={() => setActiveTab('identity')}><Tag className="w-3 h-3 inline mr-1" />Identité</button>
             <button style={tabStyle(activeTab === 'seo')} onClick={() => setActiveTab('seo')}><Globe className="w-3 h-3 inline mr-1" />SEO</button>
           </div>

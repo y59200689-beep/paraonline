@@ -1,51 +1,21 @@
 'use client';
 
+import NextImage from 'next/image';
 import React, { useState, useMemo } from 'react';
 import { buildWhatsAppUrl } from '@/lib/whatsapp-link';
-import { 
-  Users, 
-  Sliders, 
-  ClipboardList, 
-  Search, 
-  FileText, 
-  Bell, 
-  X,
-  Plus,
-  Edit3,
-  Trash2,
-  Settings,
-  Check,
-  Target,
-  Activity,
-  ArrowLeft,
-  Package,
-  Truck,
-  ShoppingBag,
-  Ticket,
-  Gift,
-  BarChart3
-} from 'lucide-react';
+import { Users, Sliders, ClipboardList, Search, FileText, Bell, X, Plus, Edit3, Trash2, Settings, Check, Target, Activity, ArrowLeft, Truck, ShoppingBag, Ticket, Gift, BarChart3 } from 'lucide-react';
 import { useAdmin, Order, DiagnosticData } from '@/context/AdminContext';
 import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 import { useAdminUI } from '@/app/admin/AdminUIContext';
-import { StatusBadge, EmptyState } from '@/components/admin/ui';
+import { StatusBadge } from '@/components/admin/ui';
 import { ConfirmDialog } from '@/components/admin/ui/ConfirmDialog';
 import { PRODUCTS_DB } from '@/lib/data';
 import RFMTab from './RFMTab';
 import AutomationsTab from './AutomationsTab';
 
 export default function CRMTab() {
-  const {
-    crmCustomers,
-    diagnosticsList,
-    leadsList,
-    diagnosticsStats,
-    adminTheme,
-    handleAdjustPoints,
-    handleUpdateOrderStatus,
-    products
-  } = useAdmin();
+  const { crmCustomers, diagnosticsList, leadsList, diagnosticsStats, adminTheme, handleUpdateOrderStatus, products } = useAdmin();
 
   const { settings, saveSettings } = useSettings();
   const { showToast } = useUi();
@@ -244,8 +214,8 @@ export default function CRMTab() {
   } | null>(null);
   const [loyaltyPointsAdjustment, setLoyaltyPointsAdjustment] = useState<number>(0);
   const [loyaltyAdjustmentReason, setLoyaltyAdjustmentReason] = useState<string>('');
-  const [isAdjustingPoints, setIsAdjustingPoints] = useState<boolean>(false);
-  const [isDataLoading, setIsDataLoading] = useState<boolean>(false);
+  const [isAdjustingPoints, ] = useState<boolean>(false);
+  const [, setIsDataLoading] = useState<boolean>(false);
 
   const [reminders, setReminders] = useState<any[]>([]);
   const [remindersDays, setRemindersDays] = useState<number>(45);
@@ -429,33 +399,7 @@ export default function CRMTab() {
     }
   };
 
-  const handleAdjustPointsSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedCustomer) return;
-    setIsAdjustingPoints(true);
-    try {
-      const newPoints = await handleAdjustPoints(
-        selectedCustomer.phone,
-        selectedCustomer.name,
-        selectedCustomer.points,
-        loyaltyPointsAdjustment,
-        loyaltyAdjustmentReason
-      );
-      if (newPoints !== null) {
-        setSelectedCustomer(prev => prev ? { 
-          ...prev, 
-          points: newPoints, 
-          pointsOverrideReason: loyaltyAdjustmentReason 
-        } : null);
-        setLoyaltyPointsAdjustment(0);
-        setLoyaltyAdjustmentReason('');
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsAdjustingPoints(false);
-    }
-  };
+
 
   return (
     <div className="space-y-6">
@@ -1724,7 +1668,7 @@ export default function CRMTab() {
                             }`}
                             title={p.title || p.name}
                           >
-                            <img src={p.image} alt={p.title} className="w-full h-full object-cover" />
+                            <NextImage unoptimized width={96} height={96} src={p.image} alt={p.title} className="w-full h-full object-cover" />
                           </div>
                         ))}
                         {ruleProducts.length === 0 && (
@@ -2145,8 +2089,8 @@ export default function CRMTab() {
                           const delivOrd = custOrders.filter((o: any) => (o.status || '').toLowerCase() === 'delivered').length;
                           const refOrd = custOrders.filter((o: any) => ['cancelled', 'returned', 'refused'].includes((o.status || '').toLowerCase())).length;
                           const confOrd = custOrders.filter((o: any) => ['confirmed', 'shipped', 'delivered'].includes((o.status || '').toLowerCase())).length;
-                          const confRate = totalOrd > 0 ? Math.round((confOrd / totalOrd) * 100) : 100;
-                          const delivRate = (delivOrd + refOrd) > 0 ? Math.round((delivOrd / (delivOrd + refOrd)) * 100) : 0;
+                          void (totalOrd > 0 ? Math.round((confOrd / totalOrd) * 100) : 100);
+                          void ((delivOrd + refOrd) > 0 ? Math.round((delivOrd / (delivOrd + refOrd)) * 100) : 0);
 
                           return (
                             <span className="text-[9px] font-mono uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-700 dark:bg-slate-800/80 dark:border-slate-700 dark:text-slate-200 flex items-center gap-1 font-bold">
@@ -2284,7 +2228,7 @@ export default function CRMTab() {
                           }`}>
                             {/* Product Thumbnail with Frequency Badge */}
                             <div className="relative shrink-0">
-                              <img
+                              <NextImage unoptimized width={96} height={96}
                                 src={prod.image}
                                 alt={prod.title}
                                 className="w-14 h-14 rounded-2xl object-cover border border-slate-200/70 dark:border-slate-800"
@@ -3014,7 +2958,7 @@ export default function CRMTab() {
                                 <div key={idx} className={`p-3 rounded-2xl border flex items-center gap-3 transition hover:scale-[1.01] ${
                                   adminTheme === 'light' ? 'bg-white border-slate-200/80 shadow-xs' : 'bg-slate-950/60 border-slate-800'
                                 }`}>
-                                  <img src={prod.image} alt={prod.title || prod.name} className="w-11 h-11 rounded-xl object-cover border border-slate-200/60 shrink-0" />
+                                  <NextImage unoptimized width={96} height={96} src={prod.image} alt={prod.title || prod.name} className="w-11 h-11 rounded-xl object-cover border border-slate-200/60 shrink-0" />
                                   <div className="min-w-0 flex-1">
                                     <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block font-mono">
                                       Soin #{idx + 1}
@@ -3649,7 +3593,7 @@ export default function CRMTab() {
                               : 'bg-slate-900 border-slate-800 text-slate-200 shadow-sm'
                           }`}
                         >
-                          <img src={p.image} alt={p.title} className="w-5 h-5 rounded-full object-cover shrink-0" />
+                          <NextImage unoptimized width={96} height={96} src={p.image} alt={p.title} className="w-5 h-5 rounded-full object-cover shrink-0" />
                           <span className="truncate max-w-[120px]">{p.title || p.name}</span>
                           <button
                             type="button"
@@ -3714,7 +3658,7 @@ export default function CRMTab() {
                           }`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <img src={p.image} alt={p.title} className="w-8 h-8 rounded-lg object-cover border border-slate-200/50 shrink-0" />
+                            <NextImage unoptimized width={96} height={96} src={p.image} alt={p.title} className="w-8 h-8 rounded-lg object-cover border border-slate-200/50 shrink-0" />
                             <div className="min-w-0">
                               <span className={`font-bold block truncate ${isSelected ? 'text-emerald-600 dark:text-emerald-400' : ''}`}>{p.title || p.name}</span>
                               <span className="text-[9.5px] text-slate-500 uppercase font-mono tracking-wider">{p.vendor} • {p.category}</span>
@@ -4124,7 +4068,7 @@ export default function CRMTab() {
       {/* ── Order Detail Modal Overlay (Shopify-Style) ─────────────────── */}
       {selectedOrderDetail && (() => {
         const ord = selectedOrderDetail;
-        const isDark = adminTheme === 'dark';
+
         const st = (ord.status || 'pending').toLowerCase();
 
         const statusMeta: Record<string, { label: string; bg: string; text: string; dot: string; border: string }> = {
@@ -4284,7 +4228,7 @@ export default function CRMTab() {
                             return (
                               <div key={i} className="p-4 flex items-center gap-4">
                                 <div className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-slate-200/80 dark:border-white/10 bg-slate-100 dark:bg-slate-800 shadow-xs group">
-                                  <img
+                                  <NextImage unoptimized width={96} height={96}
                                     src={itemImg}
                                     alt={item.title}
                                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
@@ -4597,7 +4541,7 @@ export default function CRMTab() {
                       } else {
                         showToast('Erreur lors de la création du code promo.', 'error');
                       }
-                    } catch (err) {
+                    } catch {
                       showToast('Erreur lors de la sauvegarde.', 'error');
                     } finally {
                       setIsGeneratingPromo(false);

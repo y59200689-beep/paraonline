@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import Image from 'next/image';
+
 import Link from 'next/link';
 import { Product } from '@/lib/data';
 import { useTranslation } from '@/context/LanguageContext';
@@ -176,13 +176,7 @@ function SkeletonCard() {
 
 // ─── Main Export ──────────────────────────────────────────────────────────────
 
-export const CurationClinique: React.FC = () => {
-  const { language } = useTranslation();
-  const isRTL = language === 'AR';
-  const { settings } = useSettings();
-  const customConcerns = settings.customConcerns || [];
-
-  const iconMap: Record<string, React.ReactNode> = {
+const iconMap: Record<string, React.ReactNode> = {
     acne: <Zap size={16} strokeWidth={1.8} />,
     spots: <Sparkles size={16} strokeWidth={1.8} />,
     wrinkles: <Star size={16} strokeWidth={1.8} />,
@@ -195,7 +189,15 @@ export const CurationClinique: React.FC = () => {
     solaire: <FlaskConical size={16} strokeWidth={1.8} />,
   };
 
-  const getIcon = (key: string) => iconMap[key] || iconMap[key.replace(/[^a-z]/g, '')] || <HelpCircle size={16} strokeWidth={1.8} />;
+const getIcon = (key: string) => iconMap[key] || iconMap[key.replace(/[^a-z]/g, '')] || <HelpCircle size={16} strokeWidth={1.8} />;
+
+
+export const CurationClinique: React.FC = () => {
+  const { language } = useTranslation();
+  const isRTL = language === 'AR';
+  const { settings } = useSettings();
+  const customConcerns = useMemo(() => settings.customConcerns || [], [settings.customConcerns]);
+
 
   const dynamicConcerns = useMemo(() => {
     if (customConcerns.length > 0) {
@@ -229,7 +231,7 @@ export const CurationClinique: React.FC = () => {
     if (dynamicConcerns.length > 0 && !dynamicConcerns.some((c: any) => c.key === activeConcernKey)) {
       setActiveConcernKey(dynamicConcerns[0].key);
     }
-  }, [dynamicConcerns]);
+  }, [dynamicConcerns, activeConcernKey]);
 
   const activeConcern = dynamicConcerns.find((c: any) => c.key === activeConcernKey) ?? dynamicConcerns[0];
 

@@ -1,37 +1,11 @@
 'use client';
 
+import NextImage from 'next/image';
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { 
-  Star, 
-  Search, 
-  CheckCircle, 
-  Trash2, 
-  Edit3, 
-  X, 
-  Filter, 
-  Eye, 
-  EyeOff, 
-  MessageSquare, 
-  CornerDownRight, 
-  ExternalLink,
-  ChevronRight,
-  TrendingUp,
-  AlertCircle,
-  Package,
-  ShoppingBag,
-  Zap,
-  PlusCircle,
-  ArrowLeftRight,
-  ChevronDown,
-  Clock,
-  LayoutGrid,
-  List,
-  SlidersHorizontal,
-  RotateCcw,
-} from 'lucide-react';
+import { Star, Search, CheckCircle, Trash2, Edit3, X, Eye, EyeOff, MessageSquare, CornerDownRight, ExternalLink, Package, ShoppingBag, Zap, PlusCircle, ArrowLeftRight, ChevronDown, Clock, LayoutGrid, List, RotateCcw } from 'lucide-react';
 import { useAdmin } from '@/context/AdminContext';
-import { StatusBadge, EmptyState } from '@/components/admin/ui';
+import { StatusBadge } from '@/components/admin/ui';
 import { canManageReviews } from '@/lib/permissions';
 
 export default function ReviewsTab() {
@@ -318,7 +292,7 @@ export default function ReviewsTab() {
             onClick={() => { setOpen(o => !o); setQuery(''); }}
           >
             {selected.image ? (
-              <img src={selected.image} alt="" className="w-10 h-10 object-cover rounded-lg shrink-0 border border-slate-200/20" />
+              <NextImage unoptimized width={96} height={96} src={selected.image} alt="" className="w-10 h-10 object-cover rounded-lg shrink-0 border border-slate-200/20" />
             ) : (
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
                 isDark ? 'bg-slate-800' : 'bg-slate-100'
@@ -400,7 +374,7 @@ export default function ReviewsTab() {
                     }`}
                   >
                     {p.image ? (
-                      <img src={p.image} alt="" className="w-9 h-9 object-cover rounded-lg shrink-0 border border-slate-200/20" />
+                      <NextImage unoptimized width={96} height={96} src={p.image} alt="" className="w-9 h-9 object-cover rounded-lg shrink-0 border border-slate-200/20" />
                     ) : (
                       <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${ isDark ? 'bg-slate-800' : 'bg-slate-100' }`}>
                         <ShoppingBag className="w-4 h-4 text-slate-400" />
@@ -848,7 +822,7 @@ export default function ReviewsTab() {
                   {/* Product image */}
                   <div className="relative overflow-hidden aspect-square bg-slate-100 dark:bg-slate-900">
                     {prod.image ? (
-                      <img
+                      <NextImage unoptimized width={96} height={96}
                         src={prod.image}
                         alt={prod.nameFr || prod.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -1021,7 +995,7 @@ export default function ReviewsTab() {
                   }`}>
                     <div className="flex items-center gap-3 min-w-0">
                       {prod?.image ? (
-                        <img
+                        <NextImage unoptimized width={96} height={96}
                           src={prod.image}
                           alt=""
                           className="w-10 h-10 object-cover rounded-xl shrink-0 border border-slate-200/30"
@@ -1254,7 +1228,7 @@ export default function ReviewsTab() {
                       <td className="py-3.5 px-4 align-top">
                         <div className="flex items-center gap-1.5 min-w-0">
                           {prod?.image && (
-                            <img src={prod.image} alt="" className="w-6 h-6 object-cover rounded shadow-sm shrink-0 border border-slate-200/20" />
+                            <NextImage unoptimized width={96} height={96} src={prod.image} alt="" className="w-6 h-6 object-cover rounded shadow-sm shrink-0 border border-slate-200/20" />
                           )}
                           <div className="min-w-0 leading-tight">
                             <span className="font-bold text-[11px] truncate block text-slate-700 dark:text-slate-300" title={prod?.nameFr || prod?.title}>
@@ -1463,7 +1437,7 @@ export default function ReviewsTab() {
                             return prod ? (
                               <>
                                 {prod.image ? (
-                                  <img src={prod.image} alt="" className="w-11 h-11 object-cover rounded-xl shrink-0 border border-slate-200/20" />
+                                  <NextImage unoptimized width={96} height={96} src={prod.image} alt="" className="w-11 h-11 object-cover rounded-xl shrink-0 border border-slate-200/20" />
                                 ) : (
                                   <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${ isDark ? 'bg-slate-800' : 'bg-slate-200' }`}>
                                     <ShoppingBag className="w-5 h-5 text-slate-400" />

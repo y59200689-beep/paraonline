@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import { useAdmin } from '@/context/AdminContext';
 import { canManageTranslations, canEditContent } from '@/lib/permissions';
-import { Languages, Search, Save, Loader2, Plus, Globe } from 'lucide-react';
-import { BilingualField } from '@/components/admin/ui/BilingualField';
+import { Search, Save, Loader2 } from 'lucide-react';
+
 
 interface DictionaryString {
   key: string;
@@ -34,7 +34,7 @@ export default function ContentTranslationsPage() {
   const [items, setItems] = useState<DictionaryString[]>(DEFAULT_DICTIONARY);
   const [query, setQuery] = useState('');
   const [saving, setSaving] = useState(false);
-  const [dirty, setDirty] = useState(false);
+  const [, setDirty] = useState(false);
 
   const filtered = items.filter(i =>
     !query ||

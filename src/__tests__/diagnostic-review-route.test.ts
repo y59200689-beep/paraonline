@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const rows = [
-  { id: 1, title: 'Gel nettoyant doux visage', category: 'visage', status: 'live', stock: 5, routine_roles: ['cleanser'], suitable_skin_types: ['dry'], suitable_concerns: ['dryness'], sensitivity_levels: ['medium'], active_strength: 'gentle', time_of_day: ['morning', 'evening'] },
-  { id: 2, title: 'Crème lavante hydratante visage', category: 'visage', status: 'live', stock: 3, routine_roles: ['cleanser'], suitable_skin_types: ['dry'], suitable_concerns: ['dryness'], sensitivity_levels: ['medium'], active_strength: 'gentle', time_of_day: ['morning', 'evening'] },
-  { id: 3, title: 'Gel nettoyant épuisé', category: 'visage', status: 'live', stock: 0, routine_roles: ['cleanser'], suitable_skin_types: ['dry'], suitable_concerns: ['dryness'], sensitivity_levels: ['medium'], active_strength: 'gentle', time_of_day: ['morning', 'evening'] },
+  { id: 1, title: 'Gel nettoyant doux visage', category: 'visage', status: 'live', stock: 5, routine_roles: ['cleanser'], suitable_skin_types: ['dry'], suitable_concerns: ['dryness'], sensitivity_levels: ['low'], active_strength: 'gentle', time_of_day: ['morning', 'evening'] },
+  { id: 2, title: 'Crème lavante hydratante visage', category: 'visage', status: 'live', stock: 3, routine_roles: ['cleanser'], suitable_skin_types: ['dry'], suitable_concerns: ['dryness'], sensitivity_levels: ['low'], active_strength: 'gentle', time_of_day: ['morning', 'evening'] },
+  { id: 3, title: 'Gel nettoyant épuisé', category: 'visage', status: 'live', stock: 0, routine_roles: ['cleanser'], suitable_skin_types: ['dry'], suitable_concerns: ['dryness'], sensitivity_levels: ['low'], active_strength: 'gentle', time_of_day: ['morning', 'evening'] },
 ];
 
 vi.mock('@/lib/supabase', () => ({
@@ -26,7 +26,7 @@ vi.mock('@/lib/rateLimit', () => ({
 import { POST } from '@/app/api/diagnostic/review/route';
 
 const answers = {
-  skinType: 'dry', concern: 'dryness', sensitivity: 'medium', breakoutFrequency: 'rare',
+  skinType: 'dry', concern: 'dryness', sensitivity: 'low', breakoutFrequency: 'rare',
   sunExposure: 'moderate', spfHabit: 'daily', activeTolerance: 'beginner', routineDepth: 'essential',
 };
 const body = {
@@ -65,6 +65,7 @@ describe('GPT diagnostic review endpoint', () => {
   it('accepts an eligible alternative from the shortlist', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => modelResult(2)));
     const result = await POST(request());
+    expect(result.status).toBe(200);
     const data = await result.json();
     expect(data.reviewed).toBe(true);
     expect(data.routine.map((item: { product: { id: number } }) => item.product.id)).toEqual([2]);
@@ -73,6 +74,7 @@ describe('GPT diagnostic review endpoint', () => {
   it('rejects a model-selected product outside the validated shortlist', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => modelResult(999)));
     const result = await POST(request());
+    expect(result.status).toBe(200);
     const data = await result.json();
     expect(data.reviewed).toBe(false);
     expect(data.routine.map((item: { product: { id: number } }) => item.product.id)).toEqual([1]);
@@ -85,6 +87,7 @@ describe('GPT diagnostic review endpoint', () => {
       body: JSON.stringify({ ...body, candidates: [...body.candidates, { slot: 0, step: 'cleanser', productId: 3 }] }),
     });
     const result = await POST(unsafeRequest);
+    expect(result.status).toBe(200);
     const data = await result.json();
     expect(data.reviewed).toBe(false);
     expect(data.routine.map((item: { product: { id: number } }) => item.product.id)).toEqual([1]);
@@ -93,6 +96,7 @@ describe('GPT diagnostic review endpoint', () => {
   it('keeps the rules-only routine when the model is unavailable', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 429, json: async () => ({ error: { code: 'test_unavailable' } }) } as Response)));
     const result = await POST(request());
+    expect(result.status).toBe(200);
     const data = await result.json();
     expect(data.reviewed).toBe(false);
     expect(data.routine.map((item: { product: { id: number } }) => item.product.id)).toEqual([1]);
@@ -103,9 +107,21 @@ describe('GPT diagnostic review endpoint', () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
     const result = await POST(request());
+    expect(result.status).toBe(200);
     const data = await result.json();
     expect(data.reviewed).toBe(false);
     expect(data.routine.map((item: { product: { id: number } }) => item.product.id)).toEqual([1]);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects obsolete sensitivity answers before querying the model', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const invalid = new Request('http://localhost/api/diagnostic/review', {
+      method: 'POST',
+      body: JSON.stringify({ ...body, answers: { ...answers, sensitivity: 'medium' } }),
+    });
+    expect((await POST(invalid)).status).toBe(400);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

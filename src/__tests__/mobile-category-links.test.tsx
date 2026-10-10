@@ -8,7 +8,11 @@ const settings = vi.hoisted(() => ({ categoryLinks: {} as Record<string, string>
 vi.mock('@/context/LanguageContext', () => ({ useTranslation: () => ({ language: 'FR', t: (key: string) => key }) }));
 vi.mock('@/context/SettingsContext', () => ({ useSettings: () => ({ settings }) }));
 vi.mock('@/lib/useGalleryOverrides', () => ({ useGalleryOverrides: () => ({ getDisplayImage: (src: string) => src }) }));
-vi.mock('next/image', () => ({ default: ({ fill, sizes, ...props }: any) => <img {...props} /> }));
+vi.mock('next/image', () => ({ default: ({ fill, sizes, alt, ...props }: any) => {
+  void fill;
+  void sizes;
+  return React.createElement('img', { ...props, alt });
+} }));
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); settings.categoryLinks = {}; });
 

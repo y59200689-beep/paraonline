@@ -18,6 +18,9 @@ test('JavaScript pagination supports direct loads, navigation, refresh, filters,
   await diagnosticWelcomeClose.click();
   const navigation = page.locator('nav[data-testid="catalog-pagination"]:visible').first();
   await expect(navigation).toBeVisible();
+  // Missing PostCSS/Tailwind configuration can leave anchors in an unstyled,
+  // unstable layout even though the raw HTML and href assertions pass.
+  await expect(navigation.locator(':scope > div')).toHaveCSS('display', 'flex');
 
   const priceLimit = page.getByRole('checkbox', { name: 'Limiter le prix maximum' }).first();
   await expect(priceLimit).not.toBeChecked();

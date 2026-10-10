@@ -6,10 +6,7 @@ import { useAdmin } from '@/context/AdminContext';
 import { useSettings, HomepageSectionItem } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 import { canEditContent } from '@/lib/permissions';
-import { 
-  Layers, Search, Eye, EyeOff, Edit3, X, Save, Sparkles, Plus, Trash2, 
-  ChevronUp, ChevronDown, Check, LayoutGrid, Package, ArrowUpRight, Filter
-} from 'lucide-react';
+import { Layers, Search, Eye, EyeOff, Edit3, X, Sparkles, Plus, Trash2, ChevronUp, ChevronDown, LayoutGrid, Package } from 'lucide-react';
 import { BilingualField } from '@/components/admin/ui/BilingualField';
 import { EmptyState } from '@/components/admin/ui/EmptyState';
 

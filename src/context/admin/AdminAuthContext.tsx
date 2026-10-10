@@ -138,7 +138,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       
       setAuthError(data.error || 'Identifiants invalides.');
       return false;
-    } catch (err) {
+    } catch {
       setAuthError('Erreur de connexion au serveur.');
       return false;
     }
@@ -165,7 +165,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setAuthError(data.error || 'Code de vérification incorrect.');
         return false;
       }
-    } catch (err) {
+    } catch {
       setAuthError('Erreur de connexion au serveur.');
       return false;
     }
@@ -193,7 +193,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
       setAuthError(data.error || 'Code incorrect. Réessayez.');
       return false;
-    } catch (err) {
+    } catch {
       setAuthError('Erreur de connexion au serveur.');
       return false;
     }
@@ -218,7 +218,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     await logAuthAction("Déconnexion", "Utilisateur déconnecté.");
     try {
       await fetch('/api/admin/auth/logout', { method: 'POST' });
-    } catch (e) {}
+    } catch {}
     setIsAuthenticated(false);
     setCurrentUser(null);
     setRequiresMfa(false);

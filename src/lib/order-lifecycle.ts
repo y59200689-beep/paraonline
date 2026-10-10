@@ -24,7 +24,7 @@ export function orderLifecycleTransition(currentStatus: string, targetStatus: st
 }
 
 export function customerOrderTransition(currentStatus: string, action: CustomerOrderAction) {
-  const current = String(currentStatus || '').toLowerCase();
+  (String(currentStatus || '').toLowerCase());
   const target = action === 'confirm' ? 'Confirmed' : 'Cancelled';
   return orderLifecycleTransition(currentStatus, target);
 }

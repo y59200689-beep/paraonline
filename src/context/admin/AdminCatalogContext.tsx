@@ -68,7 +68,7 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
     void loadCoupons();
   }, [currentUser, loadCoupons]);
 
-  const handleSaveCoupon = async (couponForm: any): Promise<boolean> => {
+  const handleSaveCoupon = useCallback(async (couponForm: any): Promise<boolean> => {
     if (currentUser?.role === 'logistician' || currentUser?.role === 'support') {
       showToast("Permission refusée.", 'error');
       return false;
@@ -88,13 +88,13 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
       } else {
         showToast(data.error || "Erreur lors de la configuration.", 'error');
       }
-    } catch (e) {
+    } catch {
       showToast("Erreur de connexion.", 'error');
     }
     return false;
-  };
+  }, [currentUser?.role, loadCoupons, logAdminAction, showToast]);
 
-  const handleDeleteCoupon = async (code: string): Promise<boolean> => {
+  const handleDeleteCoupon = useCallback(async (code: string): Promise<boolean> => {
     if (currentUser?.role === 'logistician' || currentUser?.role === 'support') {
       showToast("Permission refusée.", 'error');
       return false;
@@ -108,13 +108,13 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
         showToast("Coupon supprimé !", 'success');
         return true;
       }
-    } catch (e) {
+    } catch {
       showToast("Erreur de connexion.", 'error');
     }
     return false;
-  };
+  }, [currentUser?.role, loadCoupons, logAdminAction, showToast]);
 
-  const handleToggleCouponActive = async (code: string): Promise<boolean> => {
+  const handleToggleCouponActive = useCallback(async (code: string): Promise<boolean> => {
     if (currentUser?.role === 'logistician' || currentUser?.role === 'support') {
       showToast("Permission refusée.", 'error');
       return false;
@@ -132,13 +132,13 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
         showToast("Statut du coupon mis à jour !", 'success');
         return true;
       }
-    } catch (e) {
+    } catch {
       showToast("Erreur de connexion.", 'error');
     }
     return false;
-  };
+  }, [currentUser?.role, loadCoupons, logAdminAction, showToast]);
 
-  const handleSaveBanner = async (index: number, bannerForm: HeroCardConfig): Promise<boolean> => {
+  const handleSaveBanner = useCallback(async (index: number, bannerForm: HeroCardConfig): Promise<boolean> => {
     if (currentUser?.role === 'logistician' || currentUser?.role === 'support') {
       showToast("Permission refusée.", 'error');
       return false;
@@ -160,13 +160,13 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
         showToast("Bannière enregistrée avec succès !", 'success');
         return true;
       }
-    } catch (e) {
+    } catch {
       showToast("Erreur de connexion.", 'error');
     }
     return false;
-  };
+  }, [currentUser?.role, loadSettings, logAdminAction, showToast]);
 
-  const handleMoveBanner = async (index: number, direction: 'up' | 'down'): Promise<boolean> => {
+  const handleMoveBanner = useCallback(async (index: number, direction: 'up' | 'down'): Promise<boolean> => {
     if (currentUser?.role === 'logistician' || currentUser?.role === 'support') {
       showToast("Permission refusée.", 'error');
       return false;
@@ -187,11 +187,11 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
         logAdminAction("Mouvement Banner", `Bannière déplacée.`);
         return true;
       }
-    } catch (e) {}
+    } catch {}
     return false;
-  };
+  }, [currentUser?.role, loadSettings, logAdminAction, showToast]);
 
-  const handleSaveBulkProducts = async (changedProducts: Product[]): Promise<boolean> => {
+  const handleSaveBulkProducts = useCallback(async (changedProducts: Product[]): Promise<boolean> => {
     if (currentUser?.role === 'support') {
       showToast("Permission refusée.", 'error');
       return false;
@@ -209,13 +209,13 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
         showToast(`${changedProducts.length} produits enregistrés !`, 'success');
         return true;
       }
-    } catch (e) {
+    } catch {
       showToast("Erreur de connexion.", 'error');
     }
     return false;
-  };
+  }, [currentUser?.role, loadProducts, logAdminAction, showToast]);
 
-  const handleCreateProduct = async (productForm: Partial<Product>): Promise<boolean> => {
+  const handleCreateProduct = useCallback(async (productForm: Partial<Product>): Promise<boolean> => {
     if (currentUser?.role === 'support') {
       showToast("Permission refusée.", 'error');
       return false;
@@ -235,13 +235,13 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
       } else {
         showToast(data.error || "Erreur de création.", 'error');
       }
-    } catch (e) {
+    } catch {
       showToast("Erreur de connexion.", 'error');
     }
     return false;
-  };
+  }, [currentUser?.role, loadProducts, logAdminAction, showToast]);
 
-  const handleRestock = async (productId: number, newStock: number): Promise<boolean> => {
+  const handleRestock = useCallback(async (productId: number, newStock: number): Promise<boolean> => {
     if (currentUser?.role === 'support') {
       showToast("Permission refusée.", 'error');
       return false;
@@ -259,13 +259,13 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
         showToast("Stock mis à jour avec succès !", 'success');
         return true;
       }
-    } catch (e) {
+    } catch {
       showToast("Erreur de connexion.", 'error');
     }
     return false;
-  };
+  }, [currentUser?.role, loadProducts, logAdminAction, showToast]);
 
-  const handleAddFaq = async (faqForm: { q_fr: string; a_fr: string; q_ar: string; a_ar: string }): Promise<boolean> => {
+  const handleAddFaq = useCallback(async (faqForm: { q_fr: string; a_fr: string; q_ar: string; a_ar: string }): Promise<boolean> => {
     if (currentUser?.role === 'logistician' || currentUser?.role === 'support') {
       showToast("Permission refusée.", 'error');
       return false;
@@ -286,13 +286,13 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
         showToast("Question FAQ ajoutée !", 'success');
         return true;
       }
-    } catch (e) {
+    } catch {
       showToast("Erreur de connexion.", 'error');
     }
     return false;
-  };
+  }, [currentUser?.role, loadSettings, logAdminAction, showToast]);
 
-  const handleDeleteFaq = async (index: number): Promise<boolean> => {
+  const handleDeleteFaq = useCallback(async (index: number): Promise<boolean> => {
     if (currentUser?.role === 'logistician' || currentUser?.role === 'support') {
       showToast("Permission refusée.", 'error');
       return false;
@@ -313,13 +313,13 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
         showToast("Question FAQ supprimée !", 'success');
         return true;
       }
-    } catch (e) {
+    } catch {
       showToast("Erreur de connexion.", 'error');
     }
     return false;
-  };
+  }, [currentUser?.role, loadSettings, logAdminAction, showToast]);
 
-  const handleSaveGeneralSettings = async (formSettings: any): Promise<boolean> => {
+  const handleSaveGeneralSettings = useCallback(async (formSettings: any): Promise<boolean> => {
     if (currentUser?.role === 'logistician' || currentUser?.role === 'support') {
       showToast("Permission refusée.", 'error');
       return false;
@@ -340,13 +340,13 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
         showToast("Paramètres généraux enregistrés !", 'success');
         return true;
       }
-    } catch (e) {
+    } catch {
       showToast("Erreur de connexion.", 'error');
     }
     return false;
-  };
+  }, [currentUser?.role, loadSettings, logAdminAction, showToast]);
 
-  const handleSaveCourierSettings = async (formSettings: any): Promise<boolean> => {
+  const handleSaveCourierSettings = useCallback(async (formSettings: any): Promise<boolean> => {
     if (currentUser?.role === 'logistician' || currentUser?.role === 'support') {
       showToast("Permission refusée.", 'error');
       return false;
@@ -367,13 +367,13 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
         showToast("Paramètres transporteurs enregistrés !", 'success');
         return true;
       }
-    } catch (e) {
+    } catch {
       showToast("Erreur de connexion.", 'error');
     }
     return false;
-  };
+  }, [currentUser?.role, loadSettings, logAdminAction, showToast]);
 
-  const handleSaveLoyaltySettings = async (formSettings: any): Promise<boolean> => {
+  const handleSaveLoyaltySettings = useCallback(async (formSettings: any): Promise<boolean> => {
     if (currentUser?.role === 'logistician' || currentUser?.role === 'support') {
       showToast("Permission refusée.", 'error');
       return false;
@@ -394,13 +394,13 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
         showToast("Paramètres fidélité enregistrés !", 'success');
         return true;
       }
-    } catch (e) {
+    } catch {
       showToast("Erreur de connexion.", 'error');
     }
     return false;
-  };
+  }, [currentUser?.role, loadSettings, logAdminAction, showToast]);
 
-  const handleSavePaymentSettings = async (formSettings: any): Promise<boolean> => {
+  const handleSavePaymentSettings = useCallback(async (formSettings: any): Promise<boolean> => {
     if (currentUser?.role === 'logistician' || currentUser?.role === 'support') {
       showToast("Permission refusée.", 'error');
       return false;
@@ -421,13 +421,13 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
         showToast("Paramètres de paiement enregistrés !", 'success');
         return true;
       }
-    } catch (e) {
+    } catch {
       showToast("Erreur de connexion.", 'error');
     }
     return false;
-  };
+  }, [currentUser?.role, loadSettings, logAdminAction, showToast]);
 
-  const handleSaveNotificationTemplates = async (formSettings: any, notifTemplates: any): Promise<boolean> => {
+  const handleSaveNotificationTemplates = useCallback(async (formSettings: any, notifTemplates: any): Promise<boolean> => {
     if (currentUser?.role === 'logistician' || currentUser?.role === 'support') {
       showToast("Permission refusée.", 'error');
       return false;
@@ -449,13 +449,13 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
         showToast("Modèles de notifications enregistrés !", 'success');
         return true;
       }
-    } catch (e) {
+    } catch {
       showToast("Erreur de connexion.", 'error');
     }
     return false;
-  };
+  }, [currentUser?.role, loadSettings, logAdminAction, showToast]);
 
-  const handleImportProducts = async (rawProducts: any[], updateExisting: boolean, metadata?: { fileName?: string; validationErrorCount?: number; validationErrors?: Array<{ row: number; errors: Record<string, string>; raw?: Record<string, unknown> }> }): Promise<{ success: boolean; count: number; error?: string; categories?: string[]; message?: string; createdCount?: number; updatedCount?: number; skippedCount?: number; validationErrorCount?: number }> => {
+  const handleImportProducts = useCallback(async (rawProducts: any[], updateExisting: boolean, metadata?: { fileName?: string; validationErrorCount?: number; validationErrors?: Array<{ row: number; errors: Record<string, string>; raw?: Record<string, unknown> }> }): Promise<{ success: boolean; count: number; error?: string; categories?: string[]; message?: string; createdCount?: number; updatedCount?: number; skippedCount?: number; validationErrorCount?: number }> => {
     if (currentUser?.role === 'support') {
       showToast("Permission refusée.", 'error');
       return { success: false, count: 0 };
@@ -497,11 +497,11 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
         count: 0,
         error: data.error || `L’importation a échoué (${res.status} ${res.statusText}).`,
       };
-    } catch (e) {
+    } catch {
       showToast("Erreur de connexion lors de l'importation.", 'error');
       return { success: false, count: 0, error: 'Erreur de connexion lors de l’importation.' };
     }
-  };
+  }, [currentUser?.role, loadProducts, loadSettings, logAdminAction, showToast]);
 
   const contextValue = useMemo(() => ({
     coupons,
@@ -522,14 +522,7 @@ export const AdminCatalogProvider: React.FC<{ children: React.ReactNode }> = ({ 
     handleSavePaymentSettings,
     handleSaveNotificationTemplates,
     handleImportProducts
-  }), [
-    currentUser,
-    coupons,
-    loadCoupons,
-    loadProducts,
-    logAdminAction,
-    loadSettings
-  ]);
+  }), [coupons, loadCoupons, handleSaveCoupon, handleDeleteCoupon, handleToggleCouponActive, handleSaveBanner, handleMoveBanner, handleSaveBulkProducts, handleCreateProduct, handleRestock, handleAddFaq, handleDeleteFaq, handleSaveGeneralSettings, handleSaveCourierSettings, handleSaveLoyaltySettings, handleSavePaymentSettings, handleSaveNotificationTemplates, handleImportProducts]);
 
   return (
     <AdminCatalogContext.Provider value={contextValue}>
