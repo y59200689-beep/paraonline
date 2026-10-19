@@ -40,10 +40,10 @@ export function canManageOperators(role: AdminRole): boolean {
 
 /**
  * Returns true if the role is allowed to delete orders.
- * Allowed: owner
+ * Allowed: owner and legacy administrator roles
  */
 export function canDeleteOrders(role: AdminRole): boolean {
-  return role === 'owner';
+  return ['owner', 'admin', 'administrator', 'superadmin'].includes(role);
 }
 
 /**

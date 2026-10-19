@@ -18,6 +18,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from('orders')
       .select('*')
+      .is('admin_archived_at', null)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -109,7 +110,7 @@ export async function DELETE(request: Request) {
   try {
     const authorization = await authorizeAdminMutation({
       allow: canDeleteOrders,
-      forbiddenMessage: 'Accès refusé. Propriétaire uniquement.',
+      forbiddenMessage: 'Accès refusé. Suppression réservée au propriétaire et aux administrateurs.',
     });
     if (!authorization.authorized) return authorization.response;
 
@@ -119,16 +120,29 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: false, error: 'Order ID is required' }, { status: 400 });
     }
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('orders')
       .delete()
-      .eq('order_id', orderId);
+      .eq('order_id', orderId)
+      .select('order_id');
 
+    if (error?.code === '23503') {
+      // A failed DELETE is atomic: dependent rows remain intact. Archive the
+      // order instead of removing financial/inventory ledger protections.
+      const archived = await supabase.from('orders')
+        .update({ admin_archived_at: new Date().toISOString() })
+        .eq('order_id', orderId)
+        .select('order_id');
+      if (archived.error) throw archived.error;
+      if (!archived.data?.length) return NextResponse.json({ success: false, error: 'Commande introuvable.' }, { status: 404 });
+      return NextResponse.json({ success: true, archived: true });
+    }
     if (error) throw error;
+    if (!data?.length) return NextResponse.json({ success: false, error: 'Commande introuvable.' }, { status: 404 });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Delete order error:', error);
-    return NextResponse.json({ success: false, error: error.message || 'Server error' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Impossible de supprimer la commande. Réessayez plus tard.' }, { status: 500 });
   }
 }

@@ -206,6 +206,25 @@ export default function OrdersTab() {
   }>(null);
   const [confirmationBusy, setConfirmationBusy] = useState(false);
 
+  const confirmDeleteSelectedOrders = () => {
+    if (!canDeleteOrder || !selectedOrderIds.length) return;
+    const ids = [...selectedOrderIds];
+    setConfirmation({
+      title: `Supprimer ${ids.length} commande(s) ?`,
+      description: `Les commandes ${ids.join(', ')} seront retirées de la liste. Celles liées à un historique protégé seront archivées ; les autres seront supprimées définitivement. Cette action ne rembourse pas les paiements et n’annule pas les expéditions.`,
+      confirmLabel: `Supprimer ${ids.length} commande(s)`,
+      action: async () => {
+        const deletedIds: string[] = [];
+        for (const id of ids) {
+          if (await handleDeleteOrder(id)) deletedIds.push(id);
+        }
+        setSelectedOrderIds(selected => selected.filter(id => !deletedIds.includes(id)));
+        showToast(`${deletedIds.length} commande(s) retirée(s) de la liste.${deletedIds.length < ids.length ? ' Les commandes non supprimées restent sélectionnées.' : ''}`);
+      },
+    });
+  };
+
+
   const runConfirmedAction = async () => {
     if (!confirmation) return;
     setConfirmationBusy(true);
@@ -992,6 +1011,18 @@ export default function OrdersTab() {
     document.body.removeChild(link);
   };
 
+  const confirmationDialog = (
+    <ConfirmDialog
+        open={Boolean(confirmation)}
+        title={confirmation?.title || ''}
+        description={confirmation?.description || ''}
+        confirmLabel={confirmation?.confirmLabel}
+        busy={confirmationBusy}
+        onConfirm={runConfirmedAction}
+        onClose={() => { if (!confirmationBusy) setConfirmation(null); }}
+      />
+  );
+
   if (selectedOrder) {
     const st = selectedOrder.status.toLowerCase();
     const isDark = adminTheme === 'dark';
@@ -1027,6 +1058,7 @@ export default function OrdersTab() {
 
     return (
       <div className="space-y-6 admin-tab-enter pb-16">
+        {confirmationDialog}
         {/* Page Header */}
         <div className="space-y-3">
           {/* Breadcrumb */}
@@ -1165,11 +1197,14 @@ export default function OrdersTab() {
                 onClick={() => {
                   setConfirmation({
                     title: 'Supprimer cette commande ?',
-                    description: `La commande ${selectedOrder.order_id} sera supprimée définitivement. Cette action ne peut pas être annulée.`,
+                    description: `La commande ${selectedOrder.order_id} sera retirée de la liste. Si elle possède un historique protégé, elle sera archivée ; sinon elle sera supprimée définitivement. Les paiements et expéditions ne seront pas annulés.`,
                     confirmLabel: 'Supprimer la commande',
                     action: async () => {
-                    handleDeleteOrder(selectedOrder.order_id);
-                    setSelectedOrder(null);
+                      const deleted = await handleDeleteOrder(selectedOrder.order_id);
+                      if (deleted) {
+                        setSelectedOrderIds(ids => ids.filter(id => id !== selectedOrder.order_id));
+                        setSelectedOrder(null);
+                      }
                     },
                   });
                 }}
@@ -4200,6 +4235,12 @@ export default function OrdersTab() {
                 Exporter CSV
               </button>
 
+              {canDeleteOrder && (
+                <button type="button" onClick={confirmDeleteSelectedOrders} disabled={confirmationBusy}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-rose-700 disabled:opacity-50">
+                  <Trash2 className="h-3.5 w-3.5" /> Supprimer la sélection
+                </button>
+              )}
               <button
                 onClick={() => setSelectedOrderIds([])}
                 className="px-2 py-1 rounded-lg text-xs text-rose-400 hover:text-rose-300 font-bold transition cursor-pointer"
@@ -5460,15 +5501,7 @@ export default function OrdersTab() {
         </div>
       )}
 
-      <ConfirmDialog
-        open={Boolean(confirmation)}
-        title={confirmation?.title || ''}
-        description={confirmation?.description || ''}
-        confirmLabel={confirmation?.confirmLabel}
-        busy={confirmationBusy}
-        onConfirm={runConfirmedAction}
-        onClose={() => { if (!confirmationBusy) setConfirmation(null); }}
-      />
+      {confirmationDialog}
 
       {/* Floating Bulk Action Bar for Orders */}
       {canMutateOrders && selectedOrderIds.length > 0 && (
@@ -5548,6 +5581,12 @@ export default function OrdersTab() {
               >
                 Cathedis CSV
               </button>
+              {canDeleteOrder && (
+                <button type="button" onClick={confirmDeleteSelectedOrders} disabled={confirmationBusy}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-rose-700 disabled:opacity-50">
+                  <Trash2 className="h-3.5 w-3.5" /> Supprimer la sélection
+                </button>
+              )}
               <button
                 onClick={() => setSelectedOrderIds([])}
                 className={`px-3 py-1.5 bg-transparent font-black text-[9.5px] uppercase tracking-wider rounded-xl transition-all duration-200 cursor-pointer ${
