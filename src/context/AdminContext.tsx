@@ -83,7 +83,7 @@ export interface AdminContextProps {
   // Order Handlers
   handleUpdateOrderStatus: (orderId: string, newStatus: string) => Promise<void>;
   handleBulkUpdateOrderStatus: (status: string, selectedIds: string[]) => Promise<void>;
-  handleDeleteOrder: (orderId: string) => Promise<void>;
+  handleDeleteOrder: (orderId: string) => Promise<boolean>;
 
   // Courier Handlers
   handleRegisterShipping: (shippingData: {

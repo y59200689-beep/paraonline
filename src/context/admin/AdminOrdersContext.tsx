@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
+import { canDeleteOrders, type AdminRole } from '@/lib/permissions';
 import React, { createContext, useContext, useMemo } from 'react';
 import { useAdminAuth } from './AdminAuthContext';
 import { useAdminData } from './AdminDataContext';
@@ -9,7 +10,7 @@ import { useSettings } from '@/context/SettingsContext';
 export interface AdminOrdersContextProps {
   handleUpdateOrderStatus: (orderId: string, newStatus: string) => Promise<void>;
   handleBulkUpdateOrderStatus: (status: string, selectedIds: string[]) => Promise<void>;
-  handleDeleteOrder: (orderId: string) => Promise<void>;
+  handleDeleteOrder: (orderId: string) => Promise<boolean>;
   handleRegisterShipping: (shippingData: {
     orderId: string;
     courierName: 'yalidine' | 'cathedis';
@@ -95,29 +96,26 @@ export const AdminOrdersProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, [loadOrders, logAdminAction, setIsDataLoading]);
 
-  const handleDeleteOrder = useCallback(async (orderId: string) => {
-    if (currentUser?.role !== 'owner') {
-      alert("Permission refusée : Seul le propriétaire de la boutique (Owner) peut supprimer des commandes.");
-      return;
+  const handleDeleteOrder = useCallback(async (orderId: string): Promise<boolean> => {
+    if (!currentUser?.role || !canDeleteOrders(currentUser.role as AdminRole)) {
+      alert("Permission refusée : suppression réservée au propriétaire et aux administrateurs.");
+      return false;
     }
     try {
-      const res = await fetch(`/api/admin/orders?id=${orderId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/admin/orders?id=${encodeURIComponent(orderId)}`, { method: 'DELETE' });
       const data = await res.json();
-      if (data.success) {
-        if (data.note) {
-          const localOrders = JSON.parse(localStorage.getItem('ordersBM') || '[]') as any[];
-          const updated = localOrders.filter(o => o.order_id !== orderId);
-          localStorage.setItem('ordersBM', JSON.stringify(updated));
-        }
-        await loadOrders();
-        logAdminAction("Suppression Commande", `Commande ${orderId} supprimée.`);
-      } else {
-        alert("Erreur: " + data.error);
+      if (!res.ok || !data.success) {
+        alert("Erreur : " + (data.error || "Impossible de supprimer cette commande."));
+        return false;
       }
+      setOrders(previous => previous.filter(order => order.order_id !== orderId));
+      logAdminAction(data.archived ? "Archivage Commande" : "Suppression Commande", `Commande ${orderId} ${data.archived ? "archivée" : "supprimée"}.`);
+      return true;
     } catch {
-      alert("Erreur réseau");
+      alert("Erreur réseau : la suppression n’a pas pu être confirmée. Actualisez les commandes avant de réessayer.");
+      return false;
     }
-  }, [currentUser?.role, loadOrders, logAdminAction]);
+  }, [currentUser?.role, setOrders, logAdminAction]);
 
   const handleRegisterShipping = useCallback(async (shippingData: {
     orderId: string;
