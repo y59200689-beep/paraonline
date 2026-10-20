@@ -47,6 +47,7 @@ interface SearchPillProps {
   onIngredientClick: (key: string) => void;
   onQuickAdd: (e: React.MouseEvent, p: Product) => void;
   onOpenDiagnostic: () => void;
+  onSearchSubmit: () => void;
 }
 
 export const SearchPill: React.FC<SearchPillProps> = ({
@@ -73,6 +74,7 @@ export const SearchPill: React.FC<SearchPillProps> = ({
   onIngredientClick,
   onQuickAdd,
   onOpenDiagnostic,
+  onSearchSubmit,
 }) => {
   const currentCategory = CATEGORIES.find((c) => c.id === selectedCategoryId) || CATEGORIES[0];
   const selectedCategoryLabel = language === 'FR' ? currentCategory.labelFR : currentCategory.labelAR;
@@ -96,7 +98,7 @@ export const SearchPill: React.FC<SearchPillProps> = ({
 
   return (
     <div ref={searchRef} className={styles.search}>
-      <div className={styles.searchRow}>
+      <form role="search" onSubmit={event => { event.preventDefault(); onSearchSubmit(); }} className={styles.searchRow}>
         {/* Category selector */}
         <div ref={categoryRef} className="relative shrink-0 flex items-center">
           <button
@@ -184,13 +186,14 @@ export const SearchPill: React.FC<SearchPillProps> = ({
 
         {/* Search button */}
         <button
+          type="submit"
           className={styles.submit}
           aria-label={language === 'FR' ? 'Rechercher' : 'بحث'}
         >
           <Search className="w-6 h-6" aria-hidden="true" />
         </button>
         </div>
-      </div>
+      </form>
 
       {/* Search dropdown */}
       <SearchDropdown {...searchDropdownProps} />

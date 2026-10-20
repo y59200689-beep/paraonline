@@ -30,6 +30,13 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
   const { settings } = useSettings();
   const { getDisplayImage } = useGalleryOverrides();
   const [isMobile, setIsMobile] = React.useState(false);
+  // Fully prefetch only destinations the customer shows an interest in.
+  // Automatic prefetch can skip dynamic catalogue data without a loading boundary.
+  const [prefetchHrefs, setPrefetchHrefs] = React.useState<Set<string>>(() => new Set());
+  const warmCategory = (href: string) => {
+    if (!href.startsWith('/products')) return;
+    setPrefetchHrefs(previous => previous.has(href) ? previous : new Set(previous).add(href));
+  };
 
   React.useEffect(() => {
     const media = window.matchMedia('(max-width: 767px)');
@@ -257,6 +264,10 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
                    <Link
                      key={cat.id}
                      href={productsHref}
+                     prefetch={prefetchHrefs.has(productsHref) ? true : null}
+                     onMouseEnter={() => warmCategory(productsHref)}
+                     onFocus={() => warmCategory(productsHref)}
+                     onTouchStart={() => warmCategory(productsHref)}
                      className={cardClassName}
                      style={cardStyle}
                    >

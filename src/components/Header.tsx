@@ -22,6 +22,7 @@ import { SearchPill } from './Header/SearchPill';
 import { DesktopActions } from './Header/DesktopActions';
 import { MobileHeader } from './Header/MobileHeader';
 import headerStyles from './Header/Header.module.css';
+import { buildCatalogPageHref, normalizeCatalogRouteState } from '@/lib/catalog-pagination';
 import { useLiveProductSearch } from '@/hooks/useLiveProductSearch';
 
 const LANGUAGES = [
@@ -197,17 +198,28 @@ export const Header: React.FC = () => {
     setShowSearch(false);
   };
 
+  const handleSearchSubmit = () => {
+    const state = normalizeCatalogRouteState({ search: searchQuery, category: selectedCategoryId });
+    setShowSearch(false);
+    setShowCategoryDropdown(false);
+    router.push(buildCatalogPageHref(1, state));
+  };
+
   // Shared search props used by both desktop and mobile search
   const sharedSearchProps = {
     searchQuery,
     setSearchQuery,
     showSearch,
-    setShowSearch,
+    setShowSearch: (open: boolean) => {
+      if (open) setShowCategoryDropdown(false);
+      setShowSearch(open);
+    },
     searchResults,
     searchLoading,
     searchError,
     matchedIngredients,
     convertPrice,
+    onSearchSubmit: handleSearchSubmit,
     onSuggestionClick: handleSuggestionClick,
     onIngredientClick: handleIngredientClick,
     onQuickAdd: handleQuickAdd,
@@ -286,7 +298,10 @@ export const Header: React.FC = () => {
                 router.push(id === 'all' ? '/products' : `/products?category=${encodeURIComponent(id)}`);
               }}
               showCategoryDropdown={showCategoryDropdown}
-              setShowCategoryDropdown={setShowCategoryDropdown}
+              setShowCategoryDropdown={(open) => {
+                if (open) setShowSearch(false);
+                setShowCategoryDropdown(open);
+              }}
               hoveredCategoryId={hoveredCategoryId}
               setHoveredCategoryId={setHoveredCategoryId}
               {...sharedSearchProps}

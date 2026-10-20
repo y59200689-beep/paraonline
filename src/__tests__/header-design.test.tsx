@@ -34,7 +34,7 @@ describe('Redesigned desktop header', () => {
       setShowCategoryDropdown={setShowCategoryDropdown} hoveredCategoryId={null}
       setHoveredCategoryId={vi.fn()} searchResults={[]} matchedIngredients={[]}
       convertPrice={String} onSuggestionClick={vi.fn()} onIngredientClick={vi.fn()}
-      onQuickAdd={vi.fn()} onOpenDiagnostic={vi.fn()} />);
+      onQuickAdd={vi.fn()} onOpenDiagnostic={vi.fn()} onSearchSubmit={vi.fn()} />);
     fireEvent.change(screen.getByRole('textbox', {name: 'Rechercher des produits'}), {target: {value: 'crème'}});
     expect(setSearchQuery).toHaveBeenCalledWith('crème');
     expect(setShowSearch).toHaveBeenCalledWith(true);
