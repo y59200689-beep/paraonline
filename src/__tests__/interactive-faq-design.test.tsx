@@ -5,7 +5,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { InteractiveFaq } from '@/components/InteractiveFaq';
 const state = vi.hoisted(() => ({ language: 'FR' }));
 vi.mock('@/context/LanguageContext', () => ({ useTranslation: () => ({ language: state.language }) }));
-vi.mock('@/context/SettingsContext', () => ({ useSettings: () => ({ settings: { storeWhatsApp: '212660808080', shippingFee: 35, deliverySettings: { defaultDaysMin: 1, defaultDaysMax: 3, cityRules: [] } } }) }));
+vi.mock('@/context/SettingsContext', () => ({ useSettings: () => ({ settings: { storeWhatsApp: '212664099810', shippingFee: 35, deliverySettings: { defaultDaysMin: 1, defaultDaysMax: 3, cityRules: [] } } }) }));
 afterEach(() => { cleanup(); state.language = 'FR'; });
 describe('Interactive FAQ redesign', () => {
   it('shows the Marrakech estimate without a city selector', () => {
@@ -21,7 +21,7 @@ describe('Interactive FAQ redesign', () => {
     fireEvent.click(screen.getByRole('button', { name: /Commande.*Suivi/ }));
     expect(screen.getByRole('link', { name: 'Suivre ma commande' }).getAttribute('href')).toBe('/suivi-commande');
     fireEvent.click(screen.getByRole('button', { name: /Produits.*Disponibilité/ }));
-    expect(screen.getByRole('link', { name: 'Demander un conseil' }).getAttribute('href')).toContain('wa.me/212660808080');
+    expect(screen.getByRole('link', { name: 'Demander un conseil' }).getAttribute('href')).toContain('wa.me/212664099810');
     fireEvent.click(screen.getByRole('button', { name: /Livraison à domicile.*Délais/ }));
     expect(screen.getByText('Estimation pour Marrakech')).toBeTruthy();
   });

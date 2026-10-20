@@ -139,7 +139,7 @@ describe('Skin Diagnostic to Checkout Flow Integration Test', () => {
     // Check order submission result
     expect(orderResult?.success).toBe(true);
     expect(orderResult?.orderId).toBe('ORD-987654-TEST');
-    expect(orderResult?.whatsappUrl).toContain('212660808080'); // check store whatsapp number
+    expect(orderResult?.whatsappUrl).toContain('212664099810'); // check store whatsapp number
     expect(orderResult?.whatsappUrl).toContain('121%20DH'); // check url encoded total in whatsapp URL
 
     // Cart should be cleared after checkout

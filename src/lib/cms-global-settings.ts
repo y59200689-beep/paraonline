@@ -1,3 +1,4 @@
+import { resolveStorePhone, resolveStoreWhatsApp } from '@/lib/site-contact';
 import { supabaseAdmin } from './supabase-server';
 import { unstable_cache } from 'next/cache';
 import { getPublicSettings as getBasePublicSettings, PUBLIC_SETTINGS_CACHE_TAG } from './get-public-settings';
@@ -47,8 +48,8 @@ async function fetchMergedPublicSettings() {
       storeName: cmsGlobal.store_name || base.storeName,
       storeTaglineFr: cmsGlobal.store_tagline_fr || base.storeTaglineFr,
       storeTaglineAr: cmsGlobal.store_tagline_ar || base.storeTaglineAr,
-      storePhone: cmsGlobal.store_phone || base.storePhone,
-      storeWhatsApp: cmsGlobal.store_whatsapp || base.storeWhatsApp,
+      storePhone: resolveStorePhone(cmsGlobal.store_phone || base.storePhone),
+      storeWhatsApp: resolveStoreWhatsApp(cmsGlobal.store_whatsapp || base.storeWhatsApp),
       announcementFr: cmsGlobal.announcement_fr || base.announcementFr,
       announcementAr: cmsGlobal.announcement_ar || base.announcementAr,
       announcementEnabled: cmsGlobal.announcement_enabled ?? base.announcementEnabled,
@@ -75,7 +76,7 @@ async function fetchMergedPublicSettings() {
 export function getMergedPublicSettings() {
   return unstable_cache(
     () => fetchMergedPublicSettings(),
-    ['cms-merged-public-settings-v4', process.env.NEXT_PUBLIC_SUPABASE_URL || 'unconfigured'],
+    ['cms-merged-public-settings-v5-contact', process.env.NEXT_PUBLIC_SUPABASE_URL || 'unconfigured'],
     { tags: [PUBLIC_SETTINGS_CACHE_TAG], revalidate: 300 }
   )();
 }

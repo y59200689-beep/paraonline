@@ -4,7 +4,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { StorefrontFooter } from '@/components/StorefrontFooter';
 vi.mock('@/context/LanguageContext', () => ({ useTranslation: () => ({ language: 'FR' }) }));
-vi.mock('@/context/SettingsContext', () => ({ useSettings: () => ({ settings: { storeWhatsApp: '212660808080', socialLinks: [] } }) }));
+vi.mock('@/context/SettingsContext', () => ({ useSettings: () => ({ settings: { storeWhatsApp: '212664099810', socialLinks: [] } }) }));
 afterEach(cleanup);
 it('preserves footer logo, policy destinations, and the diagnostic action', () => {
   const diagnostic = vi.fn();
@@ -13,7 +13,7 @@ it('preserves footer logo, policy destinations, and the diagnostic action', () =
   expect(screen.getByRole('link', { name: 'Conditions de Vente' }).getAttribute('href')).toBe('/politiques/conditions-vente');
   fireEvent.click(screen.getByRole('button', { name: 'Dermo-Diagnostic IA' }));
   expect(diagnostic).toHaveBeenCalledOnce();
-  expect(screen.getByRole('link', { name: /WhatsApp/ }).getAttribute('href')).toContain('212660808080');
+  expect(screen.getByRole('link', { name: /WhatsApp/ }).getAttribute('href')).toContain('212664099810');
 });
 it('does not falsely confirm a newsletter subscription without a backend', () => {
   render(<StorefrontFooter onDiagnostic={() => {}} />);

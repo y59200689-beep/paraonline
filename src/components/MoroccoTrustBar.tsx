@@ -11,7 +11,7 @@ export const MoroccoTrustBar: React.FC = () => {
   const { language } = useTranslation();
   const { settings } = useSettings();
   
-  const storeWhatsApp = settings?.storeWhatsApp || '212660808080';
+  const storeWhatsApp = settings?.storeWhatsApp || '212664099810';
 
   const trustItems = [
     {

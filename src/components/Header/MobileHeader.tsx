@@ -17,6 +17,8 @@ interface MobileHeaderProps {
   showSearch: boolean;
   setShowSearch: (v: boolean) => void;
   searchResults: Product[];
+  searchLoading?: boolean;
+  searchError?: boolean;
   matchedIngredients: string[];
   convertPrice: (price: number) => string;
   onCartOpen: () => void;
@@ -40,6 +42,8 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
   showSearch,
   setShowSearch,
   searchResults,
+  searchLoading,
+  searchError,
   matchedIngredients,
   convertPrice,
   onCartOpen,
@@ -56,6 +60,8 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
     showSearch,
     searchQuery,
     searchResults,
+    searchLoading,
+    searchError,
     matchedIngredients,
     language,
     isRTL,

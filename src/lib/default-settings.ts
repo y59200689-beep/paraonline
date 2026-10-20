@@ -1,3 +1,4 @@
+import { SITE_CONTACT_PHONE, SITE_WHATSAPP_NUMBER } from '@/lib/site-contact';
 // Shared data: keep this module outside the React client boundary.
 import type { Settings } from '@/context/SettingsContext';
 
@@ -54,8 +55,8 @@ export const DEFAULT_SETTINGS: Settings = {
     ]
   },
   storeName: "Para Divine",
-  storePhone: "+212 5 22 20 20 20",
-  storeWhatsApp: "212660808080",
+  storePhone: SITE_CONTACT_PHONE,
+  storeWhatsApp: SITE_WHATSAPP_NUMBER,
   freeShippingThreshold: 400,
   shippingFee: 35,
   announcementFr: "LIVRAISON A DOMICILE — LE DÉLAI ET LES FRAIS SONT CONFIRMÉS AVANT LA VALIDATION DE VOTRE COMMANDE",

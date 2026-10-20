@@ -2981,7 +2981,7 @@ export default function OrdersTab() {
                             <div>
                               <span className="text-[10px] font-black tracking-widest uppercase block text-slate-500">EXPE : {settings?.storeName || 'Para Divine'}</span>
                               <strong className="text-xs font-black block">Casablanca, Maroc</strong>
-                              <span className="text-[9px] font-mono block text-slate-600">Tél: +212 522-202020</span>
+                              <span className="text-[9px] font-mono block text-slate-600">Tél: +212 664 099 810</span>
                             </div>
                             <div className="text-right">
                               <span className="px-2 py-0.5 bg-black text-white font-mono text-[10px] font-black uppercase rounded">
@@ -3086,7 +3086,7 @@ export default function OrdersTab() {
                         <strong className="text-sm font-black text-slate-900 block">{settings?.storeName || 'Para Divine'}</strong>
                         <p className="text-slate-600 font-medium">Boulevard d'Anfa, Maarif</p>
                         <p className="text-slate-600 font-medium">Casablanca, Maroc</p>
-                        <p className="text-slate-600 font-mono font-bold">Tél: +212 522-202020</p>
+                        <p className="text-slate-600 font-mono font-bold">Tél: +212 664 099 810</p>
                       </div>
 
                       {/* Destinataire */}

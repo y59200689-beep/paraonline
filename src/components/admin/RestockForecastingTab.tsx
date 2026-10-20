@@ -892,7 +892,7 @@ export default function RestockForecastingTab() {
                     <div className="mt-4 space-y-0.5 text-xs text-slate-600 font-sans">
                       <p>Boulevard Zerktouni, Résidence El Bahja, N° 45</p>
                       <p>Casablanca, Maroc</p>
-                      <p>Téléphone: +212 522 34 56 78</p>
+                      <p>Téléphone: +212 664 099 810</p>
                       <p>Email: contact@paradivine.ma</p>
                       <p>Patente: 34568912 • RC: Casablanca 98765</p>
                     </div>

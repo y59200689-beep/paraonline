@@ -18,7 +18,7 @@ export const InteractiveFaq: React.FC = () => {
   const text = translations[ar ? 'AR' : 'FR'];
   const [active, setActive] = useState(0);
   const [question, setQuestion] = useState<number | null>(null);
-  const support = buildWhatsAppUrl(settings.storeWhatsApp || '212660808080') || '#footer';
+  const support = buildWhatsAppUrl(settings.storeWhatsApp || '212664099810') || '#footer';
   const topics = [
     { icon: Truck, title: text.tabDelivery, sub: ar ? 'المناطق وتتبع الشحن' : 'Délais, zones et suivi', heading: text.delTitle, desc: ar ? 'تقدير التوصيل إلى مراكش ومراحل توصيل طلبك. يتم تأكيد المدة والتكلفة قبل إتمام الطلب.' : 'Consultez une estimation pour Marrakech et les étapes de livraison. Le délai et les frais sont confirmés avant validation.' },
     { icon: Package, title: text.tabReturns, sub: ar ? 'الاستبدال والاسترجاع' : 'Échanges et remboursements', heading: text.retTitle, desc: text.retDesc },

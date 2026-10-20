@@ -39,6 +39,8 @@ interface SearchPillProps {
   hoveredCategoryId: string | null;
   setHoveredCategoryId: (id: string | null) => void;
   searchResults: Product[];
+  searchLoading?: boolean;
+  searchError?: boolean;
   matchedIngredients: string[];
   convertPrice: (price: number) => string;
   onSuggestionClick: (p: Product) => void;
@@ -63,6 +65,8 @@ export const SearchPill: React.FC<SearchPillProps> = ({
   hoveredCategoryId,
   setHoveredCategoryId,
   searchResults,
+  searchLoading,
+  searchError,
   matchedIngredients,
   convertPrice,
   onSuggestionClick,
@@ -77,6 +81,8 @@ export const SearchPill: React.FC<SearchPillProps> = ({
     showSearch,
     searchQuery,
     searchResults,
+    searchLoading,
+    searchError,
     matchedIngredients,
     language,
     isRTL,

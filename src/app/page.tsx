@@ -1,3 +1,4 @@
+import { SITE_CONTACT_PHONE } from '@/lib/site-contact';
 import React from 'react';
 import type { Metadata } from 'next';
 
@@ -33,6 +34,7 @@ const organizationJsonLd = {
   contactPoint: {
     '@type': 'ContactPoint',
     contactType: 'customer service',
+    telephone: SITE_CONTACT_PHONE,
     availableLanguage: ['French', 'Arabic'],
   },
 };

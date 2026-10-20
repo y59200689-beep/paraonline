@@ -4,10 +4,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { MoroccoTrustBar } from '@/components/MoroccoTrustBar';
 
-const state = vi.hoisted(() => ({ language: 'FR', phone: '212660808080' }));
+const state = vi.hoisted(() => ({ language: 'FR', phone: '212664099810' }));
 vi.mock('@/context/LanguageContext', () => ({ useTranslation: () => ({ language: state.language }) }));
 vi.mock('@/context/SettingsContext', () => ({ useSettings: () => ({ settings: { storeWhatsApp: state.phone } }) }));
-afterEach(() => { cleanup(); state.language = 'FR'; state.phone = '212660808080'; });
+afterEach(() => { cleanup(); state.language = 'FR'; state.phone = '212664099810'; });
 
 describe('Purchase reassurance section', () => {
   it('provides four actionable cards with real policy and configured support destinations', () => {
@@ -16,7 +16,7 @@ describe('Purchase reassurance section', () => {
     const shipping = screen.getByRole('link', { name: /Livraison au Maroc/ });
     expect(shipping.getAttribute('href')).toBe('/politiques/conditions-vente');
     const support = screen.getByRole('link', { name: /Conseil & Support/ });
-    expect(support.getAttribute('href')).toContain('https://wa.me/212660808080');
+    expect(support.getAttribute('href')).toContain('https://wa.me/212664099810');
     expect(support.getAttribute('rel')).toBe('noopener noreferrer');
     expect(screen.getByRole('heading', { level: 2 }).textContent).toContain('avant votre achat');
   });

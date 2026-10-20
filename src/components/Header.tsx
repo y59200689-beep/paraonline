@@ -22,6 +22,7 @@ import { SearchPill } from './Header/SearchPill';
 import { DesktopActions } from './Header/DesktopActions';
 import { MobileHeader } from './Header/MobileHeader';
 import headerStyles from './Header/Header.module.css';
+import { useLiveProductSearch } from '@/hooks/useLiveProductSearch';
 
 const LANGUAGES = [
   { id: 'FR', label: 'Français', flag: '🇫🇷' },
@@ -51,11 +52,11 @@ export const Header: React.FC = () => {
   // ── Local UI state ─────────────────────────────────────────────────────────
   const [isWalletOpen, setIsWalletOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [matchedIngredients, setMatchedIngredients] = useState<string[]>([]);
   const [showSearch, setShowSearch] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState('all');
+  const { products: searchResults, searching: searchLoading, error: searchError } = useLiveProductSearch(searchQuery, selectedCategoryId, showSearch);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [hoveredCategoryId, setHoveredCategoryId] = useState<string | null>(null);
   const [isJiggling, setIsJiggling] = useState(false);
@@ -141,47 +142,20 @@ export const Header: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Debounced search
+  // Ingredient suggestions are local; product results update on every keystroke.
   useEffect(() => {
-    if (!showSearch) {
-      setSearchResults([]);
-      setMatchedIngredients([]);
-      return;
-    }
-
-    if (!searchQuery.trim()) {
-      setMatchedIngredients([]);
-      setSearchResults([]);
-      return;
-    }
-    const q = searchQuery.toLowerCase();
-
-    import('@/lib/data').then(({ INGREDIENTS_GLOSSARY }) => {
-      const matched = Object.keys(INGREDIENTS_GLOSSARY).filter((key) => {
-        const ing = INGREDIENTS_GLOSSARY[key];
-        return (
-          key.toLowerCase().includes(q) ||
-          ing.name_fr.toLowerCase().includes(q) ||
-          ing.name_ar.toLowerCase().includes(q)
-        );
-      });
-      setMatchedIngredients(matched);
-    });
-
+    if (!showSearch || !searchQuery.trim()) { setMatchedIngredients([]); return; }
     let active = true;
-    const timer = setTimeout(async () => {
-      try {
-        const params = new URLSearchParams({ search: searchQuery, limit: '24', category: selectedCategoryId, sort: 'search-stock' });
-        const res = await fetch(`/api/products?${params}`);
-        const data = await res.json();
-        if (active && data.success) setSearchResults(data.products || []);
-      } catch (err) {
-        console.error('Search fetch failed:', err);
-      }
-    }, 250);
-
-    return () => { active = false; clearTimeout(timer); };
-  }, [searchQuery, selectedCategoryId, showSearch]);
+    const q = searchQuery.toLowerCase();
+    void import('@/lib/data').then(({ INGREDIENTS_GLOSSARY }) => {
+      if (!active) return;
+      setMatchedIngredients(Object.keys(INGREDIENTS_GLOSSARY).filter(key => {
+        const ingredient = INGREDIENTS_GLOSSARY[key];
+        return key.toLowerCase().includes(q) || ingredient.name_fr.toLowerCase().includes(q) || ingredient.name_ar.toLowerCase().includes(q);
+      }));
+    });
+    return () => { active = false; };
+  }, [searchQuery, showSearch]);
 
   // Click-outside handler
   useEffect(() => {
@@ -230,6 +204,8 @@ export const Header: React.FC = () => {
     showSearch,
     setShowSearch,
     searchResults,
+    searchLoading,
+    searchError,
     matchedIngredients,
     convertPrice,
     onSuggestionClick: handleSuggestionClick,

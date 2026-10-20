@@ -155,8 +155,9 @@ export default function SettingsTab() {
     }));
   };
 
-  const saveGiftRanges = async () => {
-    const normalized = giftRangesDraft
+  const saveGiftRanges = async (ranges: GiftRange[] = giftRangesDraft) => {
+    if (isSavingGiftRanges) return;
+    const normalized = ranges
       .map((range) => ({
         minAmount: Number(range.minAmount),
         maxAmount: Number(range.maxAmount),
@@ -198,14 +199,18 @@ export default function SettingsTab() {
     }
 
     setIsSavingGiftRanges(true);
-    const saved = await saveSettings({ ...settings, giftRanges: normalized });
-    setIsSavingGiftRanges(false);
-
-    if (saved) {
-      setGiftRangesDraft(normalized);
-      showToast('Paliers cadeaux enregistrés.', 'success');
-    } else {
-      showToast('Impossible d’enregistrer les paliers cadeaux.', 'error');
+    try {
+      const saved = await saveSettings({ ...settings, giftRanges: normalized });
+      if (saved) {
+        setGiftRangesDraft(normalized);
+        showToast('Paliers cadeaux enregistrés.', 'success');
+      } else {
+        showToast('Impossible d’enregistrer les paliers cadeaux. Aucun cadeau n’a été supprimé.', 'error');
+      }
+    } catch {
+      showToast('Impossible d’enregistrer les paliers cadeaux. Réessayez.', 'error');
+    } finally {
+      setIsSavingGiftRanges(false);
     }
   };
 
@@ -1999,7 +2004,7 @@ export default function SettingsTab() {
                                   await saveSettings({ ...settings, storeWhatsApp: e.target.value });
                                 }}
                                 className={`w-full text-xs font-bold rounded-xl px-3 py-2 border ${adminTheme === 'light' ? 'bg-white text-slate-800 border-slate-200' : 'bg-slate-900 text-slate-202 border-slate-800'}`}
-                                placeholder="Ex: 212660808080"
+                                placeholder="Ex: 212664099810"
                               />
                             </div>
                           </div>
@@ -3186,7 +3191,8 @@ export default function SettingsTab() {
 
         {/* C. SPEND-BASED GIFT TIERS */}
         {activeSettingsSubTab === 'gifts' && (
-          <section className="space-y-5" aria-labelledby="gift-tiers-heading">
+          <section aria-labelledby="gift-tiers-heading" aria-busy={isSavingGiftRanges}>
+            <fieldset disabled={isSavingGiftRanges} className="min-w-0 space-y-5">
             <div className={`rounded-2xl border p-5 sm:p-6 ${
               adminTheme === 'light'
                 ? 'border-emerald-100 bg-emerald-50/50 text-slate-800'
@@ -3348,7 +3354,7 @@ export default function SettingsTab() {
                         <span className={`h-2 w-2 rounded-full ${range.isActive !== false ? 'bg-emerald-500' : 'bg-slate-400'}`} aria-hidden="true" />
                         {range.isActive !== false ? 'En ligne' : 'En pause'}
                       </button>
-                      <button type="button" onClick={() => setGiftRangesDraft((current) => current.filter((_, rangeIndex) => rangeIndex !== index))} className={`inline-flex h-12 items-center justify-center gap-1 rounded-xl border px-3 text-xs font-bold transition ${adminTheme === 'light' ? 'border-rose-100 text-rose-600 hover:bg-rose-50' : 'border-rose-500/20 text-rose-300 hover:bg-rose-500/10'}`} aria-label={`Supprimer le palier ${index + 1}`}>
+                      <button type="button" onClick={() => void saveGiftRanges(giftRangesDraft.filter((_, rangeIndex) => rangeIndex !== index))} className={`inline-flex h-12 items-center justify-center gap-1 rounded-xl border px-3 text-xs font-bold transition ${adminTheme === 'light' ? 'border-rose-100 text-rose-600 hover:bg-rose-50' : 'border-rose-500/20 text-rose-300 hover:bg-rose-500/10'}`} aria-label={`Supprimer le palier ${index + 1}`}>
                         <Trash2 className="h-4 w-4" aria-hidden="true" /><span className="md:sr-only">Supprimer</span>
                       </button>
                     </div>
@@ -3357,14 +3363,13 @@ export default function SettingsTab() {
               </div>
             )}
 
-            {giftRangesDraft.length > 0 && (
               <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-xs leading-5 text-slate-500">Les paliers sont vérifiés sur le sous-total, avant les frais de livraison et les réductions.</p>
-                <button type="button" onClick={saveGiftRanges} disabled={isSavingGiftRanges} className="po-ui-button po-ui-button--primary po-ui-button--md px-4 py-2.5 text-xs font-black uppercase tracking-wider disabled:cursor-not-allowed disabled:opacity-60">
+                <button type="button" onClick={() => void saveGiftRanges()} disabled={isSavingGiftRanges} className="po-ui-button po-ui-button--primary po-ui-button--md px-4 py-2.5 text-xs font-black uppercase tracking-wider disabled:cursor-not-allowed disabled:opacity-60">
                   <Check className="h-4 w-4" aria-hidden="true" /> {isSavingGiftRanges ? 'Enregistrement...' : 'Enregistrer les cadeaux'}
                 </button>
               </div>
-            )}
+            </fieldset>
           </section>
         )}
 
