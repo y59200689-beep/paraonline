@@ -15,12 +15,20 @@ export async function GET() {
       return NextResponse.json({ success: false, error: 'Accès non autorisé' }, { status: 401 });
     }
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('orders')
       .select('*')
       .is('admin_archived_at', null)
       .order('created_at', { ascending: false });
 
+    // Rolling-deployment compatibility: before the archive migration exists,
+    // no rows can have been archived. Keep existing orders readable.
+    if (error?.code === '42703' && String(error.message).includes('admin_archived_at')) {
+      console.warn('Order archive column unavailable; serving pre-migration orders.');
+      const legacy = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+      data = legacy.data;
+      error = legacy.error;
+    }
     if (error) throw error;
 
     const orderIds = (data || []).map((order: any) => order.order_id);
@@ -80,7 +88,7 @@ export async function PUT(request: Request) {
     const { data: transition, error } = await transitionOrderLifecycle(orderId, status);
     if (error) {
       if (String(error.message).includes('ORDER_NOT_FOUND')) return NextResponse.json({ success: false, error: 'Commande introuvable.' }, { status: 404 });
-      if (String(error.message).includes('INVALID_ORDER_TRANSITION')) return NextResponse.json({ success: false, error: 'Transition de commande invalide.' }, { status: 409 });
+      if (String(error.message).includes('INVALID_ORDER_TRANSITION')) return NextResponse.json({ success: false, error: 'Ce changement ne correspond plus à l’étape actuelle de la commande. Actualisez la liste ; les commandes annulées ou retournées ne peuvent pas être réactivées.' }, { status: 409 });
       throw error;
     }
     const becomesConfirmed = status === 'Confirmed';
