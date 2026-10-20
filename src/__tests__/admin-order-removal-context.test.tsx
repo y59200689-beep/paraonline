@@ -32,11 +32,13 @@ describe('admin order removal state', () => {
 });
 
 describe('order status request outcomes', () => {
-  it('does not send impossible status changes to the API', async () => {
-    const fetchMock = vi.fn(); vi.stubGlobal('fetch', fetchMock);
+  it('sends a manual status correction from any current status', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ success: true, manualCorrection: true }) }); vi.stubGlobal('fetch', fetchMock);
     const { result } = renderHook(() => useAdminOrders(), { wrapper: AdminOrdersProvider });
-    await act(async () => { expect(await result.current.handleUpdateOrderStatus('fixture/1', 'Delivered')).toBe(false); });
-    expect(fetchMock).not.toHaveBeenCalled(); expect(state.audit).not.toHaveBeenCalled();
+    await act(async () => { expect(await result.current.handleUpdateOrderStatus('fixture/1', 'Delivered')).toBe(true); });
+    expect(fetchMock).toHaveBeenCalledWith('/api/admin/orders', expect.objectContaining({ body: JSON.stringify({ orderId: 'fixture/1', status: 'Delivered' }) }));
+    expect(state.audit).toHaveBeenCalledTimes(1);
+    expect(state.toast).toHaveBeenCalledWith(expect.stringContaining('stock'), 'warning');
   });
   it('reports a rejected update without recording success or browser alerts', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, json: async () => ({ success: false, error: 'Actualisez la liste.' }) }));

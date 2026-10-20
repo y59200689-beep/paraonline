@@ -62,7 +62,12 @@ export const AdminOrdersProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
       await loadOrders();
       logAdminAction('Statut Commande Modifié', `Commande ${orderId} passée au statut ${newStatus}.`);
-      showToast('Statut de la commande mis à jour.', 'success');
+      showToast(
+        data.manualCorrection
+          ? 'Statut corrigé manuellement. Vérifiez le stock, le paiement et l’expédition séparément.'
+          : 'Statut de la commande mis à jour.',
+        data.manualCorrection ? 'warning' : 'success'
+      );
       return true;
     } catch {
       showToast('Impossible de confirmer la mise à jour. Actualisez les commandes avant de réessayer.', 'error');
@@ -74,6 +79,7 @@ export const AdminOrdersProvider: React.FC<{ children: React.ReactNode }> = ({ c
     if (!selectedIds.length) return [];
     setIsDataLoading(true);
     const updatedIds: string[] = [];
+    let manualCorrections = 0;
     try {
       for (const orderId of selectedIds) {
         const order = orders.find(order => order.order_id === orderId);
@@ -84,12 +90,15 @@ export const AdminOrdersProvider: React.FC<{ children: React.ReactNode }> = ({ c
             body: JSON.stringify({ orderId, status }),
           });
           const data = await res.json();
-          if (res.ok && data.success) updatedIds.push(orderId);
+          if (res.ok && data.success) {
+            updatedIds.push(orderId);
+            if (data.manualCorrection) manualCorrections += 1;
+          }
         } catch { /* Keep failed orders selected; continue the remaining requests. */ }
       }
       await loadOrders();
       if (updatedIds.length) logAdminAction('Bulk Statut Commande Modifié', `${updatedIds.length} commandes passées au statut ${status}.`);
-      showToast(`${updatedIds.length} commande(s) mise(s) à jour. ${selectedIds.length - updatedIds.length} non modifiée(s).`, updatedIds.length === selectedIds.length ? 'success' : 'warning');
+      showToast(`${updatedIds.length} commande(s) mise(s) à jour. ${selectedIds.length - updatedIds.length} non modifiée(s).${manualCorrections ? ` ${manualCorrections} correction(s) manuelle(s) : vérifiez stock, paiement et expédition.` : ''}`, updatedIds.length === selectedIds.length && !manualCorrections ? 'success' : 'warning');
     } catch {
       showToast('Les commandes n’ont pas pu être actualisées. Rechargez la liste avant de réessayer.', 'error');
     } finally {

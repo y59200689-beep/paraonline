@@ -20,7 +20,7 @@ describe('admin order deletion controls', () => {
     render(<OrdersTab />); selectAll();
     expect(screen.getAllByRole('region', { name: 'Actions sur les commandes sélectionnées' })).toHaveLength(1);
     expect(screen.getAllByRole('button', { name: 'Supprimer la sélection' })).toHaveLength(1);
-    expect(screen.getByRole('button', { name: 'Expédier (0)' }).hasAttribute('disabled')).toBe(true);
+    expect(screen.getByRole('button', { name: 'Expédier (2)' }).hasAttribute('disabled')).toBe(false);
     expect(screen.getByRole('button', { name: 'Confirmer (2)' }).hasAttribute('disabled')).toBe(false);
   });
   it('requires confirmation and lets the admin cancel without deleting', () => {
@@ -62,11 +62,10 @@ describe('admin order deletion controls', () => {
   });
 });
 
-it('requires explicit confirmation before reopening a cancelled order', async () => {
+it('allows reopening a cancelled order directly', async () => {
   state.orders[0].status = 'Cancelled'; state.updateOrder.mockResolvedValue(true);
   render(<OrdersTab />); fireEvent.click(screen.getByRole('button', { name: 'Annulée' }));
   fireEvent.click(screen.getByRole('option', { name: /Confirmée/ }));
-  expect(state.updateOrder).not.toHaveBeenCalled();
-  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Reconfirmer la commande' }));
   await waitFor(() => expect(state.updateOrder).toHaveBeenCalledWith('fixture-1', 'Confirmed'));
+  expect(screen.queryByRole('dialog')).toBeNull();
 });
