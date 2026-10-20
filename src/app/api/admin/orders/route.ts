@@ -5,7 +5,7 @@ import { verifyAdminSession } from '@/lib/session';
 import { processAtlascomOrderExport, queueAtlascomOrderExport } from '@/lib/atlascom-orders';
 import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { canDeleteOrders, canEditOrders } from '@/lib/permissions';
-import { transitionOrderLifecycle } from '@/lib/order-lifecycle-transition';
+import { confirmAdminOrder, transitionOrderLifecycle } from '@/lib/order-lifecycle-transition';
 
 // GET: Retrieve all orders
 export async function GET() {
@@ -85,12 +85,28 @@ export async function PUT(request: Request) {
       return NextResponse.json({ success: false, error: 'Order ID and status are required' }, { status: 400 });
     }
 
-    const { data: transition, error } = await transitionOrderLifecycle(orderId, status);
+    const { data: transition, error } = status === 'Confirmed'
+      ? await confirmAdminOrder(orderId)
+      : await transitionOrderLifecycle(orderId, status);
     if (error) {
       if (String(error.message).includes('ORDER_NOT_FOUND')) return NextResponse.json({ success: false, error: 'Commande introuvable.' }, { status: 404 });
-      if (String(error.message).includes('INVALID_ORDER_TRANSITION')) return NextResponse.json({ success: false, error: 'Ce changement ne correspond plus à l’étape actuelle de la commande. Actualisez la liste ; les commandes annulées ou retournées ne peuvent pas être réactivées.' }, { status: 409 });
+      const message = String(error.message);
+      const conflicts: Record<string, string> = {
+        INVALID_ORDER_TRANSITION: 'Ce changement ne correspond plus à l’étape actuelle. Actualisez les commandes.',
+        INSUFFICIENT_STOCK: 'Stock insuffisant pour reconfirmer cette commande. Aucun changement effectué.',
+        PRODUCT_IDENTITY_MISMATCH: 'Un article ne correspond plus au catalogue. Vérifiez ses références avant de reconfirmer.',
+        ORDER_REOPEN_INVALID_ITEMS: 'Les références ou quantités historiques sont incomplètes. Une vérification manuelle est nécessaire.',
+        ORDER_REOPEN_STOCK_HISTORY_REQUIRED: 'L’historique de stock ne permet pas une réouverture automatique sûre. Une vérification manuelle est nécessaire.',
+        ORDER_REOPEN_PAYMENT_REVIEW_REQUIRED: 'Cette commande utilise un paiement en ligne. Vérifiez son paiement avant toute réouverture.',
+        ORDER_REOPEN_PRODUCT_UNAVAILABLE: 'Un article n’est plus disponible dans le catalogue.',
+        ORDER_ARCHIVED: 'Cette commande est archivée et ne peut pas être reconfirmée.',
+      };
+      const conflict = Object.keys(conflicts).find(code => message.includes(code));
+      if (conflict) return NextResponse.json({ success: false, error: conflicts[conflict] }, { status: 409 });
+      if (error.code === 'PGRST202') return NextResponse.json({ success: false, error: 'La mise à jour de confirmation doit être installée sur la base de données. Aucun statut n’a été modifié.' }, { status: 503 });
       throw error;
     }
+    if (!transition) return NextResponse.json({ success: false, error: 'La confirmation du statut est indisponible. Aucun succès ne peut être confirmé.' }, { status: 503 });
     const becomesConfirmed = status === 'Confirmed';
 
     if (becomesConfirmed && transition?.changed) {
@@ -109,7 +125,7 @@ export async function PUT(request: Request) {
     return NextResponse.json({ success: true, idempotent: Boolean(transition?.idempotent), atlascomQueued: becomesConfirmed && Boolean(transition?.changed) });
   } catch (error: any) {
     console.error('Update order error:', error);
-    return NextResponse.json({ success: false, error: error.message || 'Server error' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Impossible de modifier cette commande pour le moment.' }, { status: 500 });
   }
 }
 

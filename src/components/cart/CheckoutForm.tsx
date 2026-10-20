@@ -225,7 +225,7 @@ const CityCombobox: React.FC<CityComboboxProps> = ({
               onChange={e => { setQuery(e.target.value); setHighlightedIndex(0); }}
               onKeyDown={handleKeyDown}
               placeholder={isFR ? 'Rechercher une ville...' : 'ابحث عن مدينة...'}
-              className="flex-1 text-xs bg-transparent outline-none text-slate-800 placeholder:text-slate-400"
+              className="flex-1 text-[16px] sm:text-xs bg-transparent outline-none text-slate-800 placeholder:text-slate-400"
             />
             {query && (
               <button
@@ -308,7 +308,7 @@ const Field: React.FC<FieldProps> = ({ id, label, icon, error, required, childre
 
 /* ── Input base class ──────────────────────────────────────────────────── */
 const inputClass = (hasError?: boolean) => `
-  w-full px-4 py-3.5 bg-white border rounded-xl text-xs text-slate-800
+  w-full px-4 py-3.5 bg-white border rounded-xl text-[16px] sm:text-xs text-slate-800
   placeholder:text-slate-400 shadow-[inset_0_1.5px_4px_rgba(0,0,0,0.025)]
   focus:outline-none transition-all duration-200
   ${hasError

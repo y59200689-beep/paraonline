@@ -61,3 +61,12 @@ describe('admin order deletion controls', () => {
     expect(screen.getByRole('heading', { name: 'fixture-1' })).toBeDefined();
   });
 });
+
+it('requires explicit confirmation before reopening a cancelled order', async () => {
+  state.orders[0].status = 'Cancelled'; state.updateOrder.mockResolvedValue(true);
+  render(<OrdersTab />); fireEvent.click(screen.getByRole('button', { name: 'Annulée' }));
+  fireEvent.click(screen.getByRole('option', { name: /Confirmée/ }));
+  expect(state.updateOrder).not.toHaveBeenCalled();
+  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Reconfirmer la commande' }));
+  await waitFor(() => expect(state.updateOrder).toHaveBeenCalledWith('fixture-1', 'Confirmed'));
+});

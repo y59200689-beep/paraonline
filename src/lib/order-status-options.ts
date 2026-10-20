@@ -3,6 +3,7 @@
  */
 const NEXT_STATUSES: Record<string, readonly string[]> = {
   Pending: ['Confirmed', 'Cancelled'],
+  Cancelled: ['Confirmed'],
   Confirmed: ['Shipped'],
   Paid: ['Shipped'],
   Shipped: ['Delivered', 'Returned'],
