@@ -18,6 +18,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { isCommerceFeatureEnabled } from '@/lib/feature-flags';
 import { isDiagnosticProductEligible } from '@/lib/diagnostic-eligibility';
+import { getCatalogReturnLocation } from '@/lib/catalog-return-location';
 import { PRODUCT_IMAGE_FALLBACK } from '@/lib/public-images';
 
 interface ProductDetailClientProps {
@@ -28,6 +29,8 @@ const placeholderSvg = PRODUCT_IMAGE_FALLBACK;
 
 export default function ProductDetailClient({ product }: ProductDetailClientProps) {
   const router = useRouter();
+  const [catalogReturnHref, setCatalogReturnHref] = useState('/products');
+  useEffect(() => { setCatalogReturnHref(getCatalogReturnLocation()); }, []);
   const { language } = useTranslation();
   const { products } = useProducts();
   const { convertPrice } = useCurrency();
@@ -488,7 +491,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
         
         {/* Breadcrumbs */}
         <div className={`flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 font-medium ${productRedesign ? 'mb-4 lg:mb-8' : 'mb-8'}`}>
-          <Link href="/products" className="hover:text-primary transition-colors">
+          <Link href={catalogReturnHref} className="hover:text-primary transition-colors">
             {language === 'FR' ? 'Boutique' : 'المتجر'}
           </Link>
           <span>/</span>

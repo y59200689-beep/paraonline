@@ -10,7 +10,8 @@ import { useSettings } from '@/context/SettingsContext';
 import { useUi } from '@/context/UiContext';
 import { isDiagnosticProductEligible } from '@/lib/diagnostic-eligibility';
 import { CatalogPagination } from '@/components/catalog/CatalogPagination';
-import type { CatalogRouteState, CatalogSort } from '@/lib/catalog-pagination';
+import { buildCatalogPageHref, type CatalogRouteState, type CatalogSort } from '@/lib/catalog-pagination';
+import { rememberCatalogLocation } from '@/lib/catalog-return-location';
 
 const CONCERNS = [
   { id: 'acne', labelFR: 'Acné & Imperfections', labelAR: 'حب الشباب والشوائب' },
@@ -226,6 +227,11 @@ export default function ProductsClient({
     maxPrice,
     sort: sortOption,
   };
+  const currentCatalogHref = buildCatalogPageHref(currentPage, currentRouteState);
+  useEffect(() => {
+    rememberCatalogLocation(currentCatalogHref);
+  }, [currentCatalogHref]);
+
   const activeFilterCount =
     (selectedCategory !== 'all' ? 1 : 0) +
     selectedBrands.length +
