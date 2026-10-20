@@ -2,6 +2,7 @@
 
 import NextImage from 'next/image';
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+import { canChangeOrderStatus } from '@/lib/order-status-options';
 import { buildWhatsAppUrl } from '@/lib/whatsapp-link';
 import { createPortal } from 'react-dom';
 import { ShoppingBag, ShoppingCart, Truck, TrendingUp, BarChart2, ClipboardList, Search, FileText, MessageSquare, RefreshCw, DollarSign, AlertTriangle, CheckCircle, ExternalLink, Printer, X, Trash2, ArrowLeft, User, Copy, Plus, Minus, Gift, CreditCard, Wallet, Zap, Activity, Send, KanbanSquare, List, ChevronDown, Check } from 'lucide-react';
@@ -27,7 +28,8 @@ export function OrderStatusPicker({ value, onChange, isDark = false, compact = f
   const triggerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, placement: 'bottom' as 'top' | 'bottom' });
-  const current = ORDER_STATUS_OPTIONS.find(option => option.value === value) || ORDER_STATUS_OPTIONS[0];
+  const current = ORDER_STATUS_OPTIONS.find(option => option.value === value) || { ...ORDER_STATUS_OPTIONS[0], label: value };
+  const availableOptions = ORDER_STATUS_OPTIONS.filter(option => canChangeOrderStatus(value, option.value));
 
   const positionMenu = useCallback(() => {
     const rect = triggerRef.current?.getBoundingClientRect();
@@ -72,7 +74,7 @@ export function OrderStatusPicker({ value, onChange, isDark = false, compact = f
     };
   }, [isOpen, positionMenu, readOnly]);
 
-  if (readOnly) {
+  if (readOnly || !availableOptions.length) {
     return (
       <span
         className={`inline-flex items-center gap-2 rounded-lg border font-bold ${compact ? 'px-2 py-1 text-[10px]' : 'px-3 py-2 text-xs'}`}
@@ -118,7 +120,7 @@ export function OrderStatusPicker({ value, onChange, isDark = false, compact = f
             <span className="h-2 w-2 rounded-full" style={{ background: current.color, boxShadow: `0 0 0 4px ${current.tint}` }} />
           </div>
           <div className="border-t pt-1" style={{ borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,30,54,0.07)' }}>
-            {ORDER_STATUS_OPTIONS.map(option => {
+            {availableOptions.map(option => {
               const isCurrent = option.value === value;
               return (
                 <button
@@ -782,8 +784,10 @@ export default function OrdersTab() {
   };
 
   const handleBulkUpdate = async (status: string) => {
-    await handleBulkUpdateOrderStatus(status, selectedOrderIds);
-    setSelectedOrderIds([]);
+    const eligibleIds = orders.filter(order => selectedOrderIds.includes(order.order_id) && canChangeOrderStatus(order.status, status)).map(order => order.order_id);
+    if (!eligibleIds.length) return;
+    const updatedIds = await handleBulkUpdateOrderStatus(status, eligibleIds);
+    setSelectedOrderIds(ids => ids.filter(id => !updatedIds.includes(id)));
   };
 
   const handleCsvFileUpload = (file: File) => {
@@ -1257,8 +1261,9 @@ export default function OrdersTab() {
                   isDark={isDark}
                   readOnly={!canMutateOrders}
                   onChange={(newStatus) => {
-                    setSelectedOrder(prev => prev ? { ...prev, status: newStatus } : null);
-                    handleUpdateOrderStatus(selectedOrder.order_id, newStatus);
+                    void handleUpdateOrderStatus(selectedOrder.order_id, newStatus).then(success => {
+                      if (success) setSelectedOrder(prev => prev ? { ...prev, status: newStatus } : null);
+                    });
                   }}
                 />
               </div>
@@ -3942,6 +3947,37 @@ export default function OrdersTab() {
               </div>
             </div>
 
+            {/* Selection actions remain in the table header, without floating overlays. */}
+            {(canMutateOrders || canDeleteOrder) && selectedOrderIds.length > 0 && (
+              <section aria-label="Actions sur les commandes sélectionnées"
+                className={`border-y p-4 ${adminTheme === 'light' ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-900 border-slate-700 text-slate-100'}`}>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm font-semibold">{selectedOrderIds.length} commande(s) sélectionnée(s)</p>
+                  <button type="button" disabled={confirmationBusy || isDataLoading} onClick={() => setSelectedOrderIds([])} className="min-h-10 rounded-lg px-3 text-sm underline underline-offset-4 disabled:opacity-50">Désélectionner</button>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {canMutateOrders && ['Confirmed', 'Shipped', 'Delivered', 'Cancelled'].map(status => {
+                    const count = orders.filter(order => selectedOrderIds.includes(order.order_id) && canChangeOrderStatus(order.status, status)).length;
+                    return <button key={status} type="button" disabled={!count || confirmationBusy || isDataLoading} onClick={() => void handleBulkUpdate(status)}
+                      className="min-h-10 rounded-lg border border-slate-400/40 px-3 text-sm font-semibold disabled:opacity-40">
+                      {({ Confirmed: 'Confirmer', Shipped: 'Expédier', Delivered: 'Livrer', Cancelled: 'Annuler' } as Record<string, string>)[status]} ({count})
+                    </button>;
+                  })}
+                  <button type="button" onClick={() => handleExportOrdersToCsv(orders.filter(order => selectedOrderIds.includes(order.order_id)))} className="min-h-10 rounded-lg border border-slate-400/40 px-3 text-sm">Exporter CSV</button>
+                  {canMutateOrders && <>
+                    <button type="button" onClick={() => setIsBatchLabelPrintOpen(true)} className="min-h-10 rounded-lg border border-slate-400/40 px-3 text-sm">Imprimer A6</button>
+                    <button type="button" onClick={() => handleExportYalidineManifest(orders.filter(order => selectedOrderIds.includes(order.order_id)))} className="min-h-10 rounded-lg border border-slate-400/40 px-3 text-sm">Yalidine CSV</button>
+                    <button type="button" onClick={() => handleExportCathedisManifest(orders.filter(order => selectedOrderIds.includes(order.order_id)))} className="min-h-10 rounded-lg border border-slate-400/40 px-3 text-sm">Cathedis CSV</button>
+                  </>}
+                  {canDeleteOrder && <button type="button" onClick={confirmDeleteSelectedOrders} disabled={confirmationBusy || isDataLoading}
+                    className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-rose-700 px-3 text-sm font-semibold text-rose-50 hover:bg-rose-800 disabled:opacity-50">
+                    <Trash2 className="h-4 w-4" /> Supprimer la sélection
+                  </button>}
+                </div>
+                <p className="mt-3 text-xs opacity-70">Les changements de statut concernent uniquement les commandes à l’étape compatible. Les autres restent sélectionnées.</p>
+              </section>
+            )}
+
             {/* Table */}
             <div className="overflow-x-auto" data-admin-scroll>
               <table className="w-full min-w-[1180px] text-left border-collapse">
@@ -4179,76 +4215,7 @@ export default function OrdersTab() {
             </div>
           </div>}
 
-          {/* Floating Bulk Actions Bar */}
-          {canMutateOrders && selectedOrderIds.length > 0 && (
-            <div
-              className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 px-5 py-3 rounded-2xl backdrop-blur-xl shadow-2xl animate-slide-up"
-              style={{
-                background: adminTheme === 'light' ? 'rgba(15,23,42,0.92)' : 'rgba(15,23,42,0.95)',
-                color: '#ffffff',
-                border: '1px solid rgba(16,185,129,0.3)',
-                boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
-              }}
-            >
-              <span className="text-xs font-bold text-emerald-400 font-mono">
-                {selectedOrderIds.length} sélectionnée(s)
-              </span>
 
-              <div className="h-4 w-px bg-slate-700" />
-
-              <button
-                onClick={() => handleBulkUpdate('Confirmed')}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 transition cursor-pointer"
-              >
-                Confirmer
-              </button>
-
-              <button
-                onClick={() => handleBulkUpdate('Shipped')}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition cursor-pointer"
-              >
-                Expédier
-              </button>
-
-              <button
-                onClick={() => handleBulkUpdate('Delivered')}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 transition cursor-pointer"
-              >
-                Livrer
-              </button>
-
-              <button
-                onClick={() => setIsBatchLabelPrintOpen(true)}
-                className="px-3.5 py-1.5 rounded-xl text-xs font-black text-slate-950 bg-amber-400 hover:bg-amber-300 transition flex items-center gap-1.5 cursor-pointer shadow-lg shadow-amber-400/20"
-              >
-                <Printer className="w-3.5 h-3.5" />
-                Imprimer A6 ({selectedOrderIds.length})
-              </button>
-
-              <button
-                onClick={() => {
-                  const toExp = orders.filter(o => selectedOrderIds.includes(o.order_id));
-                  handleExportOrdersToCsv(toExp);
-                }}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-200 bg-slate-800 hover:bg-slate-700 transition cursor-pointer"
-              >
-                Exporter CSV
-              </button>
-
-              {canDeleteOrder && (
-                <button type="button" onClick={confirmDeleteSelectedOrders} disabled={confirmationBusy}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-rose-700 disabled:opacity-50">
-                  <Trash2 className="h-3.5 w-3.5" /> Supprimer la sélection
-                </button>
-              )}
-              <button
-                onClick={() => setSelectedOrderIds([])}
-                className="px-2 py-1 rounded-lg text-xs text-rose-400 hover:text-rose-300 font-bold transition cursor-pointer"
-              >
-                Annuler
-              </button>
-            </div>
-          )}
         </div>
       )}
 
@@ -5503,104 +5470,7 @@ export default function OrdersTab() {
 
       {confirmationDialog}
 
-      {/* Floating Bulk Action Bar for Orders */}
-      {canMutateOrders && selectedOrderIds.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-2xl px-4 animate-scale-up">
-          <div className={`backdrop-blur-2xl border p-4.5 shadow-2xl rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-3.5 transition-all duration-300 ${
-            adminTheme === 'light'
-              ? 'bg-white/95 border-slate-200/80 shadow-[0_20px_50px_rgba(15,30,54,0.12)] text-slate-800'
-              : 'bg-slate-950/85 border-slate-850/60 shadow-[0_20px_50px_rgba(0,0,0,0.5)] text-slate-200'
-          }`}>
-            <div className="flex items-center gap-2.5">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <span className="text-xs font-mono font-bold">
-                {selectedOrderIds.length} commande(s) sélectionnée(s)
-              </span>
-            </div>
-            <div className="flex flex-wrap gap-2 justify-end">
-              <button
-                onClick={() => handleBulkUpdate('Confirmed')}
-                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-[9.5px] uppercase tracking-wider rounded-xl transition-all duration-200 cursor-pointer shadow-sm shadow-blue-600/10 active:scale-95"
-              >
-                Confirmer
-              </button>
-              <button
-                onClick={() => handleBulkUpdate('Shipped')}
-                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[9.5px] uppercase tracking-wider rounded-xl transition-all duration-200 cursor-pointer shadow-sm shadow-indigo-600/10 active:scale-95"
-              >
-                Expédier
-              </button>
-              <button
-                onClick={() => handleBulkUpdate('Cancelled')}
-                className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-black text-[9.5px] uppercase tracking-wider rounded-xl transition-all duration-200 cursor-pointer shadow-sm shadow-rose-600/10 active:scale-95"
-              >
-                Annuler
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const toExport = orders.filter(o => selectedOrderIds.includes(o.order_id));
-                  handleExportOrdersToCsv(toExport);
-                }}
-                className={`px-3 py-1.5 font-black text-[9.5px] uppercase tracking-wider rounded-xl transition-all duration-200 cursor-pointer border shadow-2xs ${
-                  adminTheme === 'light'
-                    ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
-                    : 'bg-slate-900 hover:bg-slate-800 text-slate-350 border-slate-800'
-                }`}
-              >
-                Exporter (CSV)
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const toExport = orders.filter(o => selectedOrderIds.includes(o.order_id));
-                  handleExportYalidineManifest(toExport);
-                }}
-                className={`px-3 py-1.5 font-black text-[9.5px] uppercase tracking-wider rounded-xl transition-all duration-200 cursor-pointer border shadow-2xs ${
-                  adminTheme === 'light'
-                    ? 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200'
-                    : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20'
-                }`}
-              >
-                Yalidine CSV
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const toExport = orders.filter(o => selectedOrderIds.includes(o.order_id));
-                  handleExportCathedisManifest(toExport);
-                }}
-                className={`px-3 py-1.5 font-black text-[9.5px] uppercase tracking-wider rounded-xl transition-all duration-200 cursor-pointer border shadow-2xs ${
-                  adminTheme === 'light'
-                    ? 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'
-                    : 'bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20'
-                }`}
-              >
-                Cathedis CSV
-              </button>
-              {canDeleteOrder && (
-                <button type="button" onClick={confirmDeleteSelectedOrders} disabled={confirmationBusy}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-rose-700 disabled:opacity-50">
-                  <Trash2 className="h-3.5 w-3.5" /> Supprimer la sélection
-                </button>
-              )}
-              <button
-                onClick={() => setSelectedOrderIds([])}
-                className={`px-3 py-1.5 bg-transparent font-black text-[9.5px] uppercase tracking-wider rounded-xl transition-all duration-200 cursor-pointer ${
-                  adminTheme === 'light'
-                    ? 'text-slate-400 hover:text-slate-700 hover:bg-slate-100/60'
-                    : 'text-slate-500 hover:bg-slate-900 hover:text-slate-300'
-                }`}
-              >
-                Désélectionner
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
 
     </div>
   );

@@ -80,7 +80,7 @@ export async function PUT(request: Request) {
     const { data: transition, error } = await transitionOrderLifecycle(orderId, status);
     if (error) {
       if (String(error.message).includes('ORDER_NOT_FOUND')) return NextResponse.json({ success: false, error: 'Commande introuvable.' }, { status: 404 });
-      if (String(error.message).includes('INVALID_ORDER_TRANSITION')) return NextResponse.json({ success: false, error: 'Transition de commande invalide.' }, { status: 409 });
+      if (String(error.message).includes('INVALID_ORDER_TRANSITION')) return NextResponse.json({ success: false, error: 'Ce changement ne correspond plus à l’étape actuelle de la commande. Actualisez la liste ; les commandes annulées ou retournées ne peuvent pas être réactivées.' }, { status: 409 });
       throw error;
     }
     const becomesConfirmed = status === 'Confirmed';

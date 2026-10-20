@@ -1,6 +1,8 @@
 'use client';
 
 import { useCallback } from 'react';
+import { useUi } from '@/context/UiContext';
+import { canChangeOrderStatus } from '@/lib/order-status-options';
 import { canDeleteOrders, type AdminRole } from '@/lib/permissions';
 import React, { createContext, useContext, useMemo } from 'react';
 import { useAdminAuth } from './AdminAuthContext';
@@ -8,8 +10,8 @@ import { useAdminData } from './AdminDataContext';
 import { useSettings } from '@/context/SettingsContext';
 
 export interface AdminOrdersContextProps {
-  handleUpdateOrderStatus: (orderId: string, newStatus: string) => Promise<void>;
-  handleBulkUpdateOrderStatus: (status: string, selectedIds: string[]) => Promise<void>;
+  handleUpdateOrderStatus: (orderId: string, newStatus: string) => Promise<boolean>;
+  handleBulkUpdateOrderStatus: (status: string, selectedIds: string[]) => Promise<string[]>;
   handleDeleteOrder: (orderId: string) => Promise<boolean>;
   handleRegisterShipping: (shippingData: {
     orderId: string;
@@ -40,61 +42,61 @@ export const AdminOrdersProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const { currentUser } = useAdminAuth();
   const { orders, setOrders, loadOrders, logAdminAction, setIsDataLoading } = useAdminData();
   const { settings } = useSettings();
+  const { showToast } = useUi();
 
-  const handleUpdateOrderStatus = useCallback(async (orderId: string, newStatus: string) => {
+  const handleUpdateOrderStatus = useCallback(async (orderId: string, newStatus: string): Promise<boolean> => {
+    const order = orders.find(order => order.order_id === orderId);
+    if (order && !canChangeOrderStatus(order.status, newStatus)) {
+      showToast('Ce changement ne correspond pas à l’étape actuelle de la commande. Actualisez la liste.', 'error');
+      return false;
+    }
     try {
       const res = await fetch('/api/admin/orders', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId, status: newStatus })
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, status: newStatus }),
       });
       const data = await res.json();
-      if (data.success) {
-        if (data.note) {
-          const localOrders = JSON.parse(localStorage.getItem('ordersBM') || '[]') as any[];
-          const updated = localOrders.map(o => o.order_id === orderId ? { ...o, status: newStatus } : o);
-          localStorage.setItem('ordersBM', JSON.stringify(updated));
-        }
-        await loadOrders();
-        logAdminAction("Statut Commande Modifié", `Commande ${orderId} passée au statut ${newStatus}.`);
-      } else {
-        alert("Erreur: " + data.error);
+      if (!res.ok || !data.success) {
+        showToast(data.error || 'Le statut n’a pas pu être modifié.', 'error');
+        return false;
       }
-    } catch {
-      alert("Erreur réseau");
-    }
-  }, [loadOrders, logAdminAction]);
-
-  const handleBulkUpdateOrderStatus = useCallback(async (status: string, selectedIds: string[]) => {
-    if (selectedIds.length === 0) return;
-    setIsDataLoading(true);
-    try {
-      let successCount = 0;
-      await Promise.all(selectedIds.map(async (orderId) => {
-        const res = await fetch('/api/admin/orders', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderId, status })
-        });
-        const data = await res.json();
-        if (data.success) {
-          successCount++;
-          if (data.note) {
-            const localOrders = JSON.parse(localStorage.getItem('ordersBM') || '[]') as any[];
-            const updated = localOrders.map(o => o.order_id === orderId ? { ...o, status } : o);
-            localStorage.setItem('ordersBM', JSON.stringify(updated));
-          }
-        }
-      }));
       await loadOrders();
-      logAdminAction("Bulk Statut Commande Modifié", `${successCount} commandes passées au statut ${status}.`);
-      alert(`${successCount} commandes mises à jour avec succès.`);
+      logAdminAction('Statut Commande Modifié', `Commande ${orderId} passée au statut ${newStatus}.`);
+      showToast('Statut de la commande mis à jour.', 'success');
+      return true;
     } catch {
-      alert("Erreur lors de la mise à jour en lot.");
+      showToast('Impossible de confirmer la mise à jour. Actualisez les commandes avant de réessayer.', 'error');
+      return false;
+    }
+  }, [orders, loadOrders, logAdminAction, showToast]);
+
+  const handleBulkUpdateOrderStatus = useCallback(async (status: string, selectedIds: string[]): Promise<string[]> => {
+    if (!selectedIds.length) return [];
+    setIsDataLoading(true);
+    const updatedIds: string[] = [];
+    try {
+      for (const orderId of selectedIds) {
+        const order = orders.find(order => order.order_id === orderId);
+        if (!order || !canChangeOrderStatus(order.status, status)) continue;
+        try {
+          const res = await fetch('/api/admin/orders', {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId, status }),
+          });
+          const data = await res.json();
+          if (res.ok && data.success) updatedIds.push(orderId);
+        } catch { /* Keep failed orders selected; continue the remaining requests. */ }
+      }
+      await loadOrders();
+      if (updatedIds.length) logAdminAction('Bulk Statut Commande Modifié', `${updatedIds.length} commandes passées au statut ${status}.`);
+      showToast(`${updatedIds.length} commande(s) mise(s) à jour. ${selectedIds.length - updatedIds.length} non modifiée(s).`, updatedIds.length === selectedIds.length ? 'success' : 'warning');
+    } catch {
+      showToast('Les commandes n’ont pas pu être actualisées. Rechargez la liste avant de réessayer.', 'error');
     } finally {
       setIsDataLoading(false);
     }
-  }, [loadOrders, logAdminAction, setIsDataLoading]);
+    return updatedIds;
+  }, [orders, loadOrders, logAdminAction, setIsDataLoading, showToast]);
 
   const handleDeleteOrder = useCallback(async (orderId: string): Promise<boolean> => {
     if (!currentUser?.role || !canDeleteOrders(currentUser.role as AdminRole)) {

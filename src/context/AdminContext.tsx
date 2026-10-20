@@ -81,8 +81,8 @@ export interface AdminContextProps {
   handleToggleCouponActive: (code: string) => Promise<boolean>;
 
   // Order Handlers
-  handleUpdateOrderStatus: (orderId: string, newStatus: string) => Promise<void>;
-  handleBulkUpdateOrderStatus: (status: string, selectedIds: string[]) => Promise<void>;
+  handleUpdateOrderStatus: (orderId: string, newStatus: string) => Promise<boolean>;
+  handleBulkUpdateOrderStatus: (status: string, selectedIds: string[]) => Promise<string[]>;
   handleDeleteOrder: (orderId: string) => Promise<boolean>;
 
   // Courier Handlers
