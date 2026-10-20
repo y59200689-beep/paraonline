@@ -1,20 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-const state = vi.hoisted(() => ({ role: 'owner', active: true, deleteError: null as null | { code: string; message: string }, archiveError: false, found: true, archivedFilter: false, mutations: [] as string[] }));
+const state = vi.hoisted(() => ({ role: 'owner', active: true, deleteError: null as null | { code: string; message: string }, archiveError: false, found: true, archivedFilter: false, readError: null as null | { code: string; message: string }, reads: 0, mutations: [] as string[] }));
 vi.mock('@/lib/session', () => ({ verifyAdminSession: async () => ({ id: 'operator', role: 'owner' }) }));
 vi.mock('@/lib/atlascom-orders', () => ({ processAtlascomOrderExport: vi.fn(), queueAtlascomOrderExport: vi.fn() }));
 vi.mock('@/lib/supabase', () => ({ supabaseAdmin: { from: () => {
   let action = 'read';
+  let filtered = false;
   const q = {
     select: () => q, eq: () => q, order: () => q,
-    is: (column: string, value: unknown) => { state.archivedFilter = column === 'admin_archived_at' && value === null; return q; },
+    is: (column: string, value: unknown) => { filtered = true; state.archivedFilter = column === 'admin_archived_at' && value === null; return q; },
     delete: () => { action = 'delete'; state.mutations.push(action); return q; },
     update: (value: Record<string, unknown>) => { expect(value.admin_archived_at).toEqual(expect.any(String)); action = 'archive'; state.mutations.push(action); return q; },
     maybeSingle: async () => ({ data: { id: 'operator', role: state.role, is_active: state.active }, error: null }),
-    then: (resolve: (value: unknown) => unknown) => resolve({ data: action === 'read' ? [] : state.found ? [{ order_id: 'fixture' }] : [], error: action === 'delete' ? state.deleteError : action === 'archive' && state.archiveError ? { message: 'private details' } : null }),
+    then: (resolve: (value: unknown) => unknown) => { if (action === 'read') state.reads++; return resolve({ data: action === 'read' ? [] : state.found ? [{ order_id: 'fixture' }] : [], error: action === 'read' ? (filtered || state.readError?.code !== '42703' ? state.readError : null) : action === 'delete' ? state.deleteError : action === 'archive' && state.archiveError ? { message: 'private details' } : null }); },
   }; return q;
 } } }));
 import { DELETE, GET } from '@/app/api/admin/orders/route';
-beforeEach(() => { Object.assign(state, { role: 'owner', active: true, deleteError: null, archiveError: false, found: true, archivedFilter: false, mutations: [] }); });
+beforeEach(() => { Object.assign(state, { role: 'owner', active: true, deleteError: null, archiveError: false, found: true, archivedFilter: false, readError: null, reads: 0, mutations: [] }); });
 const request = (suffix = '?id=fixture') => new Request('http://localhost/api/admin/orders'+suffix, { method: 'DELETE' });
 describe('authorized order removal', () => {
   it.each(['owner', 'admin', 'administrator', 'superadmin'])('allows %s to delete an unprotected order', async role => {
@@ -39,4 +40,17 @@ describe('authorized order removal', () => {
     expect((await DELETE(request())).status).toBe(500); expect(state.mutations).toEqual(['delete']);
   });
   it('excludes archived orders from the admin list', async () => { expect((await GET()).status).toBe(200); expect(state.archivedFilter).toBe(true); });
+});
+
+describe('order list migration compatibility', () => {
+  it('keeps orders readable when only the archive column is missing', async () => {
+    state.readError = { code: '42703', message: 'column orders.admin_archived_at does not exist' };
+    const response = await GET(); expect(response.status).toBe(200); expect(state.reads).toBe(2); expect(state.mutations).toEqual([]);
+  });
+  it.each([
+    { code: '42501', message: 'permission denied' },
+    { code: '42703', message: 'column orders.other_column does not exist' },
+  ])('does not hide unrelated database errors (%s)', async error => {
+    state.readError = error; expect((await GET()).status).toBe(500); expect(state.reads).toBe(1); expect(state.mutations).toEqual([]);
+  });
 });
