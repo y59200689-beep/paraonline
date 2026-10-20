@@ -41,6 +41,7 @@ describe('OrderStatusPicker hook order and read-only permissions', () => {
 describe('order lifecycle status choices', () => {
   it.each([
     ['Pending', 'En attente', ['Confirmée', 'Annulée']],
+    ['Cancelled', 'Annulée', ['Confirmée']],
     ['Confirmed', 'Confirmée', ['Expédiée']],
     ['Paid', 'Paid', ['Expédiée']],
     ['Shipped', 'Expédiée', ['Livrée', 'Retournée']],
@@ -51,7 +52,7 @@ describe('order lifecycle status choices', () => {
     fireEvent.click(screen.getByRole('button', { name: label }));
     expect(screen.getAllByRole('option').map(option => option.querySelector('span.block')?.textContent)).toEqual(expected);
   });
-  it.each(['Cancelled', 'Returned'])('does not offer reopening a terminal %s order', value => {
+  it.each(['Returned'])('does not offer reopening a terminal %s order', value => {
     render(<OrderStatusPicker value={value} onChange={vi.fn()} />);
     expect(screen.queryByRole('button')).toBeNull();
   });

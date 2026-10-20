@@ -7,3 +7,13 @@ export async function transitionOrderLifecycle(orderId: string, targetStatus: st
     p_payment_status: paymentStatus || null,
   });
 }
+
+/** Separate admin boundary: payment callbacks keep using the original RPC. */
+export async function confirmAdminOrder(orderId: string) {
+  const result = await supabase.rpc('admin_confirm_order', { p_order_id: orderId });
+  if (result.error?.code !== 'PGRST202') return result;
+  // A rolling deployment must not break existing Pending → Confirmed actions.
+  // The old RPC still rejects cancelled orders, so this cannot bypass stock checks.
+  const legacy = await transitionOrderLifecycle(orderId, 'Confirmed');
+  return String(legacy.error?.message || '').includes('INVALID_ORDER_TRANSITION') ? result : legacy;
+}

@@ -783,11 +783,35 @@ export default function OrdersTab() {
     }
   };
 
+  const requestOrderStatusChange = (order: Order, status: string) => {
+    const update = async () => {
+      if (await handleUpdateOrderStatus(order.order_id, status)) {
+        setSelectedOrder(previous => previous?.order_id === order.order_id ? { ...previous, status } : previous);
+      }
+    };
+    if (order.status === 'Cancelled' && status === 'Confirmed') {
+      setConfirmation({
+        title: 'Reconfirmer cette commande annulée ?',
+        description: 'Le stock précédemment restitué sera réservé à nouveau. La commande restera annulée si le stock ou les références ne peuvent pas être vérifiés. Cette action ne débite aucun paiement.',
+        confirmLabel: 'Reconfirmer la commande', action: update,
+      });
+    } else { void update(); }
+  };
+
   const handleBulkUpdate = async (status: string) => {
-    const eligibleIds = orders.filter(order => selectedOrderIds.includes(order.order_id) && canChangeOrderStatus(order.status, status)).map(order => order.order_id);
-    if (!eligibleIds.length) return;
-    const updatedIds = await handleBulkUpdateOrderStatus(status, eligibleIds);
-    setSelectedOrderIds(ids => ids.filter(id => !updatedIds.includes(id)));
+    const eligible = orders.filter(order => selectedOrderIds.includes(order.order_id) && canChangeOrderStatus(order.status, status));
+    if (!eligible.length) return;
+    const update = async () => {
+      const updatedIds = await handleBulkUpdateOrderStatus(status, eligible.map(order => order.order_id));
+      setSelectedOrderIds(ids => ids.filter(id => !updatedIds.includes(id)));
+    };
+    if (status === 'Confirmed' && eligible.some(order => order.status === 'Cancelled')) {
+      setConfirmation({
+        title: 'Confirmer la sélection et rouvrir les commandes annulées ?',
+        description: 'Chaque commande annulée doit disposer de références vérifiables et de stock disponible à réserver. Les commandes non modifiées resteront sélectionnées. Aucun paiement ne sera débité.',
+        confirmLabel: 'Confirmer les commandes', action: update,
+      });
+    } else { await update(); }
   };
 
   const handleCsvFileUpload = (file: File) => {
@@ -1260,11 +1284,7 @@ export default function OrdersTab() {
                   value={selectedOrder.status}
                   isDark={isDark}
                   readOnly={!canMutateOrders}
-                  onChange={(newStatus) => {
-                    void handleUpdateOrderStatus(selectedOrder.order_id, newStatus).then(success => {
-                      if (success) setSelectedOrder(prev => prev ? { ...prev, status: newStatus } : null);
-                    });
-                  }}
+                  onChange={(newStatus) => requestOrderStatusChange(selectedOrder, newStatus)}
                 />
               </div>
 
@@ -4162,7 +4182,7 @@ export default function OrdersTab() {
                             isDark={adminTheme === 'dark'}
                             compact
                             readOnly={!canMutateOrders}
-                            onChange={(newStatus) => handleUpdateOrderStatus(order.order_id, newStatus)}
+                            onChange={(newStatus) => requestOrderStatusChange(order, newStatus)}
                           />
                         </td>
 
