@@ -96,7 +96,7 @@ export const CartItemList: React.FC<CartItemListProps> = ({
             </div>
 
             {/* Info */}
-            <div className="flex-1 min-w-0 flex flex-col gap-2">
+            <div className={`${styles.itemInfo} flex-1 min-w-0 flex flex-col gap-2`}>
               <div>
                 <span data-product-brand className={styles.vendor}>
                   {item.product.vendor}
