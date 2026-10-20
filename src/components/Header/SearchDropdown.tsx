@@ -12,6 +12,8 @@ interface SearchDropdownProps {
   showSearch: boolean;
   searchQuery: string;
   searchResults: Product[];
+  searchLoading?: boolean;
+  searchError?: boolean;
   matchedIngredients: string[];
   language: string;
   isRTL: boolean;
@@ -23,7 +25,7 @@ interface SearchDropdownProps {
   onSetSearchQuery: (q: string) => void;
 }
 
-export const SearchDropdown: React.FC<SearchDropdownProps> = ({ showSearch, searchQuery, searchResults, language, isRTL, convertPrice, onSuggestionClick, onQuickAdd }) => {
+export const SearchDropdown: React.FC<SearchDropdownProps> = ({ showSearch, searchQuery, searchResults, searchLoading = false, searchError = false, language, isRTL, convertPrice, onSuggestionClick, onQuickAdd }) => {
   if (!showSearch || !searchQuery.trim()) return null;
 
   return (
@@ -91,6 +93,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({ showSearch, sear
         /* Search Results */
         <div>
 
+          {searchLoading && <div role="status" className="px-4 py-2 text-xs text-slate-500">{language === 'FR' ? 'Recherche en cours…' : 'جارٍ البحث…'}</div>}
           {searchResults.length > 0 ? (
             <div className="max-h-[320px] overflow-y-auto pr-0.5">
               <div className={`px-4 py-2 border-b border-slate-100 text-[9px] font-black uppercase tracking-wider text-slate-400 ${isRTL ? 'text-right' : 'text-left'}`}>
@@ -143,11 +146,15 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({ showSearch, sear
                 ))}
               </ul>
             </div>
-          ) : (
+          ) : searchError ? (
+            <div role="alert" className="p-6 text-center text-slate-500 text-xs">
+              {language === 'FR' ? 'Recherche indisponible. Réessayez dans un instant.' : 'البحث غير متاح حالياً. حاول مجدداً.'}
+            </div>
+          ) : !searchLoading ? (
             <div className="p-6 text-center text-slate-400 text-xs">
               {language === 'FR' ? 'Aucun résultat trouvé' : 'لم يتم العثور على نتائج'}
             </div>
-          )}
+          ) : null}
         </div>
       )}
     </div>
