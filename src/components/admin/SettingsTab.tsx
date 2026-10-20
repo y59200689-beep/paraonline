@@ -1999,7 +1999,7 @@ export default function SettingsTab() {
                                   await saveSettings({ ...settings, storeWhatsApp: e.target.value });
                                 }}
                                 className={`w-full text-xs font-bold rounded-xl px-3 py-2 border ${adminTheme === 'light' ? 'bg-white text-slate-800 border-slate-200' : 'bg-slate-900 text-slate-202 border-slate-800'}`}
-                                placeholder="Ex: 212660808080"
+                                placeholder="Ex: 212664099810"
                               />
                             </div>
                           </div>

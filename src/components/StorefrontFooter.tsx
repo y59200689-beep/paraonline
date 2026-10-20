@@ -16,7 +16,7 @@ export const StorefrontFooter = ({ onDiagnostic }: { onDiagnostic: () => void })
   const ar = language === 'AR';
   const [email, setEmail] = useState('');
   const [notice, setNotice] = useState(false);
-  const number = String(settings.storeWhatsApp || '212660808080').replace(/\D/g, '');
+  const number = String(settings.storeWhatsApp || '212664099810').replace(/\D/g, '');
   const whatsapp = buildWhatsAppUrl(number);
   const socials = (settings.socialLinks || []).filter(item => /^https?:\/\//i.test(item.url));
   const benefits = settings.trustBadges?.length ? settings.trustBadges.map((item, i) => ({

@@ -2,6 +2,7 @@
 
 import { useCallback } from 'react';
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { normalizeStoreContact } from '@/lib/site-contact';
 import { DEFAULT_SETTINGS } from '@/lib/default-settings';
 export { DEFAULT_SETTINGS } from '@/lib/default-settings';
 import { toThemeColorVariable } from '@/lib/theme-colors';
@@ -343,7 +344,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode; initialSett
 
   const [settings, setSettings] = useState<Settings>(() => {
     const baseSettings = hasInitialSettings
-      ? { ...DEFAULT_SETTINGS, ...initialSettings }
+      ? normalizeStoreContact({ ...DEFAULT_SETTINGS, ...initialSettings })
       : null;
 
     if (typeof window !== 'undefined') {
@@ -362,7 +363,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode; initialSett
             if (cached) raw = JSON.parse(cached);
           }
           if (raw && typeof raw === 'object') {
-            source = { ...DEFAULT_SETTINGS, ...raw };
+            source = normalizeStoreContact({ ...DEFAULT_SETTINGS, ...raw });
           }
         }
         if (source) {
@@ -403,7 +404,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode; initialSett
       const res = await fetch(endpoint);
       const data = await res.json();
       if (data.success && data.settings) {
-        const merged = { ...DEFAULT_SETTINGS, ...data.settings };
+        const merged = normalizeStoreContact({ ...DEFAULT_SETTINGS, ...data.settings });
 
         merged.galleryOverrides = merged.galleryOverrides || {};
 

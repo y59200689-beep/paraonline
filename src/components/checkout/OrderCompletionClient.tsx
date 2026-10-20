@@ -145,7 +145,7 @@ export function OrderCompletionClient({
     ? `/suivi-commande?order=${encodeURIComponent(order.order_id)}&token=${encodeURIComponent(token)}`
     : '/suivi-commande';
   const whatsappHref = useMemo(() => {
-    const number = settings?.storeWhatsApp || '212660808080';
+    const number = settings?.storeWhatsApp || '212664099810';
     const message = isFrench
       ? `Bonjour, j’ai besoin d’aide concernant ma commande ${order ? numericOrderId(order.order_id) : orderId}.`
       : `مرحباً، أحتاج إلى مساعدة بخصوص طلبي ${order ? numericOrderId(order.order_id) : orderId}.`;

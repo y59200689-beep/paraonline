@@ -11,7 +11,7 @@ export function ContactClient() {
   const { language } = useTranslation();
   const { settings } = useSettings();
   const ar = language === 'AR';
-  const number = formatWhatsAppNumber(settings.storeWhatsApp || '212660808080');
+  const number = formatWhatsAppNumber(settings.storeWhatsApp || '212664099810');
   const whatsapp = buildWhatsAppUrl(number);
 
   return (

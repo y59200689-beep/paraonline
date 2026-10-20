@@ -21,7 +21,7 @@ export const DeliveryTab: React.FC<{ text: FaqText; isRTL: boolean }> = ({ text,
   const daysMin = rule?.daysMin ?? delivery?.defaultDaysMin;
   const daysMax = rule?.daysMax ?? delivery?.defaultDaysMax;
   const hasEstimate = typeof daysMin === 'number' && typeof daysMax === 'number' && daysMin >= 0 && daysMax >= daysMin;
-  const support = buildWhatsAppUrl(settings.storeWhatsApp || '212660808080') || '#footer';
+  const support = buildWhatsAppUrl(settings.storeWhatsApp || '212664099810') || '#footer';
   const steps = [
     { icon: Check, title: text.delStep1, sub: isRTL ? 'تأكيد طلبك' : 'Votre commande est confirmée' },
     { icon: Package, title: text.delStep2, sub: text.delLabLabel },

@@ -135,7 +135,7 @@ const POLICIES_DATA: Record<string, PolicyData> = {
         titleFr: '3. Faire une demande',
         titleAr: '3. خطوات الإرجاع البسيطة عبر الواتساب',
         descFr: 'Pour initier une demande, contactez le service client en précisant le numéro de commande, le produit concerné et le motif. Conservez la facture et les éléments utiles jusqu\'à la résolution de votre demande.',
-        descAr: 'لبدء عملية الإرجاع أو تقديم شكوى، يكفي إرسال صورة للشحنة والفاتورة عبر خدمة الواتساب المباشرة (+212 6 60 80 80 80). يقوم فريقنا بمعالجة طلبكِ في أقل من 30 دقيقة.'
+        descAr: 'لبدء عملية الإرجاع أو تقديم شكوى، يكفي إرسال صورة للشحنة والفاتورة عبر خدمة الواتساب المباشرة (+212 664 099 810). يقوم فريقنا بمعالجة طلبكِ في أقل من 30 دقيقة.'
       },
       {
         titleFr: '4. Modalités de Remboursement',
@@ -282,7 +282,7 @@ export const PolicyClient: React.FC<PolicyClientProps> = ({ slug }) => {
                 </p>
 
                 <a
-                  href="https://wa.me/212660808080"
+                  href="https://wa.me/212664099810"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 rounded-xl text-xs font-black uppercase tracking-wider transition duration-300 w-full flex items-center justify-center gap-2 shadow-lg cursor-pointer border-0"

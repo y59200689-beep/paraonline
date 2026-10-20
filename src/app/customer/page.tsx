@@ -826,7 +826,7 @@ export default function CustomerDashboard() {
                     </PoButton>
 
                     <PoButton
-                      href="https://wa.me/212660808080"
+                      href="https://wa.me/212664099810"
                       target="_blank"
                       rel="noopener noreferrer"
                       variant="secondary"
@@ -1199,7 +1199,7 @@ export default function CustomerDashboard() {
                             </PoButton>
 
                             <PoButton
-                              href={`https://wa.me/212660808080?text=Bonjour,%20question%20sur%20ma%20commande%20N%C2%B0%20${order.order_id}`}
+                              href={`https://wa.me/212664099810?text=Bonjour,%20question%20sur%20ma%20commande%20N%C2%B0%20${order.order_id}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               variant="accentSoft"

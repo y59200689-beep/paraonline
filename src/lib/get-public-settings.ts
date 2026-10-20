@@ -1,3 +1,4 @@
+import { resolveStorePhone, resolveStoreWhatsApp } from '@/lib/site-contact';
 import { supabaseAdmin as supabase } from '@/lib/supabase-server';
 import type { HeroCardConfig, Settings } from '@/context/SettingsContext';
 import { DEFAULT_SETTINGS } from '@/lib/default-settings';
@@ -45,6 +46,8 @@ function normalizeLegacyStorefrontClaims(settings: Settings): Settings {
   const previousAnnouncement = settings.announcementFr === 'LIVRAISON AU MAROC — Le délai et les frais sont confirmés avant la validation de votre commande.';
   return {
     ...settings,
+    storePhone: resolveStorePhone(settings.storePhone),
+    storeWhatsApp: resolveStoreWhatsApp(settings.storeWhatsApp),
     banners,
     faq,
     announcementFr: legacyAnnouncement || previousAnnouncement
@@ -159,7 +162,7 @@ async function fetchPublicSettings(): Promise<PublicSettings> {
 // changes. Rejected reads never become cached fallback settings.
 const getCachedPublicSettings = unstable_cache(
   fetchPublicSettings,
-  ['public-settings', 'verified-settings-v4', process.env.NEXT_PUBLIC_SUPABASE_URL || 'unconfigured'],
+  ['public-settings', 'verified-settings-v5-contact', process.env.NEXT_PUBLIC_SUPABASE_URL || 'unconfigured'],
   { tags: [PUBLIC_SETTINGS_CACHE_TAG], revalidate: 300 }
 );
 

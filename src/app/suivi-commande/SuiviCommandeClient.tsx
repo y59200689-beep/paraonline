@@ -462,7 +462,7 @@ export default function SuiviCommandeClient() {
                 <div className="pt-2 text-xs">
                   <span className="text-slate-400">{isRTL ? 'هل تحتاجين مساعدة؟' : 'Besoin d\'assistance ?'} </span>
                   <a
-                    href="https://wa.me/212660808080"
+                    href="https://wa.me/212664099810"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-emerald-400 font-bold underline hover:text-emerald-300"
@@ -508,7 +508,7 @@ export default function SuiviCommandeClient() {
                 <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800/80 space-y-1">
                   <MessageCircle className="w-5 h-5 text-purple-400 mx-auto" />
                   <span className="font-bold text-slate-200 block">{isRTL ? 'هل فقدت رمز التتبع؟' : 'Code de suivi perdu ?'}</span>
-                  <a href="https://wa.me/212660808080?text=Bonjour%2C%20j%E2%80%99ai%20besoin%20d%E2%80%99aide%20pour%20retrouver%20mon%20code%20de%20suivi." target="_blank" rel="noopener noreferrer" className="inline-flex text-[11px] font-semibold underline underline-offset-2 hover:text-white" style={{ color: '#86efac' }}>{isRTL ? 'اطلب المساعدة عبر واتساب' : 'Demander de l’aide via WhatsApp'}</a>
+                  <a href="https://wa.me/212664099810?text=Bonjour%2C%20j%E2%80%99ai%20besoin%20d%E2%80%99aide%20pour%20retrouver%20mon%20code%20de%20suivi." target="_blank" rel="noopener noreferrer" className="inline-flex text-[11px] font-semibold underline underline-offset-2 hover:text-white" style={{ color: '#86efac' }}>{isRTL ? 'اطلب المساعدة عبر واتساب' : 'Demander de l’aide via WhatsApp'}</a>
                 </div>
               </div>
             </div>
@@ -589,7 +589,7 @@ export default function SuiviCommandeClient() {
                       </button>
 
                       <a
-                        href={`https://wa.me/212660808080?text=${encodeURIComponent(
+                        href={`https://wa.me/212664099810?text=${encodeURIComponent(
                           `Bonjour, je souhaite des informations sur ma commande N° ${order.order_id}`
                         )}`}
                         target="_blank"
@@ -886,7 +886,7 @@ export default function SuiviCommandeClient() {
 
                       <div className="space-y-2">
                         <a
-                          href={`https://wa.me/212660808080?text=${encodeURIComponent(
+                          href={`https://wa.me/212664099810?text=${encodeURIComponent(
                             `Bonjour, concernant la livraison de ma commande ${order.order_id}`
                           )}`}
                           target="_blank"
