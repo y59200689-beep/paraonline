@@ -525,7 +525,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     className="text-[11px] font-extrabold uppercase tracking-wider text-accent flex items-center gap-1.5 self-start hover:text-teal-700 transition-colors duration-200"
                   >
                     <Gift className="w-3.5 h-3.5 animate-bounce text-accent" />
-                    <span>{language === 'FR' ? 'Débloquer mon cadeau gratuit !' : 'افتحي هديتكِ المجانية اليومية!'}</span>
+                    <span>{language === 'FR' ? 'Recevoir une offre' : 'احصلي على عرض'}</span>
                   </button>
                 )}
               </div>

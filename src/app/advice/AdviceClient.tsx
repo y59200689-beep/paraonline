@@ -137,9 +137,9 @@ export default function AdviceClient({ initialArticles }: AdviceClientProps) {
 
                       {/* Title */}
                       <h3 className="text-lg font-black text-slate-800 tracking-tight leading-snug group-hover:text-primary transition-colors duration-300 font-heading">
-                        <Link href={`/advice/${art.slug}`} className="focus:outline-none">
+                        <a href={`/advice/${art.slug}`} className="focus:outline-none">
                           {title}
-                        </Link>
+                        </a>
                       </h3>
 
                       {/* Excerpt */}
@@ -151,7 +151,7 @@ export default function AdviceClient({ initialArticles }: AdviceClientProps) {
                     {/* CTA Link */}
                     <div className="pt-6 border-t border-slate-100 mt-6 flex items-center justify-between">
                       <span className="text-[10px] font-medium text-slate-600">{isRTL ? 'فريق التحرير' : 'Équipe éditoriale'}</span>
-                      <Link 
+                      <a
                         href={`/advice/${art.slug}`}
                         className="text-xs font-black uppercase tracking-wider text-slate-700 group-hover:text-primary transition duration-300 flex items-center gap-1.5"
                       >
@@ -161,7 +161,7 @@ export default function AdviceClient({ initialArticles }: AdviceClientProps) {
                         ) : (
                           <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
                         )}
-                      </Link>
+                      </a>
                     </div>
                   </div>
                 </article>

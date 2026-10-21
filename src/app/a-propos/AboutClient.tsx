@@ -58,7 +58,7 @@ export function AboutClient() {
                   نُعيد تعريف <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent">العناية بالبشرة</span> في المغرب بدقة علمية وأمان تام
                 </>
               ) : (
-                <>Qui Somme Nous?</>
+                <>Qui sommes-nous ?</>
               )}
             </h1>
 

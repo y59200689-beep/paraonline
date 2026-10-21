@@ -6,6 +6,7 @@ import { processAtlascomOrderExport, queueAtlascomOrderExport } from '@/lib/atla
 import { authorizeAdminMutation } from '@/lib/admin-authorization';
 import { canDeleteOrders, canEditOrders } from '@/lib/permissions';
 import { confirmAdminOrder, transitionOrderLifecycle } from '@/lib/order-lifecycle-transition';
+import { ADMIN_ORDER_STATUSES } from '@/lib/order-status-options';
 
 // GET: Retrieve all orders
 export async function GET() {
@@ -84,29 +85,51 @@ export async function PUT(request: Request) {
     if (!orderId || !status) {
       return NextResponse.json({ success: false, error: 'Order ID and status are required' }, { status: 400 });
     }
+    if (!ADMIN_ORDER_STATUSES.some(allowed => allowed === status)) {
+      return NextResponse.json({ success: false, error: 'Statut inconnu.' }, { status: 400 });
+    }
+
+    let { data: currentOrder, error: readError } = await supabase.from('orders')
+      .select('status')
+      .eq('order_id', orderId)
+      .is('admin_archived_at', null)
+      .maybeSingle();
+    const archiveColumnUnavailable = readError?.code === '42703' && String(readError.message).includes('admin_archived_at');
+    if (archiveColumnUnavailable) {
+      const legacy = await supabase.from('orders').select('status').eq('order_id', orderId).maybeSingle();
+      currentOrder = legacy.data;
+      readError = legacy.error;
+    }
+    if (readError) throw readError;
+    if (!currentOrder) return NextResponse.json({ success: false, error: 'Commande introuvable.' }, { status: 404 });
+    if (currentOrder.status === status) return NextResponse.json({ success: true, idempotent: true, atlascomQueued: false });
 
     const { data: transition, error } = status === 'Confirmed'
       ? await confirmAdminOrder(orderId)
       : await transitionOrderLifecycle(orderId, status);
-    if (error) {
-      if (String(error.message).includes('ORDER_NOT_FOUND')) return NextResponse.json({ success: false, error: 'Commande introuvable.' }, { status: 404 });
-      const message = String(error.message);
-      const conflicts: Record<string, string> = {
-        INVALID_ORDER_TRANSITION: 'Ce changement ne correspond plus à l’étape actuelle. Actualisez les commandes.',
-        INSUFFICIENT_STOCK: 'Stock insuffisant pour reconfirmer cette commande. Aucun changement effectué.',
-        PRODUCT_IDENTITY_MISMATCH: 'Un article ne correspond plus au catalogue. Vérifiez ses références avant de reconfirmer.',
-        ORDER_REOPEN_INVALID_ITEMS: 'Les références ou quantités historiques sont incomplètes. Une vérification manuelle est nécessaire.',
-        ORDER_REOPEN_STOCK_HISTORY_REQUIRED: 'L’historique de stock ne permet pas une réouverture automatique sûre. Une vérification manuelle est nécessaire.',
-        ORDER_REOPEN_PAYMENT_REVIEW_REQUIRED: 'Cette commande utilise un paiement en ligne. Vérifiez son paiement avant toute réouverture.',
-        ORDER_REOPEN_PRODUCT_UNAVAILABLE: 'Un article n’est plus disponible dans le catalogue.',
-        ORDER_ARCHIVED: 'Cette commande est archivée et ne peut pas être reconfirmée.',
-      };
-      const conflict = Object.keys(conflicts).find(code => message.includes(code));
-      if (conflict) return NextResponse.json({ success: false, error: conflicts[conflict] }, { status: 409 });
-      if (error.code === 'PGRST202') return NextResponse.json({ success: false, error: 'La mise à jour de confirmation doit être installée sur la base de données. Aucun statut n’a été modifié.' }, { status: 503 });
-      throw error;
+    const message = String(error?.message || '');
+    if (message.includes('ORDER_NOT_FOUND')) return NextResponse.json({ success: false, error: 'Commande introuvable.' }, { status: 404 });
+    if (message.includes('ORDER_ARCHIVED')) return NextResponse.json({ success: false, error: 'Cette commande est archivée.' }, { status: 409 });
+
+    // Admin manual corrections may skip lifecycle and stock reconciliation.
+    // Keep payment_status and inventory untouched; never represent this as an automatic transition.
+    const manualCorrection = Boolean(error && (
+      error.code === 'PGRST202' ||
+      ['INVALID_ORDER_TRANSITION', 'INSUFFICIENT_STOCK', 'PRODUCT_IDENTITY_MISMATCH', 'ORDER_REOPEN_'].some(code => message.includes(code))
+    ));
+    if (error && !manualCorrection) throw error;
+    if (manualCorrection) {
+      let correctionQuery = supabase.from('orders')
+        .update({ status })
+        .eq('order_id', orderId)
+        .eq('status', currentOrder.status);
+      if (!archiveColumnUnavailable) correctionQuery = correctionQuery.is('admin_archived_at', null);
+      const { data: corrected, error: correctionError } = await correctionQuery.select('order_id');
+      if (correctionError) throw correctionError;
+      if (!corrected?.length) return NextResponse.json({ success: false, error: 'La commande a changé entre-temps. Actualisez la liste.' }, { status: 409 });
+      return NextResponse.json({ success: true, manualCorrection: true, stockUnchanged: true, paymentUnchanged: true, atlascomQueued: false });
     }
-    if (!transition) return NextResponse.json({ success: false, error: 'La confirmation du statut est indisponible. Aucun succès ne peut être confirmé.' }, { status: 503 });
+    if (!transition) return NextResponse.json({ success: false, error: 'Le changement de statut est indisponible.' }, { status: 503 });
     const becomesConfirmed = status === 'Confirmed';
 
     if (becomesConfirmed && transition?.changed) {

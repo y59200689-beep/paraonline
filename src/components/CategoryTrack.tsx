@@ -29,15 +29,13 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
   const { t, language } = useTranslation();
   const { settings } = useSettings();
   const { getDisplayImage } = useGalleryOverrides();
-  const [isMobile, setIsMobile] = React.useState(false);
-
-  React.useEffect(() => {
-    const media = window.matchMedia('(max-width: 767px)');
-    const update = () => setIsMobile(media.matches);
-    update();
-    media.addEventListener('change', update);
-    return () => media.removeEventListener('change', update);
-  }, []);
+  // Fully prefetch only destinations the customer shows an interest in.
+  // Automatic prefetch can skip dynamic catalogue data without a loading boundary.
+  const [prefetchHrefs, setPrefetchHrefs] = React.useState<Set<string>>(() => new Set());
+  const warmCategory = (href: string) => {
+    if (!href.startsWith('/products')) return;
+    setPrefetchHrefs(previous => previous.has(href) ? previous : new Set(previous).add(href));
+  };
 
   const brandPartnersSection = settings.homepageSections?.sectionOrder?.find(
     (s) => s.type === 'brandPartners'
@@ -177,36 +175,18 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
 
                  // Admin-configurable link overrides take priority, then hardcoded fallbacks
                  const adminLink = settings?.categoryLinks?.[cat.tag];
-                 const hardcodedCategoryByTag: Record<string, string> = {
-                   all: '',
-                   offers: '',
-                   giftbox: '',
-                   solaire: 'solaire',
-                   visage: 'visage',
-                   cheveux: 'cheveux',
-                   corps: 'corp',
-                   appareils: 'accessories',
-                   complements: 'complement',
-                   maquillage: '',
-                   sport: '',
-                   masques: '',
-                   homme: 'homme',
-                   bebe: 'bébé',
+                 const categoryByTag: Record<string, string> = {
+                   offers: 'offers', giftbox: 'coffrets', solaire: 'solaire', visage: 'visage',
+                   cheveux: 'cheveux', corps: 'corps', appareils: 'appareils', complements: 'complements',
+                   maquillage: 'maquillage', sport: 'sport', masques: 'masques', homme: 'homme', bebe: 'bebe',
                  };
-                 const hardcodedCategory = hardcodedCategoryByTag[cat.tag];
-                 const desktopHref = adminLink
+                 // An old '/products' placeholder must not erase a category.
+                 // Deliberate custom destinations are still respected.
+                 const category = categoryByTag[cat.tag];
+                 const productsHref = adminLink && (adminLink !== '/products' || cat.tag === 'all')
                    ? adminLink
-                   : cat.tag in hardcodedCategoryByTag
-                   ? hardcodedCategory
-                     ? `/products?category=${hardcodedCategory}`
-                     : '/products'
-                   : null;
-                 // Keep desktop destinations and intentional admin overrides intact.
-                 const mobileCategory = ({ maquillage: 'maquillage', sport: 'sport', masques: 'masque' } as Record<string, string>)[cat.tag];
-                 const productsHref = isMobile && mobileCategory && (!adminLink || adminLink === '/products')
-                   ? `/products?category=${mobileCategory}`
-                   : desktopHref;
-                 
+                   : category ? `/products?category=${category}` : '/products';
+
                  // Exact top-down gradient; borderless layout with soft shadow; overflow-hidden to crop bleeding illustrations
                  const cardStyle: React.CSSProperties = {
                    background: `linear-gradient(180deg, ${cat.gradientStart} 0%, #FFFFFF 100%)`,
@@ -257,6 +237,10 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
                    <Link
                      key={cat.id}
                      href={productsHref}
+                     prefetch={prefetchHrefs.has(productsHref) ? true : null}
+                     onMouseEnter={() => warmCategory(productsHref)}
+                     onFocus={() => warmCategory(productsHref)}
+                     onTouchStart={() => warmCategory(productsHref)}
                      className={cardClassName}
                      style={cardStyle}
                    >

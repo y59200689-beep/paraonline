@@ -23,7 +23,7 @@ const CATEGORY_BACKED_CONCERNS: Record<string, string> = {
   acne: 'acne',
   spots: 'anti tache',
   dryness: 'secheresse',
-  wrinkles: 'anti rides',
+  wrinkles: 'anti age',
   redness: 'anti rougeur',
   suncare: 'solaire',
 };
@@ -51,7 +51,8 @@ export function matchesCatalogConcern(product: Product, concernId: string, conce
 }
 
 export async function getCatalogConcerns(): Promise<CatalogConcern[]> {
-  const { data } = await supabase.from('settings').select('value').eq('id', 1).single();
+  const { data, error } = await supabase.from('settings').select('value').eq('id', 1).single();
+  if (error && error.code !== 'PGRST116') throw new Error('Catalogue concern settings unavailable');
   const concerns = data?.value?.customConcerns;
   return Array.isArray(concerns) && concerns.length > 0 ? concerns : DEFAULT_CONCERNS;
 }

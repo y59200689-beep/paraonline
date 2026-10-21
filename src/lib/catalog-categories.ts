@@ -71,9 +71,9 @@ export const CANONICAL_CATEGORY_MAP: Record<string, string> = {
 
   pack: 'offers',
   packs: 'offers',
-  coffret: 'offers',
-  coffrets: 'offers',
-  giftbox: 'offers',
+  giftbox: 'coffrets',
+  coffret: 'coffrets',
+  coffrets: 'coffrets',
   offer: 'offers',
   offers: 'offers',
   promo: 'offers',
@@ -90,6 +90,17 @@ export const CANONICAL_CATEGORY_MAP: Record<string, string> = {
 
   serum: 'serum',
   sérum: 'serum',
+
+  'anti age': 'anti age',
+  'anti ride': 'anti age',
+  'anti rides': 'anti age',
+  'anti tache': 'anti tache',
+  'anti taches': 'anti tache',
+  hydratation: 'secheresse',
+  masque: 'masques',
+  masques: 'masques',
+  mask: 'masques',
+  masks: 'masques',
 
   patch: 'patch',
   patches: 'patch',
@@ -113,9 +124,11 @@ const CATEGORY_FILTER_VARIANTS: Record<string, string[]> = {
   cheveux: ['cheveux', 'cheveu', 'hair', 'capillaire', 'capillaires'],
   maquillage: ['maquillage', 'makeup', 'make-up', 'make up'],
   solaire: ['solaire', 'protection solaire', 'solaire & protection', 'sun', 'bronzage'],
+  coffrets: ['coffret', 'coffrets', 'pack', 'packs', 'giftbox'],
+  masques: ['masque', 'masques', 'mask', 'masks', 'patch'],
   offers: ['offers', 'offer', 'pack', 'packs', 'coffret', 'coffrets', 'giftbox', 'promo', 'promotions'],
   homme: ['homme', 'hommes', 'men', 'man'],
-  secheresse: ['secheresse', 'sécheresse', 'dryness'],
+  secheresse: ['secheresse', 'sécheresse', 'dryness', 'hydratation'],
   serum: ['serum', 'sérum'],
   patch: ['patch', 'patches'],
 };
@@ -136,14 +149,15 @@ export function getCanonicalCategory(category: string | null | undefined): strin
   if (/appar|access|materiel|matériel/i.test(normalized)) return 'appareils';
   if (/bebe|bÉbÉ|pedia|baby/i.test(normalized)) return 'bebe';
   if (/maquill|makeup|make-up/i.test(normalized)) return 'maquillage';
-  if (/pack|coffret|gift|offer|promo/i.test(normalized)) return 'offers';
+  if (/coffret|giftbox/i.test(normalized)) return 'coffrets';
+  if (/pack|gift|offer|promo/i.test(normalized)) return 'offers';
   if (/homm|men/i.test(normalized)) return 'homme';
   if (/corp|body/i.test(normalized)) return 'corps';
   if (/visag|face|peau/i.test(normalized)) return 'visage';
   if (/serum|sérum/i.test(normalized)) return 'serum';
   if (/patch/i.test(normalized)) return 'patch';
 
-  return clean;
+  return normalized;
 }
 
 export function normalizeCatalogCategoryId(value: string) {
@@ -193,7 +207,8 @@ export function catalogCategoryFilter(categoryId: string) {
   const synonyms = CATEGORY_FILTER_VARIANTS[canonical] || CATEGORY_FILTER_VARIANTS[normalized] || CATEGORY_FILTER_VARIANTS[rawClean.toLowerCase()] || [canonical];
   const allVariants = Array.from(new Set([rawClean, canonical, normalized, rawClean.toLowerCase(), ...synonyms])).filter(Boolean);
 
-  return allVariants
+  const extraClauses = canonical === 'coffrets' ? ['title.ilike.%coffret%', 'title.ilike.%pack%'] : [];
+  return [...extraClauses, ...allVariants
     .flatMap((variant) => {
       const lower = variant.toLowerCase();
       const upper = variant.toUpperCase();
@@ -206,5 +221,5 @@ export function catalogCategoryFilter(categoryId: string) {
         `categories.cs.{"${variant}"}`
       ];
     })
-    .join(',');
+    ].join(',');
 }

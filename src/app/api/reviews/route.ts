@@ -1,3 +1,4 @@
+import { getPublicReviewStats } from '@/lib/public-review-stats';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase-server';
 import { rateLimit, getClientIp } from '@/lib/rateLimit';
@@ -5,6 +6,7 @@ import { rateLimit, getClientIp } from '@/lib/rateLimit';
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
+    if (searchParams.get('summary') === 'true') return NextResponse.json({ success: true, stats: await getPublicReviewStats() });
     const productId = searchParams.get('productId');
     
     let query = supabase

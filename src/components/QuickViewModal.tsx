@@ -45,6 +45,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen,
 
   // Reviews states and functions
   const [reviews, setReviews] = useState<any[]>([]);
+  const reviewRequest = useRef(0);
   const [isReviewsLoading, setIsReviewsLoading] = useState(false);
   const [newReviewAuthor, setNewReviewAuthor] = useState('');
   const [newReviewRating, setNewReviewRating] = useState(5);
@@ -82,27 +83,31 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen,
 
   const fetchReviews = async () => {
     if (!product) return;
+    const requestId = ++reviewRequest.current;
+    setReviews([]);
     setIsReviewsLoading(true);
     try {
       const res = await fetch(`/api/reviews?productId=${product.id}`);
       const data = await res.json();
-      if (data.success) {
+      if (res.ok && data.success && requestId === reviewRequest.current) {
         setReviews(data.reviews || []);
       }
     } catch (err) {
       console.error("Failed to fetch reviews:", err);
     } finally {
-      setIsReviewsLoading(false);
+      if (requestId === reviewRequest.current) setIsReviewsLoading(false);
     }
   };
 
   const fetchReviewsInEffect = useEffectEvent((...args: Parameters<typeof fetchReviews>) => fetchReviews(...args));
 
   useEffect(() => {
-    if (activeTab === 'reviews' && product) {
+    if (product) {
       fetchReviewsInEffect();
     }
-  }, [activeTab, product]);
+    const generation = reviewRequest.current;
+    return () => { reviewRequest.current = generation + 1; };
+  }, [product]);
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -214,6 +219,9 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen,
   }, [isOpen, product]);
 
   if (!isVisible || !product) return null;
+  const reviewRating = reviews.length
+    ? Math.round(reviews.reduce((sum, review) => sum + Number(review.rating), 0) / reviews.length * 10) / 10
+    : 0;
 
   const currentProduct = liveProduct || product;
   const liveStock = currentProduct.stock !== undefined ? currentProduct.stock : 100;
@@ -343,11 +351,11 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen,
             <div className={`t-stagger ${modalState === 'open' ? 'is-shown' : ''}`}>
               <div className="t-stagger-line t-stagger-line--1 flex items-center justify-between text-xs">
                 <span data-product-brand className="text-accent font-black uppercase tracking-widest">{product.vendor}</span>
-                {product.reviews > 0 && product.rating > 0 ? (
-                  <div className="flex items-center gap-0.5 text-amber-500 font-bold" aria-label={language === 'FR' ? `${product.rating} sur 5, ${product.reviews} avis clients` : `${product.rating} من 5، ${product.reviews} تقييمات عملاء`}>
+                {reviews.length > 0 && reviewRating > 0 ? (
+                  <div className="flex items-center gap-0.5 text-amber-500 font-bold" aria-label={language === 'FR' ? `${reviewRating} sur 5, ${reviews.length} avis clients` : `${reviewRating} من 5، ${reviews.length} تقييمات عملاء`}>
                     <Star className="w-3.5 h-3.5 fill-amber-400 stroke-none" aria-hidden="true" />
-                    <span>{product.rating}</span>
-                    <span className="text-foreground/60 font-medium">({product.reviews} {language === 'FR' ? 'avis' : 'تقييم'})</span>
+                    <span>{reviewRating}</span>
+                    <span className="text-foreground/60 font-medium">({reviews.length} {language === 'FR' ? 'avis' : 'تقييم'})</span>
                   </div>
                 ) : null}
               </div>
@@ -390,7 +398,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen,
             {/* Tabs */}
             <div className="space-y-3">
               <div className="flex border-b border-border/40 text-xs font-black uppercase tracking-wider gap-4 sm:gap-6 flex-wrap">
-                {(['desc', 'ingredients', 'usage', 'reviews'] as const).map(tab => (
+                {(['desc', 'ingredients', 'usage', 'reviews'] as const).filter(tab => tab !== 'ingredients' && tab !== 'usage' || Boolean(product[tab]?.trim())).map(tab => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
@@ -405,7 +413,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen,
               </div>
 
               <div className="min-h-[140px] max-h-[220px] overflow-y-auto no-scrollbar text-xs leading-relaxed text-slate-700">
-                {activeTab === 'desc' && <p>{product.description}</p>}
+                {activeTab === 'desc' && <p>{product.description?.trim() || (language === 'FR' ? 'Description détaillée non renseignée. Contactez-nous pour en savoir plus avant votre achat.' : 'الوصف التفصيلي غير متوفر. تواصلي معنا قبل الشراء.')}</p>}
                 {activeTab === 'ingredients' && (
                   <div className="space-y-3">
                     <p className="text-[10px] text-foreground/60 font-extrabold flex items-center gap-1.5">

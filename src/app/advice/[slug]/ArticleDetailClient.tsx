@@ -207,8 +207,8 @@ export default function ArticleDetailClient({ article, initialRecommendedProduct
         </aside>
 
         <section className="public-card mb-14 p-6" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-          <h2 className="text-base font-bold text-slate-900">{isRTL ? 'المصادر والمراجع' : 'Sources et références'}</h2>
-          <p className="mt-2 text-sm leading-relaxed text-slate-600">{isRTL ? 'راجعوا وصف المنتج وقائمة المكونات وتعليمات الاستخدام قبل الاستعمال. المراجع الخاصة بهذا الدليل يتم عرضها عند توفرها.' : 'Consultez toujours la fiche produit, la liste d’ingrédients et les conseils d’utilisation. Les références spécifiques à ce guide sont affichées lorsqu’elles sont disponibles.'}</p>
+          <h2 className="text-base font-bold text-slate-900">{isRTL ? 'قبل الاستعمال' : 'Avant utilisation'}</h2>
+          <p className="mt-2 text-sm leading-relaxed text-slate-600">{isRTL ? 'راجعوا وصف المنتج وقائمة المكونات وتعليمات الاستخدام قبل الاستعمال.' : 'Consultez toujours la fiche produit, la liste d’ingrédients et les conseils d’utilisation.'}</p>
         </section>
 
         {/* Recommended products footer scroller */}

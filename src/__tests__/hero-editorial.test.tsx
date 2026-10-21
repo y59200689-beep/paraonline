@@ -11,7 +11,7 @@ vi.mock('@/lib/useGalleryOverrides', () => ({ useGalleryOverrides: () => ({ getD
 afterEach(() => { cleanup(); push.mockClear(); });
 it('keeps one fixed main image without carousel controls and preserves category actions', () => {
   render(<Hero onOpenDiagnostic={vi.fn()} />);
-  expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Découvrez nos Meilleures Ventes');
+  expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Découvrez nos offres du moment');
   fireEvent.click(screen.getByRole('button', { name: 'Je découvre' }));
   expect(push).toHaveBeenCalledWith('/products?category=offers');
   expect(screen.queryByRole('button', { name: 'Sélection suivante' })).toBeNull();
@@ -21,5 +21,5 @@ it('keeps one fixed main image without carousel controls and preserves category 
   expect(main.querySelectorAll('img')).toHaveLength(1);
   fireEvent.touchStart(main, { touches: [{ clientX: 300, clientY: 100 }] });
   fireEvent.touchEnd(main, { changedTouches: [{ clientX: 100, clientY: 100 }] });
-  expect(screen.getByRole('heading', { level: 1 }).textContent).toContain('Meilleures Ventes');
+  expect(screen.getByRole('heading', { level: 1 }).textContent).toContain('offres du moment');
 });

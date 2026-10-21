@@ -28,11 +28,12 @@ export const StorefrontFooter = ({ onDiagnostic }: { onDiagnostic: () => void })
     { title: ar ? 'دفع آمن' : 'Paiement sécurisé', desc: ar ? 'عبر الإنترنت أو عند التسليم' : 'En ligne ou à la livraison', icon: Lock },
   ];
   const careLinks = [
-    ['/products?category=Anti-Âge', 'Anti-Âge & Sérums', 'مقاومة التجاعيد والشباب'],
-    ['/products?category=Protection Solaire', 'Protection Solaire', 'الحماية من الشمس'],
-    ['/products?category=Anti-Taches', 'Anti-Taches & Éclat', 'علاج التصبغات والبقع'],
-    ['/products?category=Hydratation', 'Peaux Sensibles & Acné', 'ترطيب البشرة الجافة'],
-    ['/products', 'Soins Corps & Cheveux', 'العناية بالشعر والجسم'],
+    ['/products?concern=wrinkles', 'Anti-Âge & Sérums', 'مقاومة التجاعيد والشباب'],
+    ['/products?category=solaire', 'Protection Solaire', 'الحماية من الشمس'],
+    ['/products?concern=spots', 'Anti-Taches & Éclat', 'علاج التصبغات والبقع'],
+    ['/products?concern=acne', 'Acné & Imperfections', 'حب الشباب والشوائب'],
+    ['/products?category=corps', 'Soins du corps', 'العناية بالجسم'],
+    ['/products?category=cheveux', 'Soins des cheveux', 'العناية بالشعر'],
   ];
   return <footer id="footer" className={styles.footer} dir={ar ? 'rtl' : 'ltr'}>
     <div className={styles.botanical} aria-hidden="true"><i /><i /><i /><i /></div>

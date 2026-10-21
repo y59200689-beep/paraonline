@@ -1,4 +1,5 @@
 import { Redis } from '@upstash/redis';
+import { createHash } from 'node:crypto';
 
 // In-memory fallback store
 interface RateLimitEntry {
@@ -8,19 +9,9 @@ interface RateLimitEntry {
 
 const localStore = new Map<string, RateLimitEntry>();
 
-// Clean up expired entries every 5 minutes to prevent memory leaks
-if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
-    const now = Date.now();
-    for (const [key, entry] of localStore.entries()) {
-      if (entry.resetAt < now) localStore.delete(key);
-    }
-  }, 5 * 60 * 1000);
-}
-
 let redis: Redis | null = null;
 const isProduction = process.env.NODE_ENV === 'production';
-let hasWarnedAboutLocalFallback = false;
+let hasReportedDatabaseFailure = false;
 
 if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
   try {
@@ -29,13 +20,13 @@ if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) 
       token: process.env.UPSTASH_REDIS_REST_TOKEN,
     });
   } catch (err) {
-    console.error('[RateLimit] Failed to initialize Upstash Redis:', err);
+    void err; // The shared database backend remains available.
   }
 }
 
 /**
  * Check if a request is within the rate limit.
- * Uses Upstash Redis if configured; otherwise, falls back to in-memory Map.
+ * Uses Redis, then a shared database counter in production; local memory in development.
  * 
  * @param key       Unique key (e.g. `${route}:${ip}`)
  * @param limit     Maximum number of requests allowed in the window
@@ -69,20 +60,36 @@ export async function rateLimit(
         resetAt,
       };
     } catch (err) {
-      console.error('[RateLimit] Upstash Redis error:', err);
+      void err; // Credentials and provider error payloads must stay out of logs.
     }
   }
 
-  // Keep checkout and other customer actions available while Redis is being
-  // configured. This is weaker across serverless instances, so production logs
-  // a clear warning exactly once; add Upstash to make the limit distributed.
-  if (isProduction && !hasWarnedAboutLocalFallback) {
-    hasWarnedAboutLocalFallback = true;
-    console.warn('[RateLimit] Upstash Redis is not available; using the temporary local fallback.');
+  // Supabase provides an atomic, cross-instance backend when Redis is absent
+  // or unavailable. Never silently downgrade production to per-process limits.
+  if (isProduction) {
+    try {
+      const { supabaseAdmin } = await import('./supabase-server');
+      const { data, error } = await supabaseAdmin.rpc('consume_storefront_rate_limit', {
+        p_key: createHash('sha256').update(key).digest('hex'),
+        p_limit: limit,
+        p_window_ms: windowMs,
+      });
+      if (error) throw new Error('Rate-limit database unavailable');
+      const result = Array.isArray(data) ? data[0] : data;
+      if (!result || typeof result.allowed !== 'boolean' || !Number.isFinite(Number(result.reset_at_ms))) throw new Error('Invalid rate-limit result');
+      return { allowed: result.allowed, remaining: Number(result.remaining), resetAt: Number(result.reset_at_ms) };
+    } catch {
+      if (!hasReportedDatabaseFailure) {
+        hasReportedDatabaseFailure = true;
+        console.error('[RateLimit] Shared rate-limit backends unavailable; requests are temporarily restricted.');
+      }
+      return { allowed: false, remaining: 0, resetAt: Date.now() + windowMs };
+    }
   }
 
   // 2. In-memory fallback
   const now = Date.now();
+  for (const [storedKey, value] of localStore) if (value.resetAt <= now) localStore.delete(storedKey);
   const entry = localStore.get(key);
 
   if (!entry || entry.resetAt < now) {

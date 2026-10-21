@@ -30,17 +30,11 @@ export default function ErrorPage({ error, reset }: ErrorProps) {
             Une erreur est survenue !
           </h1>
           <p className="text-xs text-slate-400 font-medium leading-relaxed max-w-sm">
-            Une exception s'est produite lors du chargement de cette page. Notre équipe technique a été avertie et travaille à sa résolution.
+            Cette page n’a pas pu être chargée. Réessayez ou rechargez la page si le problème persiste.
           </p>
         </div>
 
-        {error.message && (
-          <div className="w-full text-left p-3.5 bg-slate-50 border border-slate-100 rounded-xl max-h-24 overflow-y-auto shrink-0 select-text">
-            <span className="text-[10px] font-mono font-semibold text-slate-500 block leading-tight">
-              {error.message}
-            </span>
-          </div>
-        )}
+
 
         <div className="w-full flex flex-col sm:flex-row gap-3 pt-2">
           <button

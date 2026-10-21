@@ -27,6 +27,7 @@ interface MobileHeaderProps {
   onIngredientClick: (key: string) => void;
   onQuickAdd: (e: React.MouseEvent, p: Product) => void;
   onOpenDiagnostic: () => void;
+  onSearchSubmit: () => void;
   t: (key: string) => string;
   isRTL: boolean;
   pathname?: string;
@@ -52,6 +53,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
   onIngredientClick,
   onQuickAdd,
   onOpenDiagnostic,
+  onSearchSubmit,
   t,
   isRTL,
   pathname,
@@ -124,10 +126,14 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
       {/* Mobile search bar (hidden on products and checkout routes to avoid duplicate bars) */}
       {!(pathname?.startsWith('/products') || pathname?.startsWith('/checkout')) && (
         <div ref={searchRef} className="relative w-full">
-          <div className="flex items-center gap-2 bg-slate-50/70 border border-slate-200 rounded-2xl px-4 py-2.5 h-[48px] transition-all duration-300 shadow-[0_2px_12px_rgba(0,0,0,0.01)]">
-            <Search className="w-4 h-4 text-foreground/60 shrink-0" />
+          <form role="search" onSubmit={event => { event.preventDefault(); onSearchSubmit(); }} className="flex items-center gap-2 bg-slate-50/70 border border-slate-200 rounded-2xl px-4 py-2.5 h-[48px] transition-all duration-300 shadow-[0_2px_12px_rgba(0,0,0,0.01)]">
+            <button type="submit" aria-label={language === 'FR' ? 'Rechercher' : 'بحث'} className="shrink-0">
+              <Search className="w-4 h-4 text-foreground/60" />
+            </button>
             <input
               type="text"
+              aria-label={language === 'FR' ? 'Rechercher des produits' : 'بحث عن المنتجات'}
+              enterKeyHint="search"
               placeholder={t('search_placeholder')}
               value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); setShowSearch(true); }}
@@ -136,13 +142,14 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
             />
             {searchQuery && (
               <button
+                type="button"
                 onClick={() => { setSearchQuery(''); setShowSearch(false); }}
                 aria-label={language === 'FR' ? 'Effacer la recherche' : 'مسح البحث'}
               >
                 <X className="w-3.5 h-3.5 text-slate-400 hover:text-slate-600" />
               </button>
             )}
-          </div>
+          </form>
 
           <SearchDropdown {...searchDropdownProps} />
         </div>

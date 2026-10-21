@@ -12,8 +12,8 @@ import styles from './Hero.module.css';
 
 interface HeroProps { onOpenDiagnostic: () => void; onSelectCategory?: (category: string) => void; }
 const defaults = [
-  { titleFr: 'Découvrez nos Meilleures Ventes', titleAr: 'اكتشفي منتجاتنا الأكثر مبيعاً', descFr: 'Une sélection de soins et de produits K-Beauty appréciés au Maroc, pour votre routine beauté.', descAr: 'مجموعة من منتجات العناية والجمال الكوري المختارة لروتينك اليومي.', ctaFr: 'Je découvre', ctaAr: 'اكتشفي الآن', tagFr: 'Beauté · Santé · Bien-être', tagAr: 'جمال · صحة · عناية', key: 'hero_bestsellers', image: '/images/hero-editorial-bestsellers.webp', category: 'offers' },
-  { titleFr: 'Offres d’Été', titleAr: 'عروض الصيف', descFr: 'Des soins solaires, hydratants et bien plus encore…', descAr: 'حماية من الشمس وترطيب والمزيد…', ctaFr: 'Voir les offres', ctaAr: 'شاهدي العروض', tagFr: 'Offres spéciales', tagAr: 'عروض خاصة', key: 'hero_summersale', image: '/images/hero-editorial-summer.webp', category: 'solaire' },
+  { titleFr: 'Découvrez nos offres du moment', titleAr: 'اكتشفي عروضنا الحالية', descFr: 'Une sélection de soins et de produits K-Beauty appréciés au Maroc, pour votre routine beauté.', descAr: 'مجموعة من منتجات العناية والجمال الكوري المختارة لروتينك اليومي.', ctaFr: 'Je découvre', ctaAr: 'اكتشفي الآن', tagFr: 'Beauté · Santé · Bien-être', tagAr: 'جمال · صحة · عناية', key: 'hero_bestsellers', image: '/images/hero-editorial-bestsellers.webp', category: 'offers' },
+  { titleFr: 'Une sélection pour votre routine', titleAr: 'مختارات لروتينك اليومي', descFr: 'Des soins solaires, hydratants et bien plus encore…', descAr: 'حماية من الشمس وترطيب والمزيد…', ctaFr: 'Voir les offres', ctaAr: 'شاهدي العروض', tagFr: 'Offres spéciales', tagAr: 'عروض خاصة', key: 'hero_summersale', image: '/images/hero-editorial-summer.webp', category: 'solaire' },
   { titleFr: 'Promotion de la semaine', titleAr: 'عروض الأسبوع', descFr: 'Des marques de qualité à prix doux !', descAr: 'منتجات مختارة بأسعار مميزة', ctaFr: 'Voir la sélection', ctaAr: 'شاهدي المختارات', tagFr: '', tagAr: '', key: 'hero_weeklypromo', image: '/images/hero-editorial-promotion.webp', category: 'offers' },
   { titleFr: 'K-Beauty', titleAr: 'الجمال الكوري', descFr: 'Les dernières pépites pour votre routine beauté.', descAr: 'اكتشفي الجديد لروتين جمالك.', ctaFr: 'Découvrir', ctaAr: 'اكتشفي', tagFr: 'Nouveautés', tagAr: 'الجديد', key: 'hero_newarrivals', image: '/images/hero-editorial-kbeauty.webp', category: 'kbeauty' },
 ];
@@ -27,7 +27,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic }) => {
   const ar = language === 'AR';
   const cards = defaults.map((fallback, index) => {
     const configured = settings?.banners?.[index];
-    const title = ar ? (configured?.titleAr || fallback.titleAr) : (configured?.titleFr && !legacyTitles.includes(configured.titleFr) ? configured.titleFr : fallback.titleFr);
+    const title = ar ? (configured?.titleAr && configured.titleAr !== 'عروض الصيف' ? configured.titleAr : fallback.titleAr) : (configured?.titleFr && !legacyTitles.includes(configured.titleFr) ? configured.titleFr : fallback.titleFr);
     return {
       ...fallback, title,
       description: ar ? (configured?.descAr || fallback.descAr) : (index === 0 ? configured?.descFr || fallback.descFr : fallback.descFr),

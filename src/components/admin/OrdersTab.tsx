@@ -27,20 +27,22 @@ export function OrderStatusPicker({ value, onChange, isDark = false, compact = f
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, placement: 'bottom' as 'top' | 'bottom' });
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, maxHeight: 0, placement: 'bottom' as 'top' | 'bottom' });
   const current = ORDER_STATUS_OPTIONS.find(option => option.value === value) || { ...ORDER_STATUS_OPTIONS[0], label: value };
-  const availableOptions = ORDER_STATUS_OPTIONS.filter(option => canChangeOrderStatus(value, option.value));
 
   const positionMenu = useCallback(() => {
     const rect = triggerRef.current?.getBoundingClientRect();
     if (!rect) return;
     const menuWidth = 280;
-    const estimatedHeight = 350;
     const viewportPadding = 12;
-    const openAbove = window.innerHeight - rect.bottom < estimatedHeight && rect.top > estimatedHeight;
+    const spaceBelow = window.innerHeight - rect.bottom - viewportPadding;
+    const spaceAbove = rect.top - viewportPadding;
+    const preferredHeight = 390;
+    const openAbove = spaceBelow < preferredHeight && spaceAbove > spaceBelow;
     setMenuPosition({
-      top: openAbove ? Math.max(viewportPadding, rect.top - estimatedHeight - 8) : Math.min(window.innerHeight - estimatedHeight - viewportPadding, rect.bottom + 8),
-      left: Math.max(viewportPadding, Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - viewportPadding)),
+      top: openAbove ? rect.top - 8 : rect.bottom + 8,
+      left: Math.max(viewportPadding, Math.min(rect.left, window.innerWidth - menuWidth - viewportPadding)),
+      maxHeight: Math.max(120, (openAbove ? spaceAbove : spaceBelow) - 8),
       placement: openAbove ? 'top' : 'bottom',
     });
   }, []);
@@ -74,7 +76,7 @@ export function OrderStatusPicker({ value, onChange, isDark = false, compact = f
     };
   }, [isOpen, positionMenu, readOnly]);
 
-  if (readOnly || !availableOptions.length) {
+  if (readOnly) {
     return (
       <span
         className={`inline-flex items-center gap-2 rounded-lg border font-bold ${compact ? 'px-2 py-1 text-[10px]' : 'px-3 py-2 text-xs'}`}
@@ -109,18 +111,18 @@ export function OrderStatusPicker({ value, onChange, isDark = false, compact = f
           ref={menuRef}
           role="listbox"
           aria-label="Choisir le statut de la commande"
-          className="fixed z-[100] w-[280px] overflow-hidden rounded-2xl border p-2 shadow-[0_24px_60px_rgba(15,30,54,0.22)]"
-          style={{ top: menuPosition.top, left: menuPosition.left, background: isDark ? 'hsl(224,25%,10%)' : '#fdfefe', borderColor: isDark ? 'rgba(255,255,255,0.09)' : 'rgba(15,30,54,0.14)' }}
+          className="fixed z-[100] w-[280px] overflow-y-auto rounded-2xl border p-2 shadow-[0_24px_60px_rgba(15,30,54,0.22)]"
+          style={{ top: menuPosition.top, left: menuPosition.left, maxHeight: menuPosition.maxHeight, transform: menuPosition.placement === 'top' ? 'translateY(-100%)' : undefined, background: isDark ? 'hsl(224,25%,10%)' : '#fdfefe', borderColor: isDark ? 'rgba(255,255,255,0.09)' : 'rgba(15,30,54,0.14)' }}
         >
           <div className="flex items-center justify-between px-2.5 pb-2 pt-1">
             <div>
               <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">Statut de la commande</p>
-              <p className={`mt-0.5 text-[11px] font-bold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Choisissez la prochaine étape</p>
+              <p className={`mt-0.5 text-[11px] font-bold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Choisissez un statut</p>
             </div>
             <span className="h-2 w-2 rounded-full" style={{ background: current.color, boxShadow: `0 0 0 4px ${current.tint}` }} />
           </div>
           <div className="border-t pt-1" style={{ borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,30,54,0.07)' }}>
-            {availableOptions.map(option => {
+            {ORDER_STATUS_OPTIONS.map(option => {
               const isCurrent = option.value === value;
               return (
                 <button
@@ -145,6 +147,7 @@ export function OrderStatusPicker({ value, onChange, isDark = false, compact = f
               );
             })}
           </div>
+          <p className="px-2.5 pt-2 text-[10px] leading-4 text-slate-500">Une correction manuelle peut nécessiter de vérifier le stock et le paiement.</p>
         </div>,
         document.body
       )}
@@ -784,34 +787,18 @@ export default function OrdersTab() {
   };
 
   const requestOrderStatusChange = (order: Order, status: string) => {
-    const update = async () => {
+    void (async () => {
       if (await handleUpdateOrderStatus(order.order_id, status)) {
         setSelectedOrder(previous => previous?.order_id === order.order_id ? { ...previous, status } : previous);
       }
-    };
-    if (order.status === 'Cancelled' && status === 'Confirmed') {
-      setConfirmation({
-        title: 'Reconfirmer cette commande annulée ?',
-        description: 'Le stock précédemment restitué sera réservé à nouveau. La commande restera annulée si le stock ou les références ne peuvent pas être vérifiés. Cette action ne débite aucun paiement.',
-        confirmLabel: 'Reconfirmer la commande', action: update,
-      });
-    } else { void update(); }
+    })();
   };
 
   const handleBulkUpdate = async (status: string) => {
     const eligible = orders.filter(order => selectedOrderIds.includes(order.order_id) && canChangeOrderStatus(order.status, status));
     if (!eligible.length) return;
-    const update = async () => {
-      const updatedIds = await handleBulkUpdateOrderStatus(status, eligible.map(order => order.order_id));
-      setSelectedOrderIds(ids => ids.filter(id => !updatedIds.includes(id)));
-    };
-    if (status === 'Confirmed' && eligible.some(order => order.status === 'Cancelled')) {
-      setConfirmation({
-        title: 'Confirmer la sélection et rouvrir les commandes annulées ?',
-        description: 'Chaque commande annulée doit disposer de références vérifiables et de stock disponible à réserver. Les commandes non modifiées resteront sélectionnées. Aucun paiement ne sera débité.',
-        confirmLabel: 'Confirmer les commandes', action: update,
-      });
-    } else { await update(); }
+    const updatedIds = await handleBulkUpdateOrderStatus(status, eligible.map(order => order.order_id));
+    setSelectedOrderIds(ids => ids.filter(id => !updatedIds.includes(id)));
   };
 
   const handleCsvFileUpload = (file: File) => {
@@ -3933,6 +3920,7 @@ export default function OrdersTab() {
                   { id: 'SHIPPED', label: 'Expédiées', count: orders.filter(o => o.status === 'Shipped').length, color: '#4f46e5' },
                   { id: 'DELIVERED', label: 'Livrées', count: orders.filter(o => o.status === 'Delivered').length, color: '#059669' },
                   { id: 'CANCELLED', label: 'Annulées', count: orders.filter(o => o.status === 'Cancelled').length, color: '#e11d48' },
+                  { id: 'RETURNED', label: 'Retournées', count: orders.filter(o => o.status === 'Returned').length, color: '#ea580c' },
                 ].map(st => {
                   const isActive = orderStatusFilter === st.id;
                   return (
@@ -3976,11 +3964,11 @@ export default function OrdersTab() {
                   <button type="button" disabled={confirmationBusy || isDataLoading} onClick={() => setSelectedOrderIds([])} className="min-h-10 rounded-lg px-3 text-sm underline underline-offset-4 disabled:opacity-50">Désélectionner</button>
                 </div>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
-                  {canMutateOrders && ['Confirmed', 'Shipped', 'Delivered', 'Cancelled'].map(status => {
+                  {canMutateOrders && ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled', 'Returned'].map(status => {
                     const count = orders.filter(order => selectedOrderIds.includes(order.order_id) && canChangeOrderStatus(order.status, status)).length;
                     return <button key={status} type="button" disabled={!count || confirmationBusy || isDataLoading} onClick={() => void handleBulkUpdate(status)}
                       className="min-h-10 rounded-lg border border-slate-400/40 px-3 text-sm font-semibold disabled:opacity-40">
-                      {({ Confirmed: 'Confirmer', Shipped: 'Expédier', Delivered: 'Livrer', Cancelled: 'Annuler' } as Record<string, string>)[status]} ({count})
+                      {({ Pending: 'En attente', Confirmed: 'Confirmer', Shipped: 'Expédier', Delivered: 'Livrer', Cancelled: 'Annuler', Returned: 'Retourner' } as Record<string, string>)[status]} ({count})
                     </button>;
                   })}
                   <button type="button" onClick={() => handleExportOrdersToCsv(orders.filter(order => selectedOrderIds.includes(order.order_id)))} className="min-h-10 rounded-lg border border-slate-400/40 px-3 text-sm">Exporter CSV</button>
@@ -3994,7 +3982,7 @@ export default function OrdersTab() {
                     <Trash2 className="h-4 w-4" /> Supprimer la sélection
                   </button>}
                 </div>
-                <p className="mt-3 text-xs opacity-70">Les changements de statut concernent uniquement les commandes à l’étape compatible. Les autres restent sélectionnées.</p>
+                <p className="mt-3 text-xs opacity-70">Les commandes déjà à ce statut restent inchangées. Une correction manuelle peut nécessiter de vérifier le stock et le paiement.</p>
               </section>
             )}
 

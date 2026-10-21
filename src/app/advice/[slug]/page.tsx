@@ -1,4 +1,5 @@
-import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { cache } from 'react';
+import { supabaseAdmin as supabase } from '@/lib/supabase-server';
 import { Product } from '@/lib/data';
 import ArticleDetailClient from './ArticleDetailClient';
 import { notFound } from 'next/navigation';
@@ -35,7 +36,7 @@ function rowToProduct(item: any): Product {
   };
 }
 
-async function getArticle(slug: string) {
+const getArticle = cache(async (slug: string) => {
   try {
     const { data: article, error } = await supabase
       .from('advice_articles')
@@ -44,16 +45,18 @@ async function getArticle(slug: string) {
       .eq('status', 'published')
       .maybeSingle();
 
-    if (error || !article) return null;
+    if (error) throw error;
+    if (!article) return null;
 
     let recommendedProducts: Product[] = [];
     if (article.recommended_products && article.recommended_products.length > 0) {
       const { data: prods, error: prodError } = await supabase
         .from('products')
         .select('*')
-        .in('id', article.recommended_products);
+        .in('id', article.recommended_products).eq('status', 'live');
       
-      if (!prodError && prods) {
+      if (prodError) throw prodError;
+      if (prods) {
         recommendedProducts = prods.map(rowToProduct);
       }
     }
@@ -63,10 +66,11 @@ async function getArticle(slug: string) {
       recommendedProducts
     };
   } catch (err) {
-    console.error("Error loading article detail on server:", err);
-    return null;
+    void err;
+    console.error("[Advice] Article query failed.");
+    throw new Error("Unable to load article.");
   }
-}
+});
 
 export async function generateStaticParams() {
   try {
