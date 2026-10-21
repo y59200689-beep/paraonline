@@ -7,7 +7,7 @@
 - App user: `paradivine`; systemd service: `paradivine.service`.
 - Initial source snapshot: current local working tree, including existing uncommitted app changes, excluding tests, local mocks, credentials and build output.
 - Initial release: `/srv/paradivine/releases/20261021-initial` (retained for rollback).
-- Active release: `/srv/paradivine/releases/20261021-product-logs`.
+- Active release: `/srv/paradivine/releases/20261021-sync-timeouts`.
 - Active symlink: `/srv/paradivine/current`.
 - Private environment: `/srv/paradivine/shared/app.env`, mode 0600, app-owned. Each release links `.env.production.local` to it.
 - Nginx proxies requests for `paradivine.ma` and `www.paradivine.ma` to loopback port 3000. Unknown hostnames receive 404.
@@ -53,6 +53,8 @@ Timer services use the private cron secret directly from disk, keep it out of pr
 Catalog jobs also upsert their running/success/failed status into `admin_sync_runs`, which is the table read by the admin dashboard. The runner resolves the existing Supabase client from the active release. Reporting errors set a failing service exit status and emit a safe diagnostic, but do not prevent the catalog request from running. This reporting was added after the first automatic run succeeded at 12:32:51 UTC on 21 October 2026; the initial verified successes were backfilled from journal timestamps and counts. Earlier runs updated product data and snippet metadata but did not populate the dashboard history.
 
 Product details for the latest successful sync are saved in the Atlascom snippet's `last_run_logs`, visible at `/admin/cron` through its existing log viewer. Changed rows include SKU, product ID/name, and before/after values for fields written by the sync. New rows are marked as drafts. Unchanged rows are omitted. Product detail lines are only saved after all catalog upsert batches succeed; a log-save failure is reported instead of claiming the logging succeeded. These details are not retroactively available for older runs, and the next run replaces the snippet's latest-run log.
+
+Timeout handling: the scheduler uses native Node HTTP with an explicit 14-minute deadline, avoiding the built-in fetch client's separate 300-second response-header deadline (confirmed in the installed Node runtime). The app limits each run to ten minutes; supplier authentication has a 30-second attempt timeout, article retrieval a 180-second attempt timeout, and transient supplier-read failures are retried once. Database catalog reads/writes share the overall abort signal. Stage transitions and safe error codes are logged without passwords, tokens or provider response bodies. Failures populate both the snippet log and dashboard run history with the stage/code. A process-local guard rejects a second concurrent request on the same app instance; it is not a distributed lock across Vercel and the VPS. Avoid manual runs on the old deployment during migration.
 
 For a future release, upload source to a new directory under `releases`, install locked dependencies as the app user, link the environment, build with a bounded Node heap, then switch `current` only after the build passes. Restart the service and smoke-test. Preserve the preceding release for rollback.
 

@@ -3,16 +3,24 @@ import { revalidatePath } from 'next/cache';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { requireCronSecret } from '@/lib/cron-auth';
 import { atlascomProductLog } from '@/lib/atlascom-sync-log';
+import { fetchAtlascomXml } from '@/lib/atlascom-request';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
+
+let syncRunning = false;
+type SyncProgress = { stage: string; logs: string[] };
+function progressStage(progress: SyncProgress, stage: string) {
+  progress.stage = stage;
+  console.log(JSON.stringify({ integration: 'atlascom', stage }));
+}
 
 function extractXmlValue(xml: string, tag: string) {
   const match = xml.match(new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`));
   return match ? match[1].trim() : '';
 }
 
-async function fetchAllProducts() {
+async function fetchAllProducts(signal: AbortSignal) {
   const pageSize = 1000;
   const products: any[] = [];
 
@@ -21,7 +29,7 @@ async function fetchAllProducts() {
     const { data, error } = await supabase
       .from('products')
       .select('*')
-      .range(from, to);
+      .range(from, to).abortSignal(signal);
 
     if (error) throw error;
     const batch = data || [];
@@ -33,7 +41,7 @@ async function fetchAllProducts() {
   return products;
 }
 
-async function upsertInBatches(rows: any[]) {
+async function upsertInBatches(rows: any[], signal: AbortSignal) {
   const batchSize = 500;
   let processed = 0;
 
@@ -41,7 +49,7 @@ async function upsertInBatches(rows: any[]) {
     const batch = rows.slice(index, index + batchSize);
     const { error } = await supabase
       .from('products')
-      .upsert(batch, { onConflict: 'id' });
+      .upsert(batch, { onConflict: 'id' }).abortSignal(signal);
 
     if (error) throw error;
     processed += batch.length;
@@ -50,13 +58,13 @@ async function upsertInBatches(rows: any[]) {
   return processed;
 }
 
-async function runAtlascomSync() {
+async function runAtlascomSync(progress: SyncProgress, signal: AbortSignal) {
   const startedAt = Date.now();
   const wsdlUrl = process.env.ATLASCOM_WSDL_URL
     || 'https://paraoficinal.ruijieddnsa.com/WebServiceAtlasCom/atlascomservice.asmx';
   const codeEmploye = process.env.ATLASCOM_EMPLOYEE_CODE;
   const password = process.env.ATLASCOM_PASSWORD;
-  const logs: string[] = [];
+  const logs = progress.logs;
 
   if (!codeEmploye || !password) {
     throw new Error('Atlascom credentials are not configured.');
@@ -64,7 +72,8 @@ async function runAtlascomSync() {
 
   logs.push('Starting Atlascom catalog synchronization.');
 
-  const authResponse = await fetch(wsdlUrl, {
+  progressStage(progress, 'authentification fournisseur');
+  const authXml = await fetchAtlascomXml(wsdlUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'text/xml; charset=utf-8',
@@ -79,13 +88,7 @@ async function runAtlascomSync() {
     </generateTOKEN>
   </soap:Body>
 </soap:Envelope>`,
-  });
-
-  if (!authResponse.ok) {
-    throw new Error(`Atlascom authentication failed with HTTP ${authResponse.status}.`);
-  }
-
-  const authXml = await authResponse.text();
+  }, signal, 30_000);
   const token = extractXmlValue(authXml, 'generateTOKENResult');
   if (!token) {
     throw new Error('Atlascom did not return an authentication token.');
@@ -93,7 +96,8 @@ async function runAtlascomSync() {
 
   logs.push('Authentication successful. Fetching articles.');
 
-  const articlesResponse = await fetch(wsdlUrl, {
+  progressStage(progress, 'lecture du catalogue fournisseur');
+  const articlesXml = await fetchAtlascomXml(wsdlUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'text/xml; charset=utf-8',
@@ -112,13 +116,7 @@ async function runAtlascomSync() {
     </getListeArticles>
   </soap:Body>
 </soap:Envelope>`,
-  });
-
-  if (!articlesResponse.ok) {
-    throw new Error(`Atlascom article fetch failed with HTTP ${articlesResponse.status}.`);
-  }
-
-  const articlesXml = await articlesResponse.text();
+  }, signal, 180_000);
   const articleMatches = articlesXml.match(/<Article>([\s\S]*?)<\/Article>/g) || [];
   if (articleMatches.length === 0) {
     return { updated: 0, inserted: 0, processed: 0, logs: ['No articles returned from Atlascom.'] };
@@ -126,7 +124,8 @@ async function runAtlascomSync() {
 
   logs.push(`Found ${articleMatches.length} Atlascom articles. Fetching full existing catalog.`);
 
-  const existingProducts = await fetchAllProducts();
+  progressStage(progress, 'lecture du catalogue Paradivine');
+  const existingProducts = await fetchAllProducts(signal);
   const productMap = new Map<string, any>();
   let maxId = 0;
 
@@ -212,12 +211,14 @@ async function runAtlascomSync() {
     }
   }
 
-  const processed = await upsertInBatches(rowsToUpsert);
+  progressStage(progress, 'enregistrement des produits');
+  const processed = await upsertInBatches(rowsToUpsert, signal);
   logs.push(`Sync complete. Processed ${processed} rows. Updated ${updated}, inserted ${inserted}.`);
   logs.push(`Duration ${Math.max(1, Math.round((Date.now() - startedAt) / 1000))}s.`);
   logs.push(productLogs.length ? 'Produits modifiés ou ajoutés :' : 'Aucun produit modifié ou ajouté.');
   logs.push(...productLogs);
 
+  progressStage(progress, 'enregistrement des journaux');
   const { error: logError } = await supabase
     .from('code_snippets')
     .update({
@@ -226,7 +227,7 @@ async function runAtlascomSync() {
       last_run_logs: logs.join('\n'),
       updated_at: new Date().toISOString(),
     })
-    .eq('id', 'cron_1782133436889');
+    .eq('id', 'cron_1782133436889').abortSignal(signal);
   if (logError) throw new Error('Catalog sync completed, but its product logs could not be saved.');
 
   revalidatePath('/');
@@ -239,22 +240,34 @@ async function runAtlascomSync() {
 export async function GET(request: Request) {
   const unauthorized = requireCronSecret(request);
   if (unauthorized) return unauthorized;
+  if (syncRunning) {
+    return NextResponse.json({ success: false, error: 'Une synchronisation Atlascom est déjà en cours.' }, { status: 409 });
+  }
+  syncRunning = true;
+  const progress: SyncProgress = { stage: 'initialisation', logs: [] };
+  // A VPS run must finish or abort before the next 15-minute timer fires.
+  const signal = AbortSignal.timeout(600_000);
 
   try {
-    const result = await runAtlascomSync();
+    const result = await runAtlascomSync(progress, signal);
     return NextResponse.json({ success: true, ...result });
   } catch (error: any) {
-    const message = error.message || 'Erreur serveur';
+    const rawCode = error?.code || error?.cause?.code || error?.name || 'ERROR';
+    const code = /^[A-Za-z0-9_]{1,64}$/.test(String(rawCode)) ? String(rawCode) : 'ERROR';
+    const message = `Synchronisation Atlascom échouée — ${progress.stage} (${code}).`;
+    console.error(JSON.stringify({ integration: 'atlascom', stage: progress.stage, code }));
     await supabase
       .from('code_snippets')
       .update({
         last_run: new Date().toISOString(),
         last_run_status: 'error',
-        last_run_logs: message,
+        last_run_logs: [...progress.logs, message].join('\n'),
         updated_at: new Date().toISOString(),
       })
-      .eq('id', 'cron_1782133436889');
+      .eq('id', 'cron_1782133436889').abortSignal(AbortSignal.timeout(15_000));
 
     return NextResponse.json({ success: false, error: message }, { status: 500 });
+  } finally {
+    syncRunning = false;
   }
 }
