@@ -49,6 +49,8 @@ Build/install logs are private to the app directory:
 
 Timer services use the private cron secret directly from disk, keep it out of process arguments, and omit integration response bodies from logs. A running systemd job is not started a second time by its timer. No catch-up run is configured after downtime.
 
+Catalog jobs also upsert their running/success/failed status into `admin_sync_runs`, which is the table read by the admin dashboard. The runner resolves the existing Supabase client from the active release. Reporting errors set a failing service exit status and emit a safe diagnostic, but do not prevent the catalog request from running. This reporting was added after the first automatic run succeeded at 12:32:51 UTC on 21 October 2026; the initial verified successes were backfilled from journal timestamps and counts. Earlier runs updated product data and snippet metadata but did not populate the dashboard history.
+
 For a future release, upload source to a new directory under `releases`, install locked dependencies as the app user, link the environment, build with a bounded Node heap, then switch `current` only after the build passes. Restart the service and smoke-test. Preserve the preceding release for rollback.
 
 Do not reinstall the VPS OS during migration; doing so erases the current installation.
