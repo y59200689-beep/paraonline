@@ -59,3 +59,11 @@ Recovered Atlascom credentials from the project's archived sync script, confirme
 - These figures include a real sync against the existing external database, not a mock replay. Rows processed include existing catalog rows beyond the live storefront count.
 
 The 15-minute catalog timer was subsequently enabled and verified to target :00/:15/:30/:45 UTC. This supersedes the earlier pending-sync status above. KVM 1 is supported by both the measured storefront and full-sync workload; production shopper concurrency is still unknown. The domain and HTTPS cutover remain pending, as do recovery of existing order-signing secrets and confirmation of other production-only settings.
+
+## Changed-row write optimization
+
+The 13:30 UTC run took 384.351 seconds: supplier authentication/download completed by 13:30:08, catalog reads by 13:30:47, and product writes ran until 13:36:24. It checked 16,071 rows and reported 17 changes, but wrote all 16,071 rows.
+
+Optimized the same full-feed sync to write only changed/new rows, retaining complete product records and existing draft-import behavior. Existing-catalog reads use stable ID ordering and at most four concurrent pages, with count/duplicate checks before any product writes. Regression tests cover unchanged rows, real stock/price changes, null cleanup, new drafts, preserved manual content, incomplete reads, and bounded concurrency.
+
+Live verification at 13:51 UTC: 16,071 checked, 1 updated/written, 0 inserted, 16,070 unchanged. Duration 7.295 seconds, app memory peak 148,447,232 bytes (141.6 MiB), zero restarts. Full unit suite: 532 passing tests. This is an observed run, not a guaranteed latency or a controlled comparison with identical upstream changes; network and database response times vary. The 15-minute schedule is retained.

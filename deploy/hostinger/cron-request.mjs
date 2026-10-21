@@ -85,6 +85,7 @@ try {
   console.log(JSON.stringify({
     job, success: true, durationSeconds: (Date.now() - started) / 1000,
     processed: result.processed, updated: result.updated, inserted: result.inserted,
+    written: result.written, unchanged: result.skipped,
   }));
 } catch (error) {
   const rawCode = error.cause?.code || error.code || error.name || 'ERROR';

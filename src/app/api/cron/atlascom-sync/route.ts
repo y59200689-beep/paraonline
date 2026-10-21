@@ -22,20 +22,33 @@ function extractXmlValue(xml: string, tag: string) {
 
 async function fetchAllProducts(signal: AbortSignal) {
   const pageSize = 1000;
-  const products: any[] = [];
-
-  for (let from = 0; ; from += pageSize) {
-    const to = from + pageSize - 1;
-    const { data, error } = await supabase
+  const readPage = async (from: number, withCount = false) => {
+    const result = await supabase
       .from('products')
-      .select('*')
-      .range(from, to).abortSignal(signal);
-
-    if (error) throw error;
-    const batch = data || [];
-    products.push(...batch);
-
-    if (batch.length < pageSize) break;
+      .select('*', withCount ? { count: 'exact' } : undefined)
+      .order('id', { ascending: true })
+      .range(from, from + pageSize - 1).abortSignal(signal);
+    if (result.error) throw result.error;
+    return result;
+  };
+  const first = await readPage(0, true);
+  const products: any[] = [...(first.data || [])];
+  if (first.count !== null && first.count !== undefined) {
+    const offsets = Array.from({ length: Math.max(0, Math.ceil(first.count / pageSize) - 1) }, (_, i) => (i + 1) * pageSize);
+    for (let i = 0; i < offsets.length; i += 4) {
+      const batches = await Promise.all(offsets.slice(i, i + 4).map(from => readPage(from)));
+      batches.forEach(batch => products.push(...(batch.data || [])));
+    }
+    // Do not infer new SKUs from a partial or shifted catalog snapshot.
+    if (products.length !== first.count || new Set(products.map(product => product.id)).size !== products.length) {
+      throw new Error('Catalog changed during pagination; retry a complete scan.');
+    }
+  } else if (products.length === pageSize) {
+    for (let from = pageSize; ; from += pageSize) {
+      const batch = await readPage(from);
+      products.push(...(batch.data || []));
+      if ((batch.data || []).length < pageSize) break;
+    }
   }
 
   return products;
@@ -140,12 +153,15 @@ async function runAtlascomSync(progress: SyncProgress, signal: AbortSignal) {
   let nextId = maxId + 1;
   let updated = 0;
   let inserted = 0;
+  let processed = 0;
+  let skipped = 0;
   const rowsToUpsert: any[] = [];
   const productLogs: string[] = [];
 
   for (const articleXml of articleMatches) {
     const sku = extractXmlValue(articleXml, 'codeArticle');
     if (!sku) continue;
+    processed++;
 
     const rawStock = extractXmlValue(articleXml, 'qteStock');
     const rawPrice = extractXmlValue(articleXml, 'prix');
@@ -178,8 +194,10 @@ async function runAtlascomSync(progress: SyncProgress, signal: AbortSignal) {
       if (productLog) {
         updated++;
         productLogs.push(productLog);
+        rowsToUpsert.push(nextRow);
+      } else {
+        skipped++;
       }
-      rowsToUpsert.push(nextRow);
     } else {
       inserted++;
       const nextRow = {
@@ -212,8 +230,9 @@ async function runAtlascomSync(progress: SyncProgress, signal: AbortSignal) {
   }
 
   progressStage(progress, 'enregistrement des produits');
-  const processed = await upsertInBatches(rowsToUpsert, signal);
+  const written = await upsertInBatches(rowsToUpsert, signal);
   logs.push(`Sync complete. Processed ${processed} rows. Updated ${updated}, inserted ${inserted}.`);
+  logs.push(`Écriture : ${written} produits. Inchangés vérifiés : ${skipped}.`);
   logs.push(`Duration ${Math.max(1, Math.round((Date.now() - startedAt) / 1000))}s.`);
   logs.push(productLogs.length ? 'Produits modifiés ou ajoutés :' : 'Aucun produit modifié ou ajouté.');
   logs.push(...productLogs);
@@ -234,7 +253,7 @@ async function runAtlascomSync(progress: SyncProgress, signal: AbortSignal) {
   revalidatePath('/products');
   revalidatePath('/admin/catalog');
 
-  return { updated, inserted, processed, logs };
+  return { updated, inserted, processed, skipped, written, logs };
 }
 
 export async function GET(request: Request) {
