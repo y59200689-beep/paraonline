@@ -393,11 +393,11 @@ export default function ProductsClient({
   const pageEnd = Math.min(pagination.page * pagination.limit, pagination.total);
   return (
     <ShopShell>
-      <main className="public-page w-full mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-12 lg:py-12 select-none">
+      <main className="public-page w-full mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-12 pb-12 lg:py-12 select-none">
         
         {/* Editorial Double-Bezel Header Card */}
-        <div className="rounded-[2rem] p-1.5 bg-slate-900/5 dark:bg-white/5 border border-slate-200/40 dark:border-slate-800/40 mb-12">
-          <div className="rounded-[calc(2rem-0.375rem)] bg-slate-950 text-white min-h-[200px] relative overflow-hidden flex flex-col justify-center px-8 sm:px-12 py-10">
+        <div className="rounded-[2rem] p-1.5 bg-slate-900/5 dark:bg-white/5 border border-slate-200/40 dark:border-slate-800/40 mb-5 sm:mb-12">
+          <div className="rounded-[calc(2rem-0.375rem)] bg-slate-950 text-white min-h-[120px] sm:min-h-[200px] relative overflow-hidden flex flex-col justify-center px-5 sm:px-12 py-5 sm:py-10">
             {/* Ambient gradients */}
             <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-emerald-500/15 blur-3xl pointer-events-none" />
             <div className="absolute -bottom-20 left-10 w-64 h-64 rounded-full bg-indigo-600/10 blur-3xl pointer-events-none" />

@@ -161,7 +161,7 @@ export const CustomerAuthPortal: React.FC<CustomerAuthPortalProps> = ({ authView
         }`}>
           
           {/* ── Left Editorial Concierge Brand Showcase (5 cols on lg) ── */}
-          <div className={`lg:col-span-5 space-y-6 lg:border-r lg:pr-8 text-left ${
+          <div className={`order-2 lg:order-1 lg:col-span-5 space-y-6 lg:border-r lg:pr-8 text-left ${
             themeMode === 'light' ? 'border-slate-200/80' : 'border-slate-800/80'
           }`} style={{ textAlign: isRTL ? 'right' : 'left' }}>
             
@@ -265,7 +265,7 @@ export const CustomerAuthPortal: React.FC<CustomerAuthPortalProps> = ({ authView
           </div>
 
           {/* ── Right Form Command Center (7 cols on lg) ── */}
-          <div className="lg:col-span-7 space-y-6">
+          <div className="order-1 lg:order-2 lg:col-span-7 space-y-6">
             
             {/* Form Header Tabs */}
             <div className="space-y-4">

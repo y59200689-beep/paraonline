@@ -1,3 +1,4 @@
+vi.mock('@/lib/public-review-stats', () => ({ getPublicReviewStats: async () => ({}) }));
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 const state = vi.hoisted(() => ({ data: null as Record<string, unknown> | null, error: null as unknown, reject: false, missing: 0 }));
 vi.mock('@/lib/supabase', () => ({ supabaseAdmin: { from: () => {

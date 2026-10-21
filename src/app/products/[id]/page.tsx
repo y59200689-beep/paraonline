@@ -1,3 +1,5 @@
+import { getPublicReviewStats } from '@/lib/public-review-stats';
+import { cache } from 'react';
 import { Product } from '@/lib/data';
 import { supabaseAdmin as supabase } from '@/lib/supabase-server';
 import ProductDetailClient from './ProductDetailClient';
@@ -49,7 +51,7 @@ function rowToProduct(item: any): Product {
   };
 }
 
-async function getProduct(id: string): Promise<Product | null> {
+const getProduct = cache(async (id: string): Promise<Product | null> => {
   if (!/^\d+$/.test(id) || !Number.isSafeInteger(Number(id)) || Number(id) < 1 || Number(id) > 2147483647) notFound();
   try {
     const { data, error } = await supabase
@@ -61,11 +63,15 @@ async function getProduct(id: string): Promise<Product | null> {
     
     if (error) throw error;
     if (!data) return null;
-    return rowToProduct(data);
+    const stats = await getPublicReviewStats().catch(() => {
+      console.error('[Reviews] Product review summary unavailable.');
+      return {};
+    });
+    return { ...rowToProduct(data), ...((stats as Record<string, { rating: number; reviews: number }>)[String(data.id)] || { rating: 0, reviews: 0 }) };
   } catch {
     throw new Error('Unable to load product.');
   }
-}
+});
 
 export async function generateStaticParams() {
   const { data, error } = await supabase.from('products').select('id').eq('status', 'live').limit(20);
@@ -134,7 +140,7 @@ function buildProductJsonLd(product: Product, id: string) {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: productName,
-    description: product.description || '',
+    ...(product.description?.trim() ? { description: product.description.trim() } : {}),
     image: allImages,
     url: productUrl,
     sku: product.sku || `SKU-${product.id}`,

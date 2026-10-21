@@ -1,5 +1,6 @@
 'use client';
 
+import { useApprovedReviewStats } from '@/hooks/useApprovedReviewStats';
 import React, { useState, useRef, useEffect } from 'react';
 import styles from './ProductCard.module.css';
 import { Product } from '@/lib/data';
@@ -60,6 +61,7 @@ const renderHighlightedTitle = (title: string, query?: string) => {
 };
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickView, className, style, imageOverlay, showMatchScore = false, searchQuery, singleImage = false, priority = false, compact = false, ingredientLayout = false, galleryKeyPrefix }) => {
+  const reviewStats = useApprovedReviewStats(product.id);
   const { addToCart } = useCart();
   const { language } = useTranslation();
   const { convertPrice } = useCurrency();
@@ -294,11 +296,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickVi
       >
         <Heart aria-hidden="true" />
       </button>
+      <div className={styles.imageLink}>
       <a
         href={`/products/${product.id}`}
         onMouseEnter={() => setShouldLoadAlternateImage(true)}
         onFocus={() => setShouldLoadAlternateImage(true)}
-        className={`${styles.imageLink} group/img`}
+        className="absolute inset-0 group/img"
       >
         
         {product.stock !== undefined && product.stock <= 0 ? (
@@ -337,7 +340,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickVi
           )}
         </div>
 
-        <div className="absolute inset-0 bg-black/6 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 flex items-center justify-center">
+        {imageOverlay}
+      </a>
+        <div className="absolute inset-0 bg-black/6 opacity-0 group-hover:opacity-100 focus-within:opacity-100 pointer-events-none transition-opacity duration-300 z-20 flex items-center justify-center">
           <div className="flex flex-col gap-2">
             <button
               onClick={(e) => {
@@ -349,7 +354,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickVi
                   setSelectedProduct(product);
                 }
               }}
-              className="px-4 py-2 bg-slate-900/90 backdrop-blur-sm hover:bg-primary hover:scale-105 text-white rounded-lg shadow-md transition-all duration-300 cursor-pointer flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.1em] select-none"
+              className="pointer-events-auto px-4 py-2 bg-slate-900/90 backdrop-blur-sm hover:bg-primary hover:scale-105 text-white rounded-lg shadow-md transition-all duration-300 cursor-pointer flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.1em] select-none"
             >
               <Eye className="w-3.5 h-3.5 text-white" />
               <span className="text-white">{language === 'FR' ? 'Aperçu' : 'عرض'}</span>
@@ -357,8 +362,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickVi
           </div>
         </div>
 
-        {imageOverlay}
-      </a>
+      </div>
 
       <div className={styles.content}>
         <div data-product-brand className={styles.vendor}>{product.vendor}</div>
@@ -379,13 +383,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickVi
         </h3>
 
         <div data-product-rating className={styles.rating}>
-          {product.reviews > 0 && product.rating > 0 ? <div className="flex items-center gap-1" aria-label={`${product.rating.toFixed(1)} sur 5, ${product.reviews} avis`}>
+          {reviewStats && reviewStats.reviews > 0 && reviewStats.rating > 0 ? <div className="flex items-center gap-1" aria-label={`${reviewStats.rating.toFixed(1)} sur 5, ${reviewStats?.reviews} avis`}>
             <div className="flex items-center gap-0.5">
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star 
                   key={star} 
                   className={`${compact ? 'w-2.5 h-2.5' : 'w-3.5 h-3.5'} fill-current ${
-                    star <= Math.round(product.rating) 
+                    star <= Math.round(reviewStats.rating)
                       ? 'text-gold fill-gold'
                       : 'text-slate-200 fill-slate-200'
                   } stroke-none`} 
@@ -393,10 +397,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickVi
               ))}
             </div>
             <span className={`${compact ? 'text-[8.5px]' : 'text-[10.5px]'} font-bold text-slate-600 mt-0.5`}>
-              ({product.reviews})
+              ({reviewStats?.reviews})
             </span>
           </div> : <span className={`${compact ? 'text-[8.5px]' : 'text-[10.5px]'} font-semibold text-slate-600`}>
-            {language === 'FR' ? 'Pas encore d’avis' : 'لا توجد تقييمات بعد'}
+            {reviewStats ? (language === 'FR' ? 'Pas encore d’avis' : 'لا توجد تقييمات بعد') : ''}
           </span>}
         </div>
 

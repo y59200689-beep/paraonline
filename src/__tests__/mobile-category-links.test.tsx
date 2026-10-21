@@ -20,16 +20,16 @@ vi.mock('next/image', () => ({ default: ({ fill, sizes, alt, ...props }: any) =>
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); settings.categoryLinks = {}; });
 
-it('filters mobile categories and restores unchanged desktop destinations on resize', () => {
+it('keeps meaningful category destinations on mobile and desktop', () => {
   let change = () => {};
   const media = { matches: true, addEventListener: (_: string, fn: () => void) => { change = fn; }, removeEventListener: vi.fn() };
   vi.stubGlobal('matchMedia', () => media);
   render(<CategoryTrack activeCategory="all" onSelectCategory={vi.fn()} />);
-  for (const [tag, category] of Object.entries({ maquillage: 'maquillage', sport: 'sport', masques: 'masque' })) {
+  for (const [tag, category] of Object.entries({ maquillage: 'maquillage', sport: 'sport', masques: 'masques' })) {
     expect(screen.getByRole('link', { name: `circle_${tag} circle_${tag}` }).getAttribute('href')).toBe(`/products?category=${category}`);
   }
   act(() => { media.matches = false; change(); });
-  expect(screen.getByRole('link', { name: 'circle_sport circle_sport' }).getAttribute('href')).toBe('/products');
+  expect(screen.getByRole('link', { name: 'circle_sport circle_sport' }).getAttribute('href')).toBe('/products?category=sport');
 });
 
 it('preserves custom mobile category destinations', () => {

@@ -539,6 +539,8 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 
                 {/* Wishlist floating toggle */}
                 <button 
+                  aria-label={language === 'FR' ? (isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris') : 'المفضلة'}
+                  aria-pressed={isFavorite}
                   onClick={() => toggleWishlist(product)}
                   className={`absolute top-6 right-6 w-11 h-11 rounded-full flex items-center justify-center shadow-lg border border-slate-100 dark:border-slate-800 transition-all z-20 cursor-pointer ${
                     isFavorite 
@@ -632,6 +634,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 <button 
                   onClick={shareProduct}
                   className="p-2.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                  aria-label={language === 'FR' ? 'Partager ce produit' : 'مشاركة المنتج'}
                   title={language === 'FR' ? 'Partager ce produit' : 'مشاركة المنتج'}
                 >
                   <Share2 className="w-4 h-4" />
@@ -795,6 +798,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
             <div className={`items-center gap-4 pt-2 border-t border-slate-100 dark:border-slate-900 ${productRedesign ? 'hidden lg:flex' : 'flex'}`}>
               <div className="flex items-center border border-slate-200 dark:border-slate-800 rounded-2xl px-3 bg-slate-50 dark:bg-slate-900 h-13 shrink-0">
                 <button 
+                  aria-label="Réduire la quantité"
                   onClick={() => setQuantity(p => Math.max(1, p - 1))}
                   disabled={product.stock !== undefined && product.stock <= 0}
                   className="p-1.5 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
@@ -803,6 +807,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 </button>
                 <input
                   type="number"
+                  aria-label="Quantité"
                   min={1}
                   max={product.stock !== undefined ? product.stock : undefined}
                   value={product.stock !== undefined && product.stock <= 0 ? 0 : quantity}
@@ -827,6 +832,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   className="w-12 text-sm font-black text-slate-800 dark:text-slate-100 text-center bg-transparent border-0 outline-none appearance-none [&::-webkit-inner-spin-button]:hidden [&::-webkit-outer-spin-button]:hidden focus:ring-0"
                 />
                 <button 
+                  aria-label="Augmenter la quantité"
                   onClick={() => setQuantity(p => p + 1)}
                   disabled={product.stock !== undefined && (product.stock <= 0 || quantity >= product.stock)}
                   className="p-1.5 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
@@ -986,14 +992,14 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
               >
                 <div className="overflow-hidden">
                   <div className="px-6 pb-6 text-xs sm:text-sm leading-relaxed text-slate-600 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800 pt-4">
-                    <p>{product.description}</p>
+                    <p>{product.description?.trim() || (language === 'FR' ? 'La description détaillée de ce produit n’est pas encore renseignée. Contactez-nous pour des informations complémentaires avant votre achat.' : 'الوصف التفصيلي غير متوفر حالياً. تواصلي معنا للمزيد من المعلومات قبل الشراء.')}</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Conseils d'utilisation Accordion */}
-            <div className="border border-slate-200/60 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
+            {Boolean(product.usage?.trim()) && <div className="border border-slate-200/60 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
               <button
                 onClick={() => setUsageOpen(!usageOpen)}
                 className="w-full px-6 py-5 flex items-center justify-between text-left cursor-pointer"
@@ -1017,10 +1023,10 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   </div>
                 </div>
               </div>
-            </div>
+            </div>}
 
             {/* Composition / Active Ingredients Glossary Match Accordion */}
-            <div className="border border-slate-200/60 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
+            {Boolean(product.ingredients?.trim()) && <div className="border border-slate-200/60 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
               <button
                 onClick={() => setIngredientsOpen(!ingredientsOpen)}
                 className="w-full px-6 py-5 flex items-center justify-between text-left cursor-pointer"
@@ -1089,7 +1095,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                     {/* Full ingredients list fallback */}
                     <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
                       <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 block mb-2">
-                        {language === 'FR' ? 'Liste complète des ingrédients (INCI) :' : 'قائمة المكونات الكاملة (INCI) :'}
+                        {language === 'FR' ? 'Ingrédients renseignés :' : 'المكونات المتوفرة :'}
                       </span>
                       <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400 italic">
                         {product.ingredients}
@@ -1098,7 +1104,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   </div>
                 </div>
               </div>
-            </div>
+            </div>}
 
           </div>
         </div>

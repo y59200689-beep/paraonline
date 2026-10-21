@@ -384,26 +384,28 @@ export default function SuiviCommandeClient() {
                     e.preventDefault();
                     handleSearch();
                   }}
-                  className="relative flex items-center bg-slate-950 border border-slate-800/80 focus-within:border-emerald-500/90 rounded-[calc(2.5rem-0.75rem)] p-2 shadow-inner transition-all group"
+                  className="relative flex flex-col sm:flex-row items-stretch sm:items-center bg-slate-950 border border-slate-800/80 focus-within:border-emerald-500/90 rounded-[calc(2.5rem-0.75rem)] p-2 shadow-inner transition-all group"
                 >
                   <div className="pl-4 pr-2 text-slate-400 group-focus-within:text-emerald-400 transition-colors">
                     <Search className="w-6 h-6" />
                   </div>
 
-                  <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                  <div className="min-w-0 flex-1 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                     <input
                       type="text"
+                      aria-label="N° de commande"
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                       placeholder={isRTL ? 'رقم الطلب (مثال: 100001)' : 'N° de commande (ex. 100001)'}
-                      className="w-full bg-transparent text-white placeholder-slate-500 text-sm font-mono py-3.5 px-2 focus:outline-none"
+                      className="w-full bg-transparent text-white placeholder-slate-400 text-base font-mono py-3.5 px-2 focus:outline-none"
                     />
                     <input
                       type="password"
+                      aria-label="Code de suivi"
                       value={trackingToken}
                       onChange={(e) => setTrackingToken(e.target.value)}
                       placeholder={isRTL ? 'رمز التتبع' : 'Code de suivi'}
-                      className="w-full bg-transparent text-white placeholder-slate-500 text-sm font-mono py-3.5 px-2 focus:outline-none border-t sm:border-t-0 sm:border-l border-slate-800"
+                      className="w-full bg-transparent text-white placeholder-slate-400 text-base font-mono py-3.5 px-2 focus:outline-none border-t sm:border-t-0 sm:border-l border-slate-800"
                     />
                   </div>
 

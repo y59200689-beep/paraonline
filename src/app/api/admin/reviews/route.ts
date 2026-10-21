@@ -1,3 +1,4 @@
+import { revalidateTag } from 'next/cache';
 import { NextResponse } from 'next/server';
 import { verifyAdminSession } from '@/lib/session';
 import { authorizeAdminMutation } from '@/lib/admin-authorization';
@@ -18,7 +19,7 @@ async function syncProductReviewsStats(productId: number) {
   }
 
   const count = approvedReviews ? approvedReviews.length : 0;
-  let avgRating = 5;
+  let avgRating = 0;
   if (count > 0) {
     const sum = approvedReviews.reduce((s: number, r: any) => s + Number(r.rating || 0), 0);
     avgRating = Math.round((sum / count) * 10) / 10;
@@ -30,6 +31,7 @@ async function syncProductReviewsStats(productId: number) {
     .eq('id', productId);
 
   if (updateError) console.error('Error updating product reviews stats:', updateError);
+  revalidateTag('public-approved-reviews', { expire: 0 });
 }
 
 // GET — all reviews (admin)

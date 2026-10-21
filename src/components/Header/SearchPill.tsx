@@ -8,7 +8,7 @@ import { Product } from '@/lib/data';
 
 const CATEGORIES = [
   { id: 'all', labelFR: 'Tous les produits', labelAR: 'كل المنتجات' },
-  { id: 'offers', labelFR: 'Meilleures Ventes', labelAR: 'الأكثر مبيعاً' },
+  { id: 'offers', labelFR: 'Offres du moment', labelAR: 'عروض حالية' },
   { id: 'giftbox', labelFR: 'Coffrets Cadeaux', labelAR: 'صناديق الهدايا' },
   { id: 'solaire', labelFR: 'Solaires', labelAR: 'واقيات الشمس' },
   { id: 'visage', labelFR: 'Visage', labelAR: 'العناية بالوجه' },

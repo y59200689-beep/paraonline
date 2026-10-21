@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { Product } from '@/lib/data';
 import { supabaseAdmin as supabase } from '@/lib/supabase-server';
-import { catalogCategoryForConcern, countCatalogConcerns, getCatalogConcerns, matchesCatalogConcern } from '@/lib/catalog-concerns';
+import { catalogCategoryForConcern, getCatalogConcerns, matchesCatalogConcern } from '@/lib/catalog-concerns';
 import { catalogCategoryFilter, normalizeCatalogCategoryId } from '@/lib/catalog-categories';
 import { catalogBrandPrefix, sanitizeCatalogSearch } from '@/lib/catalog-brand-match';
+import { getCachedCatalogFacets } from '@/lib/catalog-facets';
 import { searchStockResults } from '@/lib/search-stock-results';
 import { applyCatalogSort, isValidCatalogPageParam, type CatalogSort } from '@/lib/catalog-pagination';
 
@@ -92,69 +93,6 @@ function mapProduct(item: Record<string, unknown>): Product {
   return baseProduct as Product;
 }
 
-async function fetchProductFacetRows() {
-  const pageSize = 1000;
-  const rows: Array<Record<string, unknown>> = [];
-
-  for (let from = 0; ; from += pageSize) {
-    const to = from + pageSize - 1;
-    const { data, error } = await supabase
-      .from('products')
-      .select('id,title,name_fr,category,categories,tags,description,ingredients,vendor,price,compare_price')
-      .eq('status', 'live')
-      .range(from, to);
-
-    if (error) throw error;
-    const batch = (data || []) as Array<Record<string, unknown>>;
-    rows.push(...batch);
-
-    if (batch.length < pageSize) break;
-  }
-
-  return rows;
-}
-
-async function buildCatalogFacets() {
-  const [rows, concerns] = await Promise.all([fetchProductFacetRows(), getCatalogConcerns()]);
-  const categoryCounts = new Map<string, number>();
-  const brandCounts = new Map<string, number>();
-  let offerCount = 0;
-
-  for (const row of rows) {
-    if (Number(row.compare_price) > Number(row.price)) offerCount += 1;
-    const categories = Array.isArray(row.categories) && row.categories.length > 0
-      ? row.categories as string[]
-      : [row.category as string];
-
-    const uniqueCategories = Array.from(new Set(
-      categories
-        .map(category => normalizeCatalogCategoryId(String(category || '')))
-        .filter(Boolean)
-    ));
-
-    for (const category of uniqueCategories) {
-      categoryCounts.set(category, (categoryCounts.get(category) || 0) + 1);
-    }
-
-    const vendor = typeof row.vendor === 'string' ? row.vendor.trim() : '';
-    if (vendor && vendor !== '-') {
-      brandCounts.set(vendor, (brandCounts.get(vendor) || 0) + 1);
-    }
-  }
-
-  return {
-    total: rows.length,
-    categories: Array.from(categoryCounts.entries())
-      .map(([id, count]) => ({ id, count }))
-      .concat(offerCount > 0 ? [{ id: 'offers', count: offerCount }] : [])
-      .sort((a, b) => a.id.localeCompare(b.id)),
-    brands: Array.from(brandCounts.entries())
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => a.name.localeCompare(b.name)),
-    concerns: countCatalogConcerns(rows.map(mapProduct), concerns),
-  };
-}
-
 function customConcernFilter(concern: { keywords?: string[]; ingredientKeywords?: string[]; productIds?: number[] }) {
   const escapeValue = (value: string) => value.replace(/[,.()]/g, ' ').trim();
   const textKeywords = [...(concern.keywords || []), ...(concern.ingredientKeywords || [])]
@@ -204,7 +142,7 @@ export async function GET(request: Request) {
 
   try {
     if (facetsOnly) {
-      const facets = await buildCatalogFacets();
+      const facets = await getCachedCatalogFacets();
       return NextResponse.json(
         { success: true, facets },
         { headers: { 'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=3600' } }
@@ -261,17 +199,15 @@ export async function GET(request: Request) {
 
     const buildQuery = (countOnly = false) => {
     let query = countOnly
-      ? supabase.from('products').select('id', { count: 'exact', head: true })
-      : supabase.from('products').select(PUBLIC_PRODUCT_COLUMNS, { count: 'exact' });
+      ? supabase.from(category === 'offers' ? 'storefront_offer_products' : 'products').select('id', { count: 'exact', head: true })
+      : supabase.from(category === 'offers' ? 'storefront_offer_products' : 'products').select(PUBLIC_PRODUCT_COLUMNS, { count: 'exact' });
 
     // Filter out drafts on public customer storefront
     query = query.eq('status', 'live');
     if (inStockOnly) query = query.gt('stock', 0);
 
     if (category !== 'all') {
-      if (category === 'offers') {
-        query = query.gt('compare_price', 'price');
-      } else {
+      if (category !== 'offers') {
         query = query.or(catalogCategoryFilter(category));
       }
     }
@@ -370,9 +306,9 @@ export async function GET(request: Request) {
     } else {
       const from = (page - 1) * limit;
       const to = from + limit - 1;
-      let { data, count, error } = await applyCatalogSort(query, normalizeSort(sort)).range(from, to);
+      const { data, count, error } = await applyCatalogSort(query, normalizeSort(sort)).range(from, to);
 
-      if (error && page > 1) {
+      if (error?.code === 'PGRST103' && page > 1) {
         // PostgREST may reject a range past its configured row window. Check
         // the filtered total separately so an ordinary out-of-range request
         // gets a 404 instead of being surfaced as a server failure.
@@ -383,27 +319,6 @@ export async function GET(request: Request) {
         }
       }
 
-      // The storefront must remain usable even if a database ordering index is
-      // temporarily unavailable. This is deliberately limited to the default
-      // catalogue view so intentional empty search/filter results stay intact.
-      const isDefaultCatalogRequest = category === 'all'
-        && !inStockOnly
-        && !search
-        && !vendor
-        && vendors.length === 0
-        && !ingredient
-        && maxPrice === 0;
-      if (!error && isDefaultCatalogRequest && (!data || data.length === 0)) {
-        const fallback = await supabase
-          .from('products')
-          .select(PUBLIC_PRODUCT_COLUMNS, { count: 'exact' })
-          .eq('status', 'live')
-          .order('title', { ascending: true })
-          .range(from, to);
-        data = fallback.data;
-        count = fallback.count;
-        error = fallback.error;
-      }
       if (error || !data) {
         throw error || new Error('No products returned');
       }

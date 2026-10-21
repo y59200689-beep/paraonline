@@ -53,8 +53,8 @@ export function normalizeCatalogRouteState(params: CatalogSearchParams = {}): Ca
   )].slice(0, 20);
   const concernValue = first(params.concern) || 'all';
   const concern = /^[a-z0-9_-]{1,80}$/i.test(concernValue) ? concernValue : 'all';
-  const rawCategory = first(params.category) || 'all';
-  const category = /^[a-z0-9_\- &]+$/i.test(rawCategory)
+  const rawCategory = (first(params.category) || 'all').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const category = /^[a-z0-9_\- &]{1,100}$/i.test(rawCategory)
     ? normalizeCatalogCategoryId(rawCategory.trim().toLowerCase())
     : 'all';
 
