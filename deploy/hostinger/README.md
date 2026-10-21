@@ -6,7 +6,8 @@
 - Node.js: 22.23.4, downloaded from nodejs.org and verified against its SHA256 manifest.
 - App user: `paradivine`; systemd service: `paradivine.service`.
 - Initial source snapshot: current local working tree, including existing uncommitted app changes, excluding tests, local mocks, credentials and build output.
-- Release: `/srv/paradivine/releases/20261021-initial`.
+- Initial release: `/srv/paradivine/releases/20261021-initial` (retained for rollback).
+- Active release: `/srv/paradivine/releases/20261021-product-logs`.
 - Active symlink: `/srv/paradivine/current`.
 - Private environment: `/srv/paradivine/shared/app.env`, mode 0600, app-owned. Each release links `.env.production.local` to it.
 - Nginx proxies requests for `paradivine.ma` and `www.paradivine.ma` to loopback port 3000. Unknown hostnames receive 404.
@@ -50,6 +51,8 @@ Build/install logs are private to the app directory:
 Timer services use the private cron secret directly from disk, keep it out of process arguments, and omit integration response bodies from logs. A running systemd job is not started a second time by its timer. No catch-up run is configured after downtime.
 
 Catalog jobs also upsert their running/success/failed status into `admin_sync_runs`, which is the table read by the admin dashboard. The runner resolves the existing Supabase client from the active release. Reporting errors set a failing service exit status and emit a safe diagnostic, but do not prevent the catalog request from running. This reporting was added after the first automatic run succeeded at 12:32:51 UTC on 21 October 2026; the initial verified successes were backfilled from journal timestamps and counts. Earlier runs updated product data and snippet metadata but did not populate the dashboard history.
+
+Product details for the latest successful sync are saved in the Atlascom snippet's `last_run_logs`, visible at `/admin/cron` through its existing log viewer. Changed rows include SKU, product ID/name, and before/after values for fields written by the sync. New rows are marked as drafts. Unchanged rows are omitted. Product detail lines are only saved after all catalog upsert batches succeed; a log-save failure is reported instead of claiming the logging succeeded. These details are not retroactively available for older runs, and the next run replaces the snippet's latest-run log.
 
 For a future release, upload source to a new directory under `releases`, install locked dependencies as the app user, link the environment, build with a bounded Node heap, then switch `current` only after the build passes. Restart the service and smoke-test. Preserve the preceding release for rollback.
 

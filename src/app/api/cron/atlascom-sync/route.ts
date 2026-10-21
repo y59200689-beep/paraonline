@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { requireCronSecret } from '@/lib/cron-auth';
+import { atlascomProductLog } from '@/lib/atlascom-sync-log';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -141,6 +142,7 @@ async function runAtlascomSync() {
   let updated = 0;
   let inserted = 0;
   const rowsToUpsert: any[] = [];
+  const productLogs: string[] = [];
 
   for (const articleXml of articleMatches) {
     const sku = extractXmlValue(articleXml, 'codeArticle');
@@ -173,18 +175,15 @@ async function runAtlascomSync() {
         vendor: nextVendor,
       };
 
-      if (
-        String(existing.title || existing.name || existing.name_fr || '') !== title
-        || Number(existing.stock) !== nextRow.stock
-        || Number(existing.price) !== nextRow.price
-        || existing.vendor === 'Atlascom'
-      ) {
+      const productLog = atlascomProductLog(existing, nextRow);
+      if (productLog) {
         updated++;
+        productLogs.push(productLog);
       }
       rowsToUpsert.push(nextRow);
     } else {
       inserted++;
-      rowsToUpsert.push({
+      const nextRow = {
         id: nextId++,
         sku,
         title,
@@ -207,15 +206,19 @@ async function runAtlascomSync() {
         buying_cost: null,
         points: 0,
         status: 'draft',
-      });
+      };
+      rowsToUpsert.push(nextRow);
+      productLogs.push(atlascomProductLog(null, nextRow)!);
     }
   }
 
   const processed = await upsertInBatches(rowsToUpsert);
   logs.push(`Sync complete. Processed ${processed} rows. Updated ${updated}, inserted ${inserted}.`);
   logs.push(`Duration ${Math.max(1, Math.round((Date.now() - startedAt) / 1000))}s.`);
+  logs.push(productLogs.length ? 'Produits modifiés ou ajoutés :' : 'Aucun produit modifié ou ajouté.');
+  logs.push(...productLogs);
 
-  await supabase
+  const { error: logError } = await supabase
     .from('code_snippets')
     .update({
       last_run: new Date().toISOString(),
@@ -224,6 +227,7 @@ async function runAtlascomSync() {
       updated_at: new Date().toISOString(),
     })
     .eq('id', 'cron_1782133436889');
+  if (logError) throw new Error('Catalog sync completed, but its product logs could not be saved.');
 
   revalidatePath('/');
   revalidatePath('/products');
