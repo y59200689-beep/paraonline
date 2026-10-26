@@ -31,6 +31,7 @@ interface ProductCardProps {
   priority?: boolean;
   compact?: boolean;
   ingredientLayout?: boolean;
+  inlinePrices?: boolean;
   galleryKeyPrefix?: string;
 }
 
@@ -60,7 +61,7 @@ const renderHighlightedTitle = (title: string, query?: string) => {
   );
 };
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickView, className, style, imageOverlay, showMatchScore = false, searchQuery, singleImage = false, priority = false, compact = false, ingredientLayout = false, galleryKeyPrefix }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickView, className, style, imageOverlay, showMatchScore = false, searchQuery, singleImage = false, priority = false, compact = false, ingredientLayout = false, inlinePrices = false, galleryKeyPrefix }) => {
   const reviewStats = useApprovedReviewStats(product.id);
   const { addToCart } = useCart();
   const { language } = useTranslation();
@@ -405,7 +406,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickVi
         </div>
 
         <div className={styles.purchase}>
-          <div className={styles.prices}>
+          <div className={`${styles.prices} ${inlinePrices ? styles.pricesInline : ''}`}>
             <span className={styles.price}>{convertPrice(product.price)}</span>
             {discount && <span className={styles.oldPrice}>{convertPrice(product.comparePrice)}</span>}
           </div>

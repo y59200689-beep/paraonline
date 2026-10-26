@@ -18,6 +18,9 @@ const nextConfig: NextConfig = {
     '/api/admin/repair-product-fields': ['./supabase-mock-db.json'],
   },
   images: {
+    // The Vercel image optimizer is currently returning 402s for this project.
+    // Serve catalog, brand, and local images from their source URLs instead.
+    unoptimized: true,
     minimumCacheTTL: 31536000,
     formats: ['image/avif', 'image/webp'],
     localPatterns: [

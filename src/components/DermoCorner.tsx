@@ -242,7 +242,7 @@ export const DermoCorner: React.FC = () => {
               >
                 {acneRail.products.map(product => (
                   <div key={product.id} className="snap-start shrink-0 w-[180px] sm:w-[220px] lg:w-[168px] transition-all duration-200 hover:-translate-y-0.5">
-                    <ProductCard product={product} compact={true} />
+                    <ProductCard product={product} compact={true} inlinePrices />
                   </div>
                 ))}
               </div>
@@ -320,7 +320,7 @@ export const DermoCorner: React.FC = () => {
               >
                 {spotRail.products.map(product => (
                   <div key={product.id} className="snap-start shrink-0 w-[180px] sm:w-[220px] lg:w-[168px] transition-all duration-200 hover:-translate-y-0.5">
-                    <ProductCard product={product} compact={true} />
+                    <ProductCard product={product} compact={true} inlinePrices />
                   </div>
                 ))}
               </div>
@@ -398,7 +398,7 @@ export const DermoCorner: React.FC = () => {
               >
                 {antiAgeRail.products.map(product => (
                   <div key={product.id} className="snap-start shrink-0 w-[180px] sm:w-[220px] lg:w-[168px] transition-all duration-200 hover:-translate-y-0.5">
-                    <ProductCard product={product} compact={true} />
+                    <ProductCard product={product} compact={true} inlinePrices />
                   </div>
                 ))}
               </div>
@@ -476,7 +476,7 @@ export const DermoCorner: React.FC = () => {
               >
                 {hydrateRail.products.map(product => (
                   <div key={product.id} className="snap-start shrink-0 w-[180px] sm:w-[220px] lg:w-[168px] transition-all duration-200 hover:-translate-y-0.5">
-                    <ProductCard product={product} compact={true} />
+                    <ProductCard product={product} compact={true} inlinePrices />
                   </div>
                 ))}
               </div>
@@ -554,7 +554,7 @@ export const DermoCorner: React.FC = () => {
               >
                 {sootheRail.products.map(product => (
                   <div key={product.id} className="snap-start shrink-0 w-[180px] sm:w-[220px] lg:w-[168px] transition-all duration-200 hover:-translate-y-0.5">
-                    <ProductCard product={product} compact={true} />
+                    <ProductCard product={product} compact={true} inlinePrices />
                   </div>
                 ))}
               </div>
@@ -632,7 +632,7 @@ export const DermoCorner: React.FC = () => {
               >
                 {solarRail.products.map(product => (
                   <div key={product.id} className="snap-start shrink-0 w-[180px] sm:w-[220px] lg:w-[168px] transition-all duration-200 hover:-translate-y-0.5">
-                    <ProductCard product={product} compact={true} />
+                    <ProductCard product={product} compact={true} inlinePrices />
                   </div>
                 ))}
               </div>

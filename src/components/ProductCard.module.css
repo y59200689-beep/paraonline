@@ -57,6 +57,12 @@
 .ingredient .add svg { width: 20px; height: 20px; }
 .ingredient .rating { display: none; }
 .ingredient .wishlist { background: #fff; box-shadow: 0 3px 10px #25344a0c; }
+
+/* Keep sale and original prices together in the concern-focused product rails. */
+.card .pricesInline { flex-direction: row; align-items: baseline; flex-wrap: nowrap; gap: 4px; }
+.card .pricesInline .price { font-size: clamp(12px, 6.5cqw, 16px); }
+.card .pricesInline .oldPrice { font-size: clamp(9px, 4.5cqw, 10px); }
+
 @media (max-width: 639px) {
   .ingredient .content { padding: 10px; }
   .ingredient .title { font-size: 12px; }
