@@ -19,7 +19,7 @@ import Link from 'next/link';
 import { isCommerceFeatureEnabled } from '@/lib/feature-flags';
 import { isDiagnosticProductEligible } from '@/lib/diagnostic-eligibility';
 import { getCatalogReturnLocation } from '@/lib/catalog-return-location';
-import { PRODUCT_IMAGE_FALLBACK } from '@/lib/public-images';
+import { PRODUCT_IMAGE_FALLBACK, shouldBypassNextImageOptimization } from '@/lib/public-images';
 
 interface ProductDetailClientProps {
   product: Product;
@@ -51,10 +51,30 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   const [quantity, setQuantity] = useState(1);
   const [activeVariant, setActiveVariant] = useState<any>(null);
   const [imgError, setImgError] = useState(false);
+  const [failedGalleryImages, setFailedGalleryImages] = useState<string[]>([]);
+
+  const galleryImages = [...new Set([product.image, ...(product.images || [])]
+    .filter((image): image is string => typeof image === 'string' && image.trim().length > 0))];
+
+  const handleMainImageError = () => {
+    setFailedGalleryImages((failed) => failed.includes(displayImage) ? failed : [...failed, displayImage]);
+    const nextImage = galleryImages.find((image) => image !== displayImage && !failedGalleryImages.includes(image));
+    if (nextImage) {
+      setActiveImage(nextImage);
+      setDisplayImage(nextImage);
+      setImgError(false);
+      return;
+    }
+    setImgError(true);
+  };
 
   useEffect(() => {
     setImgError(false);
-  }, [displayImage, product]);
+  }, [displayImage]);
+
+  useEffect(() => {
+    setFailedGalleryImages([]);
+  }, [product.id]);
 
   // Accordion states
   const [descOpen, setDescOpen] = useState(true);
@@ -252,6 +272,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   useEffect(() => {
     setActiveImage(product.image);
     setDisplayImage(product.image);
+    setFailedGalleryImages([]);
     setQuantity(1);
 
     if (product.variants && product.variants.length > 0) {
@@ -559,6 +580,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   sizes="(max-width: 1024px) 100vw, 50vw"
                   priority={true}
                   loading="eager"
+                  unoptimized={shouldBypassNextImageOptimization(displayImage)}
                   className={`object-cover transition-all duration-200 ease-in-out ${
                     isFading ? 'opacity-0 blur-[2px]' : 'opacity-100 blur-0'
                   }`}
@@ -567,7 +589,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                     transform: isZooming ? 'scale(2.2)' : (isFading ? 'scale(0.98)' : 'scale(1)'),
                     transition: isZooming ? 'none' : 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.2s ease-in-out, filter 0.2s ease-in-out',
                   }}
-                  onError={() => setImgError(true)}
+                  onError={handleMainImageError}
                 />
               </div>
             </div>
@@ -591,6 +613,8 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                       width={80}
                       height={80}
                       className="w-full h-full object-contain"
+                      unoptimized={shouldBypassNextImageOptimization(img)}
+                      onError={() => setFailedGalleryImages((failed) => failed.includes(img) ? failed : [...failed, img])}
                     />
                   </button>
                 ))}
