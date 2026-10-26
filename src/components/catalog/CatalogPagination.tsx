@@ -28,8 +28,8 @@ export function CatalogPagination({
   const visiblePages = Array.from({ length: Math.min(5, totalPages) }, (_, index) => start + index);
   const end = visiblePages.at(-1) || 1;
   const isFrench = language === 'FR';
-  const buttonClass = 'h-9 px-3 rounded-xl border border-slate-200 bg-white text-xs font-black text-slate-600 transition hover:border-primary/30 hover:text-primary dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300';
-  const pageClass = 'h-9 min-w-9 rounded-xl border px-3 text-xs font-black transition';
+  const buttonClass = 'inline-flex h-10 min-w-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-xs font-black text-slate-600 transition hover:border-primary/30 hover:text-primary dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300';
+  const pageClass = 'inline-flex h-10 min-w-10 items-center justify-center rounded-xl border px-3 text-xs font-black transition';
 
   return (
     <nav
@@ -37,13 +37,13 @@ export function CatalogPagination({
       className="rounded-3xl border border-slate-100 bg-white p-3 shadow-sm dark:border-slate-900 dark:bg-slate-950 sm:p-4"
       data-testid="catalog-pagination"
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-600">
+      <div className="flex flex-col items-center gap-3">
+        <div className="text-center text-[11px] font-bold uppercase tracking-wider text-slate-600">
           {isFrench
             ? `Page ${currentPage} / ${totalPages} - ${pagination.limit} produits par page`
             : `الصفحة ${currentPage} / ${totalPages}`}
         </div>
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-wrap items-center justify-center gap-1.5">
           {start > 1 && (
             <a
               href={buildCatalogPageHref(1, routeState)}

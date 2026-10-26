@@ -32,6 +32,7 @@ interface ProductCardProps {
   compact?: boolean;
   ingredientLayout?: boolean;
   inlinePrices?: boolean;
+  stackedPurchase?: boolean;
   galleryKeyPrefix?: string;
 }
 
@@ -61,7 +62,7 @@ const renderHighlightedTitle = (title: string, query?: string) => {
   );
 };
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickView, className, style, imageOverlay, showMatchScore = false, searchQuery, singleImage = false, priority = false, compact = false, ingredientLayout = false, inlinePrices = false, galleryKeyPrefix }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickView, className, style, imageOverlay, showMatchScore = false, searchQuery, singleImage = false, priority = false, compact = false, ingredientLayout = false, inlinePrices = false, stackedPurchase = false, galleryKeyPrefix }) => {
   const reviewStats = useApprovedReviewStats(product.id);
   const { addToCart } = useCart();
   const { language } = useTranslation();
@@ -280,7 +281,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickVi
   return (
     <div
       ref={cardRef}
-      className={`group ${styles.card} ${compact ? styles.compact : ''} ${ingredientLayout ? styles.ingredient : ''} ${className || ''}`}
+      className={`group ${styles.card} ${compact ? styles.compact : ''} ${ingredientLayout ? styles.ingredient : ''} ${stackedPurchase ? styles.stackedPurchase : ''} ${className || ''}`}
       style={{ ...style }}
     >
       <button
