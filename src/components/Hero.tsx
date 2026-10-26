@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation';
 import { useTranslation } from '@/context/LanguageContext';
 import { useSettings } from '@/context/SettingsContext';
 import { useGalleryOverrides } from '@/lib/useGalleryOverrides';
-import { shouldBypassNextImageOptimization } from '@/lib/public-images';
 import styles from './Hero.module.css';
 
 interface HeroProps { onOpenDiagnostic: () => void; onSelectCategory?: (category: string) => void; }
@@ -45,7 +44,10 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic }) => {
   });
   const current = cards[0];
   const Arrow = ar ? ArrowLeft : ArrowRight;
-  const picture = (index: number, main = false) => <Image src={cards[index].image} alt="" fill sizes={main ? '(max-width: 1023px) 100vw, 52vw' : '(max-width: 639px) 50vw, 24vw'} preload={main && index === 0} unoptimized={shouldBypassNextImageOptimization(cards[index].image)} className={styles.image} />;
+  // The Vercel image optimizer can be unavailable when the account's image
+  // optimization billing is paused. These local WebP assets are already
+  // optimized, so serve them directly and keep the hero visible.
+  const picture = (index: number, main = false) => <Image src={cards[index].image} alt="" fill sizes={main ? '(max-width: 1023px) 100vw, 52vw' : '(max-width: 639px) 50vw, 24vw'} preload={main && index === 0} unoptimized className={styles.image} />;
   return <section className={'hero-section ' + styles.section} aria-label={ar ? 'مختارات الجمال والعروض' : 'Sélection beauté et offres'} dir={ar ? 'rtl' : 'ltr'}>
     <div className={styles.grid}>
       <article className={styles.main} aria-label={ar ? 'اكتشفي مختاراتنا' : 'Découvrez nos sélections'}>

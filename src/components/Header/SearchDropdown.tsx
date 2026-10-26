@@ -8,6 +8,22 @@ import { Product } from '@/lib/data';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { PRODUCT_IMAGE_FALLBACK } from '@/lib/public-images';
 
+function SearchProductImage({ src, alt }: { src: string; alt: string }) {
+  const [failed, setFailed] = React.useState(false);
+
+  return (
+    <Image
+      src={failed ? PRODUCT_IMAGE_FALLBACK : src || PRODUCT_IMAGE_FALLBACK}
+      alt={alt}
+      fill
+      sizes="40px"
+      unoptimized
+      onError={() => setFailed(true)}
+      className="object-cover"
+    />
+  );
+}
+
 interface SearchDropdownProps {
   showSearch: boolean;
   searchQuery: string;
@@ -52,7 +68,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({ showSearch, sear
                       className="flex-grow flex items-center gap-3 min-w-0 cursor-pointer"
                     >
                       <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 shrink-0 overflow-hidden relative">
-                        <Image src={getOptimizedImageUrl(product.image) || PRODUCT_IMAGE_FALLBACK} alt={product.title} fill sizes="40px" className="object-cover" />
+                        <SearchProductImage src={getOptimizedImageUrl(product.image)} alt={product.title} />
                       </div>
                       <div className={`flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
                         <span data-product-brand className="text-[8px] font-extrabold uppercase text-[var(--brand-button-fill)] block leading-none">{product.vendor}</span>
@@ -111,7 +127,7 @@ export const SearchDropdown: React.FC<SearchDropdownProps> = ({ showSearch, sear
                       className="flex-grow flex items-center gap-3 min-w-0 cursor-pointer"
                     >
                       <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 shrink-0 overflow-hidden relative">
-                        <Image src={getOptimizedImageUrl(product.image) || PRODUCT_IMAGE_FALLBACK} alt={product.title} fill sizes="40px" className="object-cover" />
+                        <SearchProductImage src={getOptimizedImageUrl(product.image)} alt={product.title} />
                       </div>
                       <div className={`flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
                         <span data-product-brand className="text-[8px] font-extrabold uppercase text-[var(--brand-button-fill)] block leading-none">{product.vendor}</span>
