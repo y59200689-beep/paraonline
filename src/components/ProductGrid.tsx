@@ -14,6 +14,7 @@ import Link from 'next/link';
   
 
 import { useUi } from '@/context/UiContext';
+import { FEATURED_PRODUCT_LIMIT } from '@/lib/featured-products';
 
 interface ProductGridProps {
   activeCategory: string;
@@ -36,19 +37,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, onSele
 
   const [page, setPage] = useState(1);
   const [, setTotalPages] = useState(1);
-  const [pageSize, setPageSize] = useState(16);
-
-  useEffect(() => {
-    // Match the five-column desktop grid; retain the existing mobile count.
-    const desktop = window.matchMedia('(min-width: 1024px)');
-    const updatePageSize = () => {
-      setPageSize(desktop.matches ? 20 : 16);
-      setPage(1);
-    };
-    updatePageSize();
-    desktop.addEventListener('change', updatePageSize);
-    return () => desktop.removeEventListener('change', updatePageSize);
-  }, []);
+  const pageSize = FEATURED_PRODUCT_LIMIT;
 
   // Reset page when filters change
   useEffect(() => {
@@ -62,20 +51,28 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, onSele
     const fetchProducts = async () => {
       try {
         let list: Product[] = [];
-        let pinnedList: Product[] = [];
         const isDefaultFilter = activeCategory === 'all' && activeConcern === 'all' && activeIngredient === 'all';
 
-        // If on page 1 and there are pinned products, fetch them first
+        // The homepage featured grid must reflect the admin's curated selection
+        // exactly. Do not hide sold-out selections or fill missing slots with
+        // unrelated catalogue products.
         if (page === 1 && isDefaultFilter && pinnedProductIds.length > 0) {
-          try {
-            const pinnedRes = await fetch(`/api/products?ids=${pinnedProductIds.join(',')}&inStock=true`, { cache: 'no-store' });
-            const pinnedData = await pinnedRes.json();
-            if (pinnedData.success && pinnedData.products) {
-              pinnedList = pinnedData.products;
-            }
-          } catch (e) {
-            console.error("Failed to fetch pinned products:", e);
+          const pinnedRes = await fetch(`/api/products?ids=${pinnedProductIds.slice(0, pageSize).join(',')}`, { cache: 'no-store' });
+          const pinnedData = await pinnedRes.json();
+          if (!pinnedRes.ok || !pinnedData.success || !pinnedData.products) {
+            throw new Error(pinnedData.error || 'Unable to load featured products');
           }
+
+          const pinnedOrderMap = new Map(pinnedProductIds.map((id, index) => [id, index]));
+          list = (pinnedData.products as Product[])
+            .sort((a, b) => (pinnedOrderMap.get(a.id) ?? 999) - (pinnedOrderMap.get(b.id) ?? 999))
+            .slice(0, pageSize);
+
+          if (active) {
+            setFilteredProducts(list);
+            setTotalPages(1);
+          }
+          return;
         }
 
         const queryParams = new URLSearchParams({
@@ -121,22 +118,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ activeCategory, onSele
             return 0;
           });
 
-          // Merge pinned products at the start of page 1, avoiding duplicates
-          if (page === 1 && pinnedList.length > 0) {
-            // Sort pinnedList to match the exact order of pinnedProductIds in the admin
-            const pinnedOrderMap = new Map(pinnedProductIds.map((id, index) => [id, index]));
-            pinnedList.sort((a, b) => (pinnedOrderMap.get(a.id) ?? 999) - (pinnedOrderMap.get(b.id) ?? 999));
-
-            if (pinnedList.length >= pageSize) {
-              list = pinnedList.slice(0, pageSize);
-            } else {
-              const pinnedIds = new Set(pinnedList.map(p => p.id));
-              const filteredFetched = fetchedList.filter(p => !pinnedIds.has(p.id));
-              list = [...pinnedList, ...filteredFetched].slice(0, pageSize);
-            }
-          } else {
-            list = fetchedList;
-          }
+          list = fetchedList.slice(0, pageSize);
 
           setFilteredProducts(list);
           setTotalPages(data.pagination?.totalPages || 1);

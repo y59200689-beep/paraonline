@@ -9,11 +9,12 @@ import { canEditContent } from '@/lib/permissions';
 import { Layers, Search, Eye, EyeOff, Edit3, X, Sparkles, Plus, Trash2, ChevronUp, ChevronDown, LayoutGrid, Package } from 'lucide-react';
 import { BilingualField } from '@/components/admin/ui/BilingualField';
 import { EmptyState } from '@/components/admin/ui/EmptyState';
+import { FEATURED_PRODUCT_LIMIT } from '@/lib/featured-products';
 
 const SECTION_TYPE_MAP: Record<string, { label: string; desc: string; category: string }> = {
   hero: { label: 'Héro Carrousel', desc: 'Bannière principale avec diaporama d\'images et boutons d\'action.', category: 'En-tête' },
   categoryTrack: { label: 'Barre Catégories', desc: 'Barre de défilement horizontale des catégories avec icônes.', category: 'Navigation' },
-  productGrid: { label: 'Grille Produits Vedettes', desc: 'Sélection des 16 produits vedettes affichés sur la boutique.', category: 'Catalogue' },
+  productGrid: { label: 'Grille Produits Vedettes', desc: 'Sélection des 20 produits vedettes affichés sur la boutique.', category: 'Catalogue' },
   brandPartners: { label: 'Marques Partenaires', desc: 'Galerie des logos des marques partenaires.', category: 'Marques' },
   diagnosticBanner: { label: 'Diagnostic IA Banner', desc: 'Bannière d\'appel à l\'action pour le diagnostic de peau IA.', category: 'Expérience' },
   summerSale: { label: 'Offres Événementielles', desc: 'Section promotionnelle pour ventes flash ou saisonnières.', category: 'Promotions' },
@@ -70,6 +71,7 @@ export default function ContentSectionsPage() {
   const [brandFilter, setBrandFilter] = useState('ALL');
   const [isAddingProductOpen, setIsAddingProductOpen] = useState(false);
   const [targetSlotIndex, setTargetSlotIndex] = useState<number | null>(null);
+  const selectedProductLimit = selectedSection?.type === 'productGrid' ? FEATURED_PRODUCT_LIMIT : 16;
 
   const sectionOrders = settings?.homepageSections?.sectionOrder || [];
 
@@ -185,11 +187,11 @@ export default function ContentSectionsPage() {
   const handleAddProductToSlot = (productId: number) => {
     if (selectedProductIds.includes(productId)) return;
 
-    if (targetSlotIndex !== null && targetSlotIndex < 16) {
+    if (targetSlotIndex !== null && targetSlotIndex < selectedProductLimit) {
       const copy = [...selectedProductIds];
       copy[targetSlotIndex] = productId;
       setSelectedProductIds(copy.filter(Boolean));
-    } else if (selectedProductIds.length < 16) {
+    } else if (selectedProductIds.length < selectedProductLimit) {
       setSelectedProductIds(prev => [...prev, productId]);
     }
     setIsAddingProductOpen(false);
@@ -330,7 +332,9 @@ export default function ContentSectionsPage() {
                     </span>
                   </div>
                   <p className="text-xs mt-0.5" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>
-                    Éditeur professionnel de section · Configurez le titre, les 16 produits vedettes et la visibilité en direct.
+                    {selectedSection.type === 'productGrid'
+                      ? `Éditeur professionnel de section · Configurez le titre, les ${FEATURED_PRODUCT_LIMIT} produits vedettes et la visibilité en direct.`
+                      : 'Éditeur professionnel de section · Configurez le contenu et la visibilité en direct.'}
                   </p>
                 </div>
               </div>
@@ -373,7 +377,7 @@ export default function ContentSectionsPage() {
                 </label>
               </div>
 
-              {/* SHOPIFY-PLUS 16 FEATURED PRODUCTS VISUAL SLOT BOARD */}
+              {/* CURATED PRODUCT VISUAL SLOT BOARD */}
               {(selectedSection.type === 'productGrid' || selectedSection.type === 'topRated' || selectedSection.type === 'bestSellers' || selectedSection.type === 'summerSale') && (
                 <div className="p-5 rounded-3xl border space-y-5" style={{
                   backgroundColor: isDark ? 'rgba(15,23,42,0.6)' : '#ffffff',
@@ -388,13 +392,15 @@ export default function ContentSectionsPage() {
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className="text-sm font-black tracking-tight">Grille des 16 Produits Vedettes</h3>
+                          <h3 className="text-sm font-black tracking-tight">
+                            {selectedSection.type === 'productGrid' ? `Grille des ${FEATURED_PRODUCT_LIMIT} Produits Vedettes` : 'Sélection de produits'}
+                          </h3>
                           <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                            {selectedProductIds.length} / 16 Remplis
+                            {selectedProductIds.length} / {selectedProductLimit} Remplis
                           </span>
                         </div>
                         <p className="text-xs" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>
-                          Sélectionnez et ordonnez les 16 produits affichés dans cette section sur votre boutique.
+                          Sélectionnez et ordonnez les produits affichés dans cette section sur votre boutique.
                         </p>
                       </div>
                     </div>
@@ -402,16 +408,16 @@ export default function ContentSectionsPage() {
                     <button
                       type="button"
                       onClick={() => { setIsAddingProductOpen(true); setTargetSlotIndex(null); }}
-                      disabled={selectedProductIds.length >= 16}
+                      disabled={selectedProductIds.length >= selectedProductLimit}
                       className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-xs uppercase tracking-wider shadow-md shadow-emerald-500/20 transition cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
                     >
                       <Plus className="w-4 h-4" /> Ajouter un produit
                     </button>
                   </div>
 
-                  {/* 16 Visual Grid Slots */}
+                  {/* Visual product slots */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                    {Array.from({ length: 16 }).map((_, slotIdx) => {
+                    {Array.from({ length: selectedProductLimit }).map((_, slotIdx) => {
                       const pid = selectedProductIds[slotIdx];
                       const prod = pid ? products.find((p: any) => p.id === pid) : null;
 
