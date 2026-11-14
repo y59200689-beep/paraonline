@@ -55,7 +55,7 @@ async function makePlan(signal: AbortSignal) {
 }
 
 export async function previewWooImages() {
-  const plan = await makePlan(AbortSignal.timeout(600_000));
+  const plan = await makePlan(AbortSignal.timeout(240_000));
   return { ...plan, entries: plan.entries.slice(0, 200), productsToUpdate: plan.entries.length,
     imagesToAdd: plan.entries.reduce((sum, entry) => sum + entry.sources.length, 0), truncated: plan.entries.length > 200 };
 }
@@ -89,7 +89,8 @@ async function copyImage(source: string, signal: AbortSignal) {
 export async function importWooImages() {
   const { data: runId, error: lockError } = await db.rpc('start_woocommerce_image_run').abortSignal(AbortSignal.timeout(15_000));
   if (lockError || !runId) throw new Error('Import indisponible : vérifiez la migration et les imports en cours.');
-  const signal = AbortSignal.timeout(600_000);
+  // Leave time for lease acquisition and saving partial results within Hobby's 300s limit.
+  const signal = AbortSignal.timeout(240_000);
   const result = { updated: 0, imagesAdded: 0, unchanged: 0, unmatched: 0, ambiguous: 0, rejectedImages: 0,
     entries: [] as { sku: string; images: number; error?: string }[], error: '' };
   try {

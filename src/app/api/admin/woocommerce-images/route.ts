@@ -5,7 +5,7 @@ import { supabaseAdmin as db } from '@/lib/supabase';
 import { importWooImages, previewWooImages } from '@/lib/woocommerce-image-sync';
 
 export const runtime = 'nodejs';
-export const maxDuration = 800;
+export const maxDuration = 300;
 
 export async function GET() {
   const auth = await authorizeAdminMutation({ allow: canEditCatalog });
