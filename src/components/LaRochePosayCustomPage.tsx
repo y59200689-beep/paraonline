@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ShopShell } from '@/components/ShopShell';
 import { ProductCard } from '@/components/ProductCard';
+import { applyStorewidePromotion } from '@/lib/storewide-promotion';
 import { Product, PRODUCTS_DB } from '@/lib/data';
 import { useGalleryOverrides } from '@/lib/useGalleryOverrides';
 import { useUi } from '@/context/UiContext';
@@ -858,7 +859,10 @@ const firstImage = (p: Product): string => {
 };
 
 /* ─── Component ──────────────────────────────────────────────────── */
-export default function LaRochePosayCustomPage({ brand = 'la-roche-posay' }: { brand?: 'la-roche-posay' | 'vichy' | 'cerave' | 'avene' | 'bioderma' | 'eucerin' }) {
+export default function LaRochePosayCustomPage({ brand = 'la-roche-posay', promotionPercent = 0 }: {
+  brand?: 'la-roche-posay' | 'vichy' | 'cerave' | 'avene' | 'bioderma' | 'eucerin';
+  promotionPercent?: number;
+}) {
   const { setDiagnosticOpen } = useUi();
   const { getDisplayImage } = useGalleryOverrides();
   const galleryPrefix = `brand_page_${brand.replace(/-/g, '_')}`;
@@ -884,7 +888,7 @@ export default function LaRochePosayCustomPage({ brand = 'la-roche-posay' }: { b
   const seedProducts = useMemo(() => PRODUCTS_DB.filter((product) => {
     const vendor = product.vendor.toLocaleLowerCase().replace(/[^a-z0-9]/g, '');
     return vendor.includes(brandConfig.vendorToken) && (!brandProductFilter || brandProductFilter(product));
-  }), [brandConfig.vendorToken, brandProductFilter]);
+  }).map(product => applyStorewidePromotion(product, promotionPercent)), [brandConfig.vendorToken, brandProductFilter, promotionPercent]);
   const [products, setProducts]         = useState<Product[]>(seedProducts);
   const [loading, setLoading]           = useState(true);
   const [loadError, setLoadError]       = useState(false);

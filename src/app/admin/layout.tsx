@@ -266,7 +266,8 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
               {activeTab === 'snippets' && 'Snippets de Code'}
               {activeTab === 'cron' && 'Tâches Planifiées'}
               {activeTab === 'audit-logs' && "Journaux d'Audit"}
-              {activeTab === 'coupons' && 'Promotions & Promo'}
+              {activeTab === 'coupons' && 'Codes promo'}
+              {activeTab === 'promotions' && 'Promotion boutique'}
               {activeTab === 'settings' && 'Paramètres'}
               {activeTab === 'gallery' && 'Galerie Médias'}
             </h1>

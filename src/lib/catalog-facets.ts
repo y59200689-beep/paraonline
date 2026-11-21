@@ -9,7 +9,7 @@ import type { Product } from './data';
 type Row = Record<string, unknown>;
 const BATCH_SIZE = 1000;
 
-export async function loadCatalogFacets() {
+export async function loadCatalogFacets(promotionPercent = 0) {
   const concerns = await getCatalogConcerns();
   // Default concerns depend only on assigned categories. Do not download every
   // description and ingredient list just to render category/brand counts.
@@ -46,7 +46,7 @@ export async function loadCatalogFacets() {
   const brands = new Map<string, number>();
   let offers = 0;
   for (const row of rows) {
-    if (Number(row.compare_price) > Number(row.price)) offers++;
+    if (promotionPercent > 0 || Number(row.compare_price) > Number(row.price)) offers++;
     const assigned = Array.isArray(row.categories) && row.categories.length ? row.categories : [row.category];
     const ids = new Set(assigned.map(value => normalizeCatalogCategoryId(String(value || ''))).filter(Boolean));
     ids.forEach(id => categories.set(id, (categories.get(id) || 0) + 1));
@@ -67,5 +67,5 @@ export async function loadCatalogFacets() {
 }
 
 export const getCachedCatalogFacets = unstable_cache(loadCatalogFacets,
-  ['catalog-facets-v3', process.env.NEXT_PUBLIC_SUPABASE_URL || 'unconfigured'],
+  ['catalog-facets-v4', process.env.NEXT_PUBLIC_SUPABASE_URL || 'unconfigured'],
   { tags: [PUBLIC_CATALOG_CACHE_TAG], revalidate: 3600 });

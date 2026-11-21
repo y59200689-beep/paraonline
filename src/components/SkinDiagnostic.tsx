@@ -206,6 +206,7 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
       return { ...current, concern: next.join(',') };
     });
   };
+  const promotionPercent = recommendedProducts.find(product => product.storewidePromotionPercent)?.storewidePromotionPercent;
   const requestedProductCount = answers.routineDepth === 'complete' ? 6 : answers.routineDepth === 'balanced' ? 5 : 3;
   const currentQuestion = !isIntro && !isResults ? questions[questionIndex] : null;
   const QuestionIcon = currentQuestion ? (ICONS[currentQuestion.options[0]?.icon] || Sparkles) : Sparkles;
@@ -891,7 +892,9 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                 </div>
                 {recommendedProducts.length > 0 && (
                   <span className="shrink-0 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600">
-                    {isRTL ? 'خصم الروتين مطبق: 15٪' : 'Avantage routine appliqué : -15 %'}
+                    {promotionPercent
+                      ? (isRTL ? `خصم المتجر ${promotionPercent}٪` : `Remise boutique de ${promotionPercent} % incluse`)
+                      : (isRTL ? 'خصم الروتين مطبق: 15٪' : 'Avantage routine appliqué : -15 %')}
                   </span>
                 )}
               </div>
@@ -970,8 +973,8 @@ export const SkinDiagnostic: React.FC<SkinDiagnosticProps> = ({ isOpen, onClose,
                           )}
                         </div>
                         <div className="shrink-0 text-end">
-                          <strong className="block text-sm text-teal-700">{Math.round(product.price * 0.85)} DH</strong>
-                          <span className="text-[11px] text-slate-400 line-through">{product.price} DH</span>
+                          <strong className="block text-sm text-teal-700">{product.storewidePromotionPercent ? product.price : Math.round(product.price * 0.85)} DH</strong>
+                          <span className="text-[11px] text-slate-400 line-through">{product.storewidePromotionPercent ? product.comparePrice : product.price} DH</span>
                         </div>
                       </article>
                       );

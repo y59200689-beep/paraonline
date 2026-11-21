@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation';
 import { Product } from '@/lib/data';
 import { supabaseAdmin as supabase } from '@/lib/supabase-server';
 import ProductsClient from './ProductsClient';
+import { getStorewidePromotion } from '@/lib/get-storewide-promotion';
+import { applyStorewidePromotion, promotionalPriceLimit } from '@/lib/storewide-promotion';
 import { unstable_cache } from 'next/cache';
 import { getCachedCatalogFacets } from '@/lib/catalog-facets';
 import { PUBLIC_CATALOG_CACHE_TAG } from '@/lib/catalog-cache';
@@ -104,7 +106,7 @@ function rowToProduct(item: any): Product {
   };
 }
 
-async function loadCatalogPage(state: CatalogRouteState) {
+async function loadCatalogPage(state: CatalogRouteState, percent: number) {
   const categoryBackedConcern = state.category === 'all' ? catalogCategoryForConcern(state.concern) : undefined;
   let concernFilter = categoryBackedConcern ? catalogCategoryFilter(categoryBackedConcern) : '';
   if (!categoryBackedConcern && state.concern !== 'all') {
@@ -115,7 +117,7 @@ async function loadCatalogPage(state: CatalogRouteState) {
 
   const buildQuery = (countOnly = false) => {
     let query = supabase
-      .from(state.category === 'offers' ? 'storefront_offer_products' : 'products')
+      .from(state.category === 'offers' && !percent ? 'storefront_offer_products' : 'products')
       .select(countOnly ? 'id' : '*', countOnly ? { count: 'exact', head: true } : { count: 'exact' })
       .eq('status', 'live');
 
@@ -140,7 +142,9 @@ async function loadCatalogPage(state: CatalogRouteState) {
     }
 
     if (state.vendors.length > 0) query = query.in('vendor', state.vendors);
-    if (state.maxPrice !== null) query = query.lte('price', state.maxPrice);
+    if (state.maxPrice !== null) {
+      query = percent ? query.lt('price', promotionalPriceLimit(state.maxPrice, percent)) : query.lte('price', state.maxPrice);
+    }
 
     if (state.ingredient) {
       const ingredientKey = normalizeIngredientKey(state.ingredient);
@@ -186,7 +190,7 @@ async function loadCatalogPage(state: CatalogRouteState) {
     confirmedTotal = filteredTotal;
   }
 
-  const products = (data || []).map(rowToProduct);
+  const products = (data || []).map((row: Record<string, unknown>) => applyStorewidePromotion(rowToProduct(row), percent));
   const total = confirmedTotal;
   const pagination = {
     total,
@@ -200,7 +204,7 @@ async function loadCatalogPage(state: CatalogRouteState) {
 
 const getCachedCatalogPage = unstable_cache(
   loadCatalogPage,
-  ['catalog-page-v2', process.env.NEXT_PUBLIC_SUPABASE_URL || 'unconfigured'],
+  ['catalog-page-v3', process.env.NEXT_PUBLIC_SUPABASE_URL || 'unconfigured'],
   { tags: [PUBLIC_CATALOG_CACHE_TAG], revalidate: 3600 }
 );
 
@@ -218,9 +222,10 @@ export default async function ProductsPage({
   const rawPage = Array.isArray(params.page) ? params.page[0] : params.page;
   if (!isValidCatalogPageParam(rawPage)) notFound();
   const state = normalizeCatalogRouteState(params);
+  const percent = await getStorewidePromotion();
   const [{ products, pagination }, catalogFacets] = await Promise.all([
-    getCachedCatalogPage(state),
-    getCachedCatalogFacets(),
+    getCachedCatalogPage(state, percent),
+    getCachedCatalogFacets(percent),
   ]);
   if (state.page > pagination.totalPages) notFound();
 

@@ -74,6 +74,10 @@ export function canEditCatalog(role: AdminRole): boolean {
 
 // ─── Settings ─────────────────────────────────────────────────
 
+export function canManagePromotions(role: AdminRole): boolean {
+  return SENIOR_ROLES.includes(role);
+}
+
 /**
  * Returns true if the role is allowed to modify general application settings.
  * Allowed: owner

@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { STOREWIDE_PROMOTION_SETTINGS_ID } from '@/lib/get-storewide-promotion';
 import { POST } from '@/app/api/orders/route';
 
 const globalForMock = globalThis as any;
@@ -80,6 +81,40 @@ describe('Order pricing boundary', () => {
         price: 420,
       }],
     });
+  });
+
+  it('applies the active storewide discount once and rejects a stale cart after it ends', async () => {
+    const promotion = { id: STOREWIDE_PROMOTION_SETTINGS_ID, value: { percent: 15 } };
+    globalForMock.mockDb.settings.push(promotion);
+    globalForMock.mockDb.products[0].compare_price = 500;
+    const order = () => POST(new Request('http://localhost/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-forwarded-for': '198.51.100.76' },
+      body: JSON.stringify({
+        orderData: { name: 'Promotion Test', phone: '0612345678', address: '1 Rue de Test', city: 'Casablanca' },
+        items: [{ id: 987001, quantity: 1, price: 357 }],
+        quotedStorewidePromotion: true,
+        appliedCoupon: 'SAVE10',
+        paymentMethod: 'cod',
+      }),
+    }));
+
+    const activeResponse = await order();
+    expect(activeResponse.status).toBe(200);
+    expect(await activeResponse.json()).toMatchObject({
+      subtotal: 357,
+      discountAmount: 35.7,
+      shippingFee: 22,
+      total: 343.3,
+      items: [{ price: 357 }],
+    });
+    expect(globalForMock.mockDb.products[0].price).toBe(420);
+
+    promotion.value.percent = 0;
+    const staleResponse = await order();
+    expect(staleResponse.status).toBe(409);
+    expect(await staleResponse.json()).toMatchObject({ code: 'CART_PRICES_CHANGED' });
+    expect(globalForMock.mockDb.orders).toHaveLength(1);
   });
 
   it('refuses checkout when the authoritative product cannot provide an SKU snapshot', async () => {

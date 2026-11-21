@@ -1,3 +1,5 @@
+import { getStorewidePromotion } from '@/lib/get-storewide-promotion';
+import { applyStorewidePromotion } from '@/lib/storewide-promotion';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { buildDiagnosticRoutine, getSelectedConcerns, isRelevantComplement, type DiagnosticAnswers, type RoutineRecommendation, type RoutineStep } from '@/lib/diagnostic-routine';
@@ -68,6 +70,7 @@ export async function POST(request: Request) {
   if (!ids.length) return response([], false);
 
   try {
+    const percent = await getStorewidePromotion();
     const [productRows, exclusionRows] = await Promise.all([
       supabaseAdmin.from('products').select('*').in('id', ids),
       supabaseAdmin.from('diagnostic_excluded_products').select('product_id').in('product_id', ids),
@@ -76,7 +79,7 @@ export async function POST(request: Request) {
     if (exclusionRows.error) throw exclusionRows.error;
     const excludedIds = new Set<number>((exclusionRows.data || []).map((row: { product_id: number }) => Number(row.product_id)));
     const products = new Map<number, Product>((productRows.data || [])
-      .map((row: Record<string, unknown>) => mapDiagnosticProduct(row))
+      .map((row: Record<string, unknown>) => applyStorewidePromotion(mapDiagnosticProduct(row), percent))
       .filter((product: Product) => isInDiagnosticPool(product, excludedIds))
       .map((product: Product) => [product.id, product]));
 

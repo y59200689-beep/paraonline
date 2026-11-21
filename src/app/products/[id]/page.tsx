@@ -1,3 +1,5 @@
+import { getStorewidePromotion } from '@/lib/get-storewide-promotion';
+import { applyStorewidePromotion } from '@/lib/storewide-promotion';
 import { getPublicReviewStats } from '@/lib/public-review-stats';
 import { cache } from 'react';
 import { Product } from '@/lib/data';
@@ -63,11 +65,14 @@ const getProduct = cache(async (id: string): Promise<Product | null> => {
     
     if (error) throw error;
     if (!data) return null;
-    const stats = await getPublicReviewStats().catch(() => {
-      console.error('[Reviews] Product review summary unavailable.');
-      return {};
-    });
-    return { ...rowToProduct(data), ...((stats as Record<string, { rating: number; reviews: number }>)[String(data.id)] || { rating: 0, reviews: 0 }) };
+    const [percent, stats] = await Promise.all([
+      getStorewidePromotion(),
+      getPublicReviewStats().catch(() => {
+        console.error('[Reviews] Product review summary unavailable.');
+        return {};
+      }),
+    ]);
+    return { ...applyStorewidePromotion(rowToProduct(data), percent), ...((stats as Record<string, { rating: number; reviews: number }>)[String(data.id)] || { rating: 0, reviews: 0 }) };
   } catch {
     throw new Error('Unable to load product.');
   }

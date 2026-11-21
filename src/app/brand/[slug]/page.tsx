@@ -1,3 +1,5 @@
+import { getStorewidePromotion } from '@/lib/get-storewide-promotion';
+import { applyStorewidePromotion } from '@/lib/storewide-promotion';
 import { PRODUCTS_DB, Product } from '@/lib/data';
 import { BRANDS_DATA, slugify, getBrandBySlug } from '@/lib/brands';
 import BrandClient from './BrandClient';
@@ -62,24 +64,26 @@ export default async function BrandPage({ params }: { params: Promise<{ slug: st
   const cmsBrand = await getCmsBrandRecordBySlug(slug);
   if (cmsBrand?.page_sections?.length) return <CmsBrandPage brand={cmsBrand} />;
 
+  const promotionPercent = await getStorewidePromotion();
+
   // ── Custom branded pages ──────────────────────────────────────────────
   if (slug === 'la-roche-posay') {
-    return <LaRochePosayCustomPage />;
+    return <LaRochePosayCustomPage promotionPercent={promotionPercent} />;
   }
   if (slug === 'vichy') {
-    return <LaRochePosayCustomPage brand="vichy" />;
+    return <LaRochePosayCustomPage brand="vichy" promotionPercent={promotionPercent} />;
   }
   if (slug === 'cerave') {
-    return <LaRochePosayCustomPage brand="cerave" />;
+    return <LaRochePosayCustomPage brand="cerave" promotionPercent={promotionPercent} />;
   }
   if (slug === 'avene') {
-    return <LaRochePosayCustomPage brand="avene" />;
+    return <LaRochePosayCustomPage brand="avene" promotionPercent={promotionPercent} />;
   }
   if (slug === 'bioderma') {
-    return <LaRochePosayCustomPage brand="bioderma" />;
+    return <LaRochePosayCustomPage brand="bioderma" promotionPercent={promotionPercent} />;
   }
   if (slug === 'eucerin') {
-    return <LaRochePosayCustomPage brand="eucerin" />;
+    return <LaRochePosayCustomPage brand="eucerin" promotionPercent={promotionPercent} />;
   }
 
   // ── Generic brand page ────────────────────────────────────────────────
@@ -113,7 +117,7 @@ export default async function BrandPage({ params }: { params: Promise<{ slug: st
     if (slugify(p.vendor) === slug) return true;
     if (v.startsWith(bName)) return true;
     return false;
-  });
+  }).map(product => applyStorewidePromotion(product, promotionPercent));
 
   return <BrandClient brand={brand} initialProducts={seedProducts} />;
 }

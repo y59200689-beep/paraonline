@@ -1,3 +1,5 @@
+import { getStorewidePromotion } from '@/lib/get-storewide-promotion';
+import { promotionalPrice } from '@/lib/storewide-promotion';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { PRODUCTS_DB } from '@/lib/data';
@@ -95,6 +97,7 @@ export async function POST(request: Request) {
     const normalizedAllowedBrands = allowedBrands.map(b => b.trim().toLowerCase());
 
     // 1. Fetch products for RAG context
+    const percent = await getStorewidePromotion();
     let productsList: any[] = [];
     try {
       const { data, error } = await supabase
@@ -112,7 +115,7 @@ export async function POST(request: Request) {
         title: item.title,
         nameFr: item.name_fr || item.title,
         vendor: item.vendor || '',
-        price: item.price,
+        price: promotionalPrice(Number(item.price), percent),
         category: item.category || '',
         tags: item.tags || [],
         description: item.description || '',
@@ -127,7 +130,7 @@ export async function POST(request: Request) {
         title: p.title,
         nameFr: p.nameFr || p.title,
         vendor: p.vendor || '',
-        price: p.price,
+        price: promotionalPrice(p.price, percent),
         category: p.category || '',
         tags: p.tags || [],
         description: p.description || '',

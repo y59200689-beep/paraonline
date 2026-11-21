@@ -29,6 +29,7 @@ export interface Product {
   images: string[];
   price: number;
   comparePrice: number;
+  storewidePromotionPercent?: number;
   category: string;
   /** Primary category plus any additional storefront categories. */
   categories?: string[];

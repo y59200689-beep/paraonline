@@ -1,5 +1,7 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 
+vi.mock('@/lib/get-storewide-promotion', () => ({ getStorewidePromotion: async () => 0 }));
+
 const state = vi.hoisted(() => ({ rows: [] as Record<string, any>[], queries: 0, error: null as { code: string; message: string } | null }));
 vi.mock('@/lib/supabase', () => ({ supabaseAdmin: { from: () => {
   state.queries++;
