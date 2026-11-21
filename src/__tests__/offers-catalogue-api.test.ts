@@ -1,16 +1,17 @@
 import { beforeEach, expect, it, vi } from 'vitest';
-const state = vi.hoisted(() => ({ relations: [] as string[], filters: [] as unknown[][], count: 25, error: null as any, result: [{ id: 1, title: 'Synthetic offer', price: 80, compare_price: 100, stock: 1 }] }));
+const state = vi.hoisted(() => ({ percent: 0, relations: [] as string[], filters: [] as unknown[][], count: 25, error: null as any, result: [{ id: 1, title: 'Synthetic offer', price: 80, compare_price: 100, stock: 1 }] }));
+vi.mock('@/lib/get-storewide-promotion', () => ({ getStorewidePromotion: async () => state.percent }));
 vi.mock('@/lib/supabase-server', () => ({ supabaseAdmin: { from: (relation: string) => {
   state.relations.push(relation);
   const q: any = {};
   q.select = q.order = () => q;
-  for (const name of ['eq', 'filter', 'gt', 'or', 'in', 'lte']) q[name] = (...args: unknown[]) => { state.filters.push([name, ...args]); return q; };
+  for (const name of ['eq', 'filter', 'gt', 'or', 'in', 'lte', 'lt']) q[name] = (...args: unknown[]) => { state.filters.push([name, ...args]); return q; };
   q.range = async () => ({ data: state.result, count: state.count, error: state.error });
   q.then = (resolve: (value: unknown) => unknown) => Promise.resolve({ count: state.count, error: null }).then(resolve);
   return q;
 } } }));
 import { GET } from '@/app/api/products/route';
-beforeEach(() => { state.relations = []; state.filters = []; state.count = 25; state.error = null; state.result = [{ id: 1, title: 'Synthetic offer', price: 80, compare_price: 100, stock: 1 }]; });
+beforeEach(() => { state.percent = 0; state.relations = []; state.filters = []; state.count = 25; state.error = null; state.result = [{ id: 1, title: 'Synthetic offer', price: 80, compare_price: 100, stock: 1 }]; });
 it('uses a database column comparison view for offers and retains live, price, brand and page state', async () => {
   const response = await GET(new Request('https://preview.test/api/products?category=offers&page=2&limit=24&maxPrice=1500&vendors=Sample'));
   expect(response.status).toBe(200);
@@ -37,4 +38,17 @@ it('returns 404 for an ordinary out-of-range offer page', async () => {
   state.result = [];
   const response = await GET(new Request('https://preview.test/api/products?category=offers&page=3&limit=24'));
   expect(response.status).toBe(404);
+});
+
+it('stacks the storewide discount on the current product price and filters offers by the resulting price', async () => {
+  state.percent = 15;
+  state.result.push({ id: 2, title: 'Regular product', price: 80, compare_price: 80, stock: 1 });
+  const response = await GET(new Request('https://preview.test/api/products?category=offers&maxPrice=68'));
+  expect(response.status).toBe(200);
+  expect((await response.json()).products).toMatchObject([
+    { id: 1, price: 68, comparePrice: 100, storewidePromotionPercent: 15 },
+    { id: 2, price: 68, comparePrice: 80, storewidePromotionPercent: 15 },
+  ]);
+  expect(state.relations).toEqual(['products']);
+  expect(state.filters).toContainEqual(['lt', 'price', 80.005]);
 });

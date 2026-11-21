@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+vi.mock('@/lib/get-storewide-promotion', () => ({ getStorewidePromotion: async () => 0 }));
+
 const rows = [
   { id: 1, title: 'Gel nettoyant doux visage', category: 'visage', status: 'live', stock: 5, routine_roles: ['cleanser'], suitable_skin_types: ['dry'], suitable_concerns: ['dryness'], sensitivity_levels: ['low'], active_strength: 'gentle', time_of_day: ['morning', 'evening'] },
   { id: 2, title: 'Crème lavante hydratante visage', category: 'visage', status: 'live', stock: 3, routine_roles: ['cleanser'], suitable_skin_types: ['dry'], suitable_concerns: ['dryness'], sensitivity_levels: ['low'], active_strength: 'gentle', time_of_day: ['morning', 'evening'] },

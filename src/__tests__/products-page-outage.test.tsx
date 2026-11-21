@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+vi.mock('@/lib/get-storewide-promotion', () => ({ getStorewidePromotion: async () => 0 }));
+
 const state = vi.hoisted(() => ({
   pageResult: { data: [] as Array<Record<string, unknown>> | null, count: 0 as number | null, error: null as { code?: string; message?: string } | null, reject: null as Error | null },
   countResult: { count: 0 as number | null, error: null as { code?: string; message?: string } | null },

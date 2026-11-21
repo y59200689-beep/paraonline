@@ -1,3 +1,5 @@
+import { getStorewidePromotion } from '@/lib/get-storewide-promotion';
+import { applyStorewidePromotion } from '@/lib/storewide-promotion';
 import { cache } from 'react';
 import { supabaseAdmin as supabase } from '@/lib/supabase-server';
 import { Product } from '@/lib/data';
@@ -57,7 +59,8 @@ const getArticle = cache(async (slug: string) => {
       
       if (prodError) throw prodError;
       if (prods) {
-        recommendedProducts = prods.map(rowToProduct);
+        const percent = await getStorewidePromotion();
+        recommendedProducts = prods.map((row: Record<string, unknown>) => applyStorewidePromotion(rowToProduct(row), percent));
       }
     }
 

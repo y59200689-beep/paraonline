@@ -14,6 +14,7 @@ const { POST: disableMfa } = await import('../app/api/admin/auth/mfa/disable/rou
 const { POST: registerOperator } = await import('../app/api/admin/auth/register/route');
 const { GET: listMarketingFlows, POST: createMarketingFlow } = await import('../app/api/admin/marketing/flows/route');
 const { GET: listCoupons, POST: createCoupon, PATCH: updateCoupon, DELETE: deleteCoupon } = await import('../app/api/admin/coupons/route');
+const { GET: getPromotion, PUT: savePromotion } = await import('../app/api/admin/promotions/route');
 const { GET: getAdminSettings, POST: updateAdminSettings } = await import('../app/api/admin/settings/route');
 
 describe('DB-authoritative privileged admin mutations', () => {
@@ -33,6 +34,23 @@ describe('DB-authoritative privileged admin mutations', () => {
 
   afterEach(() => {
     (globalThis as any).mockDb = originalDb;
+  });
+
+  it('limits storewide promotions to managers and persists activation and deactivation', async () => {
+    const update = (percent: unknown) => savePromotion(new Request('http://localhost/api/admin/promotions', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ percent }),
+    }));
+
+    expect((await update(15)).status).toBe(403);
+    const operator = (globalThis as typeof globalThis & { mockDb: { operators: { id: string; role: string }[] } }).mockDb.operators.find((row: { id: string }) => row.id === mockSession.id);
+    if (!operator) throw new Error('Missing operator fixture');
+    operator.role = 'manager';
+    expect((await update(100)).status).toBe(400);
+    expect((await update(15)).status).toBe(200);
+    expect(await (await getPromotion()).json()).toEqual({ percent: 15 });
+    expect((await update(0)).status).toBe(200);
+    expect(await (await getPromotion()).json()).toEqual({ percent: 0 });
   });
 
   it('rejects a stale owner session before creating an operator', async () => {

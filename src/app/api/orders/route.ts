@@ -1,3 +1,5 @@
+import { getStorewidePromotion } from '@/lib/get-storewide-promotion';
+import { promotionalPrice } from '@/lib/storewide-promotion';
 import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
@@ -158,9 +160,10 @@ export async function POST(request: Request) {
     }
 
     const productIds = [...quantities.keys()];
-    const [{ data: products, error: productError }, { data: settingsData }] = await Promise.all([
+    const [{ data: products, error: productError }, { data: settingsData }, percent] = await Promise.all([
       supabase.from('products').select('id, title, price, stock, image, sku, status').in('id', productIds),
       supabase.from('settings').select('value').eq('id', 1).maybeSingle(),
+      getStorewidePromotion(),
     ]);
     if (productError) throw productError;
     if (!products || products.length !== productIds.length) {
@@ -184,12 +187,25 @@ export async function POST(request: Request) {
       return {
         id: Number(product.id),
         title: product.title,
-        price: roundMoney(Number(product.price)),
+        price: roundMoney(promotionalPrice(Number(product.price), percent)),
         quantity,
         image: product.image || undefined,
         sku,
       };
     });
+
+    if (typeof body.quotedStorewidePromotion === 'boolean' && (percent > 0 || body.quotedStorewidePromotion)) {
+      const quotedPrices = new Map<number, number>(requestedItems.map((item: { id: unknown; price: unknown }) => [
+        Number(item.id), Number(item.price),
+      ]));
+      if (items.some(item => item.price !== quotedPrices.get(item.id))) {
+        return NextResponse.json({
+          success: false,
+          error: 'Les prix de votre panier ont changé. Vérifiez le nouveau total avant de confirmer.',
+          code: 'CART_PRICES_CHANGED',
+        }, { status: 409 });
+      }
+    }
 
     const settings = (settingsData?.value || {}) as ShippingSettings & Record<string, any>;
     const subtotalForCoupon = calculateSubtotal(items.map((item) => ({ product: item, quantity: item.quantity })));

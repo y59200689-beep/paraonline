@@ -12,6 +12,7 @@ import {
   canManageDiagnostic,
   canManageChat,
   canManageSettings,
+  canManagePromotions,
   canManageOperators,
   canViewAuditLog,
   canManageSnippets,
@@ -89,7 +90,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ setActiveTab, sidebarCollapsed
     if (pathname.includes('/content') || pathname.includes('/gallery')) setOpenGroups(s => ({ ...s, contenu: true }));
     if (pathname.includes('/experience')) setOpenGroups(s => ({ ...s, experience: true }));
     if (pathname.includes('/settings')) setOpenGroups(s => ({ ...s, parametres: true }));
-    if (pathname.includes('/coupons') || pathname.includes('/loyalty')) setOpenGroups(s => ({ ...s, vente: true }));
+    if (pathname.includes('/coupons') || pathname.includes('/promotions') || pathname.includes('/loyalty')) setOpenGroups(s => ({ ...s, vente: true }));
     if (pathname.includes('/cron') || pathname.includes('/snippets') || pathname.includes('/audit')) setOpenGroups(s => ({ ...s, advanced: true }));
   }, [pathname]);
 
@@ -103,7 +104,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ setActiveTab, sidebarCollapsed
   ];
 
   const venteItems: NavItem[] = viewerReadOnly ? [] : [
-    { id: 'coupons',  label: 'Promotions', href: '/admin/coupons', icon: Ticket },
+    { id: 'coupons',  label: 'Codes promo', href: '/admin/coupons', icon: Ticket },
+    ...(canManagePromotions(role) ? [{ id: 'promotions', label: 'Promotion boutique', href: '/admin/promotions', icon: Tag }] : []),
     { id: 'gifts',    label: 'Cadeaux', href: '/admin/settings?tab=gifts', icon: Gift },
     { id: 'loyalty',  label: 'Fidélité', href: '/admin/loyalty', icon: Award },
   ];
@@ -190,6 +192,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ setActiveTab, sidebarCollapsed
             crm: 'crm',
             analytics: 'analytics',
             coupons: 'coupons',
+            promotions: 'promotions',
             gifts: 'settings',
             loyalty: 'loyalty',
             'content-pages': 'gallery',

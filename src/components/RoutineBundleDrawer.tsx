@@ -52,6 +52,7 @@ export const RoutineBundleDrawer: React.FC<RoutineBundleDrawerProps> = ({ isOpen
   const STEP_2_PRODUCTS = products.filter(p => [14, 7, 3, 8].includes(p.id));
   const STEP_3_PRODUCTS = products.filter(p => [13, 17, 1].includes(p.id));
 
+  const promotionPercent = products.find(product => product.storewidePromotionPercent)?.storewidePromotionPercent;
   const isRTL = language === 'AR';
 
   // Calculations
@@ -65,9 +66,9 @@ export const RoutineBundleDrawer: React.FC<RoutineBundleDrawerProps> = ({ isOpen
 
   const getDiscountedTotal = () => {
     let sum = 0;
-    if (selectedCleanse) sum += Math.round(selectedCleanse.price * 0.85);
-    if (selectedTreat) sum += Math.round(selectedTreat.price * 0.85);
-    if (selectedProtect) sum += Math.round(selectedProtect.price * 0.85);
+    if (selectedCleanse) sum += (selectedCleanse.storewidePromotionPercent ? selectedCleanse.price : Math.round(selectedCleanse.price * 0.85));
+    if (selectedTreat) sum += (selectedTreat.storewidePromotionPercent ? selectedTreat.price : Math.round(selectedTreat.price * 0.85));
+    if (selectedProtect) sum += (selectedProtect.storewidePromotionPercent ? selectedProtect.price : Math.round(selectedProtect.price * 0.85));
     return sum;
   };
 
@@ -136,7 +137,9 @@ export const RoutineBundleDrawer: React.FC<RoutineBundleDrawerProps> = ({ isOpen
               <span>{language === 'FR' ? 'Packs Rituels Cliniques' : 'مجموعات العناية'}</span>
             </h3>
             <span className="text-[10px] font-bold text-foreground/50 block">
-              {language === 'FR' ? 'Un rituels en 3 étapes avec -15% et Cadeau Offert !' : 'روتين من 3 خطوات بخصم 15% وهدية مجانية!'}
+              {promotionPercent
+                ? (isRTL ? `خصم المتجر ${promotionPercent}٪` : `Remise boutique de ${promotionPercent} % incluse`)
+                : (isRTL ? 'روتين من 3 خطوات بخصم 15% وهدية مجانية!' : 'Un rituel en 3 étapes avec −15 % et un cadeau offert !')}
             </span>
           </div>
           <button 
@@ -278,7 +281,7 @@ export const RoutineBundleDrawer: React.FC<RoutineBundleDrawerProps> = ({ isOpen
               <span>{language === 'FR' ? 'Sous-total régulier' : 'المجموع العادي'}</span>
               <span>{subtotal.toFixed(2)} DH</span>
             </div>
-            {isRoutineComplete && (
+            {isRoutineComplete && discountAmount > 0 && (
               <div className="flex justify-between text-[11px] font-black text-emerald-600">
                 <span>{language === 'FR' ? 'Économies de Pack (-15%)' : 'خصم الباك المخصص (-15%)'}</span>
                 <span>-{discountAmount.toFixed(2)} DH</span>

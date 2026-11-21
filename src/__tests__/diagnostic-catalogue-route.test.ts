@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
+vi.mock('@/lib/get-storewide-promotion', () => ({ getStorewidePromotion: async () => 0 }));
+
 const productRows = Array.from({ length: 1001 }, (_, index) => ({
   id: index + 1,
   title: index === 1000 ? 'Solaire SPF50+' : `Produit ${index + 1}`,

@@ -17,6 +17,7 @@ import { buildWhatsAppUrl } from '@/lib/whatsapp-link';
 export interface CartItem {
   product: Product;
   quantity: number;
+  specialDiscount?: boolean;
 }
 
 export interface Coupon {
@@ -236,6 +237,64 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('cartBM', JSON.stringify(newCart));
   };
 
+  const [priceRefreshVersion, setPriceRefreshVersion] = useState(0);
+  const cartProductIds = cart.map(item => item.product.id).sort((a, b) => a - b).join(',');
+
+  const refreshCartPrices = useEffectEvent(async (signal?: AbortSignal) => {
+    if (!cartProductIds) return;
+    const ids = cartProductIds.split(',');
+    try {
+      const batches: Promise<{ products?: Product[] }>[] = [];
+      for (let offset = 0; offset < ids.length; offset += 50) {
+        batches.push(fetch(`/api/products?ids=${ids.slice(offset, offset + 50).join(',')}`, {
+          cache: 'no-store',
+          signal,
+        }).then(response => {
+          if (!response.ok) throw new Error('Cart prices unavailable');
+          return response.json();
+        }));
+      }
+      const results = await Promise.all(batches);
+      if (signal?.aborted) return;
+      const fresh = new Map(results.flatMap(result => result.products || []).map(product => [product.id, product]));
+      setCart(current => {
+        const updated = current.map(item => {
+          const product = fresh.get(item.product.id);
+          if (!product || (!product.storewidePromotionPercent && !item.product.storewidePromotionPercent)) return item;
+
+          const price = item.specialDiscount && !product.storewidePromotionPercent
+            ? Math.round(product.price * 0.85)
+            : product.price;
+          const { comparePrice, storewidePromotionPercent } = product;
+          if (item.product.price === price && item.product.comparePrice === comparePrice
+            && item.product.storewidePromotionPercent === storewidePromotionPercent) return item;
+          return { ...item, product: { ...item.product, price, comparePrice, storewidePromotionPercent } };
+        });
+        if (updated.every((item, index) => item === current[index])) return current;
+        localStorage.setItem('cartBM', JSON.stringify(updated));
+        return updated;
+      });
+    } catch {
+      // Checkout can still verify current prices on the server.
+    }
+  });
+
+  useEffect(() => {
+    if (!cartProductIds) return;
+    let controller: AbortController | undefined;
+    const refresh = () => {
+      controller?.abort();
+      controller = new AbortController();
+      void refreshCartPrices(controller.signal);
+    };
+    refresh();
+    window.addEventListener('focus', refresh);
+    return () => {
+      controller?.abort();
+      window.removeEventListener('focus', refresh);
+    };
+  }, [cartProductIds, isCartOpen, priceRefreshVersion]);
+
   const addToCart = (product: Product, quantity: number = 1, specialDiscount: boolean = false) => {
     const maxStock = product.stock !== undefined ? product.stock : 100;
     let capped = false;
@@ -260,10 +319,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           capped = true;
         }
         // Create a shallow copy of product to apply a 15% discount if specialDiscount is true
-        const finalProduct = specialDiscount 
+        const finalProduct = specialDiscount && !product.storewidePromotionPercent
           ? { ...product, price: Math.round(product.price * 0.85) } 
           : product;
-        newCart.push({ product: finalProduct, quantity: finalAddedQty });
+        newCart.push({ product: finalProduct, quantity: finalAddedQty, ...(specialDiscount ? { specialDiscount } : {}) });
       }
 
       if (capped || finalAddedQty <= 0) {
@@ -444,6 +503,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         quantity: item.quantity,
         price: item.product.price
       })),
+      quotedStorewidePromotion: cart.some(item => Boolean(item.product.storewidePromotionPercent)),
       subtotal,
       discountAmount,
       appliedCoupon: appliedCoupon?.code || null,
@@ -543,6 +603,7 @@ Merci pour votre confiance ! Nous confirmons votre livraison le jour même`;
           };
         }
       } else {
+        if (data.code === 'CART_PRICES_CHANGED') setPriceRefreshVersion(version => version + 1);
         showToast(data.error || "Une erreur est survenue lors de l'enregistrement de la commande.", 'error');
       }
     } catch (err) {

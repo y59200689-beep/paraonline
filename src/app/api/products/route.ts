@@ -1,3 +1,5 @@
+import { getStorewidePromotion } from '@/lib/get-storewide-promotion';
+import { applyStorewidePromotion, promotionalPriceLimit } from '@/lib/storewide-promotion';
 import { NextResponse } from 'next/server';
 import { Product } from '@/lib/data';
 import { supabaseAdmin as supabase } from '@/lib/supabase-server';
@@ -141,13 +143,16 @@ export async function GET(request: Request) {
   const inStockOnly = searchParams.get('inStock') === 'true';
 
   try {
+    const percent = await getStorewidePromotion();
     if (facetsOnly) {
-      const facets = await getCachedCatalogFacets();
+      const facets = await getCachedCatalogFacets(percent);
       return NextResponse.json(
         { success: true, facets },
-        { headers: { 'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=3600' } }
+        { headers: { 'Cache-Control': 'no-store, max-age=0' } }
       );
     }
+
+    const mapPromotionalProduct = (row: Record<string, unknown>) => applyStorewidePromotion(mapProduct(row), percent);
 
     // Batch fetch by comma-separated IDs (used by curated ProductGrid)
     if (idsStr) {
@@ -164,11 +169,11 @@ export async function GET(request: Request) {
         return NextResponse.json({ success: false, message: 'Products not found' }, { status: 404 });
       }
 
-      const products = (data as Array<Record<string, unknown>>).map(mapProduct);
+      const products = (data as Array<Record<string, unknown>>).map(mapPromotionalProduct);
 
       return NextResponse.json(
         { success: true, products },
-        { headers: { 'Cache-Control': inStockOnly ? 'no-store, max-age=0' : 'public, max-age=300, s-maxage=300, stale-while-revalidate=3600' } }
+        { headers: { 'Cache-Control': 'no-store, max-age=0' } }
       );
     }
 
@@ -185,13 +190,13 @@ export async function GET(request: Request) {
         return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
       }
       
-      const matchedProduct = mapProduct(data as Record<string, unknown>);
+      const matchedProduct = mapPromotionalProduct(data as Record<string, unknown>);
       
       return NextResponse.json(
         { success: true, product: matchedProduct },
         {
           headers: {
-            'Cache-Control': 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400',
+            'Cache-Control': 'no-store, max-age=0',
           },
         }
       );
@@ -199,8 +204,8 @@ export async function GET(request: Request) {
 
     const buildQuery = (countOnly = false) => {
     let query = countOnly
-      ? supabase.from(category === 'offers' ? 'storefront_offer_products' : 'products').select('id', { count: 'exact', head: true })
-      : supabase.from(category === 'offers' ? 'storefront_offer_products' : 'products').select(PUBLIC_PRODUCT_COLUMNS, { count: 'exact' });
+      ? supabase.from(category === 'offers' && !percent ? 'storefront_offer_products' : 'products').select('id', { count: 'exact', head: true })
+      : supabase.from(category === 'offers' && !percent ? 'storefront_offer_products' : 'products').select(PUBLIC_PRODUCT_COLUMNS, { count: 'exact' });
 
     // Filter out drafts on public customer storefront
     query = query.eq('status', 'live');
@@ -243,7 +248,7 @@ export async function GET(request: Request) {
     }
 
     if (Number.isFinite(maxPrice) && maxPrice > 0) {
-      query = query.lte('price', maxPrice);
+      query = percent ? query.lt('price', promotionalPriceLimit(maxPrice, percent)) : query.lte('price', maxPrice);
     }
 
     // Ingredients are imported into the dedicated products.ingredients column.
@@ -276,7 +281,7 @@ export async function GET(request: Request) {
 
     if (search && sort === 'search-stock') {
       const rows = await searchStockResults(filteredQuery, searchParams.get('search') || '', limit);
-      return NextResponse.json({ success: true, products: rows.map(mapProduct) }, {
+      return NextResponse.json({ success: true, products: rows.map(mapPromotionalProduct) }, {
         headers: { 'Cache-Control': 'no-store, max-age=0' },
       });
     }
@@ -297,7 +302,7 @@ export async function GET(request: Request) {
         const to = from + pageSize - 1;
         const { data, error } = await applyCatalogSort(query, normalizeSort(sort)).range(from, to);
         if (error || !data) throw error || new Error('No products returned');
-        const batch = (data as Array<Record<string, unknown>>).map(mapProduct);
+        const batch = (data as Array<Record<string, unknown>>).map(mapPromotionalProduct);
         allRows.push(...batch);
         if (batch.length < pageSize) break;
       }
@@ -322,7 +327,7 @@ export async function GET(request: Request) {
       if (error || !data) {
         throw error || new Error('No products returned');
       }
-      products = (data as Array<Record<string, unknown>>).map(mapProduct);
+      products = (data as Array<Record<string, unknown>>).map(mapPromotionalProduct);
       let confirmedTotal = count;
       if (confirmedTotal === null) {
         const { count: filteredTotal, error: countError } = await filteredQuery(true);

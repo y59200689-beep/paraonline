@@ -1,3 +1,5 @@
+import { getStorewidePromotion } from '@/lib/get-storewide-promotion';
+import { applyStorewidePromotion } from '@/lib/storewide-promotion';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { isInDiagnosticPool, mapDiagnosticProduct } from '@/lib/diagnostic-catalogue';
@@ -7,6 +9,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    const percent = await getStorewidePromotion();
     const excludedRows = await supabaseAdmin.from('diagnostic_excluded_products').select('product_id');
     if (excludedRows.error) throw excludedRows.error;
     const excludedIds = new Set<number>((excludedRows.data || []).map((row: { product_id: number }) => row.product_id));
@@ -22,7 +25,7 @@ export async function GET() {
         .range(from, from + pageSize - 1);
       if (error) throw error;
       const batch = data || [];
-      products.push(...batch.map((row: Record<string, unknown>) => mapDiagnosticProduct(row)).filter((product: Product) => isInDiagnosticPool(product, excludedIds)));
+      products.push(...batch.map((row: Record<string, unknown>) => applyStorewidePromotion(mapDiagnosticProduct(row), percent)).filter((product: Product) => isInDiagnosticPool(product, excludedIds)));
       if (batch.length < pageSize) break;
     }
 
