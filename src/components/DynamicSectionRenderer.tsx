@@ -233,8 +233,13 @@ export function DynamicSectionRenderer({ sections }: DynamicSectionRendererProps
             return deferred(section.id, <TopRatedAsymmetricGrid />);
 
           case 'bestSellers':
-          case 'weeklySales':
-            return deferred(section.id, <BestSellersDualGrid />);
+          case 'weeklySales': {
+            const firstVisible = sections.find(item =>
+              (item.type === 'bestSellers' || item.type === 'weeklySales') && item.visible !== false);
+            return section === firstVisible
+              ? deferred(section.id, <BestSellersDualGrid sections={sections} />)
+              : null;
+          }
 
           case 'routineVisualizer':
             return deferred(section.id, <RoutineVisualizer />);
