@@ -832,15 +832,15 @@ class MockSupabaseQueryBuilder {
     }
 
     if (this.actionType === 'update') {
+      const updatedItems: any[] = [];
       const updatedList = list.map((item: any) => {
-        if (this.filters.every(f => f(item))) {
-          return { ...item, ...this.actionData };
-        }
-        return item;
+        if (!this.filters.every(f => f(item))) return item;
+        const updated = { ...item, ...this.actionData };
+        updatedItems.push(updated);
+        return updated;
       });
       globalForMock.mockDb[this.table as keyof typeof globalForMock.mockDb] = updatedList;
       saveToDisk();
-      const updatedItems = updatedList.filter(item => this.filters.every(f => f(item)));
       return { data: updatedItems, error: null, count: updatedItems.length };
     }
 

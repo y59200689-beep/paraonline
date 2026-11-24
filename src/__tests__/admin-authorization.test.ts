@@ -36,6 +36,28 @@ describe('DB-authoritative privileged admin mutations', () => {
     (globalThis as any).mockDb = originalDb;
   });
 
+  it('publishes best-seller pins without changing neighboring sections or store settings', async () => {
+    const { POST } = await import('@/app/api/settings/route');
+    const owner = (await supabase.from('operators').select('*').eq('id', mockSession.id).single()).data;
+    if (!owner) throw new Error('Missing owner fixture');
+    await supabase.from('operators').update({ role: 'owner' }).eq('id', mockSession.id);
+    const hero = { id: 'hero-1', type: 'hero', visible: true, settings: { titleFr: 'Accueil' } };
+    const bestSellers = { id: 'bestSellers-1', type: 'bestSellers', visible: true, nameFr: 'Meilleures ventes', settings: { productIds: [7, 3] } };
+    await supabase.from('cms_pages').upsert({
+      id: 'page-home', slug: 'home', status: 'published',
+      updated_at: '2026-11-01T00:00:00Z', section_order: [hero, { ...bestSellers, settings: { productIds: [] } }],
+    });
+    const before = (await supabase.from('settings').select('value').eq('id', 1).single()).data.value;
+    const response = await POST(new Request('http://localhost/api/settings', {
+      method: 'POST',
+      body: JSON.stringify({ bestSellersSection: bestSellers }),
+    }));
+    expect(response.status).toBe(200);
+    expect((await supabase.from('cms_pages').select('section_order').eq('id', 'page-home').single()).data.section_order)
+      .toEqual([hero, bestSellers]);
+    expect((await supabase.from('settings').select('value').eq('id', 1).single()).data.value).toEqual(before);
+  });
+
   it('limits storewide promotions to managers and persists activation and deactivation', async () => {
     const update = (percent: unknown) => savePromotion(new Request('http://localhost/api/admin/promotions', {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },

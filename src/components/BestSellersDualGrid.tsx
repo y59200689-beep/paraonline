@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { Product } from '@/lib/data';
-import { useProducts } from '@/context/ProductsContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useTranslation } from '@/context/LanguageContext';
 import { useCart } from '@/context/CartContext';
@@ -11,7 +10,8 @@ import { useUi } from '@/context/UiContext';
 import Image from 'next/image';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 import { PRODUCT_IMAGE_FALLBACK } from '@/lib/public-images';
-import { useSettings } from '@/context/SettingsContext';
+import { useHomepageBestSellers } from '@/lib/use-homepage-best-sellers';
+import { useSettings, type HomepageSectionItem } from '@/context/SettingsContext';
 import cardStyles from './TopRatedAsymmetricGrid.module.css';
 import styles from './BestSellersDualGrid.module.css';
 
@@ -23,75 +23,25 @@ const cleanTitle = (title: string) => {
     .trim();
 };
 
-export const BestSellersDualGrid: React.FC = () => {
+export const BestSellersDualGrid: React.FC<{ sections?: HomepageSectionItem[] }> = ({ sections }) => {
   const { language } = useTranslation();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
-  const { products } = useProducts();
   const { setSelectedProduct, triggerFlyToCart } = useUi();
 
   const { settings } = useSettings();
   const hp = settings?.homepageSections;
 
-  const showBestSellers = hp?.showBestSellers ?? true;
-  const showWeeklySales = hp?.showWeeklySales ?? true;
+  const { products: allProducts, isLoading } = useHomepageBestSellers(hp, sections);
 
-  // Dynamically pick products from real catalog sorted by reviews or use curated selection
-  const bestSellingProducts = React.useMemo(() => {
-    if (hp?.bestSellersProductIds && hp.bestSellersProductIds.length > 0) {
-      return hp.bestSellersProductIds
-        .map(id => products.find(p => p.id === id))
-        .filter((p): p is Product => !!p);
-    }
-    const sorted = [...products].sort((a, b) => (b.reviews ?? 0) - (a.reviews ?? 0));
-    return sorted.slice(0, 4);
-  }, [products, hp]);
-
-  const topSellingProducts = React.useMemo(() => {
-    if (hp?.weeklySalesProductIds && hp.weeklySalesProductIds.length > 0) {
-      return hp.weeklySalesProductIds
-        .map(id => products.find(p => p.id === id))
-        .filter((p): p is Product => !!p);
-    }
-    const sorted = [...products].sort((a, b) => (b.reviews ?? 0) - (a.reviews ?? 0));
-    return sorted.slice(4, 8);
-  }, [products, hp]);
-
-  // Combine products without duplicate IDs
-  const allProducts = React.useMemo(() => {
-    const list: Product[] = [];
-    const ids = new Set<number>();
-
-    if (showBestSellers) {
-      for (const p of bestSellingProducts) {
-        if (!ids.has(p.id)) { ids.add(p.id); list.push(p); }
-      }
-    }
-    if (showWeeklySales) {
-      for (const p of topSellingProducts) {
-        if (!ids.has(p.id)) { ids.add(p.id); list.push(p); }
-      }
-    }
-    // Preserve editor selections first, then fill the 12-card layout from the
-    // same review-ranked catalog, adding only available public products.
-    if (showBestSellers || showWeeklySales) {
-      const additional = [...products]
-        .filter(p => p.status !== 'draft' && (p.stock ?? 0) > 0)
-        .sort((a, b) => (b.reviews ?? 0) - (a.reviews ?? 0));
-      for (const p of additional) {
-        if (list.length >= 12) break;
-        if (!ids.has(p.id)) { ids.add(p.id); list.push(p); }
-      }
-    }
-    return list.slice(0, 12);
-  }, [showBestSellers, showWeeklySales, bestSellingProducts, topSellingProducts, products]);
-
-  if (allProducts.length === 0) {
+  if (isLoading || allProducts.length === 0) {
     return null;
   }
 
-  const sectionTitleFr = hp?.bestSellersTitleFr || hp?.weeklySalesTitleFr || 'Meilleures Ventes de la Semaine';
-  const sectionTitleAr = hp?.bestSellersTitleAr || hp?.weeklySalesTitleAr || 'أفضل المنتجات مبيعاً';
+  const section = sections?.find(item => item.type === 'bestSellers' && item.visible !== false)
+    ?? sections?.find(item => item.type === 'weeklySales' && item.visible !== false);
+  const sectionTitleFr = section?.settings?.titleFr || hp?.bestSellersTitleFr || hp?.weeklySalesTitleFr || 'Meilleures Ventes de la Semaine';
+  const sectionTitleAr = section?.settings?.titleAr || hp?.bestSellersTitleAr || hp?.weeklySalesTitleAr || 'أفضل المنتجات مبيعاً';
 
   const isRTL = language === 'AR';
 
