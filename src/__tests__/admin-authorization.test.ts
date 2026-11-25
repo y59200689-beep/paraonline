@@ -42,7 +42,7 @@ describe('DB-authoritative privileged admin mutations', () => {
     if (!owner) throw new Error('Missing owner fixture');
     await supabase.from('operators').update({ role: 'owner' }).eq('id', mockSession.id);
     const hero = { id: 'hero-1', type: 'hero', visible: true, settings: { titleFr: 'Accueil' } };
-    const bestSellers = { id: 'bestSellers-1', type: 'bestSellers', visible: true, nameFr: 'Meilleures ventes', settings: { productIds: [7, 3] } };
+    const bestSellers = { id: 'bestSellers-1', type: 'bestSellers', visible: true, nameFr: 'Meilleures ventes', settings: { productIds: [7, 3], excludedProductIds: [4, 5] } };
     await supabase.from('cms_pages').upsert({
       id: 'page-home', slug: 'home', status: 'published',
       updated_at: '2026-11-01T00:00:00Z', section_order: [hero, { ...bestSellers, settings: { productIds: [] } }],

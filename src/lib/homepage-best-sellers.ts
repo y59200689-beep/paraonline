@@ -23,7 +23,8 @@ export function resolveHomepageBestSellers(
   const showWeeklySales = weeklySales?.visible ?? homepage?.showWeeklySales ?? true;
   if (!showBestSellers && !showWeeklySales) return [];
 
-  const ranked = products.filter(product => product.status !== 'draft')
+  const excludedIds = new Set(bestSellers?.settings?.excludedProductIds);
+  const ranked = products.filter(product => product.status !== 'draft' && !excludedIds.has(product.id))
     .sort((a, b) => (b.reviews ?? 0) - (a.reviews ?? 0));
   const available = ranked.filter(product => (product.stock ?? 0) > 0);
   const byId = new Map(ranked.map(product => [product.id, product]));

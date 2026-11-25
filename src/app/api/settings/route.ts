@@ -32,11 +32,14 @@ export async function GET() {
 
 async function saveBestSellersSection(input: HomepageSectionItem) {
   const productIds = input?.settings?.productIds;
+  const excludedProductIds = input?.settings?.excludedProductIds ?? [];
   if (input?.type !== 'bestSellers' || typeof input.visible !== 'boolean'
     || typeof input.nameFr !== 'string' || !Array.isArray(productIds)
     || productIds.length > BEST_SELLERS_LIMIT
     || new Set(productIds).size !== productIds.length
-    || productIds.some(id => !Number.isSafeInteger(id) || id <= 0)) {
+    || productIds.some(id => !Number.isSafeInteger(id) || id <= 0)
+    || !Array.isArray(excludedProductIds)
+    || excludedProductIds.some(id => !Number.isSafeInteger(id) || id <= 0)) {
     return NextResponse.json({ success: false, error: 'Sélection de produits invalide.' }, { status: 400 });
   }
 
@@ -62,7 +65,14 @@ async function saveBestSellersSection(input: HomepageSectionItem) {
     type: 'bestSellers',
     visible: input.visible,
     nameFr: input.nameFr,
-    settings: { ...current?.settings, ...input.settings, productIds },
+    settings: {
+      ...current?.settings,
+      ...input.settings,
+      productIds,
+      ...(input.settings?.excludedProductIds !== undefined ? {
+        excludedProductIds: [...new Set(excludedProductIds)].filter(id => !productIds.includes(id)),
+      } : {}),
+    },
   };
   const next = [...sections];
   if (index === -1) next.push(updated);

@@ -199,6 +199,7 @@ export interface HomepageSectionItem {
     textColor?: string;
     html?: string;
     productIds?: number[];
+    excludedProductIds?: number[];
     brands?: { name: string; domain: string; logoUrl?: string }[];
     discountPercent?: number;
     bgImage?: string;

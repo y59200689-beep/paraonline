@@ -1,0 +1,99 @@
+.bar {
+  --promo-pink: #f6abc4;
+  color: #f8f4f6;
+  background: #131517;
+  border-block-start: 1px solid #4a515a;
+  border-block-end: 1px solid #11161d;
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(14px, 2.4vw, 38px);
+  max-width: 1536px;
+  min-height: 45px;
+  margin-inline: auto;
+  padding: 5px clamp(12px, 2vw, 30px);
+  font-size: clamp(12px, 1.05vw, 15px);
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.campaign, .benefit, .cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.campaign {
+  color: var(--promo-pink);
+  font-size: clamp(13px, 1.45vw, 21px);
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: .035em;
+}
+
+.message, .benefit {
+  border-inline-start: 1px solid #757981;
+  padding-inline-start: clamp(14px, 2.4vw, 38px);
+}
+
+.message {
+  margin: 0;
+  text-wrap: balance;
+}
+
+.campaign svg, .benefit svg {
+  width: 1.3em;
+  height: 1.3em;
+  flex: none;
+  color: var(--promo-pink);
+}
+
+.cta {
+  min-height: 34px;
+  padding: 5px 13px;
+  border: 1px solid #ffd2e0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffd1df, #f4a0bd);
+  color: #25141d;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.cta:hover {
+  background: #ffd1df;
+}
+
+.cta:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.cta svg {
+  width: 1.05em;
+  height: 1.05em;
+}
+
+.inner:dir(rtl) .cta svg {
+  transform: rotate(180deg);
+}
+
+@media (max-width: 1080px) {
+  .stock { display: none; }
+}
+
+@media (max-width: 740px) {
+  .benefit { display: none; }
+}
+
+@media (max-width: 520px) {
+  .message { display: none; }
+  .inner {
+    justify-content: space-between;
+    min-height: 54px;
+  }
+  .cta { min-height: 44px; }
+}

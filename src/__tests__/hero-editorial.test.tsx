@@ -11,15 +11,17 @@ vi.mock('@/lib/useGalleryOverrides', () => ({ useGalleryOverrides: () => ({ getD
 afterEach(() => { cleanup(); push.mockClear(); });
 it('keeps one fixed main image without carousel controls and preserves category actions', () => {
   render(<Hero onOpenDiagnostic={vi.fn()} />);
-  expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Découvrez nos offres du moment');
-  fireEvent.click(screen.getByRole('button', { name: 'Je découvre' }));
+  expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('BLACK FRIDAY.');
+  expect(screen.getByText('prix exceptionnels').parentElement?.textContent).toBe('Vos soins préférés à des prix exceptionnels');
+  fireEvent.click(screen.getByRole('button', { name: 'Je profite des offres' }));
   expect(push).toHaveBeenCalledWith('/products?category=offers');
   expect(screen.queryByRole('button', { name: 'Sélection suivante' })).toBeNull();
   expect(screen.queryByRole('button', { name: 'Sélection précédente' })).toBeNull();
   expect(screen.queryByRole('group', { name: 'Choisir une sélection' })).toBeNull();
   const main = screen.getByRole('article', { name: 'Découvrez nos sélections' });
   expect(main.querySelectorAll('img')).toHaveLength(1);
+  expect(main.querySelector('img')?.getAttribute('src')).toBe('/images/hero-black-friday.webp');
   fireEvent.touchStart(main, { touches: [{ clientX: 300, clientY: 100 }] });
   fireEvent.touchEnd(main, { changedTouches: [{ clientX: 100, clientY: 100 }] });
-  expect(screen.getByRole('heading', { level: 1 }).textContent).toContain('offres du moment');
+  expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('BLACK FRIDAY.');
 });

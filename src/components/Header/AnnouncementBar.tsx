@@ -1,24 +1,25 @@
-'use client';
+import Link from 'next/link';
+import { ChevronRight, Gift, Tag, Truck } from 'lucide-react';
+import styles from './AnnouncementBar.module.css';
 
-import React from 'react';
+export function AnnouncementBar({ language }: { language: string }) {
+  const isArabic = language === 'AR';
 
-interface AnnouncementBarProps {
-  message: string;
-}
-
-export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ message }) => {
-  if (!message) return null;
   return (
-  <div className="group relative overflow-hidden bg-[var(--brand-secondary)] px-3 py-1.5 text-left text-[9px] font-black uppercase tracking-[0.16em] text-white sm:px-4 sm:py-2 sm:text-[10px] sm:tracking-[0.2em]" style={{ textShadow: '0 1px 2px rgba(22, 35, 39, 0.75)' }}>
-    <p className="sr-only">{message}</p>
-    <div aria-hidden="true" className="inline-block animate-marquee-slow whitespace-nowrap motion-reduce:animate-none group-hover:[animation-play-state:paused] group-focus-within:[animation-play-state:paused]">
-      {[0, 1, 2].map((copy) => (
-        <React.Fragment key={copy}>
-          <span>{message}</span>
-          <span className="mx-10 opacity-30">•</span>
-        </React.Fragment>
-      ))}
-    </div>
-  </div>
+    <aside
+      className={styles.bar}
+      dir={isArabic ? 'rtl' : 'ltr'}
+      aria-label={isArabic ? 'عروض بلاك فرايدي' : 'Offres Black Friday'}
+    >
+      <div className={styles.inner}>
+        <span className={styles.campaign}><Tag aria-hidden="true" />{isArabic ? 'بلاك فرايدي' : 'Black Friday'}</span>
+        <p className={styles.message}>{isArabic ? 'عروض استثنائية على ماركاتكم المفضلة' : 'Des offres exceptionnelles sur vos marques préférées'}</p>
+        <span className={styles.benefit}><Truck aria-hidden="true" />{isArabic ? 'توصيل إلى المنزل' : 'Livraison à domicile'}</span>
+        <span className={`${styles.benefit} ${styles.stock}`}><Gift aria-hidden="true" />{isArabic ? 'كميات محدودة' : 'Stocks limités'}</span>
+        <Link className={styles.cta} href="/products?category=offers">
+          {isArabic ? 'تصفح العروض' : 'Voir les offres'}<ChevronRight aria-hidden="true" />
+        </Link>
+      </div>
+    </aside>
   );
-};
+}
