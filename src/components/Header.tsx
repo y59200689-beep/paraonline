@@ -231,9 +231,7 @@ export const Header: React.FC = () => {
   return (
     <>
       {/* Announcement Bar */}
-      <AnnouncementBar
-        message={language === 'FR' ? settings.announcementFr : settings.announcementAr}
-      />
+      <AnnouncementBar language={language} />
 
       {/* Utility Top Bar */}
       <TopBar

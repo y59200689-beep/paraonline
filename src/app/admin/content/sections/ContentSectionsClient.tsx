@@ -69,17 +69,24 @@ export default function ContentSectionsClient({ initialSections }: { initialSect
   const [isVisible, setIsVisible] = useState(true);
 
   // Product Selection State (for productGrid / topRated / bestSellers)
+  const [excludedProductIds, setExcludedProductIds] = useState<number[]>([]);
+  const [replacementProductId, setReplacementProductId] = useState<number | null>(null);
+  const pickerRef = React.useRef<HTMLDivElement>(null);
   const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
   const [productSearch, setProductSearch] = useState('');
   const [brandFilter, setBrandFilter] = useState('ALL');
   const [isAddingProductOpen, setIsAddingProductOpen] = useState(false);
   const [targetSlotIndex, setTargetSlotIndex] = useState<number | null>(null);
+  React.useEffect(() => {
+    if (isAddingProductOpen) pickerRef.current?.scrollIntoView?.({ block: 'nearest' });
+  }, [isAddingProductOpen, replacementProductId, targetSlotIndex]);
+
   const isBestSellers = selectedSection?.type === 'bestSellers';
   const selectedProductLimit = isBestSellers ? BEST_SELLERS_LIMIT
     : selectedSection?.type === 'productGrid' ? FEATURED_PRODUCT_LIMIT : 16;
   const bestSellersSections = selectedSection && isBestSellers
     ? [
-      { ...selectedSection, visible: true, settings: { ...selectedSection.settings, productIds: selectedProductIds } },
+      { ...selectedSection, visible: true, settings: { ...selectedSection.settings, productIds: selectedProductIds, excludedProductIds } },
       ...sectionOrders.filter(section => section.type === 'weeklySales'),
     ]
     : undefined;
@@ -126,6 +133,8 @@ export default function ContentSectionsClient({ initialSections }: { initialSect
   const handleOpenEdit = (sec: HomepageSectionItem) => {
     const meta = SECTION_TYPE_MAP[sec.type] ?? { label: sec.type, desc: '' };
     setSelectedSection(sec);
+    setExcludedProductIds(sec.settings?.excludedProductIds ?? []);
+    setReplacementProductId(null);
     setTitleFr(sec.settings?.titleFr || sec.nameFr || meta.label);
     setTitleAr(sec.settings?.titleAr || meta.label);
     setSubtitleFr(sec.settings?.descFr || meta.desc);
@@ -170,6 +179,7 @@ export default function ContentSectionsClient({ initialSections }: { initialSect
           ctaLink,
           html: htmlContent,
           productIds: selectedProductIds,
+          ...(isBestSellers ? { excludedProductIds } : {}),
         },
       };
 
@@ -216,10 +226,27 @@ export default function ContentSectionsClient({ initialSections }: { initialSect
     }
   };
 
+  const removeBestSeller = (id: number) => {
+    setSelectedProductIds(ids => ids.filter(pin => pin !== id));
+    setExcludedProductIds(ids => ids.includes(id) ? ids : [...ids, id]);
+  };
+
   const handleAddProductToSlot = (productId: number) => {
     if (selectedProductIds.includes(productId)) return;
 
-    if (targetSlotIndex !== null && targetSlotIndex < selectedProductLimit) {
+    if (isBestSellers) {
+      const replacementIndex = replacementProductId === null ? -1 : selectedProductIds.indexOf(replacementProductId);
+      if (replacementIndex === -1 && selectedProductIds.length >= selectedProductLimit) return;
+      setSelectedProductIds(ids => replacementIndex === -1
+        ? [...ids, productId]
+        : ids.map(id => id === replacementProductId ? productId : id));
+      setExcludedProductIds(ids => {
+        const remaining = ids.filter(id => id !== productId);
+        return replacementProductId === null || remaining.includes(replacementProductId)
+          ? remaining : [...remaining, replacementProductId];
+      });
+      setReplacementProductId(null);
+    } else if (targetSlotIndex !== null && targetSlotIndex < selectedProductLimit) {
       const copy = [...selectedProductIds];
       copy[targetSlotIndex] = productId;
       setSelectedProductIds(copy.filter(Boolean));
@@ -435,7 +462,7 @@ export default function ContentSectionsClient({ initialSections }: { initialSect
                         </div>
                         <p className="text-xs" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>
                           {isBestSellers
-                            ? 'Les produits épinglés s’affichent en premier. Les places restantes sont complétées automatiquement.'
+                            ? 'Les produits épinglés s’affichent en premier. Après un retrait, la place est complétée automatiquement.'
                             : 'Sélectionnez et ordonnez les produits affichés dans cette section sur votre boutique.'}
                         </p>
                       </div>
@@ -443,7 +470,7 @@ export default function ContentSectionsClient({ initialSections }: { initialSect
 
                     <button
                       type="button"
-                      onClick={() => { setIsAddingProductOpen(true); setTargetSlotIndex(null); }}
+                      onClick={() => { setReplacementProductId(null); setIsAddingProductOpen(true); setTargetSlotIndex(null); }}
                       disabled={selectedProductIds.length >= selectedProductLimit}
                       className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-xs uppercase tracking-wider shadow-md shadow-emerald-500/20 transition cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
                     >
@@ -457,7 +484,7 @@ export default function ContentSectionsClient({ initialSections }: { initialSect
                         <p key={id}>
                           Produit #{id} non affiché{' '}
                           <button type="button" className="ml-2 font-semibold text-red-600"
-                            onClick={() => setSelectedProductIds(ids => ids.filter(pin => pin !== id))}>
+                            onClick={() => removeBestSeller(id)}>
                             Retirer
                           </button>
                         </p>
@@ -527,13 +554,13 @@ export default function ContentSectionsClient({ initialSections }: { initialSect
                                   >
                                     <ChevronDown className="w-3.5 h-3.5" />
                                   </button>
-                                  <button
+                                  {!isBestSellers && <button
                                     type="button"
                                     onClick={() => setSelectedProductIds(prev => prev.filter(id => id !== prod.id))}
                                     className="p-1 rounded text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 ml-1"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
+                                  </button>}
                                 </div>
                               )}
                             </div>
@@ -551,6 +578,22 @@ export default function ContentSectionsClient({ initialSections }: { initialSect
                                 <p className="text-[11px] font-mono font-bold mt-0.5 text-slate-500">{prod.price} DH</p>
                               </div>
                             </div>
+                            {isBestSellers && (
+                              <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold">
+                                <button type="button" className="text-emerald-700 [.admin-dark_&]:text-emerald-300"
+                                  onClick={() => {
+                                    setReplacementProductId(prod.id);
+                                    setTargetSlotIndex(null);
+                                    setIsAddingProductOpen(true);
+                                  }}>
+                                  Remplacer
+                                </button>
+                                <button type="button" className="text-red-600 [.admin-dark_&]:text-red-300"
+                                  onClick={() => removeBestSeller(prod.id)}>
+                                  Retirer
+                                </button>
+                              </div>
+                            )}
                           </div>
                         );
                       }
@@ -558,7 +601,7 @@ export default function ContentSectionsClient({ initialSections }: { initialSect
                       return (
                         <div
                           key={`empty-slot-${slotIdx}`}
-                          onClick={() => { setIsAddingProductOpen(true); setTargetSlotIndex(isBestSellers ? null : slotIdx); }}
+                          onClick={() => { setReplacementProductId(null); setIsAddingProductOpen(true); setTargetSlotIndex(isBestSellers ? null : slotIdx); }}
                           className="group p-4 rounded-2xl border border-dashed transition-all duration-200 cursor-pointer flex flex-col items-center justify-center gap-1.5 min-h-[100px] hover:border-emerald-500 hover:bg-emerald-500/5"
                           style={{
                             borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#cbd5e1',
@@ -583,17 +626,18 @@ export default function ContentSectionsClient({ initialSections }: { initialSect
 
               {/* QUICK PRODUCT PICKER DRAWER / MODAL OVERLAY */}
               {isAddingProductOpen && (
-                <div className="p-4 rounded-3xl border space-y-4 bg-white dark:bg-slate-900 border-emerald-500/40 shadow-2xl animate-fade-in">
+                <div ref={pickerRef} className="p-4 rounded-3xl border space-y-4 bg-white dark:bg-slate-900 border-emerald-500/40 shadow-2xl animate-fade-in">
                   <div className="flex items-center justify-between border-b pb-3">
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-4 h-4 text-emerald-500" />
                       <h4 className="text-xs font-black uppercase tracking-wider">
-                        {targetSlotIndex !== null ? `Choisir le produit pour le Slot #${targetSlotIndex + 1}` : 'Ajouter un produit aux Produits Vedettes'}
+                        {replacementProductId !== null ? 'Choisir un produit de remplacement'
+                          : targetSlotIndex !== null ? `Choisir le produit pour le Slot #${targetSlotIndex + 1}` : 'Ajouter un produit'}
                       </h4>
                     </div>
                     <button
                       type="button"
-                      onClick={() => { setIsAddingProductOpen(false); setTargetSlotIndex(null); setProductSearch(''); }}
+                      onClick={() => { setIsAddingProductOpen(false); setReplacementProductId(null); setTargetSlotIndex(null); setProductSearch(''); }}
                       className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
                     >
                       <X className="w-4 h-4" />
@@ -641,7 +685,7 @@ export default function ContentSectionsClient({ initialSections }: { initialSect
                           const vendor = (p.vendor || '').toLowerCase();
                           const q = productSearch.toLowerCase();
                           const matchBrand = brandFilter === 'ALL' || p.vendor === brandFilter;
-                          return (!isBestSellers || p.status !== 'draft') && !selectedProductIds.includes(p.id) && matchBrand && (!q || title.includes(q) || vendor.includes(q));
+                          return (!isBestSellers || p.status !== 'draft') && p.id !== replacementProductId && !selectedProductIds.includes(p.id) && matchBrand && (!q || title.includes(q) || vendor.includes(q));
                         })
                         .slice(0, 20)
                         .map((p: any) => (

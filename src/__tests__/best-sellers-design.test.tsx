@@ -54,13 +54,31 @@ describe('Best sellers layout', () => {
     expect(screen.getAllByRole('heading', { level: 5 }).map(heading => heading.textContent)).toEqual(titles);
   });
 
+  it('lets admins remove and replace automatically selected products', () => {
+    state.pins = [];
+    state.weeklyPins = [];
+    const section = { id: 'bestSellers-1', type: 'bestSellers', nameFr: 'Meilleures Ventes', visible: true };
+    render(<ContentSectionsClient initialSections={[section]} />);
+    fireEvent.click(screen.getByRole('heading', { name: 'Produits les Plus Vendus' }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Retirer' })[0]);
+    expect(screen.queryByRole('heading', { name: 'Produit 1' })).toBeNull();
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Remplacer' })[0]);
+    expect(screen.getByRole('heading', { name: 'Choisir un produit de remplacement' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('heading', { name: 'Produit 16' }));
+    expect(screen.getAllByRole('heading', { level: 5 })[0].textContent).toBe('Produit 16');
+    expect(screen.queryByRole('heading', { name: 'Produit 2' })).toBeNull();
+  });
+
   it('uses the published selection ahead of the legacy settings', () => {
     render(<BestSellersDualGrid sections={[{
       id: 'bestSellers-1', type: 'bestSellers', nameFr: 'Meilleures Ventes', visible: true,
-      settings: { productIds: [16, 15] },
+      settings: { productIds: [16, 15], excludedProductIds: [3, 5] },
     }]} />);
     const titles = screen.getAllByRole('button', { name: /^Voir Produit/ }).map(button => button.getAttribute('aria-label'));
     expect(titles.slice(0, 2)).toEqual(['Voir Produit 16', 'Voir Produit 15']);
+    expect(titles).not.toContain('Voir Produit 3');
+    expect(titles).not.toContain('Voir Produit 5');
   });
 
   it('preserves product, wishlist, and cart actions', () => {
