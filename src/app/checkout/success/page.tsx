@@ -3,6 +3,7 @@ import { OrderCompletionClient } from '@/components/checkout/OrderCompletionClie
 
 export const metadata: Metadata = {
   title: 'Commande confirmée | Para Divine',
+  referrer: 'no-referrer',
   robots: { index: false, follow: false },
 };
 

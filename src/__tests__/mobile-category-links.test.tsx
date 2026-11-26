@@ -28,6 +28,13 @@ it('keeps meaningful category destinations on mobile and desktop', () => {
   for (const [tag, category] of Object.entries({ maquillage: 'maquillage', sport: 'sport', masques: 'masques' })) {
     expect(screen.getByRole('link', { name: `circle_${tag} circle_${tag}` }).getAttribute('href')).toBe(`/products?category=${category}`);
   }
+  const offers = screen.getByRole('link', { name: 'circle_offers circle_offers' });
+  const destination = new URL(offers.getAttribute('href')!, 'https://example.com');
+  expect(destination.pathname).toBe('/products');
+  expect(destination.searchParams.has('category')).toBe(false);
+  expect(destination.searchParams.get('vendors')?.split(',')).toEqual([
+    'EUCERIN', 'LA ROCHE POSAY', 'VICHY', 'BIODERMA', 'CERAVE', 'AVENE',
+  ]);
   act(() => { media.matches = false; change(); });
   expect(screen.getByRole('link', { name: 'circle_sport circle_sport' }).getAttribute('href')).toBe('/products?category=sport');
 });

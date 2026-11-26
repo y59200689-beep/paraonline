@@ -2,6 +2,8 @@
 
 import React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
+import { featuredBrandCatalog } from '@/lib/featured-brand-catalog';
 import { ArrowLeft, ArrowRight, Tag } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@/context/LanguageContext';
@@ -63,7 +65,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenDiagnostic }) => {
               <p>Vos soins préférés à des <strong>prix exceptionnels</strong></p>
             </>
           )}
-          <button type="button" className={`${styles.cta} public-cta`} onClick={current.action}>{current.cta}<Arrow size={18} /></button>
+          <Link className={`${styles.cta} ${styles.mainLink} public-cta`} href={featuredBrandCatalog}>{current.cta}<Arrow size={18} aria-hidden="true" /></Link>
         </div>
       </article>
       <article className={styles.summer}>

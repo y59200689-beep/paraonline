@@ -36,6 +36,18 @@ describe('DB-authoritative privileged admin mutations', () => {
     (globalThis as any).mockDb = originalDb;
   });
 
+  it('restricts pixel edits to the owner and stores only supported IDs', async () => {
+    const { GET, PUT } = await import('@/app/api/admin/pixels/route');
+    const update = () => PUT(new Request('http://localhost/api/admin/pixels', {
+      method: 'PUT',
+      body: JSON.stringify({ meta: "<script>fbq('init', '123456789');</script>", tiktok: '', snap: '', ga4: '', ads: '' }),
+    }));
+    expect((await update()).status).toBe(403);
+    await supabase.from('operators').update({ role: 'owner' }).eq('id', mockSession.id);
+    expect((await update()).status).toBe(200);
+    expect(await (await GET()).json()).toEqual({ pixels: { meta: '123456789' } });
+  });
+
   it('publishes best-seller pins without changing neighboring sections or store settings', async () => {
     const { POST } = await import('@/app/api/settings/route');
     const owner = (await supabase.from('operators').select('*').eq('id', mockSession.id).single()).data;

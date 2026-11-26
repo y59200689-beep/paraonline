@@ -9,7 +9,9 @@ import Link from 'next/link';
 import { useSettings } from '@/context/SettingsContext';
 import { useGalleryOverrides } from '@/lib/useGalleryOverrides';
 
-export interface CategoryItem {
+import { featuredBrandCatalog } from '@/lib/featured-brand-catalog';
+
+interface CategoryItem {
   id: string;
   tag: string;
   translationKey: string;
@@ -176,14 +178,16 @@ export const CategoryTrack: React.FC<CategoryTrackProps> = ({ activeCategory, on
                  // Admin-configurable link overrides take priority, then hardcoded fallbacks
                  const adminLink = settings?.categoryLinks?.[cat.tag];
                  const categoryByTag: Record<string, string> = {
-                   offers: 'offers', giftbox: 'coffrets', solaire: 'solaire', visage: 'visage',
+                   giftbox: 'coffrets', solaire: 'solaire', visage: 'visage',
                    cheveux: 'cheveux', corps: 'corps', appareils: 'appareils', complements: 'complements',
                    maquillage: 'maquillage', sport: 'sport', masques: 'masques', homme: 'homme', bebe: 'bebe',
                  };
                  // An old '/products' placeholder must not erase a category.
                  // Deliberate custom destinations are still respected.
                  const category = categoryByTag[cat.tag];
-                 const productsHref = adminLink && (adminLink !== '/products' || cat.tag === 'all')
+                 const productsHref = cat.tag === 'offers'
+                   ? featuredBrandCatalog
+                   : adminLink && (adminLink !== '/products' || cat.tag === 'all')
                    ? adminLink
                    : category ? `/products?category=${category}` : '/products';
 

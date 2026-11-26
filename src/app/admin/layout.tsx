@@ -263,6 +263,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
               {activeTab === 'reviews' && 'Avis Clients'}
               {activeTab === 'advice' && 'Espace Conseils'}
               {activeTab === 'branding' && 'Personnalisation'}
+              {activeTab === 'pixels' && 'Pixels de suivi'}
               {activeTab === 'snippets' && 'Snippets de Code'}
               {activeTab === 'cron' && 'Tâches Planifiées'}
               {activeTab === 'audit-logs' && "Journaux d'Audit"}

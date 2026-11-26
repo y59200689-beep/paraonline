@@ -91,7 +91,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ setActiveTab, sidebarCollapsed
     if (pathname.includes('/experience')) setOpenGroups(s => ({ ...s, experience: true }));
     if (pathname.includes('/settings')) setOpenGroups(s => ({ ...s, parametres: true }));
     if (pathname.includes('/coupons') || pathname.includes('/promotions') || pathname.includes('/loyalty')) setOpenGroups(s => ({ ...s, vente: true }));
-    if (pathname.includes('/cron') || pathname.includes('/snippets') || pathname.includes('/audit')) setOpenGroups(s => ({ ...s, advanced: true }));
+    if (pathname.includes('/pixels') || pathname.includes('/cron') || pathname.includes('/snippets') || pathname.includes('/audit')) setOpenGroups(s => ({ ...s, advanced: true }));
   }, [pathname]);
 
   // ── Navigation structure ──────────────────────────────────────
@@ -140,6 +140,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ setActiveTab, sidebarCollapsed
 
   const advancedItems: NavItem[] = [
     ...(canManageSettings(role)   ? [{ id: 'cron',     label: 'Automatisations', href: '/admin/cron', icon: Clock }] : []),
+    ...(canManageSettings(role) ? [{ id: 'pixels', label: 'Pixels', href: '/admin/pixels', icon: Plug }] : []),
     ...(canManageSnippets(role)   ? [{ id: 'snippets', label: 'Scripts du site', href: '/admin/snippets', icon: Code }] : []),
     ...(canManageOperators(role)  ? [{ id: 'branding', label: 'Personnalisation',href: '/admin/branding', icon: Sliders }] : []),
   ];
@@ -213,6 +214,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ setActiveTab, sidebarCollapsed
             'audit-logs': 'audit-logs',
             cron: 'cron',
             snippets: 'snippets',
+            pixels: 'pixels',
             branding: 'branding',
           };
           const resolvedTab = tabMap[item.id] ?? item.id;
