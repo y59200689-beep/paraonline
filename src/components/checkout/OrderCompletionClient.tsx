@@ -19,6 +19,8 @@ import { ShopShell } from '@/components/ShopShell';
 import { useSettings } from '@/context/SettingsContext';
 import { useTranslation } from '@/context/LanguageContext';
 import { buildWhatsAppUrl } from '@/lib/whatsapp-link';
+import { PIXEL_PURCHASE_EVENT } from '@/lib/browser-pixels';
+import { isPurchaseReady } from '@/lib/pixels';
 import { normalizeGiftItem } from '@/lib/gift-item';
 
 type CompletionMode = 'success' | 'failure';
@@ -32,7 +34,7 @@ type SafeOrder = {
   status?: string | null;
   estimated_delivery?: string | null;
   created_at?: string | null;
-  items?: Array<{ title?: string; quantity?: number; price?: number }>;
+  items?: Array<{ id?: number; title?: string; quantity?: number; price?: number }>;
   subtotal?: number | null;
   discount_amount?: number | null;
   gift_item?: unknown;
@@ -113,9 +115,22 @@ export function OrderCompletionClient({
       return;
     }
 
+    if (mode === 'success') {
+      try {
+        sessionStorage.setItem(`orderTrackingToken:${orderId}`, token);
+        const url = new URL(window.location.href);
+        if (['token', 'payment_intent_client_secret', 'payment_intent', 'redirect_status'].some(key => url.searchParams.has(key))) {
+          const safeQuery = new URLSearchParams({ orderId });
+          window.history.replaceState(window.history.state, '', `/checkout/success?${safeQuery}`);
+        }
+      } catch {}
+    }
+
     const controller = new AbortController();
     setLoadState({ status: 'loading' });
-    fetch(`/api/orders?orderId=${encodeURIComponent(orderId)}&token=${encodeURIComponent(token)}`, {
+    let retry: ReturnType<typeof setTimeout> | undefined;
+    let attempts = 0;
+    const loadOrder = () => fetch(`/api/orders?orderId=${encodeURIComponent(orderId)}&token=${encodeURIComponent(token)}`, {
       signal: controller.signal,
       cache: 'no-store',
     })
@@ -130,14 +145,34 @@ export function OrderCompletionClient({
           return;
         }
         setLoadState({ status: 'ready', order, token });
+        if (mode === 'success' && isPurchaseReady(order) && !controller.signal.aborted
+          && !new URL(window.location.href).searchParams.has('token')
+          && !new URL(window.location.href).searchParams.has('payment_intent_client_secret')) {
+          window.dispatchEvent(new CustomEvent(PIXEL_PURCHASE_EVENT, {
+            detail: {
+              id: order.order_id,
+              value: Number(order.total),
+              items: order.items?.flatMap(item => item.id && item.quantity && typeof item.price === 'number'
+                ? [{ item_id: String(item.id), quantity: item.quantity, price: item.price }] : []),
+            },
+          }));
+        } else if (mode === 'success' && ['stripe', 'cmi'].includes(order.payment_method ?? '')
+          && ['pending', 'unpaid'].includes(order.payment_status ?? '') && !controller.signal.aborted && attempts < 4) {
+          attempts++;
+          retry = setTimeout(loadOrder, 2500);
+        }
       })
       .catch((error) => {
         if (error?.name === 'AbortError') return;
         setLoadState({ status: 'error', message: error?.message || 'Erreur de vérification.' });
       });
 
-    return () => controller.abort();
-  }, [initialToken, isFrench, orderId]);
+    void loadOrder();
+    return () => {
+      controller.abort();
+      clearTimeout(retry);
+    };
+  }, [initialToken, isFrench, mode, orderId]);
 
   const order = loadState.status === 'ready' ? loadState.order : null;
   const token = loadState.status === 'ready' ? loadState.token : initialToken;

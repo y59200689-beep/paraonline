@@ -2,6 +2,7 @@
 import React from 'react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { featuredBrandCatalog } from '@/lib/featured-brand-catalog';
 import { Hero } from '@/components/Hero';
 const push = vi.hoisted(() => vi.fn());
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }));
@@ -13,8 +14,7 @@ it('keeps one fixed main image without carousel controls and preserves category 
   render(<Hero onOpenDiagnostic={vi.fn()} />);
   expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('BLACK FRIDAY.');
   expect(screen.getByText('prix exceptionnels').parentElement?.textContent).toBe('Vos soins préférés à des prix exceptionnels');
-  fireEvent.click(screen.getByRole('button', { name: 'Je profite des offres' }));
-  expect(push).toHaveBeenCalledWith('/products?category=offers');
+  expect(screen.getByRole('link', { name: 'Je profite des offres' }).getAttribute('href')).toBe(featuredBrandCatalog);
   expect(screen.queryByRole('button', { name: 'Sélection suivante' })).toBeNull();
   expect(screen.queryByRole('button', { name: 'Sélection précédente' })).toBeNull();
   expect(screen.queryByRole('group', { name: 'Choisir une sélection' })).toBeNull();
